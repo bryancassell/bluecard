@@ -162,11 +162,10 @@ lines no test runs.
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
-pushes to `main`. Both jobs must pass before a pull request can merge.
-
-- **Build** runs `./gradlew build`, the same command as locally.
-- **Instrumented tests** starts an Android emulator (API 37) and runs
-  `./gradlew connectedAndroidTest`.
+pushes to `main`. Its **Build** job runs `./gradlew build`, the same command as
+locally, and must pass before a pull request can merge. CI does not run
+instrumented tests yet, because there are none; an emulator job will be added
+with the first test that needs a real device.
 
 Dependabot (`.github/dependabot.yml`) checks weekly for newer versions of the
 libraries and plugins in the version catalog, the Gradle wrapper, and the
