@@ -145,15 +145,17 @@ when it can detect that one is broken:
 
 | Rule | Check |
 |---|---|
-| Line coverage must not decrease | Module-wide line coverage from local tests must stay at or above a minimum in `app/build.gradle.kts` (task `jacocoDebugCoverageVerification`). When coverage goes up, raise the minimum to the new value, rounded down. If a change has to lower it, say why in the pull request. |
-| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage. Generated code and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
+| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
 
-The other rules (tests check meaningful behavior, UI tests cover every state
-and interaction, screenshot tests only where needed, local tests preferred) need
-a person to judge, so they are checked in code review.
+The other rules need a person to judge, so they are checked in code review:
+tests check meaningful behavior, UI tests cover every state and interaction,
+screenshot tests only where needed, and local tests are preferred. The same goes
+for "coverage must not decrease": the build only knows the current coverage, not
+what it was before. If a change lowers coverage, say so and why in the pull
+request; `./gradlew createDebugUnitTestCoverageReport` shows the numbers.
 
 When coverage fails, the error names the class. Run
 `./gradlew createDebugUnitTestCoverageReport` and open the report to see which

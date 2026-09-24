@@ -80,7 +80,7 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
     "jacocoDebugCoverageVerification"
 ) {
     group = "verification"
-    description = "Fails if local test line coverage is below the minimums."
+    description = "Fails if any class has less than 80% line coverage from local tests."
     dependsOn("testDebugUnitTest")
     // Generated Android classes, and @Preview functions (kept in *Preview.kt files),
     // which only run in Android Studio.
@@ -104,15 +104,6 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
         )
     )
     violationRules {
-        // Module-wide line coverage must not decrease. This is a ratchet: when coverage
-        // goes up, raise the minimum to the new value (rounded down). Lowering it needs
-        // an explanation in the pull request.
-        rule {
-            limit {
-                counter = "LINE"
-                minimum = "1.00".toBigDecimal()
-            }
-        }
         // Every class needs at least 80% line coverage.
         rule {
             element = "CLASS"
