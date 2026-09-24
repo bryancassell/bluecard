@@ -11,9 +11,12 @@ composeBom = "2026.09.00"
 junit = "4.13.2"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
+robolectric = "4.17"
 spotless = "8.10.2"
 # ktlint is run by Spotless; this pins the ktlint engine version.
 ktlint = "1.8.0"
+# Coverage engine used by both AGP (test data) and Gradle (verification).
+jacoco = "0.8.15"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +34,7 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 [plugins]

@@ -10,7 +10,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,11 +35,3 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 }
 
 fun greetingText(name: String): String = "Welcome to BlueCard, $name!"
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    BlueCardTheme {
-        Greeting("Scout")
-    }
-}
