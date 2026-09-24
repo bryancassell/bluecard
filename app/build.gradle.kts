@@ -62,6 +62,9 @@ android {
         // Treat lint warnings as a signal worth fixing: fail the build on them.
         warningsAsErrors = true
         abortOnError = true
+        // "A newer version is available" checks would fail the build whenever a new
+        // release comes out. Dependabot proposes those updates instead.
+        disable += setOf("AndroidGradlePluginVersion", "GradleDependency")
     }
 }
 
@@ -73,7 +76,9 @@ jacoco {
 // Runs as part of `check`, so `./gradlew build` enforces it.
 val coverageClassJars = objects.listProperty<RegularFile>()
 val coverageClassDirs = objects.listProperty<Directory>()
-val jacocoDebugCoverageVerification by tasks.registering(JacocoCoverageVerification::class) {
+val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>(
+    "jacocoDebugCoverageVerification"
+) {
     group = "verification"
     description = "Fails if local test line coverage is below the minimums."
     dependsOn("testDebugUnitTest")
@@ -120,7 +125,7 @@ val jacocoDebugCoverageVerification by tasks.registering(JacocoCoverageVerificat
 }
 
 // Testing rules from CLAUDE.md that a text search can catch.
-val checkTestRules by tasks.registering(Exec::class) {
+val checkTestRules = tasks.register<Exec>("checkTestRules") {
     group = "verification"
     description = "Fails on skipped tests, logic classes without tests, or mocking libraries."
     commandLine(rootProject.file("scripts/check-test-rules.sh"))

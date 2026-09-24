@@ -94,6 +94,9 @@ produces the same result the build expects. It replaces IDE-specific
 
 **Lint as a gate.** `warningsAsErrors = true` makes lint warnings fail the
 build, so problems get fixed when they appear instead of piling up.
+The one exception is lint's "a newer version is available" checks, which are
+turned off: they would fail the build whenever a new release came out, and
+Dependabot proposes those updates instead.
 
 ## Project layout
 
