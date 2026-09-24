@@ -61,6 +61,18 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Implement all solutions using modern Android best practices, regardless of the current project minSdk setting.
 - If your solution is not compatible with the current minSdk setting, research potential alternatives and ask the human developer for next steps.
 
+## 5. Testing Best Practices
+
+- Every class containing logic (ViewModels, use cases, repositories, mappers) should have a corresponding unit test.
+- Testing line coverage for all new code should be at least 80%.
+- Testing line coverage in a touched module should not decrease; if it does, explain why.
+- Tests must verify meaningful behavior, not just exercise lines.
+- Fakes are preferred over mocks when possible. Mocks couple tests to implementation details, while fakes test behavior.
+- UI tests should be written to validate each distinct UI state (e.g., loading, content, empty, error) and each user interaction.
+- Screenshot tests should be used selectively, mainly for visual states that are difficult to assert on semantically.
+- When a test fails, fix the code or explain why the expectation is wrong. Never delete or loosen assertions, skip tests, or re-record screenshot baselines to get tests passing.
+- Prefer local tests; use instrumented tests only for behavior that requires a real Android runtime.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
