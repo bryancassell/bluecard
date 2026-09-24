@@ -35,7 +35,9 @@ Run these from the repository root.
 
 | Command | What it does |
 |---|---|
-| `./gradlew build` | Compiles, runs unit tests and lint. This is the command CI runs. |
+| `./gradlew build` | Compiles, runs unit tests, lint, and the formatting check. This is the command CI runs. |
+| `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
+| `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local unit tests only (`app/src/test`). |
 | `./gradlew lint` | Runs Android lint. Reports are in `app/build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
@@ -75,6 +77,20 @@ re-reading build scripts when they haven't changed, the build cache reuses
 task outputs, and parallel execution runs independent tasks together. A no-op
 rebuild takes a few seconds.
 
+**Code style: Spotless + ktlint.** The [Spotless](https://github.com/diffplug/spotless)
+Gradle plugin runs [ktlint](https://ktlint.github.io/ktlint/) on every `.kt`
+and `.gradle.kts` file. ktlint uses its `android_studio` style, which follows
+[Android's Kotlin style guide](https://developer.android.com/kotlin/style-guide):
+4-space indentation, a 100-character line limit, no wildcard imports, and no
+trailing commas. If `./gradlew build` fails on formatting, run
+`./gradlew spotlessApply` and commit the result; a few rules (such as wildcard
+imports) must be fixed by hand.
+
+**`.editorconfig`.** The shared style settings live in `.editorconfig`, which
+both ktlint and Android Studio read, so **Code → Reformat Code** in the IDE
+produces the same result the build expects. It replaces IDE-specific
+`.idea/codeStyles` files.
+
 **Lint as a gate.** `warningsAsErrors = true` makes lint warnings fail the
 build, so problems get fixed when they appear instead of piling up.
 
@@ -82,7 +98,8 @@ build, so problems get fixed when they appear instead of piling up.
 
 ```
 .
-├── build.gradle.kts            Root build: declares plugins for all modules
+├── .editorconfig               Formatting rules for ktlint and Android Studio
+├── build.gradle.kts            Root build: plugins for all modules, Spotless
 ├── settings.gradle.kts         Module list and repositories
 ├── gradle.properties           Gradle and Android build settings
 ├── gradle/

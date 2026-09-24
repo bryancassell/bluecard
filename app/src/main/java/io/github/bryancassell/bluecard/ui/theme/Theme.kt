@@ -15,14 +15,16 @@ fun BlueCardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color uses the user's wallpaper colors on Android 12+.
     dynamicColor: Boolean = true,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+
         darkTheme -> darkColorScheme()
+
         else -> lightColorScheme()
     }
 
