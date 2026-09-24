@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Window theme applied before Compose draws (including the splash screen);
+        the app's real theme is BlueCardTheme in Kotlin. values-night/themes.xml
+        overrides the parent in dark mode so the window matches the Compose theme.
+    -->
+    <style name="Theme.BlueCard" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

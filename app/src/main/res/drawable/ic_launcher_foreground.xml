@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder launcher icon: a white card on the blue background. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,38h36a4,4 0,0 1,4 4v24a4,4 0,0 1,-4 4h-36a4,4 0,0 1,-4 -4v-24a4,4 0,0 1,4 -4z" />
+    <path
+        android:fillColor="#003F87"
+        android:pathData="M40,46h20v4h-20zM40,54h28v4h-28z" />
+</vector>

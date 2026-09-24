@@ -8,9 +8,9 @@ local.properties
 secrets.properties
 
 # Android Studio / IntelliJ
-# Ignore IDE state; keep shared code style and run configurations
+# Ignore IDE state except shared run configurations. Code style is shared
+# through .editorconfig instead of .idea/codeStyles.
 .idea/*
-!.idea/codeStyles/
 !.idea/runConfigurations/
 *.iml
 captures/
