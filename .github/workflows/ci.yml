@@ -1,0 +1,33 @@
+# Runs the same commands we use locally on every pull request and on main.
+# Pushes to main also write the Gradle cache that pull request runs read.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same major version as Android Studio's bundled JDK, used for local builds.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      # Validates the Gradle wrapper and caches Gradle state. "basic" is the
+      # open-source (MIT) cache provider.
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      # Compile, unit tests, coverage minimums, test rules, lint and formatting.
+      - run: ./gradlew build

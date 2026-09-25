@@ -1,6 +1,10 @@
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    jacoco
 }
 
 android {
@@ -18,6 +22,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Record JaCoCo coverage data when local tests run.
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -36,10 +44,100 @@ android {
         compose = true
     }
 
+    testOptions {
+        // Robolectric needs the app's resources to run activities and Compose UI locally.
+        unitTests.isIncludeAndroidResources = true
+        // Robolectric reaches into JDK internals that JDK 17+ hides by default.
+        // Other flags from https://robolectric.org/getting-started/ may be needed later.
+        unitTests.all {
+            it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
+        }
+    }
+
+    testCoverage {
+        jacocoVersion = libs.versions.jacoco.get()
+    }
+
     lint {
         // Treat lint warnings as a signal worth fixing: fail the build on them.
         warningsAsErrors = true
         abortOnError = true
+        // "A newer version is available" checks would fail the build whenever a new
+        // release comes out. Dependabot proposes those updates instead.
+        disable += setOf("AndroidGradlePluginVersion", "GradleDependency")
+    }
+}
+
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+// Coverage gate for the testing rules in CLAUDE.md, measured from local tests.
+// Runs as part of `check`, so `./gradlew build` enforces it.
+val coverageClassJars = objects.listProperty<RegularFile>()
+val coverageClassDirs = objects.listProperty<Directory>()
+val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>(
+    "jacocoDebugCoverageVerification"
+) {
+    group = "verification"
+    description = "Fails if any class has less than 80% line coverage from local tests."
+    dependsOn("testDebugUnitTest")
+    // Generated Android classes, and @Preview functions (kept in *Preview.kt files),
+    // which only run in Android Studio.
+    val exclusions = listOf(
+        "**/R.class",
+        "**/R\$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*PreviewKt*.class"
+    )
+    val fileTrees = objects
+    classDirectories.setFrom(
+        coverageClassJars,
+        coverageClassDirs.map { dirs ->
+            dirs.map { dir -> fileTrees.fileTree().setDir(dir).exclude(exclusions) }
+        }
+    )
+    executionData.setFrom(
+        layout.buildDirectory.file(
+            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+        )
+    )
+    violationRules {
+        // Every class needs at least 80% line coverage.
+        rule {
+            element = "CLASS"
+            limit {
+                counter = "LINE"
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}
+
+// Testing rules from CLAUDE.md that a text search can catch.
+val checkTestRules = tasks.register<Exec>("checkTestRules") {
+    group = "verification"
+    description = "Fails on skipped tests, logic classes without tests, or mocking libraries."
+    commandLine(rootProject.file("scripts/check-test-rules.sh"))
+}
+
+tasks.named("check") { dependsOn(jacocoDebugCoverageVerification, checkTestRules) }
+
+// Count code that runs under Robolectric, which loads app classes in its own class loader.
+// https://github.com/robolectric/robolectric/issues/2230
+tasks.withType<Test>().configureEach {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+
+androidComponents {
+    onVariants(selector().withName("debug")) { variant ->
+        variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+            .use(jacocoDebugCoverageVerification)
+            .toGet(ScopedArtifact.CLASSES, { coverageClassJars }, { coverageClassDirs })
     }
 }
 
@@ -54,6 +152,12 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.
+    testImplementation(libs.androidx.espresso.core)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -35,10 +35,11 @@ Run these from the repository root.
 
 | Command | What it does |
 |---|---|
-| `./gradlew build` | Compiles, runs unit tests, lint, and the formatting check. This is the command CI runs. |
+| `./gradlew build` | Compiles, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. This is the command CI runs. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
-| `./gradlew test` | Runs local unit tests only (`app/src/test`). |
+| `./gradlew test` | Runs local tests only (`app/src/test`). |
+| `./gradlew createDebugUnitTestCoverageReport` | Writes an HTML coverage report for local tests to `app/build/reports/coverage/test/debug/index.html`. |
 | `./gradlew lint` | Runs Android lint. Reports are in `app/build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
 | `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. |
@@ -93,6 +94,9 @@ produces the same result the build expects. It replaces IDE-specific
 
 **Lint as a gate.** `warningsAsErrors = true` makes lint warnings fail the
 build, so problems get fixed when they appear instead of piling up.
+The one exception is lint's "a newer version is available" checks, which are
+turned off: they would fail the build whenever a new release came out, and
+Dependabot proposes those updates instead.
 
 ## Project layout
 
@@ -101,6 +105,11 @@ build, so problems get fixed when they appear instead of piling up.
 ├── .editorconfig               Formatting rules for ktlint and Android Studio
 ├── build.gradle.kts            Root build: plugins for all modules, Spotless
 ├── settings.gradle.kts         Module list and repositories
+├── .github/
+│   ├── workflows/ci.yml        Continuous integration
+│   └── dependabot.yml          Weekly dependency update pull requests
+├── scripts/
+│   └── check-test-rules.sh     Testing-rule checks run by the build
 ├── gradle.properties           Gradle and Android build settings
 ├── gradle/
 │   ├── libs.versions.toml      Version catalog
@@ -109,18 +118,58 @@ build, so problems get fixed when they appear instead of piling up.
     ├── build.gradle.kts        App module: SDK levels, dependencies, lint
     └── src/
         ├── main/               App code, manifest, resources
-        ├── test/               Local unit tests (run on your computer)
+        ├── test/               Local tests (run on your computer)
         └── androidTest/        Instrumented tests (run on a device)
 ```
 
 ## Tests: local vs instrumented
 
-- **Local unit tests** (`app/src/test`) run on your computer's JVM in seconds.
-  Put as much logic as possible where these can test it.
-- **Instrumented tests** (`app/src/androidTest`) run on an emulator or device
-  and can exercise real Android and Compose UI. They are slower and need a
-  device, so `./gradlew build` does not run them.
+- **Local tests** (`app/src/test`) run on your computer's JVM in seconds. Plain
+  logic tests need nothing else. Tests of activities and Compose UI use
+  [Robolectric](https://developer.android.com/training/testing/local-tests/robolectric),
+  which simulates Android on the JVM: mark the class with
+  `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
+  device.
+- **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.
+  Use them only for behavior that needs a real Android runtime. They are slower
+  and need a device, so `./gradlew build` does not run them. There are none yet.
 
 To run instrumented tests, create a virtual device once in Android Studio
 (**Device Manager → Create Virtual Device**), start it, then run
 `./gradlew connectedAndroidTest`.
+
+## Testing rules the build enforces
+
+`CLAUDE.md` lists the project's testing best practices. `./gradlew build` fails
+when it can detect that one is broken:
+
+| Rule | Check |
+|---|---|
+| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
+| Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
+| Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. |
+| Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
+
+The other rules need a person to judge, so they are checked in code review:
+tests check meaningful behavior, UI tests cover every state and interaction,
+screenshot tests only where needed, and local tests are preferred. The same goes
+for "coverage must not decrease": the build only knows the current coverage, not
+what it was before. If a change lowers coverage, say so and why in the pull
+request; `./gradlew createDebugUnitTestCoverageReport` shows the numbers.
+
+When coverage fails, the error names the class. Run
+`./gradlew createDebugUnitTestCoverageReport` and open the report to see which
+lines no test runs.
+
+## Continuous integration
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
+pushes to `main`. Its **Build** job runs `./gradlew build`, the same command as
+locally, and must pass before a pull request can merge. CI does not run
+instrumented tests yet, because there are none; an emulator job will be added
+with the first test that needs a real device.
+
+Dependabot (`.github/dependabot.yml`) checks weekly for newer versions of the
+libraries and plugins in the version catalog, the Gradle wrapper, and the
+GitHub Actions used by CI, and opens a pull request for each update. CI runs on
+those pull requests like any other.
