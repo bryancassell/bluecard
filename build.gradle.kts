@@ -9,15 +9,18 @@ plugins {
 // Code formatting. `./gradlew spotlessCheck` fails on unformatted code (and runs
 // as part of `./gradlew check` and `./gradlew build`); `./gradlew spotlessApply`
 // fixes it. ktlint reads its style settings from .editorconfig.
+//
+// Targets starting with "**/" already skip build, .gradle and .git folders while
+// scanning. Don't add targetExclude("**/build/**"): Spotless scans the whole
+// project, build folders included, to evaluate it, which races with other tasks
+// writing to app/build (#16).
 spotless {
     kotlin {
         target("**/*.kt")
-        targetExclude("**/build/**")
         ktlint(libs.versions.ktlint.get())
     }
     kotlinGradle {
         target("**/*.gradle.kts")
-        targetExclude("**/build/**")
         ktlint(libs.versions.ktlint.get())
     }
 }
