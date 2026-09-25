@@ -1,4 +1,6 @@
 # Dependabot opens pull requests to update dependencies once a week.
+# Minor and patch updates arrive together in one pull request per ecosystem;
+# each major update gets its own pull request, since it may need code changes.
 version: 2
 updates:
   # Version catalog (gradle/libs.versions.toml) and the Gradle wrapper.
@@ -6,9 +8,17 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    groups:
+      gradle-minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
 
   # Actions used in .github/workflows.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-minor-and-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]

@@ -181,5 +181,7 @@ repository settings and the "Protect main" ruleset.
 
 Dependabot (`.github/dependabot.yml`) checks weekly for newer versions of the
 libraries and plugins in the version catalog, the Gradle wrapper, and the
-GitHub Actions used by CI, and opens a pull request for each update. CI runs on
-those pull requests like any other.
+GitHub Actions used by CI. Minor and patch updates arrive together in one pull
+request per ecosystem (Gradle, GitHub Actions); each major update gets its own
+pull request, since it may need code changes. CI runs on those pull requests
+like any other.
