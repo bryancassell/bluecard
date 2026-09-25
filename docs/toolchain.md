@@ -174,6 +174,11 @@ When the job fails, the lint and test reports are attached to the run as a
 CI does not run instrumented tests yet, because there are none; an emulator job
 will be added with the first test that needs a real device.
 
+Pull requests are squash-merged: each one becomes a single commit on `main`,
+titled with the PR title and described by the PR description, so write both as
+a summary of the whole change. Other merge methods are turned off in the
+repository settings and the "Protect main" ruleset.
+
 Dependabot (`.github/dependabot.yml`) checks weekly for newer versions of the
 libraries and plugins in the version catalog, the Gradle wrapper, and the
 GitHub Actions used by CI, and opens a pull request for each update. CI runs on
