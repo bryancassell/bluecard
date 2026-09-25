@@ -11,11 +11,12 @@ permissions:
   contents: read
 
 # A newer push to the same pull request cancels the run still in progress for
-# the older commit, since only the latest result matters. Runs on main are never
-# cancelled, so every commit on main gets its own result.
+# the older commit, since only the latest result matters. head_ref is only set
+# for pull requests; every other run (pushes to main) gets its own group from
+# run_id, so it is never cancelled and every commit on main gets a result.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
