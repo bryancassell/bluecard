@@ -10,6 +10,14 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same pull request cancels the run still in progress for
+# the older commit, since only the latest result matters. head_ref is only set
+# for pull requests; every other run (pushes to main) gets its own group from
+# run_id, so it is never cancelled and every commit on main gets a result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build
