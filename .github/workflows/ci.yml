@@ -29,5 +29,15 @@ jobs:
         with:
           cache-provider: basic
 
-      # Compile, unit tests, coverage minimums, test rules, lint and formatting.
+      # Compile, unit tests, coverage, test rules, lint and formatting.
       - run: ./gradlew build
+
+      # On failure, keep the HTML reports (lint, tests) and raw test results so
+      # they can be downloaded from the run's summary page.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+            app/build/test-results/

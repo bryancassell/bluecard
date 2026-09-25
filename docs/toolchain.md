@@ -165,9 +165,14 @@ lines no test runs.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
 pushes to `main`. Its **Build** job runs `./gradlew build`, the same command as
-locally, and must pass before a pull request can merge. CI does not run
-instrumented tests yet, because there are none; an emulator job will be added
-with the first test that needs a real device.
+locally, and must pass before a pull request can merge.
+
+When the job fails, the lint and test reports are attached to the run as a
+`reports` artifact: open the failed run on GitHub and download it from the
+**Artifacts** section of the summary page.
+
+CI does not run instrumented tests yet, because there are none; an emulator job
+will be added with the first test that needs a real device.
 
 Dependabot (`.github/dependabot.yml`) checks weekly for newer versions of the
 libraries and plugins in the version catalog, the Gradle wrapper, and the
