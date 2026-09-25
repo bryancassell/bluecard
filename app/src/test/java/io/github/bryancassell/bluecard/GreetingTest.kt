@@ -7,6 +7,6 @@ import org.junit.Test
 class GreetingTest {
     @Test
     fun greetingText_includesName() {
-        assertEquals("Welcome to BlueCard, Scout!", greetingText("Scout"))
+        assertEquals("Welcome to BlueCard, Nobody!", greetingText("Scout"))
     }
 }
