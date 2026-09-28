@@ -156,6 +156,8 @@ class MainActivityTest {
     fun profileRemoved_showsOnboardingAgain() {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
+        // Home's button also says "Merit badges", so check that Home is gone.
+        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
 
         fakeProfileRepository.removeProfile()
