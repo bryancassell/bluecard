@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,7 +15,8 @@ import org.xmlpull.v1.XmlPullParser
 
 /**
  * Checks that each set of Auto Backup rules covers the files where the app keeps the
- * scout's data, so moving or renaming one can't silently drop it from backups.
+ * scout's data. DatabaseModuleTest and ProfileModuleTest check that the app really stores
+ * its data in those files.
  * https://developer.android.com/identity/data/autobackup#IncludingFiles
  */
 @RunWith(AndroidJUnit4::class)
@@ -22,48 +24,81 @@ class BackupRulesTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val database = context.getDatabasePath(BlueCardDatabase.NAME)
 
-    // Room uses write-ahead logging, so recent changes may be only in the -wal file.
+    // Room uses write-ahead logging, so recent changes may be only in the -wal file. The
+    // -shm file isn't needed: SQLite rebuilds it from the -wal file.
+    // https://www.sqlite.org/walformat.html
     private val dataFiles = listOf(
         database,
         File("${database.path}-wal"),
-        File("${database.path}-shm"),
         context.preferencesDataStoreFile(DataStoreProfileRepository.FILE_NAME)
     )
 
+    private val fullBackupContent = readRules(R.xml.backup_rules, "full-backup-content")
+    private val cloudBackup = readRules(R.xml.data_extraction_rules, "cloud-backup")
+    private val deviceTransfer = readRules(R.xml.data_extraction_rules, "device-transfer")
+
     @Test
     fun fullBackupContent_backsUpScoutData() {
-        assertBacksUpDataFiles(readRules(R.xml.backup_rules, "full-backup-content"))
+        assertBacksUpDataFiles(fullBackupContent)
     }
 
     @Test
     fun cloudBackup_backsUpScoutData() {
-        assertBacksUpDataFiles(readRules(R.xml.data_extraction_rules, "cloud-backup"))
+        assertBacksUpDataFiles(cloudBackup)
     }
 
     @Test
     fun deviceTransfer_backsUpScoutData() {
-        assertBacksUpDataFiles(readRules(R.xml.data_extraction_rules, "device-transfer"))
+        assertBacksUpDataFiles(deviceTransfer)
+    }
+
+    @Test
+    fun ruleSets_areTheSame() {
+        // Every Android version and kind of backup copies the same files.
+        assertEquals(fullBackupContent, cloudBackup)
+        assertEquals(fullBackupContent, deviceTransfer)
+    }
+
+    @Test
+    fun ruleSets_haveNoConditions() {
+        // Backup isn't limited to phones that can encrypt it (ARCHITECTURE.md, "Backup").
+        for (ruleSet in listOf(fullBackupContent, cloudBackup, deviceTransfer)) {
+            assertEquals(emptyList<String>(), ruleSet.conditions)
+        }
     }
 
     /** An `<include>` or `<exclude>` rule, resolved to the file or directory it names. */
     private data class Rule(val include: Boolean, val file: File)
 
+    /** The rules in one section, and any conditions that limit when backup happens. */
+    private data class RuleSet(val rules: Set<Rule>, val conditions: List<String>)
+
     /** Reads the rules inside the [section] element of the XML resource [id]. */
-    private fun readRules(id: Int, section: String): List<Rule> {
-        val parser = context.resources.getXml(id)
-        val rules = mutableListOf<Rule>()
-        var inSection = false
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.name == section) {
-                inSection = parser.eventType == XmlPullParser.START_TAG
-            } else if (inSection && parser.eventType == XmlPullParser.START_TAG) {
-                val directory = domainDirectory(parser.getAttributeValue(null, "domain"))
-                val path = parser.getAttributeValue(null, "path")
-                rules += Rule(parser.name == "include", File(directory, path).canonicalFile)
+    private fun readRules(id: Int, section: String): RuleSet =
+        context.resources.getXml(id).use { parser ->
+            val rules = mutableSetOf<Rule>()
+            val conditions = mutableListOf<String>()
+            var found = false
+            var inSection = false
+            while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                if (parser.name == section) inSection = parser.eventType == XmlPullParser.START_TAG
+                if (!inSection || parser.eventType != XmlPullParser.START_TAG) continue
+                found = true
+                if (parser.getAttributeValue(null, "disableIfNoEncryptionCapabilities") == "true") {
+                    conditions += "disableIfNoEncryptionCapabilities"
+                }
+                parser.getAttributeValue(null, "requireFlags")?.let { flags ->
+                    conditions += "requireFlags=$flags"
+                }
+                if (parser.name != section) {
+                    val directory = domainDirectory(parser.getAttributeValue(null, "domain"))
+                    val path = parser.getAttributeValue(null, "path")
+                    rules += Rule(parser.name == "include", File(directory, path).canonicalFile)
+                }
             }
+            assertTrue("The backup rules have no <$section> section", found)
+            RuleSet(rules, conditions)
         }
-        return rules
-    }
 
     private fun domainDirectory(domain: String): File = when (domain) {
         "database" -> database.parentFile!!
@@ -75,9 +110,9 @@ class BackupRulesTest {
      * With no `<include>` rules everything is backed up; otherwise only what they name.
      * `<exclude>` rules then remove files from that set.
      */
-    private fun assertBacksUpDataFiles(rules: List<Rule>) {
-        val includes = rules.filter { it.include }
-        val excludes = rules.filterNot { it.include }
+    private fun assertBacksUpDataFiles(ruleSet: RuleSet) {
+        val includes = ruleSet.rules.filter { it.include }
+        val excludes = ruleSet.rules.filterNot { it.include }
         for (file in dataFiles.map { it.canonicalFile }) {
             val included = includes.isEmpty() || includes.any { file.startsWith(it.file) }
             val excluded = excludes.any { file.startsWith(it.file) }

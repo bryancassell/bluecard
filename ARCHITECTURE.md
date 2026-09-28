@@ -356,11 +356,13 @@ leave a stale completion state behind.
   and the scout can turn it off in system settings. The manifest sets
   `android:allowBackup` explicitly, as the Auto Backup docs
   [recommend](https://developer.android.com/identity/data/autobackup#EnablingAutoBackup),
-  and its backup rules include only the Room database and the DataStore files,
-  for both cloud backup and device-to-device transfer
-  (`res/xml/data_extraction_rules.xml` on Android 12 and higher,
-  `res/xml/backup_rules.xml` on Android 11 and lower). Other files, such as
-  libraries' own state, are left out. Backup isn't limited to phones that can
+  and its backup rules include only the databases directory (the Room database
+  and its write-ahead log files) and the DataStore directory, for both cloud
+  backup and device-to-device transfer (`res/xml/data_extraction_rules.xml` on
+  Android 12 and higher, `res/xml/backup_rules.xml` on Android 11 and lower).
+  Other files, such as libraries' state files in `files/`, are left out. A
+  library that stores data in either directory would be backed up too, so check
+  new dependencies for that. Backup isn't limited to phones that can
   encrypt it end to end (`disableIfNoEncryptionCapabilities`), so every scout
   who keeps backup on can move their records. The cache directory where PDFs
   are generated needs no rule: Auto Backup always excludes it.
@@ -417,7 +419,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Versions in the first release | Current requirements only; versions are kept from the first release on | Project decision for the initial app; keeping every version from then on protects existing users' recorded progress |
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
-| Backup | Android Auto Backup on, with rules that include only the database and DataStore files; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |

@@ -199,11 +199,12 @@ line.
 
 The app's data is copied to a new phone by Android's
 [Auto Backup](https://developer.android.com/identity/data/autobackup). Two files
-in `app/src/main/res/xml/` list what is backed up, which is only the Room
-database and the DataStore files: `data_extraction_rules.xml` for Android 12
-and higher, and `backup_rules.xml` for Android 11 and lower. Keep the rules in
-the two files the same. Lint checks the files' syntax, and `BackupRulesTest`
-checks that each set of rules covers the files where the app stores data.
+in `app/src/main/res/xml/` list what is backed up, which is only the databases
+directory and the DataStore directory: `data_extraction_rules.xml` for Android
+12 and higher, and `backup_rules.xml` for Android 11 and lower. Keep the rules
+in the two files the same. Lint checks the files' syntax. `BackupRulesTest`
+checks that each set of rules covers the files where the app stores data, that
+all sets match, and that none limits backup to phones that can encrypt it.
 
 After changing the rules, or where the app stores data, check a real backup and
 restore on an emulator, as described in
@@ -212,10 +213,18 @@ Use an emulator, not your own phone: these commands change the device's backup
 settings. If a phone is also connected, point `adb` at the emulator first with
 `export ANDROID_SERIAL=emulator-5554`.
 
-1. Install the debug app (`./gradlew installDebug`), open it, enter some data,
+1. Note the emulator's backup settings, to put them back at the end: whether
+   backup is enabled, and which transport is selected (marked `*`).
+
+   ```sh
+   adb shell bmgr enabled
+   adb shell bmgr list transports
+   ```
+
+2. Install the debug app (`./gradlew installDebug`), open it, enter some data,
    then press Home. Don't force-stop the app: backup skips a stopped app, and
    `bmgr` reports "Backup is not allowed".
-2. Back up with the local test transport, then uninstall and reinstall the app,
+3. Back up with the local test transport, then uninstall and reinstall the app,
    which restores the backup:
 
    ```sh
@@ -227,18 +236,21 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    adb install -t app/build/outputs/apk/debug/app-debug.apk
    ```
 
-3. List the restored files. Expect `databases/bluecard.db` and
-   `files/datastore/profile.preferences_pb`, and nothing in `cache/`. Then open
-   the app and check that the data is back.
+4. List the restored files. Expect `files/datastore/profile.preferences_pb`,
+   and nothing in `cache/`. Expect `databases/bluecard.db` too if you recorded
+   progress: the app creates the database the first time it saves progress.
+   Then open the app and check that the data is back.
 
    ```sh
    adb shell run-as io.github.bryancassell.bluecard find . -type f
    ```
 
-4. Put the emulator's backup settings back:
+5. Put back the settings you noted in step 1: select the transport that was
+   marked `*`, remove the test transport's settings, and turn backup off again
+   if it was off.
 
    ```sh
-   adb shell bmgr transport com.google.android.gms/.backup.BackupTransportService
+   adb shell bmgr transport <transport noted in step 1>
    adb shell settings delete secure backup_local_transport_parameters
    adb shell bmgr enable false
    ```
@@ -249,7 +261,8 @@ follows the `<device-transfer>` rules. To check it, use the
 from the same page, on an emulator with a Google Play system image. The script
 switches back to the Google backup transport before reinstalling, because that
 transport performs the restore; if it's skipped, logcat shows "Can't restore
-from D2d Transport".
+from D2d Transport". Its cleanup selects that transport again but leaves backup
+on, so turn backup off afterwards if it was off in step 1.
 
 ## Continuous integration
 
