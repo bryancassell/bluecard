@@ -46,7 +46,8 @@ them.
    version or a tracker is a change to the catalog file only.
 8. **Testable with local tests and fakes.** Every class with logic can be
    tested on the JVM against fake dependencies, so the app can meet the testing
-   rules in `CLAUDE.md`, including 80% line coverage for each class.
+   rules in `CLAUDE.md` and the build's check of 80% line coverage for each
+   class.
 9. **Follows Android's architecture guidance**, meaning the items its
    recommendations page marks "strongly recommended" (see
    [Architecture approach](#architecture-approach)).
@@ -62,12 +63,12 @@ part of the app.
 |---|---|
 | Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
 | The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
-| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. Once a badge has a second requirements version, a catalog test checks that every version shipped before is still in the file. |
-| A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files and exclude the cache directory. |
+| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge ID and requirements version shipped before is still in the file. |
+| A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
 | A new tracker needs only catalog data (req. 7) | A test renders and stores a tracker defined only in test catalog data. |
-| The code stays testable as it grows (req. 8) | Every class, except generated code, has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test is skipped, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
+| The code stays testable as it grows (req. 8) | Every class, except generated code and `@Preview` functions, has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
 
 ## Architecture approach
@@ -342,8 +343,9 @@ leave a stale completion state behind.
   scout's Google Drive (end-to-end encrypted on Android 9+ with a screen lock)
   and restored on a new phone. This is Android's system backup, not app sync,
   and the scout can turn it off in system settings. The manifest will set
-  backup rules explicitly, as the Auto Backup docs recommend, and exclude the
-  cache directory where PDFs are generated.
+  backup rules explicitly, as the Auto Backup docs recommend. The cache
+  directory where PDFs are generated needs no rule: Auto Backup always
+  excludes it.
 
 ## Testing approach
 
