@@ -14,3 +14,6 @@ data object Home : NavKey
 
 @Serializable
 data object Badges : NavKey
+
+@Serializable
+data object DataManagement : NavKey

@@ -19,6 +19,7 @@ class BlueCardAppTest {
         composeTestRule.setContent { BlueCardApp(MainActivityUiState.Loading) }
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        // Home's button that opens the badge list.
+        composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 }

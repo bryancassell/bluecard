@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -16,10 +17,19 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dagger.hilt.android.testing.UninstallModules
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
+import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -33,11 +43,11 @@ import org.robolectric.annotation.Config
 /**
  * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
  * application, so test modules (such as TestDispatchersModule) replace real ones, and
- * this class swaps the profile for a fake. Each test starts with no saved profile, as on
- * a fresh install.
+ * this class swaps the repositories for fakes. Each test starts with no saved profile, as
+ * on a fresh install, a one-badge catalog and no progress.
  */
 @HiltAndroidTest
-@UninstallModules(ProfileModule::class)
+@UninstallModules(ProfileModule::class, DataModule::class)
 @Config(application = HiltTestApplication::class)
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -55,6 +65,30 @@ class MainActivityTest {
     @JvmField
     val profileRepository: ProfileRepository = fakeProfileRepository
 
+    @BindValue
+    @JvmField
+    val catalogRepository: CatalogRepository = FakeCatalogRepository(
+        listOf(
+            MeritBadge(
+                id = "camping",
+                name = "Camping",
+                summary = "Our summary of Camping.",
+                officialUrl = "https://www.scouting.org/merit-badges/camping/",
+                eagleRequired = true,
+                requirementVersions = listOf(
+                    RequirementsVersion(
+                        LocalDate.of(2026, 1, 1),
+                        listOf(Requirement("1", "First."))
+                    )
+                )
+            )
+        )
+    )
+
+    @BindValue
+    @JvmField
+    val progressRepository: ProgressRepository = FakeProgressRepository()
+
     private lateinit var scenario: ActivityScenario<MainActivity>
 
     @After
@@ -71,6 +105,10 @@ class MainActivityTest {
         runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launch()
     }
+
+    // Home's heading is the scout's name. Matching the heading leaves out the Onboarding
+    // field that holds the same name.
+    private fun home() = composeTestRule.onNode(isHeading() and hasText("Alex Scout"))
 
     private fun field(label: String) = composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
@@ -92,7 +130,7 @@ class MainActivityTest {
         launch()
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        home().assertDoesNotExist()
     }
 
     @Test
@@ -111,7 +149,7 @@ class MainActivityTest {
 
         completeOnboarding()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         assertEquals(
             Profile("Alex Scout", "123"),
@@ -124,7 +162,7 @@ class MainActivityTest {
         launch()
         completeOnboarding()
         // Back on Onboarding would also leave the app, so check that Home is showing first.
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
 
         // Home is the start destination, so there is nothing to go back to.
         pressBackUnconditionally()
@@ -140,7 +178,7 @@ class MainActivityTest {
         // As when the app returns after a save that finished in the background.
         runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
     }
 
@@ -148,7 +186,7 @@ class MainActivityTest {
     fun launchWithProfile_goesStraightToHome() {
         launchWithProfile()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
     }
 
@@ -157,7 +195,7 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
         // Home's button also says "Merit badges", so check that Home is gone.
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
 
         fakeProfileRepository.removeProfile()
@@ -172,7 +210,7 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
     }
 
@@ -186,6 +224,47 @@ class MainActivityTest {
 
         pressBack()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun home_showsProgressAsSoonAsItChanges() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("You haven't started any merit badges yet.")
+            .assertIsDisplayed()
+
+        // As when the scout starts a badge on another screen.
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+
+        composeTestRule.onNodeWithText("Your merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("0 of 1 completed").assertIsDisplayed()
+    }
+
+    @Test
+    fun openDataManagement_showsDataManagement() {
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Manage data").performClick()
+
+        home().assertDoesNotExist()
+        composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
+    }
+
+    @Test
+    fun back_fromDataManagement_returnsHome() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Manage data").performClick()
+        // As in back_fromBadges_returnsHome, let the new entry settle before pressing back.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        home().assertIsDisplayed()
     }
 }
