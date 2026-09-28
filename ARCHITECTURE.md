@@ -22,9 +22,11 @@ What the architecture must provide, beyond the features listed in
 [`PRD.md`](PRD.md). The rest of this document describes how the design meets
 them.
 
-1. **All data stays on the device.** There is no server, account or sync. The
-   only network use is opening official Scouting America pages in the browser,
-   which the browser does, so the app itself needs no internet access.
+1. **All data stays on the device.** There is no server, account or app sync.
+   Android's own Auto Backup, which the scout can turn off, is the only
+   automatic copy off the device (see req. 4). The only network use is opening
+   official Scouting America pages in the browser, which the browser does, so
+   the app itself needs no internet access.
 2. **The merit badge catalog is our own data.** Scouting America's
    [terms of use](https://www.scouting.org/legal/terms-and-conditions/) forbid
    reusing or compiling their content without written permission, so the app
@@ -57,7 +59,7 @@ part of the app.
 
 | Outcome | Checks |
 |---|---|
-| Everything works with no network connection, and no data leaves the device unless the scout shares or exports it (req. 1) | The merged manifest declares no `INTERNET` permission. |
+| Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
 | The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
 | An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. Once a badge has a second requirements version, a catalog test checks that every version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files and exclude the cache directory. |
