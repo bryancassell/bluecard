@@ -190,7 +190,9 @@ switch to the new ones.
 - **Switching versions** on a badge that already has requirement progress asks
   for confirmation and starts that badge's requirement progress fresh (counselor
   details stay). Requirement numbers can mean different things in different
-  versions, so old entries aren't carried over automatically.
+  versions, so old entries aren't carried over automatically. Carrying progress
+  over is a possible future improvement
+  ([#29](https://github.com/bryancassell/bluecard/issues/29)).
 - **Versions offered vs. versions kept.** The picker offers the newest version
   and the one before it, which covers scouts who started shortly before a
   change. The catalog keeps every version it has ever shipped, so a badge
@@ -202,9 +204,9 @@ simple in-memory filter). It is updated by releasing a new app version. It is
 kept separate from the progress database, so catalog updates never require
 database migrations.
 
-**Authoring.** Writing summaries for about 140 badges is a content project of
-its own. The catalog can grow in stages, starting with the Eagle-required
-badges; the app treats whatever is in the file as the full list. Each badge
+**Authoring.** The project writes all the summaries itself. That is about 140
+badges, a content project of its own, so the catalog grows in stages, in no
+particular order; the app treats whatever is in the file as the full list. Each badge
 whose requirements changed recently also needs its previous version written,
 so scouts who started before the change can pick it. A unit test
 validates the file (unique IDs, valid structure, a URL for every badge).
@@ -262,7 +264,10 @@ completion date.
   version, the profile and all progress) to a user-chosen file with
   `ActivityResultContracts.CreateDocument`. Import reads one with
   `ActivityResultContracts.OpenDocument`, checks the format version and
-  validates it before changing anything.
+  validates it before changing anything. Import **replaces all current data**
+  (profile and progress), after a warning that says so. Merging an import
+  with existing data is a possible future improvement
+  ([#28](https://github.com/bryancassell/bluecard/issues/28)).
 - **Backup.** Android [Auto Backup](https://developer.android.com/identity/data/autobackup)
   stays on, so the Room database and DataStore file are backed up to the
   scout's Google Drive (end-to-end encrypted on Android 9+ with a screen lock)
@@ -313,15 +318,9 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |
+| Import | Replaces all current data, after a warning | Simplest correct behavior; merging is tracked in [#28](https://github.com/bryancassell/bluecard/issues/28) |
+| Switching requirement versions | Resets the badge's requirement progress, after a confirmation; counselor details stay | Avoids attaching entries to the wrong requirement; carrying progress over is tracked in [#29](https://github.com/bryancassell/bluecard/issues/29) |
 | Requirement changes | Shipped with regular app updates, with no urgency or monitoring process | The app doesn't need to reflect Scouting America's changes immediately. Scouts who already started may keep the previous requirements anyway. Until an update ships, a scout starting a changed badge sees the previous requirements in the app; the linked official page has the current ones |
 | Links to scouting.org | Link each badge to its official page | The PRD asks for links. Scouting America's [terms of use](https://www.scouting.org/legal/terms-and-conditions/), read literally, restrict linking without permission; resolve before release ([#26](https://github.com/bryancassell/bluecard/issues/26)) |
 | Official wording | Use Scouting America's terms, such as "Merit Badge" and "Eagle Scout", and official badge names | Clearest for scouts. These are Scouting America [trademarks](https://licensingbsa.org/trademarks/); resolve before release ([#27](https://github.com/bryancassell/bluecard/issues/27)) |
-
-## Open questions
-
-- **Catalog authoring.** Who writes the summaries, and in what order.
-- **Import behavior.** Whether import replaces all current data (simplest) or
-  merges with it.
-- **Carrying progress across versions.** Switching versions starts a badge's
-  requirement progress fresh. A later feature could let the scout copy
-  individual entries across by hand.
