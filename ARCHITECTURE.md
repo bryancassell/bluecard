@@ -16,15 +16,56 @@ completion dates and comments, larger trackers such as exercise logs, or a
 whole badge completed on a prior date. A finished badge can be turned into a PDF
 report to save or share. All progress can be cleared, exported and imported.
 
-Two constraints shape the design:
+## Requirements
 
-- **All data stays on the device.** There is no server, account or sync. The only
-  network use is opening official Scouting America pages in the browser.
-- **The merit badge catalog is our own data.** Scouting America's
-  [terms of use](https://www.scouting.org/legal/terms-and-conditions/) forbid
-  reusing or compiling their content without written permission, so the app
-  ships its own short summaries of each requirement and links to the official
-  page for the full text (see [Merit badge catalog](#merit-badge-catalog)).
+What the architecture must provide, beyond the features listed in
+[`PRD.md`](PRD.md). The rest of this document describes how the design meets
+them.
+
+1. **All data stays on the device.** There is no server, account or sync. The
+   only network use is opening official Scouting America pages in the browser,
+   which the browser does, so the app itself needs no internet access.
+2. **The merit badge catalog is our own data.** Scouting America's
+   [terms of use](https://www.scouting.org/legal/terms-and-conditions/) forbid
+   reusing or compiling their content without written permission, so the app
+   ships its own short summaries of each requirement and links to the official
+   page for the full text (see [Merit badge catalog](#merit-badge-catalog)).
+3. **Recorded progress survives app updates.** Catalog changes, including new
+   requirement versions, ship with app updates and never lose a scout's
+   progress or attach it to the wrong requirements.
+4. **Recorded progress survives a phone change**, through Android Auto Backup
+   and the app's own export and import.
+5. **No special permissions.** Saving, sharing, exporting and importing go
+   through the system file picker and Sharesheet, so the app requests no
+   storage or other runtime permissions.
+6. **Runs on Android 8.0 (API 26) and later**, the project's `minSdk`.
+7. **New catalog content needs no new code.** Adding a badge, a requirements
+   version or a tracker is a change to the catalog file only.
+8. **Testable with local tests and fakes.** Every class with logic can be
+   tested on the JVM against fake dependencies, so the app can meet the testing
+   rules in `CLAUDE.md`, including 80% line coverage for each class.
+9. **Follows Android's architecture guidance**, meaning the items its
+   recommendations page marks "strongly recommended" (see
+   [Architecture approach](#architecture-approach)).
+
+## Success criteria
+
+The architecture is working when these outcomes hold. Each outcome lists the
+checks that show it. Checks marked **(CI)** already run in `./gradlew build` on
+every pull request; the others are added by the feature issue that builds that
+part of the app.
+
+| Outcome | Checks |
+|---|---|
+| Everything works with no network connection, and no data leaves the device unless the scout shares or exports it (req. 1) | The merged manifest declares no `INTERNET` permission. |
+| The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
+| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. Once a badge has a second requirements version, a catalog test checks that every version shipped before is still in the file. |
+| A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files and exclude the cache directory. |
+| The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
+| The app runs on API 26 and later (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
+| A new tracker needs only catalog data (req. 7) | A test renders and stores a tracker defined only in test catalog data. |
+| The code stays testable as it grows (req. 8) | Every class, except generated code, has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test is skipped, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
+| The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
 
 ## Architecture approach
 
