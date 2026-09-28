@@ -7,7 +7,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import io.github.bryancassell.bluecard.ui.badges.BadgesScreen
+import io.github.bryancassell.bluecard.ui.badge.BadgeDetailScreen
+import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
 import io.github.bryancassell.bluecard.ui.home.HomeRoute
 import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 
@@ -38,7 +39,8 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         entryProvider = entryProvider {
             entry<Onboarding> { OnboardingRoute() }
             entry<Home> { HomeRoute(onOpenBadges = { backStack.add(Badges) }) }
-            entry<Badges> { BadgesScreen() }
+            entry<Badges> { BadgesRoute(onOpenBadge = { backStack.add(BadgeDetail(it)) }) }
+            entry<BadgeDetail> { BadgeDetailScreen() }
         }
     )
 }

@@ -16,10 +16,19 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dagger.hilt.android.testing.UninstallModules
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
+import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -33,11 +42,11 @@ import org.robolectric.annotation.Config
 /**
  * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
  * application, so test modules (such as TestDispatchersModule) replace real ones, and
- * this class swaps the profile for a fake. Each test starts with no saved profile, as on
- * a fresh install.
+ * this class swaps the repositories for fakes. Each test starts with no saved profile, as
+ * on a fresh install, and a one-badge catalog.
  */
 @HiltAndroidTest
-@UninstallModules(ProfileModule::class)
+@UninstallModules(ProfileModule::class, DataModule::class)
 @Config(application = HiltTestApplication::class)
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -54,6 +63,30 @@ class MainActivityTest {
     @BindValue
     @JvmField
     val profileRepository: ProfileRepository = fakeProfileRepository
+
+    @BindValue
+    @JvmField
+    val catalogRepository: CatalogRepository = FakeCatalogRepository(
+        listOf(
+            MeritBadge(
+                id = "camping",
+                name = "Camping",
+                summary = "Our summary of Camping.",
+                officialUrl = "https://www.scouting.org/merit-badges/camping/",
+                eagleRequired = true,
+                requirementVersions = listOf(
+                    RequirementsVersion(
+                        LocalDate.of(2026, 1, 1),
+                        listOf(Requirement("1", "First."))
+                    )
+                )
+            )
+        )
+    )
+
+    @BindValue
+    @JvmField
+    val progressRepository: ProgressRepository = FakeProgressRepository()
 
     private lateinit var scenario: ActivityScenario<MainActivity>
 
@@ -174,6 +207,48 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Home").assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+    }
+
+    @Test
+    fun openBadges_showsProgress() {
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        composeTestRule.onNodeWithText("In progress").assertIsDisplayed()
+    }
+
+    @Test
+    fun openBadge_showsBadgeDetail() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        composeTestRule.onNodeWithText("Camping").performClick()
+
+        composeTestRule.onNodeWithText("Badge detail").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Camping").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromBadgeDetail_returnsToBadges() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Camping").performClick()
+        // As in back_fromBadges_returnsHome, let the new entry settle before pressing back.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Badge detail").assertDoesNotExist()
     }
 
     @Test

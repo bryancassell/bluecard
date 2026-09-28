@@ -273,6 +273,11 @@ it, a requirements change adds a version and keeps the ones already shipped
 validates the file (unique IDs, valid structure, a URL for every badge). The
 format and authoring rules are in [`docs/catalog.md`](docs/catalog.md).
 
+**Discontinued badges.** Not handled yet: the Badges list shows every badge in
+the catalog. Once shipped, a badge can't be removed, because progress is stored
+against it, so hiding discontinued badges from scouts who haven't started them
+is tracked in [#55](https://github.com/bryancassell/bluecard/issues/55).
+
 **Requirement IDs.** A requirement is identified by its official number (such
 as `4c(1)`), which is unique within a requirements version. Progress is stored
 against the badge ID, its version and the requirement number; because switching
@@ -318,7 +323,8 @@ leave a stale completion state behind.
   is no profile, the navigation root shows Onboarding instead of the back stack;
   once the profile is saved, it shows the back stack, which starts at Home.
 - **Browse and search.** The Badges ViewModel combines the catalog with the
-  search query and the scout's progress (to show state on each badge).
+  search query and the scout's progress, to show each badge as not started, in
+  progress or completed (see Data model: completion is derived).
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so

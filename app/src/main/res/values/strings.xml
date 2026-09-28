@@ -10,4 +10,8 @@
     <string name="home_title">Home</string>
     <string name="home_open_badges">Merit badges</string>
     <string name="badges_title">Merit badges</string>
+    <string name="badges_eagle_required">Eagle-required</string>
+    <string name="badges_in_progress">In progress</string>
+    <string name="badges_completed">Completed</string>
+    <string name="badge_detail_title">Badge detail</string>
 </resources>

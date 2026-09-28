@@ -1,0 +1,170 @@
+package io.github.bryancassell.bluecard.ui.badges
+
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import java.time.LocalDate
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+
+class BadgesViewModelTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val version = LocalDate.of(2026, 1, 1)
+    private val started = LocalDate.of(2026, 3, 1)
+    private val day = LocalDate.of(2026, 4, 15)
+
+    private fun badge(id: String, name: String, eagleRequired: Boolean = false) = MeritBadge(
+        id = id,
+        name = name,
+        summary = "Our summary of $name.",
+        officialUrl = "https://www.scouting.org/merit-badges/$id/",
+        eagleRequired = eagleRequired,
+        requirementVersions = listOf(
+            RequirementsVersion(
+                version,
+                listOf(Requirement("1", "First."), Requirement("2", "Second."))
+            )
+        )
+    )
+
+    private val camping = badge("camping", "Camping", eagleRequired = true)
+    private val chess = badge("chess", "Chess")
+
+    private val catalogRepository = FakeCatalogRepository(listOf(chess, camping))
+    private val progressRepository = FakeProgressRepository()
+
+    // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
+    // viewModelScope uses.
+    private val viewModel by lazy { BadgesViewModel(catalogRepository, progressRepository) }
+
+    /**
+     * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
+     * coroutines testing guide: https://developer.android.com/kotlin/coroutines/test#statein
+     */
+    private fun TestScope.startCollecting(viewModel: BadgesViewModel) {
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.uiState.collect {} }
+    }
+
+    private fun status(badgeId: String): BadgeStatus {
+        val state = viewModel.uiState.value as BadgesUiState.Ready
+        return state.badges.single { it.id == badgeId }.status
+    }
+
+    @Test
+    fun uiState_whileCatalogLoads_isLoading() = runTest {
+        val loading = object : CatalogRepository {
+            override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
+        }
+        val viewModel = BadgesViewModel(loading, progressRepository)
+        startCollecting(viewModel)
+
+        assertEquals(BadgesUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_listsEveryBadgeAlphabetically_withEagleFlag() = runTest {
+        startCollecting(viewModel)
+
+        assertEquals(
+            BadgesUiState.Ready(
+                listOf(
+                    BadgeListItem(
+                        "camping",
+                        "Camping",
+                        eagleRequired = true,
+                        BadgeStatus.NotStarted
+                    ),
+                    BadgeListItem("chess", "Chess", eagleRequired = false, BadgeStatus.NotStarted)
+                )
+            ),
+            viewModel.uiState.value
+        )
+    }
+
+    @Test
+    fun uiState_sortsIgnoringCase() = runTest {
+        catalogRepository.badges = listOf(
+            badge("c", "Cooking"),
+            badge("b", "bird Study"),
+            badge("a", "Archery")
+        )
+        startCollecting(viewModel)
+
+        val state = viewModel.uiState.value as BadgesUiState.Ready
+        assertEquals(listOf("Archery", "bird Study", "Cooking"), state.badges.map { it.name })
+    }
+
+    @Test
+    fun status_startedBadge_isInProgress() = runTest {
+        progressRepository.startBadge("camping", version, started)
+        progressRepository.markRequirementCompleted("camping", "1", day)
+        startCollecting(viewModel)
+
+        assertEquals(BadgeStatus.InProgress, status("camping"))
+        assertEquals(BadgeStatus.NotStarted, status("chess"))
+    }
+
+    @Test
+    fun status_everyRequirementDone_isCompleted() = runTest {
+        progressRepository.startBadge("camping", version, started)
+        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "2", null)
+        startCollecting(viewModel)
+
+        assertEquals(BadgeStatus.Completed, status("camping"))
+    }
+
+    @Test
+    fun status_completedOnPriorDate_isCompleted() = runTest {
+        progressRepository.startBadge("camping", version, started)
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        startCollecting(viewModel)
+
+        assertEquals(BadgeStatus.Completed, status("camping"))
+    }
+
+    @Test
+    fun status_versionMissingFromCatalog_isInProgress() = runTest {
+        progressRepository.startBadge("camping", LocalDate.of(2025, 1, 1), started)
+        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "2", day)
+        startCollecting(viewModel)
+
+        assertEquals(BadgeStatus.InProgress, status("camping"))
+    }
+
+    @Test
+    fun status_updatesWhenProgressChanges() = runTest {
+        startCollecting(viewModel)
+        assertEquals(BadgeStatus.NotStarted, status("camping"))
+
+        progressRepository.startBadge("camping", version, started)
+        assertEquals(BadgeStatus.InProgress, status("camping"))
+
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        assertEquals(BadgeStatus.Completed, status("camping"))
+
+        progressRepository.clearBadge("camping")
+        assertEquals(BadgeStatus.NotStarted, status("camping"))
+    }
+
+    @Test
+    fun progressForBadgeNotInCatalog_isIgnored() = runTest {
+        progressRepository.startBadge("retired-badge", version, started)
+        startCollecting(viewModel)
+
+        val state = viewModel.uiState.value as BadgesUiState.Ready
+        assertEquals(listOf("camping", "chess"), state.badges.map { it.id })
+    }
+}
