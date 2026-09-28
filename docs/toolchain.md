@@ -72,14 +72,15 @@ Symbol Processing) runs code generators at compile time.
 uses it to generate the dependency injection code; its Gradle plugin wires the
 generated code into the app. Libraries whose generators run through KSP are
 added with `ksp(...)` (for app code) or `kspTest(...)` (for local tests) in
-`app/build.gradle.kts`. Room also generates its database code with KSP.
+`app/build.gradle.kts`. Room also generates its database code with KSP. KSP
+versions are no longer tied to Kotlin versions, but Hilt must be 2.60.1 or newer
+to work with Kotlin 2.4.
 
 **Room schemas** (`app/schemas/`). The Room Gradle plugin writes each database
 version's schema there as JSON. Commit these files: they show schema changes in
 review, and future migration tests read them. Changing an entity means raising
 the database version and adding a migration, or existing users' data can't be
-opened. KSP versions are no longer tied to Kotlin versions, but
-Hilt must be 2.60.1 or newer to work with Kotlin 2.4.
+opened.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
 version lives in this one file. Build scripts refer to entries by alias, such

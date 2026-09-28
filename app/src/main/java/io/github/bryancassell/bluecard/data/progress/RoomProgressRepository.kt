@@ -23,33 +23,44 @@ class RoomProgressRepository @Inject constructor(private val dao: ProgressDao) :
         startedDate: LocalDate
     ) = dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate))
 
-    override suspend fun setCounselor(badgeId: String, counselor: Counselor?) =
+    override suspend fun setCounselor(badgeId: String, counselor: Counselor?) = ifStarted(badgeId) {
         dao.updateCounselor(badgeId, counselor?.name, counselor?.phone, counselor?.email)
+    }
 
     override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) =
-        dao.updateCompletedOnPriorDate(badgeId, date)
+        ifStarted(badgeId) { dao.updateCompletedOnPriorDate(badgeId, date) }
 
     override suspend fun markRequirementCompleted(
         badgeId: String,
         number: String,
         completedDate: LocalDate?
-    ) = dao.updateRequirement(badgeId, number) {
-        it.copy(completed = true, completedDate = completedDate)
+    ) = ifStarted(badgeId) {
+        dao.updateRequirement(badgeId, number) {
+            it.copy(completed = true, completedDate = completedDate)
+        }
     }
 
     override suspend fun markRequirementNotCompleted(badgeId: String, number: String) =
-        dao.updateRequirement(badgeId, number) { it.copy(completed = false, completedDate = null) }
+        ifStarted(badgeId) {
+            dao.updateRequirement(badgeId, number) {
+                it.copy(completed = false, completedDate = null)
+            }
+        }
 
     override suspend fun setRequirementComment(badgeId: String, number: String, comment: String?) =
-        dao.updateRequirement(badgeId, number) { it.copy(comment = comment?.ifBlank { null }) }
+        ifStarted(badgeId) {
+            dao.updateRequirement(badgeId, number) { it.copy(comment = comment?.ifBlank { null }) }
+        }
 
     override suspend fun addTrackerEntry(
         badgeId: String,
         number: String,
         values: Map<String, String>
-    ): Long = dao.insertTrackerEntry(
-        TrackerEntry(badgeId = badgeId, requirementNumber = number, values = values)
-    )
+    ): Long = ifStarted(badgeId) {
+        dao.insertTrackerEntry(
+            TrackerEntry(badgeId = badgeId, requirementNumber = number, values = values)
+        )
+    }
 
     override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) =
         dao.updateTrackerEntry(id, values)
@@ -62,4 +73,7 @@ class RoomProgressRepository @Inject constructor(private val dao: ProgressDao) :
     override suspend fun clearBadge(badgeId: String) = dao.deleteBadge(badgeId)
 
     override suspend fun clearAll() = dao.deleteAll()
+
+    private suspend fun <T> ifStarted(badgeId: String, action: suspend () -> T): T =
+        if (dao.isStarted(badgeId)) action() else throw notStartedError(badgeId)
 }

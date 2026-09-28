@@ -4,8 +4,12 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Everything the scout records about their badges. A badge must be started with
- * [startBadge] before anything else is recorded for it.
+ * Everything the scout records about their badges.
+ *
+ * A badge must be started with [startBadge] before anything is recorded for it: the
+ * other functions that record progress throw [IllegalStateException] for a badge that
+ * hasn't been started. Clearing, and changing or deleting a tracker entry that doesn't
+ * exist, do nothing.
  */
 interface ProgressRepository {
     /** Every started badge, with its progress, updated whenever anything changes. */
@@ -46,3 +50,7 @@ interface ProgressRepository {
     /** Clears all progress. The scout's profile is stored elsewhere and stays. */
     suspend fun clearAll()
 }
+
+/** What [ProgressRepository] implementations throw when a badge hasn't been started. */
+fun notStartedError(badgeId: String) =
+    IllegalStateException("Badge \"$badgeId\" hasn't been started")

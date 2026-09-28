@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.fail
 import org.junit.Test
 
 /**
@@ -201,7 +202,49 @@ abstract class ProgressRepositoryContract {
         flow.first { details -> details!!.requirements.any { it.completed } }
     }
 
+    @Test
+    fun recordingOnAnUnstartedBadge_failsAndRecordsNothing() = test {
+        val writes: List<Pair<String, suspend () -> Unit>> = listOf(
+            "setCounselor" to { repository.setCounselor(UNSTARTED, Counselor(name = "Pat")) },
+            "setCompletedOnPriorDate" to { repository.setCompletedOnPriorDate(UNSTARTED, day) },
+            "markRequirementCompleted" to {
+                repository.markRequirementCompleted(UNSTARTED, "1", day)
+            },
+            "markRequirementNotCompleted" to {
+                repository.markRequirementNotCompleted(UNSTARTED, "1")
+            },
+            "setRequirementComment" to { repository.setRequirementComment(UNSTARTED, "1", "Hi") },
+            "addTrackerEntry" to {
+                repository.addTrackerEntry(UNSTARTED, "7a", mapOf("minutes" to "30"))
+            }
+        )
+        for ((name, write) in writes) {
+            try {
+                write()
+                fail("$name should fail for a badge that hasn't been started")
+            } catch (e: IllegalStateException) {
+                assertEquals(notStartedError(UNSTARTED).message, e.message)
+            }
+        }
+        assertNull(progress(UNSTARTED))
+    }
+
+    @Test
+    fun clearingOrChangingSomethingMissing_doesNothing() = test {
+        repository.markRequirementCompleted(BADGE, "1", day)
+        val before = progress()
+
+        repository.clearRequirement(UNSTARTED, "1")
+        repository.clearBadge(UNSTARTED)
+        repository.updateTrackerEntry(999, mapOf("minutes" to "30"))
+        repository.deleteTrackerEntry(999)
+
+        assertNull(progress(UNSTARTED))
+        assertEquals(before, progress())
+    }
+
     private companion object {
         const val BADGE = "personal-fitness"
+        const val UNSTARTED = "archery"
     }
 }

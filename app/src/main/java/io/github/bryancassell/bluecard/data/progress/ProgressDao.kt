@@ -19,6 +19,9 @@ interface ProgressDao {
     @Query("SELECT * FROM badge_progress WHERE badgeId = :badgeId")
     fun observe(badgeId: String): Flow<BadgeProgressDetails?>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM badge_progress WHERE badgeId = :badgeId)")
+    suspend fun isStarted(badgeId: String): Boolean
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertBadge(badge: BadgeProgress)
 

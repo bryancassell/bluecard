@@ -71,6 +71,7 @@ class FakeProgressRepository : ProgressRepository {
         number: String,
         values: Map<String, String>
     ): Long {
+        requireStarted(badgeId)
         val id = nextTrackerEntryId++
         updateBadge(badgeId) {
             it.copy(trackerEntries = it.trackerEntries + TrackerEntry(id, badgeId, number, values))
@@ -95,6 +96,7 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     override suspend fun clearRequirement(badgeId: String, number: String) {
+        if (badgeId !in badges.value) return
         updateBadge(badgeId) { details ->
             details.copy(
                 requirements = details.requirements.filterNot { it.requirementNumber == number },
@@ -111,14 +113,17 @@ class FakeProgressRepository : ProgressRepository {
         badges.value = emptyMap()
     }
 
+    private fun requireStarted(badgeId: String) {
+        if (badgeId !in badges.value) throw notStartedError(badgeId)
+    }
+
+    /** Changes a started badge; throws, as Room does, if it hasn't been started. */
     private fun updateBadge(
         badgeId: String,
         change: (BadgeProgressDetails) -> BadgeProgressDetails
     ) {
-        badges.update { all ->
-            val details = all[badgeId] ?: return@update all
-            all + (badgeId to change(details))
-        }
+        requireStarted(badgeId)
+        badges.update { all -> all + (badgeId to change(all.getValue(badgeId))) }
     }
 
     private fun updateEachBadge(change: (BadgeProgressDetails) -> BadgeProgressDetails) {
