@@ -145,7 +145,8 @@ Dependabot proposes those updates instead.
   run with `@Config(application = HiltTestApplication::class)` and use
   `HiltAndroidRule` (see `MainActivityTest`). In those tests, `@TestInstallIn`
   modules in `app/src/test` replace production modules, for example
-  `TestDispatchersModule` swaps in a test coroutine dispatcher.
+  `TestDispatchersModule` binds every dispatcher to one shared `TestDispatcher`,
+  which a test can `@Inject` to control virtual time.
 - **`MainDispatcherRule`** (`app/src/test/.../testing/`) replaces the main
   dispatcher in ViewModel tests, as in Android's
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
