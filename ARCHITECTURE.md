@@ -181,9 +181,14 @@ while scouts who started before it may finish on the previous requirements or
 switch to the new ones.
 
 - **Each badge has requirement versions**, identified by effective date.
+- **The first release ships only current requirements.** Each badge starts
+  with a single version: its requirements when the release is prepared. Older
+  requirements aren't written for it. From then on, when a badge's requirements
+  change, the app update adds the new version and keeps the old one, so existing
+  users can stay on theirs.
 - **Each badge the scout works on records its version.** It defaults to the
-  newest version. The scout can pick an older one, for example if they started
-  the badge before using the app.
+  newest version. When the catalog has an older version of the badge, the scout
+  can pick it, for example if they started the badge before a change.
 - **A badge stays on its version** when an app update brings newer
   requirements, so recorded progress keeps matching its requirements. The scout
   can switch it to the newest version themselves.
@@ -194,8 +199,8 @@ switch to the new ones.
   over is a possible future improvement
   ([#29](https://github.com/bryancassell/bluecard/issues/29)).
 - **Versions offered vs. versions kept.** The picker offers the newest version
-  and the one before it, which covers scouts who started shortly before a
-  change. The catalog keeps every version it has ever shipped, so a badge
+  and the one before it (when the catalog has one), which covers scouts who
+  started shortly before a change. The catalog keeps every version it has ever shipped, so a badge
   already on an older version never loses its requirements.
 
 **Shipping and updates.** The catalog is a JSON file bundled in `assets/` and
@@ -206,9 +211,10 @@ database migrations.
 
 **Authoring.** The project writes all the summaries itself. That is about 140
 badges, a content project of its own, so the catalog grows in stages, in no
-particular order; the app treats whatever is in the file as the full list. Each badge
-whose requirements changed recently also needs its previous version written,
-so scouts who started before the change can pick it. A unit test
+particular order; the app treats whatever is in the file as the full list.
+Before the first release, each badge gets only its current requirements; after
+it, a requirements change adds a version and keeps the ones already shipped
+(see Versions above). A unit test
 validates the file (unique IDs, valid structure, a URL for every badge). The
 format and authoring rules are in [`docs/catalog.md`](docs/catalog.md).
 
@@ -324,7 +330,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |
-| Requirement versions | Newest by default; the scout can pick the previous version; a badge stays on its version until the scout switches it | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
+| Requirement versions | Newest by default; the scout can pick the previous version when the catalog has one; a badge stays on its version until the scout switches it | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
+| Versions in the first release | Current requirements only; versions are kept from the first release on | Project decision for the initial app; keeping every version from then on protects existing users' recorded progress |
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |

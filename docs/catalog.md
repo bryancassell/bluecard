@@ -13,9 +13,12 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 - **Match the official structure.** Requirement numbers, nesting and "do N of the
   following" counts must match the official page exactly, because scouts and
   counselors use those numbers.
-- **Previous versions.** If a badge's requirements changed recently, also write
-  the version before the change, so scouts who started earlier can pick it.
-  Keep every version already in the file: scouts' progress may depend on it.
+- **Current requirements only, until the first release.** Write each badge's
+  current requirements as its only version.
+- **After the first release, keep every shipped version.** When a badge's
+  requirements change, add the new version and leave the old one in place:
+  scouts' progress is saved against it. Never remove a shipped version or
+  change its requirement numbers or structure.
 
 ## Format
 
