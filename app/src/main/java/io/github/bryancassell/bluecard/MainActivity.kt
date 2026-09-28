@@ -5,16 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.bryancassell.bluecard.ui.navigation.BlueCardNavDisplay
-import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
+import io.github.bryancassell.bluecard.ui.BlueCardApp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,16 +25,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            BlueCardTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    (uiState as? MainActivityUiState.Ready)?.let {
-                        BlueCardNavDisplay(
-                            startDestination = it.startDestination,
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                }
-            }
+            BlueCardApp(uiState)
         }
     }
 }

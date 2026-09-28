@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Module
@@ -25,7 +24,7 @@ object DataStoreModule {
     fun provideProfileDataStore(
         @ApplicationContext context: Context,
         @IoDispatcher ioDispatcher: CoroutineDispatcher
-    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+    ): DataStore<Preferences> = DataStoreProfileRepository.createDataStore(
         scope = CoroutineScope(ioDispatcher + SupervisorJob()),
         produceFile = { context.preferencesDataStoreFile(DataStoreProfileRepository.FILE_NAME) }
     )

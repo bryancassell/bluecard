@@ -57,7 +57,8 @@ class MainActivityTest {
 
     @After
     fun tearDown() {
-        scenario.close()
+        // A test can fail before it launches the activity.
+        if (::scenario.isInitialized) scenario.close()
     }
 
     private fun launch() {
@@ -101,7 +102,8 @@ class MainActivityTest {
         field("Name").performTextInput("Alex Scout")
         field("Unit number").performTextInput("123")
         composeTestRule.onNodeWithText("Get started").performClick()
-        composeTestRule.waitForIdle()
+        // Back on Onboarding would also leave the app, so check that Home is showing first.
+        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
 
         // Onboarding was replaced by Home, so there is nothing to go back to.
         pressBackUnconditionally()
@@ -110,6 +112,18 @@ class MainActivityTest {
         var isFinishing = false
         scenario.onActivity { isFinishing = it.isFinishing }
         assertTrue(isFinishing)
+    }
+
+    @Test
+    fun profileSaved_whileOnboardingShows_movesToHome() {
+        launch()
+        composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
+
+        // As when a restored back stack still shows Onboarding after the save finished.
+        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+
+        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
     }
 
     @Test

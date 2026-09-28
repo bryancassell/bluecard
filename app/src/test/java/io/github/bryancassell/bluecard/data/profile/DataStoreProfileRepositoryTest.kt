@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.data.profile
 
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -26,7 +26,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     /** A new DataStore on [file], as a new app process would create. */
     private fun newRepository(): DataStoreProfileRepository {
         val job = Job().also { jobs += it }
-        val dataStore = PreferenceDataStoreFactory.create(
+        val dataStore = DataStoreProfileRepository.createDataStore(
             scope = CoroutineScope(Dispatchers.IO + job),
             produceFile = { file }
         )
@@ -47,5 +47,19 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
         jobs.single().cancelAndJoin()
 
         assertEquals(Profile("Alex Scout", "123"), newRepository().observeProfile().first())
+    }
+
+    @Test
+    fun corruptedFile_isReplacedWithNoProfile() = runTest {
+        repository.saveProfile(Profile("Alex Scout", "123"))
+        jobs.single().cancelAndJoin()
+        file.writeText("not a preferences file")
+        val reopened = newRepository()
+
+        assertNull(reopened.observeProfile().first())
+
+        // Saving works again, so the scout can redo Onboarding.
+        reopened.saveProfile(Profile("Alex Scout", "123"))
+        assertEquals(Profile("Alex Scout", "123"), reopened.observeProfile().first())
     }
 }

@@ -6,6 +6,7 @@
     <string name="onboarding_unit_number">Unit number</string>
     <string name="onboarding_required">Required</string>
     <string name="onboarding_save">Get started</string>
+    <string name="onboarding_save_failed">Couldn\'t save. Try again.</string>
     <string name="home_title">Home</string>
     <string name="home_open_badges">Merit badges</string>
     <string name="badges_title">Merit badges</string>

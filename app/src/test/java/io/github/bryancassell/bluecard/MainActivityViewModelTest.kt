@@ -4,8 +4,6 @@ import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
-import io.github.bryancassell.bluecard.ui.navigation.Home
-import io.github.bryancassell.bluecard.ui.navigation.Onboarding
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -42,18 +40,29 @@ class MainActivityViewModelTest {
     }
 
     @Test
-    fun uiState_withoutProfile_startsAtOnboarding() = runTest {
+    fun uiState_withoutProfile_isNotSetUp() = runTest {
         val viewModel = MainActivityViewModel(FakeProfileRepository())
         startCollecting(viewModel)
 
-        assertEquals(MainActivityUiState.Ready(Onboarding), viewModel.uiState.value)
+        assertEquals(MainActivityUiState.Ready(isSetUp = false), viewModel.uiState.value)
     }
 
     @Test
-    fun uiState_withProfile_startsAtHome() = runTest {
+    fun uiState_withProfile_isSetUp() = runTest {
         val viewModel = MainActivityViewModel(FakeProfileRepository(Profile("Alex Scout", "123")))
         startCollecting(viewModel)
 
-        assertEquals(MainActivityUiState.Ready(Home), viewModel.uiState.value)
+        assertEquals(MainActivityUiState.Ready(isSetUp = true), viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProfileIsSaved_becomesSetUp() = runTest {
+        val repository = FakeProfileRepository()
+        val viewModel = MainActivityViewModel(repository)
+        startCollecting(viewModel)
+
+        repository.saveProfile(Profile("Alex Scout", "123"))
+
+        assertEquals(MainActivityUiState.Ready(isSetUp = true), viewModel.uiState.value)
     }
 }

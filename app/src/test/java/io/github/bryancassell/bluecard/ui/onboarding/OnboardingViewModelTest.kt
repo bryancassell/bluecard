@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
+import androidx.lifecycle.SavedStateHandle
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
@@ -22,7 +23,10 @@ class OnboardingViewModelTest {
     val mainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
 
     private val repository = FakeProfileRepository()
-    private val viewModel = OnboardingViewModel(repository)
+    private val savedStateHandle = SavedStateHandle()
+    private val viewModel = OnboardingViewModel(repository, savedStateHandle)
+
+    private val state get() = viewModel.uiState.value
 
     private fun fillIn(name: String = "Alex Scout", unitNumber: String = "123") {
         viewModel.onNameChange(name)
@@ -31,33 +35,45 @@ class OnboardingViewModelTest {
 
     @Test
     fun uiState_startsEmptyAndCannotSave() {
-        assertEquals(OnboardingUiState(), viewModel.uiState.value)
-        assertFalse(viewModel.uiState.value.canSave)
+        assertEquals(OnboardingUiState(), state)
+        assertTrue(state.canEdit)
+        assertFalse(state.canSave)
     }
 
     @Test
     fun typing_updatesFields() {
         fillIn()
 
-        assertEquals("Alex Scout", viewModel.uiState.value.name)
-        assertEquals("123", viewModel.uiState.value.unitNumber)
-        assertTrue(viewModel.uiState.value.canSave)
+        assertEquals("Alex Scout", state.name)
+        assertEquals("123", state.unitNumber)
+        assertTrue(state.canSave)
+    }
+
+    @Test
+    fun typing_isRestoredFromSavedState() {
+        fillIn()
+
+        // A new ViewModel with the same saved state, as after the system stopped the app.
+        val restored = OnboardingViewModel(repository, savedStateHandle).uiState.value
+
+        assertEquals("Alex Scout", restored.name)
+        assertEquals("123", restored.unitNumber)
     }
 
     @Test
     fun canSave_needsBothFields() {
         fillIn(name = "Alex Scout", unitNumber = "")
-        assertFalse(viewModel.uiState.value.canSave)
+        assertFalse(state.canSave)
 
         fillIn(name = "", unitNumber = "123")
-        assertFalse(viewModel.uiState.value.canSave)
+        assertFalse(state.canSave)
     }
 
     @Test
     fun canSave_blankIsEmpty() {
         fillIn(name = "  ", unitNumber = "123")
 
-        assertFalse(viewModel.uiState.value.canSave)
+        assertFalse(state.canSave)
     }
 
     @Test
@@ -70,17 +86,19 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun save_showsSavingThenSaved() = runTest {
+    fun save_showsSavingThenSaved_andLocksTheForm() = runTest {
         fillIn()
         viewModel.save()
 
-        assertTrue(viewModel.uiState.value.isSaving)
-        assertFalse(viewModel.uiState.value.canSave)
+        assertEquals(SaveStatus.Saving, state.saveStatus)
+        assertFalse(state.canEdit)
+        assertFalse(state.canSave)
 
         advanceUntilIdle()
 
-        assertFalse(viewModel.uiState.value.isSaving)
-        assertTrue(viewModel.uiState.value.isSaved)
+        assertEquals(SaveStatus.Saved, state.saveStatus)
+        assertFalse(state.canEdit)
+        assertFalse(state.canSave)
     }
 
     @Test
@@ -99,6 +117,25 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         assertNull(repository.observeProfile().first())
-        assertFalse(viewModel.uiState.value.isSaved)
+        assertEquals(SaveStatus.Editing, state.saveStatus)
+    }
+
+    @Test
+    fun save_whenItFails_showsFailedAndAllowsRetry() = runTest {
+        repository.failSaves = true
+        fillIn()
+        viewModel.save()
+        advanceUntilIdle()
+
+        assertEquals(SaveStatus.Failed, state.saveStatus)
+        assertTrue(state.canEdit)
+        assertTrue(state.canSave)
+
+        repository.failSaves = false
+        viewModel.save()
+        advanceUntilIdle()
+
+        assertEquals(SaveStatus.Saved, state.saveStatus)
+        assertEquals(Profile("Alex Scout", "123"), repository.observeProfile().first())
     }
 }

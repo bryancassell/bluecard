@@ -1,10 +1,15 @@
 package io.github.bryancassell.bluecard.data.profile
 
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -31,5 +36,20 @@ class DataStoreProfileRepository @Inject constructor(
 
         private val NAME = stringPreferencesKey("name")
         private val UNIT_NUMBER = stringPreferencesKey("unit_number")
+
+        /**
+         * Creates the profile's DataStore. A corrupted file is replaced with an empty one,
+         * so the scout goes through Onboarding again instead of the app failing on every
+         * launch; without a handler, DataStore throws on every read. See "Handle file
+         * corruption" in https://developer.android.com/topic/libraries/architecture/datastore
+         */
+        fun createDataStore(
+            scope: CoroutineScope,
+            produceFile: () -> File
+        ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+            corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+            scope = scope,
+            produceFile = produceFile
+        )
     }
 }

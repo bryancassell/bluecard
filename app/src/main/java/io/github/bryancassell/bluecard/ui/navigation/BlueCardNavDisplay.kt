@@ -1,9 +1,9 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -15,11 +15,20 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 /**
  * The app's navigation root: shows the screen on top of the back stack.
  *
- * [startDestination] is only read the first time; after that the saved back stack wins.
+ * Starts on Onboarding until the scout's profile is saved ([isSetUp]), then on Home.
  */
 @Composable
-fun BlueCardNavDisplay(startDestination: NavKey, modifier: Modifier = Modifier) {
-    val backStack = rememberNavBackStack(startDestination)
+fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
+    val backStack = rememberNavBackStack(if (isSetUp) Home else Onboarding)
+    // Once a profile is saved, Home replaces Onboarding, so back from Home leaves the app.
+    // Following the profile, instead of a signal from the Onboarding screen, also covers
+    // a saved back stack restored after the save finished in the background.
+    LaunchedEffect(isSetUp) {
+        if (isSetUp && Onboarding in backStack) {
+            backStack.add(Home)
+            backStack.remove(Onboarding)
+        }
+    }
     NavDisplay(
         backStack = backStack,
         modifier = modifier,
@@ -31,13 +40,7 @@ fun BlueCardNavDisplay(startDestination: NavKey, modifier: Modifier = Modifier) 
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
-            // Replace Onboarding with Home, so back from Home leaves the app.
-            entry<Onboarding> {
-                OnboardingRoute(onSaved = {
-                    backStack.add(Home)
-                    backStack.remove(Onboarding)
-                })
-            }
+            entry<Onboarding> { OnboardingRoute() }
             entry<Home> { HomeRoute(onOpenBadges = { backStack.add(Badges) }) }
             entry<Badges> { BadgesScreen() }
         }
