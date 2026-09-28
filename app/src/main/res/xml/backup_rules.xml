@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Auto Backup rules for Android 11 and lower. Android 12 and higher use
+    data_extraction_rules.xml instead; keep the two files' rules the same.
+
+    Only the scout's data is backed up: the Room database (with its write-ahead
+    log files) and the DataStore files. The cache directory, where PDF reports
+    are generated, is never backed up, so it needs no rule.
+    https://developer.android.com/identity/data/autobackup
+-->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="file" path="datastore/" />
+</full-backup-content>
