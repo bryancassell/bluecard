@@ -4,6 +4,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -55,9 +56,8 @@ class HomeScreenTest {
         ProgressBarRangeInfo.Indeterminate
     )
 
-    private fun eagleBar(fraction: Float) = SemanticsMatcher.expectValue(
-        SemanticsProperties.ProgressBarRangeInfo,
-        ProgressBarRangeInfo(fraction, 0f..1f)
+    private val anyProgressBar = SemanticsMatcher.keyIsDefined(
+        SemanticsProperties.ProgressBarRangeInfo
     )
 
     @Test
@@ -102,8 +102,15 @@ class HomeScreenTest {
 
         text("Eagle-required").assert(isHeading()).assertIsDisplayed()
         text("4 of 13 completed").assertIsDisplayed()
-        composeTestRule.onNode(eagleBar(4f / 13)).assertIsDisplayed()
         text("2 in progress").assertIsDisplayed()
+    }
+
+    @Test
+    fun eagleProgressBar_isHiddenFromScreenReaders() {
+        show(withProgress)
+
+        // Screen readers get "4 of 13 completed" instead of a percentage without context.
+        composeTestRule.onAllNodes(anyProgressBar).assertCountEquals(0)
     }
 
     @Test

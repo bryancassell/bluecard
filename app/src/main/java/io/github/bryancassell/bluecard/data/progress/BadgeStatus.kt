@@ -11,7 +11,7 @@ enum class BadgeStatus {
 
 /**
  * The scout's status on this badge, from its recorded [progress] (null if it hasn't been
- * started). Completion is checked against the requirements version the badge was started on.
+ * started). Completion is checked against the requirements version the badge is worked on.
  */
 fun MeritBadge.status(progress: BadgeProgressDetails?): BadgeStatus {
     if (progress == null) return BadgeStatus.NotStarted

@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard
 
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -110,6 +113,14 @@ class MainActivityTest {
     // field that holds the same name.
     private fun home() = composeTestRule.onNode(isHeading() and hasText("Alex Scout"))
 
+    // Without a profile, Home would show only its loading indicator.
+    private fun homeLoading() = composeTestRule.onNode(
+        SemanticsMatcher.expectValue(
+            SemanticsProperties.ProgressBarRangeInfo,
+            ProgressBarRangeInfo.Indeterminate
+        )
+    )
+
     private fun field(label: String) = composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
     private fun completeOnboarding() {
@@ -131,6 +142,7 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
         home().assertDoesNotExist()
+        homeLoading().assertDoesNotExist()
     }
 
     @Test

@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -98,27 +99,38 @@ fun HomeScreen(
 
 @Composable
 private fun Summary(uiState: HomeUiState.Ready) {
-    SummaryCard(title = stringResource(R.string.home_badges_title)) {
-        Text(countText(R.plurals.home_completed, uiState.badges.completed))
-        Text(countText(R.plurals.home_in_progress, uiState.badges.inProgress))
-    }
-    // A catalog with no Eagle-required badges has no Eagle progress to show.
-    if (uiState.eagleTotal > 0) {
-        SummaryCard(title = stringResource(R.string.home_eagle_title)) {
-            Text(
-                pluralStringResource(
-                    R.plurals.home_eagle_completed,
-                    uiState.eagle.completed,
-                    uiState.eagle.completed,
-                    uiState.eagleTotal
-                )
-            )
-            LinearProgressIndicator(
-                progress = { uiState.eagle.completed.toFloat() / uiState.eagleTotal },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(countText(R.plurals.home_in_progress, uiState.eagle.inProgress))
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SummaryCard(title = stringResource(R.string.home_badges_title)) {
+            Text(countText(R.plurals.home_completed, uiState.badges.completed))
+            Text(countText(R.plurals.home_in_progress, uiState.badges.inProgress))
         }
+        // A catalog with no Eagle-required badges has no Eagle progress to show.
+        if (uiState.eagleTotal > 0) {
+            EagleCard(uiState)
+        }
+    }
+}
+
+@Composable
+private fun EagleCard(uiState: HomeUiState.Ready) {
+    SummaryCard(title = stringResource(R.string.home_eagle_title)) {
+        Text(
+            pluralStringResource(
+                R.plurals.home_eagle_completed,
+                uiState.eagle.completed,
+                uiState.eagle.completed,
+                uiState.eagleTotal
+            )
+        )
+        LinearProgressIndicator(
+            progress = { uiState.eagle.completed.toFloat() / uiState.eagleTotal },
+            // The text above says the same, so screen readers skip the bar rather than
+            // read a percentage out of context.
+            modifier = Modifier
+                .fillMaxWidth()
+                .clearAndSetSemantics {}
+        )
+        Text(countText(R.plurals.home_in_progress, uiState.eagle.inProgress))
     }
 }
 
