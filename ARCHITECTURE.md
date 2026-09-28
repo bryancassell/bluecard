@@ -313,19 +313,11 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Links to scouting.org | Link each badge to its official page | The PRD asks for links. Scouting America's [terms of use](https://www.scouting.org/legal/terms-and-conditions/), read literally, restrict linking without permission; resolve before release ([#26](https://github.com/bryancassell/bluecard/issues/26)) |
+| Official wording | Use Scouting America's terms, such as "Merit Badge" and "Eagle Scout", and official badge names | Clearest for scouts. These are Scouting America [trademarks](https://licensingbsa.org/trademarks/); resolve before release ([#27](https://github.com/bryancassell/bluecard/issues/27)) |
 
 ## Open questions
 
-- **Linking to scouting.org.** The PRD asks for links to the official
-  requirements, but Scouting America's
-  [terms of use](https://www.scouting.org/legal/terms-and-conditions/), read
-  literally, prohibit linking to any page on the site "without our express
-  permission." Decide whether to ask Scouting America (bsa.legal@scouting.org)
-  or accept the risk before release.
-- **Names and trademarks.** "Merit Badge" and "Eagle Scout" are listed as
-  Scouting America [trademarks](https://licensingbsa.org/trademarks/). Decide
-  how the app describes itself (for example, a "not affiliated with or endorsed
-  by Scouting America" statement) before release.
 - **Catalog authoring.** Who writes the summaries, in what order, and how
   annual requirement changes are tracked.
 - **Import behavior.** Whether import replaces all current data (simplest) or
