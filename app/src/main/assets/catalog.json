@@ -1,0 +1,382 @@
+{
+  "formatVersion": 1,
+  "badges": [
+    {
+      "id": "citizenship-in-the-world",
+      "name": "Citizenship in the World",
+      "summary": "Learn how nations govern, cooperate and relate to one another.",
+      "officialUrl": "https://www.scouting.org/merit-badges/citizenship-in-the-world/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain what being a citizen of the world means to you."
+            },
+            {
+              "number": "2",
+              "summary": "Explain how people become U.S. citizens, and compare rights across countries."
+            },
+            {
+              "number": "3",
+              "summary": "Look at how events and geography shape nations.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Show how a current event affects a country's relationships."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Show how a country's land and climate shape its economy."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explore how nations work together.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain how international law helps settle disputes."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Follow a world trade issue and why cooperation matters."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Describe the work of two international organizations.",
+                  "requiredCount": 2,
+                  "children": [
+                    {
+                      "number": "4c(1)",
+                      "summary": "The United Nations and UNICEF."
+                    },
+                    {
+                      "number": "4c(2)",
+                      "summary": "The International Court of Justice."
+                    },
+                    {
+                      "number": "4c(3)",
+                      "summary": "Interpol."
+                    },
+                    {
+                      "number": "4c(4)",
+                      "summary": "The World Organization of the Scout Movement."
+                    },
+                    {
+                      "number": "4c(5)",
+                      "summary": "The World Health Organization."
+                    },
+                    {
+                      "number": "4c(6)",
+                      "summary": "Amnesty International."
+                    },
+                    {
+                      "number": "4c(7)",
+                      "summary": "The Red Cross and Red Crescent."
+                    },
+                    {
+                      "number": "4c(8)",
+                      "summary": "CARE."
+                    },
+                    {
+                      "number": "4c(9)",
+                      "summary": "The European Union."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Compare forms of government around the world.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Contrast constitutional and non-constitutional governments."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Name five kinds of government in use today."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Find countries using each kind on a world map."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain how countries represent themselves abroad.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "How nations are represented abroad and in world bodies."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain the roles of four U.S. diplomatic and trade offices."
+                },
+                {
+                  "number": "6c",
+                  "summary": "What passports and visas are for."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do two activities and share what you learned.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Research a world issue using State Department resources."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Find a foreign news story about a right people lack there."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Learn about another culture from a young person who lives there."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Join a world Scouting event, in person, by radio or online."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Attend an international festival or cultural event."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "personal-fitness",
+      "name": "Personal Fitness",
+      "summary": "Build healthy habits and follow a 12-week fitness program.",
+      "officialUrl": "https://www.scouting.org/merit-badges/personal-fitness/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Talk with your counselor about what being fit means to you.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Describe a person in good physical shape."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe a person who is mentally, emotionally and socially healthy."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe a person who is spiritually healthy."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain why fitness in every area matters."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Connect each area of fitness to the Scout Oath and Law."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain how you look after your health with regular checkups.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Why yearly physicals matter and when you last had one."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Why dental care matters and when you last saw a dentist."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Review your current health habits with your counselor.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Your exercise habits and your long-term heart health risk."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Harmful substances you avoid and how that lowers your risk."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Diseases vaccines prevent and whether yours are up to date."
+                },
+                {
+                  "number": "3d",
+                  "summary": "How food affects fitness and whether you eat a balanced diet."
+                },
+                {
+                  "number": "3e",
+                  "summary": "What a healthy weight is for you and how you keep it."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Why sleep matters and whether you get enough."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Time with family and friends, and how you help at home."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Pick, with your counselor, the fitness tests you'll repeat.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "A cardio test, usually a timed mile."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Two strength tests, one for core and one for upper body."
+                },
+                {
+                  "number": "4c",
+                  "summary": "At least one flexibility test."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Set your starting point before the program.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Take your chosen tests and record the results."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Find your strongest and weakest areas; choose one to improve."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Keep a three-day log of what you eat and drink."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Use the log to set at least two eating goals."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Plan a 12-week exercise and eating program.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Include a warm-up."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Include cardio at least three times a week."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Include strength training."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Include flexibility exercises."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Include a cool-down."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Include how you'll reach your eating goals."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Carry out your program and review the results.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Follow your plan for 12 weeks and log each session.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "text"
+                      },
+                      {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      },
+                      {
+                        "id": "notes",
+                        "label": "Distance, reps or notes",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "Session"
+                  }
+                },
+                {
+                  "number": "7b",
+                  "summary": "Retake your tests at weeks 4 and 8 and after week 12."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Log your eating again at weeks 8 and 12 and check your goals."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Discuss your results and what you learned with your counselor."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Look ahead at fitness in your future.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Explore careers in fitness and study one closely."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Explore how fitness could become a lifelong hobby."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
