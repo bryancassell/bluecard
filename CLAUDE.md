@@ -1,5 +1,7 @@
 The product requirements document for this project is in PRD.md
 
+The architecture design for this project is in ARCHITECTURE.md. Follow it for new features, and update it in the same PR when a design decision changes.
+
 # Claude Code Workflow
 
 ## Git Development Workflow

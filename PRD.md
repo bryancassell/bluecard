@@ -16,6 +16,9 @@ I want to build an Android mobile app that will allow Scouting America scouts to
   - When recording progress on a merit badge the user should have the option to add additional comments about that requirement.
   - When a merit badge is completed the user should have the ability to generate a report in PDF format that reflects the entirety of the data they have recorded for that merit badge, and to save and/or share that report with standard Android save and share features.
   - This page should allow the user to mark a merit badge as completed on a prior date without entering specific data for each requirement.
+  - Scouting America updates merit badge requirements over time, usually each January 1. By default, a merit badge should use the newest version of its requirements.
+  - The user should be able to select the previous version of a merit badge's requirements instead, for example if they started working on the badge before they began using the app.
+  - When an app update brings newer requirements for a merit badge the user has already started, the badge should stay on the version the user was using, so their recorded progress still matches its requirements. The user should be able to switch that badge to the newest version themselves.
 - A user should have the option to clear all merit badge data, all progress for a specific merit badge, or specific progress information for a particular merit badge.
 - A user should have the option to export their merit badge data, as well as import previously exported data.
 
