@@ -20,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -30,15 +31,14 @@ class BadgesScreenTest {
     private val openedBadges = mutableListOf<String>()
 
     private val badges = listOf(
-        BadgeListItem("camping", "Camping", eagleRequired = true, BadgeStatus.Completed),
-        BadgeListItem("chess", "Chess", eagleRequired = false, BadgeStatus.InProgress),
-        BadgeListItem("cooking", "Cooking", eagleRequired = true, BadgeStatus.NotStarted),
+        BadgeListItem("camping", "Camping", EagleRequirement.Required, BadgeStatus.Completed),
+        BadgeListItem("chess", "Chess", eagle = null, BadgeStatus.InProgress),
+        BadgeListItem("cooking", "Cooking", EagleRequirement.Required, BadgeStatus.NotStarted),
         BadgeListItem(
             "hiking",
             "Hiking",
-            eagleRequired = true,
-            BadgeStatus.NotStarted,
-            eagleGroup = listOf("Cycling", "Hiking", "Swimming")
+            EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming")),
+            BadgeStatus.NotStarted
         )
     )
 
@@ -106,8 +106,17 @@ class BadgesScreenTest {
     fun eagleGroupBadge_namesTheGroup() {
         show(BadgesUiState.Ready(badges))
 
-        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking, Swimming)"))
+        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
         row("Hiking").assert(!hasText("Eagle-required"))
+    }
+
+    // The app has only English strings, but the list of names follows the device language.
+    @Config(qualifiers = "fr")
+    @Test
+    fun eagleGroupBadge_listsNamesForTheLanguage() {
+        show(BadgesUiState.Ready(badges))
+
+        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking et Swimming)"))
     }
 
     @Test
@@ -147,7 +156,7 @@ class BadgesScreenTest {
     fun longList_scrollsToLastBadge() {
         // More badges than the full catalog (about 140).
         val many = (1..200).map {
-            BadgeListItem("badge-$it", "Badge $it", eagleRequired = false, BadgeStatus.NotStarted)
+            BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
         }
         show(BadgesUiState.Ready(many))
         // Rows off screen aren't composed until scrolled to.

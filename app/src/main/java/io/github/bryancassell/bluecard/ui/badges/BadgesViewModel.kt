@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.completion
+import java.text.Collator
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,29 +23,41 @@ class BadgesViewModel @Inject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<BadgesUiState> = combine(
+        // What depends only on the catalog is worked out once, not on every progress change.
         flow {
-            val badges = catalogRepository.getBadges()
-            emit(badges.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, MeritBadge::name)))
+            // Alphabetical order for the scout's language: an accented letter sorts with its
+            // base letter, and case only breaks ties.
+            val byName = compareBy(Collator.getInstance(), MeritBadge::name)
+            val badges = catalogRepository.getBadges().sortedWith(byName)
+            val eagleGroups = badges.filter { it.eagleGroup != null }
+                .groupBy({ it.eagleGroup }, { it.name })
+            emit(badges.map { it to it.eagleRequirement(eagleGroups) })
         },
         progressRepository.observeAllProgress()
     ) { badges, progress ->
         val progressById = progress.associateBy { it.badge.badgeId }
-        val eagleGroups = badges.filter { it.eagleGroup != null }
-            .groupBy({ it.eagleGroup }, { it.name })
         BadgesUiState.Ready(
-            badges.map { badge ->
+            badges.map { (badge, eagle) ->
                 BadgeListItem(
                     id = badge.id,
                     name = badge.name,
-                    eagleRequired = badge.eagleRequired,
-                    status = badge.status(progressById[badge.id]),
-                    // The catalog is written in stages; while a group has only this badge
-                    // so far, it's shown as required on its own.
-                    eagleGroup = eagleGroups[badge.eagleGroup]?.takeIf { it.size > 1 }.orEmpty()
+                    eagle = eagle,
+                    status = badge.status(progressById[badge.id])
                 )
             }
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgesUiState.Loading)
+}
+
+/** [eagleGroups] maps each Eagle group to the names of its badges. */
+private fun MeritBadge.eagleRequirement(
+    eagleGroups: Map<String?, List<String>>
+): EagleRequirement? {
+    if (!eagleRequired) return null
+    // The catalog is written in stages; while a group has only this badge so far, it's
+    // shown as required on its own.
+    val group = eagleGroups[eagleGroup]?.takeIf { it.size > 1 } ?: return EagleRequirement.Required
+    return EagleRequirement.OneOf(group)
 }
 
 /** Completion is checked against the requirements version the badge was started on. */

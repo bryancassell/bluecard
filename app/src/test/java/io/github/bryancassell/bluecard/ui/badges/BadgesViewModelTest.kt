@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 
@@ -90,10 +91,10 @@ class BadgesViewModelTest {
                     BadgeListItem(
                         "camping",
                         "Camping",
-                        eagleRequired = true,
+                        EagleRequirement.Required,
                         BadgeStatus.NotStarted
                     ),
-                    BadgeListItem("chess", "Chess", eagleRequired = false, BadgeStatus.NotStarted)
+                    BadgeListItem("chess", "Chess", eagle = null, BadgeStatus.NotStarted)
                 )
             ),
             viewModel.uiState.value
@@ -101,20 +102,24 @@ class BadgesViewModelTest {
     }
 
     @Test
-    fun uiState_sortsIgnoringCase() = runTest {
+    fun uiState_sortsAlphabetically_ignoringCaseAndAccents() = runTest {
         catalogRepository.badges = listOf(
-            badge("c", "Cooking"),
+            badge("z", "Zoology"),
+            badge("e", "Écologie"),
             badge("b", "bird Study"),
             badge("a", "Archery")
         )
         startCollecting(viewModel)
 
         val state = viewModel.uiState.value as BadgesUiState.Ready
-        assertEquals(listOf("Archery", "bird Study", "Cooking"), state.badges.map { it.name })
+        assertEquals(
+            listOf("Archery", "bird Study", "Écologie", "Zoology"),
+            state.badges.map { it.name }
+        )
     }
 
     @Test
-    fun eagleGroup_listsEveryBadgeInTheGroup() = runTest {
+    fun eagleGroup_isOneOfEveryBadgeInTheGroup() = runTest {
         catalogRepository.badges = listOf(
             badge("swimming", "Swimming", eagleRequired = true, eagleGroup = "c-h-s"),
             badge("cycling", "Cycling", eagleRequired = true, eagleGroup = "c-h-s"),
@@ -124,23 +129,22 @@ class BadgesViewModelTest {
         )
         startCollecting(viewModel)
 
-        val group = listOf("Cycling", "Hiking", "Swimming")
-        assertEquals(group, item("cycling").eagleGroup)
-        assertEquals(group, item("hiking").eagleGroup)
-        assertEquals(group, item("swimming").eagleGroup)
-        assertEquals(emptyList<String>(), item("camping").eagleGroup)
-        assertEquals(emptyList<String>(), item("chess").eagleGroup)
+        val group = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))
+        assertEquals(group, item("cycling").eagle)
+        assertEquals(group, item("hiking").eagle)
+        assertEquals(group, item("swimming").eagle)
+        assertEquals(EagleRequirement.Required, item("camping").eagle)
+        assertNull(item("chess").eagle)
     }
 
     @Test
-    fun eagleGroup_withOnlyThisBadgeInCatalog_isEmpty() = runTest {
+    fun eagleGroup_withOnlyThisBadgeInCatalog_isRequiredOnItsOwn() = runTest {
         catalogRepository.badges = listOf(
             badge("cycling", "Cycling", eagleRequired = true, eagleGroup = "c-h-s")
         )
         startCollecting(viewModel)
 
-        assertEquals(emptyList<String>(), item("cycling").eagleGroup)
-        assertEquals(true, item("cycling").eagleRequired)
+        assertEquals(EagleRequirement.Required, item("cycling").eagle)
     }
 
     @Test

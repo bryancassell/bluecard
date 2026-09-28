@@ -2,8 +2,8 @@ package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -24,14 +24,6 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 @Composable
 fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(Home)
-
-    // Only the screen on top can navigate. A screen that is animating out still takes the
-    // taps that the incoming screen doesn't, so a quick double tap could otherwise open
-    // the next screen twice.
-    fun navigate(from: NavKey, to: NavKey) {
-        if (backStack.lastOrNull() == from) backStack.add(to)
-    }
-
     NavDisplay(
         // Deciding here, before anything is drawn, means the wrong screen never shows,
         // and Onboarding returns if the profile is ever missing. With only one entry,
@@ -45,10 +37,18 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
+        // Navigation callbacks are wrapped in dropUnlessResumed. NavDisplay holds a screen
+        // at STARTED while it animates in or out, and a screen that is leaving still takes
+        // the taps that the incoming screen doesn't, so without this a quick double tap
+        // could open the next screen twice.
         entryProvider = entryProvider {
             entry<Onboarding> { OnboardingRoute() }
-            entry<Home> { HomeRoute(onOpenBadges = { navigate(Home, Badges) }) }
-            entry<Badges> { BadgesRoute(onOpenBadge = { navigate(Badges, BadgeDetail(it)) }) }
+            entry<Home> { HomeRoute(onOpenBadges = dropUnlessResumed { backStack.add(Badges) }) }
+            entry<Badges> {
+                BadgesRoute(
+                    onOpenBadge = dropUnlessResumed { id: String -> backStack.add(BadgeDetail(id)) }
+                )
+            }
             entry<BadgeDetail> { key -> BadgeDetailScreen(badgeId = key.badgeId) }
         }
     )

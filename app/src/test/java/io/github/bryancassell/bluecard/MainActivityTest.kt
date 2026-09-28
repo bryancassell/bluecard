@@ -1,15 +1,12 @@
 package io.github.bryancassell.bluecard
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.Espresso.pressBackUnconditionally
@@ -274,15 +271,16 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
+        // Let the list finish animating in; until then it doesn't take taps either.
+        val camping = composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+
         // Tap a second time while the list is still fading out, as a quick double tap
-        // does. The second tap goes by position: the list has already left the semantics
-        // tree, but it's still on screen and still takes taps.
-        val camping = composeTestRule.onNodeWithText("Camping")
-        val position = camping.fetchSemanticsNode().boundsInRoot.center
+        // does. The list is still on screen then, and still takes taps that the incoming
+        // screen doesn't. The second tap fails the test if the list is already gone.
         composeTestRule.mainClock.autoAdvance = false
         camping.performClick()
         composeTestRule.mainClock.advanceTimeBy(100)
-        composeTestRule.onRoot().performTouchInput { click(position) }
+        camping.performClick()
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitForIdle()
 

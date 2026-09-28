@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import android.icu.text.ListFormatter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -72,15 +74,18 @@ fun BadgesScreen(
 
 @Composable
 private fun BadgeRow(badge: BadgeListItem, onClick: () -> Unit) {
-    val eagle = when {
-        badge.eagleGroup.isNotEmpty() -> stringResource(
+    val eagle = when (val requirement = badge.eagle) {
+        null -> null
+
+        EagleRequirement.Required -> stringResource(R.string.badges_eagle_required)
+
+        // Lists the names as the scout's language does, such as "Cycling, Hiking, and
+        // Swimming" in English.
+        is EagleRequirement.OneOf -> stringResource(
             R.string.badges_eagle_required_one_of,
-            badge.eagleGroup.joinToString(", ")
+            ListFormatter.getInstance(LocalConfiguration.current.locales[0])
+                .format(requirement.badgeNames)
         )
-
-        badge.eagleRequired -> stringResource(R.string.badges_eagle_required)
-
-        else -> null
     }
     val status = when (badge.status) {
         BadgeStatus.NotStarted -> null
