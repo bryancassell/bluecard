@@ -35,7 +35,8 @@ class DatabaseModuleTest {
 
     @After
     fun closeDatabase() {
-        database.close()
+        // Skipped if injection failed, so the report shows only that failure.
+        if (::database.isInitialized) database.close()
     }
 
     @Test

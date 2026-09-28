@@ -222,8 +222,10 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    ```
 
 2. Install the debug app (`./gradlew installDebug`), open it, enter some data,
-   then press Home. Don't force-stop the app: backup skips a stopped app, and
-   `bmgr` reports "Backup is not allowed".
+   then press Home. Room creates the database file only when the app first
+   opens the database, so also visit a screen that shows or records progress.
+   Don't force-stop the app: backup skips a stopped app, and `bmgr` reports
+   "Backup is not allowed".
 3. Back up with the local test transport, then uninstall and reinstall the app,
    which restores the backup:
 
@@ -236,10 +238,12 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    adb install -t app/build/outputs/apk/debug/app-debug.apk
    ```
 
-4. List the restored files. Expect `files/datastore/profile.preferences_pb`,
-   and nothing in `cache/`. Expect `databases/bluecard.db` too if you recorded
-   progress: the app creates the database the first time it saves progress.
-   Then open the app and check that the data is back.
+4. Before opening the app, list the restored files. Expect only the files the
+   rules include: `files/datastore/profile.preferences_pb`, and
+   `databases/bluecard.db` (with its `-wal` and `-shm` files, if present) if the
+   app had opened its database. Any other file, such as `files/profileInstalled`,
+   means the rules include too much. Then open the app and check that the data
+   is back.
 
    ```sh
    adb shell run-as io.github.bryancassell.bluecard find . -type f
@@ -252,7 +256,7 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    ```sh
    adb shell bmgr transport <transport noted in step 1>
    adb shell settings delete secure backup_local_transport_parameters
-   adb shell bmgr enable false
+   adb shell bmgr enable false   # only if backup was off in step 1
    ```
 
 Device-to-device transfer, used when setting up a new phone from an old one,

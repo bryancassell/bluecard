@@ -7,16 +7,18 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import java.io.File
+import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.w3c.dom.Element
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Checks that each set of Auto Backup rules covers the files where the app keeps the
- * scout's data. DatabaseModuleTest and ProfileModuleTest check that the app really stores
- * its data in those files.
+ * Checks that the manifest uses the app's Auto Backup rules, and that each set of rules covers
+ * the files where the app keeps the scout's data. DatabaseModuleTest and ProfileModuleTest
+ * check that the app really stores its data in those files.
  * https://developer.android.com/identity/data/autobackup#IncludingFiles
  */
 @RunWith(AndroidJUnit4::class)
@@ -33,9 +35,29 @@ class BackupRulesTest {
         context.preferencesDataStoreFile(DataStoreProfileRepository.FILE_NAME)
     )
 
-    private val fullBackupContent = readRules(R.xml.backup_rules, "full-backup-content")
-    private val cloudBackup = readRules(R.xml.data_extraction_rules, "cloud-backup")
-    private val deviceTransfer = readRules(R.xml.data_extraction_rules, "device-transfer")
+    // Read only by the tests that use them, so a broken section fails only those tests.
+    private val fullBackupContent by lazy { readRules(R.xml.backup_rules, "full-backup-content") }
+    private val cloudBackup by lazy { readRules(R.xml.data_extraction_rules, "cloud-backup") }
+    private val deviceTransfer by lazy { readRules(R.xml.data_extraction_rules, "device-transfer") }
+
+    @Test
+    fun manifest_usesTheseRules() {
+        // Read from the manifest source, because Robolectric doesn't load dataExtractionRules.
+        val application = DocumentBuilderFactory.newInstance()
+            .apply { isNamespaceAware = true }
+            .newDocumentBuilder()
+            .parse(File("src/main/AndroidManifest.xml"))
+            .getElementsByTagName("application")
+            .item(0) as Element
+        val android = "http://schemas.android.com/apk/res/android"
+
+        assertEquals("true", application.getAttributeNS(android, "allowBackup"))
+        assertEquals("@xml/backup_rules", application.getAttributeNS(android, "fullBackupContent"))
+        assertEquals(
+            "@xml/data_extraction_rules",
+            application.getAttributeNS(android, "dataExtractionRules")
+        )
+    }
 
     @Test
     fun fullBackupContent_backsUpScoutData() {
