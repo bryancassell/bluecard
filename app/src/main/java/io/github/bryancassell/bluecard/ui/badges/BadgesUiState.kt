@@ -14,7 +14,13 @@ data class BadgeListItem(
     val id: String,
     val name: String,
     val eagleRequired: Boolean,
-    val status: BadgeStatus
+    val status: BadgeStatus,
+    /**
+     * For an Eagle-required badge that is one of a group of alternatives, such as Cycling,
+     * Hiking and Swimming: the names of the group's badges, this one included. Empty for
+     * a badge required on its own.
+     */
+    val eagleGroup: List<String> = emptyList()
 )
 
 /** How far the scout has got with a badge. */

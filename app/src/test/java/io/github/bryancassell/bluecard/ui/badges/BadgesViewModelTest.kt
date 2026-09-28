@@ -24,12 +24,18 @@ class BadgesViewModelTest {
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
 
-    private fun badge(id: String, name: String, eagleRequired: Boolean = false) = MeritBadge(
+    private fun badge(
+        id: String,
+        name: String,
+        eagleRequired: Boolean = false,
+        eagleGroup: String? = null
+    ) = MeritBadge(
         id = id,
         name = name,
         summary = "Our summary of $name.",
         officialUrl = "https://www.scouting.org/merit-badges/$id/",
         eagleRequired = eagleRequired,
+        eagleGroup = eagleGroup,
         requirementVersions = listOf(
             RequirementsVersion(
                 version,
@@ -56,10 +62,12 @@ class BadgesViewModelTest {
         backgroundScope.launch(mainDispatcherRule.testDispatcher) { viewModel.uiState.collect {} }
     }
 
-    private fun status(badgeId: String): BadgeStatus {
+    private fun item(badgeId: String): BadgeListItem {
         val state = viewModel.uiState.value as BadgesUiState.Ready
-        return state.badges.single { it.id == badgeId }.status
+        return state.badges.single { it.id == badgeId }
     }
+
+    private fun status(badgeId: String) = item(badgeId).status
 
     @Test
     fun uiState_whileCatalogLoads_isLoading() = runTest {
@@ -106,6 +114,36 @@ class BadgesViewModelTest {
     }
 
     @Test
+    fun eagleGroup_listsEveryBadgeInTheGroup() = runTest {
+        catalogRepository.badges = listOf(
+            badge("swimming", "Swimming", eagleRequired = true, eagleGroup = "c-h-s"),
+            badge("cycling", "Cycling", eagleRequired = true, eagleGroup = "c-h-s"),
+            badge("hiking", "Hiking", eagleRequired = true, eagleGroup = "c-h-s"),
+            camping,
+            chess
+        )
+        startCollecting(viewModel)
+
+        val group = listOf("Cycling", "Hiking", "Swimming")
+        assertEquals(group, item("cycling").eagleGroup)
+        assertEquals(group, item("hiking").eagleGroup)
+        assertEquals(group, item("swimming").eagleGroup)
+        assertEquals(emptyList<String>(), item("camping").eagleGroup)
+        assertEquals(emptyList<String>(), item("chess").eagleGroup)
+    }
+
+    @Test
+    fun eagleGroup_withOnlyThisBadgeInCatalog_isEmpty() = runTest {
+        catalogRepository.badges = listOf(
+            badge("cycling", "Cycling", eagleRequired = true, eagleGroup = "c-h-s")
+        )
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), item("cycling").eagleGroup)
+        assertEquals(true, item("cycling").eagleRequired)
+    }
+
+    @Test
     fun status_startedBadge_isInProgress() = runTest {
         progressRepository.startBadge("camping", version, started)
         progressRepository.markRequirementCompleted("camping", "1", day)
@@ -142,6 +180,15 @@ class BadgesViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(BadgeStatus.InProgress, status("camping"))
+    }
+
+    @Test
+    fun status_completedOnPriorDate_withVersionMissingFromCatalog_isCompleted() = runTest {
+        progressRepository.startBadge("camping", LocalDate.of(2025, 1, 1), started)
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        startCollecting(viewModel)
+
+        assertEquals(BadgeStatus.Completed, status("camping"))
     }
 
     @Test

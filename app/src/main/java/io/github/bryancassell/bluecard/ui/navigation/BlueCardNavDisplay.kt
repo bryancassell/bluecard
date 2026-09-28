@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -23,6 +24,14 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 @Composable
 fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(Home)
+
+    // Only the screen on top can navigate. A screen that is animating out still takes the
+    // taps that the incoming screen doesn't, so a quick double tap could otherwise open
+    // the next screen twice.
+    fun navigate(from: NavKey, to: NavKey) {
+        if (backStack.lastOrNull() == from) backStack.add(to)
+    }
+
     NavDisplay(
         // Deciding here, before anything is drawn, means the wrong screen never shows,
         // and Onboarding returns if the profile is ever missing. With only one entry,
@@ -38,9 +47,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         ),
         entryProvider = entryProvider {
             entry<Onboarding> { OnboardingRoute() }
-            entry<Home> { HomeRoute(onOpenBadges = { backStack.add(Badges) }) }
-            entry<Badges> { BadgesRoute(onOpenBadge = { backStack.add(BadgeDetail(it)) }) }
-            entry<BadgeDetail> { BadgeDetailScreen() }
+            entry<Home> { HomeRoute(onOpenBadges = { navigate(Home, Badges) }) }
+            entry<Badges> { BadgesRoute(onOpenBadge = { navigate(Badges, BadgeDetail(it)) }) }
+            entry<BadgeDetail> { key -> BadgeDetailScreen(badgeId = key.badgeId) }
         }
     )
 }

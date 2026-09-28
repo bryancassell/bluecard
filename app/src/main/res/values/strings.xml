@@ -11,7 +11,12 @@
     <string name="home_open_badges">Merit badges</string>
     <string name="badges_title">Merit badges</string>
     <string name="badges_eagle_required">Eagle-required</string>
+    <!-- An Eagle-required badge that is one of a group of alternatives. %1$s lists the group's
+         badges, such as "Cycling, Hiking, Swimming". -->
+    <string name="badges_eagle_required_one_of">Eagle-required (one of %1$s)</string>
     <string name="badges_in_progress">In progress</string>
     <string name="badges_completed">Completed</string>
+    <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
+    <string name="badges_open_badge">open badge</string>
     <string name="badge_detail_title">Badge detail</string>
 </resources>

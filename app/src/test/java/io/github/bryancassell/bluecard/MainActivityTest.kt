@@ -1,12 +1,15 @@
 package io.github.bryancassell.bluecard
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.Espresso.pressBackUnconditionally
@@ -234,6 +237,8 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Camping").performClick()
 
         composeTestRule.onNodeWithText("Badge detail").assertIsDisplayed()
+        // The placeholder shows the ID of the badge it was opened for.
+        composeTestRule.onNodeWithText("camping").assertIsDisplayed()
         composeTestRule.onNodeWithText("Camping").assertDoesNotExist()
     }
 
@@ -262,5 +267,27 @@ class MainActivityTest {
         pressBack()
 
         composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onBadge_opensItOnce() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        // Tap a second time while the list is still fading out, as a quick double tap
+        // does. The second tap goes by position: the list has already left the semantics
+        // tree, but it's still on screen and still takes taps.
+        val camping = composeTestRule.onNodeWithText("Camping")
+        val position = camping.fetchSemanticsNode().boundsInRoot.center
+        composeTestRule.mainClock.autoAdvance = false
+        camping.performClick()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        composeTestRule.onRoot().performTouchInput { click(position) }
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
     }
 }

@@ -16,6 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,7 +46,10 @@ fun BadgesScreen(
         Text(
             text = stringResource(R.string.badges_title),
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(16.dp)
+            // Lets screen reader users jump to it.
+            modifier = Modifier
+                .padding(16.dp)
+                .semantics { heading() }
         )
         when (uiState) {
             BadgesUiState.Loading -> Box(
@@ -66,19 +72,30 @@ fun BadgesScreen(
 
 @Composable
 private fun BadgeRow(badge: BadgeListItem, onClick: () -> Unit) {
+    val eagle = when {
+        badge.eagleGroup.isNotEmpty() -> stringResource(
+            R.string.badges_eagle_required_one_of,
+            badge.eagleGroup.joinToString(", ")
+        )
+
+        badge.eagleRequired -> stringResource(R.string.badges_eagle_required)
+
+        else -> null
+    }
     val status = when (badge.status) {
         BadgeStatus.NotStarted -> null
-        BadgeStatus.InProgress -> R.string.badges_in_progress
-        BadgeStatus.Completed -> R.string.badges_completed
+        BadgeStatus.InProgress -> stringResource(R.string.badges_in_progress)
+        BadgeStatus.Completed -> stringResource(R.string.badges_completed)
     }
     ListItem(
         headlineContent = { Text(badge.name) },
-        supportingContent = if (badge.eagleRequired) {
-            { Text(stringResource(R.string.badges_eagle_required)) }
-        } else {
-            null
-        },
-        trailingContent = status?.let { { Text(stringResource(it)) } },
-        modifier = Modifier.clickable(onClick = onClick)
+        supportingContent = eagle?.let { { Text(it) } },
+        trailingContent = status?.let { { Text(it) } },
+        // Screen readers announce the row as a button that opens the badge.
+        modifier = Modifier.clickable(
+            onClickLabel = stringResource(R.string.badges_open_badge),
+            role = Role.Button,
+            onClick = onClick
+        )
     )
 }

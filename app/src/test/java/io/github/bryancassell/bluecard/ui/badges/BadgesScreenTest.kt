@@ -1,12 +1,15 @@
 package io.github.bryancassell.bluecard.ui.badges
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithText
@@ -29,7 +32,14 @@ class BadgesScreenTest {
     private val badges = listOf(
         BadgeListItem("camping", "Camping", eagleRequired = true, BadgeStatus.Completed),
         BadgeListItem("chess", "Chess", eagleRequired = false, BadgeStatus.InProgress),
-        BadgeListItem("cooking", "Cooking", eagleRequired = true, BadgeStatus.NotStarted)
+        BadgeListItem("cooking", "Cooking", eagleRequired = true, BadgeStatus.NotStarted),
+        BadgeListItem(
+            "hiking",
+            "Hiking",
+            eagleRequired = true,
+            BadgeStatus.NotStarted,
+            eagleGroup = listOf("Cycling", "Hiking", "Swimming")
+        )
     )
 
     private fun show(uiState: BadgesUiState) {
@@ -52,7 +62,7 @@ class BadgesScreenTest {
     fun loading_showsProgressAndNoBadges() {
         show(BadgesUiState.Loading)
 
-        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Merit badges").assert(isHeading()).assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertIsDisplayed()
         list().assertDoesNotExist()
     }
@@ -61,11 +71,26 @@ class BadgesScreenTest {
     fun ready_showsBadgesInGivenOrder() {
         show(BadgesUiState.Ready(badges))
 
+        composeTestRule.onNodeWithText("Merit badges").assert(isHeading())
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         val rows = list().onChildren()
         rows[0].assert(hasText("Camping"))
         rows[1].assert(hasText("Chess"))
         rows[2].assert(hasText("Cooking"))
+        rows[3].assert(hasText("Hiking"))
+    }
+
+    @Test
+    fun rows_areButtonsThatOpenTheBadge() {
+        show(BadgesUiState.Ready(badges))
+
+        row("Chess")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .assert(
+                SemanticsMatcher("click label is \"open badge\"") {
+                    it.config[SemanticsActions.OnClick].label == "open badge"
+                }
+            )
     }
 
     @Test
@@ -75,6 +100,14 @@ class BadgesScreenTest {
         row("Camping").assert(hasText("Eagle-required"))
         row("Cooking").assert(hasText("Eagle-required"))
         row("Chess").assert(!hasText("Eagle-required"))
+    }
+
+    @Test
+    fun eagleGroupBadge_namesTheGroup() {
+        show(BadgesUiState.Ready(badges))
+
+        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking, Swimming)"))
+        row("Hiking").assert(!hasText("Eagle-required"))
     }
 
     @Test

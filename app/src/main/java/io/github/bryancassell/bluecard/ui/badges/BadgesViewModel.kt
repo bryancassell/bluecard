@@ -22,20 +22,36 @@ class BadgesViewModel @Inject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<BadgesUiState> = combine(
-        flow { emit(catalogRepository.getBadges().sortedBy { it.name.lowercase() }) },
+        flow {
+            val badges = catalogRepository.getBadges()
+            emit(badges.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, MeritBadge::name)))
+        },
         progressRepository.observeAllProgress()
     ) { badges, progress ->
         val progressById = progress.associateBy { it.badge.badgeId }
-        BadgesUiState.Ready(badges.map { it.toListItem(progressById[it.id]) })
+        val eagleGroups = badges.filter { it.eagleGroup != null }
+            .groupBy({ it.eagleGroup }, { it.name })
+        BadgesUiState.Ready(
+            badges.map { badge ->
+                BadgeListItem(
+                    id = badge.id,
+                    name = badge.name,
+                    eagleRequired = badge.eagleRequired,
+                    status = badge.status(progressById[badge.id]),
+                    // The catalog is written in stages; while a group has only this badge
+                    // so far, it's shown as required on its own.
+                    eagleGroup = eagleGroups[badge.eagleGroup]?.takeIf { it.size > 1 }.orEmpty()
+                )
+            }
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgesUiState.Loading)
 }
-
-private fun MeritBadge.toListItem(progress: BadgeProgressDetails?) =
-    BadgeListItem(id = id, name = name, eagleRequired = eagleRequired, status = status(progress))
 
 /** Completion is checked against the requirements version the badge was started on. */
 private fun MeritBadge.status(progress: BadgeProgressDetails?): BadgeStatus {
     if (progress == null) return BadgeStatus.NotStarted
+    // Checked first, because a badge marked completed on a prior date needs no version.
+    if (progress.badge.completedOnPriorDate != null) return BadgeStatus.Completed
     val versionDate = progress.badge.requirementsVersion
     // Released catalogs keep every version they shipped, but a catalog edited during
     // development can drop one; a badge on a missing version can't be checked.
