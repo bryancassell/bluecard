@@ -167,7 +167,7 @@ when it can detect that one is broken:
 |---|---|
 | New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android and Hilt classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
-| Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. |
+| Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
 
 The other rules need a person to judge, so they are checked in code review:

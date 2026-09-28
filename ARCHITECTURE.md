@@ -151,9 +151,9 @@ larger opens the requirement detail sub-page.
 **Content.** For each badge: a stable ID, name, our own short summary, whether
 it is Eagle-required (and which Eagle "one of" group it belongs to, such as
 Cycling / Hiking / Swimming), the URL of its official page, and its
-requirements. Each requirement has an ID, its official number (such as `4b`),
-our own one-line summary, its children, how many children are required ("do
-two of the following"), and an optional tracker definition. No text is copied
+requirements. Each requirement has its official number (such as `4b`), which
+also identifies it, our own one-line summary, its children, how many children
+are required ("do two of the following"), and an optional tracker definition. No text is copied
 from Scouting America, and no badge images or logos are included, because
 Scouting America's
 [trademarks](https://licensingbsa.org/trademarks/) and terms of use require
@@ -209,7 +209,14 @@ badges, a content project of its own, so the catalog grows in stages, in no
 particular order; the app treats whatever is in the file as the full list. Each badge
 whose requirements changed recently also needs its previous version written,
 so scouts who started before the change can pick it. A unit test
-validates the file (unique IDs, valid structure, a URL for every badge).
+validates the file (unique IDs, valid structure, a URL for every badge). The
+format and authoring rules are in [`docs/catalog.md`](docs/catalog.md).
+
+**Requirement IDs.** A requirement is identified by its official number (such
+as `4c(1)`), which is unique within a requirements version. Progress is stored
+against the badge ID, its version and the requirement number; because switching
+versions starts requirement progress fresh, numbers only need to be unique
+within one version.
 
 ## Data model
 
@@ -321,6 +328,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |
 | Import | Replaces all current data, after a warning | Simplest correct behavior; merging is tracked in [#28](https://github.com/bryancassell/bluecard/issues/28) |
 | Switching requirement versions | Resets the badge's requirement progress, after a confirmation; counselor details stay | Avoids attaching entries to the wrong requirement; carrying progress over is tracked in [#29](https://github.com/bryancassell/bluecard/issues/29) |

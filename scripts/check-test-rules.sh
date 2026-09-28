@@ -18,6 +18,10 @@ done
 # Rule: every class containing logic has a corresponding unit test.
 while IFS= read -r source; do
     name=$(basename "$source" .kt)
+    # A file that only declares an interface has no logic to test.
+    if ! grep -qE '^[[:space:]]*([a-z]+ )*(class|object) ' "$source"; then
+        continue
+    fi
     if [[ -z $(find app/src/test -name "${name}Test.kt") ]]; then
         fail "$source has no unit test. Add app/src/test/.../${name}Test.kt."
     fi
