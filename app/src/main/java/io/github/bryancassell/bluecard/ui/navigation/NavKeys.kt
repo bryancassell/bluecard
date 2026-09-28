@@ -7,6 +7,9 @@ import kotlinx.serialization.Serializable
 // configuration changes and process death.
 
 @Serializable
+data object Onboarding : NavKey
+
+@Serializable
 data object Home : NavKey
 
 @Serializable

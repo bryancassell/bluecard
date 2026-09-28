@@ -120,13 +120,20 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+- **Launch:** the app starts on Onboarding until a profile is saved, then on Home.
+  The splash screen stays up until the saved profile loads, using
+  [core-splashscreen](https://developer.android.com/develop/ui/views/launch/splash-screen/migrate)'s
+  `setKeepOnScreenCondition`, so the wrong screen never flashes first. The
+  [splash screen guide](https://developer.android.com/develop/ui/views/launch/splash-screen)
+  suggests holding the first frame for loading "a small amount of data, such as
+  loading in-app settings from a local disk".
 - **Material 3** components and the existing `BlueCardTheme`.
 
 ### Data layer
 
 | Repository | Owns | Data source |
 |---|---|---|
-| `ProfileRepository` | Scout name and unit number; whether first-launch setup is done | [Preferences DataStore](https://developer.android.com/topic/libraries/architecture/datastore) |
+| `ProfileRepository` | Scout name and unit number; first-launch setup is done once they are saved | [Preferences DataStore](https://developer.android.com/topic/libraries/architecture/datastore) |
 | `CatalogRepository` | Merit badges, requirements, requirement versions (read-only) | JSON file in `assets/`, parsed with [kotlinx.serialization](https://kotlinlang.org/docs/serialization.html) |
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
 | `ReportRepository` | Building a badge's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |

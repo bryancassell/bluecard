@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">BlueCard</string>
+    <string name="onboarding_title">Welcome to BlueCard</string>
+    <string name="onboarding_message">Enter your name and unit number to get started.</string>
+    <string name="onboarding_name">Name</string>
+    <string name="onboarding_unit_number">Unit number</string>
+    <string name="onboarding_required">Required</string>
+    <string name="onboarding_save">Get started</string>
     <string name="home_title">Home</string>
     <string name="home_open_badges">Merit badges</string>
     <string name="badges_title">Merit badges</string>

@@ -6,6 +6,8 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
+import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
 import javax.inject.Inject
@@ -28,6 +30,9 @@ class DataModuleTest {
     lateinit var catalogRepository: CatalogRepository
 
     @Inject
+    lateinit var profileRepository: ProfileRepository
+
+    @Inject
     lateinit var progressRepository: ProgressRepository
 
     @Before
@@ -38,6 +43,11 @@ class DataModuleTest {
     @Test
     fun catalogRepository_isAssetCatalogRepository() {
         assertTrue(catalogRepository is AssetCatalogRepository)
+    }
+
+    @Test
+    fun profileRepository_isDataStoreProfileRepository() {
+        assertTrue(profileRepository is DataStoreProfileRepository)
     }
 
     @Test
