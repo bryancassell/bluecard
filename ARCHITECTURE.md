@@ -120,7 +120,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
-- **Launch:** the app starts on Onboarding until a profile is saved, then on Home.
+- **Launch:** Home is the fixed start destination. Until a profile is saved, the
+  navigation root shows Onboarding in place of the back stack, because the
+  [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
+  say one-time setup screens "should not be considered start destinations".
   The splash screen stays up until the saved profile loads, using
   [core-splashscreen](https://developer.android.com/develop/ui/views/launch/splash-screen/migrate)'s
   `setKeepOnScreenCondition`, so the wrong screen never flashes first. The
@@ -311,8 +314,9 @@ leave a stale completion state behind.
 
 ## Key flows
 
-- **First launch.** The navigation root reads `ProfileRepository`: with no
-  profile it shows Onboarding, otherwise Home. Saving the profile moves to Home.
+- **First launch.** `MainActivityViewModel` reads `ProfileRepository`. While there
+  is no profile, the navigation root shows Onboarding instead of the back stack;
+  once the profile is saved, it shows the back stack, which starts at Home.
 - **Browse and search.** The Badges ViewModel combines the catalog with the
   search query and the scout's progress (to show state on each badge).
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
@@ -369,7 +373,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   They check each UI state and each event.
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
-  bindings such as the coroutine dispatcher.
+  bindings such as the coroutine dispatcher. A test class that needs a fake for
+  one repository removes just that repository's module with `@UninstallModules`
+  and supplies the fake with `@BindValue`, as `MainActivityTest` does for the
+  profile.
 - **Room repository tests use Robolectric** with an in-memory database. The
   [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
   recommends plain JVM tests with Room's Kotlin Multiplatform setup instead.

@@ -7,7 +7,6 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -16,8 +15,6 @@ import kotlinx.coroutines.flow.stateIn
 class MainActivityViewModel @Inject constructor(profileRepository: ProfileRepository) :
     ViewModel() {
     val uiState: StateFlow<MainActivityUiState> = profileRepository.observeProfile()
-        .map { it != null }
-        .distinctUntilChanged()
-        .map { MainActivityUiState.Ready(isSetUp = it) }
+        .map { MainActivityUiState.Ready(isSetUp = it != null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainActivityUiState.Loading)
 }

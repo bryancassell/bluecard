@@ -16,6 +16,11 @@ class FakeProfileRepository(profile: Profile? = null) : ProfileRepository {
 
     override fun observeProfile(): Flow<Profile?> = profile
 
+    /** Removes the profile, as DataStore's reset of a corrupted file does. */
+    fun removeProfile() {
+        profile.value = null
+    }
+
     override suspend fun saveProfile(profile: Profile) {
         if (failSaves) throw IOException("Save failed")
         this.profile.value = profile

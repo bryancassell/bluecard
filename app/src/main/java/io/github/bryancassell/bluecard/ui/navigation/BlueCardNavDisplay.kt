@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -15,22 +14,19 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 /**
  * The app's navigation root: shows the screen on top of the back stack.
  *
- * Starts on Onboarding until the scout's profile is saved ([isSetUp]), then on Home.
+ * Home is the fixed start destination. Until the scout's profile is saved ([isSetUp]),
+ * Onboarding is shown in place of the back stack; the navigation principles say one-time
+ * setup screens "should not be considered start destinations":
+ * https://developer.android.com/guide/navigation/principles#fixed_start_destination
  */
 @Composable
 fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
-    val backStack = rememberNavBackStack(if (isSetUp) Home else Onboarding)
-    // Once a profile is saved, Home replaces Onboarding, so back from Home leaves the app.
-    // Following the profile, instead of a signal from the Onboarding screen, also covers
-    // a saved back stack restored after the save finished in the background.
-    LaunchedEffect(isSetUp) {
-        if (isSetUp && Onboarding in backStack) {
-            backStack.add(Home)
-            backStack.remove(Onboarding)
-        }
-    }
+    val backStack = rememberNavBackStack(Home)
     NavDisplay(
-        backStack = backStack,
+        // Deciding here, before anything is drawn, means the wrong screen never shows,
+        // and Onboarding returns if the profile is ever missing. With only one entry,
+        // back leaves the app.
+        backStack = if (isSetUp) backStack else listOf(Onboarding),
         modifier = modifier,
         onBack = { backStack.removeLastOrNull() },
         // Keep each entry's saved UI state, and scope ViewModels to their entry so they

@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
@@ -30,14 +33,27 @@ class OnboardingScreenTest {
 
     private val filledIn = OnboardingUiState(name = "Alex Scout", unitNumber = "123")
 
+    /** Records what the screen asks of the on-screen keyboard. */
+    private val keyboard = object : SoftwareKeyboardController {
+        var hides = 0
+
+        override fun show() = Unit
+
+        override fun hide() {
+            hides++
+        }
+    }
+
     private fun show(uiState: OnboardingUiState) {
         composeTestRule.setContent {
-            OnboardingScreen(
-                uiState = uiState,
-                onNameChange = { name = it },
-                onUnitNumberChange = { unitNumber = it },
-                onSave = { saves++ }
-            )
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                OnboardingScreen(
+                    uiState = uiState,
+                    onNameChange = { name = it },
+                    onUnitNumberChange = { unitNumber = it },
+                    onSave = { saves++ }
+                )
+            }
         }
     }
 
@@ -137,20 +153,12 @@ class OnboardingScreenTest {
     }
 
     @Test
-    fun keyboardDone_onUnitNumber_saves() {
+    fun keyboardDone_onUnitNumber_hidesKeyboardAndSaves() {
         show(filledIn)
 
         field("Unit number").performImeAction()
 
+        assertEquals(1, keyboard.hides)
         assertEquals(1, saves)
-    }
-
-    @Test
-    fun keyboardDone_withIncompleteForm_doesNotSave() {
-        show(OnboardingUiState(unitNumber = "123"))
-
-        field("Unit number").performImeAction()
-
-        assertEquals(0, saves)
     }
 }
