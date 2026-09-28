@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.data.catalog
 
 import java.io.File
+import kotlinx.serialization.SerializationException
 import org.junit.Assert.fail
 import org.junit.Test
 
@@ -12,8 +13,7 @@ class BundledCatalogTest {
         val file = File("src/main/assets/${AssetCatalogRepository.CATALOG_ASSET}")
         val catalog = try {
             parseCatalog(file.readText())
-        } catch (e: IllegalArgumentException) {
-            // SerializationException is an IllegalArgumentException, and so is a bad date.
+        } catch (e: SerializationException) {
             fail("${file.path} is not valid catalog JSON: ${e.message}")
             return
         }

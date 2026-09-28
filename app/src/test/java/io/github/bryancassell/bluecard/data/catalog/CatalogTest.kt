@@ -147,8 +147,9 @@ class CatalogTest {
 
     @Test
     fun localDateSerializer_rejectsNonIsoDate() {
-        assertThrows(RuntimeException::class.java) {
+        val error = assertThrows(SerializationException::class.java) {
             Json.decodeFromString(LocalDateSerializer, "\"January 1, 2026\"")
         }
+        assertEquals("\"January 1, 2026\" is not a date in YYYY-MM-DD form", error.message)
     }
 }
