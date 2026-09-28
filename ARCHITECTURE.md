@@ -231,19 +231,31 @@ At a high level. Exact fields are decided in the feature issues.
 - **Profile** (DataStore): name, unit number.
 - **Catalog** (JSON, read-only): `MeritBadge` → `RequirementsVersion` →
   `Requirement` (a tree) → optional `TrackerDefinition`.
-- **Progress** (Room), keyed by catalog IDs (strings), so progress survives
-  catalog updates:
-  - `BadgeProgress`: badge ID, requirements version, counselor name and contact
-    details, started date, completed date, and whether it was marked complete
-    on a prior date without per-requirement detail.
-  - `RequirementProgress`: badge ID, requirement ID, completed date (optional),
-    comment (optional).
-  - `TrackerEntry`: badge ID, requirement ID, row, and the values for the
-    tracker's columns.
+- **Progress** (Room, database file `bluecard.db`), keyed by catalog IDs
+  (strings), so progress survives catalog updates. Only a started badge has
+  progress; its requirement progress and tracker entries are deleted with it.
+  - `BadgeProgress`: badge ID, requirements version (its effective date, recorded
+    when the badge is started), started date, counselor (name, phone, email, all
+    optional), and the date it was marked completed on a prior date, if any.
+  - `RequirementProgress`: badge ID, requirement number, whether it is complete,
+    completion date (optional), comment (optional).
+  - `TrackerEntry`: an ID, badge ID, requirement number, and the row's values
+    keyed by the catalog's column IDs.
 
-A badge's completion state is derived from its requirement progress and the
-catalog's "N of M children required" rules, or from an explicit prior
-completion date.
+**Completion is derived, not stored**
+(`data/progress/Completion.kt`), from requirement progress and the catalog:
+
+- A requirement without children is complete when the scout marked it complete.
+  One with children is complete when all of them are, or its "N of these"
+  count is.
+- A badge is complete when all its top-level requirements are, or when it was
+  marked completed on a prior date.
+- The completion date is when the last requirement it needed was completed. It
+  is the prior date for a badge marked that way. It is unknown if a needed
+  requirement has no date.
+
+Because nothing about completion is saved, editing or clearing progress can't
+leave a stale completion state behind.
 
 ## Key flows
 
@@ -305,20 +317,24 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
   bindings such as the coroutine dispatcher.
-- **Room DAO and repository tests** use an in-memory database in local tests.
-  The [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
-  recommends plain JVM tests (Room's Kotlin Multiplatform setup with the bundled
-  SQLite driver) over Robolectric. Whether that works in this Android-only
-  module, or needs Robolectric after all, is to be confirmed in the first
-  persistence issue.
+- **Room repository tests use Robolectric** with an in-memory database. The
+  [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
+  recommends plain JVM tests with Room's Kotlin Multiplatform setup instead.
+  That needs a JVM target, where the in-memory builder takes no `Context`. This
+  module is Android-only, and every in-memory builder in Room's Android artifact
+  takes a `Context`, so the tests use Robolectric to supply one (checked with
+  Room 2.8.5).
+- **Contract tests keep fakes honest.** A repository's behavior is written once
+  as an abstract test class (for example `ProgressRepositoryContract`). The real
+  implementation's test and the fake's test both extend it, so the fake used by
+  other features' tests behaves like the real repository.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
   interaction, fed by fake repositories or fixed UI state.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.
-- **Coverage.** Hilt and Room generate classes (for example `Hilt_*`,
-  `*_Factory`, `*_Impl`) that the per-class 80% coverage rule will need to
-  exclude, alongside the existing generated-code exclusions.
+- **Coverage.** Classes that Hilt and Room generate (for example `Hilt_*`,
+  `*_Factory`, `*_Impl`) are excluded from the per-class 80% coverage rule.
 
 ## Decisions
 
@@ -335,6 +351,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |
 | Import | Replaces all current data, after a warning | Simplest correct behavior; merging is tracked in [#28](https://github.com/bryancassell/bluecard/issues/28) |

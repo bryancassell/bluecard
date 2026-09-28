@@ -6,6 +6,8 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
 import javax.inject.Inject
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -25,6 +27,9 @@ class DataModuleTest {
     @Inject
     lateinit var catalogRepository: CatalogRepository
 
+    @Inject
+    lateinit var progressRepository: ProgressRepository
+
     @Before
     fun setUp() {
         hiltRule.inject()
@@ -33,5 +38,10 @@ class DataModuleTest {
     @Test
     fun catalogRepository_isAssetCatalogRepository() {
         assertTrue(catalogRepository is AssetCatalogRepository)
+    }
+
+    @Test
+    fun progressRepository_isRoomProgressRepository() {
+        assertTrue(progressRepository is RoomProgressRepository)
     }
 }
