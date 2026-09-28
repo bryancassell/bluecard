@@ -39,8 +39,9 @@ interface ProgressDao {
     )
     suspend fun getRequirement(badgeId: String, number: String): RequirementProgress?
 
-    // @Upsert rather than SQL "ON CONFLICT DO UPDATE", which needs SQLite 3.24
-    // (Android 11); minSdk 26 ships SQLite 3.19.
+    // @Upsert rather than SQL "ON CONFLICT DO UPDATE": that syntax needs SQLite 3.24.0
+    // (June 2018, https://www.sqlite.org/lang_upsert.html), which Android 8 (API 26-27,
+    // released in 2017) can't include.
     @Upsert
     suspend fun upsertRequirement(requirement: RequirementProgress)
 
