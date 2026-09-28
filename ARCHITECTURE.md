@@ -40,7 +40,8 @@ them.
 5. **No special permissions.** Saving, sharing, exporting and importing go
    through the system file picker and Sharesheet, so the app requests no
    storage or other runtime permissions.
-6. **Runs on Android 8.0 (API 26) and later**, the project's `minSdk`.
+6. **Runs on the project's `minSdk`** (currently API 26). Raising it is decided
+   case by case, when a feature or API needs it.
 7. **New catalog content needs no new code.** Adding a badge, a requirements
    version or a tracker is a change to the catalog file only.
 8. **Testable with local tests and fakes.** Every class with logic can be
@@ -64,7 +65,7 @@ part of the app.
 | An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. Once a badge has a second requirements version, a catalog test checks that every version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files and exclude the cache directory. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
-| The app runs on API 26 and later (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
+| The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
 | A new tracker needs only catalog data (req. 7) | A test renders and stores a tracker defined only in test catalog data. |
 | The code stays testable as it grows (req. 8) | Every class, except generated code, has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test is skipped, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
