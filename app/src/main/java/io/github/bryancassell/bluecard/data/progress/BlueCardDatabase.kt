@@ -13,7 +13,7 @@ abstract class BlueCardDatabase : RoomDatabase() {
     abstract fun progressDao(): ProgressDao
 
     companion object {
-        /** The database file name, also named in the backup rules. */
+        /** The database file name. The backup rules (#33) will need to name it. */
         const val NAME = "bluecard.db"
     }
 }
