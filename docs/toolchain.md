@@ -195,6 +195,79 @@ call the function. Write such one-line functions as expression bodies
 (`suspend fun clearAll() = dao.deleteAll()`), which have no separate closing
 line.
 
+## Checking backup and restore
+
+The app's data is copied to a new phone by Android's
+[Auto Backup](https://developer.android.com/identity/data/autobackup). Two files
+in `app/src/main/res/xml/` list what is backed up, which is only the databases
+directory and the DataStore directory: `data_extraction_rules.xml` for Android
+12 and higher, and `backup_rules.xml` for Android 11 and lower. Keep the rules
+in the two files the same. Lint checks the files' syntax. `BackupRulesTest`
+checks that each set of rules covers the files where the app stores data, that
+all sets match, and that none limits backup to phones that can encrypt it.
+
+After changing the rules, or where the app stores data, check a real backup and
+restore on an emulator, as described in
+[Test backup and restore](https://developer.android.com/identity/data/testingbackup).
+Use an emulator, not your own phone: these commands change the device's backup
+settings. If a phone is also connected, point `adb` at the emulator first with
+`export ANDROID_SERIAL=emulator-5554`.
+
+1. Note the emulator's backup settings, to put them back at the end: whether
+   backup is enabled, and which transport is selected (marked `*`).
+
+   ```sh
+   adb shell bmgr enabled
+   adb shell bmgr list transports
+   ```
+
+2. Install the debug app (`./gradlew installDebug`), open it, enter some data,
+   then press Home. Room creates the database file only when the app first
+   opens the database, so also visit a screen that shows or records progress.
+   Don't force-stop the app: backup skips a stopped app, and `bmgr` reports
+   "Backup is not allowed".
+3. Back up with the local test transport, then uninstall and reinstall the app,
+   which restores the backup:
+
+   ```sh
+   adb shell bmgr enable true
+   adb shell bmgr transport com.android.localtransport/.LocalTransport
+   adb shell settings put secure backup_local_transport_parameters 'is_encrypted=true'
+   adb shell bmgr backupnow io.github.bryancassell.bluecard
+   adb shell pm uninstall --user 0 io.github.bryancassell.bluecard
+   adb install -t app/build/outputs/apk/debug/app-debug.apk
+   ```
+
+4. Before opening the app, list the restored files. Expect only the files the
+   rules include: `files/datastore/profile.preferences_pb`, and
+   `databases/bluecard.db` (with its `-wal` and `-shm` files, if present) if the
+   app had opened its database. Any other file, such as `files/profileInstalled`,
+   means the rules include too much. Then open the app and check that the data
+   is back.
+
+   ```sh
+   adb shell run-as io.github.bryancassell.bluecard find . -type f
+   ```
+
+5. Put back the settings you noted in step 1: select the transport that was
+   marked `*`, remove the test transport's settings, and turn backup off again
+   if it was off.
+
+   ```sh
+   adb shell bmgr transport <transport noted in step 1>
+   adb shell settings delete secure backup_local_transport_parameters
+   adb shell bmgr enable false   # only if backup was off in step 1
+   ```
+
+Device-to-device transfer, used when setting up a new phone from an old one,
+follows the `<device-transfer>` rules. To check it, use the
+[`test_d2d.sh` script](https://developer.android.com/identity/data/testingbackup#TestingTransfer)
+from the same page, on an emulator with a Google Play system image. The script
+switches back to the Google backup transport before reinstalling, because that
+transport performs the restore; if it's skipped, logcat shows "Can't restore
+from D2d Transport". Its cleanup selects that transport again but leaves backup
+on, so turn backup off afterwards if it was off in step 1.
+
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
