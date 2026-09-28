@@ -6,6 +6,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
 
 /** Binds each repository interface to its implementation. */
 @Module
@@ -13,4 +15,7 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 interface DataModule {
     @Binds
     fun bindCatalogRepository(repository: AssetCatalogRepository): CatalogRepository
+
+    @Binds
+    fun bindProgressRepository(repository: RoomProgressRepository): ProgressRepository
 }

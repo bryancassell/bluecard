@@ -72,8 +72,15 @@ Symbol Processing) runs code generators at compile time.
 uses it to generate the dependency injection code; its Gradle plugin wires the
 generated code into the app. Libraries whose generators run through KSP are
 added with `ksp(...)` (for app code) or `kspTest(...)` (for local tests) in
-`app/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions, but
-Hilt must be 2.60.1 or newer to work with Kotlin 2.4.
+`app/build.gradle.kts`. Room also generates its database code with KSP. KSP
+versions are no longer tied to Kotlin versions, but Hilt must be 2.60.1 or newer
+to work with Kotlin 2.4.
+
+**Room schemas** (`app/schemas/`). The Room Gradle plugin writes each database
+version's schema there as JSON. Commit these files: they show schema changes in
+review, and future migration tests read them. Changing an entity means raising
+the database version and adding a migration, or existing users' data can't be
+opened.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
 version lives in this one file. Build scripts refer to entries by alias, such
@@ -126,6 +133,7 @@ Dependabot proposes those updates instead.
 │   └── wrapper/                Pinned Gradle version
 └── app/
     ├── build.gradle.kts        App module: SDK levels, dependencies, lint
+    ├── schemas/                Room database schemas (generated; commit them)
     └── src/
         ├── main/               App code, manifest, resources
         ├── test/               Local tests (run on your computer)
@@ -165,7 +173,7 @@ when it can detect that one is broken:
 
 | Rule | Check |
 |---|---|
-| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android and Hilt classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
+| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android, Hilt and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
@@ -180,6 +188,12 @@ request; `./gradlew createDebugUnitTestCoverageReport` shows the numbers.
 When coverage fails, the error names the class. Run
 `./gradlew createDebugUnitTestCoverageReport` and open the report to see which
 lines no test runs.
+
+One JaCoCo limitation: in a `suspend` function whose call really suspends (for
+example into Room), JaCoCo counts the closing `}` as never run, even when tests
+call the function. Write such one-line functions as expression bodies
+(`suspend fun clearAll() = dao.deleteAll()`), which have no separate closing
+line.
 
 ## Continuous integration
 

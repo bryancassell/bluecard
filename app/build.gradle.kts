@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
     jacoco
 }
 
@@ -71,6 +72,12 @@ android {
     }
 }
 
+// Room writes each database version's schema here, for reviewing schema changes and
+// testing future migrations. Commit the generated files.
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 jacoco {
     toolVersion = libs.versions.jacoco.get()
 }
@@ -85,7 +92,7 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
     group = "verification"
     description = "Fails if any class has less than 80% line coverage from local tests."
     dependsOn("testDebugUnitTest")
-    // Generated Android classes, Hilt-generated classes, and @Preview functions (kept in
+    // Generated Android, Hilt and Room classes, and @Preview functions (kept in
     // *Preview.kt files), which only run in Android Studio.
     val exclusions = listOf(
         "**/R.class",
@@ -103,7 +110,10 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
         "**/*_Provide*Factory*.class",
         "**/*_MembersInjector*.class",
         "**/hilt_aggregated_deps/**",
-        "**/dagger/hilt/internal/**"
+        "**/dagger/hilt/internal/**",
+        // Room: generated database and DAO implementations.
+        "**/*_Impl.class",
+        "**/*_Impl\$*.class"
     )
     val fileTrees = objects
     classDirectories.setFrom(
@@ -166,6 +176,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
