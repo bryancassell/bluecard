@@ -289,6 +289,9 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   `kotlinx-coroutines-test` and a `MainDispatcherRule`, as in the
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
   They check each UI state and each event.
+- **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
+  Hilt's test application, and `@TestInstallIn` modules replace production
+  bindings such as the coroutine dispatcher.
 - **Room DAO and repository tests** use an in-memory database in local tests.
   The [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
   recommends plain JVM tests (Room's Kotlin Multiplatform setup with the bundled

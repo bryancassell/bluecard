@@ -62,8 +62,18 @@ tampered download fails. Upgrade with
 commit all four wrapper files.
 
 **Android Gradle Plugin (AGP).** The plugin that knows how to build Android
-apps. AGP 9 has Kotlin support built in, so the build only adds the Compose
-compiler plugin on top.
+apps. AGP 9 has Kotlin support built in, so the build only adds Kotlin compiler
+plugins on top: Compose, and kotlinx.serialization (for `@Serializable`
+navigation keys).
+
+**KSP and Hilt.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin
+Symbol Processing) runs code generators at compile time.
+[Hilt](https://developer.android.com/training/dependency-injection/hilt-android)
+uses it to generate the dependency injection code; its Gradle plugin wires the
+generated code into the app. Libraries whose generators run through KSP are
+added with `ksp(...)` (for app code) or `kspTest(...)` (for local tests) in
+`app/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions, but
+Hilt must be 2.60.1 or newer to work with Kotlin 2.4.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
 version lives in this one file. Build scripts refer to entries by alias, such
@@ -130,6 +140,15 @@ Dependabot proposes those updates instead.
   which simulates Android on the JVM: mark the class with
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
   device.
+- **Hilt in tests.** ViewModel and other unit tests construct classes directly,
+  passing fakes. Tests that launch a Hilt activity are marked `@HiltAndroidTest`,
+  run with `@Config(application = HiltTestApplication::class)` and use
+  `HiltAndroidRule` (see `MainActivityTest`). In those tests, `@TestInstallIn`
+  modules in `app/src/test` replace production modules, for example
+  `TestDispatchersModule` swaps in a test coroutine dispatcher.
+- **`MainDispatcherRule`** (`app/src/test/.../testing/`) replaces the main
+  dispatcher in ViewModel tests, as in Android's
+  [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
 - **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.
   Use them only for behavior that needs a real Android runtime. They are slower
   and need a device, so `./gradlew build` does not run them. There are none yet.
@@ -145,7 +164,7 @@ when it can detect that one is broken:
 
 | Rule | Check |
 |---|---|
-| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
+| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android and Hilt classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
