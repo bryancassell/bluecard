@@ -174,11 +174,27 @@ not new code.
 **Versions.** Scouting America updates many badges each January 1 and can make
 safety changes at any time
 ([announcement](https://www.scouting.org/program-updates/important-update-merit-badge-requirements-moving-online/)).
-Its advancement rules let a scout who already started a badge keep using the
-old requirements. So each badge in the catalog carries a requirements version
-(its effective date), and progress is recorded against the version the scout
-started with. The catalog keeps a badge's previous version while any scout
-could still be using it.
+The Guide to Advancement (section 7.0.4.3, quoted on the
+[2026 update page](https://www.scouting.org/program-updates/scouts-bsa-advancement-updates-effective-january-1-2026/))
+says scouts who start a badge after a change must use the new requirements,
+while scouts who started before it may finish on the previous requirements or
+switch to the new ones.
+
+- **Each badge has requirement versions**, identified by effective date.
+- **Each badge the scout works on records its version.** It defaults to the
+  newest version. The scout can pick an older one, for example if they started
+  the badge before using the app.
+- **A badge stays on its version** when an app update brings newer
+  requirements, so recorded progress keeps matching its requirements. The scout
+  can switch it to the newest version themselves.
+- **Switching versions** on a badge that already has requirement progress asks
+  for confirmation and starts that badge's requirement progress fresh (counselor
+  details stay). Requirement numbers can mean different things in different
+  versions, so old entries aren't carried over automatically.
+- **Versions offered vs. versions kept.** The picker offers the newest version
+  and the one before it, which covers scouts who started shortly before a
+  change. The catalog keeps every version it has ever shipped, so a badge
+  already on an older version never loses its requirements.
 
 **Shipping and updates.** The catalog is a JSON file bundled in `assets/` and
 loaded into memory at startup (about 140 badges, small enough that search is a
@@ -188,7 +204,9 @@ database migrations.
 
 **Authoring.** Writing summaries for about 140 badges is a content project of
 its own. The catalog can grow in stages, starting with the Eagle-required
-badges; the app treats whatever is in the file as the full list. A unit test
+badges; the app treats whatever is in the file as the full list. Each badge
+whose requirements changed recently also needs its previous version written,
+so scouts who started before the change can pick it. A unit test
 validates the file (unique IDs, valid structure, a URL for every badge).
 
 ## Data model
@@ -291,7 +309,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |
-| Requirement versions | Progress recorded against the version the scout started with | Scouting America's advancement rules allow finishing on the old requirements |
+| Requirement versions | Newest by default; the scout can pick the previous version; a badge stays on its version until the scout switches it | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |
@@ -312,5 +330,6 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   annual requirement changes are tracked.
 - **Import behavior.** Whether import replaces all current data (simplest) or
   merges with it.
-- **Previous requirement versions.** How long the catalog keeps a badge's old
-  requirements after a change.
+- **Carrying progress across versions.** Switching versions starts a badge's
+  requirement progress fresh. A later feature could let the scout copy
+  individual entries across by hand.
