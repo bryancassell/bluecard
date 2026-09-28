@@ -84,6 +84,18 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun setCounselor_dropsBlankFields_andRemovesAnEmptyCounselor() = test {
+        repository.setCounselor(BADGE, Counselor(name = "Pat", phone = " ", email = ""))
+        assertEquals(Counselor(name = "Pat"), progress()!!.badge.counselor)
+
+        repository.setCounselor(BADGE, Counselor(name = "  "))
+        assertNull(progress()!!.badge.counselor)
+
+        repository.setCounselor(BADGE, Counselor())
+        assertNull(progress()!!.badge.counselor)
+    }
+
+    @Test
     fun setCompletedOnPriorDate_setsAndUndoes() = test {
         repository.setCompletedOnPriorDate(BADGE, day)
         assertEquals(day, progress()!!.badge.completedOnPriorDate)

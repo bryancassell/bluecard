@@ -41,7 +41,9 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     override suspend fun setCounselor(badgeId: String, counselor: Counselor?) {
-        updateBadge(badgeId) { it.copy(badge = it.badge.copy(counselor = counselor)) }
+        updateBadge(badgeId) {
+            it.copy(badge = it.badge.copy(counselor = counselor?.normalized()))
+        }
     }
 
     override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) {

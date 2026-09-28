@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import androidx.room.withTransaction
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -10,8 +11,10 @@ import kotlinx.coroutines.flow.Flow
  * Functions are written as expression bodies (`= dao...`): when a call really suspends,
  * JaCoCo never sees a separate closing brace run, and would count it as untested.
  */
-class RoomProgressRepository @Inject constructor(private val dao: ProgressDao) :
+class RoomProgressRepository @Inject constructor(private val database: BlueCardDatabase) :
     ProgressRepository {
+    private val dao = database.progressDao()
+
     override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> = dao.observeAll()
 
     override fun observeProgress(badgeId: String): Flow<BadgeProgressDetails?> =
@@ -24,7 +27,8 @@ class RoomProgressRepository @Inject constructor(private val dao: ProgressDao) :
     ) = dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate))
 
     override suspend fun setCounselor(badgeId: String, counselor: Counselor?) = ifStarted(badgeId) {
-        dao.updateCounselor(badgeId, counselor?.name, counselor?.phone, counselor?.email)
+        val stored = counselor?.normalized()
+        dao.updateCounselor(badgeId, stored?.name, stored?.phone, stored?.email)
     }
 
     override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) =
@@ -74,6 +78,9 @@ class RoomProgressRepository @Inject constructor(private val dao: ProgressDao) :
 
     override suspend fun clearAll() = dao.deleteAll()
 
+    /** Runs [action] if the badge is started, checking and writing in one transaction. */
     private suspend fun <T> ifStarted(badgeId: String, action: suspend () -> T): T =
-        if (dao.isStarted(badgeId)) action() else throw notStartedError(badgeId)
+        database.withTransaction {
+            if (dao.isStarted(badgeId)) action() else throw notStartedError(badgeId)
+        }
 }

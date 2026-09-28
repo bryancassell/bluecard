@@ -17,7 +17,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         BlueCardDatabase::class.java
     ).build()
 
-    override val repository = RoomProgressRepository(database.progressDao())
+    override val repository = RoomProgressRepository(database)
 
     @After
     fun closeDatabase() {

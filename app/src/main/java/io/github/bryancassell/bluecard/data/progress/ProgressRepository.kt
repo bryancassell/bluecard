@@ -21,6 +21,7 @@ interface ProgressRepository {
     /** Starts a badge on a requirements version. Does nothing if it's already started. */
     suspend fun startBadge(badgeId: String, requirementsVersion: LocalDate, startedDate: LocalDate)
 
+    /** Sets the counselor. Blank fields are dropped; a counselor with none left is removed. */
     suspend fun setCounselor(badgeId: String, counselor: Counselor?)
 
     /** Marks the badge completed on [date] without requirement detail, or undoes it (null). */

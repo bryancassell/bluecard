@@ -8,7 +8,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
-import io.github.bryancassell.bluecard.data.progress.ProgressDao
 import javax.inject.Singleton
 
 @Module
@@ -18,7 +17,4 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): BlueCardDatabase =
         Room.databaseBuilder(context, BlueCardDatabase::class.java, BlueCardDatabase.NAME).build()
-
-    @Provides
-    fun provideProgressDao(database: BlueCardDatabase): ProgressDao = database.progressDao()
 }
