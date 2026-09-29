@@ -20,6 +20,8 @@ sealed interface RequirementDetailUiState {
          */
         val completedDate: LocalDate?,
         val children: List<RequirementItem>,
+        /** Its tracker, or null if it has none. */
+        val tracker: TrackerItem?,
         /** Whether the comment field differs from the saved comment, so it can be saved. */
         val commentChanged: Boolean,
         /** The latest date the scout can give as a completion date. */

@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 
 /** A badge, the requirements the scout works on, and what they've recorded against them. */
@@ -13,8 +14,13 @@ data class BadgeRequirements(
     /** The version the badge is worked on ([requirementsVersionFor]). */
     val version: RequirementsVersion,
     /** The scout's recorded requirement progress, keyed by requirement number. */
-    val recorded: Map<String, RequirementProgress>
-)
+    val recorded: Map<String, RequirementProgress>,
+    /** The scout's tracker entries, keyed by requirement number. */
+    val trackerEntries: Map<String, List<TrackerEntry>>
+) {
+    /** [requirement] of this badge as a row. */
+    fun item(requirement: Requirement) = requirement.toItem(recorded, trackerEntries)
+}
 
 /**
  * Badge [badgeId] from this catalog with the scout's [progress] on it, or null if the
@@ -31,7 +37,8 @@ fun List<MeritBadge>.badgeRequirements(
     return BadgeRequirements(
         badge,
         version,
-        progress?.requirements.orEmpty().associateBy { it.requirementNumber }
+        progress?.requirements.orEmpty().associateBy { it.requirementNumber },
+        progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber }
     )
 }
 

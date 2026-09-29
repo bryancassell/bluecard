@@ -41,6 +41,13 @@ abstract class ProgressRepositoryContract {
     private suspend fun trackerValues(number: String) = progress()!!.trackerEntries
         .filter { it.requirementNumber == number }.sortedBy { it.id }.map { it.values }
 
+    /** Adds an entry to a log, a tracker without a fixed number of rows. */
+    private suspend fun addLogEntry(
+        number: String,
+        values: Map<String, String>,
+        badgeId: String = BADGE
+    ) = repository.addTrackerEntry(badgeId, number, null, values, badgeStart)
+
     private fun test(body: suspend () -> Unit): TestResult = runTest {
         repository.startBadge(BADGE, version, started)
         body()
@@ -202,6 +209,13 @@ abstract class ProgressRepositoryContract {
     fun recordingWithStart_startsAnUnstartedBadge() = test {
         repository.markRequirementCompleted(UNSTARTED, "1", day, BadgeStart(version, day))
         repository.setRequirementComment(OTHER, "1", "Next week.", BadgeStart(version, day))
+        repository.addTrackerEntry(
+            COOKING,
+            "4",
+            null,
+            mapOf("meal" to "Chili"),
+            BadgeStart(version, day)
+        )
 
         assertEquals(BadgeProgress(UNSTARTED, version, day), progress(UNSTARTED)!!.badge)
         assertEquals(
@@ -213,6 +227,11 @@ abstract class ProgressRepositoryContract {
             listOf(RequirementProgress(OTHER, "1", comment = "Next week.")),
             progress(OTHER)!!.requirements
         )
+        assertEquals(BadgeProgress(COOKING, version, day), progress(COOKING)!!.badge)
+        assertEquals(
+            listOf(mapOf("meal" to "Chili")),
+            progress(COOKING)!!.trackerEntries.map { it.values }
+        )
     }
 
     @Test
@@ -221,15 +240,17 @@ abstract class ProgressRepositoryContract {
 
         repository.markRequirementCompleted(BADGE, "1", day, later)
         repository.setRequirementComment(BADGE, "2", "Hi", later)
+        repository.addTrackerEntry(BADGE, "7a", null, mapOf("minutes" to "30"), later)
 
         assertEquals(BadgeProgress(BADGE, version, started), progress()!!.badge)
         assertEquals(listOf("1", "2"), progress()!!.requirements.map { it.requirementNumber })
+        assertEquals(listOf(mapOf("minutes" to "30")), trackerValues("7a"))
     }
 
     @Test
     fun trackerEntries_addUpdateDelete() = test {
-        val first = repository.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
-        val second = repository.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "45"))
+        val first = addLogEntry("7a", mapOf("minutes" to "30"))
+        val second = addLogEntry("7a", mapOf("minutes" to "45"))
         assertEquals(
             listOf(mapOf("minutes" to "30"), mapOf("minutes" to "45")),
             trackerValues("7a")
@@ -242,11 +263,41 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun addTrackerEntry_toAFilledRow_givesItTheNewValues() = test {
+        val week1 = repository.addTrackerEntry(BADGE, "2", 1, mapOf("income" to "10"), badgeStart)
+        repository.addTrackerEntry(BADGE, "2", 2, mapOf("income" to "20"), badgeStart)
+        repository.addTrackerEntry(BADGE, "3", 1, mapOf("income" to "30"), badgeStart)
+
+        val again = repository.addTrackerEntry(BADGE, "2", 1, mapOf("spent" to "5"), badgeStart)
+
+        assertEquals(week1, again)
+        assertEquals(
+            listOf(
+                Triple("2", 1, mapOf("spent" to "5")),
+                Triple("2", 2, mapOf("income" to "20")),
+                Triple("3", 1, mapOf("income" to "30"))
+            ),
+            progress()!!.trackerEntries
+                .map { Triple(it.requirementNumber, it.rowNumber, it.values) }
+                .sortedWith(compareBy({ it.first }, { it.second }))
+        )
+    }
+
+    @Test
+    fun trackerValues_areTrimmed_andBlankOnesDropped() = test {
+        val id = addLogEntry("7a", mapOf("activity" to "  Run ", "minutes" to " ", "notes" to ""))
+        assertEquals(listOf(mapOf("activity" to "Run")), trackerValues("7a"))
+
+        repository.updateTrackerEntry(id, mapOf("activity" to "", "minutes" to " 30 "))
+        assertEquals(listOf(mapOf("minutes" to "30")), trackerValues("7a"))
+    }
+
+    @Test
     fun clearRequirement_removesOnlyThatRequirement() = test {
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
         repository.setRequirementComment(BADGE, "7a", "Week 1 went well.", badgeStart)
-        repository.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
-        repository.addTrackerEntry(BADGE, "7b", mapOf("mile" to "9:30"))
+        addLogEntry("7a", mapOf("minutes" to "30"))
+        addLogEntry("7b", mapOf("mile" to "9:30"))
 
         repository.clearRequirement(BADGE, "7a")
 
@@ -264,7 +315,7 @@ abstract class ProgressRepositoryContract {
         repository.startBadge("archery", version, started)
         repository.setCounselor(BADGE, Counselor(name = "Pat"))
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
-        repository.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
+        addLogEntry("7a", mapOf("minutes" to "30"))
         repository.markRequirementCompleted("archery", "1", day, badgeStart)
 
         repository.clearBadge(BADGE)
@@ -283,7 +334,7 @@ abstract class ProgressRepositoryContract {
     fun clearAll_removesAllProgress() = test {
         repository.startBadge("archery", version, started)
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
-        repository.addTrackerEntry("archery", "2", mapOf("score" to "250"))
+        addLogEntry("2", mapOf("score" to "250"), badgeId = "archery")
 
         repository.clearAll()
 
@@ -307,9 +358,6 @@ abstract class ProgressRepositoryContract {
             "setCompletedOnPriorDate" to { repository.setCompletedOnPriorDate(UNSTARTED, day) },
             "markRequirementNotCompleted" to {
                 repository.markRequirementNotCompleted(UNSTARTED, "1")
-            },
-            "addTrackerEntry" to {
-                repository.addTrackerEntry(UNSTARTED, "7a", mapOf("minutes" to "30"))
             }
         )
         for ((name, write) in writes) {
@@ -367,7 +415,7 @@ abstract class ProgressRepositoryContract {
             "setRequirementComment" to
                 { unwritable.setRequirementComment(BADGE, "1", "Hi", badgeStart) },
             "addTrackerEntry" to {
-                unwritable.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
+                unwritable.addTrackerEntry(BADGE, "7a", null, mapOf("minutes" to "30"), badgeStart)
             },
             "updateTrackerEntry" to { unwritable.updateTrackerEntry(1, mapOf("minutes" to "30")) },
             "deleteTrackerEntry" to { unwritable.deleteTrackerEntry(1) },
@@ -386,5 +434,6 @@ abstract class ProgressRepositoryContract {
         const val BADGE = "personal-fitness"
         const val UNSTARTED = "archery"
         const val OTHER = "camping"
+        const val COOKING = "cooking"
     }
 }

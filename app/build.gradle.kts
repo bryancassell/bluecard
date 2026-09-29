@@ -58,6 +58,12 @@ android {
         }
     }
 
+    // MigrationTestHelper reads each database version's schema from assets. The Room plugin
+    // adds the schemas to instrumented tests' assets only, and migration tests run locally,
+    // where Robolectric reads the debug build's assets. So debug builds carry the schemas too;
+    // release builds don't.
+    sourceSets.getByName("debug").assets.directories.add("$projectDir/schemas")
+
     testCoverage {
         jacocoVersion = libs.versions.jacoco.get()
     }
@@ -194,6 +200,8 @@ dependencies {
     // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
     testImplementation(libs.androidx.lifecycle.viewmodel.testing)
     testImplementation(libs.hilt.android.testing)
+    // MigrationTestHelper, which checks each database migration against the committed schemas.
+    testImplementation(libs.androidx.room.testing)
     kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.junit)
     // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.

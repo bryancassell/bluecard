@@ -24,6 +24,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -41,6 +42,7 @@ class RequirementDetailScreenTest {
     private val today = LocalDate.of(2026, 5, 20)
 
     private val openedRequirements = mutableListOf<String>()
+    private val openedTrackerEntries = mutableListOf<Pair<Long?, Int?>>()
     private val completedChanges = mutableListOf<Pair<String, Boolean>>()
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
@@ -55,8 +57,16 @@ class RequirementDetailScreenTest {
         children = listOf(
             RequirementItem("2a", "Cook a meal.", null, completed = true, false),
             RequirementItem("2b", "Lead one hike.", Choice(1, 2), completed = false, true),
-            RequirementItem("2c", "Pitch a tent.", null, completed = false, false)
+            RequirementItem(
+                "2c",
+                "Keep a camping log.",
+                null,
+                completed = false,
+                false,
+                TrackerCount(3, null, "nights")
+            )
         ),
+        tracker = null,
         commentChanged = false,
         today = today
     )
@@ -67,8 +77,44 @@ class RequirementDetailScreenTest {
         requirement = RequirementItem("1", "Plan a campout.", null, false, false),
         completedDate = null,
         children = emptyList(),
+        tracker = null,
         commentChanged = false,
         today = today
+    )
+
+    /** A requirement with a log, a tracker the scout adds rows to. */
+    private val withLog = leaf.copy(
+        tracker = TrackerItem(
+            count = TrackerCount(2, null, "sessions"),
+            rowTitle = "Session",
+            rowLabel = "session",
+            rows = listOf(
+                TrackerRow(
+                    1,
+                    11,
+                    listOf(
+                        TrackerValue(TrackerColumnType.DATE, "2026-04-12"),
+                        TrackerValue(TrackerColumnType.TEXT, "Running"),
+                        TrackerValue(TrackerColumnType.NUMBER, "30")
+                    )
+                ),
+                TrackerRow(2, 12, listOf(TrackerValue(TrackerColumnType.TEXT, "Swimming")))
+            )
+        )
+    )
+
+    /** A requirement with a tracker of three weeks, the second filled in. */
+    private val withWeeks = leaf.copy(
+        tracker = TrackerItem(
+            count = TrackerCount(1, 3, "weeks"),
+            rowTitle = "Week",
+            rowLabel = "week",
+            rows = listOf(
+                TrackerRow(1, null, emptyList()),
+                TrackerRow(2, 5, listOf(TrackerValue(TrackerColumnType.NUMBER, "20"))),
+                TrackerRow(3, null, emptyList())
+            )
+        )
     )
 
     private val completedLeaf = leaf.copy(
@@ -82,6 +128,9 @@ class RequirementDetailScreenTest {
                 uiState = uiState,
                 comment = comment,
                 onOpenRequirement = { openedRequirements += it },
+                onOpenTrackerEntry = { entryId, rowNumber ->
+                    openedTrackerEntries += entryId to rowNumber
+                },
                 onCompletedChange = { number, completed ->
                     completedChanges += number to completed
                 },
@@ -212,6 +261,70 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun subRequirementWithTracker_showsHowMuchIsFilledIn() {
+        show(ready)
+
+        row("Keep a camping log.").assert(hasText("3 nights"))
+    }
+
+    @Test
+    fun noTracker_showsNoTrackerRows() {
+        show(leaf)
+
+        composeTestRule.onNodeWithText("Add", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun log_showsCountAsHeading_thenItsEntries() {
+        show(withLog)
+
+        composeTestRule.onNodeWithText("2 sessions").performScrollTo().assert(isHeading())
+        row("Session 1").assert(hasText("Apr 12, 2026 · Running · 30"))
+        row("Session 2").assert(hasText("Swimming"))
+    }
+
+    @Test
+    fun logEntry_isButtonThatOpensIt() {
+        show(withLog)
+
+        row("Session 2")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .performClick()
+
+        assertEquals(listOf<Pair<Long?, Int?>>(12L to null), openedTrackerEntries)
+    }
+
+    @Test
+    fun addToLog_opensANewEntry() {
+        show(withLog)
+
+        composeTestRule.onNodeWithText("Add session").performScrollTo().performClick()
+
+        assertEquals(listOf<Pair<Long?, Int?>>(null to null), openedTrackerEntries)
+    }
+
+    @Test
+    fun fixedRows_listsEveryRow_withNoAddButton() {
+        show(withWeeks)
+
+        composeTestRule.onNodeWithText("1 of 3 weeks").performScrollTo().assert(isHeading())
+        row("Week 1").assert(!hasText("20"))
+        row("Week 2").assert(hasText("20"))
+        row("Week 3")
+        composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
+    }
+
+    @Test
+    fun fixedRow_opensByItsNumber_filledInOrNot() {
+        show(withWeeks)
+
+        row("Week 3").performClick()
+        row("Week 2").performClick()
+
+        assertEquals(listOf<Pair<Long?, Int?>>(null to 3, null to 2), openedTrackerEntries)
+    }
+
+    @Test
     fun checkingSubRequirement_marksItCompleted() {
         show(ready)
 
@@ -226,7 +339,7 @@ class RequirementDetailScreenTest {
     fun everySubRequirement_isButtonThatOpensIt() {
         show(ready)
 
-        for (summary in listOf("Cook a meal.", "Lead one hike.", "Pitch a tent.")) {
+        for (summary in listOf("Cook a meal.", "Lead one hike.", "Keep a camping log.")) {
             row(summary)
                 .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
                 .performClick()

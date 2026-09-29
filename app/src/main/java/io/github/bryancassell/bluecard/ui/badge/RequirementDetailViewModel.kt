@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * One requirement of a badge and its sub-requirements, with the scout's progress: whether
- * it's complete and when, and their comment on it.
+ * it's complete and when, their comment on it, and its tracker.
  */
 @HiltViewModel(assistedFactory = RequirementDetailViewModel.Factory::class)
 class RequirementDetailViewModel @AssistedInject constructor(
@@ -74,9 +74,10 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val text = if (commentLoaded) commentText else loadComment(recorded?.comment)
         RequirementDetailUiState.Ready(
             badgeName = found.badge.name,
-            requirement = requirement.toItem(found.recorded),
+            requirement = found.item(requirement),
             completedDate = recorded?.completedDate,
-            children = requirement.children.map { it.toItem(found.recorded) },
+            children = requirement.children.map(found::item),
+            tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
             commentChanged = normalizedComment(text) != recorded?.comment,
             today = today(),
             saveFailure = saveFailure

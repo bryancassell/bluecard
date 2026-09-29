@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
+import io.github.bryancassell.bluecard.ui.badge.TrackerEntryRoute
 import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
 import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
 import io.github.bryancassell.bluecard.ui.home.HomeRoute
@@ -73,7 +74,20 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 RequirementDetailRoute(
                     badgeId = key.badgeId,
                     number = key.number,
-                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
+                    onOpenTrackerEntry = { entryId, rowNumber ->
+                        navigate(TrackerEntryDetail(key.badgeId, key.number, entryId, rowNumber))
+                    }
+                )
+            }
+            entry<TrackerEntryDetail> { key ->
+                TrackerEntryRoute(
+                    badgeId = key.badgeId,
+                    number = key.number,
+                    entryId = key.entryId,
+                    rowNumber = key.rowNumber,
+                    // Only while it's on top, so it can't close a screen opened after it.
+                    onClose = { if (backStack.lastOrNull() == key) backStack.removeLastOrNull() }
                 )
             }
             entry<DataManagement> { DataManagementScreen() }

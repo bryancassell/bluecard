@@ -67,7 +67,7 @@ part of the app.
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
-| A new tracker needs only catalog data (req. 7) | A test renders and stores a tracker defined only in test catalog data. |
+| A new tracker needs only catalog data (req. 7) | Tests render and store trackers defined only in test catalog data (`TrackerEntryViewModelTest`, `MainActivityTest`) **(CI)**. |
 | The code stays testable as it grows (req. 8) | Every class, except generated code and `@Preview` functions, has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
 
@@ -204,8 +204,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ViewModel creates the state with `SavedStateHandle.textFieldState`
   (`ui/TextFieldSavedState.kt`), which restores the text and keeps it with a
   [saved state provider](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate#non-parcelable).
-  Onboarding's name and unit number fields, Badges search and the requirement
-  comment work this way. The provider reads the text each time the system
+  Onboarding's name and unit number fields, Badges search, the requirement
+  comment and a tracker row's fields work this way. The provider reads the text each time the system
   saves state, so the text survives the system stopping the app even if it
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
@@ -218,13 +218,16 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   out. The comment is kept only once the saved comment has loaded into
   it (`restoredText` and `keepText`), so if the system stops the app before
   then, the page loads the saved comment again instead of restoring an empty
-  field.
+  field. A tracker row's fields work the same way. Its date columns are text
+  fields too, holding the date as `YYYY-MM-DD` as it's stored, so they're kept
+  the same way; the page shows them as dates with a date picker.
   A ViewModel that fills a field with stored text once it
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
   snapshot, which it does once a frame. Saved state has a size limit, so Badges
-  search and the requirement comment have a length limit (`TextLengthLimit`);
+  search, the requirement comment and a tracker row's fields have a length
+  limit (`TextLengthLimit`);
   Onboarding's fields don't have one yet. It keeps as much of an edit, such as
   a long paste, as fits, and never cuts the text already in the field or splits
   an emoji.
@@ -420,7 +423,8 @@ io.github.bryancassell.bluecard
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
 | **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
-| **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, the scout's comment, and its tracker. |
+| **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
+| **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
 The PRD asks that requirements be understandable "without extensive
@@ -429,11 +433,12 @@ is one row: its official number, our one-line summary, "Do N of M" when only
 some of its sub-requirements are needed, and its completion state. A requirement
 without sub-requirements has a checkbox, so the scout can mark many of them
 complete without leaving the list. One with sub-requirements has a check once
-enough of them are done. Every row opens the requirement's own page, with its
-completion date and comment. A requirement with sub-requirements lists them
-there the same way, and each opens its own page in turn. A requirement with a
-tracker will show it there too
-([#40](https://github.com/bryancassell/bluecard/issues/40)). Each page shows one level of the requirement tree.
+enough of them are done. A requirement with a tracker says how much of it is
+filled in, such as "8 of 12 weeks". Every row opens the requirement's own page,
+with its completion date and comment. A requirement with sub-requirements lists
+them there the same way, and each opens its own page in turn. A requirement
+with a tracker lists its rows there, and each opens the Tracker entry page (see
+[Key flows](#key-flows)). Each page shows one level of the requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
 version for a badge the scout hasn't started.
 
@@ -535,8 +540,11 @@ At a high level. Exact fields are decided in the feature issues.
     optional), and the date it was marked completed on a prior date, if any.
   - `RequirementProgress`: badge ID, requirement number, whether it is complete,
     completion date (optional), comment (optional).
-  - `TrackerEntry`: an ID, badge ID, requirement number, and the row's values
-    keyed by the catalog's column IDs.
+  - `TrackerEntry`: an ID, badge ID, requirement number, the row it fills in a
+    tracker with a fixed number of rows (null in a log), and the row's values
+    keyed by the catalog's column IDs, all stored as text (a date as
+    `YYYY-MM-DD`). A row of a fixed-row tracker has at most one entry, which a
+    unique index enforces.
 
 **Completion is derived, not stored**
 (`data/progress/Completion.kt`), from requirement progress and the catalog:
@@ -587,8 +595,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   they update as soon as data is saved.
   - **Recording anything starts the badge**, on the requirements version its
     pages show until then (the newest), dated today (`ui/badge/ProgressRecorder.kt`).
-    There's no separate "start" step. `markRequirementCompleted` and
-    `setRequirementComment` take a `BadgeStart`, and `ProgressRepository` starts
+    There's no separate "start" step. `markRequirementCompleted`,
+    `setRequirementComment` and `addTrackerEntry` take a `BadgeStart`, and `ProgressRepository` starts
     the badge in the same transaction as the write, so a save that fails doesn't
     leave the badge started. Other functions that record progress should take one
     when a screen first calls them. Undoing everything recorded leaves the badge
@@ -610,6 +618,25 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     (`normalizedComment`), and an empty comment removes it. The field takes up
     to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
     stopping the app, but leaving the page discards it.
+  - **Trackers.** The catalog defines each tracker's columns (date, number or
+    text), what a row is called ("week", "weeks"), and optionally a fixed
+    number of rows. A log, a tracker without a fixed number, lists its entries
+    in the order they were added, numbered from 1 ("Session 3"), with a button
+    to add one. A fixed-row tracker lists every row ("Week 1" to "Week 12"),
+    filled in or not. Either kind opens a row on the Tracker entry page, a form
+    with a field for each column: a date with a date picker (no dates after
+    today, as for completion dates), a number field that takes only digits and
+    one decimal separator, or a text field of up to 500 characters. Save is
+    enabled once the fields differ from what's saved and aren't all empty; a row
+    with nothing in it is deleted instead. The page reads what's saved when it
+    opens, and closes once a save or delete is done (`done` in its UI state),
+    so a save that fails keeps the page open with the scout's edit. Delete asks
+    first. Leaving the page discards an unsaved edit, as with a comment.
+    `addTrackerEntry` gives a fixed-row tracker's row that already has an entry
+    the new values instead of adding a second one. The repository trims spaces
+    around each value and drops blank ones (`normalizedTrackerValues`). A
+    tracker doesn't complete its requirement: the scout marks it complete, as
+    one without a tracker.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,
   requirement summaries, dates, comments and tracker data onto `PdfDocument`
   pages and writes the file to the app's cache directory. The scout can:
@@ -696,6 +723,11 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   module is Android-only, and every in-memory builder in Room's Android artifact
   takes a `Context`, so the tests use Robolectric to supply one (checked with
   Room 2.8.5).
+- **Migration tests** (`MigrationTest`) run locally too, with Room's
+  `MigrationTestHelper`. It reads each version's schema from assets, and the
+  Room Gradle plugin adds `app/schemas/` to instrumented tests' assets only.
+  Robolectric reads the debug build's assets, so debug builds carry the
+  schemas as assets; release builds don't.
 - **Contract tests keep fakes honest.** A repository's behavior is written once
   as an abstract test class (for example `ProgressRepositoryContract`). The real
   implementation's test and the fake's test both extend it, so the fake used by
@@ -736,6 +768,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
 | Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
+| Trackers | Listed on the requirement's page; each row filled in on its own page with a field for each column, saved with a Save button. A fixed-row tracker shows every row, and a row keeps its number when another is deleted | Four or more fields don't fit in a dialog or a table row on a phone once the keyboard is up. Numbered rows match trackers such as a 13-week budget, where each week is its own row |
+| Tracker row names | The catalog gives the singular and plural in lowercase ("week", "weeks"), and the app capitalizes the singular for titles | Counts read naturally ("8 of 12 weeks", "1 session") without the app pluralizing catalog text |
 | Requirement comments | On every requirement, saved with a Save button | The scout decides when a comment is saved, and a save that fails is reported right then, not while they're still typing |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |

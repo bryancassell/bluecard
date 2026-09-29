@@ -70,6 +70,33 @@
     <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
          it, such as after the badge moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
+    <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
+         rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
+    <string name="tracker_count">%1$d %2$s</string>
+    <!-- How much of a requirement's tracker is filled in, when it has a fixed number of rows,
+         such as "8 of 12 weeks". What a row is called comes from the catalog. -->
+    <string name="tracker_count_of">%1$d of %2$d %3$s</string>
+    <!-- Title of a row of a tracker, with what a row is called and its number, such as
+         "Week 3" or "Session 12". -->
+    <string name="tracker_row_title">%1$s %2$d</string>
+    <!-- Button that adds a row to a tracker, with what a row is called, such as
+         "Add session". -->
+    <string name="tracker_add_row">Add %1$s</string>
+    <!-- Screen reader action on a tracker row, which opens it to fill in or change: "Double tap
+         to edit". -->
+    <string name="tracker_edit_row">edit</string>
+    <!-- Shown for a date in a tracker row that the scout hasn't given. -->
+    <string name="tracker_entry_no_date">No date</string>
+    <string name="tracker_entry_save">Save</string>
+    <string name="tracker_entry_delete">Delete</string>
+    <!-- Asks before a tracker row is deleted, with what a row is called, such as "Delete this
+         session?" -->
+    <string name="tracker_entry_delete_title">Delete this %1$s?</string>
+    <string name="tracker_entry_delete_message">What you entered in it will be removed.</string>
+    <string name="tracker_entry_cancel">Cancel</string>
+    <!-- Shown in place of a tracker row's page when the requirements the badge uses don't have
+         the tracker or the row, such as after the row was deleted. -->
+    <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
     <string name="data_management_title">Data management</string>
     <plurals name="home_completed">
         <item quantity="one">%1$d completed</item>

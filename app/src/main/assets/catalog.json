@@ -342,7 +342,8 @@
                         "type": "text"
                       }
                     ],
-                    "rowLabel": "Session"
+                    "rowLabel": "session",
+                    "rowLabelPlural": "sessions"
                   }
                 },
                 {

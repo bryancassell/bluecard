@@ -6,6 +6,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -56,7 +57,7 @@ class BadgeRequirementsTest {
     @Test
     fun notStarted_isBadgeOnNewestVersion_withNothingRecorded() {
         assertEquals(
-            BadgeRequirements(camping, newest, emptyMap()),
+            BadgeRequirements(camping, newest, emptyMap(), emptyMap()),
             catalog.badgeRequirements("camping", null)
         )
     }
@@ -67,6 +68,31 @@ class BadgeRequirementsTest {
 
         assertEquals(older, found?.version)
         assertEquals(setOf("1"), found?.recorded?.keys)
+    }
+
+    @Test
+    fun started_hasTrackerEntriesByNumber() {
+        val first = TrackerEntry(1, "camping", "2a", values = mapOf("meal" to "Chili"))
+        val second = TrackerEntry(2, "camping", "2a", values = mapOf("meal" to "Stew"))
+        val other = TrackerEntry(3, "camping", "1", values = mapOf("site" to "Lake"))
+        val progress = startedOn(
+            newest.effectiveDate
+        ).copy(trackerEntries = listOf(first, other, second))
+
+        assertEquals(
+            mapOf("2a" to listOf(first, second), "1" to listOf(other)),
+            catalog.badgeRequirements("camping", progress)?.trackerEntries
+        )
+    }
+
+    @Test
+    fun item_isRequirementWithWhatWasRecorded() {
+        val found = catalog.badgeRequirements("camping", startedOn(newest.effectiveDate, "2a"))!!
+
+        assertEquals(
+            RequirementItem("2", "Do one of these.", Choice(1, 2), true, true),
+            found.item(newest.requirements[1])
+        )
     }
 
     @Test

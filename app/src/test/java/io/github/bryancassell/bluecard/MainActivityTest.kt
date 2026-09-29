@@ -10,10 +10,12 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
@@ -37,9 +39,13 @@ import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
@@ -101,7 +107,18 @@ class MainActivityTest {
                     RequirementsVersion(
                         LocalDate.of(2026, 1, 1),
                         listOf(
-                            Requirement("1", "First."),
+                            Requirement(
+                                "1",
+                                "First.",
+                                tracker = TrackerDefinition(
+                                    listOf(
+                                        TrackerColumn("night", "Night", TrackerColumnType.DATE),
+                                        TrackerColumn("notes", "Notes", TrackerColumnType.TEXT)
+                                    ),
+                                    "night",
+                                    "nights"
+                                )
+                            ),
                             Requirement(
                                 "2",
                                 "Second.",
@@ -196,6 +213,10 @@ class MainActivityTest {
 
     private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
         .first()?.requirements?.singleOrNull { it.requirementNumber == number }
+
+    private suspend fun trackerValues(number: String) = progressRepository
+        .observeProgress("camping").first()?.trackerEntries.orEmpty()
+        .filter { it.requirementNumber == number }.map { it.values }
 
     /** Badges is showing, and Badge detail isn't. */
     private fun assertBadgesShowing() {
@@ -513,6 +534,63 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
         pressBack()
         rowCheckbox("1").assertIsOn()
+    }
+
+    private fun notesField() = composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
+
+    // The acceptance test of trackers: a row the scout adds is listed on the requirement's
+    // page, counted on the badge's, and saved.
+    @Test
+    fun trackerRow_isAddedAndCounted() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Night 1").assertIsDisplayed()
+        notesField().performTextInput("Rained all night.")
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        // Saving closes the row's page.
+        composeTestRule.onNodeWithText("1 night").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Night 1") and hasText("Rained all night."))
+            .performScrollTo()
+            .assertIsDisplayed()
+        assertEquals(
+            listOf(mapOf("notes" to "Rained all night.")),
+            runBlocking { trackerValues("1") }
+        )
+        composeTestRule.waitForIdle()
+        pressBack()
+        composeTestRule.onNode(hasText("First.") and hasText("1 night")).assertIsDisplayed()
+    }
+
+    @Test
+    fun trackerRow_isEditedAndDeleted() {
+        runBlocking {
+            progressRepository.addTrackerEntry(
+                "camping",
+                "1",
+                null,
+                mapOf("notes" to "Clear skies."),
+                BadgeStart(LocalDate.of(2026, 1, 1), today)
+            )
+        }
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+
+        composeTestRule.onNodeWithText("Night 1").performScrollTo().performClick()
+        notesField().performTextInput(" Saw a meteor.")
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+        composeTestRule.onNode(hasText("Night 1") and hasText("Clear skies. Saw a meteor."))
+            .performScrollTo()
+            .assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("Night 1").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Delete").performScrollTo().performClick()
+        composeTestRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
+
+        composeTestRule.onNodeWithText("0 nights").performScrollTo().assertIsDisplayed()
+        assertEquals(emptyList<Map<String, String>>(), runBlocking { trackerValues("1") })
     }
 
     // Dates, like numbers, follow the strings' language, so on a Persian device the English

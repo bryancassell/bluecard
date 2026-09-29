@@ -39,8 +39,9 @@ class CatalogTest {
                             { "id": "miles", "label": "Miles", "type": "number" },
                             { "id": "notes", "label": "Notes", "type": "text" }
                           ],
-                          "rowCount": 5,
-                          "rowLabel": "Hike"
+                          "rowLabel": "hike",
+                          "rowLabelPlural": "hikes",
+                          "rowCount": 5
                         }
                       }
                     ]
@@ -92,8 +93,9 @@ class CatalogTest {
                                                         TrackerColumnType.TEXT
                                                     )
                                                 ),
-                                                rowCount = 5,
-                                                rowLabel = "Hike"
+                                                rowLabel = "hike",
+                                                rowLabelPlural = "hikes",
+                                                rowCount = 5
                                             )
                                         )
                                     )

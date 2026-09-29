@@ -75,7 +75,10 @@ data class RequirementProgress(
     val comment: String? = null
 )
 
-/** One row of a requirement's tracker: values keyed by the catalog's column IDs. */
+/**
+ * One row of a requirement's tracker: values keyed by the catalog's column IDs. A tracker with
+ * a fixed number of rows has at most one entry for each row.
+ */
 @Entity(
     tableName = "tracker_entry",
     foreignKeys = [
@@ -86,14 +89,24 @@ data class RequirementProgress(
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("badgeId", "requirementNumber")]
+    // SQLite counts every null as different, so a log can have any number of entries.
+    indices = [Index("badgeId", "requirementNumber", "rowNumber", unique = true)]
 )
 data class TrackerEntry(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val badgeId: String,
     val requirementNumber: String,
+    /** The row it fills in a tracker with a fixed number of rows, from 1; null in a log. */
+    val rowNumber: Int? = null,
     val values: Map<String, String>
 )
+
+/**
+ * Tracker values as repositories store them: without spaces around each value, and without
+ * values that are blank.
+ */
+fun normalizedTrackerValues(values: Map<String, String>): Map<String, String> =
+    values.mapValues { it.value.trim() }.filterValues { it.isNotEmpty() }
 
 /** A started badge with everything recorded for it. */
 data class BadgeProgressDetails(

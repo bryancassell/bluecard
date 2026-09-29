@@ -1,0 +1,249 @@
+package io.github.bryancassell.bluecard.ui.badge
+
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
+import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.SaveRunner
+import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.keepText
+import io.github.bryancassell.bluecard.ui.restoredText
+import java.time.Clock
+import java.time.LocalDate
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.stateIn
+
+/**
+ * One row of a requirement's tracker, for the scout to fill in, change or delete: in a log,
+ * entry [entryId], or a new one when it's null; in a tracker with a fixed number of rows, row
+ * [rowNumber].
+ *
+ * It reads what's saved when the page opens, and the page is a form: the scout saves it, which
+ * closes the page, or leaves to discard their changes.
+ */
+@HiltViewModel(assistedFactory = TrackerEntryViewModel.Factory::class)
+class TrackerEntryViewModel @AssistedInject constructor(
+    @Assisted("badgeId") private val badgeId: String,
+    @Assisted("number") private val number: String,
+    @Assisted private val entryId: Long?,
+    @Assisted private val rowNumber: Int?,
+    catalogRepository: CatalogRepository,
+    private val progressRepository: ProgressRepository,
+    private val clock: Clock,
+    // Keeps unsaved values if the system stops the app in the background.
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+    private val _fields = mutableMapOf<String, TextFieldState>()
+
+    /**
+     * The row's values as the scout edits them, by column ID: a text or number column's text,
+     * and a date column's date as YYYY-MM-DD, or empty. They're filled in when the page first
+     * loads, with the saved values or the unsaved ones the system stopped the app with.
+     */
+    val fields: Map<String, TextFieldState> = _fields
+
+    private val saves = SaveRunner(viewModelScope)
+    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
+
+    /** Whether a save or delete is under way. */
+    private val saving = MutableStateFlow(false)
+
+    /** Whether the row was saved or deleted, so the page closes. */
+    private val done = MutableStateFlow(false)
+
+    /** The saved entry, once the page loads; null for a new one or a row not filled in. */
+    private var savedEntryId: Long? = null
+
+    val uiState: StateFlow<TrackerEntryUiState> = flow {
+        val row = load(
+            catalogRepository.getBadges(),
+            progressRepository.observeProgress(badgeId).first()
+        )
+        if (row == null) {
+            emit(TrackerEntryUiState.Unavailable)
+        } else {
+            emitAll(
+                combine(
+                    snapshotFlow { _fields.mapValues { it.value.text.toString() } },
+                    saving,
+                    done,
+                    saves.failure
+                ) { values, saving, done, saveFailure ->
+                    ready(row, values, saving, done, saveFailure)
+                }
+            )
+        }
+    }.catchLoadFailure(TrackerEntryUiState.LoadFailed).stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        TrackerEntryUiState.Loading
+    )
+
+    /** The row as the page loaded it: which one it is, and what it has saved. */
+    private class LoadedRow(
+        val badgeName: String,
+        val tracker: TrackerItem,
+        val columns: List<TrackerColumn>,
+        /** The row it is, from 1: the one it fills, or its place in a log. */
+        val shownNumber: Int,
+        val saved: Map<String, String>
+    )
+
+    private fun ready(
+        row: LoadedRow,
+        values: Map<String, String>,
+        saving: Boolean,
+        done: Boolean,
+        saveFailure: SaveFailure?
+    ): TrackerEntryUiState.Ready {
+        val stored = normalizedTrackerValues(values)
+        return TrackerEntryUiState.Ready(
+            badgeName = row.badgeName,
+            requirementNumber = number,
+            rowTitle = row.tracker.rowTitle,
+            rowNumber = row.shownNumber,
+            rowLabel = row.tracker.rowLabel,
+            columns = row.columns,
+            dates = row.columns.filter { it.type == TrackerColumnType.DATE }
+                .mapNotNull { column ->
+                    stored[column.id]?.let { column.id to LocalDate.parse(it) }
+                }
+                .toMap(),
+            // A row with nothing in it is deleted instead.
+            canSave = !saving && !done && stored.isNotEmpty() && stored != row.saved,
+            // Stays while a save or delete is under way, which ignores another (finish).
+            canDelete = savedEntryId != null,
+            today = LocalDate.now(clock),
+            done = done,
+            saveFailure = saveFailure
+        )
+    }
+
+    /**
+     * Finds the row, and fills in the fields the first time. Null if the requirements the
+     * badge uses don't have the tracker, or the tracker doesn't have the row.
+     */
+    private fun load(catalog: List<MeritBadge>, progress: BadgeProgressDetails?): LoadedRow? {
+        val found = catalog.badgeRequirements(badgeId, progress) ?: return null
+        val tracker = found.version.find(number)?.tracker ?: return null
+        val entries = found.trackerEntries[number].orEmpty()
+        val item = tracker.toItem(entries)
+        val row = when {
+            !item.addsRows -> item.rows.find { it.number == rowNumber }
+            entryId != null -> item.rows.find { it.entryId == entryId }
+            else -> TrackerRow(item.rows.size + 1, null, emptyList())
+        } ?: return null
+        val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
+        savedEntryId = row.entryId
+        loadFields(tracker.columns, saved)
+        return LoadedRow(found.badge.name, item, tracker.columns, row.number, saved)
+    }
+
+    /**
+     * Fills in the fields, the first time the page loads: with the values the system stopped
+     * the app with, if any, or else the [saved] ones. They're kept from then on, so if the
+     * system stops the app before then, the page loads the saved values again.
+     */
+    private fun loadFields(columns: List<TrackerColumn>, saved: Map<String, String>) {
+        if (_fields.isNotEmpty()) return
+        val restored = columns.associate { it.id to savedStateHandle.restoredText(fieldKey(it.id)) }
+        val wasStopped = restored.values.any { it != null }
+        for (column in columns) {
+            val text = if (wasStopped) restored[column.id] else saved[column.id]
+            val field = TextFieldState(text.orEmpty())
+            savedStateHandle.keepText(fieldKey(column.id), field)
+            _fields[column.id] = field
+        }
+    }
+
+    /** Sets date column [columnId] to [date], or removes its date (null). */
+    fun setDate(columnId: String, date: LocalDate?) {
+        // In a snapshot of its own, so uiState sees the change as soon as it's applied, not
+        // when Compose next applies changes made outside a snapshot.
+        Snapshot.withMutableSnapshot {
+            _fields.getValue(columnId).setTextAndPlaceCursorAtEnd(date?.toString().orEmpty())
+        }
+    }
+
+    /** Saves the fields as the row, then closes the page. */
+    fun save() {
+        val values = _fields.mapValues { it.value.text.toString() }
+        val id = savedEntryId
+        finish {
+            if (id != null) {
+                progressRepository.updateTrackerEntry(id, values)
+            } else {
+                progressRepository.addTrackerEntry(
+                    badgeId,
+                    number,
+                    rowNumber,
+                    values,
+                    recorder.badgeStart()
+                )
+            }
+        }
+    }
+
+    /** Deletes the saved row, then closes the page. */
+    fun delete() {
+        val id = savedEntryId ?: return
+        finish { progressRepository.deleteTrackerEntry(id) }
+    }
+
+    /**
+     * Runs [write], then closes the page if it worked. Does nothing while another is under way
+     * or once the page is closing, so a double tap saves once.
+     */
+    private fun finish(write: suspend () -> Unit) {
+        if (saving.value || done.value) return
+        saving.value = true
+        saves.launch {
+            try {
+                write()
+                done.value = true
+            } finally {
+                saving.value = false
+            }
+        }
+    }
+
+    /** The scout has been told about [failure]. */
+    fun onSaveFailureShown(failure: SaveFailure) {
+        saves.onShown(failure)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("badgeId") badgeId: String,
+            @Assisted("number") number: String,
+            entryId: Long?,
+            rowNumber: Int?
+        ): TrackerEntryViewModel
+    }
+
+    private companion object {
+        fun fieldKey(columnId: String) = "field:$columnId"
+    }
+}

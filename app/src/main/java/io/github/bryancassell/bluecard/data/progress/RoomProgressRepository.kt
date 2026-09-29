@@ -92,15 +92,22 @@ class RoomProgressRepository @Inject constructor(
     override suspend fun addTrackerEntry(
         badgeId: String,
         number: String,
-        values: Map<String, String>
-    ): Long = ifStarted(badgeId) {
-        dao.insertTrackerEntry(
-            TrackerEntry(badgeId = badgeId, requirementNumber = number, values = values)
+        rowNumber: Int?,
+        values: Map<String, String>,
+        start: BadgeStart
+    ): Long = ifStarted(badgeId, start) {
+        dao.addTrackerEntry(
+            TrackerEntry(
+                badgeId = badgeId,
+                requirementNumber = number,
+                rowNumber = rowNumber,
+                values = normalizedTrackerValues(values)
+            )
         )
     }
 
     override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) =
-        writing { dao.updateTrackerEntry(id, values) }
+        writing { dao.updateTrackerEntry(id, normalizedTrackerValues(values)) }
 
     override suspend fun deleteTrackerEntry(id: Long) = writing { dao.deleteTrackerEntry(id) }
 

@@ -15,7 +15,9 @@ class CatalogValidatorTest {
         requirementVersions = listOf(version)
     )
     private val tracker = TrackerDefinition(
-        columns = listOf(TrackerColumn("date", "Date", TrackerColumnType.DATE))
+        columns = listOf(TrackerColumn("date", "Date", TrackerColumnType.DATE)),
+        rowLabel = "night",
+        rowLabelPlural = "nights"
     )
 
     private fun errorsFor(vararg badges: MeritBadge, formatVersion: Int = 1) =
@@ -172,8 +174,9 @@ class CatalogValidatorTest {
                 TrackerColumn("date", "", TrackerColumnType.TEXT),
                 TrackerColumn("Miles Walked", "Miles", TrackerColumnType.NUMBER)
             ),
-            rowCount = 0,
-            rowLabel = ""
+            rowLabel = "",
+            rowLabelPlural = "Hikes",
+            rowCount = 0
         )
         val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker"
         assertEquals(
@@ -182,7 +185,8 @@ class CatalogValidatorTest {
                 "$where: column \"date\" has a blank label",
                 "$where: column id \"Miles Walked\" must be lowercase words joined by '-'",
                 "$where: rowCount must be at least 1",
-                "$where: rowLabel is blank"
+                "$where: rowLabel is blank",
+                "$where: rowLabelPlural \"Hikes\" must start with a lowercase letter"
             ),
             errorsForRequirements(requirement.copy(tracker = bad))
         )
@@ -195,7 +199,7 @@ class CatalogValidatorTest {
                 "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: has no columns"
             ),
             errorsForRequirements(
-                requirement.copy(tracker = TrackerDefinition(columns = emptyList()))
+                requirement.copy(tracker = tracker.copy(columns = emptyList()))
             )
         )
     }

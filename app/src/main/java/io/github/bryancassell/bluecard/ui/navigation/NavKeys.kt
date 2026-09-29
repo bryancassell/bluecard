@@ -24,3 +24,15 @@ data object DataManagement : NavKey
 /** A requirement of a badge, by its official number, such as "4c". */
 @Serializable
 data class RequirementDetail(val badgeId: String, val number: String) : NavKey
+
+/**
+ * A row of requirement [number]'s tracker: in a log, entry [entryId], or a new one when it's
+ * null; in a tracker with a fixed number of rows, row [rowNumber].
+ */
+@Serializable
+data class TrackerEntryDetail(
+    val badgeId: String,
+    val number: String,
+    val entryId: Long? = null,
+    val rowNumber: Int? = null
+) : NavKey

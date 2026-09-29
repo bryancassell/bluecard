@@ -74,6 +74,27 @@ interface ProgressDao {
     @Insert
     suspend fun insertTrackerEntry(entry: TrackerEntry): Long
 
+    @Query(
+        """
+        SELECT id FROM tracker_entry
+        WHERE badgeId = :badgeId AND requirementNumber = :number AND rowNumber = :rowNumber
+        """
+    )
+    suspend fun getTrackerRowId(badgeId: String, number: String, rowNumber: Int): Long?
+
+    /**
+     * Inserts [entry], or for a row of a fixed-row tracker that already has an entry, gives
+     * that one [entry]'s values, in a single transaction. Returns the entry's ID.
+     */
+    @Transaction
+    suspend fun addTrackerEntry(entry: TrackerEntry): Long {
+        val filled = entry.rowNumber?.let {
+            getTrackerRowId(entry.badgeId, entry.requirementNumber, it)
+        } ?: return insertTrackerEntry(entry)
+        updateTrackerEntry(filled, entry.values)
+        return filled
+    }
+
     @Query("UPDATE tracker_entry SET `values` = :values WHERE id = :id")
     suspend fun updateTrackerEntry(id: Long, values: Map<String, String>)
 
