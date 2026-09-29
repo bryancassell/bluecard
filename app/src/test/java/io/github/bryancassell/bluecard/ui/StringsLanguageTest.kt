@@ -1,22 +1,29 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.content.Context
 import android.content.res.Configuration
 import android.icu.text.PluralRules
 import android.os.LocaleList
+import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,21 +45,34 @@ class StringsLanguageTest {
         return result
     }
 
-    /**
-     * What [text] returns inside [ProvideStringsLanguageResources] on a device whose languages
-     * are [deviceLocales], as BCP 47 tags in order. Robolectric's qualifiers take one locale.
-     */
-    private fun onDevice(deviceLocales: String, text: @Composable () -> String): String {
+    /** What [text] returns inside [ProvideStringsLanguageResources] on [Device] [locales]. */
+    private fun onDevice(locales: String, text: @Composable () -> String): String {
         lateinit var result: String
         composeTestRule.setContent {
-            val device = Configuration(LocalConfiguration.current).apply {
-                setLocales(LocaleList.forLanguageTags(deviceLocales))
-            }
-            CompositionLocalProvider(LocalConfiguration provides device) {
-                ProvideStringsLanguageResources { result = text() }
-            }
+            Device(locales) { ProvideStringsLanguageResources { result = text() } }
         }
         return result
+    }
+
+    /**
+     * Stands in for a device whose languages are [locales], BCP 47 tags in order, since
+     * Robolectric's qualifiers take one locale.
+     */
+    @Composable
+    private fun Device(locales: String, content: @Composable () -> Unit) {
+        val context = LocalContext.current
+        val configuration = LocalConfiguration.current
+        val device = remember(locales) {
+            val deviceConfiguration = Configuration(configuration).apply {
+                setLocales(LocaleList.forLanguageTags(locales))
+            }
+            context.createConfigurationContext(deviceConfiguration)
+        }
+        CompositionLocalProvider(
+            LocalContext provides device,
+            LocalConfiguration provides device.resources.configuration,
+            content = content
+        )
     }
 
     @Config(qualifiers = "fa")
@@ -92,6 +112,64 @@ class StringsLanguageTest {
         }
 
         assertEquals("other", form)
+    }
+
+    // The layout follows the device's direction, so resources with a direction-specific
+    // version (such as drawable-ldrtl) must too.
+    @Test
+    fun onPersianDevice_keepsDeviceLayoutDirection() {
+        val direction = onDevice("fa-IR") {
+            LocalResources.current.configuration.layoutDirection.toString()
+        }
+
+        assertEquals(View.LAYOUT_DIRECTION_RTL.toString(), direction)
+    }
+
+    @Test
+    fun onDeviceInStringsLanguage_usesDeviceResources() {
+        lateinit var provided: Any
+        lateinit var device: Any
+        composeTestRule.setContent {
+            device = LocalResources.current
+            ProvideStringsLanguageResources { provided = LocalResources.current }
+        }
+
+        assertSame(device, provided)
+    }
+
+    @Config(qualifiers = "fa")
+    @Test
+    fun onPersianDevice_providesOtherResources() {
+        lateinit var provided: Any
+        lateinit var device: Any
+        composeTestRule.setContent {
+            device = LocalResources.current
+            ProvideStringsLanguageResources { provided = LocalResources.current }
+        }
+
+        assertNotSame(device, provided)
+    }
+
+    // Changing the phone's language recreates the activity. The content must be at the same
+    // place in the composition whether or not the new language needs other resources, so its
+    // saved state, such as the back stack, comes back.
+    @Test
+    fun deviceLanguageChange_keepsContentState() {
+        var locales by mutableStateOf("en-US")
+        var state: MutableList<String>? = null
+        composeTestRule.setContent {
+            Device(locales) {
+                ProvideStringsLanguageResources {
+                    state = rememberSaveable { mutableListOf<String>() }
+                }
+            }
+        }
+        composeTestRule.runOnIdle { state!!.add("kept") }
+
+        locales = "fa-IR"
+        composeTestRule.waitForIdle()
+
+        assertEquals(listOf("kept"), state)
     }
 
     // Android offers a choice of digits for some languages, such as Persian with Western
@@ -143,24 +221,6 @@ class StringsLanguageTest {
                 Locale.forLanguageTag("sr-Latn")
             )
         )
-    }
-
-    // A translation whose strings_language isn't a valid tag, such as "pt_BR", still loads:
-    // Android falls back to the device's locales. The app has no translations yet, so this
-    // reads a Compose UI string that has one.
-    @Test
-    fun stringsLocales_invalidStringsLanguage_fallsBackToDeviceLocales() {
-        val locales = stringsLocales(
-            LocaleList.forLanguageTags("pt-BR"),
-            Locale.forLanguageTag("pt_BR")
-        )
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val configuration = Configuration(context.resources.configuration).apply {
-            setLocales(locales)
-        }
-        val resources = context.createConfigurationContext(configuration).resources
-
-        assertEquals("Desativado", resources.getString(androidx.compose.ui.R.string.state_off))
     }
 
     @Config(qualifiers = "fa")

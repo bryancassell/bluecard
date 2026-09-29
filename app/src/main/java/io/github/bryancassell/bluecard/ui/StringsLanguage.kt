@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.ui
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import android.content.res.Configuration.SCREENLAYOUT_LAYOUTDIR_MASK
 import android.os.LocaleList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,11 +40,28 @@ fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val locales = stringsLocales(configuration.locales, stringsLanguage())
-    val resources = remember(context, configuration, locales) {
-        val stringsConfiguration = Configuration(configuration).apply { setLocales(locales) }
-        context.createConfigurationContext(stringsConfiguration).resources
+    // When the device's own locales are already right, as on an English phone, its resources
+    // are used as they are.
+    val resources = if (locales == configuration.locales) {
+        null
+    } else {
+        remember(context, configuration, locales) {
+            val stringsConfiguration = Configuration(configuration).apply {
+                setLocales(locales)
+                // setLocales also sets the layout direction from the first locale. Keep the
+                // device's, which the layout follows.
+                screenLayout = screenLayout and SCREENLAYOUT_LAYOUTDIR_MASK.inv() or
+                    (configuration.screenLayout and SCREENLAYOUT_LAYOUTDIR_MASK)
+            }
+            context.createConfigurationContext(stringsConfiguration).resources
+        }
     }
-    CompositionLocalProvider(LocalResources provides resources, content = content)
+    // One call either way keeps content at the same place in the composition, so its saved
+    // state, such as the back stack, comes back after a language change.
+    CompositionLocalProvider(
+        *listOfNotNull(resources?.let { LocalResources provides it }).toTypedArray(),
+        content = content
+    )
 }
 
 /**
