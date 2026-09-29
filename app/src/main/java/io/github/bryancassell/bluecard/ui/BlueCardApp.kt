@@ -13,17 +13,19 @@ import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 /** The app's content. Shows nothing while loading; the splash screen covers it. */
 @Composable
 fun BlueCardApp(uiState: MainActivityUiState) {
-    BlueCardTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            if (uiState is MainActivityUiState.Ready) {
-                BlueCardNavDisplay(
-                    isSetUp = uiState.isSetUp,
-                    // Consuming the system bar insets that innerPadding already covers keeps
-                    // screens' imePadding() from adding them a second time.
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .consumeWindowInsets(innerPadding)
-                )
+    ProvideStringsLanguageResources {
+        BlueCardTheme {
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                if (uiState is MainActivityUiState.Ready) {
+                    BlueCardNavDisplay(
+                        isSetUp = uiState.isSetUp,
+                        // Consuming the system bar insets that innerPadding already covers
+                        // keeps screens' imePadding() from adding them a second time.
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding)
+                    )
+                }
             }
         }
     }

@@ -143,8 +143,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   Lists inside a string (`rememberBadgeNameListFormatter`) and numbers are
   formatted in that language, and plurals follow its rules, so a sentence never
   mixes two languages: on a Persian phone, English strings read "Do 2 of 3", not
-  "Do ۲ of ۳", like catalog numbers such as "4c(1)" in the same row. Every
-  string with a number is formatted with `rememberStringsLanguageResources`.
+  "Do ۲ of ۳", like catalog numbers such as "4c(1)" in the same row.
+  `BlueCardApp` provides `LocalResources` in that language
+  (`ProvideStringsLanguageResources`), so every `stringResource` and
+  `pluralStringResource` follows it, with nothing to remember at each call. When
+  one of the device's languages is the strings' language, its locale is used,
+  which keeps the device's region and digit choice. Compose Foundation's text
+  menu labels (such as Cut, Copy and Paste) are read from the same resources, so
+  they follow the strings' language too; Material 3's labels and the role and
+  state names TalkBack reads follow the device.
 - **Material 3** components and the existing `BlueCardTheme`.
 
 ### Data layer

@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
@@ -29,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.rememberStringsLanguageResources
 
 /** Connects the Home screen to its ViewModel. */
 @Composable
@@ -115,7 +115,7 @@ private fun Summary(uiState: HomeUiState.Ready) {
 private fun EagleCard(uiState: HomeUiState.Ready) {
     SummaryCard(title = stringResource(R.string.home_eagle_title)) {
         Text(
-            rememberStringsLanguageResources().getQuantityString(
+            pluralStringResource(
                 R.plurals.home_eagle_completed,
                 uiState.eagle.completed,
                 uiState.eagle.completed,
@@ -153,5 +153,4 @@ private fun SummaryCard(title: String, content: @Composable ColumnScope.() -> Un
 
 /** A plural string whose only argument is its quantity, such as "3 in progress". */
 @Composable
-private fun countText(@PluralsRes id: Int, count: Int) =
-    rememberStringsLanguageResources().getQuantityString(id, count, count)
+private fun countText(@PluralsRes id: Int, count: Int) = pluralStringResource(id, count, count)
