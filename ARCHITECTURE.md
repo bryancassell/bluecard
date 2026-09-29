@@ -283,8 +283,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     date picker formats its dates in the device's language too: in the version
     the app uses (1.4.0), `rememberDatePickerState` takes no locale. Compose
     Foundation's right-click menu does read `LocalResources`, so it follows the
-    strings' language. They're still laid out in the activity's direction, so
-    on a Persian phone the toolbar lists its Persian labels left-to-right.
+    strings' language. These labels are laid out in the activity's direction,
+    so on a Persian phone the toolbar lists its Persian labels left-to-right,
+    except the date picker: `CompletionDatePickerDialog` lays it out in the
+    device's language's direction, because a Persian date laid out
+    left-to-right reads out of order.
   - **Code outside Compose** that formats a string with a number, such as the
     PDF report, must use the same locales (`stringsLocales`), and lay out in the
     first one's direction.

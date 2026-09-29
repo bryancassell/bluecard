@@ -527,6 +527,24 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Completed on May 20, 2026").assertIsDisplayed()
     }
 
+    // The date picker shows its labels and dates in the device's language, so it's laid out in
+    // that language's direction, unlike the English screen behind it: a Persian calendar reads
+    // right-to-left. Its buttons show the direction: OK comes first, on the left.
+    @Config(qualifiers = "fa")
+    @Test
+    fun onRightToLeftDevice_datePickerIsRightToLeft() {
+        assertDeviceIsRightToLeft()
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+        completedCheckbox().performClick()
+
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+
+        val ok = composeTestRule.onNodeWithText("OK").getBoundsInRoot()
+        val cancel = composeTestRule.onNodeWithText("Cancel").getBoundsInRoot()
+        assertTrue(ok.right <= cancel.left)
+    }
+
     @Test
     fun back_fromBadges_returnsHome() {
         launchWithProfile()

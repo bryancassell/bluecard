@@ -22,7 +22,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -343,6 +345,17 @@ class RequirementDetailScreenTest {
         commentField().performTextInput("Planned it with my patrol.")
 
         assertEquals("Planned it with my patrol.", comment.text.toString())
+    }
+
+    // The layout is left-to-right, like the English strings, but a comment typed in Persian
+    // reads right-to-left, with its final period at its end.
+    @Test
+    fun commentTypedInPersian_readsRightToLeft() {
+        show(leaf)
+
+        commentField().performTextInput("با گشتی‌ام برنامه‌ریزی کردم.")
+
+        assertEquals(ResolvedTextDirection.Rtl, commentField().paragraphDirection())
     }
 
     @Test
