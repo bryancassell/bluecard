@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -178,7 +179,7 @@ class RequirementDetailViewModelTest {
                 ),
                 commentChanged = false,
                 today = today,
-                saveFailed = false
+                saveFailure = null
             ),
             viewModel.uiState.value
         )
@@ -478,12 +479,13 @@ class RequirementDetailViewModelTest {
 
         viewModel.setCompleted("1", true)
 
-        assertTrue(viewModel.ready().saveFailed)
+        val failure = viewModel.ready().saveFailure
+        assertNotNull(failure)
         assertFalse(viewModel.ready().requirement.completed)
 
-        viewModel.onSaveFailureShown()
+        viewModel.onSaveFailureShown(failure!!)
 
-        assertFalse(viewModel.ready().saveFailed)
+        assertNull(viewModel.ready().saveFailure)
     }
 
     @Test
@@ -495,7 +497,7 @@ class RequirementDetailViewModelTest {
 
         viewModel.setCompletedDate(day)
 
-        assertTrue(viewModel.ready().saveFailed)
+        assertNotNull(viewModel.ready().saveFailure)
         assertEquals(today, viewModel.ready().completedDate)
     }
 
@@ -508,7 +510,7 @@ class RequirementDetailViewModelTest {
 
         viewModel.saveComment()
 
-        assertTrue(viewModel.ready().saveFailed)
+        assertNotNull(viewModel.ready().saveFailure)
         assertEquals("Not saved yet.", viewModel.comment.text.toString())
         assertTrue(viewModel.ready().commentChanged)
     }

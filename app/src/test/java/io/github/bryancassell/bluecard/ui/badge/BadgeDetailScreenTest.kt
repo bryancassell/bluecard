@@ -21,6 +21,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -36,7 +37,7 @@ class BadgeDetailScreenTest {
     private val openedRequirements = mutableListOf<String>()
     private val openedUris = mutableListOf<String>()
     private val completedChanges = mutableListOf<Pair<String, Boolean>>()
-    private var saveFailuresShown = 0
+    private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     private val ready = BadgeDetailUiState.Ready(
         name = "Camping",
@@ -72,7 +73,7 @@ class BadgeDetailScreenTest {
                         completedChanges +=
                             number to completed
                     },
-                    onSaveFailureShown = { saveFailuresShown++ }
+                    onSaveFailureShown = { saveFailuresShown += it }
                 )
             }
         }
@@ -223,16 +224,17 @@ class BadgeDetailScreenTest {
 
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
-        show(ready.copy(saveFailed = true))
+        val failure = SaveFailure()
+        show(ready.copy(saveFailure = failure))
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(0, saveFailuresShown)
+        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
 
         // A short snackbar shows for 4 seconds.
         composeTestRule.mainClock.advanceTimeBy(5_000)
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
-        assertEquals(1, saveFailuresShown)
+        assertEquals(listOf(failure), saveFailuresShown)
     }
 
     @Test

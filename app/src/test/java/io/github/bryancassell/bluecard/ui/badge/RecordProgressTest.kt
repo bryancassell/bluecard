@@ -4,6 +4,7 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import java.time.LocalDate
@@ -38,19 +39,18 @@ class RecordProgressTest {
         progress()?.requirements?.singleOrNull { it.requirementNumber == number }
 
     @Test
-    fun startBadge_notStarted_startsOnNewestVersionToday() = runTest {
-        repository.startBadge(camping, today)
-
-        assertEquals(BadgeProgress("camping", newest, today), progress()?.badge)
+    fun startedOn_isNewestVersionOnThatDay() {
+        assertEquals(BadgeStart(newest, today), camping.startedOn(today))
     }
 
     @Test
-    fun startBadge_alreadyStarted_keepsItsVersionAndDate() = runTest {
+    fun setRequirementCompleted_onStartedBadge_keepsItsVersionAndDate() = runTest {
         repository.startBadge("camping", older, started)
 
-        repository.startBadge(camping, today)
+        repository.setRequirementCompleted(camping, "1", completed = true, today)
 
         assertEquals(BadgeProgress("camping", older, started), progress()?.badge)
+        assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
     }
 
     @Test

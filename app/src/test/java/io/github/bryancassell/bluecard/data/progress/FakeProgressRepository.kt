@@ -69,10 +69,11 @@ class FakeProgressRepository : ProgressRepository {
     override suspend fun markRequirementCompleted(
         badgeId: String,
         number: String,
-        completedDate: LocalDate?
+        completedDate: LocalDate?,
+        start: BadgeStart?
     ) {
         checkCanSave()
-        updateRequirement(badgeId, number) {
+        updateRequirement(badgeId, number, start) {
             it.copy(completed = true, completedDate = completedDate)
         }
     }
@@ -82,9 +83,14 @@ class FakeProgressRepository : ProgressRepository {
         updateRequirement(badgeId, number) { it.copy(completed = false, completedDate = null) }
     }
 
-    override suspend fun setRequirementComment(badgeId: String, number: String, comment: String?) {
+    override suspend fun setRequirementComment(
+        badgeId: String,
+        number: String,
+        comment: String?,
+        start: BadgeStart?
+    ) {
         checkCanSave()
-        updateRequirement(badgeId, number) { it.copy(comment = comment?.ifBlank { null }) }
+        updateRequirement(badgeId, number, start) { it.copy(comment = comment?.ifBlank { null }) }
     }
 
     override suspend fun addTrackerEntry(
@@ -148,13 +154,27 @@ class FakeProgressRepository : ProgressRepository {
         if (badgeId !in badges.value) throw notStartedError(badgeId)
     }
 
-    /** Changes a started badge; throws, as Room does, if it hasn't been started. */
+    /**
+     * Changes a started badge, or one that [start] starts in the same update. Throws, as Room
+     * does, if it hasn't been started and there's no [start].
+     */
     private fun updateBadge(
         badgeId: String,
+        start: BadgeStart? = null,
         change: (BadgeProgressDetails) -> BadgeProgressDetails
     ) {
-        requireStarted(badgeId)
-        badges.update { all -> all + (badgeId to change(all.getValue(badgeId))) }
+        badges.update { all ->
+            val details = all[badgeId]
+                ?: start?.let {
+                    BadgeProgressDetails(
+                        BadgeProgress(badgeId, it.requirementsVersion, it.startedDate),
+                        emptyList(),
+                        emptyList()
+                    )
+                }
+                ?: throw notStartedError(badgeId)
+            all + (badgeId to change(details))
+        }
     }
 
     private fun updateEachBadge(change: (BadgeProgressDetails) -> BadgeProgressDetails) {
@@ -164,9 +184,10 @@ class FakeProgressRepository : ProgressRepository {
     private fun updateRequirement(
         badgeId: String,
         number: String,
+        start: BadgeStart? = null,
         change: (RequirementProgress) -> RequirementProgress
     ) {
-        updateBadge(badgeId) { details ->
+        updateBadge(badgeId, start) { details ->
             val current = details.requirements.find { it.requirementNumber == number }
                 ?: RequirementProgress(badgeId, number)
             details.copy(

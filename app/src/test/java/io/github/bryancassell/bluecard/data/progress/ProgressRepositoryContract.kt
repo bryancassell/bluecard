@@ -149,6 +149,34 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun recordingWithStart_startsAnUnstartedBadge() = test {
+        repository.markRequirementCompleted(UNSTARTED, "1", day, BadgeStart(version, day))
+        repository.setRequirementComment(OTHER, "1", "Next week.", BadgeStart(version, day))
+
+        assertEquals(BadgeProgress(UNSTARTED, version, day), progress(UNSTARTED)!!.badge)
+        assertEquals(
+            listOf(RequirementProgress(UNSTARTED, "1", completed = true, completedDate = day)),
+            progress(UNSTARTED)!!.requirements
+        )
+        assertEquals(BadgeProgress(OTHER, version, day), progress(OTHER)!!.badge)
+        assertEquals(
+            listOf(RequirementProgress(OTHER, "1", comment = "Next week.")),
+            progress(OTHER)!!.requirements
+        )
+    }
+
+    @Test
+    fun recordingWithStart_onAStartedBadge_keepsItsVersionAndDate() = test {
+        val later = BadgeStart(LocalDate.of(2027, 1, 1), day)
+
+        repository.markRequirementCompleted(BADGE, "1", day, later)
+        repository.setRequirementComment(BADGE, "2", "Hi", later)
+
+        assertEquals(BadgeProgress(BADGE, version, started), progress()!!.badge)
+        assertEquals(listOf("1", "2"), progress()!!.requirements.map { it.requirementNumber })
+    }
+
+    @Test
     fun trackerEntries_addUpdateDelete() = test {
         val first = repository.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
         val second = repository.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "45"))
@@ -306,5 +334,6 @@ abstract class ProgressRepositoryContract {
     private companion object {
         const val BADGE = "personal-fitness"
         const val UNSTARTED = "archery"
+        const val OTHER = "camping"
     }
 }

@@ -13,11 +13,11 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
-import io.github.bryancassell.bluecard.ui.launchSave
 import java.time.Clock
 import java.time.LocalDate
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -46,7 +46,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     val comment = TextFieldState(savedStateHandle[COMMENT] ?: "")
     private var commentLoaded = savedStateHandle.contains(COMMENT)
 
-    private val saveFailed = MutableStateFlow(false)
+    private val saves = SaveRunner(viewModelScope)
 
     val uiState: StateFlow<RequirementDetailUiState> = combine(
         flow { emit(catalogRepository.getBadges()) },
@@ -56,8 +56,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
         snapshotFlow { comment.text.toString() }.onEach {
             if (commentLoaded) savedStateHandle[COMMENT] = it
         },
-        saveFailed
-    ) { catalog, progress, commentText, saveFailed ->
+        saves.failure
+    ) { catalog, progress, commentText, saveFailure ->
         // Checked on every change, not only when the page opens, because which version
         // the badge uses depends on its progress.
         val found = catalog.badgeRequirements(badgeId, progress)
@@ -71,8 +71,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
             completedDate = recorded?.completedDate,
             children = requirement.children.map { it.toItem(found.recorded) },
             commentChanged = text.asStoredComment() != recorded?.comment,
-            today = LocalDate.now(clock),
-            saveFailed = saveFailed
+            today = today(),
+            saveFailure = saveFailure
         )
     }.catchLoadFailure(RequirementDetailUiState.LoadFailed).stateIn(
         viewModelScope,
@@ -94,31 +94,34 @@ class RequirementDetailViewModel @AssistedInject constructor(
      * Marks [requirementNumber], this requirement or one of its sub-requirements, completed
      * today or not. Only for one without sub-requirements of its own.
      */
-    fun setCompleted(requirementNumber: String, completed: Boolean) = save {
-        progressRepository.setRequirementCompleted(badge(), requirementNumber, completed, today())
+    fun setCompleted(requirementNumber: String, completed: Boolean) {
+        saves.launch {
+            val badge = badge()
+            progressRepository.setRequirementCompleted(badge, requirementNumber, completed, today())
+        }
     }
 
     /** Changes the date this requirement, which is complete, was completed on; null removes it. */
-    fun setCompletedDate(date: LocalDate?) = save {
-        progressRepository.markRequirementCompleted(badgeId, number, date)
+    fun setCompletedDate(date: LocalDate?) {
+        saves.launch { progressRepository.markRequirementCompleted(badgeId, number, date) }
     }
 
     /** Saves the comment field as this requirement's comment. An empty one removes it. */
     fun saveComment() {
         val text = comment.text.toString().asStoredComment()
-        save {
-            progressRepository.startBadge(badge(), today())
-            progressRepository.setRequirementComment(badgeId, number, text)
+        saves.launch {
+            progressRepository.setRequirementComment(
+                badgeId,
+                number,
+                text,
+                badge().startedOn(today())
+            )
         }
     }
 
-    /** The scout has been told that something couldn't be saved. */
-    fun onSaveFailureShown() {
-        saveFailed.value = false
-    }
-
-    private fun save(write: suspend () -> Unit) {
-        viewModelScope.launchSave(saveFailed, write)
+    /** The scout has been told about [failure]. */
+    fun onSaveFailureShown(failure: SaveFailure) {
+        saves.onShown(failure)
     }
 
     private suspend fun badge() = catalogRepository.getBadges().first { it.id == badgeId }

@@ -138,10 +138,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ([#69](https://github.com/bryancassell/bluecard/issues/69)).
 - **Save failures are a UI state too.** When something can't be saved, a
   repository throws an `IOException`. ViewModels that save progress launch each
-  write with `launchSave` (`ui/SaveFailure.kt`), which logs the failure and sets
-  a `saveFailed` flag in the screen's state. The screen shows "Couldn't save. Try
+  write with a `SaveRunner` (`ui/SaveFailure.kt`), which logs the failure and
+  puts a `SaveFailure` in the screen's state. The screen shows "Couldn't save. Try
   again." in a snackbar (`SaveFailedSnackbarHost`) and tells the ViewModel once
-  it's gone, which clears the flag. That's the pattern in the UI layer guide's
+  it's gone, which clears it. Each failure is a new object, and the snackbar is
+  keyed by it, so a failure that arrives just as the last one is cleared is
+  still shown. That's the pattern in the UI layer guide's
   [Handle ViewModel events](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
   which says ViewModel events "should always result in a UI state update". The
   screen keeps showing what's stored, so a change that failed visibly didn't
@@ -171,8 +173,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
-  snapshot, which it does once a frame. Fields whose text is saved this way cut
-  off long pastes (`TextLengthLimit`), because saved state has a size limit.
+  snapshot, which it does once a frame. Fields whose text is saved this way have a
+  length limit (`TextLengthLimit`), because saved state has a size limit. It
+  keeps as much of an edit, such as a long paste, as fits, and never cuts the
+  text already in the field or splits an emoji.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -253,7 +257,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   exceptions". DataStore and the asset manager already throw `IOException`, and
   `RoomProgressRepository` wraps Room's `SQLiteException` in one, for its reads
   and its writes. ViewModels then
-  catch it without depending on a storage API (req. 9). A
+  catch it without depending on a storage API (req. 9). Errors that SQLite's
+  [result codes](https://www.sqlite.org/rescode.html) describe as mistakes in
+  the app's code, such as a constraint violation or misuse of its interface,
+  aren't wrapped, so they still crash as bugs. A
   corrupted database is the exception: the SQLite library deletes it. If a read
   finds the corruption, the scout sees the load-failed message, and the app
   reopens with no progress. If opening the database finds it, the progress is
@@ -463,9 +470,13 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
   they update as soon as data is saved.
-  - **Recording anything starts the badge** (`ui/badge/RecordProgress.kt`), on
-    the requirements version its pages show until then (the newest), dated today.
-    There's no separate "start" step. Undoing everything recorded leaves the badge
+  - **Recording anything starts the badge**, on the requirements version its
+    pages show until then (the newest), dated today (`ui/badge/RecordProgress.kt`).
+    There's no separate "start" step. `markRequirementCompleted` and
+    `setRequirementComment` take a `BadgeStart`, and `ProgressRepository` starts
+    the badge in the same transaction as the write, so a save that fails doesn't
+    leave the badge started. Other functions that record progress should take one
+    when a screen first calls them. Undoing everything recorded leaves the badge
     started, so it stays In progress until the scout clears it
     ([#45](https://github.com/bryancassell/bluecard/issues/45)).
   - **Completing a requirement.** Only a requirement without sub-requirements is
@@ -573,8 +584,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.
-- **Coverage.** Classes that Hilt and Room generate (for example `Hilt_*`,
-  `*_Factory`, `*_Impl`) are excluded from the per-class 80% coverage rule.
+- **Coverage.** Classes that Hilt, Room and Kotlin generate (for example `Hilt_*`,
+  `*_Factory`, `*_Impl`, and `DefaultImpls`, which Kotlin keeps for code compiled
+  before interfaces had default methods) are excluded from the per-class 80%
+  coverage rule.
 
 ## Decisions
 

@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
 
 /** What the Requirement detail screen shows. */
@@ -24,7 +25,7 @@ sealed interface RequirementDetailUiState {
         /** The latest date the scout can give as a completion date. */
         val today: LocalDate,
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
-        val saveFailed: Boolean = false
+        val saveFailure: SaveFailure? = null
     ) : RequirementDetailUiState
 
     /**

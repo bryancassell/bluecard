@@ -15,46 +15,71 @@ import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 private const val TAG = "SaveFailure"
 
 /**
- * Launches [save]. If it throws an [IOException], which repositories throw when data can't be
- * saved, logs it and sets [failed], which the screen shows with [SaveFailedSnackbarHost]. Any
- * other exception is a bug, so it still crashes the app, as in [catchLoadFailure].
+ * A save that failed, for the screen to tell the scout about. Each failure is its own object,
+ * not a data class, so one that follows another is told apart from it even if the screen
+ * never saw the first one cleared.
  */
-fun CoroutineScope.launchSave(failed: MutableStateFlow<Boolean>, save: suspend () -> Unit): Job =
-    launch {
+class SaveFailure
+
+/**
+ * Runs a ViewModel's saves in [scope], and keeps the latest one that failed until its screen
+ * has shown it with [SaveFailedSnackbarHost].
+ */
+class SaveRunner(private val scope: CoroutineScope) {
+    private val _failure = MutableStateFlow<SaveFailure?>(null)
+
+    /** The latest save that failed, or null once the screen has shown it. */
+    val failure: StateFlow<SaveFailure?> = _failure.asStateFlow()
+
+    /**
+     * Launches [save]. If it throws an [IOException], which repositories throw when data can't
+     * be saved, logs it and reports it in [failure]. Any other exception is a bug, so it still
+     * crashes the app, as in [catchLoadFailure].
+     */
+    fun launch(save: suspend () -> Unit): Job = scope.launch {
         try {
             save()
         } catch (e: IOException) {
             // The app reports caught exceptions nowhere else, so logcat and bug reports are
             // the only way to tell what failed and why.
             Log.w(TAG, "Couldn't save", e)
-            failed.value = true
+            _failure.value = SaveFailure()
         }
     }
 
+    /** The screen has shown [shown]. A failure since then stays, to be shown next. */
+    fun onShown(shown: SaveFailure) {
+        _failure.compareAndSet(shown, null)
+    }
+}
+
 /**
- * Shows a snackbar saying progress couldn't be saved while [saveFailed], then calls [onShown]
+ * Shows a snackbar saying progress couldn't be saved for each [failure], then calls [onShown]
  * once it's gone, so the ViewModel can clear it. That's how the UI layer guide has the UI
  * show a message from UI state:
  * https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events
  */
 @Composable
 fun SaveFailedSnackbarHost(
-    saveFailed: Boolean,
-    onShown: () -> Unit,
+    failure: SaveFailure?,
+    onShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val hostState = remember { SnackbarHostState() }
-    if (saveFailed) {
+    if (failure != null) {
         val message = stringResource(R.string.save_failed)
         val currentOnShown by rememberUpdatedState(onShown)
-        LaunchedEffect(hostState) {
+        // Keyed by the failure, so one that replaces another is shown too.
+        LaunchedEffect(failure) {
             hostState.showSnackbar(message)
-            currentOnShown()
+            currentOnShown(failure)
         }
     }
     SnackbarHost(hostState, modifier)

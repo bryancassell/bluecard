@@ -1,15 +1,18 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
+import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -31,9 +34,9 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private fun open(builder: RoomDatabase.Builder<BlueCardDatabase>) =
         builder.build().also { databases += it }
 
-    override val repository = RoomProgressRepository(
-        open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
-    )
+    private val database = open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
+
+    override val repository = RoomProgressRepository(database)
 
     override fun unreadableRepository() = unopenableRepository()
 
@@ -65,6 +68,46 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertTrue(
             "Expected Room's IllegalStateException, got $error",
             error is IllegalStateException
+        )
+    }
+
+    /**
+     * Makes every write of requirement progress fail, as a bug that breaks a constraint would.
+     * SQLite reports a trigger's RAISE(ABORT) as a constraint violation:
+     * https://www.sqlite.org/lang_createtrigger.html
+     */
+    private fun failRequirementWrites() {
+        database.openHelper.writableDatabase.execSQL(
+            """
+            CREATE TRIGGER fail_requirement_writes BEFORE INSERT ON requirement_progress
+            BEGIN SELECT RAISE(ABORT, 'Test failure'); END
+            """
+        )
+    }
+
+    @Test
+    fun recordingThatFailsPartWay_leavesTheBadgeUnstarted() = runTest {
+        failRequirementWrites()
+        val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 4, 15))
+
+        runCatching { repository.markRequirementCompleted("archery", "1", null, start) }
+
+        // The badge was started in the same transaction, so it's rolled back too.
+        assertNull(repository.observeProgress("archery").first())
+    }
+
+    @Test
+    fun writing_thatBreaksAConstraint_throwsTheBugUnwrapped() = runTest {
+        repository.startBadge("archery", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1))
+        failRequirementWrites()
+
+        val error = runCatching { repository.markRequirementCompleted("archery", "1", null) }
+            .exceptionOrNull()
+
+        // A bug must crash, not become a save failure (see isStorageFailure).
+        assertTrue(
+            "Expected SQLiteConstraintException, got $error",
+            error is SQLiteConstraintException
         )
     }
 

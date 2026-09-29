@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -41,7 +42,7 @@ class RequirementDetailScreenTest {
     private val completedChanges = mutableListOf<Pair<String, Boolean>>()
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
-    private var saveFailuresShown = 0
+    private val saveFailuresShown = mutableListOf<SaveFailure>()
     private val comment = TextFieldState()
 
     /** A requirement with sub-requirements. */
@@ -84,7 +85,7 @@ class RequirementDetailScreenTest {
                 },
                 onCompletedDateChange = { dateChanges += it },
                 onSaveComment = { commentsSaved++ },
-                onSaveFailureShown = { saveFailuresShown++ }
+                onSaveFailureShown = { saveFailuresShown += it }
             )
         }
     }
@@ -383,15 +384,16 @@ class RequirementDetailScreenTest {
 
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
-        show(leaf.copy(saveFailed = true))
+        val failure = SaveFailure()
+        show(leaf.copy(saveFailure = failure))
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(0, saveFailuresShown)
+        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
 
         // A short snackbar shows for 4 seconds.
         composeTestRule.mainClock.advanceTimeBy(5_000)
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
-        assertEquals(1, saveFailuresShown)
+        assertEquals(listOf(failure), saveFailuresShown)
     }
 }

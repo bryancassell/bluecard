@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import java.time.LocalDate
@@ -82,7 +83,7 @@ fun RequirementDetailScreen(
     onCompletedChange: (number: String, completed: Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     onSaveComment: () -> Unit,
-    onSaveFailureShown: () -> Unit,
+    onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -117,7 +118,7 @@ fun RequirementDetailScreen(
                 CommentField(comment, uiState.commentChanged, onSaveComment)
             }
             SaveFailedSnackbarHost(
-                saveFailed = uiState.saveFailed,
+                failure = uiState.saveFailure,
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

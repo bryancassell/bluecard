@@ -25,10 +25,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -337,16 +335,20 @@ class BadgeDetailViewModelTest {
     fun setCompleted_whenSaveFails_reportsItUntilShown() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)
-        assertFalse(viewModel.ready().saveFailed)
+        assertNull(viewModel.ready().saveFailure)
         progressRepository.failSaves = true
 
         viewModel.setCompleted("1", true)
 
-        assertTrue(viewModel.ready().saveFailed)
+        val failure = viewModel.ready().saveFailure
+        assertNotNull(failure)
         assertEquals(false, viewModel.completed()["1"])
+        // Starting the badge failed with the rest.
+        progressRepository.failSaves = false
+        assertNull(progressRepository.observeProgress("camping").first())
 
-        viewModel.onSaveFailureShown()
+        viewModel.onSaveFailureShown(failure!!)
 
-        assertFalse(viewModel.ready().saveFailed)
+        assertNull(viewModel.ready().saveFailure)
     }
 }

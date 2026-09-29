@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -59,7 +60,7 @@ fun BadgeDetailScreen(
     uiState: BadgeDetailUiState,
     onOpenRequirement: (number: String) -> Unit,
     onCompletedChange: (number: String, completed: Boolean) -> Unit,
-    onSaveFailureShown: () -> Unit,
+    onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -73,7 +74,7 @@ fun BadgeDetailScreen(
         is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
             BadgeDetails(uiState, onOpenRequirement, onCompletedChange)
             SaveFailedSnackbarHost(
-                saveFailed = uiState.saveFailed,
+                failure = uiState.saveFailure,
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

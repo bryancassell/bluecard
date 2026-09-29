@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Everything the scout records about their badges.
  *
- * A badge must be started with [startBadge] before anything is recorded for it: the
- * other functions that record progress throw [IllegalStateException] for a badge that
- * hasn't been started. Clearing, and changing or deleting a tracker entry that doesn't
- * exist, do nothing.
+ * A badge must be started before anything is recorded for it, with [startBadge] or with the
+ * [BadgeStart] that some functions take: the other functions that record progress throw
+ * [IllegalStateException] for a badge that hasn't been started. Clearing, and changing or
+ * deleting a tracker entry that doesn't exist, do nothing.
  *
  * Its flows throw an `IOException` when stored progress can't be read, such as when the
  * database can't be opened, and its other functions throw one when progress can't be saved.
@@ -30,13 +30,31 @@ interface ProgressRepository {
     /** Marks the badge completed on [date] without requirement detail, or undoes it (null). */
     suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?)
 
-    suspend fun markRequirementCompleted(badgeId: String, number: String, completedDate: LocalDate?)
+    /**
+     * Marks the requirement completed on [completedDate], or with no date (null). A badge that
+     * hasn't been started is started with [start], in the same transaction, so a failure
+     * leaves neither.
+     */
+    suspend fun markRequirementCompleted(
+        badgeId: String,
+        number: String,
+        completedDate: LocalDate?,
+        start: BadgeStart? = null
+    )
 
     /** Undoes completion and removes the completion date; the comment stays. */
     suspend fun markRequirementNotCompleted(badgeId: String, number: String)
 
-    /** Sets the requirement's comment; null or blank removes it. */
-    suspend fun setRequirementComment(badgeId: String, number: String, comment: String?)
+    /**
+     * Sets the requirement's comment; null or blank removes it. A badge that hasn't been
+     * started is started with [start], as in [markRequirementCompleted].
+     */
+    suspend fun setRequirementComment(
+        badgeId: String,
+        number: String,
+        comment: String?,
+        start: BadgeStart? = null
+    )
 
     /** Adds a tracker row and returns its ID. */
     suspend fun addTrackerEntry(badgeId: String, number: String, values: Map<String, String>): Long

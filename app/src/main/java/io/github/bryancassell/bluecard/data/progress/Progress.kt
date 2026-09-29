@@ -24,6 +24,12 @@ data class BadgeProgress(
     val completedOnPriorDate: LocalDate? = null
 )
 
+/**
+ * How to start a badge that hasn't been started, when something is recorded for it: on a
+ * requirements version (its effective date), on a date. See [ProgressRepository].
+ */
+data class BadgeStart(val requirementsVersion: LocalDate, val startedDate: LocalDate)
+
 /** The badge's merit badge counselor. Every field is optional. */
 data class Counselor(
     val name: String? = null,
