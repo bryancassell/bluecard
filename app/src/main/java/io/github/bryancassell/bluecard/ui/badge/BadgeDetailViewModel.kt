@@ -24,16 +24,20 @@ class BadgeDetailViewModel @AssistedInject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<BadgeDetailUiState> = combine(
-        flow { emit(catalogRepository.getBadges()) },
+        // What depends only on the catalog is worked out once, not on every progress change.
+        flow {
+            val catalog = catalogRepository.getBadges()
+            emit(catalog to catalog.eagleGroups())
+        },
         progressRepository.observeProgress(badgeId)
-    ) { catalog, progress ->
+    ) { (catalog, eagleGroups), progress ->
         val found = catalog.badgeRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.badge
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,
-            eagle = badge.eagleRequirement(catalog.eagleGroups()),
+            eagle = badge.eagleRequirement(eagleGroups),
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map { it.toItem(found.recorded) }
         )

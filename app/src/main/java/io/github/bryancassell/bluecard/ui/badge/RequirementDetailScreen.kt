@@ -52,7 +52,8 @@ fun RequirementDetailScreen(
     when (uiState) {
         RequirementDetailUiState.Loading -> LoadingIndicator(modifier)
 
-        RequirementDetailUiState.Unavailable -> RequirementsUnavailable(modifier)
+        RequirementDetailUiState.Unavailable ->
+            UnavailableMessage(stringResource(R.string.requirement_detail_unavailable), modifier)
 
         is RequirementDetailUiState.Ready -> Column(
             modifier = modifier.verticalScroll(rememberScrollState())

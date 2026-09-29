@@ -42,6 +42,11 @@ class BadgeVersionTest {
     }
 
     @Test
+    fun noVersionsInCatalog_isNull() {
+        assertNull(badge.copy(requirementVersions = emptyList()).requirementsVersionFor(null))
+    }
+
+    @Test
     fun startedOnVersionMissingFromCatalog_isNull() {
         assertNull(badge.requirementsVersionFor(startedOn(LocalDate.of(2023, 1, 1))))
     }

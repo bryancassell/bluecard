@@ -30,9 +30,13 @@ fun badgeNameOrder(): Comparator<MeritBadge> =
     compareBy(Collator.getInstance(Locale.ENGLISH), MeritBadge::name)
 
 /** Maps each Eagle group in this catalog to the names of its badges, in [badgeNameOrder]. */
-fun List<MeritBadge>.eagleGroups(): Map<String, List<String>> = sortedWith(badgeNameOrder())
-    .mapNotNull { badge -> badge.eagleGroup?.let { it to badge.name } }
-    .groupBy({ it.first }, { it.second })
+fun List<MeritBadge>.eagleGroups(): Map<String, List<String>> {
+    val byName = badgeNameOrder()
+    // Only the few badges in groups are sorted.
+    return mapNotNull { badge -> badge.eagleGroup?.let { it to badge } }
+        .groupBy({ it.first }, { it.second })
+        .mapValues { (_, badges) -> badges.sortedWith(byName).map { it.name } }
+}
 
 /** How this badge counts toward Eagle Scout, or null if it doesn't. */
 fun MeritBadge.eagleRequirement(eagleGroups: Map<String, List<String>>): EagleRequirement? {

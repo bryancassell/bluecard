@@ -55,7 +55,8 @@ fun BadgeDetailScreen(
     when (uiState) {
         BadgeDetailUiState.Loading -> LoadingIndicator(modifier)
 
-        BadgeDetailUiState.Unavailable -> RequirementsUnavailable(modifier)
+        BadgeDetailUiState.Unavailable ->
+            UnavailableMessage(stringResource(R.string.requirements_unavailable), modifier)
 
         is BadgeDetailUiState.Ready -> Column(
             modifier = modifier.verticalScroll(rememberScrollState())

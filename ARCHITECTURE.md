@@ -207,9 +207,10 @@ The PRD asks that requirements be understandable "without extensive
 scrolling", so the badge detail page lists only the top-level requirements. Each
 is one row: its official number, our one-line summary, "Do N of M" when only
 some of its sub-requirements are needed, and its completion state. A requirement
-with sub-requirements or a tracker opens the requirement detail sub-page, which
-lists its sub-requirements the same way, and a sub-requirement with more of its
-own opens a sub-page in turn. Each page shows one level of the requirement tree.
+with sub-requirements opens the requirement detail sub-page, which lists its
+sub-requirements the same way, and a sub-requirement with more of its own opens
+a sub-page in turn. A requirement with a tracker will open one too, once the
+sub-page shows trackers ([#40](https://github.com/bryancassell/bluecard/issues/40)). Each page shows one level of the requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
 version for a badge the scout hasn't started.
 

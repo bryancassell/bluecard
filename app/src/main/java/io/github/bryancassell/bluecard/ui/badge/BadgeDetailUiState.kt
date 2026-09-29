@@ -17,6 +17,9 @@ sealed interface BadgeDetailUiState {
         val requirements: List<RequirementItem>
     ) : BadgeDetailUiState
 
-    /** The catalog doesn't have the badge or its requirements version ([badgeRequirements]). */
+    /**
+     * The catalog doesn't have the badge or its requirements version ([badgeRequirements]).
+     * Only a catalog edited during development can cause that.
+     */
     data object Unavailable : BadgeDetailUiState
 }

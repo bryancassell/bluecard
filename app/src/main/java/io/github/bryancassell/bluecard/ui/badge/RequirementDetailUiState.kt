@@ -12,8 +12,9 @@ sealed interface RequirementDetailUiState {
     ) : RequirementDetailUiState
 
     /**
-     * The catalog doesn't have the badge, its requirements version ([badgeRequirements]), or
-     * this requirement in that version.
+     * The catalog doesn't have the badge or its requirements version ([badgeRequirements]),
+     * or that version doesn't have this requirement. The last can also happen with a released
+     * catalog, when the badge moves to another version, such as when its progress is cleared.
      */
     data object Unavailable : RequirementDetailUiState
 }

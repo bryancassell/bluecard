@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 
@@ -57,16 +56,16 @@ fun RequirementRow(
         } else {
             null
         },
+        // ListItem already reads as one item to screen readers. One that opens a page is
+        // announced as a button that opens the requirement.
         modifier = if (item.opensDetail) {
-            // Screen readers announce the row as a button that opens the requirement.
             modifier.clickable(
                 onClickLabel = stringResource(R.string.requirement_open),
                 role = Role.Button,
                 onClick = { onOpen(item.number) }
             )
         } else {
-            // Screen readers read the row as one item, as they do a row that opens.
-            modifier.semantics(mergeDescendants = true) {}
+            modifier
         }
     )
 }
@@ -76,16 +75,10 @@ fun RequirementRow(
 fun choiceLabel(choice: Choice): String =
     stringResource(R.string.requirement_choice, choice.required, choice.of)
 
-/**
- * Shown in place of a page whose badge, requirements version or requirement isn't in the
- * catalog. Only a catalog edited during development can cause that.
- */
+/** Shown in place of a page whose badge, requirements version or requirement is missing. */
 @Composable
-fun RequirementsUnavailable(modifier: Modifier = Modifier) {
-    Text(
-        text = stringResource(R.string.requirements_unavailable),
-        modifier = modifier.padding(16.dp)
-    )
+fun UnavailableMessage(text: String, modifier: Modifier = Modifier) {
+    Text(text = text, modifier = modifier.padding(16.dp))
 }
 
 /** Shown while the catalog loads. */

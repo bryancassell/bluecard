@@ -77,7 +77,7 @@ class RequirementDetailScreenTest {
         show(RequirementDetailUiState.Unavailable)
 
         composeTestRule
-            .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
+            .onNodeWithText("This requirement isn't in the requirements this badge uses.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
