@@ -33,8 +33,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -291,6 +293,17 @@ class BadgesScreenTest {
         searchField().performTextInput("camp")
 
         assertEquals("camp", query.text.toString())
+    }
+
+    // The layout is left-to-right, like the English strings, but a search typed in Persian
+    // reads right-to-left.
+    @Test
+    fun searchTypedInPersian_readsRightToLeft() {
+        show(BadgesUiState.Ready(badges))
+
+        searchField().performTextInput("شنا.")
+
+        assertEquals(ResolvedTextDirection.Rtl, searchField().paragraphDirection())
     }
 
     @Test

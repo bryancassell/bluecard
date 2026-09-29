@@ -43,6 +43,7 @@ import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
 /** Connects the Requirement detail screen to its ViewModel. */
@@ -242,6 +243,7 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
     ) {
         OutlinedTextField(
             state = comment,
+            textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.requirement_comment)) },
             inputTransformation = CommentLengthLimit,
             lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 
 /**
  * Connects the Onboarding screen to its ViewModel. Once the profile is saved, the
@@ -73,6 +74,7 @@ fun OnboardingScreen(
         OutlinedTextField(
             state = name,
             enabled = uiState.canEdit,
+            textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.onboarding_name)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -85,6 +87,7 @@ fun OnboardingScreen(
         OutlinedTextField(
             state = unitNumber,
             enabled = uiState.canEdit,
+            textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.onboarding_unit_number)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
             lineLimits = TextFieldLineLimits.SingleLine,

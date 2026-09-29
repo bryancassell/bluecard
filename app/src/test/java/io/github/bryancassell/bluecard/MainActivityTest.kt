@@ -2,12 +2,14 @@ package io.github.bryancassell.bluecard
 
 import android.app.Application
 import android.content.Intent
+import android.view.View
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
@@ -200,6 +202,12 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Our summary of Camping.").assertDoesNotExist()
     }
 
+    /** Checks that Robolectric set up the device right-to-left, as "fa" asks. */
+    private fun assertDeviceIsRightToLeft() {
+        val device = ApplicationProvider.getApplicationContext<Application>().resources
+        assertEquals(View.LAYOUT_DIRECTION_RTL, device.configuration.layoutDirection)
+    }
+
     private fun assertActivityFinishing() {
         // Robolectric doesn't move a finishing activity on to DESTROYED by itself.
         var isFinishing = false
@@ -345,6 +353,42 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Do 1 of 2").assertIsDisplayed()
     }
 
+    // The activity takes the strings' language's direction, so on a right-to-left device its
+    // views are left-to-right like the English strings. Compose draws in one of them, and
+    // keyboard and D-pad focus moves by its direction. Its resources are left-to-right too, and
+    // ProvideStringsLanguageResources keeps their direction, so resources with a
+    // direction-specific version, such as drawable-ldrtl, match the layout.
+    @Config(qualifiers = "fa")
+    @Test
+    fun onRightToLeftDevice_activityIsLeftToRight() {
+        assertDeviceIsRightToLeft()
+
+        launchWithProfile()
+
+        scenario.onActivity {
+            assertEquals(View.LAYOUT_DIRECTION_LTR, it.window.decorView.layoutDirection)
+            assertEquals(View.LAYOUT_DIRECTION_LTR, it.resources.configuration.layoutDirection)
+        }
+    }
+
+    // Screens are laid out left-to-right too: a requirement's number comes before its text.
+    // Text takes the layout's direction, which puts a sentence's final period at its end, but
+    // a test can't see where Text draws it (see paragraphDirection).
+    @Config(qualifiers = "fa")
+    @Test
+    fun onRightToLeftDevice_laysOutInStringsLanguageDirection() {
+        assertDeviceIsRightToLeft()
+
+        openCamping()
+
+        // ListItem merges its texts into one node, so find each in the unmerged tree.
+        val number = composeTestRule.onNodeWithText("1", useUnmergedTree = true)
+            .getBoundsInRoot()
+        val text = composeTestRule.onNodeWithText("First.", useUnmergedTree = true)
+            .getBoundsInRoot()
+        assertTrue(number.right <= text.left)
+    }
+
     @Test
     fun back_fromBadgeDetail_returnsToBadges() {
         openCamping()
@@ -481,6 +525,24 @@ class MainActivityTest {
         completedCheckbox().performClick()
 
         composeTestRule.onNodeWithText("Completed on May 20, 2026").assertIsDisplayed()
+    }
+
+    // The date picker shows its labels and dates in the device's language, so it's laid out in
+    // that language's direction, unlike the English screen behind it: a Persian calendar reads
+    // right-to-left. Its buttons show the direction: OK comes first, on the left.
+    @Config(qualifiers = "fa")
+    @Test
+    fun onRightToLeftDevice_datePickerIsRightToLeft() {
+        assertDeviceIsRightToLeft()
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+        completedCheckbox().performClick()
+
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+
+        val ok = composeTestRule.onNodeWithText("OK").getBoundsInRoot()
+        val cancel = composeTestRule.onNodeWithText("Cancel").getBoundsInRoot()
+        assertTrue(ok.right <= cancel.left)
     }
 
     @Test

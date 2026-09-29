@@ -53,6 +53,7 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 
@@ -167,6 +168,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
     val isEmpty by remember(query) { derivedStateOf { query.text.isEmpty() } }
     OutlinedTextField(
         state = query,
+        textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(R.string.badges_search)) },
         leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
         trailingIcon = if (isEmpty) {
