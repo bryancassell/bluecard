@@ -211,10 +211,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen's state once when it leaves the display, and not again while it's in
   the back stack, so a change made after that isn't kept. (Copying the text
   into `SavedStateHandle` had the same limit.) `restoredText` ignores any value
-  under its key that isn't the kind of `Bundle` it keeps. The extras of the
-  intent that opened the app don't reach it (see Navigation), so this only
-  guards against a value from somewhere else. The comment is kept only once the
-  saved comment has loaded into
+  under its key that isn't the kind of `Bundle` it keeps, as a backstop for the
+  extras of the intent that opened the app (see Navigation). The comment is
+  kept only once the saved comment has loaded into
   it (`restoredText` and `keepText`), so if the system stops the app before
   then, the page loads the saved comment again instead of restoring an empty
   field.
@@ -238,8 +237,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     state, such as the requirement comment, with an extra of the same name.
     BlueCard uses neither intent extras nor default arguments, so `MainActivity`
     overrides `defaultViewModelCreationExtras` to leave the default arguments
-    empty ([#83](https://github.com/bryancassell/bluecard/issues/83)). This
-    also covers ViewModels scoped to the activity.
+    empty ([#83](https://github.com/bryancassell/bluecard/issues/83)). That
+    covers every ViewModel created with the activity's creation extras, as
+    Hilt and Navigation 3 create them, including those scoped to the activity.
+    The activity's default factory still passes the extras to a ViewModel
+    created without creation extras. BlueCard creates none that way, and
+    overriding the factory would replace Hilt's.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens

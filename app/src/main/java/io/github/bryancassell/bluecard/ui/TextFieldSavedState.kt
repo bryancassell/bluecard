@@ -14,9 +14,9 @@ fun SavedStateHandle.textFieldState(key: String): TextFieldState =
 
 /**
  * The text [keepText] kept under [key] when the system stopped the app, or null if none.
- * A value under [key] that isn't the kind of Bundle [keepText] keeps is ignored. MainActivity
- * keeps the extras of the intent that opened the app out of every [SavedStateHandle], so this
- * only guards against a value from somewhere else.
+ * A value under [key] that isn't the kind of Bundle [keepText] keeps is ignored. This is a
+ * backstop: MainActivity keeps the extras of the intent that opened the app out of the
+ * [SavedStateHandle]s BlueCard creates, but one created another way could still get them.
  */
 fun SavedStateHandle.restoredText(key: String): String? =
     (get<Any?>(key) as? Bundle)?.getString(TEXT)

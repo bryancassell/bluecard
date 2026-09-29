@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard
 
 import android.app.Application
 import android.content.Intent
+import android.os.Bundle
 import android.view.View
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.core.os.bundleOf
+import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.pressBack
@@ -345,6 +347,17 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.onNodeWithText("First.").performClick()
         assertFieldEmpty("Comment")
+    }
+
+    // Covers every ViewModel, including those scoped to the activity, whatever keys the
+    // screens save their text under.
+    @Test
+    fun launchExtras_areNotDefaultArguments() {
+        launchWithExtrasNamedLikeTextFields()
+
+        var defaultArgs: Bundle? = null
+        scenario.onActivity { defaultArgs = it.defaultViewModelCreationExtras[DEFAULT_ARGS_KEY] }
+        assertEquals(emptySet<String>(), defaultArgs?.keySet())
     }
 
     @Test

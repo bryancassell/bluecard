@@ -79,7 +79,7 @@ class TextFieldSavedStateTest {
 
     @Test
     fun textFieldState_ignoresAnotherValueUnderItsKey() {
-        // A value keepText didn't keep, such as a default argument with the same name.
+        // A value keepText didn't keep.
         val savedStateHandle = SavedStateHandle(mapOf("field" to "From an intent."))
 
         assertEquals("", savedStateHandle.textFieldState("field").text.toString())

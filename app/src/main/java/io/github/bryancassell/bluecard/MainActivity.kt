@@ -13,7 +13,6 @@ import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
-import androidx.savedstate.savedState
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.bryancassell.bluecard.ui.BlueCardApp
 import io.github.bryancassell.bluecard.ui.stringsLocale
@@ -28,7 +27,7 @@ class MainActivity : ComponentActivity() {
     // uses neither intent extras nor default arguments, so the defaults are left empty.
     override val defaultViewModelCreationExtras: CreationExtras
         get() = MutableCreationExtras(super.defaultViewModelCreationExtras).apply {
-            set(DEFAULT_ARGS_KEY, savedState())
+            set(DEFAULT_ARGS_KEY, Bundle())
         }
 
     override fun attachBaseContext(newBase: Context) {
