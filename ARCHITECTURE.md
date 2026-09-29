@@ -331,6 +331,8 @@ leave a stale completion state behind.
 
 A badge's status (not started, in progress or completed) is derived the same
 way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees.
+Which requirements version a badge is worked on (the one it was started on, or
+the newest for a badge not started yet) comes from `data/progress/BadgeVersion.kt`.
 
 ## Key flows
 

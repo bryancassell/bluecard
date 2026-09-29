@@ -5,11 +5,12 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 
 /** A badge, the requirements the scout works on, and what they've recorded against them. */
 data class BadgeRequirements(
     val badge: MeritBadge,
-    /** The version the badge was started on, or the newest if it hasn't been started. */
+    /** The version the badge is worked on ([requirementsVersionFor]). */
     val version: RequirementsVersion,
     /** The scout's recorded requirement progress, keyed by requirement number. */
     val recorded: Map<String, RequirementProgress>
@@ -26,12 +27,7 @@ fun List<MeritBadge>.badgeRequirements(
     progress: BadgeProgressDetails?
 ): BadgeRequirements? {
     val badge = find { it.id == badgeId } ?: return null
-    val version = if (progress == null) {
-        badge.requirementVersions.maxBy { it.effectiveDate }
-    } else {
-        badge.requirementVersions.find { it.effectiveDate == progress.badge.requirementsVersion }
-            ?: return null
-    }
+    val version = badge.requirementsVersionFor(progress) ?: return null
     return BadgeRequirements(
         badge,
         version,
