@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -40,23 +40,22 @@ fun OnboardingRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     OnboardingScreen(
         uiState = uiState,
-        onNameChange = viewModel::onNameChange,
-        onUnitNumberChange = viewModel::onUnitNumberChange,
+        name = viewModel.name,
+        unitNumber = viewModel.unitNumber,
         onSave = viewModel::save,
         modifier = modifier
     )
 }
 
-/** First launch: asks for the scout's name and unit number. */
+/** First launch: asks for the scout's [name] and [unitNumber]. */
 @Composable
 fun OnboardingScreen(
     uiState: OnboardingUiState,
-    onNameChange: (String) -> Unit,
-    onUnitNumberChange: (String) -> Unit,
+    name: TextFieldState,
+    unitNumber: TextFieldState,
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         // imePadding() before verticalScroll() shrinks the scrollable area to the space
         // above the keyboard, so every field and the button can be scrolled into view.
@@ -72,12 +71,11 @@ fun OnboardingScreen(
         )
         Text(text = stringResource(R.string.onboarding_message))
         OutlinedTextField(
-            value = uiState.name,
-            onValueChange = onNameChange,
+            state = name,
             enabled = uiState.canEdit,
             label = { Text(stringResource(R.string.onboarding_name)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
-            singleLine = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Next
@@ -85,19 +83,18 @@ fun OnboardingScreen(
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
-            value = uiState.unitNumber,
-            onValueChange = onUnitNumberChange,
+            state = unitNumber,
             enabled = uiState.canEdit,
             label = { Text(stringResource(R.string.onboarding_unit_number)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
-            singleLine = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            // Close the keyboard, as Done normally does, and save; the ViewModel ignores
-            // the save if the form is incomplete.
-            keyboardActions = KeyboardActions(onDone = {
-                keyboardController?.hide()
+            // Do what Done normally does, which closes the keyboard, and save; the ViewModel
+            // ignores the save if the form is incomplete.
+            onKeyboardAction = { performDefaultAction ->
+                performDefaultAction()
                 onSave()
-            }),
+            },
             modifier = Modifier.fillMaxWidth()
         )
         Button(onClick = onSave, enabled = uiState.canSave, modifier = Modifier.fillMaxWidth()) {

@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
 import android.util.Log
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,43 +12,54 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     // Keeps what the scout typed if the system stops the app in the background.
-    private val savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(
-        OnboardingUiState(
-            name = savedStateHandle[NAME] ?: "",
-            unitNumber = savedStateHandle[UNIT_NUMBER] ?: ""
-        )
+    /** The name field's text, which the field edits directly. */
+    val name = TextFieldState(savedStateHandle[NAME] ?: "")
+
+    /** The unit number field's text, which the field edits directly. */
+    val unitNumber = TextFieldState(savedStateHandle[UNIT_NUMBER] ?: "")
+
+    private val saveStatus = MutableStateFlow(SaveStatus.Editing)
+
+    val uiState: StateFlow<OnboardingUiState> = combine(
+        // Saved as they change. The scout can change them only while the screen shows the
+        // fields, which is while it collects uiState, so every change is saved.
+        snapshotFlow { name.text.toString() }.onEach { savedStateHandle[NAME] = it },
+        snapshotFlow { unitNumber.text.toString() }.onEach { savedStateHandle[UNIT_NUMBER] = it },
+        saveStatus,
+        ::uiStateOf
+    ).stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        // Starts from the restored text, so Save doesn't show as disabled until the flow
+        // catches up.
+        currentUiState()
     )
-    val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
-    fun onNameChange(name: String) {
-        savedStateHandle[NAME] = name
-        _uiState.update { it.copy(name = name) }
-    }
-
-    fun onUnitNumberChange(unitNumber: String) {
-        savedStateHandle[UNIT_NUMBER] = unitNumber
-        _uiState.update { it.copy(unitNumber = unitNumber) }
-    }
-
-    /** Saves the profile, trimmed. Does nothing unless [OnboardingUiState.canSave]. */
+    /**
+     * Saves the profile, trimmed. Does nothing while saving, once saved, or if either field is
+     * blank. Checks the fields' text directly, so it can save before [uiState] catches up with
+     * the last keystroke.
+     */
     fun save() {
-        val state = _uiState.value
-        if (!state.canSave) return
-        _uiState.update { it.copy(saveStatus = SaveStatus.Saving) }
+        if (!currentUiState().canSave) return
+        val profile = Profile(name.text.toString().trim(), unitNumber.text.toString().trim())
+        saveStatus.value = SaveStatus.Saving
         viewModelScope.launch {
-            val status = try {
-                profileRepository.saveProfile(Profile(state.name.trim(), state.unitNumber.trim()))
+            saveStatus.value = try {
+                profileRepository.saveProfile(profile)
                 SaveStatus.Saved
             } catch (e: IOException) {
                 // The app reports caught exceptions nowhere else, so logcat and bug reports
@@ -54,9 +67,14 @@ class OnboardingViewModel @Inject constructor(
                 Log.w(TAG, "Couldn't save the profile", e)
                 SaveStatus.Failed
             }
-            _uiState.update { it.copy(saveStatus = status) }
         }
     }
+
+    /** What [uiState] shows once it catches up with the fields' current text. */
+    private fun currentUiState() = uiStateOf(name.text, unitNumber.text, saveStatus.value)
+
+    private fun uiStateOf(name: CharSequence, unitNumber: CharSequence, saveStatus: SaveStatus) =
+        OnboardingUiState(saveStatus, isComplete = name.isNotBlank() && unitNumber.isNotBlank())
 
     private companion object {
         const val TAG = "Onboarding"

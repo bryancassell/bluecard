@@ -154,8 +154,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   recommends state-based fields over `value` and `onValueChange`, which invite
   async updates, and encourages keeping `TextFieldState` in ViewModels. The
   ViewModel reads the text with `snapshotFlow` and copies it to
-  `SavedStateHandle`, so it survives the system stopping the app. Badges search
-  uses one; Onboarding predates this and still uses value-based fields.
+  `SavedStateHandle`, so it survives the system stopping the app. Onboarding's
+  name and unit number fields and Badges search work this way.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
