@@ -1,12 +1,18 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.io.File
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 
@@ -39,6 +45,24 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             )
         )
     )
+
+    @Test
+    fun observing_whenMigrationIsMissing_throwsTheBugUnwrapped() = runTest {
+        // A database from a newer app version, which Room has no migration down from.
+        val file = File(folder.root, BlueCardDatabase.NAME)
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { it.version = 1_000 }
+        val repository = RoomProgressRepository(
+            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath))
+        )
+
+        val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
+
+        // A bug must crash, not become a load failure (see readFailuresAsIOException).
+        assertTrue(
+            "Expected Room's IllegalStateException, got $error",
+            error is IllegalStateException
+        )
+    }
 
     @After
     fun closeDatabases() {

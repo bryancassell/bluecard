@@ -128,10 +128,25 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   crashes the app. The app has no crash reporting of its own, so a crash is the
   only way a bug reaches the developer without a scout reporting it: Google
   Play's [Android vitals](https://developer.android.com/topic/performance/vitals)
-  reports crashes from users who allow it, but not caught exceptions. To keep it
-  simple, the message has no "Try again" button; it asks the scout to close and
-  reopen the app, which loads everything again. Revisit this if crash reporting
-  is added ([#63](https://github.com/bryancassell/bluecard/issues/63)).
+  reports crashes from users who allow it, but not caught exceptions. Revisit
+  this if crash reporting is added
+  ([#63](https://github.com/bryancassell/bluecard/issues/63)). Until then,
+  `catchLoadFailure` logs each failure it catches with `Log.w`, so logcat and bug
+  reports show which data failed and why. Screen readers announce the message
+  when it replaces the loading indicator (a polite live region, in
+  `ui/ScreenMessage.kt`).
+- **Reloading after a load failure has limits.** To keep it simple, the message
+  has no "Try again" button; it asks the scout to close and reopen the app. A
+  screen loads again only when its ViewModel is created, or when the screen is
+  shown after being hidden for more than 5 seconds (`WhileSubscribed(5_000)`).
+  Badges and the badge pages get a new ViewModel each time they open, but Home
+  and the navigation root keep theirs for as long as the activity lives. On
+  Android 12 and higher, Back on Home moves the app to the background instead of
+  finishing the activity
+  ([behavior change](https://developer.android.com/about/versions/12/behavior-changes-all)),
+  so reopening the app within 5 seconds shows the message again. A failure
+  after a screen has loaded also stays until the screen loads again. A "Try
+  again" button would fix both.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -433,7 +448,13 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 - **ViewModel tests** are local JVM tests against fake repositories, using
   `kotlinx-coroutines-test` and a `MainDispatcherRule`, as in the
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
-  They check each UI state and each event.
+  They check each UI state and each event. They run with Robolectric, because
+  their load-failure tests reach `android.util.Log`, whose methods throw in plain
+  local tests. The alternative, `returnDefaultValues`, makes every Android method
+  return null or zero instead; the
+  [local tests guide](https://developer.android.com/training/testing/local-tests)
+  says it "might allow failing tests to pass" and adds: "Only use it as a last
+  resort."
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
   bindings such as the coroutine dispatcher. A test class that needs fakes

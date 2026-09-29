@@ -84,8 +84,11 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
 
     /**
      * Reports a database that can't be read, such as one that can't be opened, as the
-     * [IOException] that [ProgressRepository] documents. Other exceptions are bugs, such as a
-     * missing migration, and pass through.
+     * [IOException] that [ProgressRepository] documents. Android's SQLite reports those as
+     * [SQLiteException]s. Other exceptions are bugs and pass through: a missing migration, and
+     * the parent class `android.database.SQLException`, which Room's SQLite adapter throws only
+     * for misuse such as reading a closed statement. If Room is ever given a `SQLiteDriver`,
+     * every SQLite error arrives as that parent class, so this check needs revisiting.
      */
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> =
         catch { throw if (it is SQLiteException) IOException(it) else it }
