@@ -84,4 +84,10 @@
         <item quantity="one">%1$d of %2$d completed</item>
         <item quantity="other">%1$d of %2$d completed</item>
     </plurals>
+    <!-- How many badges the Badges list shows: every badge, or the ones that match the search.
+         Screen readers announce it when it changes. -->
+    <plurals name="badges_count">
+        <item quantity="one">%1$d merit badge</item>
+        <item quantity="other">%1$d merit badges</item>
+    </plurals>
 </resources>

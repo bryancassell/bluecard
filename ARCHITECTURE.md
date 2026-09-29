@@ -161,22 +161,58 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   so reopening the app within 5 seconds shows the message again. A failure
   after a screen has loaded also stays until the screen loads again. A "Try
   again" button would fix both.
+- **Screen readers hear how many badges match a search.** Under the Badges
+  search field, a line says how many badges are listed ("12 merit badges"), or
+  "No merit badges match your search." Screen readers hear it from a polite
+  live region. Android 16 deprecated `announceForAccessibility`, and its
+  [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
+  point to live regions instead, "used sparingly".
+  - **The live region stays composed while the search field is shown, and
+    only its text changes.** Compose announces a live region only when a node
+    that already exists changes (`sendSemanticsPropertyChangeEvents` in
+    `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A new
+    node isn't announced, so the count isn't read out when the screen first
+    shows it. The load-failed message and Onboarding's save-failed message
+    have the same gap
+    ([#69](https://github.com/bryancassell/bluecard/issues/69)), which this
+    approach could also close.
+  - **Screen readers hear a new count once the scout stops typing for a
+    second**, while the line and the list change on every keystroke. With
+    TalkBack 17 on Android 17, the count's announcement reached TalkBack just
+    before the echo of the key typed, and TalkBack doesn't let new speech cut
+    off a polite live region. A count announced on every keystroke was spoken
+    first and held back the echo by 1 to 4 seconds. Waiting for the pause
+    keeps the echo first. A key typed while the count is being spoken still
+    waits for it.
+  - **The live region is kept apart from the count the line shows.** TalkBack
+    announces a live region whenever it changes at all, even just its size, so
+    a live region around the shown count read out the old count as soon as the
+    shown one changed. The line has two texts: the shown count, hidden from
+    accessibility services, and the live region, laid out from the announced
+    count alone and not drawn.
+  - **Only a change is announced.** A keystroke that leaves the count the same
+    says nothing more. After "Clear search", the full count is announced
+    straight away, before TalkBack reads the search field, where its focus
+    moves whether or not the field had input focus. After a pause, the count
+    would come just as the scout starts a new search. Deleting the search a key
+    at a time still waits for the pause.
 - **Text fields are state-based.** A text field edits a `TextFieldState` that
   its screen's ViewModel holds. The
   [text field guide](https://developer.android.com/develop/ui/compose/text/user-input)
   recommends state-based fields over `value` and `onValueChange`, which invite
   async updates, and encourages keeping `TextFieldState` in ViewModels. The
   ViewModel reads the text with `snapshotFlow` and copies it to
-  `SavedStateHandle`, so it survives the system stopping the app. Badges search
-  and the requirement comment use one; Onboarding predates this and still uses
-  value-based fields. A ViewModel that fills a field with stored text once it
+  `SavedStateHandle`, so it survives the system stopping the app. Onboarding's
+  name and unit number fields, Badges search and the requirement comment work
+  this way. A ViewModel that fills a field with stored text once it
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
-  snapshot, which it does once a frame. Fields whose text is saved this way have a
-  length limit (`TextLengthLimit`), because saved state has a size limit. It
-  keeps as much of an edit, such as a long paste, as fits, and never cuts the
-  text already in the field or splits an emoji.
+  snapshot, which it does once a frame. Saved state has a size limit, so Badges
+  search and the requirement comment have a length limit (`TextLengthLimit`);
+  Onboarding's fields don't have one yet. It keeps as much of an edit, such as
+  a long paste, as fits, and never cuts the text already in the field or splits
+  an emoji.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -476,7 +512,9 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   digits, in the search and in badge text alike, so spaces and punctuation only
   separate them; a search with no words lists every badge. The list stays
   alphabetical, and a new set of matches is shown from the top. The search is
-  capped at 100 characters, because it's saved with the screen's state.
+  capped at 100 characters, because it's saved with the screen's state. A line
+  above the list says how many badges match, for screen readers to announce
+  (see [UI layer](#ui-layer)).
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
@@ -619,11 +657,12 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | Text fields | State-based (`TextFieldState`), held in the ViewModel and saved in `SavedStateHandle` | The text field guide recommends state-based fields and holding their state in ViewModels |
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
+| Search result announcements | A visible count of the matches. Screen readers hear it from a polite live region that stays composed and is laid out apart from the shown count. It changes once typing pauses for a second, or straight away after Clear search | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed, doesn't let it be cut off, and announces a live region on any change, even of its size |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
 | Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
-| Requirement comments | On every requirement, saved with a Save button | Saving as the scout types would need a save that outlives the page to keep the last few keystrokes, and would report a failure after the fact |
+| Requirement comments | On every requirement, saved with a Save button | The scout decides when a comment is saved, and a save that fails is reported right then, not while they're still typing |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |

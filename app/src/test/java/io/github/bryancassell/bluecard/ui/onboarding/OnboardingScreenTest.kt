@@ -1,7 +1,13 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
+import android.text.InputType
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -27,11 +33,9 @@ class OnboardingScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private var name: String? = null
-    private var unitNumber: String? = null
+    private val name = TextFieldState()
+    private val unitNumber = TextFieldState()
     private var saves = 0
-
-    private val filledIn = OnboardingUiState(name = "Alex Scout", unitNumber = "123")
 
     /** Records what the screen asks of the on-screen keyboard. */
     private val keyboard = object : SoftwareKeyboardController {
@@ -44,17 +48,27 @@ class OnboardingScreenTest {
         }
     }
 
+    // The view that hosts the screen, which connects the keyboard to the focused field.
+    private lateinit var view: View
+
     private fun show(uiState: OnboardingUiState) {
         composeTestRule.setContent {
+            view = LocalView.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 OnboardingScreen(
                     uiState = uiState,
-                    onNameChange = { name = it },
-                    onUnitNumberChange = { unitNumber = it },
+                    name = name,
+                    unitNumber = unitNumber,
                     onSave = { saves++ }
                 )
             }
         }
+    }
+
+    private fun showFilledIn(saveStatus: SaveStatus = SaveStatus.Editing) {
+        name.setTextAndPlaceCursorAtEnd("Alex Scout")
+        unitNumber.setTextAndPlaceCursorAtEnd("123")
+        show(OnboardingUiState(saveStatus, isComplete = true))
     }
 
     // Matches on EditableText, not the SetText action, which disabled fields don't have.
@@ -79,7 +93,7 @@ class OnboardingScreenTest {
 
     @Test
     fun filledIn_showsValuesAndEnablesSave() {
-        show(filledIn)
+        showFilledIn()
 
         field("Name").assertTextContains("Alex Scout")
         field("Unit number").assertTextContains("123")
@@ -88,7 +102,7 @@ class OnboardingScreenTest {
 
     @Test
     fun saving_disablesFieldsAndSave() {
-        show(filledIn.copy(saveStatus = SaveStatus.Saving))
+        showFilledIn(SaveStatus.Saving)
 
         field("Name").assertIsNotEnabled()
         field("Unit number").assertIsNotEnabled()
@@ -97,7 +111,7 @@ class OnboardingScreenTest {
 
     @Test
     fun saved_disablesFieldsAndSave() {
-        show(filledIn.copy(saveStatus = SaveStatus.Saved))
+        showFilledIn(SaveStatus.Saved)
 
         field("Name").assertIsNotEnabled()
         field("Unit number").assertIsNotEnabled()
@@ -107,7 +121,7 @@ class OnboardingScreenTest {
 
     @Test
     fun failed_showsMessageAndAllowsRetry() {
-        show(filledIn.copy(saveStatus = SaveStatus.Failed))
+        showFilledIn(SaveStatus.Failed)
 
         saveFailedMessage().assertExists()
         field("Name").assertIsEnabled()
@@ -116,21 +130,37 @@ class OnboardingScreenTest {
     }
 
     @Test
-    fun typingName_reportsIt() {
+    fun typingName_editsName() {
         show(OnboardingUiState())
 
         field("Name").performTextInput("Alex")
 
-        assertEquals("Alex", name)
+        assertEquals("Alex", name.text.toString())
+        assertEquals("", unitNumber.text.toString())
     }
 
     @Test
-    fun typingUnitNumber_reportsIt() {
+    fun typingUnitNumber_editsUnitNumber() {
         show(OnboardingUiState())
 
         field("Unit number").performTextInput("123")
 
-        assertEquals("123", unitNumber)
+        assertEquals("123", unitNumber.text.toString())
+        assertEquals("", name.text.toString())
+    }
+
+    @Test
+    fun name_capitalizesWords() {
+        show(OnboardingUiState())
+        field("Name").performClick()
+
+        val editorInfo = EditorInfo()
+        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+
+        assertEquals(
+            InputType.TYPE_TEXT_FLAG_CAP_WORDS,
+            editorInfo.inputType and InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        )
     }
 
     @Test
@@ -145,7 +175,7 @@ class OnboardingScreenTest {
 
     @Test
     fun clickingSave_saves() {
-        show(filledIn)
+        showFilledIn()
 
         saveButton().performClick()
 
@@ -154,7 +184,7 @@ class OnboardingScreenTest {
 
     @Test
     fun keyboardDone_onUnitNumber_hidesKeyboardAndSaves() {
-        show(filledIn)
+        showFilledIn()
 
         field("Unit number").performImeAction()
 

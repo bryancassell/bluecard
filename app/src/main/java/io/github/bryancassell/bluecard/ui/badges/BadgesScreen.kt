@@ -23,19 +23,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -44,8 +52,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 
 /** Connects the Badges screen to its ViewModel. */
 @Composable
@@ -85,9 +94,25 @@ fun BadgesScreen(
                 .semantics { heading() }
         )
         // Shown in the same place whether or not anything matches, so the field keeps focus
-        // and the keyboard stays open as the scout types.
+        // and the keyboard stays open as the scout types, and screen readers announce the
+        // count when it changes.
         if (uiState is BadgesUiState.Ready || uiState == BadgesUiState.NoMatches) {
-            SearchField(query)
+            val count = if (uiState is BadgesUiState.Ready) {
+                val size = uiState.badges.size
+                pluralStringResource(R.plurals.badges_count, size, size)
+            } else {
+                stringResource(R.string.badges_no_matches)
+            }
+            // The count when the scout last pressed Clear search, until the count that
+            // replaces it is announced.
+            var countWhenCleared by remember { mutableStateOf<String?>(null) }
+            SearchField(query, onClear = { countWhenCleared = count })
+            MatchCount(
+                count = count,
+                query = query,
+                countWhenCleared = countWhenCleared,
+                onClearAnnounced = { countWhenCleared = null }
+            )
         }
         when (uiState) {
             BadgesUiState.Loading -> Box(
@@ -99,7 +124,8 @@ fun BadgesScreen(
 
             BadgesUiState.LoadFailed -> LoadFailedMessage()
 
-            BadgesUiState.NoMatches -> ScreenMessage(stringResource(R.string.badges_no_matches))
+            // MatchCount says so.
+            BadgesUiState.NoMatches -> Unit
 
             // A lazy list composes only the rows on screen, so the full catalog scrolls
             // smoothly. Keys keep each row's state with its badge.
@@ -133,7 +159,7 @@ fun BadgesScreen(
 private val SearchLengthLimit = TextLengthLimit(maxLength = 100)
 
 @Composable
-private fun SearchField(query: TextFieldState) {
+private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
     // Read through derivedStateOf, so the field recomposes when the text goes between empty
@@ -149,9 +175,11 @@ private fun SearchField(query: TextFieldState) {
             {
                 // Clearing usually starts a new search, so the field takes input focus, which
                 // the button had until it disappears, and the keyboard opens even if the
-                // field was already focused with the keyboard closed. Where TalkBack's focus
-                // goes is checked in #71.
+                // field was already focused with the keyboard closed. TalkBack's focus moves
+                // to the field too, even when the field already had input focus (checked with
+                // TalkBack 17 on Android 17).
                 IconButton(onClick = {
+                    onClear()
                     query.clearText()
                     focusRequester.requestFocus()
                     keyboardController?.show()
@@ -179,6 +207,69 @@ private fun SearchField(query: TextFieldState) {
             .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
             .focusRequester(focusRequester)
     )
+}
+
+/**
+ * How long the scout must stop typing before screen readers hear a new count. TalkBack doesn't
+ * let new speech cut off a polite live region, so a count spoken while the scout types holds
+ * back their keyboard's feedback on the next key.
+ */
+internal val TypingPause = 1.seconds
+
+/**
+ * How many badges the list shows, or that none match. The line shows [count] straight away.
+ * Screen readers get it as a polite live region, which they announce when it changes, once the
+ * scout has stopped typing in [query] for [TypingPause], so the announcement comes after the
+ * keyboard's feedback on the last key.
+ *
+ * After Clear search, when the count changes from [countWhenCleared], the new count is
+ * announced straight away instead, before TalkBack reads the search field the scout is about to
+ * type in, and [onClearAnnounced] is called.
+ *
+ * Compose announces a live region only when a node that's already shown changes (see
+ * ARCHITECTURE.md, UI layer), so the live region stays composed as the matches change, and only
+ * its text changes.
+ */
+@Composable
+private fun MatchCount(
+    count: String,
+    query: TextFieldState,
+    countWhenCleared: String?,
+    onClearAnnounced: () -> Unit
+) {
+    // Read through derivedStateOf, so the count recomposes when the text changes, not when the
+    // cursor moves.
+    val typed by remember(query) { derivedStateOf { query.text.toString() } }
+    var announced by remember { mutableStateOf(count) }
+    // Each keystroke restarts the wait, even one that leaves the count the same.
+    LaunchedEffect(count, typed) {
+        if (typed.isEmpty() && countWhenCleared != null && count != countWhenCleared) {
+            onClearAnnounced()
+        } else {
+            delay(TypingPause)
+        }
+        announced = count
+    }
+    Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+        // What screen readers hear. TalkBack announces a live region whenever it changes at
+        // all, even just its size, so this one is laid out from the announced count alone,
+        // apart from the count the line shows. It isn't drawn: the shown count is drawn in its
+        // place.
+        Text(
+            text = announced,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .semantics { liveRegion = LiveRegionMode.Polite }
+                .drawWithContent {}
+        )
+        Text(
+            text = count,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // Screen readers get the announced count instead.
+            modifier = Modifier.semantics { hideFromAccessibility() }
+        )
+    }
 }
 
 @Composable
