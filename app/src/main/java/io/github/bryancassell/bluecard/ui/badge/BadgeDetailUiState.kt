@@ -17,7 +17,9 @@ sealed interface BadgeDetailUiState {
         val eagle: EagleRequirement?,
         val officialUrl: String,
         /** The top-level requirements of the version the scout works on. */
-        val requirements: List<RequirementItem>
+        val requirements: List<RequirementItem>,
+        /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
+        val saveFailed: Boolean = false
     ) : BadgeDetailUiState
 
     /**

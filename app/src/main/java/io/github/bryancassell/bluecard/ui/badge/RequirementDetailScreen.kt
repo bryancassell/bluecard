@@ -1,24 +1,48 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import java.time.LocalDate
 
 /** Connects the Requirement detail screen to its ViewModel. */
 @Composable
@@ -35,20 +59,30 @@ fun RequirementDetailRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RequirementDetailScreen(
         uiState = uiState,
+        comment = viewModel.comment,
         onOpenRequirement = onOpenRequirement,
+        onCompletedChange = viewModel::setCompleted,
+        onCompletedDateChange = viewModel::setCompletedDate,
+        onSaveComment = viewModel::saveComment,
+        onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
 }
 
 /**
- * A requirement with more than fits in a row on the badge's page: its sub-requirements
- * now, and its tracker once trackers are built. A sub-requirement with more to it opens
- * its own page in turn.
+ * A requirement's own page: whether it's complete, and when for one the scout marks complete,
+ * its sub-requirements, and the scout's [comment] on it. It will show the requirement's tracker
+ * once trackers are built (#40). A sub-requirement opens its own page in turn.
  */
 @Composable
 fun RequirementDetailScreen(
     uiState: RequirementDetailUiState,
+    comment: TextFieldState,
     onOpenRequirement: (number: String) -> Unit,
+    onCompletedChange: (number: String, completed: Boolean) -> Unit,
+    onCompletedDateChange: (LocalDate?) -> Unit,
+    onSaveComment: () -> Unit,
+    onSaveFailureShown: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -59,42 +93,169 @@ fun RequirementDetailScreen(
         RequirementDetailUiState.Unavailable ->
             ScreenMessage(stringResource(R.string.requirement_detail_unavailable), modifier)
 
-        is RequirementDetailUiState.Ready -> Column(
-            modifier = modifier.verticalScroll(rememberScrollState())
-        ) {
-            val requirement = uiState.requirement
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = uiState.badgeName,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(R.string.requirement_detail_title, requirement.number),
-                    style = MaterialTheme.typography.headlineMedium,
-                    // Lets screen reader users jump to it.
-                    modifier = Modifier.semantics { heading() }
-                )
-                Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
-                requirement.choice?.let {
-                    Text(
-                        text = choiceLabel(it),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+        // Ends the page above the keyboard, so the comment field can be scrolled into view.
+        is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                RequirementHeader(uiState.badgeName, uiState.requirement)
+                val requirement = uiState.requirement
+                if (!requirement.hasSubRequirements) {
+                    CompletedCheckbox(
+                        completed = requirement.completed,
+                        onCompletedChange = { onCompletedChange(requirement.number, it) }
+                    )
+                    if (requirement.completed) {
+                        CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
+                    }
+                }
+                uiState.children.forEach {
+                    RequirementRow(
+                        item = it,
+                        onOpen = onOpenRequirement,
+                        onCompletedChange = onCompletedChange
                     )
                 }
-                if (requirement.completed) {
-                    Text(
-                        text = stringResource(R.string.requirement_completed),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                CommentField(comment, uiState.commentChanged, onSaveComment)
             }
-            uiState.children.forEach { RequirementRow(item = it, onOpen = onOpenRequirement) }
+            SaveFailedSnackbarHost(
+                saveFailed = uiState.saveFailed,
+                onShown = onSaveFailureShown,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = badgeName,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = stringResource(R.string.requirement_detail_title, requirement.number),
+            style = MaterialTheme.typography.headlineMedium,
+            // Lets screen reader users jump to it.
+            modifier = Modifier.semantics { heading() }
+        )
+        Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
+        requirement.choice?.let {
+            Text(
+                text = choiceLabel(it),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        // One without sub-requirements has a checkbox instead.
+        if (requirement.hasSubRequirements && requirement.completed) {
+            Text(
+                text = stringResource(R.string.requirement_completed),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+/** The whole row toggles the checkbox, and screen readers read it as one checkbox. */
+@Composable
+private fun CompletedCheckbox(completed: Boolean, onCompletedChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = completed, role = Role.Checkbox, onValueChange = onCompletedChange)
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 16.dp)
+    ) {
+        Checkbox(checked = completed, onCheckedChange = null)
+        Text(
+            text = stringResource(R.string.requirement_completed),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 16.dp)
+        )
+    }
+}
+
+/** The date a completed requirement was completed on, which the scout can change or remove. */
+@Composable
+private fun CompletionDate(date: LocalDate?, today: LocalDate, onDateChange: (LocalDate?) -> Unit) {
+    var picking by rememberSaveable { mutableStateOf(false) }
+    val formatter = rememberCompletionDateFormatter()
+    Text(
+        text = if (date == null) {
+            stringResource(R.string.requirement_no_date)
+        } else {
+            stringResource(R.string.requirement_completed_on, formatter.format(date))
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+    // Lines the buttons' text up with the date's.
+    Row(modifier = Modifier.padding(horizontal = 4.dp)) {
+        TextButton(onClick = { picking = true }) {
+            val label = if (date == null) {
+                R.string.requirement_add_date
+            } else {
+                R.string.requirement_change_date
+            }
+            Text(stringResource(label))
+        }
+        if (date != null) {
+            TextButton(onClick = { onDateChange(null) }) {
+                Text(stringResource(R.string.requirement_remove_date))
+            }
+        }
+    }
+    if (picking) {
+        CompletionDatePickerDialog(
+            initial = date ?: today,
+            today = today,
+            onConfirm = {
+                picking = false
+                onDateChange(it)
+            },
+            onDismiss = { picking = false }
+        )
+    }
+}
+
+/**
+ * Plenty for notes on a requirement. The field's text is saved with the screen's state, which
+ * has a size limit, so a huge paste mustn't reach it.
+ */
+private val CommentLengthLimit = TextLengthLimit(maxLength = 2_000)
+
+/** The scout's comment on the requirement, saved when they choose. */
+@Composable
+private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -> Unit) {
+    val focusManager = LocalFocusManager.current
+    Column(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            state = comment,
+            label = { Text(stringResource(R.string.requirement_comment)) },
+            inputTransformation = CommentLengthLimit,
+            lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = {
+                onSave()
+                // Done editing: closes the keyboard.
+                focusManager.clearFocus()
+            },
+            enabled = changed
+        ) {
+            Text(stringResource(R.string.requirement_save_comment))
         }
     }
 }

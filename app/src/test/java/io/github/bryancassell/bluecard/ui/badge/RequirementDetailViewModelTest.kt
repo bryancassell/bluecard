@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -9,15 +12,21 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import java.time.Clock
 import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +43,8 @@ class RequirementDetailViewModelTest {
     private val newest = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
+    private val today = LocalDate.of(2026, 5, 20)
+    private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
 
     private val camping = MeritBadge(
         id = "camping",
@@ -91,11 +102,18 @@ class RequirementDetailViewModelTest {
 
     private val catalogRepository = FakeCatalogRepository(listOf(camping))
     private val progressRepository = FakeProgressRepository()
+    private val savedStateHandle = SavedStateHandle()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private fun viewModel(number: String) =
-        RequirementDetailViewModel("camping", number, catalogRepository, progressRepository)
+    private fun viewModel(number: String) = RequirementDetailViewModel(
+        "camping",
+        number,
+        catalogRepository,
+        progressRepository,
+        clock,
+        savedStateHandle
+    )
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -112,7 +130,14 @@ class RequirementDetailViewModelTest {
         val loading = object : CatalogRepository {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
         }
-        val viewModel = RequirementDetailViewModel("camping", "2", loading, progressRepository)
+        val viewModel = RequirementDetailViewModel(
+            "camping",
+            "2",
+            loading,
+            progressRepository,
+            clock,
+            savedStateHandle
+        )
         startCollecting(viewModel)
 
         assertEquals(RequirementDetailUiState.Loading, viewModel.uiState.value)
@@ -145,17 +170,15 @@ class RequirementDetailViewModelTest {
             RequirementDetailUiState.Ready(
                 badgeName = "Camping",
                 requirement = RequirementItem("2", "Do two of these.", Choice(2, 3), false, true),
+                completedDate = null,
                 children = listOf(
-                    RequirementItem("2a", "Cook a meal.", null, false, opensDetail = false),
-                    RequirementItem(
-                        "2b",
-                        "Lead one hike.",
-                        Choice(1, 2),
-                        false,
-                        opensDetail = true
-                    ),
-                    RequirementItem("2c", "Keep a camping log.", null, false, opensDetail = false)
-                )
+                    RequirementItem("2a", "Cook a meal.", null, false, false),
+                    RequirementItem("2b", "Lead one hike.", Choice(1, 2), false, true),
+                    RequirementItem("2c", "Keep a camping log.", null, false, false)
+                ),
+                commentChanged = false,
+                today = today,
+                saveFailed = false
             ),
             viewModel.uiState.value
         )
@@ -219,8 +242,14 @@ class RequirementDetailViewModelTest {
 
     @Test
     fun badgeMissingFromCatalog_isUnavailable() = runTest {
-        val viewModel =
-            RequirementDetailViewModel("retired-badge", "2", catalogRepository, progressRepository)
+        val viewModel = RequirementDetailViewModel(
+            "retired-badge",
+            "2",
+            catalogRepository,
+            progressRepository,
+            clock,
+            savedStateHandle
+        )
         startCollecting(viewModel)
 
         assertEquals(RequirementDetailUiState.Unavailable, viewModel.uiState.value)
@@ -240,5 +269,247 @@ class RequirementDetailViewModelTest {
         progressRepository.markRequirementCompleted("camping", "2b(2)", day)
         assertTrue(viewModel.ready().children.single { it.number == "2b" }.completed)
         assertTrue(viewModel.ready().requirement.completed)
+    }
+
+    private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
+        .first()?.requirements?.singleOrNull { it.requirementNumber == number }
+
+    /** Types into the comment field, as the scout does. */
+    private fun RequirementDetailViewModel.typeComment(text: String) {
+        comment.setTextAndPlaceCursorAtEnd(text)
+        Snapshot.sendApplyNotifications()
+    }
+
+    @Test
+    fun today_isFromTheClock() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        assertEquals(today, viewModel.ready().today)
+    }
+
+    @Test
+    fun setCompleted_onUnstartedBadge_startsItAndCompletesThisRequirementToday() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().requirement.completed)
+        assertNull(viewModel.ready().completedDate)
+
+        viewModel.setCompleted("1", true)
+
+        assertEquals(
+            BadgeProgress("camping", newest, today),
+            progressRepository.observeProgress("camping").first()!!.badge
+        )
+        assertTrue(viewModel.ready().requirement.completed)
+        assertEquals(today, viewModel.ready().completedDate)
+    }
+
+    @Test
+    fun setCompleted_false_undoesItAndRemovesDate() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted("1", true)
+
+        viewModel.setCompleted("1", false)
+
+        assertFalse(viewModel.ready().requirement.completed)
+        assertNull(viewModel.ready().completedDate)
+    }
+
+    @Test
+    fun completingEnoughSubRequirements_completesThisRequirement() = runTest {
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        viewModel.setCompleted("2a", true)
+        assertTrue(viewModel.ready().children.single { it.number == "2a" }.completed)
+        assertFalse(viewModel.ready().requirement.completed)
+
+        viewModel.setCompleted("2c", true)
+        assertTrue(viewModel.ready().requirement.completed)
+
+        viewModel.setCompleted("2a", false)
+        assertFalse(viewModel.ready().requirement.completed)
+    }
+
+    @Test
+    fun setCompletedDate_changesTheDate() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted("1", true)
+
+        viewModel.setCompletedDate(day)
+
+        assertEquals(day, viewModel.ready().completedDate)
+        assertTrue(viewModel.ready().requirement.completed)
+    }
+
+    @Test
+    fun setCompletedDate_null_removesTheDateButStaysCompleted() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted("1", true)
+
+        viewModel.setCompletedDate(null)
+
+        assertNull(viewModel.ready().completedDate)
+        assertTrue(viewModel.ready().requirement.completed)
+    }
+
+    @Test
+    fun comment_startsAsSavedComment() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setRequirementComment("camping", "1", "Planned it with my patrol.")
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        assertEquals("Planned it with my patrol.", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun comment_edited_isChanged_untilSaved() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        assertEquals("", viewModel.comment.text.toString())
+
+        viewModel.typeComment("Planned it with my patrol.")
+        assertTrue(viewModel.ready().commentChanged)
+
+        viewModel.saveComment()
+
+        assertFalse(viewModel.ready().commentChanged)
+        assertEquals("Planned it with my patrol.", recorded("1")?.comment)
+    }
+
+    @Test
+    fun saveComment_onUnstartedBadge_startsItWithoutCompletingTheRequirement() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeComment("Next week.")
+
+        viewModel.saveComment()
+
+        assertEquals(
+            BadgeProgress("camping", newest, today),
+            progressRepository.observeProgress("camping").first()!!.badge
+        )
+        assertEquals(RequirementProgress("camping", "1", comment = "Next week."), recorded("1"))
+    }
+
+    @Test
+    fun saveComment_trimsSpaces_andOnlySpacesAreNoChange() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        viewModel.typeComment("   ")
+        assertFalse(viewModel.ready().commentChanged)
+
+        viewModel.typeComment("  Done at camp.  ")
+        viewModel.saveComment()
+
+        assertEquals("Done at camp.", recorded("1")?.comment)
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun saveComment_empty_removesIt() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setRequirementComment("camping", "1", "Planned it with my patrol.")
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        viewModel.typeComment("")
+        assertTrue(viewModel.ready().commentChanged)
+        viewModel.saveComment()
+
+        assertNull(recorded("1")?.comment)
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun comment_onRequirementWithSubRequirements_isSavedForIt() = runTest {
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        viewModel.typeComment("Chose 2a and 2c.")
+        viewModel.saveComment()
+
+        assertEquals(
+            RequirementProgress("camping", "2", comment = "Chose 2a and 2c."),
+            recorded("2")
+        )
+    }
+
+    @Test
+    fun unsavedComment_isKeptWhenProgressChanges() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeComment("Not saved yet.")
+
+        viewModel.setCompleted("1", true)
+
+        assertEquals("Not saved yet.", viewModel.comment.text.toString())
+        assertTrue(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun unsavedComment_isRestoredFromSavedState() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setRequirementComment("camping", "1", "Saved.")
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeComment("Saved, then edited.")
+
+        // A new ViewModel with the same saved state, as after the system stopped the app.
+        val restored = viewModel("1")
+        startCollecting(restored)
+
+        assertEquals("Saved, then edited.", restored.comment.text.toString())
+        assertTrue(restored.ready().commentChanged)
+    }
+
+    @Test
+    fun setCompleted_whenSaveFails_reportsItUntilShown() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+
+        viewModel.setCompleted("1", true)
+
+        assertTrue(viewModel.ready().saveFailed)
+        assertFalse(viewModel.ready().requirement.completed)
+
+        viewModel.onSaveFailureShown()
+
+        assertFalse(viewModel.ready().saveFailed)
+    }
+
+    @Test
+    fun setCompletedDate_whenSaveFails_reportsIt() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted("1", true)
+        progressRepository.failSaves = true
+
+        viewModel.setCompletedDate(day)
+
+        assertTrue(viewModel.ready().saveFailed)
+        assertEquals(today, viewModel.ready().completedDate)
+    }
+
+    @Test
+    fun saveComment_whenSaveFails_reportsIt_andKeepsTheEdit() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeComment("Not saved yet.")
+        progressRepository.failSaves = true
+
+        viewModel.saveComment()
+
+        assertTrue(viewModel.ready().saveFailed)
+        assertEquals("Not saved yet.", viewModel.comment.text.toString())
+        assertTrue(viewModel.ready().commentChanged)
     }
 }

@@ -19,6 +19,12 @@ class FakeProgressRepository : ProgressRepository {
     /** When true, the flows throw, as Room's do when the database can't be opened. */
     var failLoads = false
 
+    /**
+     * When true, every function that changes progress throws, as Room's do when the database
+     * can't be opened or the disk is full.
+     */
+    var failSaves = false
+
     override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> =
         loadedBadges().map { all -> all.values.sortedBy { it.badge.badgeId } }
 
@@ -32,6 +38,7 @@ class FakeProgressRepository : ProgressRepository {
         requirementsVersion: LocalDate,
         startedDate: LocalDate
     ) {
+        checkCanSave()
         badges.update { all ->
             if (badgeId in all) {
                 all
@@ -48,12 +55,14 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     override suspend fun setCounselor(badgeId: String, counselor: Counselor?) {
+        checkCanSave()
         updateBadge(badgeId) {
             it.copy(badge = it.badge.copy(counselor = counselor?.normalized()))
         }
     }
 
     override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) {
+        checkCanSave()
         updateBadge(badgeId) { it.copy(badge = it.badge.copy(completedOnPriorDate = date)) }
     }
 
@@ -62,16 +71,19 @@ class FakeProgressRepository : ProgressRepository {
         number: String,
         completedDate: LocalDate?
     ) {
+        checkCanSave()
         updateRequirement(badgeId, number) {
             it.copy(completed = true, completedDate = completedDate)
         }
     }
 
     override suspend fun markRequirementNotCompleted(badgeId: String, number: String) {
+        checkCanSave()
         updateRequirement(badgeId, number) { it.copy(completed = false, completedDate = null) }
     }
 
     override suspend fun setRequirementComment(badgeId: String, number: String, comment: String?) {
+        checkCanSave()
         updateRequirement(badgeId, number) { it.copy(comment = comment?.ifBlank { null }) }
     }
 
@@ -80,6 +92,7 @@ class FakeProgressRepository : ProgressRepository {
         number: String,
         values: Map<String, String>
     ): Long {
+        checkCanSave()
         requireStarted(badgeId)
         val id = nextTrackerEntryId++
         updateBadge(badgeId) {
@@ -89,6 +102,7 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) {
+        checkCanSave()
         updateEachBadge { details ->
             details.copy(
                 trackerEntries = details.trackerEntries.map {
@@ -99,12 +113,14 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     override suspend fun deleteTrackerEntry(id: Long) {
+        checkCanSave()
         updateEachBadge { details ->
             details.copy(trackerEntries = details.trackerEntries.filterNot { it.id == id })
         }
     }
 
     override suspend fun clearRequirement(badgeId: String, number: String) {
+        checkCanSave()
         if (badgeId !in badges.value) return
         updateBadge(badgeId) { details ->
             details.copy(
@@ -115,11 +131,17 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     override suspend fun clearBadge(badgeId: String) {
+        checkCanSave()
         badges.update { it - badgeId }
     }
 
     override suspend fun clearAll() {
+        checkCanSave()
         badges.value = emptyMap()
+    }
+
+    private fun checkCanSave() {
+        if (failSaves) throw IOException("Save failed")
     }
 
     private fun requireStarted(badgeId: String) {

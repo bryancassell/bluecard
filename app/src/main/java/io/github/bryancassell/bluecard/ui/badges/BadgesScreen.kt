@@ -12,12 +12,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,9 +35,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.maxTextLength
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -50,6 +45,7 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.TextLengthLimit
 
 /** Connects the Badges screen to its ViewModel. */
 @Composable
@@ -134,21 +130,7 @@ fun BadgesScreen(
  * Longer than any search needs. The field's text is saved with the screen's state, which has
  * a size limit, so a huge paste mustn't reach it.
  */
-private const val MAX_SEARCH_LENGTH = 100
-
-/**
- * Keeps the search to [MAX_SEARCH_LENGTH] characters by cutting off the end of a longer edit,
- * such as a long paste. `InputTransformation.maxLength` rejects the whole edit instead.
- */
-private object SearchLengthLimit : InputTransformation {
-    override fun SemanticsPropertyReceiver.applySemantics() {
-        maxTextLength = MAX_SEARCH_LENGTH
-    }
-
-    override fun TextFieldBuffer.transformInput() {
-        if (length > MAX_SEARCH_LENGTH) delete(MAX_SEARCH_LENGTH, length)
-    }
-}
+private val SearchLengthLimit = TextLengthLimit(maxLength = 100)
 
 @Composable
 private fun SearchField(query: TextFieldState) {

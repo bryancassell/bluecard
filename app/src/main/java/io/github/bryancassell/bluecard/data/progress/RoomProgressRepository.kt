@@ -28,7 +28,7 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
         badgeId: String,
         requirementsVersion: LocalDate,
         startedDate: LocalDate
-    ) = dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate))
+    ) = writing { dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate)) }
 
     override suspend fun setCounselor(badgeId: String, counselor: Counselor?) = ifStarted(badgeId) {
         val stored = counselor?.normalized()
@@ -71,16 +71,16 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     }
 
     override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) =
-        dao.updateTrackerEntry(id, values)
+        writing { dao.updateTrackerEntry(id, values) }
 
-    override suspend fun deleteTrackerEntry(id: Long) = dao.deleteTrackerEntry(id)
+    override suspend fun deleteTrackerEntry(id: Long) = writing { dao.deleteTrackerEntry(id) }
 
     override suspend fun clearRequirement(badgeId: String, number: String) =
-        dao.deleteRequirement(badgeId, number)
+        writing { dao.deleteRequirement(badgeId, number) }
 
-    override suspend fun clearBadge(badgeId: String) = dao.deleteBadge(badgeId)
+    override suspend fun clearBadge(badgeId: String) = writing { dao.deleteBadge(badgeId) }
 
-    override suspend fun clearAll() = dao.deleteAll()
+    override suspend fun clearAll() = writing { dao.deleteAll() }
 
     /**
      * Reports a database that can't be read, such as one that can't be opened, as the
@@ -93,9 +93,21 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> =
         catch { throw if (it is SQLiteException) IOException(it) else it }
 
+    /**
+     * Runs [write], reporting a database that can't be written, such as one that can't be
+     * opened or a full disk, as an [IOException], in the same way as
+     * [readFailuresAsIOException].
+     */
+    private suspend fun <T> writing(write: suspend () -> T): T = try {
+        write()
+    } catch (e: SQLiteException) {
+        throw IOException(e)
+    }
+
     /** Runs [action] if the badge is started, checking and writing in one transaction. */
-    private suspend fun <T> ifStarted(badgeId: String, action: suspend () -> T): T =
+    private suspend fun <T> ifStarted(badgeId: String, action: suspend () -> T): T = writing {
         database.withTransaction {
             if (dao.isStarted(badgeId)) action() else throw notStartedError(badgeId)
         }
+    }
 }

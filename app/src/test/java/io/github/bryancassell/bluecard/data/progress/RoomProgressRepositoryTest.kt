@@ -35,8 +35,12 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
     )
 
+    override fun unreadableRepository() = unopenableRepository()
+
+    override fun unwritableRepository() = unopenableRepository()
+
     // A folder where the database file should be, so SQLite can't open it.
-    override fun unreadableRepository() = RoomProgressRepository(
+    private fun unopenableRepository() = RoomProgressRepository(
         open(
             Room.databaseBuilder(
                 context,

@@ -7,6 +7,8 @@
     <string name="strings_language">en</string>
     <!-- Shown in place of a screen when the data stored on the phone can't be read. -->
     <string name="load_failed">Couldn\'t load your data. Try closing and reopening BlueCard.</string>
+    <!-- Shown briefly when something the scout recorded couldn't be saved on the phone. -->
+    <string name="save_failed">Couldn\'t save. Try again.</string>
     <string name="onboarding_title">Welcome to BlueCard</string>
     <string name="onboarding_message">Enter your name and unit number to get started.</string>
     <string name="onboarding_name">Name</string>
@@ -44,9 +46,25 @@
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
-    <!-- Screen reader action on a requirement that opens its own page: "Double tap to open
-         requirement". -->
+    <!-- Screen reader label for the checkbox on a requirement's row, with its official number,
+         such as "Requirement 4b completed". The screen reader adds whether it's checked. -->
+    <string name="requirement_completed_checkbox">Requirement %1$s completed</string>
+    <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
+         open requirement". -->
     <string name="requirement_open">open requirement</string>
+    <!-- The date a requirement was completed on, such as "Completed on Apr 15, 2026". -->
+    <string name="requirement_completed_on">Completed on %1$s</string>
+    <!-- Shown for a completed requirement that has no completion date. -->
+    <string name="requirement_no_date">No completion date</string>
+    <string name="requirement_add_date">Add date</string>
+    <string name="requirement_change_date">Change date</string>
+    <string name="requirement_remove_date">Remove date</string>
+    <!-- Label of the field for the scout's notes about a requirement. -->
+    <string name="requirement_comment">Comment</string>
+    <string name="requirement_save_comment">Save comment</string>
+    <!-- Buttons of the dialog for picking a requirement's completion date. -->
+    <string name="date_picker_ok">OK</string>
+    <string name="date_picker_cancel">Cancel</string>
     <!-- Heading of a requirement's page, with its official number, such as "Requirement 4b". -->
     <string name="requirement_detail_title">Requirement %1$s</string>
     <!-- Shown in place of a requirement's page when the requirements the badge uses don't have

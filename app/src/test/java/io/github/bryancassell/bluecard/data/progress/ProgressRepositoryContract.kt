@@ -22,6 +22,9 @@ abstract class ProgressRepositoryContract {
     /** A repository whose stored progress can't be read. */
     protected abstract fun unreadableRepository(): ProgressRepository
 
+    /** A repository that can't save progress. */
+    protected abstract fun unwritableRepository(): ProgressRepository
+
     private val version = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
@@ -269,6 +272,32 @@ abstract class ProgressRepositoryContract {
         )
         for ((name, flow) in flows) {
             val error = runCatching { flow.first() }.exceptionOrNull()
+
+            assertTrue("$name should throw an IOException, got $error", error is IOException)
+        }
+    }
+
+    @Test
+    fun writing_whenUnwritable_throwsIOException() = runTest {
+        val unwritable = unwritableRepository()
+        val writes: List<Pair<String, suspend () -> Unit>> = listOf(
+            "startBadge" to { unwritable.startBadge(BADGE, version, started) },
+            "setCounselor" to { unwritable.setCounselor(BADGE, Counselor(name = "Pat")) },
+            "setCompletedOnPriorDate" to { unwritable.setCompletedOnPriorDate(BADGE, day) },
+            "markRequirementCompleted" to { unwritable.markRequirementCompleted(BADGE, "1", day) },
+            "markRequirementNotCompleted" to { unwritable.markRequirementNotCompleted(BADGE, "1") },
+            "setRequirementComment" to { unwritable.setRequirementComment(BADGE, "1", "Hi") },
+            "addTrackerEntry" to {
+                unwritable.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
+            },
+            "updateTrackerEntry" to { unwritable.updateTrackerEntry(1, mapOf("minutes" to "30")) },
+            "deleteTrackerEntry" to { unwritable.deleteTrackerEntry(1) },
+            "clearRequirement" to { unwritable.clearRequirement(BADGE, "1") },
+            "clearBadge" to { unwritable.clearBadge(BADGE) },
+            "clearAll" to { unwritable.clearAll() }
+        )
+        for ((name, write) in writes) {
+            val error = runCatching { write() }.exceptionOrNull()
 
             assertTrue("$name should throw an IOException, got $error", error is IOException)
         }
