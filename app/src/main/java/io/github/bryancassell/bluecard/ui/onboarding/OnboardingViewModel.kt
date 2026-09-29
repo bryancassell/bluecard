@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -47,7 +48,10 @@ class OnboardingViewModel @Inject constructor(
             val status = try {
                 profileRepository.saveProfile(Profile(state.name.trim(), state.unitNumber.trim()))
                 SaveStatus.Saved
-            } catch (_: IOException) {
+            } catch (e: IOException) {
+                // The app reports caught exceptions nowhere else, so logcat and bug reports
+                // are the only way to tell why saving failed.
+                Log.w(TAG, "Couldn't save the profile", e)
                 SaveStatus.Failed
             }
             _uiState.update { it.copy(saveStatus = status) }
@@ -55,6 +59,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private companion object {
+        const val TAG = "Onboarding"
         const val NAME = "name"
         const val UNIT_NUMBER = "unit_number"
     }

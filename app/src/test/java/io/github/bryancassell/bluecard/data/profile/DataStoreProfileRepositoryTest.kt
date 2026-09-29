@@ -35,9 +35,12 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
 
     override val repository = newRepository()
 
-    // A folder where the file should be, so DataStore can't read it.
-    override fun unreadableRepository() =
-        newRepository { folder.newFolder("unreadable.preferences_pb") }
+    // A folder where the file should be, so DataStore can't read it. Created here rather
+    // than in produceFile, where a second call would throw an IOException of its own.
+    override fun unreadableRepository(): DataStoreProfileRepository {
+        val unreadable = folder.newFolder("unreadable.preferences_pb")
+        return newRepository { unreadable }
+    }
 
     @After
     fun closeDataStores() = runBlocking {

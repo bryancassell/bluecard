@@ -132,9 +132,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   this if crash reporting is added
   ([#63](https://github.com/bryancassell/bluecard/issues/63)). Until then,
   `catchLoadFailure` logs each failure it catches with `Log.w`, so logcat and bug
-  reports show which data failed and why. Screen readers announce the message
-  when it replaces the loading indicator (a polite live region, in
-  `ui/ScreenMessage.kt`).
+  reports show which data failed and why. A failed save is logged the same way,
+  as in Onboarding. Screen readers don't announce the
+  message yet when it replaces the loading indicator
+  ([#69](https://github.com/bryancassell/bluecard/issues/69)).
 - **Reloading after a load failure has limits.** To keep it simple, the message
   has no "Try again" button; it asks the scout to close and reopen the app. A
   screen loads again only when its ViewModel is created, or when the screen is
@@ -194,7 +195,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   exceptions". DataStore and the asset manager already throw `IOException`, and
   `RoomProgressRepository` wraps Room's `SQLiteException` in one. ViewModels then
   catch it without depending on a storage API (req. 9). Room's writes aren't
-  wrapped yet: the first screen that saves progress wraps them the same way.
+  wrapped yet: the first screen that saves progress wraps them the same way. A
+  corrupted database is the exception: the SQLite library deletes it, so
+  progress is lost without an error
+  ([#70](https://github.com/bryancassell/bluecard/issues/70)).
 
 ### Dependency injection
 
@@ -449,8 +453,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   `kotlinx-coroutines-test` and a `MainDispatcherRule`, as in the
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
   They check each UI state and each event. They run with Robolectric, because
-  their load-failure tests reach `android.util.Log`, whose methods throw in plain
-  local tests. The alternative, `returnDefaultValues`, makes every Android method
+  their load- and save-failure tests reach `android.util.Log`, whose methods
+  throw in plain local tests. The alternative, `returnDefaultValues`, makes every Android method
   return null or zero instead; the
   [local tests guide](https://developer.android.com/training/testing/local-tests)
   says it "might allow failing tests to pass" and adds: "Only use it as a last
