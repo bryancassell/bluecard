@@ -250,6 +250,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   and Hilt both generate code, using the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
+- **Writes outlive the screen.** `RoomProgressRepository` runs each write in an
+  app-lifetime scope and waits for it, so leaving a screen cancels only the
+  wait, not the write. That's the pattern in the data layer guide's
+  [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
+  A write that fails after the scout has left the screen goes unreported.
 - **Stored data that can't be read or saved is reported as an `IOException`.**
   The
   [data layer guide](https://developer.android.com/topic/architecture/data-layer)
@@ -257,10 +262,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   exceptions". DataStore and the asset manager already throw `IOException`, and
   `RoomProgressRepository` wraps Room's `SQLiteException` in one, for its reads
   and its writes. ViewModels then
-  catch it without depending on a storage API (req. 9). Errors that SQLite's
-  [result codes](https://www.sqlite.org/rescode.html) describe as mistakes in
-  the app's code, such as a constraint violation or misuse of its interface,
-  aren't wrapped, so they still crash as bugs. A
+  catch it without depending on a storage API (req. 9). Errors that can only
+  come from a mistake in the app's code aren't wrapped, so they still crash as
+  bugs. SQLite's [result codes](https://www.sqlite.org/rescode.html) say that of
+  misuse of its interface ("the application is incorrectly coded"). This app
+  also counts a constraint violation, an out-of-range parameter or column
+  number and a datatype mismatch as bugs, because each write checks what it
+  needs first, such as that the badge is started. A
   corrupted database is the exception: the SQLite library deletes it. If a read
   finds the corruption, the scout sees the load-failed message, and the app
   reopens with no progress. If opening the database finds it, the progress is
@@ -275,8 +283,9 @@ using constructor injection. The
 says to use Hilt once an app has "multiple screens with ViewModels" or
 ViewModels scoped to the navigation back stack; BlueCard will have both. Hilt
 modules bind each repository interface to its implementation and provide the
-Room database, DataStore, a coroutine dispatcher and a `Clock` for today's date
-(the last two injected so tests can replace them).
+Room database, DataStore, a coroutine dispatcher, an app-lifetime
+`CoroutineScope` (`@ApplicationScope`) and a `Clock` for today's date (the
+dispatcher and clock injected so tests can replace them).
 
 ### Package layout
 
@@ -471,7 +480,7 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   mark badge completed on a date); the screens observe progress as a `Flow`, so
   they update as soon as data is saved.
   - **Recording anything starts the badge**, on the requirements version its
-    pages show until then (the newest), dated today (`ui/badge/RecordProgress.kt`).
+    pages show until then (the newest), dated today (`ui/badge/ProgressRecorder.kt`).
     There's no separate "start" step. `markRequirementCompleted` and
     `setRequirementComment` take a `BadgeStart`, and `ProgressRepository` starts
     the badge in the same transaction as the write, so a save that fails doesn't
@@ -484,12 +493,16 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     (`Completion.kt`). Checking it, on its row or its page, records it completed
     today. On its page, the scout can pick another date or remove it. Dates
     after today can't be picked. Unchecking removes the date and keeps the
-    comment.
+    comment, but the page remembers the date until it closes: checking the
+    requirement again on that page brings the date back, so a mistaken tap
+    loses nothing. A date change applies only to a completed requirement, so
+    one that lands just after an uncheck can't complete it again.
   - **Comments.** Every requirement can have one, including one with
     sub-requirements, for notes about it as a whole. The page's comment field is
     saved when the scout taps Save, which is enabled once the field differs from
-    the saved comment. Spaces around it are trimmed, an empty comment removes
-    it, and it's capped at 2,000 characters. An unsaved edit survives the system
+    the saved comment. The repository trims spaces around it
+    (`normalizedComment`), an empty comment removes it, and it's capped at
+    2,000 characters. An unsaved edit survives the system
     stopping the app, but leaving the page discards it.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,
   requirement summaries, dates, comments and tracker data onto `PdfDocument`
@@ -608,6 +621,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
+| Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
 | Requirement comments | On every requirement, saved with a Save button | Saving as the scout types would need a save that outlives the page to keep the last few keystrokes, and would report a failure after the fact |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |

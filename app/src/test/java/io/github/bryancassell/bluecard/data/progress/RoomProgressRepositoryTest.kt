@@ -5,13 +5,23 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -36,7 +46,10 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
     private val database = open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
 
-    override val repository = RoomProgressRepository(database)
+    // Lives as long as the test, as the app's does for the app.
+    private val externalScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override val repository = RoomProgressRepository(database, externalScope)
 
     override fun unreadableRepository() = unopenableRepository()
 
@@ -50,7 +63,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
                 BlueCardDatabase::class.java,
                 folder.newFolder(BlueCardDatabase.NAME).absolutePath
             )
-        )
+        ),
+        externalScope
     )
 
     @Test
@@ -59,7 +73,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val file = File(folder.root, BlueCardDatabase.NAME)
         SQLiteDatabase.openOrCreateDatabase(file, null).use { it.version = 1_000 }
         val repository = RoomProgressRepository(
-            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath))
+            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath)),
+            externalScope
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -111,8 +126,35 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         )
     }
 
+    @Test
+    fun write_finishesEvenIfItsCallerIsCancelled() = runTest(timeout = 10.seconds) {
+        // Another transaction holds the database, so the write has to wait its turn.
+        val holding = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val other = launch(Dispatchers.IO) {
+            database.withTransaction {
+                holding.complete(Unit)
+                release.await()
+            }
+        }
+        holding.await()
+        val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 4, 15))
+
+        // As when the scout saves and leaves the screen while the write waits.
+        val caller = launch(start = CoroutineStart.UNDISPATCHED) {
+            repository.markRequirementCompleted("archery", "1", null, start)
+        }
+        caller.cancel()
+        release.complete(Unit)
+        other.join()
+
+        val progress = repository.observeProgress("archery").first { it != null }!!
+        assertEquals(listOf("1"), progress.requirements.map { it.requirementNumber })
+    }
+
     @After
     fun closeDatabases() {
+        externalScope.cancel()
         databases.forEach { it.close() }
     }
 }

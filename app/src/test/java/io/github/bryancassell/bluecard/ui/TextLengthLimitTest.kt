@@ -81,6 +81,29 @@ class TextLengthLimitTest {
     }
 
     @Test
+    fun emojiMadeOfSeveralCodePoints_isNotSplitAtTheLimit() {
+        field().performTextInput("abc")
+
+        // A flag (two regional indicators, four UTF-16 units) and a thumbs-up with a skin
+        // tone (two code points, four units): neither fits, and half of one would be wrong.
+        field().performTextInput("\uD83C\uDDFA\uD83C\uDDF8")
+        field().performTextInput("\uD83D\uDC4D\uD83C\uDFFD")
+
+        assertEquals("abc", state.text.toString())
+    }
+
+    @Test
+    fun replacementEndingLikeTheOldText_neverLeavesHalfAnEmoji() {
+        // Ends with U+1F525, whose second UTF-16 unit is the same as U+1F925's.
+        field().performTextInput("aaa\uD83D\uDD25")
+        field().performTextInputSelection(TextRange(0, 5))
+
+        field().performTextInput("bbbbbb\uD83E\uDD25")
+
+        assertEquals("bbbbb", state.text.toString())
+    }
+
+    @Test
     fun field_tellsAccessibilityServicesTheLimit() {
         field().assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 5))
     }

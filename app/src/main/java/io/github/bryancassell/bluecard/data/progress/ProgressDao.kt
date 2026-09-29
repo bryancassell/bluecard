@@ -59,6 +59,14 @@ interface ProgressDao {
         upsertRequirement(change(current))
     }
 
+    @Query(
+        """
+        UPDATE requirement_progress SET completedDate = :date
+        WHERE badgeId = :badgeId AND requirementNumber = :number AND completed = 1
+        """
+    )
+    suspend fun updateCompletedDate(badgeId: String, number: String, date: LocalDate?)
+
     @Insert
     suspend fun insertTrackerEntry(entry: TrackerEntry): Long
 

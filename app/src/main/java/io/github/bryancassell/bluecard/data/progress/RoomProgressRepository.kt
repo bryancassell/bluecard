@@ -6,20 +6,30 @@ import android.database.sqlite.SQLiteDatatypeMismatchException
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteMisuseException
 import androidx.room.withTransaction
+import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
 /**
  * [ProgressRepository] backed by Room.
  *
+ * Writes run in [externalScope], which lives as long as the app, so one finishes even if its
+ * caller is cancelled, such as when the scout leaves the screen that made it. That's how the
+ * data layer guide has an operation live longer than the screen:
+ * https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen
+ *
  * Functions are written as expression bodies (`= dao...`): when a call really suspends,
  * JaCoCo never sees a separate closing brace run, and would count it as untested.
  */
-class RoomProgressRepository @Inject constructor(private val database: BlueCardDatabase) :
-    ProgressRepository {
+class RoomProgressRepository @Inject constructor(
+    private val database: BlueCardDatabase,
+    @param:ApplicationScope private val externalScope: CoroutineScope
+) : ProgressRepository {
     private val dao = database.progressDao()
 
     override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> =
@@ -60,13 +70,19 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
             }
         }
 
+    override suspend fun setRequirementCompletedDate(
+        badgeId: String,
+        number: String,
+        date: LocalDate?
+    ) = writing { dao.updateCompletedDate(badgeId, number, date) }
+
     override suspend fun setRequirementComment(
         badgeId: String,
         number: String,
         comment: String?,
         start: BadgeStart?
     ) = ifStarted(badgeId, start) {
-        dao.updateRequirement(badgeId, number) { it.copy(comment = comment?.ifBlank { null }) }
+        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedComment(comment)) }
     }
 
     override suspend fun addTrackerEntry(
@@ -105,22 +121,26 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     }
 
     /**
-     * Runs [write], reporting a database that can't be written, such as one that can't be
-     * opened or a full disk, as an [IOException], in the same way as
-     * [readFailuresAsIOException].
+     * Runs [write] in [externalScope] and waits for it. If the caller is cancelled, only the
+     * wait is: the write still finishes, though a failure then goes unreported. Reports a
+     * database that can't be written, such as one that can't be opened or a full disk, as an
+     * [IOException], in the same way as [readFailuresAsIOException].
      */
-    private suspend fun <T> writing(write: suspend () -> T): T = try {
-        write()
-    } catch (e: SQLiteException) {
-        throw if (e.isStorageFailure()) IOException(e) else e
-    }
+    private suspend fun <T> writing(write: suspend () -> T): T = externalScope.async {
+        try {
+            write()
+        } catch (e: SQLiteException) {
+            throw if (e.isStorageFailure()) IOException(e) else e
+        }
+    }.await()
 
     /**
      * Whether the database couldn't be read or written, such as a full disk or a file that
-     * can't be opened, rather than the app using it wrongly. SQLite's result codes describe a
-     * constraint violation, misuse of its interface, an out-of-range parameter or column number
-     * and a datatype mismatch as mistakes in the app's code:
-     * https://www.sqlite.org/rescode.html
+     * can't be opened, rather than the app using it wrongly. SQLite says misuse of its
+     * interface means the app "is incorrectly coded" (https://www.sqlite.org/rescode.html).
+     * This app also counts a constraint violation, an out-of-range parameter or column number
+     * and a datatype mismatch as bugs: each write checks what it needs first, such as that the
+     * badge is started, so only a mistake in the code can cause one.
      */
     private fun SQLiteException.isStorageFailure() = this !is SQLiteConstraintException &&
         this !is SQLiteMisuseException &&
@@ -139,9 +159,7 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
         database.withTransaction {
             if (!dao.isStarted(badgeId)) {
                 if (start == null) throw notStartedError(badgeId)
-                dao.insertBadge(
-                    BadgeProgress(badgeId, start.requirementsVersion, start.startedDate)
-                )
+                dao.insertBadge(start.progress(badgeId))
             }
             action()
         }

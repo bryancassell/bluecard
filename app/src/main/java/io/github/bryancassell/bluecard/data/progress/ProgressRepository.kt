@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.Flow
  *
  * Its flows throw an `IOException` when stored progress can't be read, such as when the
  * database can't be opened, and its other functions throw one when progress can't be saved.
+ * A change finishes even if the caller is cancelled, such as when the scout leaves the screen
+ * that made it.
  */
 interface ProgressRepository {
     /** Every started badge, with its progress, updated whenever anything changes. */
@@ -46,8 +48,16 @@ interface ProgressRepository {
     suspend fun markRequirementNotCompleted(badgeId: String, number: String)
 
     /**
-     * Sets the requirement's comment; null or blank removes it. A badge that hasn't been
-     * started is started with [start], as in [markRequirementCompleted].
+     * Changes the date a completed requirement was completed on, or removes it (null). Does
+     * nothing if the requirement isn't completed, so a date change that lands just after the
+     * scout unchecked it can't complete it again.
+     */
+    suspend fun setRequirementCompletedDate(badgeId: String, number: String, date: LocalDate?)
+
+    /**
+     * Sets the requirement's comment, stored as [normalizedComment]: null or blank removes it.
+     * A badge that hasn't been started is started with [start], as in
+     * [markRequirementCompleted].
      */
     suspend fun setRequirementComment(
         badgeId: String,

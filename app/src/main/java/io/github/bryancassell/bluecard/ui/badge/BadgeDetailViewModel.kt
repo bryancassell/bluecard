@@ -14,7 +14,6 @@ import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -24,12 +23,13 @@ import kotlinx.coroutines.flow.stateIn
 /** One badge from the catalog, with the scout's progress on its requirements. */
 @HiltViewModel(assistedFactory = BadgeDetailViewModel.Factory::class)
 class BadgeDetailViewModel @AssistedInject constructor(
-    @Assisted private val badgeId: String,
-    private val catalogRepository: CatalogRepository,
-    private val progressRepository: ProgressRepository,
-    private val clock: Clock
+    @Assisted badgeId: String,
+    catalogRepository: CatalogRepository,
+    progressRepository: ProgressRepository,
+    clock: Clock
 ) : ViewModel() {
     private val saves = SaveRunner(viewModelScope)
+    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     val uiState: StateFlow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
@@ -54,17 +54,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 
-    /** Marks requirement [number], one without sub-requirements, completed today or not. */
+    /** Marks requirement [number], one without sub-requirements, completed or not. */
     fun setCompleted(number: String, completed: Boolean) {
-        saves.launch {
-            val badge = catalogRepository.getBadges().first { it.id == badgeId }
-            progressRepository.setRequirementCompleted(
-                badge,
-                number,
-                completed,
-                LocalDate.now(clock)
-            )
-        }
+        saves.launch { recorder.setCompleted(number, completed) }
     }
 
     /** The scout has been told about [failure]. */

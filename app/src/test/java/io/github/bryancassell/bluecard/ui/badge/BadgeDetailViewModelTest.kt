@@ -317,6 +317,22 @@ class BadgeDetailViewModelTest {
     }
 
     @Test
+    fun uncheckingThenChecking_onThisPage_keepsTheDate() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.markRequirementCompleted("camping", "1", day)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.setCompleted("1", false)
+        viewModel.setCompleted("1", true)
+
+        assertEquals(
+            listOf(RequirementProgress("camping", "1", completed = true, completedDate = day)),
+            progressRepository.observeProgress("camping").first()!!.requirements
+        )
+    }
+
+    @Test
     fun completingAllRequirements_completesEveryRequirement() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)

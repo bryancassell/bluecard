@@ -83,6 +83,27 @@ class FakeProgressRepository : ProgressRepository {
         updateRequirement(badgeId, number) { it.copy(completed = false, completedDate = null) }
     }
 
+    override suspend fun setRequirementCompletedDate(
+        badgeId: String,
+        number: String,
+        date: LocalDate?
+    ) {
+        checkCanSave()
+        badges.update { all ->
+            val details = all[badgeId] ?: return@update all
+            val requirements = details.requirements.map {
+                if (it.requirementNumber == number &&
+                    it.completed
+                ) {
+                    it.copy(completedDate = date)
+                } else {
+                    it
+                }
+            }
+            all + (badgeId to details.copy(requirements = requirements))
+        }
+    }
+
     override suspend fun setRequirementComment(
         badgeId: String,
         number: String,
@@ -90,7 +111,7 @@ class FakeProgressRepository : ProgressRepository {
         start: BadgeStart?
     ) {
         checkCanSave()
-        updateRequirement(badgeId, number, start) { it.copy(comment = comment?.ifBlank { null }) }
+        updateRequirement(badgeId, number, start) { it.copy(comment = normalizedComment(comment)) }
     }
 
     override suspend fun addTrackerEntry(
@@ -166,11 +187,7 @@ class FakeProgressRepository : ProgressRepository {
         badges.update { all ->
             val details = all[badgeId]
                 ?: start?.let {
-                    BadgeProgressDetails(
-                        BadgeProgress(badgeId, it.requirementsVersion, it.startedDate),
-                        emptyList(),
-                        emptyList()
-                    )
+                    BadgeProgressDetails(it.progress(badgeId), emptyList(), emptyList())
                 }
                 ?: throw notStartedError(badgeId)
             all + (badgeId to change(details))

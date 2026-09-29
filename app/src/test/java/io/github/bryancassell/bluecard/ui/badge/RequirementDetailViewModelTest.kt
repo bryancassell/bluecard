@@ -347,6 +347,32 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun setCompletedDate_afterUnchecking_doesNotCompleteItAgain() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted("1", true)
+
+        // As when the scout taps Remove date just after unchecking, before the page redraws.
+        viewModel.setCompleted("1", false)
+        viewModel.setCompletedDate(null)
+
+        assertFalse(viewModel.ready().requirement.completed)
+    }
+
+    @Test
+    fun uncheckingThenChecking_onThisPage_keepsTheDate() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted("1", true)
+        viewModel.setCompletedDate(day)
+
+        viewModel.setCompleted("1", false)
+        viewModel.setCompleted("1", true)
+
+        assertEquals(day, viewModel.ready().completedDate)
+    }
+
+    @Test
     fun setCompletedDate_null_removesTheDateButStaysCompleted() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)

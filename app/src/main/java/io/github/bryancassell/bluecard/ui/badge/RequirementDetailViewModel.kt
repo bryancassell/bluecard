@@ -13,6 +13,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.normalizedComment
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
@@ -33,7 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 class RequirementDetailViewModel @AssistedInject constructor(
     @Assisted("badgeId") private val badgeId: String,
     @Assisted("number") private val number: String,
-    private val catalogRepository: CatalogRepository,
+    catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps an unsaved comment if the system stops the app in the background.
@@ -47,6 +48,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     private var commentLoaded = savedStateHandle.contains(COMMENT)
 
     private val saves = SaveRunner(viewModelScope)
+    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     val uiState: StateFlow<RequirementDetailUiState> = combine(
         flow { emit(catalogRepository.getBadges()) },
@@ -70,7 +72,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             requirement = requirement.toItem(found.recorded),
             completedDate = recorded?.completedDate,
             children = requirement.children.map { it.toItem(found.recorded) },
-            commentChanged = text.asStoredComment() != recorded?.comment,
+            commentChanged = normalizedComment(text) != recorded?.comment,
             today = today(),
             saveFailure = saveFailure
         )
@@ -91,31 +93,23 @@ class RequirementDetailViewModel @AssistedInject constructor(
     }
 
     /**
-     * Marks [requirementNumber], this requirement or one of its sub-requirements, completed
-     * today or not. Only for one without sub-requirements of its own.
+     * Marks [requirementNumber], this requirement or one of its sub-requirements, completed or
+     * not. Only for one without sub-requirements of its own.
      */
     fun setCompleted(requirementNumber: String, completed: Boolean) {
-        saves.launch {
-            val badge = badge()
-            progressRepository.setRequirementCompleted(badge, requirementNumber, completed, today())
-        }
+        saves.launch { recorder.setCompleted(requirementNumber, completed) }
     }
 
     /** Changes the date this requirement, which is complete, was completed on; null removes it. */
     fun setCompletedDate(date: LocalDate?) {
-        saves.launch { progressRepository.markRequirementCompleted(badgeId, number, date) }
+        saves.launch { progressRepository.setRequirementCompletedDate(badgeId, number, date) }
     }
 
     /** Saves the comment field as this requirement's comment. An empty one removes it. */
     fun saveComment() {
-        val text = comment.text.toString().asStoredComment()
+        val text = comment.text.toString()
         saves.launch {
-            progressRepository.setRequirementComment(
-                badgeId,
-                number,
-                text,
-                badge().startedOn(today())
-            )
+            progressRepository.setRequirementComment(badgeId, number, text, recorder.badgeStart())
         }
     }
 
@@ -124,12 +118,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         saves.onShown(failure)
     }
 
-    private suspend fun badge() = catalogRepository.getBadges().first { it.id == badgeId }
-
     private fun today() = LocalDate.now(clock)
-
-    /** The comment as it's saved: without spaces around it, and null if nothing is left. */
-    private fun String.asStoredComment() = trim().ifEmpty { null }
 
     @AssistedFactory
     interface Factory {

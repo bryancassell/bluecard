@@ -138,6 +138,37 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun setRequirementCompletedDate_changesAndRemovesDateOfCompletedRequirement() = test {
+        repository.markRequirementCompleted(BADGE, "1", day)
+
+        repository.setRequirementCompletedDate(BADGE, "1", started)
+        assertEquals(RequirementProgress(BADGE, "1", true, started), requirement("1"))
+
+        repository.setRequirementCompletedDate(BADGE, "1", null)
+        assertEquals(RequirementProgress(BADGE, "1", completed = true), requirement("1"))
+    }
+
+    @Test
+    fun setRequirementCompletedDate_doesNothingUnlessCompleted() = test {
+        repository.setRequirementComment(BADGE, "1", "Not done yet.")
+        val before = progress()
+
+        repository.setRequirementCompletedDate(BADGE, "1", day)
+        repository.setRequirementCompletedDate(BADGE, "2", day)
+        repository.setRequirementCompletedDate(UNSTARTED, "1", day)
+
+        assertEquals(before, progress())
+        assertNull(progress(UNSTARTED))
+    }
+
+    @Test
+    fun setRequirementComment_trimsSpacesAroundIt() = test {
+        repository.setRequirementComment(BADGE, "1", "  Done at camp.\n")
+
+        assertEquals("Done at camp.", requirement("1")?.comment)
+    }
+
+    @Test
     fun setRequirementComment_keepsCompletion_andBlankRemovesIt() = test {
         repository.markRequirementCompleted(BADGE, "1", day)
 
@@ -314,6 +345,9 @@ abstract class ProgressRepositoryContract {
             "setCompletedOnPriorDate" to { unwritable.setCompletedOnPriorDate(BADGE, day) },
             "markRequirementCompleted" to { unwritable.markRequirementCompleted(BADGE, "1", day) },
             "markRequirementNotCompleted" to { unwritable.markRequirementNotCompleted(BADGE, "1") },
+            "setRequirementCompletedDate" to {
+                unwritable.setRequirementCompletedDate(BADGE, "1", day)
+            },
             "setRequirementComment" to { unwritable.setRequirementComment(BADGE, "1", "Hi") },
             "addTrackerEntry" to {
                 unwritable.addTrackerEntry(BADGE, "7a", mapOf("minutes" to "30"))
