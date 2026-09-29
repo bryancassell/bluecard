@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Configuration.SCREENLAYOUT_LAYOUTDIR_MASK
+import android.content.res.Resources
 import android.os.LocaleList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -12,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.stringResource
 import androidx.core.os.LocaleListCompat
 import io.github.bryancassell.bluecard.R
 import java.util.Locale
@@ -28,10 +28,8 @@ fun stringsLocale(): Locale =
     stringsLocales(LocalConfiguration.current.locales, stringsLanguage())[0]
 
 /** [stringsLocale] for code outside Compose, such as an activity before it has content. */
-fun stringsLocale(context: Context): Locale = stringsLocales(
-    context.resources.configuration.locales,
-    Locale.forLanguageTag(context.getString(R.string.strings_language))
-)[0]
+fun stringsLocale(context: Context): Locale =
+    stringsLocales(context.resources.configuration.locales, stringsLanguage(context.resources))[0]
 
 /**
  * Provides [LocalResources] in the strings' language to [content], so every `stringResource`
@@ -89,5 +87,7 @@ internal fun stringsLocales(device: LocaleList, stringsLanguage: Locale): Locale
 
 @Composable
 @ReadOnlyComposable
-private fun stringsLanguage(): Locale =
-    Locale.forLanguageTag(stringResource(R.string.strings_language))
+private fun stringsLanguage(): Locale = stringsLanguage(LocalResources.current)
+
+private fun stringsLanguage(resources: Resources): Locale =
+    Locale.forLanguageTag(resources.getString(R.string.strings_language))

@@ -330,8 +330,9 @@ class MainActivityTest {
 
     // The activity takes the strings' language's direction, so on a right-to-left device its
     // views are left-to-right like the English strings. Compose draws in one of them, and
-    // keyboard and D-pad focus moves by its direction. Resources with a direction-specific
-    // version, such as drawable-ldrtl, follow the activity's resources.
+    // keyboard and D-pad focus moves by its direction. Its resources are left-to-right too, and
+    // ProvideStringsLanguageResources keeps their direction, so resources with a
+    // direction-specific version, such as drawable-ldrtl, match the layout.
     @Config(qualifiers = "fa")
     @Test
     fun onRightToLeftDevice_activityIsLeftToRight() {

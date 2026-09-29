@@ -198,10 +198,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     `LocalConfiguration` and the activity's resources in step.
   - **The manifest keeps `android:supportsRtl="true"`,** so a right-to-left
     translation would be laid out right-to-left with no other change.
-  - **Text the scout types takes its own direction** (`TextDirection.Content`):
-    the Name, Unit number and search fields, and the name on Home. Compose
-    otherwise gives text the layout's direction, which would put the final
-    period of a name typed in Persian at its start.
+  - **Text the scout types keeps its own direction** (`ui/TypedText.kt`), so a
+    name typed in Persian reads right-to-left with its final period at its end.
+    Compose would otherwise give it the layout's direction and put the period at
+    its start. Fields the scout types in use `typedTextFieldStyle()`, whose text
+    direction follows the content. Typed text shown on screen, alone or inside
+    one of the app's strings (the name and "Unit: %1$s" on Home), goes through
+    `typedText()`, which wraps it with
+    [`BidiFormatter.unicodeWrap`](https://developer.android.com/training/basics/supporting-devices/languages#FormatText).
+    Code outside Compose, such as the PDF report, must wrap it the same way.
 - **`BlueCardApp` provides `LocalResources` in the strings' language**
   (`ProvideStringsLanguageResources`), so every `stringResource` and
   `pluralStringResource` follows it, with nothing to remember at each call.
@@ -218,7 +223,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     `LocalResources`, such as the text selection toolbar (Cut, Copy, Paste),
     Material 3's labels and the role and state names TalkBack reads. Compose
     Foundation's right-click menu does read `LocalResources`, so it follows the
-    strings' language.
+    strings' language. They're still laid out in the activity's direction, so
+    on a Persian phone the toolbar lists its Persian labels left-to-right.
   - **Code outside Compose** that formats a string with a number, such as the
     PDF report, must use the same locales (`stringsLocales`), and lay out in the
     first one's direction.
