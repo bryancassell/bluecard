@@ -185,6 +185,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   `StringsLanguageTagTest` checks that each `strings.xml` names its own language
   with a well-formed tag: a wrong tag, such as "en" left in a translation, would
   replace the whole translation with English.
+- **Screens are laid out in the strings' language's direction, not the
+  device's** ([#66](https://github.com/bryancassell/bluecard/issues/66)). On a
+  Persian or Arabic phone, the English strings are laid out left-to-right as on
+  an English phone: a requirement's number comes before its text, and a
+  sentence's final period stays at its end. Mirrored, they would read as broken
+  English. Compose gives text the layout's direction, so text follows too,
+  including what the scout types, such as a name in Persian. The manifest keeps
+  `android:supportsRtl="true"`, so a right-to-left translation would be laid out
+  right-to-left with no other change.
 - **`BlueCardApp` provides `LocalResources` in the strings' language**
   (`ProvideStringsLanguageResources`), so every `stringResource` and
   `pluralStringResource` follows it, with nothing to remember at each call.
@@ -194,9 +203,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     locales, so Android can fall back to them when the app has no strings in the
     first, such as for a pseudo-locale. When these are the device's own locales,
     as on an English phone, the device's resources are used unchanged.
-  - **Only the locales change.** The resources keep the device's layout
-    direction, which the layout follows
-    ([#66](https://github.com/bryancassell/bluecard/issues/66)).
+  - **The layout direction comes from these resources.** `setLocales` sets
+    their direction from the strings' first locale, and the provider passes it
+    on as `LocalLayoutDirection`, so direction-specific resources, such as
+    `drawable-ldrtl`, match the layout.
   - **Labels that follow the device:** those the app doesn't read through
     `LocalResources`, such as the text selection toolbar (Cut, Copy, Paste),
     Material 3's labels and the role and state names TalkBack reads. Compose

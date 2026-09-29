@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -318,6 +319,22 @@ class MainActivityTest {
         openCamping()
 
         composeTestRule.onNodeWithText("Do 1 of 2").assertIsDisplayed()
+    }
+
+    // The app lays out its English strings left-to-right, as on an English phone, even on a
+    // right-to-left device: a requirement's number comes before its text. Text takes the
+    // layout's direction, so a sentence's final period stays at its end.
+    @Config(qualifiers = "fa")
+    @Test
+    fun onRightToLeftDevice_laysOutInStringsLanguageDirection() {
+        openCamping()
+
+        // ListItem merges its texts into one node, so find each in the unmerged tree.
+        val number = composeTestRule.onNodeWithText("1", useUnmergedTree = true)
+            .getBoundsInRoot()
+        val text = composeTestRule.onNodeWithText("First.", useUnmergedTree = true)
+            .getBoundsInRoot()
+        assertTrue(number.right <= text.left)
     }
 
     @Test
