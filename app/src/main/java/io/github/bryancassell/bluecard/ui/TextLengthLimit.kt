@@ -34,25 +34,19 @@ class TextLengthLimit(private val maxLength: Int) : InputTransformation {
         ) {
             keptAtEnd++
         }
-        // Widened to whole characters, since an edit can change part of one, such as by
-        // adding a skin tone to an emoji.
+        // Cut from the end of what the edit changed, at a boundary between characters.
         val characters = characters()
-        cutExtra(
-            characters.boundaryAtOrBefore(kept),
-            characters.boundaryAtOrAfter(length - keptAtEnd),
-            characters
-        )
+        val end = characters.boundaryAtOrAfter(length - keptAtEnd)
+        val from = characters.boundaryAtOrBefore(maxOf(kept, end - (length - maxLength)))
+        if (from < kept) {
+            // Only cutting text that was already there would make room, as when an accent is
+            // added to the last letter of a full field, so the edit is rejected.
+            revertAllChanges()
+        } else {
+            delete(from, end)
+        }
         // Text that was already too long, such as text set in code, is cut at its end.
-        if (length > maxLength) cutExtra(0, length, characters())
-    }
-
-    /**
-     * Deletes the characters past [maxLength] from the end of the text from [start] to [end],
-     * which are boundaries between the [characters].
-     */
-    private fun TextFieldBuffer.cutExtra(start: Int, end: Int, characters: BreakIterator) {
-        val extra = length - maxLength
-        delete(characters.boundaryAtOrBefore(maxOf(start, end - extra)), end)
+        if (length > maxLength) delete(characters().boundaryAtOrBefore(maxLength), length)
     }
 }
 

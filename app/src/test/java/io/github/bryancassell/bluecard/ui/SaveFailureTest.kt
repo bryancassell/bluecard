@@ -132,6 +132,23 @@ class SaveFailureTest {
     }
 
     @Test
+    fun snackbar_leftWhileShowing_isReportedShown() {
+        val failure = SaveFailure()
+        var onScreen by mutableStateOf(true)
+        val shown = mutableListOf<SaveFailure>()
+        composeTestRule.setContent {
+            if (onScreen) SaveFailedSnackbarHost(failure, onShown = { shown += it })
+        }
+        composeTestRule.onNodeWithText(message).assertIsDisplayed()
+
+        // As when the scout opens another screen before the message times out.
+        onScreen = false
+        composeTestRule.waitForIdle()
+
+        assertEquals(listOf(failure), shown)
+    }
+
+    @Test
     fun snackbar_withNoFailure_showsNothing() {
         composeTestRule.setContent { SaveFailedSnackbarHost(null, onShown = {}) }
 

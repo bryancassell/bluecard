@@ -62,8 +62,8 @@ class SaveRunner(private val scope: CoroutineScope) {
 
 /**
  * Shows a snackbar saying progress couldn't be saved for each [failure], then calls [onShown]
- * once it's gone, so the ViewModel can clear it. That's how the UI layer guide has the UI
- * show a message from UI state:
+ * once it's gone, or the screen is, so the ViewModel can clear it. That's how the UI layer
+ * guide has the UI show a message from UI state:
  * https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events
  */
 @Composable
@@ -78,8 +78,13 @@ fun SaveFailedSnackbarHost(
         val currentOnShown by rememberUpdatedState(onShown)
         // Keyed by the failure, so one that replaces another is shown too.
         LaunchedEffect(failure) {
-            hostState.showSnackbar(message)
-            currentOnShown(failure)
+            try {
+                hostState.showSnackbar(message)
+            } finally {
+                // Also once the screen is gone, such as when the scout leaves it while the
+                // message shows, so the old message doesn't come back when they return.
+                currentOnShown(failure)
+            }
         }
     }
     SnackbarHost(hostState, modifier)

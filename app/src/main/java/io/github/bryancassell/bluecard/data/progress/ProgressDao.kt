@@ -48,15 +48,19 @@ interface ProgressDao {
     @Upsert
     suspend fun upsertRequirement(requirement: RequirementProgress)
 
-    /** Reads, changes and writes one requirement's progress in a single transaction. */
+    /**
+     * Reads, changes and writes one requirement's progress in a single transaction. Returns
+     * the progress from before, or null if nothing was recorded for the requirement.
+     */
     @Transaction
     suspend fun updateRequirement(
         badgeId: String,
         number: String,
         change: (RequirementProgress) -> RequirementProgress
-    ) {
-        val current = getRequirement(badgeId, number) ?: RequirementProgress(badgeId, number)
-        upsertRequirement(change(current))
+    ): RequirementProgress? {
+        val current = getRequirement(badgeId, number)
+        upsertRequirement(change(current ?: RequirementProgress(badgeId, number)))
+        return current
     }
 
     @Query(

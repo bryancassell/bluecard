@@ -70,7 +70,7 @@ class FakeProgressRepository : ProgressRepository {
         badgeId: String,
         number: String,
         completedDate: LocalDate?,
-        start: BadgeStart?
+        start: BadgeStart
     ) {
         checkCanSave()
         updateRequirement(badgeId, number, start) {
@@ -78,9 +78,14 @@ class FakeProgressRepository : ProgressRepository {
         }
     }
 
-    override suspend fun markRequirementNotCompleted(badgeId: String, number: String) {
+    override suspend fun markRequirementNotCompleted(
+        badgeId: String,
+        number: String
+    ): RequirementProgress? {
         checkCanSave()
-        updateRequirement(badgeId, number) { it.copy(completed = false, completedDate = null) }
+        return updateRequirement(badgeId, number) {
+            it.copy(completed = false, completedDate = null)
+        }
     }
 
     override suspend fun setRequirementCompletedDate(
@@ -108,7 +113,7 @@ class FakeProgressRepository : ProgressRepository {
         badgeId: String,
         number: String,
         comment: String?,
-        start: BadgeStart?
+        start: BadgeStart
     ) {
         checkCanSave()
         updateRequirement(badgeId, number, start) { it.copy(comment = normalizedComment(comment)) }
@@ -198,19 +203,21 @@ class FakeProgressRepository : ProgressRepository {
         badges.update { all -> all.mapValues { change(it.value) } }
     }
 
+    /** Changes a requirement's progress and returns it from before, as Room's DAO does. */
     private fun updateRequirement(
         badgeId: String,
         number: String,
         start: BadgeStart? = null,
         change: (RequirementProgress) -> RequirementProgress
-    ) {
+    ): RequirementProgress? {
+        var before: RequirementProgress? = null
         updateBadge(badgeId, start) { details ->
-            val current = details.requirements.find { it.requirementNumber == number }
-                ?: RequirementProgress(badgeId, number)
+            before = details.requirements.find { it.requirementNumber == number }
             details.copy(
                 requirements = details.requirements.filterNot { it.requirementNumber == number } +
-                    change(current)
+                    change(before ?: RequirementProgress(badgeId, number))
             )
         }
+        return before
     }
 }

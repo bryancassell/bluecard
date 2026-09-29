@@ -254,7 +254,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   app-lifetime scope and waits for it, so leaving a screen cancels only the
   wait, not the write. That's the pattern in the data layer guide's
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
-  A write that fails after the scout has left the screen goes unreported.
+  Writes take a first-come, first-served lock, so they happen in the order
+  they're made. A storage failure after the scout has left the screen goes
+  unreported, but a bug still crashes the app.
 - **Stored data that can't be read or saved is reported as an `IOException`.**
   The
   [data layer guide](https://developer.android.com/topic/architecture/data-layer)
@@ -501,8 +503,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     sub-requirements, for notes about it as a whole. The page's comment field is
     saved when the scout taps Save, which is enabled once the field differs from
     the saved comment. The repository trims spaces around it
-    (`normalizedComment`), an empty comment removes it, and it's capped at
-    2,000 characters. An unsaved edit survives the system
+    (`normalizedComment`), and an empty comment removes it. The field takes up
+    to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
     stopping the app, but leaving the page discards it.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,
   requirement summaries, dates, comments and tracker data onto `PdfDocument`
@@ -597,10 +599,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.
-- **Coverage.** Classes that Hilt, Room and Kotlin generate (for example `Hilt_*`,
-  `*_Factory`, `*_Impl`, and `DefaultImpls`, which Kotlin keeps for code compiled
-  before interfaces had default methods) are excluded from the per-class 80%
-  coverage rule.
+- **Coverage.** Classes that Hilt and Room generate (for example `Hilt_*`,
+  `*_Factory`, `*_Impl`) are excluded from the per-class 80% coverage rule.
 
 ## Decisions
 

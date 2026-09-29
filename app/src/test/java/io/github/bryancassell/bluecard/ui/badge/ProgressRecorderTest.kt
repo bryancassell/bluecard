@@ -107,6 +107,20 @@ class ProgressRecorderTest {
     }
 
     @Test
+    fun uncheckingTwice_keepsTheDateFromTheFirstTime() = runTest {
+        val recorder = recorder()
+        recorder.setCompleted("1", true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+
+        // As by a quick double tap, before the checkbox shows the first one.
+        recorder.setCompleted("1", false)
+        recorder.setCompleted("1", false)
+        recorder.setCompleted("1", true)
+
+        assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
+    }
+
+    @Test
     fun checkingAgainOnAnotherPage_datesItToday() = runTest {
         val closedPage = recorder()
         closedPage.setCompleted("1", true)

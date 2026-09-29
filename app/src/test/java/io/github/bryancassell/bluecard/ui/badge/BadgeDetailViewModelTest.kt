@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
@@ -43,6 +44,7 @@ class BadgeDetailViewModelTest {
     private val newest = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
+    private val badgeStart = BadgeStart(newest, started)
     private val today = LocalDate.of(2026, 5, 20)
     private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
 
@@ -231,12 +233,12 @@ class BadgeDetailViewModelTest {
     @Test
     fun requirements_showWhetherEachIsComplete() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
         // Two of three is enough for requirement 2.
-        progressRepository.markRequirementCompleted("camping", "2a", day)
-        progressRepository.markRequirementCompleted("camping", "2c", null)
+        progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
+        progressRepository.markRequirementCompleted("camping", "2c", null, badgeStart)
         // One of two isn't enough for requirement 4.
-        progressRepository.markRequirementCompleted("camping", "4a", day)
+        progressRepository.markRequirementCompleted("camping", "4a", day, badgeStart)
         val viewModel = viewModel()
         startCollecting(viewModel)
 
@@ -253,7 +255,7 @@ class BadgeDetailViewModelTest {
         startCollecting(viewModel)
         assertEquals(false, viewModel.completed()["1"])
 
-        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
         assertEquals(true, viewModel.completed()["1"])
 
         progressRepository.markRequirementNotCompleted("camping", "1")
@@ -319,7 +321,7 @@ class BadgeDetailViewModelTest {
     @Test
     fun uncheckingThenChecking_onThisPage_keepsTheDate() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
         val viewModel = viewModel()
         startCollecting(viewModel)
 

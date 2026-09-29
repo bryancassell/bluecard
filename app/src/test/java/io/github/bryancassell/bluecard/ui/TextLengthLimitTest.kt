@@ -104,6 +104,16 @@ class TextLengthLimitTest {
     }
 
     @Test
+    fun accentOnTheLastLetterOfAFullField_changesNothing() {
+        field().performTextInput("abcde")
+
+        // A combining acute accent, which would make "e" into "é".
+        field().performTextInput("\u0301")
+
+        assertEquals("abcde", state.text.toString())
+    }
+
+    @Test
     fun field_tellsAccessibilityServicesTheLimit() {
         field().assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 5))
     }

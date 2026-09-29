@@ -13,6 +13,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
@@ -44,6 +45,7 @@ class RequirementDetailViewModelTest {
     private val newest = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
+    private val badgeStart = BadgeStart(newest, started)
     private val today = LocalDate.of(2026, 5, 20)
     private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
 
@@ -262,12 +264,12 @@ class RequirementDetailViewModelTest {
         val viewModel = viewModel("2")
         startCollecting(viewModel)
 
-        progressRepository.markRequirementCompleted("camping", "2a", day)
+        progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
         assertTrue(viewModel.ready().children.single { it.number == "2a" }.completed)
         assertFalse(viewModel.ready().requirement.completed)
 
         // One of 2b's two choices completes 2b, and with 2a that's two of three.
-        progressRepository.markRequirementCompleted("camping", "2b(2)", day)
+        progressRepository.markRequirementCompleted("camping", "2b(2)", day, badgeStart)
         assertTrue(viewModel.ready().children.single { it.number == "2b" }.completed)
         assertTrue(viewModel.ready().requirement.completed)
     }
@@ -387,7 +389,12 @@ class RequirementDetailViewModelTest {
     @Test
     fun comment_startsAsSavedComment() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment("camping", "1", "Planned it with my patrol.")
+        progressRepository.setRequirementComment(
+            "camping",
+            "1",
+            "Planned it with my patrol.",
+            badgeStart
+        )
         val viewModel = viewModel("1")
         startCollecting(viewModel)
 
@@ -443,7 +450,12 @@ class RequirementDetailViewModelTest {
     @Test
     fun saveComment_empty_removesIt() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment("camping", "1", "Planned it with my patrol.")
+        progressRepository.setRequirementComment(
+            "camping",
+            "1",
+            "Planned it with my patrol.",
+            badgeStart
+        )
         val viewModel = viewModel("1")
         startCollecting(viewModel)
 
@@ -484,7 +496,7 @@ class RequirementDetailViewModelTest {
     @Test
     fun unsavedComment_isRestoredFromSavedState() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment("camping", "1", "Saved.")
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
         val viewModel = viewModel("1")
         startCollecting(viewModel)
         viewModel.typeComment("Saved, then edited.")

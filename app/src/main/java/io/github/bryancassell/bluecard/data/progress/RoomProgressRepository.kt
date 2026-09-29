@@ -10,10 +10,14 @@ import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * [ProgressRepository] backed by Room.
@@ -56,8 +60,8 @@ class RoomProgressRepository @Inject constructor(
         badgeId: String,
         number: String,
         completedDate: LocalDate?,
-        start: BadgeStart?
-    ) = ifStarted(badgeId, start) {
+        start: BadgeStart
+    ): Unit = ifStarted(badgeId, start) {
         dao.updateRequirement(badgeId, number) {
             it.copy(completed = true, completedDate = completedDate)
         }
@@ -80,8 +84,8 @@ class RoomProgressRepository @Inject constructor(
         badgeId: String,
         number: String,
         comment: String?,
-        start: BadgeStart?
-    ) = ifStarted(badgeId, start) {
+        start: BadgeStart
+    ): Unit = ifStarted(badgeId, start) {
         dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedComment(comment)) }
     }
 
@@ -120,19 +124,31 @@ class RoomProgressRepository @Inject constructor(
         throw if (it is SQLiteException && it.isStorageFailure()) IOException(it) else it
     }
 
+    /** Lets writes in one at a time, in the order they were made (it's first come, first served). */
+    private val writeOrder = Mutex()
+
     /**
      * Runs [write] in [externalScope] and waits for it. If the caller is cancelled, only the
-     * wait is: the write still finishes, though a failure then goes unreported. Reports a
-     * database that can't be written, such as one that can't be opened or a full disk, as an
-     * [IOException], in the same way as [readFailuresAsIOException].
+     * wait is: the write still finishes. Reports a database that can't be written, such as one
+     * that can't be opened or a full disk, as an [IOException], in the same way as
+     * [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too, but it
+     * crashes the app through [externalScope] even if the caller is gone.
      */
-    private suspend fun <T> writing(write: suspend () -> T): T = externalScope.async {
-        try {
-            write()
-        } catch (e: SQLiteException) {
-            throw if (e.isStorageFailure()) IOException(e) else e
+    private suspend fun <T> writing(write: suspend () -> T): T {
+        val result = CompletableDeferred<T>()
+        // Started in the caller's thread, so writes queue for writeOrder in the order they're
+        // made.
+        externalScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try {
+                result.complete(writeOrder.withLock { write() })
+            } catch (e: Throwable) {
+                val storageFailure = e is SQLiteException && e.isStorageFailure()
+                result.completeExceptionally(if (storageFailure) IOException(e) else e)
+                if (!storageFailure) throw e
+            }
         }
-    }.await()
+        return result.await()
+    }
 
     /**
      * Whether the database couldn't be read or written, such as a full disk or a file that
