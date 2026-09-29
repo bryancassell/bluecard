@@ -4,6 +4,8 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -326,15 +328,21 @@ class BadgesViewModelTest {
 
     @Test
     fun search_isRestoredFromSavedState() = runTest {
-        startCollecting(viewModel)
-        search("camp")
+        viewModelScenario {
+            BadgesViewModel(catalogRepository, progressRepository, createSavedStateHandle())
+        }.use { scenario ->
+            // While nothing collects uiState.
+            scenario.viewModel.query.setTextAndPlaceCursorAtEnd("camp")
 
-        // A new ViewModel with the same saved state, as after the system stopped the app.
-        val restored = BadgesViewModel(catalogRepository, progressRepository, savedStateHandle)
-        startCollecting(restored)
+            // Saves state and restores it into a new ViewModel, as when the system stops the
+            // app.
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
 
-        assertEquals("camp", restored.query.text.toString())
-        val state = restored.uiState.value as BadgesUiState.Ready
-        assertEquals(listOf("camping"), state.badges.map { it.id })
+            assertEquals("camp", restored.query.text.toString())
+            val state = restored.uiState.value as BadgesUiState.Ready
+            assertEquals(listOf("camping"), state.badges.map { it.id })
+        }
     }
 }

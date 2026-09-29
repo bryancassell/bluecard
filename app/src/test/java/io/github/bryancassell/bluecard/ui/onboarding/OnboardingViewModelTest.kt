@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
@@ -99,16 +101,21 @@ class OnboardingViewModelTest {
 
     @Test
     fun typing_isRestoredFromSavedState() = runTest {
-        startCollecting()
-        fillIn()
+        viewModelScenario { OnboardingViewModel(repository, createSavedStateHandle()) }
+            .use { scenario ->
+                // While nothing collects uiState.
+                fillIn(viewModel = scenario.viewModel)
 
-        // A new ViewModel with the same saved state, as after the system stopped the app.
-        val restored = OnboardingViewModel(repository, savedStateHandle)
+                // Saves state and restores it into a new ViewModel, as when the system stops
+                // the app.
+                scenario.recreate()
+                val restored = scenario.viewModel
 
-        assertEquals("Alex Scout", restored.name.text.toString())
-        assertEquals("123", restored.unitNumber.text.toString())
-        // Before anything collects it, so Save is enabled from the first frame.
-        assertTrue(restored.uiState.value.canSave)
+                assertEquals("Alex Scout", restored.name.text.toString())
+                assertEquals("123", restored.unitNumber.text.toString())
+                // Before anything collects it, so Save is enabled from the first frame.
+                assertTrue(restored.uiState.value.canSave)
+            }
     }
 
     @Test

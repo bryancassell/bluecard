@@ -17,13 +17,14 @@ import io.github.bryancassell.bluecard.data.progress.normalizedComment
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.keepText
+import io.github.bryancassell.bluecard.ui.restoredText
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -44,8 +45,14 @@ class RequirementDetailViewModel @AssistedInject constructor(
      * The comment field's text, which the field edits directly. It starts as the saved comment
      * once that loads, or as the unsaved comment the system stopped the app with.
      */
-    val comment = TextFieldState(savedStateHandle[COMMENT] ?: "")
+    val comment = TextFieldState(savedStateHandle.restoredText(COMMENT).orEmpty())
     private var commentLoaded = savedStateHandle.contains(COMMENT)
+
+    init {
+        // Kept only once the saved comment has loaded into it, so if the system stops the app
+        // before then, the page loads the saved comment again.
+        if (commentLoaded) savedStateHandle.keepText(COMMENT, comment)
+    }
 
     private val saves = SaveRunner(viewModelScope)
     private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
@@ -53,11 +60,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     val uiState: StateFlow<RequirementDetailUiState> = combine(
         flow { emit(catalogRepository.getBadges()) },
         progressRepository.observeProgress(badgeId),
-        // Saved as it changes, once the saved comment has loaded into it. The scout can change
-        // it only while the screen shows the field, which is while it collects uiState.
-        snapshotFlow { comment.text.toString() }.onEach {
-            if (commentLoaded) savedStateHandle[COMMENT] = it
-        },
+        snapshotFlow { comment.text.toString() },
         saves.failure
     ) { catalog, progress, commentText, saveFailure ->
         // Checked on every change, not only when the page opens, because which version
@@ -85,9 +88,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
     /** Puts the [saved] comment in the field, the first time the page loads. */
     private fun loadComment(saved: String?): String {
         commentLoaded = true
-        // In a snapshot of its own, so the field's observers, such as the flow that saves it,
-        // see the change as soon as it's applied, not when Compose next applies changes made
-        // outside a snapshot.
+        savedStateHandle.keepText(COMMENT, comment)
+        // In a snapshot of its own, so the field's observers, such as uiState, see the change as
+        // soon as it's applied, not when Compose next applies changes made outside a snapshot.
         Snapshot.withMutableSnapshot { comment.setTextAndPlaceCursorAtEnd(saved.orEmpty()) }
         return saved.orEmpty()
     }

@@ -201,10 +201,17 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   [text field guide](https://developer.android.com/develop/ui/compose/text/user-input)
   recommends state-based fields over `value` and `onValueChange`, which invite
   async updates, and encourages keeping `TextFieldState` in ViewModels. The
-  ViewModel reads the text with `snapshotFlow` and copies it to
-  `SavedStateHandle`, so it survives the system stopping the app. Onboarding's
-  name and unit number fields, Badges search and the requirement comment work
-  this way. A ViewModel that fills a field with stored text once it
+  ViewModel creates the state with `SavedStateHandle.textFieldState`
+  (`ui/TextFieldSavedState.kt`), which restores the text and keeps it with a
+  [saved state provider](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate#non-parcelable).
+  The provider reads the text only when the system saves state, so the text
+  survives the system stopping the app even if it changed while nothing
+  collected the screen's UI state. Onboarding's name and unit number fields,
+  Badges search and the requirement comment work this way. The comment is kept
+  only once the saved comment has loaded into it (`restoredText` and
+  `keepText`), so if the system stops the app before then, the page loads the
+  saved comment again instead of restoring an empty field.
+  A ViewModel that fills a field with stored text once it
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
@@ -607,6 +614,13 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   [local tests guide](https://developer.android.com/training/testing/local-tests)
   says it "might allow failing tests to pass" and adds: "Only use it as a last
   resort."
+- **Saved state in tests.** Tests that a ViewModel keeps state when the system
+  stops the app use `ViewModelScenario` from `lifecycle-viewmodel-testing`. Its
+  `recreate()` saves state, passes it through a `Parcel` and restores it into a
+  new ViewModel. Handing a second ViewModel the same `SavedStateHandle` doesn't
+  run saved state providers, so it can't test them. `scenario.viewModel`
+  creates the ViewModel when first read, so a test reads it before
+  `recreate()`.
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
   bindings such as the coroutine dispatcher. A test class that needs fakes
@@ -655,7 +669,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
-| Text fields | State-based (`TextFieldState`), held in the ViewModel and saved in `SavedStateHandle` | The text field guide recommends state-based fields and holding their state in ViewModels |
+| Text fields | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Search result announcements | A visible count of the matches. Screen readers hear it from a polite live region that stays composed and is laid out apart from the shown count. It changes once typing pauses for a second, or straight away after Clear search | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed, doesn't let it be cut off, and announces a live region on any change, even of its size |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |

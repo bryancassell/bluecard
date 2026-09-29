@@ -3,6 +3,8 @@ package io.github.bryancassell.bluecard.ui.badge
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -117,6 +119,21 @@ class RequirementDetailViewModelTest {
         clock,
         savedStateHandle
     )
+
+    /**
+     * Can save the ViewModel's state and restore it into a new one, as when the system stops
+     * the app.
+     */
+    private fun scenario(number: String) = viewModelScenario {
+        RequirementDetailViewModel(
+            "camping",
+            number,
+            catalogRepository,
+            progressRepository,
+            clock,
+            createSavedStateHandle()
+        )
+    }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -497,16 +514,51 @@ class RequirementDetailViewModelTest {
     fun unsavedComment_isRestoredFromSavedState() = runTest {
         progressRepository.startBadge("camping", newest, started)
         progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
-        val viewModel = viewModel("1")
-        startCollecting(viewModel)
-        viewModel.typeComment("Saved, then edited.")
+        scenario("1").use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.typeComment("Saved, then edited.")
 
-        // A new ViewModel with the same saved state, as after the system stopped the app.
-        val restored = viewModel("1")
-        startCollecting(restored)
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
 
-        assertEquals("Saved, then edited.", restored.comment.text.toString())
-        assertTrue(restored.ready().commentChanged)
+            assertEquals("Saved, then edited.", restored.comment.text.toString())
+            assertTrue(restored.ready().commentChanged)
+        }
+    }
+
+    @Test
+    fun restoredComment_isKeptAgain_evenWhileNothingCollects() = runTest {
+        scenario("1").use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.typeComment("First edit.")
+            scenario.recreate()
+
+            // The restored ViewModel, before anything collects its uiState.
+            scenario.viewModel.comment.setTextAndPlaceCursorAtEnd("Second edit.")
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertEquals("Second edit.", restored.comment.text.toString())
+        }
+    }
+
+    @Test
+    fun appStoppedBeforeTheCommentLoads_loadsTheSavedCommentAgain() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        scenario("1").use { scenario ->
+            // Nothing has collected uiState, so the saved comment hasn't loaded.
+            assertEquals("", scenario.viewModel.comment.text.toString())
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertEquals("Saved.", restored.comment.text.toString())
+            assertFalse(restored.ready().commentChanged)
+        }
     }
 
     @Test

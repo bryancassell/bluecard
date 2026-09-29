@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
 import android.util.Log
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -9,13 +8,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.ui.textFieldState
 import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -26,18 +25,16 @@ class OnboardingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     /** The name field's text, which the field edits directly. */
-    val name = TextFieldState(savedStateHandle[NAME] ?: "")
+    val name = savedStateHandle.textFieldState(NAME)
 
     /** The unit number field's text, which the field edits directly. */
-    val unitNumber = TextFieldState(savedStateHandle[UNIT_NUMBER] ?: "")
+    val unitNumber = savedStateHandle.textFieldState(UNIT_NUMBER)
 
     private val saveStatus = MutableStateFlow(SaveStatus.Editing)
 
     val uiState: StateFlow<OnboardingUiState> = combine(
-        // Saved as they change. The scout can change them only while the screen shows the
-        // fields, which is while it collects uiState, so every change is saved.
-        snapshotFlow { name.text.toString() }.onEach { savedStateHandle[NAME] = it },
-        snapshotFlow { unitNumber.text.toString() }.onEach { savedStateHandle[UNIT_NUMBER] = it },
+        snapshotFlow { name.text.toString() },
+        snapshotFlow { unitNumber.text.toString() },
         saveStatus,
         ::uiStateOf
     ).stateIn(

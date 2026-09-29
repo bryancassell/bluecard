@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badges
 
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,12 +9,12 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.textFieldState
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 /** The badges in the catalog that match the scout's search, with their progress on each. */
@@ -27,7 +26,7 @@ class BadgesViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     /** The search field's text, which the field edits directly. */
-    val query = TextFieldState(savedStateHandle[QUERY] ?: "")
+    val query = savedStateHandle.textFieldState(QUERY)
 
     val uiState: StateFlow<BadgesUiState> = combine(
         // What depends only on the catalog is worked out when the list starts collecting,
@@ -39,9 +38,7 @@ class BadgesViewModel @Inject constructor(
             emit(badges.map { it to it.eagleRequirement(eagleGroups) })
         },
         progressRepository.observeAllProgress(),
-        // Saved as it changes. The scout can change it only while the screen shows the
-        // search field, which is while it collects uiState, so every change is saved.
-        snapshotFlow { query.text.toString() }.onEach { savedStateHandle[QUERY] = it }
+        snapshotFlow { query.text.toString() }
     ) { badges, progress, search ->
         val progressById = progress.associateBy { it.badge.badgeId }
         val words = searchWords(search)
