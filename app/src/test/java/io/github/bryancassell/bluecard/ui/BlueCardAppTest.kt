@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +22,13 @@ class BlueCardAppTest {
         composeTestRule.setContent { BlueCardApp(MainActivityUiState.Loading) }
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        // Home's button that opens the badge list, and its loading indicator.
+        composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
+        composeTestRule.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.ProgressBarRangeInfo,
+                ProgressBarRangeInfo.Indeterminate
+            )
+        ).assertDoesNotExist()
     }
 }

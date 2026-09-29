@@ -88,7 +88,9 @@ marks "strongly recommended":
 - **No domain layer for now.** The architecture guide calls it
   [optional](https://developer.android.com/topic/architecture/domain-layer), for
   logic that is complex or reused across ViewModels. Add use cases only when that
-  happens (for example, if progress calculations end up shared by several screens).
+  happens. Small calculations that several screens share, such as a badge's
+  status, are plain functions next to the data they read (see
+  [Data model](#data-model)) rather than use cases.
 - **One Gradle module (`:app`).** Android's
   [modularization guide](https://developer.android.com/topic/modularization)
   says modularizing pays off mainly for reuse, strict visibility or large
@@ -190,7 +192,7 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a progress summary (for example badges started, completed, and Eagle-required progress). |
+| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
 | **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state, "mark completed on a prior date", and "generate report" once complete. |
 | **Requirement detail** | Sub-page for requirements that need more room: trackers, long lists of choices, or many sub-requirements. |
@@ -312,11 +314,20 @@ At a high level. Exact fields are decided in the feature issues.
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
 
+A badge's status (not started, in progress or completed) is derived the same
+way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees.
+
 ## Key flows
 
 - **First launch.** `MainActivityViewModel` reads `ProfileRepository`. While there
   is no profile, the navigation root shows Onboarding instead of the back stack;
   once the profile is saved, it shows the back stack, which starts at Home.
+- **Home summary.** The Home ViewModel combines the profile, the catalog and the
+  scout's progress. It counts badges completed and in progress, and
+  Eagle-required progress against the Eagle-required badges in the catalog.
+  Each Eagle "one of" group (such as Cycling, Hiking and Swimming) counts once,
+  with the status of its furthest-along badge, because earning any of them meets
+  the requirement. Progress on a badge that isn't in the catalog isn't counted.
 - **Browse and search.** The Badges ViewModel combines the catalog with the
   search query and the scout's progress (to show state on each badge).
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
@@ -382,10 +393,12 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   They check each UI state and each event.
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
-  bindings such as the coroutine dispatcher. A test class that needs a fake for
-  one repository removes just that repository's module with `@UninstallModules`
-  and supplies the fake with `@BindValue`, as `MainActivityTest` does for the
-  profile.
+  bindings such as the coroutine dispatcher. A test class that needs fakes
+  removes the modules that bind those repositories with `@UninstallModules` and
+  supplies the fakes with `@BindValue`, as `MainActivityTest` does.
+  `ProfileModule` binds only the profile repository. `DataModule` binds the
+  catalog and progress repositories together, so a test that fakes one of them
+  supplies both.
 - **Room repository tests use Robolectric** with an in-memory database. The
   [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
   recommends plain JVM tests with Room's Kotlin Multiplatform setup instead.

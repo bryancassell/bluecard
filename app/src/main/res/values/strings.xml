@@ -7,7 +7,25 @@
     <string name="onboarding_required">Required</string>
     <string name="onboarding_save">Get started</string>
     <string name="onboarding_save_failed">Couldn\'t save. Try again.</string>
-    <string name="home_title">Home</string>
+    <string name="home_unit">Unit: %1$s</string>
+    <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
+    <string name="home_badges_title">Your merit badges</string>
+    <string name="home_eagle_title">Eagle-required</string>
     <string name="home_open_badges">Merit badges</string>
+    <string name="home_open_data_management">Manage data</string>
     <string name="badges_title">Merit badges</string>
+    <string name="data_management_title">Data management</string>
+    <plurals name="home_completed">
+        <item quantity="one">%1$d completed</item>
+        <item quantity="other">%1$d completed</item>
+    </plurals>
+    <plurals name="home_in_progress">
+        <item quantity="one">%1$d in progress</item>
+        <item quantity="other">%1$d in progress</item>
+    </plurals>
+    <!-- The quantity is the number completed. -->
+    <plurals name="home_eagle_completed">
+        <item quantity="one">%1$d of %2$d completed</item>
+        <item quantity="other">%1$d of %2$d completed</item>
+    </plurals>
 </resources>
