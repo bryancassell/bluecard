@@ -64,7 +64,7 @@ part of the app.
 | Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
 | The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
 | An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge ID and requirements version shipped before is still in the file. |
-| A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files. |
+| A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
 | A new tracker needs only catalog data (req. 7) | A test renders and stores a tracker defined only in test catalog data. |
@@ -88,7 +88,9 @@ marks "strongly recommended":
 - **No domain layer for now.** The architecture guide calls it
   [optional](https://developer.android.com/topic/architecture/domain-layer), for
   logic that is complex or reused across ViewModels. Add use cases only when that
-  happens (for example, if progress calculations end up shared by several screens).
+  happens. Small calculations that several screens share, such as a badge's
+  status, are plain functions next to the data they read (see
+  [Data model](#data-model)) rather than use cases.
 - **One Gradle module (`:app`).** Android's
   [modularization guide](https://developer.android.com/topic/modularization)
   says modularizing pays off mainly for reuse, strict visibility or large
@@ -195,7 +197,7 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a progress summary (for example badges started, completed, and Eagle-required progress). |
+| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
 | **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state, "mark completed on a prior date", and "generate report" once complete. |
 | **Requirement detail** | Sub-page for requirements that need more room: trackers, long lists of choices, or many sub-requirements. |
@@ -322,14 +324,25 @@ At a high level. Exact fields are decided in the feature issues.
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
 
+A badge's status (not started, in progress or completed) is derived the same
+way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees.
+
 ## Key flows
 
 - **First launch.** `MainActivityViewModel` reads `ProfileRepository`. While there
   is no profile, the navigation root shows Onboarding instead of the back stack;
   once the profile is saved, it shows the back stack, which starts at Home.
+- **Home summary.** The Home ViewModel combines the profile, the catalog and the
+  scout's progress. It counts badges completed and in progress, and
+  Eagle-required progress against the Eagle-required badges in the catalog.
+  Each Eagle "one of" group (such as Cycling, Hiking and Swimming) counts once,
+  with the status of its furthest-along badge, because earning any of them meets
+  the requirement. Progress on a badge that isn't in the catalog isn't counted.
 - **Browse and search.** The Badges ViewModel combines the catalog with the
-  search query and the scout's progress, to show each badge as not started, in
-  progress or completed (see Data model: completion is derived).
+  scout's progress, to show each badge's status from
+  `data/progress/BadgeStatus.kt`. Search
+  ([#36](https://github.com/bryancassell/bluecard/issues/36)) adds the search
+  query to it.
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
@@ -364,10 +377,19 @@ leave a stale completion state behind.
   stays on, so the Room database and DataStore file are backed up to the
   scout's Google Drive (end-to-end encrypted on Android 9+ with a screen lock)
   and restored on a new phone. This is Android's system backup, not app sync,
-  and the scout can turn it off in system settings. The manifest will set
-  backup rules explicitly, as the Auto Backup docs recommend. The cache
-  directory where PDFs are generated needs no rule: Auto Backup always
-  excludes it.
+  and the scout can turn it off in system settings. The manifest sets
+  `android:allowBackup` explicitly, as the Auto Backup docs
+  [recommend](https://developer.android.com/identity/data/autobackup#EnablingAutoBackup),
+  and its backup rules include only the databases directory (the Room database
+  and its write-ahead log files) and the DataStore directory, for both cloud
+  backup and device-to-device transfer (`res/xml/data_extraction_rules.xml` on
+  Android 12 and higher, `res/xml/backup_rules.xml` on Android 11 and lower).
+  Other files, such as libraries' state files in `files/`, are left out. A
+  library that stores data in either directory would be backed up too, so check
+  new dependencies for that. Backup isn't limited to phones that can
+  encrypt it end to end (`disableIfNoEncryptionCapabilities`), so every scout
+  who keeps backup on can move their records. The cache directory where PDFs
+  are generated needs no rule: Auto Backup always excludes it.
 
 ## Testing approach
 
@@ -384,10 +406,12 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   They check each UI state and each event.
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
-  bindings such as the coroutine dispatcher. A test class that needs a fake for
-  one repository removes just that repository's module with `@UninstallModules`
-  and supplies the fake with `@BindValue`, as `MainActivityTest` does for the
-  profile.
+  bindings such as the coroutine dispatcher. A test class that needs fakes
+  removes the modules that bind those repositories with `@UninstallModules` and
+  supplies the fakes with `@BindValue`, as `MainActivityTest` does.
+  `ProfileModule` binds only the profile repository. `DataModule` binds the
+  catalog and progress repositories together, so a test that fakes one of them
+  supplies both.
 - **Room repository tests use Robolectric** with an in-memory database. The
   [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
   recommends plain JVM tests with Room's Kotlin Multiplatform setup instead.
@@ -421,7 +445,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Versions in the first release | Current requirements only; versions are kept from the first release on | Project decision for the initial app; keeping every version from then on protects existing users' recorded progress |
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
-| Backup | Android Auto Backup on, with explicit rules | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |

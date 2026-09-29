@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import java.util.Locale
 
 /** Connects the Badges screen to its ViewModel. */

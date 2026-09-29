@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.LocalDate
@@ -172,44 +173,6 @@ class BadgesViewModelTest {
 
         assertEquals(BadgeStatus.InProgress, status("camping"))
         assertEquals(BadgeStatus.NotStarted, status("chess"))
-    }
-
-    @Test
-    fun status_everyRequirementDone_isCompleted() = runTest {
-        progressRepository.startBadge("camping", version, started)
-        progressRepository.markRequirementCompleted("camping", "1", day)
-        progressRepository.markRequirementCompleted("camping", "2", null)
-        startCollecting(viewModel)
-
-        assertEquals(BadgeStatus.Completed, status("camping"))
-    }
-
-    @Test
-    fun status_completedOnPriorDate_isCompleted() = runTest {
-        progressRepository.startBadge("camping", version, started)
-        progressRepository.setCompletedOnPriorDate("camping", day)
-        startCollecting(viewModel)
-
-        assertEquals(BadgeStatus.Completed, status("camping"))
-    }
-
-    @Test
-    fun status_versionMissingFromCatalog_isInProgress() = runTest {
-        progressRepository.startBadge("camping", LocalDate.of(2025, 1, 1), started)
-        progressRepository.markRequirementCompleted("camping", "1", day)
-        progressRepository.markRequirementCompleted("camping", "2", day)
-        startCollecting(viewModel)
-
-        assertEquals(BadgeStatus.InProgress, status("camping"))
-    }
-
-    @Test
-    fun status_completedOnPriorDate_withVersionMissingFromCatalog_isCompleted() = runTest {
-        progressRepository.startBadge("camping", LocalDate.of(2025, 1, 1), started)
-        progressRepository.setCompletedOnPriorDate("camping", day)
-        startCollecting(viewModel)
-
-        assertEquals(BadgeStatus.Completed, status("camping"))
     }
 
     @Test

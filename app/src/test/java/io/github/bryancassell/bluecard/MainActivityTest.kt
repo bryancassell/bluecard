@@ -1,8 +1,12 @@
 package io.github.bryancassell.bluecard
 
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -43,7 +47,7 @@ import org.robolectric.annotation.Config
  * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
  * application, so test modules (such as TestDispatchersModule) replace real ones, and
  * this class swaps the repositories for fakes. Each test starts with no saved profile, as
- * on a fresh install, and a one-badge catalog.
+ * on a fresh install, a one-badge catalog and no progress.
  */
 @HiltAndroidTest
 @UninstallModules(ProfileModule::class, DataModule::class)
@@ -105,12 +109,35 @@ class MainActivityTest {
         launch()
     }
 
+    // Home's heading is the scout's name. Matching the heading leaves out the Onboarding
+    // field that holds the same name.
+    private fun home() = composeTestRule.onNode(isHeading() and hasText("Alex Scout"))
+
+    // Without a profile, Home would show only its loading indicator.
+    private fun homeLoading() = composeTestRule.onNode(
+        SemanticsMatcher.expectValue(
+            SemanticsProperties.ProgressBarRangeInfo,
+            ProgressBarRangeInfo.Indeterminate
+        )
+    )
+
     private fun field(label: String) = composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
     private fun completeOnboarding() {
         field("Name").performTextInput("Alex Scout")
         field("Unit number").performTextInput("123")
         composeTestRule.onNodeWithText("Get started").performClick()
+    }
+
+    /** Taps twice before the next frame, before the first tap's screen change starts. */
+    private fun tapTwiceInOneFrame(text: String) {
+        // Let the screen finish appearing before stopping the clock.
+        val node = composeTestRule.onNodeWithText(text).assertIsDisplayed()
+        composeTestRule.mainClock.autoAdvance = false
+        node.performClick()
+        node.performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
     }
 
     private fun assertActivityFinishing() {
@@ -125,7 +152,8 @@ class MainActivityTest {
         launch()
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        home().assertDoesNotExist()
+        homeLoading().assertDoesNotExist()
     }
 
     @Test
@@ -144,7 +172,7 @@ class MainActivityTest {
 
         completeOnboarding()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         assertEquals(
             Profile("Alex Scout", "123"),
@@ -157,7 +185,7 @@ class MainActivityTest {
         launch()
         completeOnboarding()
         // Back on Onboarding would also leave the app, so check that Home is showing first.
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
 
         // Home is the start destination, so there is nothing to go back to.
         pressBackUnconditionally()
@@ -173,7 +201,7 @@ class MainActivityTest {
         // As when the app returns after a save that finished in the background.
         runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
     }
 
@@ -181,7 +209,7 @@ class MainActivityTest {
     fun launchWithProfile_goesStraightToHome() {
         launchWithProfile()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
     }
 
@@ -190,7 +218,7 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
         // Home's button also says "Merit badges", so check that Home is gone.
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
 
         fakeProfileRepository.removeProfile()
@@ -205,7 +233,7 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
-        composeTestRule.onNodeWithText("Home").assertDoesNotExist()
+        home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
         composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
     }
@@ -263,25 +291,68 @@ class MainActivityTest {
 
         pressBack()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
     }
 
     @Test
-    fun doubleTap_onMeritBadges_inOneFrame_opensBadgesOnce() {
+    fun home_showsProgressAsSoonAsItChanges() {
         launchWithProfile()
-        // Let Home finish appearing before stopping the clock.
-        val meritBadges = composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("You haven't started any merit badges yet.")
+            .assertIsDisplayed()
 
-        // Both taps land before the next frame, before the screen change starts.
-        composeTestRule.mainClock.autoAdvance = false
-        meritBadges.performClick()
-        meritBadges.performClick()
-        composeTestRule.mainClock.autoAdvance = true
+        // As when the scout starts a badge on another screen.
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+
+        composeTestRule.onNodeWithText("Your merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("0 of 1 completed").assertIsDisplayed()
+    }
+
+    @Test
+    fun openDataManagement_showsDataManagement() {
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Manage data").performClick()
+
+        home().assertDoesNotExist()
+        composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
+    }
+
+    @Test
+    fun back_fromDataManagement_returnsHome() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Manage data").performClick()
+        // As in back_fromBadges_returnsHome, let the new entry settle before pressing back.
         composeTestRule.waitForIdle()
 
         pressBack()
 
-        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onMeritBadges_opensBadgesOnce() {
+        launchWithProfile()
+
+        tapTwiceInOneFrame("Merit badges")
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onManageData_opensDataManagementOnce() {
+        launchWithProfile()
+
+        tapTwiceInOneFrame("Manage data")
+        pressBack()
+
+        home().assertIsDisplayed()
     }
 
     @Test

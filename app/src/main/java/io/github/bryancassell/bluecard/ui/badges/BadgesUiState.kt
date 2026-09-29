@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+
 /** What the Badges screen shows. */
 sealed interface BadgesUiState {
     /** The catalog is still loading. */
@@ -27,11 +29,4 @@ sealed interface EagleRequirement {
      * are the group's badges, this one included, in list order.
      */
     data class OneOf(val badgeNames: List<String>) : EagleRequirement
-}
-
-/** How far the scout has got with a badge. */
-enum class BadgeStatus {
-    NotStarted,
-    InProgress,
-    Completed
 }

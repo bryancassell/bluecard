@@ -17,3 +17,6 @@ data object Badges : NavKey
 
 @Serializable
 data class BadgeDetail(val badgeId: String) : NavKey
+
+@Serializable
+data object DataManagement : NavKey

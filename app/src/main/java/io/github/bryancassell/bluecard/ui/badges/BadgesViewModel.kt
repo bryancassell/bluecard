@@ -5,9 +5,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
-import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.status
 import java.text.Collator
 import java.util.Locale
 import javax.inject.Inject
@@ -60,18 +59,4 @@ private fun MeritBadge.eagleRequirement(
     // shown as required on its own.
     val group = eagleGroups[eagleGroup]?.takeIf { it.size > 1 } ?: return EagleRequirement.Required
     return EagleRequirement.OneOf(group)
-}
-
-/** Completion is checked against the requirements version the badge was started on. */
-private fun MeritBadge.status(progress: BadgeProgressDetails?): BadgeStatus {
-    if (progress == null) return BadgeStatus.NotStarted
-    // Checked first, because a badge marked completed on a prior date needs no version.
-    if (progress.badge.completedOnPriorDate != null) return BadgeStatus.Completed
-    val versionDate = progress.badge.requirementsVersion
-    // Released catalogs keep every version they shipped, but a catalog edited during
-    // development can drop one; a badge on a missing version can't be checked.
-    val version = requirementVersions.find { it.effectiveDate == versionDate }
-        ?: return BadgeStatus.InProgress
-    val completed = progress.completion(version) != null
-    return if (completed) BadgeStatus.Completed else BadgeStatus.InProgress
 }
