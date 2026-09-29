@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.LocalDate
@@ -32,6 +33,7 @@ class HomeViewModelTest {
     private val version = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
+    private val badgeStart = BadgeStart(version, started)
 
     private fun badge(id: String, eagleRequired: Boolean = false, eagleGroup: String? = null) =
         MeritBadge(
@@ -154,12 +156,12 @@ class HomeViewModelTest {
     fun badges_countsCompletedAndInProgress() = runTest {
         start("chess")
         start("camping")
-        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
         complete("pottery")
         // Completed through its requirements rather than a prior date.
         start("cooking")
-        progressRepository.markRequirementCompleted("cooking", "1", day)
-        progressRepository.markRequirementCompleted("cooking", "2", null)
+        progressRepository.markRequirementCompleted("cooking", "1", day, badgeStart)
+        progressRepository.markRequirementCompleted("cooking", "2", null, badgeStart)
         startCollecting(viewModel)
 
         assertEquals(ProgressCounts(completed = 2, inProgress = 2), ready().badges)

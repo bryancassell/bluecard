@@ -7,13 +7,17 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
@@ -36,9 +40,13 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.di.ClockModule
 import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
+import java.time.Clock
 import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -54,11 +62,11 @@ import org.robolectric.shadows.ShadowToast
 /**
  * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
  * application, so test modules (such as TestDispatchersModule) replace real ones, and
- * this class swaps the repositories for fakes. Each test starts with no saved profile, as
- * on a fresh install, a one-badge catalog and no progress.
+ * this class swaps the repositories for fakes and fixes the date. Each test starts with no
+ * saved profile, as on a fresh install, a one-badge catalog and no progress.
  */
 @HiltAndroidTest
-@UninstallModules(ProfileModule::class, DataModule::class)
+@UninstallModules(ProfileModule::class, DataModule::class, ClockModule::class)
 @Config(application = HiltTestApplication::class)
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -115,6 +123,12 @@ class MainActivityTest {
     @JvmField
     val progressRepository: ProgressRepository = FakeProgressRepository()
 
+    private val today = LocalDate.of(2026, 5, 20)
+
+    @BindValue
+    @JvmField
+    val clock: Clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+
     private lateinit var scenario: ActivityScenario<MainActivity>
 
     @After
@@ -168,6 +182,17 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Merit badges").performClick()
         composeTestRule.onNodeWithText("Camping").performClick()
     }
+
+    // A requirement's checkbox on its row, on Badge detail or Requirement detail.
+    private fun rowCheckbox(number: String) = composeTestRule
+        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
+
+    // The checkbox on a requirement's own page.
+    private fun completedCheckbox() =
+        composeTestRule.onNode(hasText("Completed") and isToggleable())
+
+    private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
+        .first()?.requirements?.singleOrNull { it.requirementNumber == number }
 
     /** Badges is showing, and Badge detail isn't. */
     private fun assertBadgesShowing() {
@@ -388,6 +413,74 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
+    }
+
+    @Test
+    fun checkingRequirement_onBadgeDetail_completesItToday() {
+        openCamping()
+
+        rowCheckbox("1").performClick()
+
+        rowCheckbox("1").assertIsOn()
+        assertEquals(
+            RequirementProgress("camping", "1", completed = true, completedDate = today),
+            runBlocking { recorded("1") }
+        )
+    }
+
+    // The acceptance test of recording progress: completing enough sub-requirements completes
+    // their requirement, and completing every requirement completes the badge.
+    @Test
+    fun completingEnoughRequirements_completesTheBadge() {
+        openCamping()
+        rowCheckbox("1").performClick()
+        composeTestRule.onNodeWithText("Second.").performClick()
+
+        // Requirement 2 needs one of its two choices.
+        rowCheckbox("2a").performClick()
+
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        pressBack()
+        composeTestRule.onNode(hasText("Second.") and hasContentDescription("Completed"))
+            .assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        pressBack()
+        composeTestRule.onNode(hasText("Camping") and hasText("Completed")).assertIsDisplayed()
+    }
+
+    @Test
+    fun requirementPage_recordsCompletionDateAndComment() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+
+        completedCheckbox().performClick()
+        composeTestRule.onNodeWithText("Completed on May 20, 2026").assertIsDisplayed()
+        composeTestRule.onNode(hasSetTextAction() and hasText("Comment"))
+            .performTextInput("Planned it with my patrol.")
+        composeTestRule.onNodeWithText("Save comment").performScrollTo().performClick()
+
+        assertEquals(
+            RequirementProgress("camping", "1", true, today, "Planned it with my patrol."),
+            runBlocking { recorded("1") }
+        )
+        // Back on the badge's page, the requirement is checked.
+        composeTestRule.waitForIdle()
+        pressBack()
+        rowCheckbox("1").assertIsOn()
+    }
+
+    // Dates, like numbers, follow the strings' language, so on a Persian device the English
+    // strings keep English month names and digits.
+    @Config(qualifiers = "fa")
+    @Test
+    fun onDeviceInOtherLanguage_datesUseStringsLanguage() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+
+        completedCheckbox().performClick()
+
+        composeTestRule.onNodeWithText("Completed on May 20, 2026").assertIsDisplayed()
     }
 
     @Test

@@ -6,15 +6,15 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Everything the scout records about their badges.
  *
- * A badge must be started with [startBadge] before anything is recorded for it: the
- * other functions that record progress throw [IllegalStateException] for a badge that
- * hasn't been started. Clearing, and changing or deleting a tracker entry that doesn't
- * exist, do nothing.
+ * A badge must be started before anything is recorded for it, with [startBadge] or with the
+ * [BadgeStart] that some functions take and start it with: the other functions that record
+ * progress throw [IllegalStateException] for a badge that hasn't been started. Clearing, and changing or
+ * deleting a tracker entry that doesn't exist, do nothing.
  *
  * Its flows throw an `IOException` when stored progress can't be read, such as when the
- * database can't be opened. Its other functions don't report storage failures as an
- * `IOException` yet, so catching one won't catch a failed write (see ARCHITECTURE.md,
- * Data layer).
+ * database can't be opened, and its other functions throw one when progress can't be saved.
+ * A change finishes even if the caller is cancelled, such as when the scout leaves the screen
+ * that made it, and changes are made in the order they're called.
  */
 interface ProgressRepository {
     /** Every started badge, with its progress, updated whenever anything changes. */
@@ -32,13 +32,43 @@ interface ProgressRepository {
     /** Marks the badge completed on [date] without requirement detail, or undoes it (null). */
     suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?)
 
-    suspend fun markRequirementCompleted(badgeId: String, number: String, completedDate: LocalDate?)
+    /**
+     * Marks the requirement completed on [completedDate], or with no date (null). A badge that
+     * hasn't been started is started with [start], in the same transaction, so a failure
+     * leaves neither.
+     */
+    suspend fun markRequirementCompleted(
+        badgeId: String,
+        number: String,
+        completedDate: LocalDate?,
+        start: BadgeStart
+    )
 
-    /** Undoes completion and removes the completion date; the comment stays. */
-    suspend fun markRequirementNotCompleted(badgeId: String, number: String)
+    /**
+     * Undoes completion and removes the completion date; the comment stays. Returns the
+     * requirement's progress from before, read in the same transaction, or null if nothing was
+     * recorded for it, so a caller can bring its date back.
+     */
+    suspend fun markRequirementNotCompleted(badgeId: String, number: String): RequirementProgress?
 
-    /** Sets the requirement's comment; null or blank removes it. */
-    suspend fun setRequirementComment(badgeId: String, number: String, comment: String?)
+    /**
+     * Changes the date a completed requirement was completed on, or removes it (null). Does
+     * nothing if the requirement isn't completed, so a date change that lands just after the
+     * scout unchecked it can't complete it again.
+     */
+    suspend fun setRequirementCompletedDate(badgeId: String, number: String, date: LocalDate?)
+
+    /**
+     * Sets the requirement's comment, stored as [normalizedComment]: null or blank removes it.
+     * A badge that hasn't been started is started with [start], as in
+     * [markRequirementCompleted].
+     */
+    suspend fun setRequirementComment(
+        badgeId: String,
+        number: String,
+        comment: String?,
+        start: BadgeStart
+    )
 
     /** Adds a tracker row and returns its ID. */
     suspend fun addTrackerEntry(badgeId: String, number: String, values: Map<String, String>): Long

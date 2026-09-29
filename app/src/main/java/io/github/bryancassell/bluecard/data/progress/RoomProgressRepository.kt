@@ -1,21 +1,39 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import android.database.sqlite.SQLiteBindOrColumnIndexOutOfRangeException
+import android.database.sqlite.SQLiteConstraintException
+import android.database.sqlite.SQLiteDatatypeMismatchException
 import android.database.sqlite.SQLiteException
+import android.database.sqlite.SQLiteMisuseException
 import androidx.room.withTransaction
+import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * [ProgressRepository] backed by Room.
  *
+ * Writes run in [externalScope], which lives as long as the app, so one finishes even if its
+ * caller is cancelled, such as when the scout leaves the screen that made it. That's how the
+ * data layer guide has an operation live longer than the screen:
+ * https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen
+ *
  * Functions are written as expression bodies (`= dao...`): when a call really suspends,
  * JaCoCo never sees a separate closing brace run, and would count it as untested.
  */
-class RoomProgressRepository @Inject constructor(private val database: BlueCardDatabase) :
-    ProgressRepository {
+class RoomProgressRepository @Inject constructor(
+    private val database: BlueCardDatabase,
+    @param:ApplicationScope private val externalScope: CoroutineScope
+) : ProgressRepository {
     private val dao = database.progressDao()
 
     override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> =
@@ -28,7 +46,7 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
         badgeId: String,
         requirementsVersion: LocalDate,
         startedDate: LocalDate
-    ) = dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate))
+    ) = writing { dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate)) }
 
     override suspend fun setCounselor(badgeId: String, counselor: Counselor?) = ifStarted(badgeId) {
         val stored = counselor?.normalized()
@@ -41,8 +59,9 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     override suspend fun markRequirementCompleted(
         badgeId: String,
         number: String,
-        completedDate: LocalDate?
-    ) = ifStarted(badgeId) {
+        completedDate: LocalDate?,
+        start: BadgeStart
+    ): Unit = ifStarted(badgeId, start) {
         dao.updateRequirement(badgeId, number) {
             it.copy(completed = true, completedDate = completedDate)
         }
@@ -55,10 +74,20 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
             }
         }
 
-    override suspend fun setRequirementComment(badgeId: String, number: String, comment: String?) =
-        ifStarted(badgeId) {
-            dao.updateRequirement(badgeId, number) { it.copy(comment = comment?.ifBlank { null }) }
-        }
+    override suspend fun setRequirementCompletedDate(
+        badgeId: String,
+        number: String,
+        date: LocalDate?
+    ) = writing { dao.updateCompletedDate(badgeId, number, date) }
+
+    override suspend fun setRequirementComment(
+        badgeId: String,
+        number: String,
+        comment: String?,
+        start: BadgeStart
+    ): Unit = ifStarted(badgeId, start) {
+        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedComment(comment)) }
+    }
 
     override suspend fun addTrackerEntry(
         badgeId: String,
@@ -71,31 +100,84 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     }
 
     override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) =
-        dao.updateTrackerEntry(id, values)
+        writing { dao.updateTrackerEntry(id, values) }
 
-    override suspend fun deleteTrackerEntry(id: Long) = dao.deleteTrackerEntry(id)
+    override suspend fun deleteTrackerEntry(id: Long) = writing { dao.deleteTrackerEntry(id) }
 
     override suspend fun clearRequirement(badgeId: String, number: String) =
-        dao.deleteRequirement(badgeId, number)
+        writing { dao.deleteRequirement(badgeId, number) }
 
-    override suspend fun clearBadge(badgeId: String) = dao.deleteBadge(badgeId)
+    override suspend fun clearBadge(badgeId: String) = writing { dao.deleteBadge(badgeId) }
 
-    override suspend fun clearAll() = dao.deleteAll()
+    override suspend fun clearAll() = writing { dao.deleteAll() }
 
     /**
      * Reports a database that can't be read, such as one that can't be opened, as the
      * [IOException] that [ProgressRepository] documents. Android's SQLite reports those as
-     * [SQLiteException]s. Other exceptions are bugs and pass through: a missing migration, and
-     * the parent class `android.database.SQLException`, which Room's SQLite adapter throws only
-     * for misuse such as reading a closed statement. If Room is ever given a `SQLiteDriver`,
-     * every SQLite error arrives as that parent class, so this check needs revisiting.
+     * [SQLiteException]s ([isStorageFailure]). Other exceptions are bugs and pass through: a
+     * missing migration, and the parent class `android.database.SQLException`, which Room's
+     * SQLite adapter throws only for misuse such as reading a closed statement. If Room is ever
+     * given a `SQLiteDriver`, every SQLite error arrives as that parent class, so this check
+     * needs revisiting.
      */
-    private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> =
-        catch { throw if (it is SQLiteException) IOException(it) else it }
+    private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> = catch {
+        throw if (it is SQLiteException && it.isStorageFailure()) IOException(it) else it
+    }
 
-    /** Runs [action] if the badge is started, checking and writing in one transaction. */
-    private suspend fun <T> ifStarted(badgeId: String, action: suspend () -> T): T =
-        database.withTransaction {
-            if (dao.isStarted(badgeId)) action() else throw notStartedError(badgeId)
+    /** Lets writes in one at a time, in the order they were made (it's first come, first served). */
+    private val writeOrder = Mutex()
+
+    /**
+     * Runs [write] in [externalScope] and waits for it. If the caller is cancelled, only the
+     * wait is: the write still finishes. Reports a database that can't be written, such as one
+     * that can't be opened or a full disk, as an [IOException], in the same way as
+     * [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too, but it
+     * crashes the app through [externalScope] even if the caller is gone.
+     */
+    private suspend fun <T> writing(write: suspend () -> T): T {
+        val result = CompletableDeferred<T>()
+        // Started in the caller's thread, so writes queue for writeOrder in the order they're
+        // made.
+        externalScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try {
+                result.complete(writeOrder.withLock { write() })
+            } catch (e: Throwable) {
+                val storageFailure = e is SQLiteException && e.isStorageFailure()
+                result.completeExceptionally(if (storageFailure) IOException(e) else e)
+                if (!storageFailure) throw e
+            }
         }
+        return result.await()
+    }
+
+    /**
+     * Whether the database couldn't be read or written, such as a full disk or a file that
+     * can't be opened, rather than the app using it wrongly. SQLite says misuse of its
+     * interface means the app "is incorrectly coded" (https://www.sqlite.org/rescode.html).
+     * This app also counts a constraint violation, an out-of-range parameter or column number
+     * and a datatype mismatch as bugs: each write checks what it needs first, such as that the
+     * badge is started, so only a mistake in the code can cause one.
+     */
+    private fun SQLiteException.isStorageFailure() = this !is SQLiteConstraintException &&
+        this !is SQLiteMisuseException &&
+        this !is SQLiteBindOrColumnIndexOutOfRangeException &&
+        this !is SQLiteDatatypeMismatchException
+
+    /**
+     * Runs [action] if the badge is started, or once [start] has started it, checking and
+     * writing in one transaction.
+     */
+    private suspend fun <T> ifStarted(
+        badgeId: String,
+        start: BadgeStart? = null,
+        action: suspend () -> T
+    ): T = writing {
+        database.withTransaction {
+            if (!dao.isStarted(badgeId)) {
+                if (start == null) throw notStartedError(badgeId)
+                dao.insertBadge(start.progress(badgeId))
+            }
+            action()
+        }
+    }
 }
