@@ -122,6 +122,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+- **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
+  ignores a tap unless the tapping screen is on top of the screens `NavDisplay`
+  is showing. A screen that is animating out still takes taps, but it's no
+  longer on top, so a double tap can't open a screen twice. Taps on the
+  incoming screen work straight away.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -275,6 +280,11 @@ it, a requirements change adds a version and keeps the ones already shipped
 validates the file (unique IDs, valid structure, a URL for every badge). The
 format and authoring rules are in [`docs/catalog.md`](docs/catalog.md).
 
+**Discontinued badges.** Not handled yet: the Badges list shows every badge in
+the catalog. Once shipped, a badge can't be removed, because progress is stored
+against it, so hiding discontinued badges from scouts who haven't started them
+is tracked in [#55](https://github.com/bryancassell/bluecard/issues/55).
+
 **Requirement IDs.** A requirement is identified by its official number (such
 as `4c(1)`), which is unique within a requirements version. Progress is stored
 against the badge ID, its version and the requirement number; because switching
@@ -329,7 +339,10 @@ way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees.
   with the status of its furthest-along badge, because earning any of them meets
   the requirement. Progress on a badge that isn't in the catalog isn't counted.
 - **Browse and search.** The Badges ViewModel combines the catalog with the
-  search query and the scout's progress (to show state on each badge).
+  scout's progress, to show each badge's status from
+  `data/progress/BadgeStatus.kt`. Search
+  ([#36](https://github.com/bryancassell/bluecard/issues/36)) adds the search
+  query to it.
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so

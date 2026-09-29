@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">BlueCard</string>
+    <!-- The language of these strings, as a BCP 47 tag, such as "en". Lists inside a string,
+         such as the badges in an Eagle group, are formatted in this language, so a
+         sentence never mixes two. Each translation sets its own. -->
+    <string name="strings_language">en</string>
     <string name="onboarding_title">Welcome to BlueCard</string>
     <string name="onboarding_message">Enter your name and unit number to get started.</string>
     <string name="onboarding_name">Name</string>
@@ -14,6 +18,15 @@
     <string name="home_open_badges">Merit badges</string>
     <string name="home_open_data_management">Manage data</string>
     <string name="badges_title">Merit badges</string>
+    <string name="badges_eagle_required">Eagle-required</string>
+    <!-- An Eagle-required badge that is one of a group of alternatives. %1$s lists the group's
+         badges in the strings_language, such as "Cycling, Hiking, and Swimming". -->
+    <string name="badges_eagle_required_one_of">Eagle-required (one of %1$s)</string>
+    <string name="badges_in_progress">In progress</string>
+    <string name="badges_completed">Completed</string>
+    <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
+    <string name="badges_open_badge">open badge</string>
+    <string name="badge_detail_title">Badge detail</string>
     <string name="data_management_title">Data management</string>
     <plurals name="home_completed">
         <item quantity="one">%1$d completed</item>

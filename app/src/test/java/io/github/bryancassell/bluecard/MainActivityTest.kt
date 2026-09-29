@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.pressBack
@@ -129,6 +131,17 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Get started").performClick()
     }
 
+    /** Taps twice before the next frame, before the first tap's screen change starts. */
+    private fun tapTwiceInOneFrame(text: String) {
+        // Let the screen finish appearing before stopping the clock.
+        val node = composeTestRule.onNodeWithText(text).assertIsDisplayed()
+        composeTestRule.mainClock.autoAdvance = false
+        node.performClick()
+        node.performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+    }
+
     private fun assertActivityFinishing() {
         // Robolectric doesn't move a finishing activity on to DESTROYED by itself.
         var isFinishing = false
@@ -224,6 +237,50 @@ class MainActivityTest {
 
         home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+    }
+
+    @Test
+    fun openBadges_showsProgress() {
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        composeTestRule.onNodeWithText("In progress").assertIsDisplayed()
+    }
+
+    @Test
+    fun openBadge_showsBadgeDetail() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        composeTestRule.onNodeWithText("Camping").performClick()
+
+        composeTestRule.onNodeWithText("Badge detail").assertIsDisplayed()
+        // The placeholder shows the ID of the badge it was opened for.
+        composeTestRule.onNodeWithText("camping").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Camping").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromBadgeDetail_returnsToBadges() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Camping").performClick()
+        // As in back_fromBadges_returnsHome, let the new entry settle before pressing back.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Badge detail").assertDoesNotExist()
     }
 
     @Test
@@ -278,5 +335,85 @@ class MainActivityTest {
         pressBack()
 
         home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onMeritBadges_opensBadgesOnce() {
+        launchWithProfile()
+
+        tapTwiceInOneFrame("Merit badges")
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onManageData_opensDataManagementOnce() {
+        launchWithProfile()
+
+        tapTwiceInOneFrame("Manage data")
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onBadge_opensItOnce() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        // Let the list finish animating in; until then it doesn't take taps either.
+        val camping = composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+
+        // Tap a second time while the list is still fading out, as a quick double tap
+        // does. The list is still on screen then, and still takes taps that the incoming
+        // screen doesn't. The second tap fails the test if the list is already gone.
+        composeTestRule.mainClock.autoAdvance = false
+        camping.performClick()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        camping.performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+    }
+
+    @Test
+    fun tap_onScreenStillAnimatingIn_opensIt() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+
+        // Tap a badge about 100 ms after opening the list, while it is still fading in.
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.mainClock.autoAdvance = true
+
+        composeTestRule.onNodeWithText("Badge detail").assertIsDisplayed()
+    }
+
+    @Test
+    fun tap_onBadgesLeavingForOnboarding_doesNothing() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        val camping = composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+
+        // The profile goes missing, and the scout taps a badge while Badges animates out.
+        composeTestRule.mainClock.autoAdvance = false
+        fakeProfileRepository.removeProfile()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        composeTestRule.onNodeWithText("Welcome to BlueCard").assertExists()
+        // Run the row's click action directly: whether a real tap reaches Badges depends
+        // on what Onboarding has drawn over that spot.
+        camping.performSemanticsAction(SemanticsActions.OnClick)
+        composeTestRule.mainClock.autoAdvance = true
+        completeOnboarding()
+
+        // Back where the scout was, not on a Badge detail opened while Onboarding showed.
+        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Badge detail").assertDoesNotExist()
     }
 }
