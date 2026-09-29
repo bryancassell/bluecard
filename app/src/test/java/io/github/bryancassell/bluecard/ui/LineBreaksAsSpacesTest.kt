@@ -72,13 +72,21 @@ class LineBreaksAsSpacesTest {
     }
 
     @Test
+    fun otherUnicodeLineBreaks_becomeSpaces() {
+        // Vertical tab, form feed, next line, line separator and paragraph separator.
+        field().performTextInput("a\u000Bb\u000Cc\u0085d\u2028e\u2029f")
+
+        assertEquals("a b c d e f", state.text.toString())
+    }
+
+    @Test
     fun editInTheMiddle_keepsCursorAfterIt() {
         field().performTextInput("AlexScout")
         field().performTextInputSelection(TextRange(4))
 
-        field().performTextInput("\r\nB.\r\n")
+        field().performTextInput("\r\nB.\r\nJ. ")
 
-        assertEquals("Alex B. Scout", state.text.toString())
-        assertEquals(TextRange(8), state.selection)
+        assertEquals("Alex B. J. Scout", state.text.toString())
+        assertEquals(TextRange(11), state.selection)
     }
 }

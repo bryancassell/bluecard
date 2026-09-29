@@ -196,6 +196,27 @@ class OnboardingScreenTest {
         assertEquals("Troop 123", unitNumber.text.toString())
     }
 
+    // Line breaks become spaces before the length limit, so "\r\n" counts as one character.
+    @Test
+    fun name_pastedLineBreak_countsAsOneCharacterTowardTheLimit() {
+        show(OnboardingUiState())
+        field("Name").performTextInput("a".repeat(98))
+
+        field("Name").performTextInput("\r\nBC")
+
+        assertEquals("a".repeat(98) + " B", name.text.toString())
+    }
+
+    @Test
+    fun unitNumber_pastedLineBreak_countsAsOneCharacterTowardTheLimit() {
+        show(OnboardingUiState())
+        field("Unit number").performTextInput("1".repeat(18))
+
+        field("Unit number").performTextInput("\r\n23")
+
+        assertEquals("1".repeat(18) + " 2", unitNumber.text.toString())
+    }
+
     @Test
     fun name_capitalizesWords() {
         show(OnboardingUiState())

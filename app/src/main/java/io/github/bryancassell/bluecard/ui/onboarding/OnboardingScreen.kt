@@ -52,11 +52,15 @@ fun OnboardingRoute(
 }
 
 /**
- * Longer than any real name or unit number, which can be written out as "Troop 1234". The
- * fields' text is saved with the screen's state, which has a size limit, so a huge paste
- * mustn't reach it.
+ * Longer than any real name. The field's text is saved with the screen's state, which has a
+ * size limit, so a huge paste mustn't reach it.
  */
 private val NameLengthLimit = TextLengthLimit(maxLength = 100)
+
+/**
+ * Longer than any real unit number, even written out as "Troop 1234 B". Limited for the same
+ * reason as the name.
+ */
 private val UnitNumberLengthLimit = TextLengthLimit(maxLength = 20)
 
 /** First launch: asks for the scout's [name] and [unitNumber]. */
