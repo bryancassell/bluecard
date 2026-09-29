@@ -7,8 +7,14 @@ sealed interface BadgesUiState {
     /** The catalog is still loading. */
     data object Loading : BadgesUiState
 
-    /** Every badge in the catalog, in alphabetical order. */
+    /**
+     * The badges that match the search, in alphabetical order. Every badge in the catalog
+     * when the search is blank.
+     */
     data class Ready(val badges: List<BadgeListItem>) : BadgesUiState
+
+    /** No badge matches the search. */
+    data object NoMatches : BadgesUiState
 }
 
 /** One badge in the list. [eagle] is null for a badge that isn't Eagle-required. */

@@ -118,6 +118,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
 - **UI state is immutable** and models each state the screen can be in (for
   example loading, content, empty). ViewModels handle events by updating state,
   not by sending one-off events to the UI, as the recommendations page advises.
+- **Text fields are state-based.** A text field edits a `TextFieldState` that
+  its screen's ViewModel holds. The
+  [text field guide](https://developer.android.com/develop/ui/compose/text/user-input)
+  recommends state-based fields over `value` and `onValueChange`, which invite
+  async updates, and encourages keeping `TextFieldState` in ViewModels. The
+  ViewModel reads the text with `snapshotFlow` and copies it to
+  `SavedStateHandle`, so it survives the system stopping the app. Badges search
+  uses one; Onboarding predates this and still uses value-based fields.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -346,11 +354,12 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   Each Eagle "one of" group (such as Cycling, Hiking and Swimming) counts once,
   with the status of its furthest-along badge, because earning any of them meets
   the requirement. Progress on a badge that isn't in the catalog isn't counted.
-- **Browse and search.** The Badges ViewModel combines the catalog with the
-  scout's progress, to show each badge's status from
-  `data/progress/BadgeStatus.kt`. Search
-  ([#36](https://github.com/bryancassell/bluecard/issues/36)) adds the search
-  query to it.
+- **Browse and search.** The Badges ViewModel combines the catalog, the
+  scout's progress and the search text, to list the matching badges with each
+  one's status from `data/progress/BadgeStatus.kt`. A badge matches when every
+  word of the search starts a word in its name or summary, in any order and
+  ignoring case (`ui/badges/BadgeSearch.kt`); a blank search lists every badge.
+  The list stays alphabetical, and a new set of matches is shown from the top.
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
@@ -454,6 +463,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
+| Text fields | State-based (`TextFieldState`), held in the ViewModel and saved in `SavedStateHandle` | The text field guide recommends state-based fields and holding their state in ViewModels |
+| Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |
