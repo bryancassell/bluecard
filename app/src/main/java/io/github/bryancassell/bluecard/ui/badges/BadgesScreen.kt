@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -136,11 +137,14 @@ private const val MAX_SEARCH_LENGTH = 100
 private fun SearchField(query: TextFieldState) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
+    // Read through derivedStateOf, so the field recomposes when the text goes between empty
+    // and not, rather than on every keystroke.
+    val isEmpty by remember(query) { derivedStateOf { query.text.isEmpty() } }
     OutlinedTextField(
         state = query,
         label = { Text(stringResource(R.string.badges_search)) },
         leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-        trailingIcon = if (query.text.isEmpty()) {
+        trailingIcon = if (isEmpty) {
             null
         } else {
             {
@@ -159,7 +163,13 @@ private fun SearchField(query: TextFieldState) {
         },
         inputTransformation = InputTransformation.maxLength(MAX_SEARCH_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        // Asks the keyboard not to autocorrect the start of a word into a different word
+        // that no longer matches. Some keyboards ignore this: Gboard still corrects typos
+        // such as "teh", though it leaves word starts such as "pers" and "cooki" alone.
+        keyboardOptions = KeyboardOptions(
+            autoCorrectEnabled = false,
+            imeAction = ImeAction.Search
+        ),
         // The list already shows the matches, so the keyboard's search key only closes it.
         onKeyboardAction = { keyboardController?.hide() },
         modifier = Modifier

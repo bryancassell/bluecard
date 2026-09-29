@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import android.text.InputType
+import android.view.View
+import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.CompositionLocalProvider
@@ -7,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -72,9 +76,13 @@ class BadgesScreenTest {
     // Tests can change it after show(), as the ViewModel would.
     private var uiState by mutableStateOf<BadgesUiState>(BadgesUiState.Loading)
 
+    // The view that hosts the screen, which connects the keyboard to the focused field.
+    private lateinit var view: View
+
     private fun show(state: BadgesUiState) {
         uiState = state
         composeTestRule.setContent {
+            view = LocalView.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 BadgesScreen(uiState = uiState, query = query, onOpenBadge = { openedBadges += it })
             }
@@ -272,6 +280,21 @@ class BadgesScreenTest {
         searchField().performTextInput("b")
 
         assertEquals(longest, query.text.toString())
+    }
+
+    @Test
+    fun searchField_asksKeyboardForSearchKeyWithoutAutocorrect() {
+        show(BadgesUiState.Ready(badges))
+        searchField().performClick()
+
+        val editorInfo = EditorInfo()
+        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+
+        assertEquals(
+            EditorInfo.IME_ACTION_SEARCH,
+            editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
+        )
+        assertEquals(0, editorInfo.inputType and InputType.TYPE_TEXT_FLAG_AUTO_CORRECT)
     }
 
     @Test

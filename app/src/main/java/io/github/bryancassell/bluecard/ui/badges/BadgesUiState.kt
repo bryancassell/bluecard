@@ -12,7 +12,7 @@ sealed interface BadgesUiState {
 
     /**
      * The badges that match the search, in alphabetical order. Every badge in the catalog
-     * when the search is blank.
+     * when the search has no words, such as when it's blank or only punctuation.
      */
     data class Ready(val badges: List<BadgeListItem>) : BadgesUiState
 

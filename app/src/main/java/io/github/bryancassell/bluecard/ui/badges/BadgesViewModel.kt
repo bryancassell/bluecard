@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 /** The badges in the catalog that match the scout's search, with their progress on each. */
 @HiltViewModel
@@ -29,12 +29,6 @@ class BadgesViewModel @Inject constructor(
     /** The search field's text, which the field edits directly. */
     val query = TextFieldState(savedStateHandle[QUERY] ?: "")
 
-    private val queryText = snapshotFlow { query.text.toString() }
-
-    init {
-        viewModelScope.launch { queryText.collect { savedStateHandle[QUERY] = it } }
-    }
-
     val uiState: StateFlow<BadgesUiState> = combine(
         // What depends only on the catalog is worked out when the list starts collecting,
         // not on every progress change or keystroke.
@@ -45,7 +39,9 @@ class BadgesViewModel @Inject constructor(
             emit(badges.map { it to it.eagleRequirement(eagleGroups) })
         },
         progressRepository.observeAllProgress(),
-        queryText
+        // Saved as it changes. The scout can change it only while the screen shows the
+        // search field, which is while it collects uiState, so every change is saved.
+        snapshotFlow { query.text.toString() }.onEach { savedStateHandle[QUERY] = it }
     ) { badges, progress, search ->
         val progressById = progress.associateBy { it.badge.badgeId }
         val words = searchWords(search)

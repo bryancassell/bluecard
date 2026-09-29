@@ -132,11 +132,12 @@ class BadgeSearchTest {
 
     @Test
     fun straightAndCurlyApostrophes_matchEachOther() {
-        val camping = badge("Camping", "Plan a scout's first campout.")
-        val curly = badge("Cooking", "Cook a scout\u2019s meal.")
+        // No other word starts with "s", so it can only match after the apostrophe.
+        val straight = badge("Oceanography", "Explore the world's oceans.")
+        val curly = badge("Oceanography", "Explore the world\u2019s oceans.")
 
-        assertTrue(camping.matches("scout\u2019s"))
-        assertTrue(curly.matches("scout's"))
+        assertTrue(straight.matches("world\u2019s"))
+        assertTrue(curly.matches("world's"))
     }
 
     @Test
