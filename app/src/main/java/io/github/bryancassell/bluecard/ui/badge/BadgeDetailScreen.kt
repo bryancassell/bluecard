@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -53,6 +55,8 @@ fun BadgeDetailScreen(
     when (uiState) {
         BadgeDetailUiState.Loading -> LoadingIndicator(modifier)
 
+        BadgeDetailUiState.Unavailable -> RequirementsUnavailable(modifier)
+
         is BadgeDetailUiState.Ready -> Column(
             modifier = modifier.verticalScroll(rememberScrollState())
         ) {
@@ -79,8 +83,18 @@ fun BadgeDetailScreen(
             // only a resumed screen acts on the tap: this page is drawn on top while it
             // animates in, so the second tap of a double tap on a badge could land here.
             val uriHandler = LocalUriHandler.current
+            val context = LocalContext.current
+            val noBrowser = stringResource(R.string.badge_detail_no_browser)
             TextButton(
-                onClick = dropUnlessResumed { uriHandler.openUri(uiState.officialUrl) },
+                onClick = dropUnlessResumed {
+                    try {
+                        uriHandler.openUri(uiState.officialUrl)
+                    } catch (_: IllegalArgumentException) {
+                        // What Compose's UriHandler throws when no app can open web links,
+                        // as when parental controls block the browser.
+                        Toast.makeText(context, noBrowser, Toast.LENGTH_SHORT).show()
+                    }
+                },
                 modifier = Modifier.padding(horizontal = 4.dp)
             ) {
                 Text(text = stringResource(R.string.badge_detail_official_page))
@@ -92,15 +106,7 @@ fun BadgeDetailScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .semantics { heading() }
             )
-            val requirements = uiState.requirements
-            if (requirements == null) {
-                Text(
-                    text = stringResource(R.string.badge_detail_requirements_missing),
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            } else {
-                requirements.forEach { RequirementRow(item = it, onOpen = onOpenRequirement) }
-            }
+            uiState.requirements.forEach { RequirementRow(item = it, onOpen = onOpenRequirement) }
         }
     }
 }

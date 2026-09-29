@@ -73,6 +73,16 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun unavailable_showsMessageOnly() {
+        show(RequirementDetailUiState.Unavailable)
+
+        composeTestRule
+            .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
+    }
+
+    @Test
     fun ready_showsRequirement() {
         show(ready)
 

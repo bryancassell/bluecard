@@ -23,22 +23,18 @@ class BadgeDetailViewModel @AssistedInject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<BadgeDetailUiState> = combine(
-        flow {
-            val catalog = catalogRepository.getBadges()
-            val badge = catalog.first { it.id == badgeId }
-            emit(badge to badge.eagleRequirement(catalog))
-        },
+        flow { emit(catalogRepository.getBadges()) },
         progressRepository.observeProgress(badgeId)
-    ) { (badge, eagle), progress ->
-        val recorded = progress.requirementProgress()
+    ) { catalog, progress ->
+        val found = catalog.badgeRequirements(badgeId, progress)
+            ?: return@combine BadgeDetailUiState.Unavailable
+        val badge = found.badge
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,
-            eagle = eagle,
+            eagle = badge.eagleRequirement(catalog),
             officialUrl = badge.officialUrl,
-            requirements = badge.requirementsFor(progress)?.requirements?.map {
-                it.toItem(recorded)
-            }
+            requirements = found.version.requirements.map { it.toItem(found.recorded) }
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 

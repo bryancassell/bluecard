@@ -23,19 +23,18 @@ class RequirementDetailViewModel @AssistedInject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<RequirementDetailUiState> = combine(
-        flow { emit(catalogRepository.getBadges().first { it.id == badgeId }) },
+        flow { emit(catalogRepository.getBadges()) },
         progressRepository.observeProgress(badgeId)
-    ) { badge, progress ->
-        // This page opens from a row on the badge's page, which shows only requirements
-        // that are in the catalog.
-        val requirement = checkNotNull(badge.requirementsFor(progress)?.find(number)) {
-            "Requirement $number of badge \"$badgeId\" isn't in the catalog"
-        }
-        val recorded = progress.requirementProgress()
+    ) { catalog, progress ->
+        // Checked on every change, not only when the page opens, because which version
+        // the badge uses depends on its progress.
+        val found = catalog.badgeRequirements(badgeId, progress)
+        val requirement = found?.version?.find(number)
+            ?: return@combine RequirementDetailUiState.Unavailable
         RequirementDetailUiState.Ready(
-            badgeName = badge.name,
-            requirement = requirement.toItem(recorded),
-            children = requirement.children.map { it.toItem(recorded) }
+            badgeName = found.badge.name,
+            requirement = requirement.toItem(found.recorded),
+            children = requirement.children.map { it.toItem(found.recorded) }
         )
     }.stateIn(
         viewModelScope,

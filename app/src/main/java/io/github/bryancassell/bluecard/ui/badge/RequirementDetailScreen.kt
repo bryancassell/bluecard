@@ -52,6 +52,8 @@ fun RequirementDetailScreen(
     when (uiState) {
         RequirementDetailUiState.Loading -> LoadingIndicator(modifier)
 
+        RequirementDetailUiState.Unavailable -> RequirementsUnavailable(modifier)
+
         is RequirementDetailUiState.Ready -> Column(
             modifier = modifier.verticalScroll(rememberScrollState())
         ) {

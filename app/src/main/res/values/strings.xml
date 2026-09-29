@@ -28,9 +28,13 @@
     <string name="badges_open_badge">open badge</string>
     <string name="badge_detail_official_page">Official requirements</string>
     <string name="badge_detail_requirements">Requirements</string>
-    <!-- Shown in place of the requirements when a badge's requirements version isn't in the
-         catalog. Only a catalog edited during development can cause this. -->
-    <string name="badge_detail_requirements_missing">The requirements this badge was started on aren\'t in this version of BlueCard.</string>
+    <!-- Shown when tapping the official requirements link, if no app on the phone can open
+         web links. -->
+    <string name="badge_detail_no_browser">No app on this phone can open the link.</string>
+    <!-- Shown in place of a badge or requirement page when the catalog doesn't have the badge,
+         its requirements version or the requirement. Only a catalog edited during development
+         can cause this. -->
+    <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>

@@ -210,16 +210,14 @@ class BadgeDetailScreenTest {
     }
 
     @Test
-    fun requirementsMissing_showsMessage() {
-        show(ready.copy(requirements = null))
+    fun unavailable_showsMessageOnly() {
+        show(BadgeDetailUiState.Unavailable)
 
         composeTestRule
-            .onNodeWithText(
-                "The requirements this badge was started on aren't in this version of BlueCard."
-            )
-            .performScrollTo()
+            .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
             .assertIsDisplayed()
-        composeTestRule.onNodeWithText("Plan a campout.").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Requirements").assertDoesNotExist()
+        composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
     }
 
     @Test

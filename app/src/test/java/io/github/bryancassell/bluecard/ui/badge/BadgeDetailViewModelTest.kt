@@ -64,6 +64,8 @@ class BadgeDetailViewModelTest {
                     Requirement(
                         "4",
                         "Do all of these.",
+                        // Two of two is all of them, not a choice.
+                        requiredCount = 2,
                         children = listOf(
                             Requirement("4a", "Pack a first aid kit."),
                             Requirement("4b", "Treat a blister.")
@@ -101,7 +103,7 @@ class BadgeDetailViewModelTest {
     private fun BadgeDetailViewModel.ready() = uiState.value as BadgeDetailUiState.Ready
 
     private fun BadgeDetailViewModel.completed() =
-        ready().requirements.orEmpty().associate { it.number to it.completed }
+        ready().requirements.associate { it.number to it.completed }
 
     @Test
     fun uiState_whileCatalogLoads_isLoading() = runTest {
@@ -134,7 +136,8 @@ class BadgeDetailViewModelTest {
                         false,
                         opensDetail = true
                     ),
-                    RequirementItem("3", "Keep a camping log.", null, false, opensDetail = true),
+                    // A tracker doesn't open a page until that page shows trackers (#40).
+                    RequirementItem("3", "Keep a camping log.", null, false, opensDetail = false),
                     RequirementItem("4", "Do all of these.", null, false, opensDetail = true)
                 )
             ),
@@ -155,13 +158,20 @@ class BadgeDetailViewModelTest {
     }
 
     @Test
-    fun startedOnVersionMissingFromCatalog_hasNoRequirements() = runTest {
+    fun startedOnVersionMissingFromCatalog_isUnavailable() = runTest {
         progressRepository.startBadge("camping", LocalDate.of(2023, 1, 1), started)
         val viewModel = viewModel()
         startCollecting(viewModel)
 
-        assertEquals("Camping", viewModel.ready().name)
-        assertNull(viewModel.ready().requirements)
+        assertEquals(BadgeDetailUiState.Unavailable, viewModel.uiState.value)
+    }
+
+    @Test
+    fun badgeMissingFromCatalog_isUnavailable() = runTest {
+        val viewModel = viewModel("retired-badge")
+        startCollecting(viewModel)
+
+        assertEquals(BadgeDetailUiState.Unavailable, viewModel.uiState.value)
     }
 
     @Test
@@ -228,10 +238,10 @@ class BadgeDetailViewModelTest {
         progressRepository.startBadge("camping", older, started)
         val viewModel = viewModel()
         startCollecting(viewModel)
-        assertEquals("An older first requirement.", viewModel.ready().requirements!![0].summary)
+        assertEquals("An older first requirement.", viewModel.ready().requirements[0].summary)
 
         progressRepository.clearBadge("camping")
 
-        assertEquals("Plan a campout.", viewModel.ready().requirements!![0].summary)
+        assertEquals("Plan a campout.", viewModel.ready().requirements[0].summary)
     }
 }

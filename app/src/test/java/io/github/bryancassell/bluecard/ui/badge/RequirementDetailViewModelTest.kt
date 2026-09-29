@@ -73,6 +73,11 @@ class RequirementDetailViewModelTest {
                         "2",
                         "An older second requirement.",
                         children = listOf(Requirement("2a", "An older 2a."))
+                    ),
+                    Requirement(
+                        "3",
+                        "Only in the older version.",
+                        children = listOf(Requirement("3a", "An older 3a."))
                     )
                 )
             )
@@ -126,7 +131,7 @@ class RequirementDetailViewModelTest {
                         false,
                         opensDetail = true
                     ),
-                    RequirementItem("2c", "Keep a camping log.", null, false, opensDetail = true)
+                    RequirementItem("2c", "Keep a camping log.", null, false, opensDetail = false)
                 )
             ),
             viewModel.uiState.value
@@ -149,15 +154,6 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun trackerRequirement_hasNoSubRequirements() = runTest {
-        val viewModel = viewModel("2c")
-        startCollecting(viewModel)
-
-        assertEquals("Keep a camping log.", viewModel.ready().requirement.summary)
-        assertEquals(emptyList<RequirementItem>(), viewModel.ready().children)
-    }
-
-    @Test
     fun startedOnOlderVersion_showsThatVersionsRequirement() = runTest {
         progressRepository.startBadge("camping", older, started)
         val viewModel = viewModel("2")
@@ -165,6 +161,46 @@ class RequirementDetailViewModelTest {
 
         assertEquals("An older second requirement.", viewModel.ready().requirement.summary)
         assertEquals(listOf("An older 2a."), viewModel.ready().children.map { it.summary })
+    }
+
+    @Test
+    fun requirementMissingFromVersion_isUnavailable() = runTest {
+        // Requirement 3 is only in the older version, and the badge hasn't been started.
+        val viewModel = viewModel("3")
+        startCollecting(viewModel)
+
+        assertEquals(RequirementDetailUiState.Unavailable, viewModel.uiState.value)
+    }
+
+    @Test
+    fun requirementGoneAfterProgressChanges_isUnavailable() = runTest {
+        progressRepository.startBadge("camping", older, started)
+        val viewModel = viewModel("3")
+        startCollecting(viewModel)
+        assertEquals("Only in the older version.", viewModel.ready().requirement.summary)
+
+        // Clearing the badge puts it back on the newest version, which has no 3.
+        progressRepository.clearBadge("camping")
+
+        assertEquals(RequirementDetailUiState.Unavailable, viewModel.uiState.value)
+    }
+
+    @Test
+    fun startedOnVersionMissingFromCatalog_isUnavailable() = runTest {
+        progressRepository.startBadge("camping", LocalDate.of(2024, 1, 1), started)
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        assertEquals(RequirementDetailUiState.Unavailable, viewModel.uiState.value)
+    }
+
+    @Test
+    fun badgeMissingFromCatalog_isUnavailable() = runTest {
+        val viewModel =
+            RequirementDetailViewModel("retired-badge", "2", catalogRepository, progressRepository)
+        startCollecting(viewModel)
+
+        assertEquals(RequirementDetailUiState.Unavailable, viewModel.uiState.value)
     }
 
     @Test

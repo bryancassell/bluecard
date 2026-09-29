@@ -13,10 +13,10 @@ sealed interface BadgeDetailUiState {
         /** Null for a badge that isn't Eagle-required. */
         val eagle: EagleRequirement?,
         val officialUrl: String,
-        /**
-         * The top-level requirements of the version the scout works on, or null if the
-         * badge was started on a version that isn't in the catalog.
-         */
-        val requirements: List<RequirementItem>?
+        /** The top-level requirements of the version the scout works on. */
+        val requirements: List<RequirementItem>
     ) : BadgeDetailUiState
+
+    /** The catalog doesn't have the badge or its requirements version ([badgeRequirements]). */
+    data object Unavailable : BadgeDetailUiState
 }

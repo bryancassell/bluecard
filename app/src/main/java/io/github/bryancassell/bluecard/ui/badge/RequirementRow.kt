@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -16,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 
 // Composables shared by the Badge detail and Requirement detail screens.
@@ -73,6 +75,18 @@ fun RequirementRow(
 @Composable
 fun choiceLabel(choice: Choice): String =
     stringResource(R.string.requirement_choice, choice.required, choice.of)
+
+/**
+ * Shown in place of a page whose badge, requirements version or requirement isn't in the
+ * catalog. Only a catalog edited during development can cause that.
+ */
+@Composable
+fun RequirementsUnavailable(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(R.string.requirements_unavailable),
+        modifier = modifier.padding(16.dp)
+    )
+}
 
 /** Shown while the catalog loads. */
 @Composable

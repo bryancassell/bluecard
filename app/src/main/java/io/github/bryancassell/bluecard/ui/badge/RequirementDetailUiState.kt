@@ -8,7 +8,12 @@ sealed interface RequirementDetailUiState {
     data class Ready(
         val badgeName: String,
         val requirement: RequirementItem,
-        /** Its sub-requirements; empty for a requirement that has only a tracker. */
         val children: List<RequirementItem>
     ) : RequirementDetailUiState
+
+    /**
+     * The catalog doesn't have the badge, its requirements version ([badgeRequirements]), or
+     * this requirement in that version.
+     */
+    data object Unavailable : RequirementDetailUiState
 }
