@@ -45,17 +45,15 @@ data class Counselor(
      * repositories store this form.
      */
     fun normalized(): Counselor? =
-        Counselor(name.trimmedOrNull(), phone.trimmedOrNull(), email.trimmedOrNull())
+        Counselor(normalizedText(name), normalizedText(phone), normalizedText(email))
             .takeIf { it != Counselor() }
-
-    private fun String?.trimmedOrNull() = this?.trim()?.ifEmpty { null }
 }
 
 /**
- * A requirement's comment as repositories store it: without spaces around it, and null if
- * nothing is left.
+ * Text the scout typed, such as a requirement's comment, as repositories store it: without
+ * spaces around it, and null if nothing is left.
  */
-fun normalizedComment(comment: String?): String? = comment?.trim()?.ifEmpty { null }
+fun normalizedText(text: String?): String? = text?.trim()?.ifEmpty { null }
 
 @Entity(
     tableName = "requirement_progress",

@@ -63,7 +63,7 @@ interface ProgressRepository {
     suspend fun setRequirementCompletedDate(badgeId: String, number: String, date: LocalDate?)
 
     /**
-     * Sets the requirement's comment, stored as [normalizedComment]: null or blank removes it.
+     * Sets the requirement's comment, stored as [normalizedText]: null or blank removes it.
      * A badge that hasn't been started is started with [start], as in
      * [markRequirementCompleted].
      */

@@ -87,7 +87,7 @@ class RoomProgressRepository @Inject constructor(
         comment: String?,
         start: BadgeStart
     ): Unit = ifStarted(badgeId, start) {
-        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedComment(comment)) }
+        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedText(comment)) }
     }
 
     override suspend fun addTrackerEntry(

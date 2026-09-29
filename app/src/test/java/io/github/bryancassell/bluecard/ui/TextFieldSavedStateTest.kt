@@ -14,7 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * [textFieldState], [restoredText] and [keepText]. Robolectric, because saved state is a
+ * [textFieldState], [restoredText], [keepText] and [StoredTextFields]. Robolectric, because saved state is a
  * Bundle, and ViewModelScenario passes it through a Parcel as the system does.
  */
 @RunWith(AndroidJUnit4::class)
@@ -31,6 +31,14 @@ class TextFieldSavedStateTest {
 
         fun startKeeping() = savedStateHandle.keepText("field", field)
     }
+
+    private class StoredFieldsViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+        val fields = StoredTextFields(savedStateHandle, "name", "phone")
+        val name = fields["name"]
+        val phone = fields["phone"]
+    }
+
+    private val stored = mapOf("name" to "Pat Lee", "phone" to null)
 
     @Test
     fun textFieldState_withNothingKept_startsEmpty() {
@@ -107,5 +115,76 @@ class TextFieldSavedStateTest {
 
             assertEquals("Kept.", scenario.viewModel.restored)
         }
+    }
+
+    @Test
+    fun storedTextFields_startEmpty_thenLoadTheStoredText() {
+        viewModelScenario { StoredFieldsViewModel(createSavedStateHandle()) }.use { scenario ->
+            val viewModel = scenario.viewModel
+            assertEquals("", viewModel.name.text.toString())
+
+            viewModel.fields.loadOnce { stored }
+
+            assertEquals("Pat Lee", viewModel.name.text.toString())
+            assertEquals("", viewModel.phone.text.toString())
+        }
+    }
+
+    @Test
+    fun storedTextFields_loadOnlyOnce() {
+        viewModelScenario { StoredFieldsViewModel(createSavedStateHandle()) }.use { scenario ->
+            val viewModel = scenario.viewModel
+            viewModel.fields.loadOnce { stored }
+            viewModel.name.setTextAndPlaceCursorAtEnd("Sam Park")
+
+            var calls = 0
+            viewModel.fields.loadOnce {
+                calls++
+                mapOf("name" to "Someone else")
+            }
+
+            assertEquals("Sam Park", viewModel.name.text.toString())
+            assertEquals(0, calls)
+        }
+    }
+
+    @Test
+    fun storedTextFields_keepTheirTextOnceLoaded_andDontLoadAgain() {
+        viewModelScenario { StoredFieldsViewModel(createSavedStateHandle()) }.use { scenario ->
+            scenario.viewModel.fields.loadOnce { stored }
+            scenario.viewModel.name.setTextAndPlaceCursorAtEnd("Sam Park")
+            scenario.viewModel.phone.setTextAndPlaceCursorAtEnd("555-0100")
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            restored.fields.loadOnce { stored }
+
+            assertEquals("Sam Park", restored.name.text.toString())
+            assertEquals("555-0100", restored.phone.text.toString())
+        }
+    }
+
+    @Test
+    fun storedTextFields_stoppedBeforeLoading_loadTheStoredTextAgain() {
+        viewModelScenario { StoredFieldsViewModel(createSavedStateHandle()) }.use { scenario ->
+            scenario.viewModel.name.setTextAndPlaceCursorAtEnd("Not kept.")
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            assertEquals("", restored.name.text.toString())
+            restored.fields.loadOnce { stored }
+
+            assertEquals("Pat Lee", restored.name.text.toString())
+        }
+    }
+
+    @Test
+    fun storedTextFields_withAnotherValueUnderAKey_loadTheStoredText() {
+        // As when the intent that opened the app has an extra with the same name.
+        val fields = StoredTextFields(SavedStateHandle(mapOf("name" to "Intent")), "name", "phone")
+
+        fields.loadOnce { stored }
+
+        assertEquals("Pat Lee", fields["name"].text.toString())
     }
 }

@@ -16,10 +16,12 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -301,6 +303,77 @@ class EditCounselorViewModelTest {
 
         assertEquals("Not saved yet", viewModel.name.text.toString())
         assertTrue(viewModel.ready().changed)
+    }
+
+    /**
+     * A ViewModel whose saves of the counselor wait until [allowSave] completes, as when a write
+     * waits for another to finish.
+     */
+    private fun viewModelSavingOnlyAfter(allowSave: CompletableDeferred<Unit>) =
+        EditCounselorViewModel(
+            "camping",
+            catalogRepository,
+            object : ProgressRepository by progressRepository {
+                override suspend fun setCounselor(
+                    badgeId: String,
+                    counselor: Counselor?,
+                    start: BadgeStart
+                ) {
+                    allowSave.await()
+                    progressRepository.setCounselor(badgeId, counselor, start)
+                }
+            },
+            clock,
+            SavedStateHandle()
+        )
+
+    @Test
+    fun fieldChangedWhileSaving_staysOpen_toBeSavedToo() = runTest {
+        val allowSave = CompletableDeferred<Unit>()
+        val viewModel = viewModelSavingOnlyAfter(allowSave)
+        startCollecting(viewModel)
+        viewModel.typeAll(patLee)
+
+        viewModel.save()
+        viewModel.email.type("pat.lee@example.com")
+        allowSave.complete(Unit)
+
+        assertEquals(patLee, saved()?.badge?.counselor)
+        assertFalse(viewModel.ready().saved)
+        assertTrue(viewModel.ready().changed)
+        assertEquals("pat.lee@example.com", viewModel.email.text.toString())
+    }
+
+    @Test
+    fun spacesAddedWhileSaving_stillClosesThePage() = runTest {
+        val allowSave = CompletableDeferred<Unit>()
+        val viewModel = viewModelSavingOnlyAfter(allowSave)
+        startCollecting(viewModel)
+        viewModel.typeAll(patLee)
+
+        viewModel.save()
+        // Saved as the same counselor, so closing loses nothing.
+        viewModel.name.type("Pat Lee ")
+        allowSave.complete(Unit)
+
+        assertTrue(viewModel.ready().saved)
+    }
+
+    @Test
+    fun onClosed_letsTheNextSaveCloseThePageAgain() = runTest {
+        // As when a screen reader opens the page again before this ViewModel is cleared.
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        viewModel.typeAll(patLee)
+        viewModel.save()
+        assertTrue(viewModel.ready().saved)
+
+        viewModel.onClosed()
+
+        assertFalse(viewModel.ready().saved)
+        viewModel.name.type("Sam Park")
+        viewModel.save()
+        assertTrue(viewModel.ready().saved)
     }
 
     @Test

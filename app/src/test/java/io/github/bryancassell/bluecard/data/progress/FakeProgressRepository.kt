@@ -116,7 +116,7 @@ class FakeProgressRepository : ProgressRepository {
         start: BadgeStart
     ) {
         checkCanSave()
-        updateRequirement(badgeId, number, start) { it.copy(comment = normalizedComment(comment)) }
+        updateRequirement(badgeId, number, start) { it.copy(comment = normalizedText(comment)) }
     }
 
     override suspend fun addTrackerEntry(

@@ -204,8 +204,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ViewModel creates the state with `SavedStateHandle.textFieldState`
   (`ui/TextFieldSavedState.kt`), which restores the text and keeps it with a
   [saved state provider](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate#non-parcelable).
-  Onboarding's name and unit number fields, Badges search, the requirement
-  comment and the counselor's fields work this way. The provider reads the text each time the system
+  Onboarding's name and unit number fields and Badges search work this way.
+  Fields that start as stored text, the requirement comment and the counselor's
+  fields, use `StoredTextFields` instead (below). The provider reads the text each time the system
   saves state, so the text survives the system stopping the app even if it
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
@@ -215,12 +216,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   default arguments, so `restoredText` ignores any value under its key that
   isn't the kind of `Bundle` it keeps. An extra built like one still counts;
   [#83](https://github.com/bryancassell/bluecard/issues/83) keeps the extras
-  out. The comment is kept only once the saved comment has loaded into
-  it (`restoredText` and `keepText`), so if the system stops the app before
-  then, the page loads the saved comment again instead of restoring an empty
-  field. The counselor's fields work the same way, and are kept together.
-  A ViewModel that fills a field with stored text once it
-  loads, as Requirement detail does with the saved comment, writes it in a
+  out. `StoredTextFields` keeps a page's fields only once the stored text has
+  loaded into them (`loadOnce`), so if the system stops the app before then,
+  the page loads the stored text again instead of restoring empty fields. It
+  keeps and restores the fields together. It writes the stored text in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
   snapshot, which it does once a frame. Saved state has a size limit, so Badges
@@ -611,7 +610,7 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     sub-requirements, for notes about it as a whole. The page's comment field is
     saved when the scout taps Save, which is enabled once the field differs from
     the saved comment. The repository trims spaces around it
-    (`normalizedComment`), and an empty comment removes it. The field takes up
+    (`normalizedText`), and an empty comment removes it. The field takes up
     to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
     stopping the app, but leaving the page discards it.
   - **Counselor.** Badge detail shows the counselor's name, phone and email,
@@ -624,12 +623,19 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     repository trims spaces around each field (`Counselor.normalized`) and
     drops empty ones; with none left, the counselor is removed. There's no
     format check: a phone number or email address that's wrong opens its app
-    with what the scout typed. Once the save succeeds, the ViewModel sets
+    with what the scout typed. Each field is one line, and a line break pasted
+    into one becomes a space (`LineBreaksToSpaces`): `TextFieldLineLimits.SingleLine`
+    only draws it as a space, and the text would keep it. Onboarding's fields and
+    Badges search don't do this yet ([#90](https://github.com/bryancassell/bluecard/issues/90)).
+    Once the save succeeds, the ViewModel sets
     `saved` in the UI state and the screen closes itself
     (`closeIfOnTop`, which does nothing if the scout has already gone back),
     following the UI layer guide's
     [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
-    of navigating from UI state. A save that fails keeps the page open with its
+    of navigating from UI state. The screen then tells the ViewModel it has
+    closed (`onClosed`), which clears `saved`, so the page works again if it's
+    opened before its ViewModel is cleared. The page stays open if a field
+    changed while it saved, so the change isn't lost. A save that fails keeps the page open with its
     fields and the snackbar, so the scout can try again. Leaving the page
     without saving discards the edits, as with a comment.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,

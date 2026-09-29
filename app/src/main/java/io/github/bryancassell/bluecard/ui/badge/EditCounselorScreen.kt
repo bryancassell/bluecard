@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.LineBreaksToSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -59,7 +61,10 @@ fun EditCounselorRoute(
         phone = viewModel.phone,
         email = viewModel.email,
         onSave = viewModel::save,
-        onSaved = onSaved,
+        onSaved = {
+            onSaved()
+            viewModel.onClosed()
+        },
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
@@ -190,7 +195,8 @@ private fun CounselorField(
         state = state,
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(label)) },
-        inputTransformation = lengthLimit,
+        // Each field is one line, so a pasted line break mustn't reach its text.
+        inputTransformation = LineBreaksToSpaces.then(lengthLimit),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = keyboardOptions,
         modifier = Modifier.fillMaxWidth()

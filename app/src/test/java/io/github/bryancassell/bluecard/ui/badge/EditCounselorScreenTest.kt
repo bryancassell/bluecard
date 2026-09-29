@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -164,6 +165,19 @@ class EditCounselorScreenTest {
     }
 
     @Test
+    fun pastedLineBreaks_becomeSpaces() {
+        show(ready)
+
+        field("Name").performTextInput("Pat Lee\nTroop 12")
+        field("Phone").performTextInput("555-0100\r\nmobile")
+        field("Email").performTextInput("pat@example.com\n")
+
+        assertEquals("Pat Lee Troop 12", name.text.toString())
+        assertEquals("555-0100 mobile", phone.text.toString())
+        assertEquals("pat@example.com ", email.text.toString())
+    }
+
+    @Test
     fun unchanged_cannotBeSaved() {
         show(ready)
 
@@ -178,6 +192,16 @@ class EditCounselorScreenTest {
 
         assertEquals(1, saves)
         assertEquals(0, closes)
+    }
+
+    @Test
+    fun save_closesTheKeyboard() {
+        show(ready.copy(changed = true))
+        field("Email").performClick().assertIsFocused()
+
+        saveButton().performClick()
+
+        field("Email").assertIsNotFocused()
     }
 
     @Test
@@ -203,6 +227,31 @@ class EditCounselorScreenTest {
         composeTestRule.waitForIdle()
 
         assertEquals(1, closes)
+    }
+
+    @Test
+    fun savedAgain_afterClosing_closesThePageAgain() {
+        // As when the page is opened again before its ViewModel is cleared.
+        var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(saved = true))
+        composeTestRule.setContent {
+            EditCounselorScreen(
+                uiState = uiState,
+                name = name,
+                phone = phone,
+                email = email,
+                onSave = {},
+                onSaved = { closes++ },
+                onSaveFailureShown = {}
+            )
+        }
+        composeTestRule.waitForIdle()
+
+        uiState = ready.copy(saved = false)
+        composeTestRule.waitForIdle()
+        uiState = ready.copy(saved = true)
+        composeTestRule.waitForIdle()
+
+        assertEquals(2, closes)
     }
 
     @Test
