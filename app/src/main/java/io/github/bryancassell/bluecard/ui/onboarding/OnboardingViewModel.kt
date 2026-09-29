@@ -45,13 +45,16 @@ class OnboardingViewModel @Inject constructor(
         SharingStarted.WhileSubscribed(5_000),
         // Starts from the restored text, so Save doesn't show as disabled until the flow
         // catches up.
-        uiStateOf(name.text, unitNumber.text, saveStatus.value)
+        currentUiState()
     )
 
-    /** Saves the profile, trimmed. Does nothing unless [OnboardingUiState.canSave]. */
+    /**
+     * Saves the profile, trimmed. Does nothing while saving, once saved, or if either field is
+     * blank. Checks the fields' text directly, so it can save before [uiState] catches up with
+     * the last keystroke.
+     */
     fun save() {
-        // Reads the fields directly, because uiState catches up with them a little later.
-        if (!uiStateOf(name.text, unitNumber.text, saveStatus.value).canSave) return
+        if (!currentUiState().canSave) return
         val profile = Profile(name.text.toString().trim(), unitNumber.text.toString().trim())
         saveStatus.value = SaveStatus.Saving
         viewModelScope.launch {
@@ -66,6 +69,9 @@ class OnboardingViewModel @Inject constructor(
             }
         }
     }
+
+    /** What [uiState] shows once it catches up with the fields' current text. */
+    private fun currentUiState() = uiStateOf(name.text, unitNumber.text, saveStatus.value)
 
     private fun uiStateOf(name: CharSequence, unitNumber: CharSequence, saveStatus: SaveStatus) =
         OnboardingUiState(saveStatus, isComplete = name.isNotBlank() && unitNumber.isNotBlank())
