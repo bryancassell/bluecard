@@ -352,7 +352,7 @@ class BadgesScreenTest {
         searchField().assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 100))
     }
 
-    // A single-line field shows a pasted line break as a space, so it searches for one.
+    // A single-line field shows a pasted line break as a space, so the query holds one.
     @Test
     fun searchField_pastedLineBreak_becomesSpace() {
         show(BadgesUiState.Ready(badges))

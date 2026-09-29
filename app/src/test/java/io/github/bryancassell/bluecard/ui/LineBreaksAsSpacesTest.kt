@@ -1,10 +1,14 @@
 package io.github.bryancassell.bluecard.ui
 
+import android.view.View
+import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
@@ -22,9 +26,13 @@ class LineBreaksAsSpacesTest {
 
     private val state = TextFieldState()
 
+    // The view that hosts the field, which connects the keyboard to it.
+    private lateinit var view: View
+
     @Before
     fun showField() {
         composeTestRule.setContent {
+            view = LocalView.current
             BasicTextField(
                 state = state,
                 inputTransformation = LineBreaksAsSpaces,
@@ -88,5 +96,25 @@ class LineBreaksAsSpacesTest {
 
         assertEquals("Alex B. J. Scout", state.text.toString())
         assertEquals(TextRange(11), state.selection)
+    }
+
+    @Test
+    fun keyboardEditPuttingCursorBetweenLineBreaks_keepsCursorThere() {
+        field().performClick()
+
+        // A keyboard can commit text and move the cursor into it in one batch, which the
+        // field's transformation sees as one edit.
+        composeTestRule.runOnIdle {
+            val connection = view.onCreateInputConnection(EditorInfo())!!
+            connection.beginBatchEdit()
+            connection.commitText("a\nb\nc", 1)
+            connection.setSelection(2, 2)
+            connection.endBatchEdit()
+        }
+
+        composeTestRule.runOnIdle {
+            assertEquals("a b c", state.text.toString())
+            assertEquals(TextRange(2), state.selection)
+        }
     }
 }

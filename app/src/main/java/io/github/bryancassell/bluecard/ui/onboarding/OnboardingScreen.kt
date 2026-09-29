@@ -92,7 +92,7 @@ fun OnboardingScreen(
             textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.onboarding_name)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
-            inputTransformation = LineBreaksAsSpaces.then(NameLengthLimit),
+            inputTransformation = NameLengthLimit.then(LineBreaksAsSpaces),
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
@@ -106,7 +106,7 @@ fun OnboardingScreen(
             textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.onboarding_unit_number)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
-            inputTransformation = LineBreaksAsSpaces.then(UnitNumberLengthLimit),
+            inputTransformation = UnitNumberLengthLimit.then(LineBreaksAsSpaces),
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             // Do what Done normally does, which closes the keyboard, and save; the ViewModel

@@ -22,6 +22,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.paragraphDirection
@@ -196,25 +198,29 @@ class OnboardingScreenTest {
         assertEquals("Troop 123", unitNumber.text.toString())
     }
 
-    // Line breaks become spaces before the length limit, so "\r\n" counts as one character.
+    // The length limit finds what a paste changed before its line breaks become spaces.
+    // Otherwise a pasted line break, a space by then, would look like the space already after
+    // the cursor, and the limit would cut that space instead of the paste's end.
     @Test
-    fun name_pastedLineBreak_countsAsOneCharacterTowardTheLimit() {
+    fun name_longPasteStartingWithLineBreak_keepsTheWordsAfterItApart() {
         show(OnboardingUiState())
-        field("Name").performTextInput("a".repeat(98))
+        field("Name").performTextInput("A".repeat(89) + " Scout")
+        field("Name").performTextInputSelection(TextRange(89))
 
-        field("Name").performTextInput("\r\nBC")
+        field("Name").performTextInput("\nJunior Assistant")
 
-        assertEquals("a".repeat(98) + " B", name.text.toString())
+        assertEquals("A".repeat(89) + " Juni Scout", name.text.toString())
     }
 
     @Test
-    fun unitNumber_pastedLineBreak_countsAsOneCharacterTowardTheLimit() {
+    fun unitNumber_longPasteStartingWithLineBreak_keepsTheWordsAfterItApart() {
         show(OnboardingUiState())
-        field("Unit number").performTextInput("1".repeat(18))
+        field("Unit number").performTextInput("1".repeat(14) + " B")
+        field("Unit number").performTextInputSelection(TextRange(14))
 
-        field("Unit number").performTextInput("\r\n23")
+        field("Unit number").performTextInput("\n234567")
 
-        assertEquals("1".repeat(18) + " 2", unitNumber.text.toString())
+        assertEquals("1".repeat(14) + " 234 B", unitNumber.text.toString())
     }
 
     @Test

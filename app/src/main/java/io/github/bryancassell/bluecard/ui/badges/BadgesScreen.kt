@@ -195,7 +195,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
                 }
             }
         },
-        inputTransformation = LineBreaksAsSpaces.then(SearchLengthLimit),
+        inputTransformation = SearchLengthLimit.then(LineBreaksAsSpaces),
         lineLimits = TextFieldLineLimits.SingleLine,
         // Asks the keyboard not to autocorrect the start of a word into a different word
         // that no longer matches. Some keyboards ignore this: Gboard still corrects typos

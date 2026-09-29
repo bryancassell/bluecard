@@ -9,16 +9,24 @@ import androidx.compose.foundation.text.input.TextFieldBuffer
  * doesn't show one: it draws "\n" as a space and "\r" as nothing. The text would then hold a
  * break the scout never saw. "\r\n" counts as one line break, and so does each of Unicode's
  * other line-ending characters.
+ *
+ * Chain it after a [TextLengthLimit], for two reasons. The limit then cuts a huge paste
+ * before this replaces its line breaks one at a time, which keeps the cursor in place but
+ * copies the whole text for each break far from the last. And the limit finds an edit by
+ * comparing the text with what it was, so a pasted line break already turned into a space
+ * could look to it like the space after the cursor, and it would cut that space instead.
  */
 object LineBreaksAsSpaces : InputTransformation {
     override fun TextFieldBuffer.transformInput() {
-        val text = asCharSequence()
-        val first = text.indexOfFirst { it in LINE_BREAK_CHARS }
-        if (first == -1) return
-        val last = text.indexOfLast { it in LINE_BREAK_CHARS }
-        // One replace for all of them. TextFieldBuffer copies the whole text for a replace far
-        // from the last one, so replacing each line break of a huge paste would be slow.
-        replace(first, last + 1, text.substring(first, last + 1).replace(LineBreak, " "))
+        var i = 0
+        while (i < length) {
+            val char = charAt(i)
+            if (char in LINE_BREAK_CHARS) {
+                val isCrLf = char == '\r' && i + 1 < length && charAt(i + 1) == '\n'
+                replace(i, if (isCrLf) i + 2 else i + 1, " ")
+            }
+            i++
+        }
     }
 }
 
@@ -27,5 +35,3 @@ object LineBreaksAsSpaces : InputTransformation {
  * separators.
  */
 private const val LINE_BREAK_CHARS = "\n\u000B\u000C\r\u0085\u2028\u2029"
-
-private val LineBreak = Regex("\r\n|[$LINE_BREAK_CHARS]")
