@@ -54,9 +54,9 @@ class FakeProgressRepository : ProgressRepository {
         }
     }
 
-    override suspend fun setCounselor(badgeId: String, counselor: Counselor?) {
+    override suspend fun setCounselor(badgeId: String, counselor: Counselor?, start: BadgeStart) {
         checkCanSave()
-        updateBadge(badgeId) {
+        updateBadge(badgeId, start) {
             it.copy(badge = it.badge.copy(counselor = counselor?.normalized()))
         }
     }

@@ -204,8 +204,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ViewModel creates the state with `SavedStateHandle.textFieldState`
   (`ui/TextFieldSavedState.kt`), which restores the text and keeps it with a
   [saved state provider](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate#non-parcelable).
-  Onboarding's name and unit number fields, Badges search and the requirement
-  comment work this way. The provider reads the text each time the system
+  Onboarding's name and unit number fields, Badges search, the requirement
+  comment and the counselor's fields work this way. The provider reads the text each time the system
   saves state, so the text survives the system stopping the app even if it
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
@@ -218,13 +218,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   out. The comment is kept only once the saved comment has loaded into
   it (`restoredText` and `keepText`), so if the system stops the app before
   then, the page loads the saved comment again instead of restoring an empty
-  field.
+  field. The counselor's fields work the same way, and are kept together.
   A ViewModel that fills a field with stored text once it
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
   snapshot, which it does once a frame. Saved state has a size limit, so Badges
-  search and the requirement comment have a length limit (`TextLengthLimit`);
+  search, the requirement comment and the counselor's fields have a length
+  limit (`TextLengthLimit`);
   Onboarding's fields don't have one yet. It keeps as much of an edit, such as
   a long paste, as fits, and never cuts the text already in the field or splits
   an emoji.
@@ -399,7 +400,7 @@ io.github.bryancassell.bluecard
 │   ├── onboarding/
 │   ├── home/
 │   ├── badges/         Browse and search
-│   ├── badge/          Badge detail and requirement sub-pages
+│   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
 │   ├── data/           Clear, export, import
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
 │   └── theme/
@@ -419,8 +420,9 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, the scout's comment, and its tracker. |
+| **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
 The PRD asks that requirements be understandable "without extensive
@@ -435,7 +437,9 @@ there the same way, and each opens its own page in turn. A requirement with a
 tracker will show it there too
 ([#40](https://github.com/bryancassell/bluecard/issues/40)). Each page shows one level of the requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
-version for a badge the scout hasn't started.
+version for a badge the scout hasn't started. The counselor takes a few lines
+between the official link and the requirements, and is entered on a page of its
+own.
 
 ## Merit badge catalog
 
@@ -587,9 +591,9 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   they update as soon as data is saved.
   - **Recording anything starts the badge**, on the requirements version its
     pages show until then (the newest), dated today (`ui/badge/ProgressRecorder.kt`).
-    There's no separate "start" step. `markRequirementCompleted` and
-    `setRequirementComment` take a `BadgeStart`, and `ProgressRepository` starts
-    the badge in the same transaction as the write, so a save that fails doesn't
+    There's no separate "start" step. `markRequirementCompleted`,
+    `setRequirementComment` and `setCounselor` take a `BadgeStart`, and
+    `ProgressRepository` starts the badge in the same transaction as the write, so a save that fails doesn't
     leave the badge started. Other functions that record progress should take one
     when a screen first calls them. Undoing everything recorded leaves the badge
     started, so it stays In progress until the scout clears it
@@ -610,6 +614,24 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     (`normalizedComment`), and an empty comment removes it. The field takes up
     to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
     stopping the app, but leaving the page discards it.
+  - **Counselor.** Badge detail shows the counselor's name, phone and email,
+    with a button to add or edit them. Tapping the phone opens the phone app
+    with the number filled in (`ACTION_DIAL`, which needs no permission), and
+    tapping the email opens an email app (`ACTION_SENDTO` with a `mailto:`
+    address). If no app can, as on a tablet without a phone app, a message
+    says so. The fields are edited on Edit counselor and saved when the scout
+    taps Save, which is enabled once they differ from the saved counselor. The
+    repository trims spaces around each field (`Counselor.normalized`) and
+    drops empty ones; with none left, the counselor is removed. There's no
+    format check: a phone number or email address that's wrong opens its app
+    with what the scout typed. Once the save succeeds, the ViewModel sets
+    `saved` in the UI state and the screen closes itself
+    (`closeIfOnTop`, which does nothing if the scout has already gone back),
+    following the UI layer guide's
+    [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
+    of navigating from UI state. A save that fails keeps the page open with its
+    fields and the snackbar, so the scout can try again. Leaving the page
+    without saving discards the edits, as with a comment.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,
   requirement summaries, dates, comments and tracker data onto `PdfDocument`
   pages and writes the file to the app's cache directory. The scout can:
@@ -736,6 +758,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
 | Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
+| Counselor details | Shown on Badge detail; edited on a page of their own with a Save button, which closes it once the save succeeds; the phone and email open the phone and email apps | Entered once and read often, so Badge detail stays short; closing only after a successful save shows a failure while the scout can still try again; `ACTION_DIAL` and `ACTION_SENDTO` need no permissions |
 | Requirement comments | On every requirement, saved with a Save button | The scout decides when a comment is saved, and a save that fails is reported right then, not while they're still typing |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |

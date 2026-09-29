@@ -68,4 +68,23 @@ class NavigateFromTest {
 
         assertEquals(listOf(Home, Badges, BadgeDetail("camping")), backStack)
     }
+
+    @Test
+    fun closeIfOnTop_onTop_closesIt() {
+        backStack += listOf(BadgeDetail("camping"), EditCounselor("camping"))
+
+        backStack.closeIfOnTop(EditCounselor("camping"))
+
+        assertEquals(listOf(Home, Badges, BadgeDetail("camping")), backStack)
+    }
+
+    @Test
+    fun closeIfOnTop_notOnTop_doesNothing() {
+        // As when the scout went back from the screen before it was done.
+        backStack += BadgeDetail("camping")
+
+        backStack.closeIfOnTop(EditCounselor("camping"))
+
+        assertEquals(listOf(Home, Badges, BadgeDetail("camping")), backStack)
+    }
 }

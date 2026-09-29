@@ -21,6 +21,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -40,6 +41,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
@@ -515,6 +517,57 @@ class MainActivityTest {
         rowCheckbox("1").assertIsOn()
     }
 
+    private suspend fun counselor() =
+        progressRepository.observeProgress("camping").first()?.badge?.counselor
+
+    @Test
+    fun counselor_savedOnItsPage_showsOnBadgeDetail() {
+        openCamping()
+
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        field("Name").performTextInput("Pat Lee")
+        field("Phone").performTextInput("555-0100")
+        field("Email").performTextInput("pat@example.com")
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        assertEquals(
+            Counselor("Pat Lee", "555-0100", "pat@example.com"),
+            runBlocking {
+                counselor()
+            }
+        )
+        // Saving closes the page, back to the badge's.
+        field("Name").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Pat Lee").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("555-0100").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo().assertIsDisplayed()
+
+        // Editing it starts from what's saved.
+        composeTestRule.onNodeWithText("Edit counselor").performScrollTo().performClick()
+        field("Phone").performTextClearance()
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        assertEquals(
+            Counselor(name = "Pat Lee", email = "pat@example.com"),
+            runBlocking { counselor() }
+        )
+        composeTestRule.onNodeWithText("555-0100").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromEditCounselor_discardsChanges() {
+        openCamping()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        field("Name").performTextInput("Pat Lee")
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pat Lee").assertDoesNotExist()
+        assertNull(runBlocking { progressRepository.observeProgress("camping").first() })
+    }
+
     // Dates, like numbers, follow the strings' language, so on a Persian device the English
     // strings keep English month names and digits.
     @Config(qualifiers = "fa")
@@ -708,6 +761,17 @@ class MainActivityTest {
         pressBack()
 
         composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onAddCounselor_opensItOnce() {
+        openCamping()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo()
+
+        tapTwiceInOneFrame("Add counselor")
+        pressBack()
+
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
     }
 
     @Test

@@ -24,3 +24,7 @@ data object DataManagement : NavKey
 /** A requirement of a badge, by its official number, such as "4c". */
 @Serializable
 data class RequirementDetail(val badgeId: String, val number: String) : NavKey
+
+/** The page for entering a badge's merit badge counselor. */
+@Serializable
+data class EditCounselor(val badgeId: String) : NavKey
