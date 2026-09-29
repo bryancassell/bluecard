@@ -1,5 +1,17 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import android.text.InputType
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -7,14 +19,19 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import org.junit.Assert.assertEquals
@@ -43,9 +60,35 @@ class BadgesScreenTest {
         )
     )
 
-    private fun show(uiState: BadgesUiState) {
+    private val query = TextFieldState()
+
+    /** Records what the screen asks of the on-screen keyboard. */
+    private val keyboard = object : SoftwareKeyboardController {
+        var shows = 0
+        var hides = 0
+
+        override fun show() {
+            shows++
+        }
+
+        override fun hide() {
+            hides++
+        }
+    }
+
+    // Tests can change it after show(), as the ViewModel would.
+    private var uiState by mutableStateOf<BadgesUiState>(BadgesUiState.Loading)
+
+    // The view that hosts the screen, which connects the keyboard to the focused field.
+    private lateinit var view: View
+
+    private fun show(state: BadgesUiState) {
+        uiState = state
         composeTestRule.setContent {
-            BadgesScreen(uiState = uiState, onOpenBadge = { openedBadges += it })
+            view = LocalView.current
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                BadgesScreen(uiState = uiState, query = query, onOpenBadge = { openedBadges += it })
+            }
         }
     }
 
@@ -53,6 +96,17 @@ class BadgesScreenTest {
     private fun row(name: String) = composeTestRule.onNodeWithText(name)
 
     private fun list() = composeTestRule.onNode(hasScrollToNodeAction())
+
+    private fun searchField() = composeTestRule.onNode(hasSetTextAction())
+
+    private fun clearButton() = composeTestRule.onNodeWithContentDescription("Clear search")
+
+    private fun noMatchesMessage() =
+        composeTestRule.onNodeWithText("No merit badges match your search.")
+
+    private val many = (1..200).map {
+        BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
+    }
 
     private val loadingIndicator = SemanticsMatcher.expectValue(
         SemanticsProperties.ProgressBarRangeInfo,
@@ -66,6 +120,7 @@ class BadgesScreenTest {
         composeTestRule.onNodeWithText("Merit badges").assert(isHeading()).assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertIsDisplayed()
         list().assertDoesNotExist()
+        searchField().assertDoesNotExist()
     }
 
     @Test
@@ -78,6 +133,7 @@ class BadgesScreenTest {
         ).assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
+        searchField().assertDoesNotExist()
     }
 
     @Test
@@ -169,9 +225,6 @@ class BadgesScreenTest {
     @Test
     fun longList_scrollsToLastBadge() {
         // More badges than the full catalog (about 140).
-        val many = (1..200).map {
-            BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
-        }
         show(BadgesUiState.Ready(many))
         // Rows off screen aren't composed until scrolled to.
         row("Badge 200").assertDoesNotExist()
@@ -181,5 +234,149 @@ class BadgesScreenTest {
         row("Badge 200").assertIsDisplayed()
         row("Badge 200").performClick()
         assertEquals(listOf("badge-200"), openedBadges)
+    }
+
+    @Test
+    fun ready_showsEmptySearchFieldWithoutClearButton() {
+        show(BadgesUiState.Ready(badges))
+
+        searchField().assertIsDisplayed().assert(hasText("Search merit badges"))
+        clearButton().assertDoesNotExist()
+    }
+
+    @Test
+    fun typingInSearchField_updatesQuery() {
+        show(BadgesUiState.Ready(badges))
+
+        searchField().performTextInput("camp")
+
+        assertEquals("camp", query.text.toString())
+    }
+
+    @Test
+    fun clearButton_emptiesSearchField() {
+        query.setTextAndPlaceCursorAtEnd("camp")
+        show(BadgesUiState.Ready(badges))
+
+        clearButton().assertIsDisplayed().performClick()
+
+        assertEquals("", query.text.toString())
+        clearButton().assertDoesNotExist()
+    }
+
+    @Test
+    fun clearButton_movesFocusToSearchField() {
+        query.setTextAndPlaceCursorAtEnd("camp")
+        show(BadgesUiState.Ready(badges))
+
+        clearButton().performClick()
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun clearButton_opensKeyboard_evenWhenFieldIsAlreadyFocused() {
+        show(BadgesUiState.Ready(badges))
+        searchField().performTextInput("camp")
+        // The keyboard's search key closes the keyboard, and the field keeps focus.
+        searchField().performImeAction()
+
+        clearButton().performClick()
+
+        searchField().assertIsFocused()
+        assertEquals(1, keyboard.shows)
+    }
+
+    @Test
+    fun searchField_trimsTextPast100Characters() {
+        show(BadgesUiState.Ready(badges))
+        searchField().performTextInput("a".repeat(90))
+
+        // As when pasting.
+        searchField().performTextInput("b".repeat(20))
+
+        assertEquals("a".repeat(90) + "b".repeat(10), query.text.toString())
+        searchField().assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 100))
+    }
+
+    @Test
+    fun searchField_asksKeyboardForSearchKeyWithoutAutocorrect() {
+        show(BadgesUiState.Ready(badges))
+        searchField().performClick()
+
+        val editorInfo = EditorInfo()
+        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+
+        assertEquals(
+            EditorInfo.IME_ACTION_SEARCH,
+            editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
+        )
+        assertEquals(0, editorInfo.inputType and InputType.TYPE_TEXT_FLAG_AUTO_CORRECT)
+    }
+
+    @Test
+    fun keyboardSearch_hidesKeyboard() {
+        show(BadgesUiState.Ready(badges))
+
+        searchField().performImeAction()
+
+        assertEquals(1, keyboard.hides)
+    }
+
+    @Test
+    fun noMatches_showsMessageAndSearchField() {
+        query.setTextAndPlaceCursorAtEnd("zoology")
+        show(BadgesUiState.NoMatches)
+
+        noMatchesMessage().assertIsDisplayed()
+        searchField().assertIsDisplayed().assert(hasText("zoology"))
+        list().assertDoesNotExist()
+        composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+    }
+
+    @Test
+    fun ready_hasNoNoMatchesMessage() {
+        show(BadgesUiState.Ready(badges))
+
+        noMatchesMessage().assertDoesNotExist()
+    }
+
+    // On a phone, a new field would lose focus and close the keyboard as the scout types.
+    // Robolectric focuses the new field anyway, so this checks that it's the same field.
+    @Test
+    fun searchField_staysTheSameField_asMatchesComeAndGo() {
+        show(BadgesUiState.Ready(badges))
+        val field = searchField().fetchSemanticsNode().id
+
+        uiState = BadgesUiState.NoMatches
+        noMatchesMessage().assertIsDisplayed()
+        assertEquals(field, searchField().fetchSemanticsNode().id)
+
+        uiState = BadgesUiState.Ready(badges)
+        row("Chess").assertIsDisplayed()
+        assertEquals(field, searchField().fetchSemanticsNode().id)
+    }
+
+    @Test
+    fun newMatches_areShownFromTheTop() {
+        show(BadgesUiState.Ready(many))
+        list().performScrollToNode(hasText("Badge 150"))
+
+        // Badge 1, Badge 10 to 19, then Badge 100 to 199, which include the rows on screen.
+        uiState = BadgesUiState.Ready(many.filter { it.name.startsWith("Badge 1") })
+
+        row("Badge 1").assertIsDisplayed()
+    }
+
+    @Test
+    fun sameBadges_keepTheirScrollPosition() {
+        show(BadgesUiState.Ready(many))
+        list().performScrollToNode(hasText("Badge 200"))
+
+        // As when the scout comes back from a badge they started.
+        uiState = BadgesUiState.Ready(many.map { it.copy(status = BadgeStatus.InProgress) })
+
+        row("Badge 200").assertIsDisplayed()
+        row("Badge 1").assertDoesNotExist()
     }
 }

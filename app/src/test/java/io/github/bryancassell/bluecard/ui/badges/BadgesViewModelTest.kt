@@ -1,5 +1,9 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -57,10 +61,13 @@ class BadgesViewModelTest {
 
     private val catalogRepository = FakeCatalogRepository(listOf(chess, camping))
     private val progressRepository = FakeProgressRepository()
+    private val savedStateHandle = SavedStateHandle()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private val viewModel by lazy { BadgesViewModel(catalogRepository, progressRepository) }
+    private val viewModel by lazy {
+        BadgesViewModel(catalogRepository, progressRepository, savedStateHandle)
+    }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -77,12 +84,27 @@ class BadgesViewModelTest {
 
     private fun status(badgeId: String) = item(badgeId).status
 
+    private fun listedIds(): List<String> {
+        val state = viewModel.uiState.value as BadgesUiState.Ready
+        return state.badges.map { it.id }
+    }
+
+    /**
+     * Types [text] into the search field, replacing what's there. Compose announces snapshot
+     * changes, which snapshotFlow waits for, once per frame; outside a composition, tests
+     * announce them.
+     */
+    private fun search(text: String) {
+        viewModel.query.setTextAndPlaceCursorAtEnd(text)
+        Snapshot.sendApplyNotifications()
+    }
+
     @Test
     fun uiState_whileCatalogLoads_isLoading() = runTest {
         val loading = object : CatalogRepository {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
         }
-        val viewModel = BadgesViewModel(loading, progressRepository)
+        val viewModel = BadgesViewModel(loading, progressRepository, savedStateHandle)
         startCollecting(viewModel)
 
         assertEquals(BadgesUiState.Loading, viewModel.uiState.value)
@@ -218,5 +240,99 @@ class BadgesViewModelTest {
 
         val state = viewModel.uiState.value as BadgesUiState.Ready
         assertEquals(listOf("camping", "chess"), state.badges.map { it.id })
+    }
+
+    @Test
+    fun query_startsEmpty_andListsEveryBadge() = runTest {
+        startCollecting(viewModel)
+
+        assertEquals("", viewModel.query.text.toString())
+        assertEquals(listOf("camping", "chess"), listedIds())
+    }
+
+    @Test
+    fun search_listsOnlyMatchingBadges() = runTest {
+        startCollecting(viewModel)
+
+        search("camp")
+
+        assertEquals(listOf("camping"), listedIds())
+    }
+
+    @Test
+    fun search_matchesSummaries() = runTest {
+        startCollecting(viewModel)
+
+        // Every test badge's summary is "Our summary of <name>."
+        search("summary")
+
+        assertEquals(listOf("camping", "chess"), listedIds())
+    }
+
+    @Test
+    fun search_keepsAlphabeticalOrder() = runTest {
+        catalogRepository.badges = listOf(
+            badge("cooking", "Cooking"),
+            badge("chess", "Chess"),
+            badge("camping", "Camping")
+        )
+        startCollecting(viewModel)
+
+        search("c")
+
+        assertEquals(listOf("camping", "chess", "cooking"), listedIds())
+    }
+
+    @Test
+    fun search_withNoMatches_isNoMatches() = runTest {
+        startCollecting(viewModel)
+
+        search("zoology")
+
+        assertEquals(BadgesUiState.NoMatches, viewModel.uiState.value)
+    }
+
+    @Test
+    fun emptyCatalog_withBlankSearch_isReadyWithNoBadges() = runTest {
+        catalogRepository.badges = emptyList()
+        startCollecting(viewModel)
+
+        assertEquals(BadgesUiState.Ready(emptyList()), viewModel.uiState.value)
+    }
+
+    @Test
+    fun clearingSearch_listsEveryBadgeAgain() = runTest {
+        startCollecting(viewModel)
+        search("zoology")
+
+        viewModel.query.clearText()
+        Snapshot.sendApplyNotifications()
+
+        assertEquals(listOf("camping", "chess"), listedIds())
+    }
+
+    @Test
+    fun search_keepsFilteringWhenProgressChanges() = runTest {
+        startCollecting(viewModel)
+        search("camp")
+
+        progressRepository.startBadge("camping", version, started)
+
+        assertEquals(listOf("camping"), listedIds())
+        assertEquals(BadgeStatus.InProgress, status("camping"))
+    }
+
+    @Test
+    fun search_isRestoredFromSavedState() = runTest {
+        startCollecting(viewModel)
+        search("camp")
+
+        // A new ViewModel with the same saved state, as after the system stopped the app.
+        val restored = BadgesViewModel(catalogRepository, progressRepository, savedStateHandle)
+        startCollecting(restored)
+
+        assertEquals("camp", restored.query.text.toString())
+        val state = restored.uiState.value as BadgesUiState.Ready
+        assertEquals(listOf("camping"), state.badges.map { it.id })
     }
 }

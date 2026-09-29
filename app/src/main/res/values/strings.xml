@@ -29,6 +29,10 @@
     <string name="badges_completed">Completed</string>
     <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
     <string name="badges_open_badge">open badge</string>
+    <string name="badges_search">Search merit badges</string>
+    <!-- Screen reader label for the button that empties the search field. -->
+    <string name="badges_clear_search">Clear search</string>
+    <string name="badges_no_matches">No merit badges match your search.</string>
     <string name="badge_detail_official_page">Official requirements</string>
     <string name="badge_detail_requirements">Requirements</string>
     <!-- Shown when tapping the official requirements link, if no app on the phone can open
