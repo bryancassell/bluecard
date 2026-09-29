@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -104,6 +105,21 @@ class BadgesScreenTest {
     private fun noMatchesMessage() =
         composeTestRule.onNodeWithText("No merit badges match your search.")
 
+    // The only live region on the screen.
+    private fun matchCount() =
+        composeTestRule.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion))
+
+    /**
+     * Waits as long as the scout must stop typing before the count changes, from when the
+     * screen has caught up with the last change.
+     */
+    private fun pauseTyping() = waitFor(1_000)
+
+    private fun waitFor(milliseconds: Long) {
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(milliseconds)
+    }
+
     private val many = (1..200).map {
         BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
     }
@@ -121,6 +137,7 @@ class BadgesScreenTest {
         composeTestRule.onNode(loadingIndicator).assertIsDisplayed()
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()
+        matchCount().assertDoesNotExist()
     }
 
     @Test
@@ -134,6 +151,7 @@ class BadgesScreenTest {
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()
+        matchCount().assertDoesNotExist()
     }
 
     @Test
@@ -324,11 +342,26 @@ class BadgesScreenTest {
     }
 
     @Test
+    fun ready_showsHowManyBadges() {
+        show(BadgesUiState.Ready(badges))
+
+        matchCount().assertIsDisplayed().assert(hasText("4 merit badges"))
+    }
+
+    @Test
+    fun oneBadge_countIsSingular() {
+        show(BadgesUiState.Ready(badges.take(1)))
+
+        matchCount().assert(hasText("1 merit badge"))
+    }
+
+    @Test
     fun noMatches_showsMessageAndSearchField() {
         query.setTextAndPlaceCursorAtEnd("zoology")
         show(BadgesUiState.NoMatches)
 
         noMatchesMessage().assertIsDisplayed()
+        matchCount().assert(hasText("No merit badges match your search."))
         searchField().assertIsDisplayed().assert(hasText("zoology"))
         list().assertDoesNotExist()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
@@ -349,12 +382,80 @@ class BadgesScreenTest {
         val field = searchField().fetchSemanticsNode().id
 
         uiState = BadgesUiState.NoMatches
+        pauseTyping()
         noMatchesMessage().assertIsDisplayed()
         assertEquals(field, searchField().fetchSemanticsNode().id)
 
         uiState = BadgesUiState.Ready(badges)
         row("Chess").assertIsDisplayed()
         assertEquals(field, searchField().fetchSemanticsNode().id)
+    }
+
+    // Screen readers announce a live region when its text changes. Compose announces only a
+    // node that was already shown, so the count must stay the same node as matches come and
+    // go, with only its text changing.
+    @Test
+    fun matchCount_staysTheSamePoliteLiveRegion_asMatchesChange() {
+        show(BadgesUiState.Ready(badges))
+        val count = matchCount()
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
+            )
+            .fetchSemanticsNode().id
+
+        uiState = BadgesUiState.Ready(badges.take(1))
+        pauseTyping()
+        matchCount().assert(hasText("1 merit badge"))
+        assertEquals(count, matchCount().fetchSemanticsNode().id)
+
+        uiState = BadgesUiState.NoMatches
+        pauseTyping()
+        matchCount().assert(hasText("No merit badges match your search."))
+        assertEquals(count, matchCount().fetchSemanticsNode().id)
+
+        // As when the scout clears the search.
+        uiState = BadgesUiState.Ready(badges)
+        pauseTyping()
+        matchCount().assert(hasText("4 merit badges"))
+        assertEquals(count, matchCount().fetchSemanticsNode().id)
+    }
+
+    // TalkBack doesn't let new speech cut off a polite live region, so a count announced as
+    // the scout types would hold back the keyboard's feedback on their next key.
+    @Test
+    fun matchCount_changesOnlyOnceTypingPauses() {
+        show(BadgesUiState.Ready(badges))
+        composeTestRule.mainClock.autoAdvance = false
+
+        // Each keystroke filters the list straight away, as the ViewModel does.
+        query.setTextAndPlaceCursorAtEnd("c")
+        uiState = BadgesUiState.Ready(badges.take(3))
+        waitFor(800)
+        row("Hiking").assertDoesNotExist()
+        matchCount().assert(hasText("4 merit badges"))
+
+        // A keystroke that leaves the same matches still restarts the wait.
+        query.setTextAndPlaceCursorAtEnd("c ")
+        waitFor(800)
+        // Longer than the pause since the count first changed, but the scout kept typing.
+        matchCount().assert(hasText("4 merit badges"))
+
+        waitFor(300)
+        matchCount().assert(hasText("3 merit badges"))
+    }
+
+    // Once the catalog loads, the count is new on the screen, so screen readers don't
+    // announce it, and there's no reason to wait.
+    @Test
+    fun matchCount_appearsWithoutWaiting_whenBadgesLoad() {
+        show(BadgesUiState.Loading)
+        composeTestRule.mainClock.autoAdvance = false
+
+        uiState = BadgesUiState.Ready(badges)
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeByFrame()
+
+        matchCount().assert(hasText("4 merit badges"))
     }
 
     @Test

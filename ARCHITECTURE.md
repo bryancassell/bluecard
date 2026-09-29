@@ -148,6 +148,32 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   so reopening the app within 5 seconds shows the message again. A failure
   after a screen has loaded also stays until the screen loads again. A "Try
   again" button would fix both.
+- **Screen readers hear how many badges match a search.** Under the Badges
+  search field, a line says how many badges are listed ("12 merit badges"), or
+  "No merit badges match your search." It's a polite live region.
+  Android 16 deprecated `announceForAccessibility`, and its
+  [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
+  point to live regions instead, "used sparingly".
+  - **The line stays composed while the search field is shown, and only its
+    text changes.** Compose announces a live region only when a node that
+    already exists changes (`sendSemanticsPropertyChangeEvents` in
+    `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A new
+    node isn't announced, so the count isn't read out when the screen first
+    shows it. The load-failed message has the same gap
+    ([#69](https://github.com/bryancassell/bluecard/issues/69)), which this
+    approach could also close.
+  - **It changes once the scout stops typing for a second**; the list still
+    filters on every keystroke. With TalkBack 17 on Android 17, the count's
+    announcement reached TalkBack just before the echo of the key typed, and
+    TalkBack doesn't let new speech cut off a polite live region. A count
+    changed on every keystroke was spoken first and held back the echo by 1 to
+    4 seconds. Waiting for the pause keeps the echo first. A key typed while
+    the count is being spoken still waits for it.
+  - **Only a change is announced.** A keystroke that leaves the count the same
+    says nothing more. Clearing the search announces the full count, after the
+    same pause. After "Clear search", TalkBack's focus moves to the search
+    field, whether or not the field had input focus, so the scout can start a
+    new search straight away.
 - **Text fields are state-based.** A text field edits a `TextFieldState` that
   its screen's ViewModel holds. The
   [text field guide](https://developer.android.com/develop/ui/compose/text/user-input)
@@ -434,7 +460,9 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   digits, in the search and in badge text alike, so spaces and punctuation only
   separate them; a search with no words lists every badge. The list stays
   alphabetical, and a new set of matches is shown from the top. The search is
-  capped at 100 characters, because it's saved with the screen's state.
+  capped at 100 characters, because it's saved with the screen's state. A line
+  above the list says how many badges match, for screen readers to announce
+  (see [UI layer](#ui-layer)).
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
@@ -550,6 +578,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | Text fields | State-based (`TextFieldState`), held in the ViewModel and saved in `SavedStateHandle` | The text field guide recommends state-based fields and holding their state in ViewModels |
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
+| Search result announcements | A visible count of the matches, as a polite live region that stays composed, changed once typing pauses for a second | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed and doesn't let it be cut off, so waiting for a pause keeps the keyboard's feedback first |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
