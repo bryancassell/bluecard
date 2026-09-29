@@ -13,7 +13,8 @@ import androidx.navigation3.runtime.NavKey
  *
  * A screen that is animating out still takes the taps the incoming screen doesn't, but it's
  * no longer on top, so a second tap, whether in the same frame or during the animation,
- * doesn't open another screen. Taps on the incoming screen work straight away.
+ * doesn't open another screen. [IgnoreTouchesAfterScreenChange] keeps a second tap from
+ * pressing anything on the incoming screen.
  */
 @Composable
 fun rememberNavigateFrom(

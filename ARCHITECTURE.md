@@ -195,11 +195,26 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
-- **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
-  ignores a tap unless the tapping screen is on top of the screens `NavDisplay`
-  is showing. A screen that is animating out still takes taps, but it's no
-  longer on top, so a double tap can't open a screen twice. Taps on the
-  incoming screen work straight away.
+- **A double tap opens a screen once, and doesn't press anything on it.**
+  - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
+    ignores a tap unless the tapping screen is on top of the screens
+    `NavDisplay` is showing. A screen that is animating out still takes taps,
+    but it's no longer on top, so a double tap can't open a screen twice, even
+    with both taps in the same frame.
+  - **Touches are ignored for the double-tap timeout after the screen changes.**
+    The incoming screen is drawn on top while it fades in (700 ms), so the
+    second tap of a double tap would otherwise press whatever is under the
+    finger, such as "Official requirements", which opens the browser
+    ([#61](https://github.com/bryancassell/bluecard/issues/61)).
+    `IgnoreTouchesAfterScreenChange` covers both screens from the first frame
+    of a new screen until `ViewConfiguration.doubleTapTimeoutMillis` (300 ms)
+    has passed. This happens after every change of the screen on top,
+    including Back and switching between Onboarding and Home, but not when the
+    app opens.
+  - **Taps after the timeout work, even while the screen is still fading in.**
+    [#56](https://github.com/bryancassell/bluecard/pull/56) dropped
+    `dropUnlessResumed` because it ignored taps for the whole animation. Taps
+    further apart than the timeout aren't a double tap to the platform either.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
