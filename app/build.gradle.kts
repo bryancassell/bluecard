@@ -191,6 +191,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
+    // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
+    testImplementation(libs.androidx.lifecycle.viewmodel.testing)
     testImplementation(libs.hilt.android.testing)
     kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.junit)
