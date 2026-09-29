@@ -4,7 +4,6 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -56,9 +55,13 @@ class HomeScreenTest {
         ProgressBarRangeInfo.Indeterminate
     )
 
-    private val anyProgressBar = SemanticsMatcher.keyIsDefined(
-        SemanticsProperties.ProgressBarRangeInfo
+    private fun eagleBar(fraction: Float) = SemanticsMatcher.expectValue(
+        SemanticsProperties.ProgressBarRangeInfo,
+        ProgressBarRangeInfo(fraction, 0f..1f)
     )
+
+    private val hiddenFromScreenReaders =
+        SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
 
     @Test
     fun loading_showsProgressAndNoProfile() {
@@ -73,7 +76,7 @@ class HomeScreenTest {
         show(noProgress)
 
         text("Alex Scout").assert(isHeading()).assertIsDisplayed()
-        text("Unit 123").assertIsDisplayed()
+        text("Unit: 123").assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
     }
 
@@ -106,11 +109,13 @@ class HomeScreenTest {
     }
 
     @Test
-    fun eagleProgressBar_isHiddenFromScreenReaders() {
+    fun eagleProgressBar_showsShareCompleted_hiddenFromScreenReaders() {
         show(withProgress)
 
         // Screen readers get "4 of 13 completed" instead of a percentage without context.
-        composeTestRule.onAllNodes(anyProgressBar).assertCountEquals(0)
+        composeTestRule.onNode(eagleBar(4f / 13))
+            .assertIsDisplayed()
+            .assert(hiddenFromScreenReaders)
     }
 
     @Test

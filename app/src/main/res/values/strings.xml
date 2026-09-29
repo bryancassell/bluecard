@@ -7,7 +7,7 @@
     <string name="onboarding_required">Required</string>
     <string name="onboarding_save">Get started</string>
     <string name="onboarding_save_failed">Couldn\'t save. Try again.</string>
-    <string name="home_unit">Unit %1$s</string>
+    <string name="home_unit">Unit: %1$s</string>
     <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
     <string name="home_badges_title">Your merit badges</string>
     <string name="home_eagle_title">Eagle-required</string>

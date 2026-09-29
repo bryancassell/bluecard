@@ -23,8 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -128,7 +128,7 @@ private fun EagleCard(uiState: HomeUiState.Ready) {
             // read a percentage out of context.
             modifier = Modifier
                 .fillMaxWidth()
-                .clearAndSetSemantics {}
+                .semantics { hideFromAccessibility() }
         )
         Text(countText(R.plurals.home_in_progress, uiState.eagle.inProgress))
     }

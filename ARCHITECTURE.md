@@ -393,10 +393,12 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   They check each UI state and each event.
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
-  bindings such as the coroutine dispatcher. A test class that needs a fake for
-  one repository removes just that repository's module with `@UninstallModules`
-  and supplies the fake with `@BindValue`, as `MainActivityTest` does for the
-  profile.
+  bindings such as the coroutine dispatcher. A test class that needs fakes
+  removes the modules that bind those repositories with `@UninstallModules` and
+  supplies the fakes with `@BindValue`, as `MainActivityTest` does.
+  `ProfileModule` binds only the profile repository. `DataModule` binds the
+  catalog and progress repositories together, so a test that fakes one of them
+  supplies both.
 - **Room repository tests use Robolectric** with an in-memory database. The
   [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
   recommends plain JVM tests with Room's Kotlin Multiplatform setup instead.
