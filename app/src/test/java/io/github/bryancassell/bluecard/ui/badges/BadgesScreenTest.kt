@@ -64,9 +64,12 @@ class BadgesScreenTest {
 
     /** Records what the screen asks of the on-screen keyboard. */
     private val keyboard = object : SoftwareKeyboardController {
+        var shows = 0
         var hides = 0
 
-        override fun show() = Unit
+        override fun show() {
+            shows++
+        }
 
         override fun hide() {
             hides++
@@ -272,14 +275,28 @@ class BadgesScreenTest {
     }
 
     @Test
-    fun searchField_acceptsAtMost100Characters() {
+    fun clearButton_opensKeyboard_evenWhenFieldIsAlreadyFocused() {
         show(BadgesUiState.Ready(badges))
-        val longest = "a".repeat(100)
-        searchField().performTextInput(longest)
+        searchField().performTextInput("camp")
+        // The keyboard's search key closes the keyboard, and the field keeps focus.
+        searchField().performImeAction()
 
-        searchField().performTextInput("b")
+        clearButton().performClick()
 
-        assertEquals(longest, query.text.toString())
+        searchField().assertIsFocused()
+        assertEquals(1, keyboard.shows)
+    }
+
+    @Test
+    fun searchField_trimsTextPast100Characters() {
+        show(BadgesUiState.Ready(badges))
+        searchField().performTextInput("a".repeat(90))
+
+        // As when pasting.
+        searchField().performTextInput("b".repeat(20))
+
+        assertEquals("a".repeat(90) + "b".repeat(10), query.text.toString())
+        searchField().assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 100))
     }
 
     @Test

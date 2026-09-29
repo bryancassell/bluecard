@@ -140,6 +140,18 @@ class BadgeSearchTest {
         assertTrue(curly.matches("world's"))
     }
 
+    // U+20000, a CJK letter written as two UTF-16 surrogates.
+    private val supplementaryLetter = "\uD840\uDC00"
+
+    @Test
+    fun letterOutsideBasicPlane_isPartOfTheWord() {
+        val badge = badge("Stamps", "Collect ${supplementaryLetter}fit stamps.")
+
+        assertEquals(listOf("${supplementaryLetter}fit"), searchWords("${supplementaryLetter}fit"))
+        assertFalse(badge.matches("fit"))
+        assertTrue(badge.matches("${supplementaryLetter}fit"))
+    }
+
     @Test
     fun unrelatedWord_doesNotMatch() {
         assertFalse(fitness.matches("cooking"))

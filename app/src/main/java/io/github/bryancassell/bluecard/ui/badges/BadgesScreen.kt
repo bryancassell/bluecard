@@ -13,10 +13,11 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.maxLength
+import androidx.compose.foundation.text.input.delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +38,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.maxTextLength
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -133,6 +136,20 @@ fun BadgesScreen(
  */
 private const val MAX_SEARCH_LENGTH = 100
 
+/**
+ * Keeps the search to [MAX_SEARCH_LENGTH] characters by cutting off the end of a longer edit,
+ * such as a long paste. `InputTransformation.maxLength` rejects the whole edit instead.
+ */
+private object SearchLengthLimit : InputTransformation {
+    override fun SemanticsPropertyReceiver.applySemantics() {
+        maxTextLength = MAX_SEARCH_LENGTH
+    }
+
+    override fun TextFieldBuffer.transformInput() {
+        if (length > MAX_SEARCH_LENGTH) delete(MAX_SEARCH_LENGTH, length)
+    }
+}
+
 @Composable
 private fun SearchField(query: TextFieldState) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -148,11 +165,14 @@ private fun SearchField(query: TextFieldState) {
             null
         } else {
             {
-                // The button disappears once the field is empty, so focus moves to the field
-                // rather than being lost, and the scout can type a new search.
+                // Clearing usually starts a new search, so the field takes input focus, which
+                // the button had until it disappears, and the keyboard opens even if the
+                // field was already focused with the keyboard closed. Where TalkBack's focus
+                // goes is checked in #71.
                 IconButton(onClick = {
                     query.clearText()
                     focusRequester.requestFocus()
+                    keyboardController?.show()
                 }) {
                     Icon(
                         painterResource(R.drawable.ic_close),
@@ -161,7 +181,7 @@ private fun SearchField(query: TextFieldState) {
                 }
             }
         },
-        inputTransformation = InputTransformation.maxLength(MAX_SEARCH_LENGTH),
+        inputTransformation = SearchLengthLimit,
         lineLimits = TextFieldLineLimits.SingleLine,
         // Asks the keyboard not to autocorrect the start of a word into a different word
         // that no longer matches. Some keyboards ignore this: Gboard still corrects typos

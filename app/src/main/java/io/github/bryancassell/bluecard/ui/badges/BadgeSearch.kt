@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.ui.badges
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 
-// Anything but a letter or digit, the characters that isLetterOrDigit() rejects.
+// Anything but a letter or digit: the code points that Character.isLetterOrDigit() rejects.
 private val nonWordCharacters = Regex("[^\\p{L}\\p{Nd}]+")
 
 /**
@@ -26,7 +26,9 @@ fun MeritBadge.matchesSearch(words: List<String>): Boolean = words.all { word ->
 private fun String.hasWordStartingWith(prefix: String): Boolean {
     var index = indexOf(prefix, ignoreCase = true)
     while (index >= 0) {
-        if (index == 0 || !this[index - 1].isLetterOrDigit()) return true
+        // By code point, as searchWords splits, so a letter outside the Basic Multilingual
+        // Plane counts as one letter rather than two surrogates.
+        if (index == 0 || !Character.isLetterOrDigit(codePointBefore(index))) return true
         index = indexOf(prefix, startIndex = index + 1, ignoreCase = true)
     }
     return false
