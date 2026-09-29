@@ -24,16 +24,20 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     private val jobs = mutableListOf<Job>()
 
     /** A new DataStore on [file], as a new app process would create. */
-    private fun newRepository(): DataStoreProfileRepository {
+    private fun newRepository(produceFile: () -> File = { file }): DataStoreProfileRepository {
         val job = Job().also { jobs += it }
         val dataStore = DataStoreProfileRepository.createDataStore(
             scope = CoroutineScope(Dispatchers.IO + job),
-            produceFile = { file }
+            produceFile = produceFile
         )
         return DataStoreProfileRepository(dataStore)
     }
 
     override val repository = newRepository()
+
+    // A folder where the file should be, so DataStore can't read it.
+    override fun unreadableRepository() =
+        newRepository { folder.newFolder("unreadable.preferences_pb") }
 
     @After
     fun closeDataStores() = runBlocking {

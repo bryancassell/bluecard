@@ -1,9 +1,12 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import android.database.sqlite.SQLiteException
 import androidx.room.withTransaction
+import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 
 /**
  * [ProgressRepository] backed by Room.
@@ -15,10 +18,11 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     ProgressRepository {
     private val dao = database.progressDao()
 
-    override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> = dao.observeAll()
+    override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> =
+        dao.observeAll().readFailuresAsIOException()
 
     override fun observeProgress(badgeId: String): Flow<BadgeProgressDetails?> =
-        dao.observe(badgeId)
+        dao.observe(badgeId).readFailuresAsIOException()
 
     override suspend fun startBadge(
         badgeId: String,
@@ -77,6 +81,14 @@ class RoomProgressRepository @Inject constructor(private val database: BlueCardD
     override suspend fun clearBadge(badgeId: String) = dao.deleteBadge(badgeId)
 
     override suspend fun clearAll() = dao.deleteAll()
+
+    /**
+     * Reports a database that can't be read, such as one that can't be opened, as the
+     * [IOException] that [ProgressRepository] documents. Other exceptions are bugs, such as a
+     * missing migration, and pass through.
+     */
+    private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> =
+        catch { throw if (it is SQLiteException) IOException(it) else it }
 
     /** Runs [action] if the badge is started, checking and writing in one transaction. */
     private suspend fun <T> ifStarted(badgeId: String, action: suspend () -> T): T =

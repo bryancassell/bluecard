@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 
 /** Connects the Requirement detail screen to its ViewModel. */
 @Composable
@@ -51,6 +52,8 @@ fun RequirementDetailScreen(
 ) {
     when (uiState) {
         RequirementDetailUiState.Loading -> LoadingIndicator(modifier)
+
+        RequirementDetailUiState.LoadFailed -> LoadFailedMessage(modifier)
 
         RequirementDetailUiState.Unavailable ->
             UnavailableMessage(stringResource(R.string.requirement_detail_unavailable), modifier)

@@ -114,6 +114,24 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun uiState_whenCatalogCantBeRead_isLoadFailed() = runTest {
+        catalogRepository.failLoads = true
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        assertEquals(RequirementDetailUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProgressCantBeRead_isLoadFailed() = runTest {
+        progressRepository.failLoads = true
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        assertEquals(RequirementDetailUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
     fun showsRequirementWithItsSubRequirements() = runTest {
         val viewModel = viewModel("2")
         startCollecting(viewModel)

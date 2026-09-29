@@ -117,6 +117,24 @@ class BadgeDetailViewModelTest {
     }
 
     @Test
+    fun uiState_whenCatalogCantBeRead_isLoadFailed() = runTest {
+        catalogRepository.failLoads = true
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(BadgeDetailUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProgressCantBeRead_isLoadFailed() = runTest {
+        progressRepository.failLoads = true
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(BadgeDetailUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
     fun notStarted_showsBadgeWithNewestRequirements() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)

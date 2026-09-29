@@ -118,6 +118,20 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
 - **UI state is immutable** and models each state the screen can be in (for
   example loading, content, empty). ViewModels handle events by updating state,
   not by sending one-off events to the UI, as the recommendations page advises.
+- **Load failures are a UI state.** When stored data can't be read, a repository
+  throws an `IOException` (see [Data layer](#data-layer)). Each ViewModel that
+  loads data turns it into a `LoadFailed` state with `catchLoadFailure`
+  (`ui/LoadFailure.kt`), and the screen shows a message in place of its content.
+  When the profile can't be read, the navigation root shows the message in place
+  of the whole app. This follows "Show errors on the screen" in the UI layer
+  guide, which keeps errors in UI state. Any other exception is a bug and still
+  crashes the app. The app has no crash reporting of its own, so a crash is the
+  only way a bug reaches the developer without a scout reporting it: Google
+  Play's [Android vitals](https://developer.android.com/topic/performance/vitals)
+  reports crashes from users who allow it, but not caught exceptions. To keep it
+  simple, the message has no "Try again" button; it asks the scout to close and
+  reopen the app, which loads everything again. Revisit this if crash reporting
+  is added ([#63](https://github.com/bryancassell/bluecard/issues/63)).
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -159,6 +173,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   and Hilt both generate code, using the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
+- **Stored data that can't be read is reported as an `IOException`.** The
+  [data layer guide](https://developer.android.com/topic/architecture/data-layer)
+  ("Expose errors") says the data layer can expose errors "using custom
+  exceptions". DataStore and the asset manager already throw `IOException`, and
+  `RoomProgressRepository` wraps Room's `SQLiteException` in one. ViewModels then
+  catch it without depending on a storage API (req. 9). Room's writes aren't
+  wrapped yet: the first screen that saves progress wraps them the same way.
 
 ### Dependency injection
 
@@ -339,7 +360,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
 
 - **First launch.** `MainActivityViewModel` reads `ProfileRepository`. While there
   is no profile, the navigation root shows Onboarding instead of the back stack;
-  once the profile is saved, it shows the back stack, which starts at Home.
+  once the profile is saved, it shows the back stack, which starts at Home. If
+  the profile can't be read, it shows the load-failed message instead.
 - **Home summary.** The Home ViewModel combines the profile, the catalog and the
   scout's progress. It counts badges completed and in progress, and
   Eagle-required progress against the Eagle-required badges in the catalog.
@@ -431,6 +453,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   as an abstract test class (for example `ProgressRepositoryContract`). The real
   implementation's test and the fake's test both extend it, so the fake used by
   other features' tests behaves like the real repository.
+- **Load failures in tests.** Each fake has a `failLoads` switch that makes its
+  reads throw an `IOException`, for testing each screen's `LoadFailed` state. The
+  profile and progress contract tests check that the real repositories throw one
+  too, using a folder where the DataStore file or the Room database should be.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
   interaction, fed by fake repositories or fixed UI state.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
@@ -455,6 +481,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
+| Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |
 | Import | Replaces all current data, after a warning | Simplest correct behavior; merging is tracked in [#28](https://github.com/bryancassell/bluecard/issues/28) |

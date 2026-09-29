@@ -1,9 +1,13 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 
 /**
@@ -12,15 +16,32 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class RoomProgressRepositoryTest : ProgressRepositoryContract() {
-    private val database = Room.inMemoryDatabaseBuilder(
-        ApplicationProvider.getApplicationContext(),
-        BlueCardDatabase::class.java
-    ).build()
+    @get:Rule
+    val folder = TemporaryFolder()
 
-    override val repository = RoomProgressRepository(database)
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val databases = mutableListOf<BlueCardDatabase>()
+
+    private fun open(builder: RoomDatabase.Builder<BlueCardDatabase>) =
+        builder.build().also { databases += it }
+
+    override val repository = RoomProgressRepository(
+        open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
+    )
+
+    // A folder where the database file should be, so SQLite can't open it.
+    override fun unreadableRepository() = RoomProgressRepository(
+        open(
+            Room.databaseBuilder(
+                context,
+                BlueCardDatabase::class.java,
+                folder.newFolder(BlueCardDatabase.NAME).absolutePath
+            )
+        )
+    )
 
     @After
-    fun closeDatabase() {
-        database.close()
+    fun closeDatabases() {
+        databases.forEach { it.close() }
     }
 }

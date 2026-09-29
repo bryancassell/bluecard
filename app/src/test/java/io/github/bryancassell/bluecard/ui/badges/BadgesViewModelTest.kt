@@ -84,6 +84,22 @@ class BadgesViewModelTest {
     }
 
     @Test
+    fun uiState_whenCatalogCantBeRead_isLoadFailed() = runTest {
+        catalogRepository.failLoads = true
+        startCollecting(viewModel)
+
+        assertEquals(BadgesUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProgressCantBeRead_isLoadFailed() = runTest {
+        progressRepository.failLoads = true
+        startCollecting(viewModel)
+
+        assertEquals(BadgesUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
     fun uiState_listsEveryBadgeAlphabetically_withEagleFlag() = runTest {
         startCollecting(viewModel)
 

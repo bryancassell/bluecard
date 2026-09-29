@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -11,7 +12,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** The Loading state. MainActivityTest covers Ready, which needs Hilt for the screens. */
+/**
+ * The Loading and LoadFailed states. MainActivityTest covers Ready, which needs Hilt for the
+ * screens.
+ */
 @RunWith(AndroidJUnit4::class)
 class BlueCardAppTest {
     @get:Rule
@@ -30,5 +34,16 @@ class BlueCardAppTest {
                 ProgressBarRangeInfo.Indeterminate
             )
         ).assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_showsMessageOnly() {
+        composeTestRule.setContent { BlueCardApp(MainActivityUiState.LoadFailed) }
+
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 }

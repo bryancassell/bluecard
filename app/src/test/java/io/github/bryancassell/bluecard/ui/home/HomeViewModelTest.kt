@@ -97,6 +97,30 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun uiState_whenProfileCantBeRead_isLoadFailed() = runTest {
+        profileRepository.failLoads = true
+        startCollecting(viewModel)
+
+        assertEquals(HomeUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenCatalogCantBeRead_isLoadFailed() = runTest {
+        catalogRepository.failLoads = true
+        startCollecting(viewModel)
+
+        assertEquals(HomeUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProgressCantBeRead_isLoadFailed() = runTest {
+        progressRepository.failLoads = true
+        startCollecting(viewModel)
+
+        assertEquals(HomeUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
     fun uiState_withoutProfile_isLoading() = runTest {
         profileRepository.removeProfile()
         startCollecting(viewModel)

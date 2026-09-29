@@ -5,6 +5,9 @@ sealed interface HomeUiState {
     /** The profile, catalog or progress is still loading. */
     data object Loading : HomeUiState
 
+    /** The profile, catalog or progress couldn't be read. */
+    data object LoadFailed : HomeUiState
+
     data class Ready(
         val name: String,
         val unitNumber: String,

@@ -40,6 +40,14 @@ class MainActivityViewModelTest {
     }
 
     @Test
+    fun uiState_whenProfileCantBeRead_isLoadFailed() = runTest {
+        val viewModel = MainActivityViewModel(FakeProfileRepository().apply { failLoads = true })
+        startCollecting(viewModel)
+
+        assertEquals(MainActivityUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
     fun uiState_withoutProfile_isNotSetUp() = runTest {
         val viewModel = MainActivityViewModel(FakeProfileRepository())
         startCollecting(viewModel)
