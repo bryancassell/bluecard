@@ -35,10 +35,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -46,6 +44,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 
 /** Connects the Badges screen to its ViewModel. */
 @Composable
@@ -97,13 +97,9 @@ fun BadgesScreen(
                 CircularProgressIndicator()
             }
 
-            BadgesUiState.NoMatches -> Text(
-                text = stringResource(R.string.badges_no_matches),
-                modifier = Modifier
-                    .padding(16.dp)
-                    // Read out by screen readers when it appears.
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-            )
+            BadgesUiState.LoadFailed -> LoadFailedMessage()
+
+            BadgesUiState.NoMatches -> ScreenMessage(stringResource(R.string.badges_no_matches))
 
             // A lazy list composes only the rows on screen, so the full catalog scrolls
             // smoothly. Keys keep each row's state with its badge.

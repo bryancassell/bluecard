@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -13,7 +14,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+// Robolectric, because the load-failure tests reach android.util.Log, which throws in
+// plain local tests (see ARCHITECTURE.md, Testing approach).
+@RunWith(AndroidJUnit4::class)
 class MainActivityViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -37,6 +42,14 @@ class MainActivityViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(MainActivityUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProfileCantBeRead_isLoadFailed() = runTest {
+        val viewModel = MainActivityViewModel(FakeProfileRepository().apply { failLoads = true })
+        startCollecting(viewModel)
+
+        assertEquals(MainActivityUiState.LoadFailed, viewModel.uiState.value)
     }
 
     @Test

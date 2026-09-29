@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -109,6 +108,19 @@ class BadgesScreenTest {
 
         composeTestRule.onNodeWithText("Merit badges").assert(isHeading()).assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertIsDisplayed()
+        list().assertDoesNotExist()
+        searchField().assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_showsTitleAndMessage() {
+        show(BadgesUiState.LoadFailed)
+
+        composeTestRule.onNodeWithText("Merit badges").assert(isHeading()).assertIsDisplayed()
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assertIsDisplayed()
+        composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()
     }
@@ -276,14 +288,7 @@ class BadgesScreenTest {
         query.setTextAndPlaceCursorAtEnd("zoology")
         show(BadgesUiState.NoMatches)
 
-        noMatchesMessage()
-            .assertIsDisplayed()
-            .assert(
-                SemanticsMatcher.expectValue(
-                    SemanticsProperties.LiveRegion,
-                    LiveRegionMode.Polite
-                )
-            )
+        noMatchesMessage().assertIsDisplayed()
         searchField().assertIsDisplayed().assert(hasText("zoology"))
         list().assertDoesNotExist()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()

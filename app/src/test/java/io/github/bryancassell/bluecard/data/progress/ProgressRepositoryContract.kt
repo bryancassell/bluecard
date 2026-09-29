@@ -1,11 +1,13 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import java.io.IOException
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 
@@ -16,6 +18,9 @@ import org.junit.Test
  */
 abstract class ProgressRepositoryContract {
     protected abstract val repository: ProgressRepository
+
+    /** A repository whose stored progress can't be read. */
+    protected abstract fun unreadableRepository(): ProgressRepository
 
     private val version = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
@@ -253,6 +258,20 @@ abstract class ProgressRepositoryContract {
 
         assertNull(progress(UNSTARTED))
         assertEquals(before, progress())
+    }
+
+    @Test
+    fun observing_whenUnreadable_throwsIOException() = runTest {
+        val unreadable = unreadableRepository()
+        val flows = listOf(
+            "observeAllProgress" to unreadable.observeAllProgress(),
+            "observeProgress" to unreadable.observeProgress(BADGE)
+        )
+        for ((name, flow) in flows) {
+            val error = runCatching { flow.first() }.exceptionOrNull()
+
+            assertTrue("$name should throw an IOException, got $error", error is IOException)
+        }
     }
 
     private companion object {

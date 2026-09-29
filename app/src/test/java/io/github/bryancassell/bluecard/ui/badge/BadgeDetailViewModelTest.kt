@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -20,7 +21,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+// Robolectric, because the load-failure tests reach android.util.Log, which throws in
+// plain local tests (see ARCHITECTURE.md, Testing approach).
+@RunWith(AndroidJUnit4::class)
 class BadgeDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -114,6 +119,24 @@ class BadgeDetailViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(BadgeDetailUiState.Loading, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenCatalogCantBeRead_isLoadFailed() = runTest {
+        catalogRepository.failLoads = true
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(BadgeDetailUiState.LoadFailed, viewModel.uiState.value)
+    }
+
+    @Test
+    fun uiState_whenProgressCantBeRead_isLoadFailed() = runTest {
+        progressRepository.failLoads = true
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(BadgeDetailUiState.LoadFailed, viewModel.uiState.value)
     }
 
     @Test

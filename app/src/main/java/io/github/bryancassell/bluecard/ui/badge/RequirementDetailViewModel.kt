@@ -8,6 +8,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -36,7 +37,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             requirement = requirement.toItem(found.recorded),
             children = requirement.children.map { it.toItem(found.recorded) }
         )
-    }.stateIn(
+    }.catchLoadFailure(RequirementDetailUiState.LoadFailed).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         RequirementDetailUiState.Loading

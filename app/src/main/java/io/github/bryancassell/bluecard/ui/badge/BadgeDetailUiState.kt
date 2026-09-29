@@ -7,6 +7,9 @@ sealed interface BadgeDetailUiState {
     /** The catalog is still loading. */
     data object Loading : BadgeDetailUiState
 
+    /** The catalog or progress couldn't be read. */
+    data object LoadFailed : BadgeDetailUiState
+
     data class Ready(
         val name: String,
         val summary: String,

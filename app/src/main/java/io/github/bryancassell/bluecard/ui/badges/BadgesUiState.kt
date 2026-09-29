@@ -7,6 +7,9 @@ sealed interface BadgesUiState {
     /** The catalog is still loading. */
     data object Loading : BadgesUiState
 
+    /** The catalog or progress couldn't be read. */
+    data object LoadFailed : BadgesUiState
+
     /**
      * The badges that match the search, in alphabetical order. Every badge in the catalog
      * when the search is blank.

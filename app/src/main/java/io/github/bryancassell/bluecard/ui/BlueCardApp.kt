@@ -15,8 +15,12 @@ import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 fun BlueCardApp(uiState: MainActivityUiState) {
     BlueCardTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            if (uiState is MainActivityUiState.Ready) {
-                BlueCardNavDisplay(
+            when (uiState) {
+                MainActivityUiState.Loading -> Unit
+
+                MainActivityUiState.LoadFailed -> LoadFailedMessage(Modifier.padding(innerPadding))
+
+                is MainActivityUiState.Ready -> BlueCardNavDisplay(
                     isSetUp = uiState.isSetUp,
                     // Consuming the system bar insets that innerPadding already covers keeps
                     // screens' imePadding() from adding them a second time.
