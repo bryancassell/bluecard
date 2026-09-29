@@ -1,9 +1,6 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation3.runtime.NavKey
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -16,45 +13,31 @@ class NavigateFromTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val lifecycleOwner = object : LifecycleOwner {
-        val registry = LifecycleRegistry(this)
-        override val lifecycle: Lifecycle get() = registry
-    }
-
     private val backStack = mutableListOf<NavKey>(Home, Badges)
 
-    /** Navigation from the Badges screen, which is on top of the back stack. */
+    // What NavDisplay shows: the back stack, or Onboarding in its place.
+    private var shownBackStack: List<NavKey> = backStack
+
+    /** Navigation from the Badges screen. */
     private fun navigateFromBadges(): (NavKey) -> Unit {
         lateinit var navigate: (NavKey) -> Unit
         composeTestRule.setContent {
-            navigate = rememberNavigateFrom(backStack, from = Badges, lifecycleOwner)
+            navigate = rememberNavigateFrom(backStack, from = Badges) { shownBackStack }
         }
         return navigate
     }
 
     @Test
-    fun resumedAndOnTop_navigates() {
-        lifecycleOwner.registry.currentState = Lifecycle.State.RESUMED
-
+    fun onTop_navigates() {
         navigateFromBadges()(BadgeDetail("camping"))
 
         assertEquals(listOf(Home, Badges, BadgeDetail("camping")), backStack)
     }
 
     @Test
-    fun started_doesNothing() {
-        // As NavDisplay holds a screen while it animates in or out.
-        lifecycleOwner.registry.currentState = Lifecycle.State.STARTED
-
-        navigateFromBadges()(BadgeDetail("camping"))
-
-        assertEquals(listOf(Home, Badges), backStack)
-    }
-
-    @Test
-    fun secondCall_beforeScreenChanges_doesNothing() {
-        // Both taps land before NavDisplay moves the screen out of RESUMED.
-        lifecycleOwner.registry.currentState = Lifecycle.State.RESUMED
+    fun secondCall_afterScreenChanged_doesNothing() {
+        // As for a double tap: the first tap put Badge detail on top, so the second tap,
+        // on the Badges screen that is leaving, is ignored.
         val navigate = navigateFromBadges()
 
         navigate(BadgeDetail("camping"))
@@ -64,12 +47,23 @@ class NavigateFromTest {
     }
 
     @Test
-    fun checksWhenCalled() {
-        lifecycleOwner.registry.currentState = Lifecycle.State.STARTED
+    fun notShown_doesNothing() {
+        // As when the profile is removed: NavDisplay shows Onboarding in place of the back
+        // stack, while Badges is still on top of it.
+        shownBackStack = listOf(Onboarding)
+
+        navigateFromBadges()(BadgeDetail("camping"))
+
+        assertEquals(listOf(Home, Badges), backStack)
+    }
+
+    @Test
+    fun checksWhatIsShownWhenCalled() {
+        shownBackStack = listOf(Onboarding)
         val navigate = navigateFromBadges()
 
         navigate(BadgeDetail("dropped"))
-        lifecycleOwner.registry.currentState = Lifecycle.State.RESUMED
+        shownBackStack = backStack
         navigate(BadgeDetail("camping"))
 
         assertEquals(listOf(Home, Badges, BadgeDetail("camping")), backStack)

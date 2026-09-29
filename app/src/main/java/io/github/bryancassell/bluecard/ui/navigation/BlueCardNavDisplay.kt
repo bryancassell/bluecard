@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -24,11 +26,15 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 @Composable
 fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(Home)
+    // Deciding here, before anything is drawn, means the wrong screen never shows, and
+    // Onboarding returns if the profile is ever missing. With only one entry, back leaves
+    // the app.
+    val shownBackStack = if (isSetUp) backStack else listOf(Onboarding)
+    // Navigation reads this State when a screen is tapped, so a screen still animating out
+    // after isSetUp changes navigates against what is shown now.
+    val currentShownBackStack by rememberUpdatedState(shownBackStack)
     NavDisplay(
-        // Deciding here, before anything is drawn, means the wrong screen never shows,
-        // and Onboarding returns if the profile is ever missing. With only one entry,
-        // back leaves the app.
-        backStack = if (isSetUp) backStack else listOf(Onboarding),
+        backStack = shownBackStack,
         modifier = modifier,
         onBack = { backStack.removeLastOrNull() },
         // Keep each entry's saved UI state, and scope ViewModels to their entry so they
@@ -42,14 +48,14 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         entryProvider = entryProvider {
             entry<Onboarding> { OnboardingRoute() }
             entry<Home> { key ->
-                val navigate = rememberNavigateFrom(backStack, from = key)
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
                 HomeRoute(
                     onOpenBadges = { navigate(Badges) },
                     onOpenDataManagement = { navigate(DataManagement) }
                 )
             }
             entry<Badges> { key ->
-                val navigate = rememberNavigateFrom(backStack, from = key)
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
                 BadgesRoute(onOpenBadge = { navigate(BadgeDetail(it)) })
             }
             entry<BadgeDetail> { key -> BadgeDetailScreen(badgeId = key.badgeId) }

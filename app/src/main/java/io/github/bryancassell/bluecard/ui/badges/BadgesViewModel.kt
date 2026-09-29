@@ -23,15 +23,17 @@ class BadgesViewModel @Inject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<BadgesUiState> = combine(
-        // What depends only on the catalog is worked out once, not on every progress change.
+        // What depends only on the catalog is worked out when the list starts collecting,
+        // not on every progress change.
         flow {
             // Badge names are English whatever the device language, so they're sorted by
             // English rules: an accented letter sorts with its base letter, and case only
             // breaks ties.
             val byName = compareBy(Collator.getInstance(Locale.ENGLISH), MeritBadge::name)
             val badges = catalogRepository.getBadges().sortedWith(byName)
-            val eagleGroups = badges.filter { it.eagleGroup != null }
-                .groupBy({ it.eagleGroup }, { it.name })
+            val eagleGroups = badges
+                .mapNotNull { badge -> badge.eagleGroup?.let { it to badge.name } }
+                .groupBy({ it.first }, { it.second })
             emit(badges.map { it to it.eagleRequirement(eagleGroups) })
         },
         progressRepository.observeAllProgress()
@@ -51,12 +53,11 @@ class BadgesViewModel @Inject constructor(
 }
 
 /** [eagleGroups] maps each Eagle group to the names of its badges. */
-private fun MeritBadge.eagleRequirement(
-    eagleGroups: Map<String?, List<String>>
-): EagleRequirement? {
+private fun MeritBadge.eagleRequirement(eagleGroups: Map<String, List<String>>): EagleRequirement? {
     if (!eagleRequired) return null
     // The catalog is written in stages; while a group has only this badge so far, it's
     // shown as required on its own.
-    val group = eagleGroups[eagleGroup]?.takeIf { it.size > 1 } ?: return EagleRequirement.Required
+    val group = eagleGroup?.let(eagleGroups::get)?.takeIf { it.size > 1 }
+        ?: return EagleRequirement.Required
     return EagleRequirement.OneOf(group)
 }
