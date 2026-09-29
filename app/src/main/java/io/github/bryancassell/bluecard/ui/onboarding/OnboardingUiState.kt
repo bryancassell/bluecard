@@ -1,16 +1,19 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
-/** What the Onboarding screen shows. */
+/**
+ * What the Onboarding screen shows, apart from the fields' text, which the fields edit in
+ * [OnboardingViewModel].
+ */
 data class OnboardingUiState(
-    val name: String = "",
-    val unitNumber: String = "",
-    val saveStatus: SaveStatus = SaveStatus.Editing
+    val saveStatus: SaveStatus = SaveStatus.Editing,
+
+    /** Both fields are required; this is true once neither is blank. */
+    val isComplete: Boolean = false
 ) {
     /** The fields can be changed until a save starts, and again if it fails. */
     val canEdit: Boolean get() = saveStatus == SaveStatus.Editing || saveStatus == SaveStatus.Failed
 
-    /** Both fields are required. */
-    val canSave: Boolean get() = canEdit && name.isNotBlank() && unitNumber.isNotBlank()
+    val canSave: Boolean get() = canEdit && isComplete
 }
 
 enum class SaveStatus {
