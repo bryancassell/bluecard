@@ -34,52 +34,49 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // Navigation reads this State when a screen is tapped, so a screen still animating out
     // after isSetUp changes navigates against what is shown now.
     val currentShownBackStack by rememberUpdatedState(shownBackStack)
-    // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen twice,
-    // and this keeps its second tap from pressing a control on the screen it opened.
-    IgnoreTouchesAfterScreenChange(screen = shownBackStack.last(), modifier = modifier) {
-        NavDisplay(
-            backStack = shownBackStack,
-            onBack = { backStack.removeLastOrNull() },
-            // Keep each entry's saved UI state, and scope ViewModels to their entry so they
-            // are cleared when the entry leaves the back stack.
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
-            entryProvider = entryProvider {
-                entry<Onboarding> { OnboardingRoute() }
-                entry<Home> { key ->
-                    val navigate =
-                        rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
-                    HomeRoute(
-                        onOpenBadges = { navigate(Badges) },
-                        onOpenDataManagement = { navigate(DataManagement) }
-                    )
-                }
-                entry<Badges> { key ->
-                    val navigate =
-                        rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
-                    BadgesRoute(onOpenBadge = { navigate(BadgeDetail(it)) })
-                }
-                entry<BadgeDetail> { key ->
-                    val navigate =
-                        rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
-                    BadgeDetailRoute(
-                        badgeId = key.badgeId,
-                        onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
-                    )
-                }
-                entry<RequirementDetail> { key ->
-                    val navigate =
-                        rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
-                    RequirementDetailRoute(
-                        badgeId = key.badgeId,
-                        number = key.number,
-                        onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
-                    )
-                }
-                entry<DataManagement> { DataManagementScreen() }
+    NavDisplay(
+        backStack = shownBackStack,
+        modifier = modifier,
+        onBack = { backStack.removeLastOrNull() },
+        // Keep each entry's saved UI state, scope ViewModels to their entry so they are
+        // cleared when the entry leaves the back stack, and ignore touches on screens that
+        // are animating, so a double tap can't press a control on the screen it opened.
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+            rememberIgnoreTouchesNavEntryDecorator()
+        ),
+        // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
+        // twice.
+        entryProvider = entryProvider {
+            entry<Onboarding> { OnboardingRoute() }
+            entry<Home> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                HomeRoute(
+                    onOpenBadges = { navigate(Badges) },
+                    onOpenDataManagement = { navigate(DataManagement) }
+                )
             }
-        )
-    }
+            entry<Badges> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                BadgesRoute(onOpenBadge = { navigate(BadgeDetail(it)) })
+            }
+            entry<BadgeDetail> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                BadgeDetailRoute(
+                    badgeId = key.badgeId,
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                )
+            }
+            entry<RequirementDetail> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                RequirementDetailRoute(
+                    badgeId = key.badgeId,
+                    number = key.number,
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                )
+            }
+            entry<DataManagement> { DataManagementScreen() }
+        }
+    )
 }

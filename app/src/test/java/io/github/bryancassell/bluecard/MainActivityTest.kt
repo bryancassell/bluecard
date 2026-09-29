@@ -470,14 +470,14 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
-        // Let the list finish animating in; until then it doesn't take taps either. Badge
-        // detail's heading also says "Camping", so match the list's row.
+        // Let the list finish animating in. Badge detail's heading also says "Camping", so
+        // match the list's row.
         val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
             .assertIsDisplayed()
 
         // Tap a second time while the list is still fading out, as a quick double tap
-        // does. The second tap fails the test if the list is already gone. Touches are
-        // ignored for a moment after the screen changes, so the list doesn't get this one;
+        // does. The second tap fails the test if the list is already gone. Screens ignore
+        // touches while they animate, so neither screen takes it;
         // doubleTap_onRequirement_opensItOnce shows navigation guarding a second tap that
         // does reach the screen, in the same frame.
         composeTestRule.mainClock.autoAdvance = false
@@ -512,6 +512,26 @@ class MainActivityTest {
         var started: Intent? = null
         scenario.onActivity { started = shadowOf(it).nextStartedActivity }
         assertNull(started)
+    }
+
+    @Test
+    fun tap_onClosingScreenAfterBack_doesNothing() {
+        openCamping()
+        composeTestRule.waitForIdle()
+
+        // Badge detail is drawn on top of Badges while it fades out after Back. Tap its
+        // link after the double-tap timeout, while it's still there.
+        composeTestRule.mainClock.autoAdvance = false
+        pressBack()
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.onNodeWithText("Official requirements").performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        var started: Intent? = null
+        scenario.onActivity { started = shadowOf(it).nextStartedActivity }
+        assertNull(started)
+        assertBadgesShowing()
     }
 
     @Test
