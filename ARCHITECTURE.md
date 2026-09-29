@@ -137,6 +137,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   [splash screen guide](https://developer.android.com/develop/ui/views/launch/splash-screen)
   suggests holding the first frame for loading "a small amount of data, such as
   loading in-app settings from a local disk".
+- **Text inside a string follows the strings' language, not the device's.**
+  `strings_language` in `strings.xml` names the language of the strings the app
+  shows, which differs from the device's when the app has no strings for it.
+  Lists inside a string (`rememberBadgeNameListFormatter`) and numbers are
+  formatted in that language, and plurals follow its rules, so a sentence never
+  mixes two languages: on a Persian phone, English strings read "Do 2 of 3", not
+  "Do ۲ of ۳", like catalog numbers such as "4c(1)" in the same row. Every
+  string with a number is formatted with `rememberStringsLanguageResources`.
 - **Material 3** components and the existing `BlueCardTheme`.
 
 ### Data layer

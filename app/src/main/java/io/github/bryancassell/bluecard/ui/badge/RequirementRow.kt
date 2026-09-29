@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.rememberStringsLanguageResources
 
 // Composables shared by the Badge detail and Requirement detail screens.
 
@@ -72,8 +73,11 @@ fun RequirementRow(
 
 /** "Do 2 of 3". */
 @Composable
-fun choiceLabel(choice: Choice): String =
-    stringResource(R.string.requirement_choice, choice.required, choice.of)
+fun choiceLabel(choice: Choice): String = rememberStringsLanguageResources().getString(
+    R.string.requirement_choice,
+    choice.required,
+    choice.of
+)
 
 /** Shown in place of a page whose badge, requirements version or requirement is missing. */
 @Composable

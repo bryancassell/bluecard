@@ -15,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -104,6 +105,19 @@ class HomeScreenTest {
         show(withProgress)
 
         text("Eagle-required").assert(isHeading()).assertIsDisplayed()
+        text("4 of 13 completed").assertIsDisplayed()
+        text("2 in progress").assertIsDisplayed()
+    }
+
+    // The strings are English, so their numbers use English digits on a Persian device too,
+    // rather than "۴ of ۱۳ completed".
+    @Config(qualifiers = "fa")
+    @Test
+    fun withProgress_onDeviceWithOtherDigits_usesStringsLanguageDigits() {
+        show(withProgress)
+
+        text("5 completed").assertIsDisplayed()
+        text("3 in progress").assertIsDisplayed()
         text("4 of 13 completed").assertIsDisplayed()
         text("2 in progress").assertIsDisplayed()
     }

@@ -24,6 +24,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -159,6 +160,16 @@ class BadgeDetailScreenTest {
 
         row("Do two of these.").assert(hasText("Do 2 of 3"))
         row("Plan a campout.").assert(!hasText("Do", substring = true))
+    }
+
+    // The strings are English, so "Do 2 of 3" keeps English digits on a Persian device, like
+    // the requirement numbers from the catalog in the same row.
+    @Config(qualifiers = "fa")
+    @Test
+    fun choiceRequirement_onDeviceWithOtherDigits_usesStringsLanguageDigits() {
+        show(ready)
+
+        row("Do two of these.").assert(hasText("Do 2 of 3"))
     }
 
     @Test
