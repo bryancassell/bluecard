@@ -204,13 +204,19 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ViewModel creates the state with `SavedStateHandle.textFieldState`
   (`ui/TextFieldSavedState.kt`), which restores the text and keeps it with a
   [saved state provider](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate#non-parcelable).
-  The provider reads the text only when the system saves state, so the text
-  survives the system stopping the app even if it changed while nothing
-  collected the screen's UI state. Onboarding's name and unit number fields,
-  Badges search and the requirement comment work this way. The comment is kept
-  only once the saved comment has loaded into it (`restoredText` and
-  `keepText`), so if the system stops the app before then, the page loads the
-  saved comment again instead of restoring an empty field.
+  Onboarding's name and unit number fields, Badges search and the requirement
+  comment work this way. The provider reads the text each time the system
+  saves state, so the text survives the system stopping the app even if it
+  changed while nothing collected the screen's UI state. Navigation 3 saves a
+  screen's state once when it leaves the display, and not again while it's in
+  the back stack, so a change made after that isn't kept. (Copying the text
+  into `SavedStateHandle` had the same limit.) Navigation 3 also gives every
+  screen's `SavedStateHandle` the extras of the intent that opened the app as
+  default arguments, so `restoredText` ignores any value under its key that it
+  didn't keep. The comment is kept only once the saved comment has loaded into
+  it (`restoredText` and `keepText`), so if the system stops the app before
+  then, the page loads the saved comment again instead of restoring an empty
+  field.
   A ViewModel that fills a field with stored text once it
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`

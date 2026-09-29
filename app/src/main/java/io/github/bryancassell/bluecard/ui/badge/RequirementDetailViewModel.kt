@@ -41,12 +41,14 @@ class RequirementDetailViewModel @AssistedInject constructor(
     // Keeps an unsaved comment if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val restoredComment = savedStateHandle.restoredText(COMMENT)
+
     /**
      * The comment field's text, which the field edits directly. It starts as the saved comment
      * once that loads, or as the unsaved comment the system stopped the app with.
      */
-    val comment = TextFieldState(savedStateHandle.restoredText(COMMENT).orEmpty())
-    private var commentLoaded = savedStateHandle.contains(COMMENT)
+    val comment = TextFieldState(restoredComment.orEmpty())
+    private var commentLoaded = restoredComment != null
 
     init {
         // Kept only once the saved comment has loaded into it, so if the system stops the app

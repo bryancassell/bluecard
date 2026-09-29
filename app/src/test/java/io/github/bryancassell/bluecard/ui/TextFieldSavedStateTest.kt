@@ -78,6 +78,15 @@ class TextFieldSavedStateTest {
     }
 
     @Test
+    fun textFieldState_ignoresAnotherValueUnderItsKey() {
+        // As when the intent that opened the app has an extra with the same name.
+        val savedStateHandle = SavedStateHandle(mapOf("field" to "From an intent."))
+
+        assertEquals("", savedStateHandle.textFieldState("field").text.toString())
+        assertNull(savedStateHandle.restoredText("field"))
+    }
+
+    @Test
     fun restoredText_whenNothingWasKept_isNull() {
         viewModelScenario { KeptLaterViewModel(createSavedStateHandle()) }.use { scenario ->
             scenario.viewModel.field.setTextAndPlaceCursorAtEnd("Not kept.")

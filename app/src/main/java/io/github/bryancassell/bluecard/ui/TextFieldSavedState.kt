@@ -12,12 +12,19 @@ import androidx.lifecycle.SavedStateHandle
 fun SavedStateHandle.textFieldState(key: String): TextFieldState =
     TextFieldState(restoredText(key).orEmpty()).also { keepText(key, it) }
 
-/** The text [keepText] kept under [key] when the system stopped the app, or null if none. */
-fun SavedStateHandle.restoredText(key: String): String? = get<Bundle>(key)?.getString(TEXT)
+/**
+ * The text [keepText] kept under [key] when the system stopped the app, or null if none.
+ * Anything else under [key] is ignored, such as an extra of the intent that opened the app,
+ * which Navigation 3 gives every screen's [SavedStateHandle] as a default argument.
+ */
+fun SavedStateHandle.restoredText(key: String): String? =
+    (get<Any?>(key) as? Bundle)?.getString(TEXT)
 
 /**
- * Keeps [state]'s text under [key] if the system stops the app. The text is read only when the
- * system saves state, so every change is kept, even one made while nothing observes the field.
+ * Keeps [state]'s text under [key] if the system stops the app. The text is read each time the
+ * system saves state, so a change is kept even if nothing observes the field. Navigation 3
+ * saves a screen's state once when it leaves the display, and not again while it's in the back
+ * stack, so a change made after that isn't kept.
  */
 fun SavedStateHandle.keepText(key: String, state: TextFieldState) {
     setSavedStateProvider(key) { bundleOf(TEXT to state.text.toString()) }

@@ -562,6 +562,25 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun anotherValueUnderTheCommentKey_loadsTheSavedComment() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        // As when the intent that opened the app has an extra named "comment".
+        val viewModel = RequirementDetailViewModel(
+            "camping",
+            "1",
+            catalogRepository,
+            progressRepository,
+            clock,
+            SavedStateHandle(mapOf("comment" to "From an intent."))
+        )
+        startCollecting(viewModel)
+
+        assertEquals("Saved.", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
     fun setCompleted_whenSaveFails_reportsItUntilShown() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
