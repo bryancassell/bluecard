@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -149,6 +150,50 @@ class OnboardingScreenTest {
 
         assertEquals("123", unitNumber.text.toString())
         assertEquals("", name.text.toString())
+    }
+
+    @Test
+    fun name_trimsTextPast100Characters() {
+        show(OnboardingUiState())
+        field("Name").performTextInput("a".repeat(90))
+
+        // As when pasting.
+        field("Name").performTextInput("b".repeat(20))
+
+        assertEquals("a".repeat(90) + "b".repeat(10), name.text.toString())
+        field("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 100))
+    }
+
+    @Test
+    fun unitNumber_trimsTextPast20Characters() {
+        show(OnboardingUiState())
+        field("Unit number").performTextInput("1".repeat(15))
+
+        // As when pasting.
+        field("Unit number").performTextInput("2".repeat(10))
+
+        assertEquals("1".repeat(15) + "2".repeat(5), unitNumber.text.toString())
+        field("Unit number")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 20))
+    }
+
+    // A single-line field shows a pasted line break as a space, so it's saved as one.
+    @Test
+    fun name_pastedLineBreak_becomesSpace() {
+        show(OnboardingUiState())
+
+        field("Name").performTextInput("Alex\nScout")
+
+        assertEquals("Alex Scout", name.text.toString())
+    }
+
+    @Test
+    fun unitNumber_pastedLineBreak_becomesSpace() {
+        show(OnboardingUiState())
+
+        field("Unit number").performTextInput("Troop\r\n123")
+
+        assertEquals("Troop 123", unitNumber.text.toString())
     }
 
     @Test
