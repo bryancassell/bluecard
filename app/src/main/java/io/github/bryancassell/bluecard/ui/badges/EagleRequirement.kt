@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.ui.stringsLocale
 import java.text.Collator
 import java.util.Locale
 
@@ -54,8 +55,8 @@ fun MeritBadge.eagleRequirement(eagleGroups: Map<String, List<String>>): EagleRe
  */
 @Composable
 fun rememberBadgeNameListFormatter(): ListFormatter {
-    val language = stringResource(R.string.strings_language)
-    return remember(language) { ListFormatter.getInstance(Locale.forLanguageTag(language)) }
+    val locale = stringsLocale()
+    return remember(locale) { ListFormatter.getInstance(locale) }
 }
 
 /** How [requirement] is shown, such as "Eagle-required (one of Cycling, Hiking, and Swimming)". */

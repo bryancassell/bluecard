@@ -167,6 +167,35 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   [splash screen guide](https://developer.android.com/develop/ui/views/launch/splash-screen)
   suggests holding the first frame for loading "a small amount of data, such as
   loading in-app settings from a local disk".
+- **Text inside a string follows the strings' language, not the device's.**
+  `strings_language` in `strings.xml` names the language of the strings the app
+  shows, which differs from the device's when the app has no strings for it.
+  Lists inside a string (`rememberBadgeNameListFormatter`) and numbers are
+  formatted in that language, and plurals follow its rules, so a sentence never
+  mixes two languages: on a Persian phone, English strings read "Do 2 of 3", not
+  "Do ۲ of ۳", like catalog numbers such as "4c(1)" in the same row.
+  `StringsLanguageTagTest` checks that each `strings.xml` names its own language
+  with a well-formed tag: a wrong tag, such as "en" left in a translation, would
+  replace the whole translation with English.
+- **`BlueCardApp` provides `LocalResources` in the strings' language**
+  (`ProvideStringsLanguageResources`), so every `stringResource` and
+  `pluralStringResource` follows it, with nothing to remember at each call.
+  - **Locales** (`stringsLocales`): first, the device's first locale in the
+    strings' language and script, which keeps the device's region and digit
+    choice, or else the strings' language itself. Then the device's other
+    locales, so Android can fall back to them when the app has no strings in the
+    first, such as for a pseudo-locale. When these are the device's own locales,
+    as on an English phone, the device's resources are used unchanged.
+  - **Only the locales change.** The resources keep the device's layout
+    direction, which the layout follows
+    ([#66](https://github.com/bryancassell/bluecard/issues/66)).
+  - **Labels that follow the device:** those the app doesn't read through
+    `LocalResources`, such as the text selection toolbar (Cut, Copy, Paste),
+    Material 3's labels and the role and state names TalkBack reads. Compose
+    Foundation's right-click menu does read `LocalResources`, so it follows the
+    strings' language.
+  - **Code outside Compose** that formats a string with a number, such as the
+    PDF report, must use the same locales (`stringsLocales`).
 - **Material 3** components and the existing `BlueCardTheme`.
 
 ### Data layer

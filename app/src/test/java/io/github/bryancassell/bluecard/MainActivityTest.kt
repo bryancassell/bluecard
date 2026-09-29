@@ -310,6 +310,16 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 
+    // The app formats every string in the strings' language, so on a Persian device the
+    // English strings keep English digits rather than "Do ۱ of ۲".
+    @Config(qualifiers = "fa")
+    @Test
+    fun onDeviceWithOtherDigits_numbersUseStringsLanguageDigits() {
+        openCamping()
+
+        composeTestRule.onNodeWithText("Do 1 of 2").assertIsDisplayed()
+    }
+
     @Test
     fun back_fromBadgeDetail_returnsToBadges() {
         openCamping()
