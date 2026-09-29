@@ -9,6 +9,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.completion
 import java.text.Collator
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,9 +26,10 @@ class BadgesViewModel @Inject constructor(
     val uiState: StateFlow<BadgesUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
-            // Alphabetical order for the scout's language: an accented letter sorts with its
-            // base letter, and case only breaks ties.
-            val byName = compareBy(Collator.getInstance(), MeritBadge::name)
+            // Badge names are English whatever the device language, so they're sorted by
+            // English rules: an accented letter sorts with its base letter, and case only
+            // breaks ties.
+            val byName = compareBy(Collator.getInstance(Locale.ENGLISH), MeritBadge::name)
             val badges = catalogRepository.getBadges().sortedWith(byName)
             val eagleGroups = badges.filter { it.eagleGroup != null }
                 .groupBy({ it.eagleGroup }, { it.name })

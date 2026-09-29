@@ -267,6 +267,24 @@ class MainActivityTest {
     }
 
     @Test
+    fun doubleTap_onMeritBadges_inOneFrame_opensBadgesOnce() {
+        launchWithProfile()
+        // Let Home finish appearing before stopping the clock.
+        val meritBadges = composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+
+        // Both taps land before the next frame, before the screen change starts.
+        composeTestRule.mainClock.autoAdvance = false
+        meritBadges.performClick()
+        meritBadges.performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Home").assertIsDisplayed()
+    }
+
+    @Test
     fun doubleTap_onBadge_opensItOnce() {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()

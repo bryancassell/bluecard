@@ -110,13 +110,14 @@ class BadgesScreenTest {
         row("Hiking").assert(!hasText("Eagle-required"))
     }
 
-    // The app has only English strings, but the list of names follows the device language.
+    // The app has only English strings, so on a French device the whole label stays
+    // English, rather than an English sentence with a French list ("Hiking et Swimming").
     @Config(qualifiers = "fr")
     @Test
-    fun eagleGroupBadge_listsNamesForTheLanguage() {
+    fun eagleGroupBadge_onDeviceInAnotherLanguage_staysInOneLanguage() {
         show(BadgesUiState.Ready(badges))
 
-        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking et Swimming)"))
+        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
     }
 
     @Test

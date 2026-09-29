@@ -120,6 +120,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+- **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
+  ignores a tap unless the tapping screen is on top of the back stack and
+  resumed, so a double tap can't open a screen twice. `NavDisplay` holds a
+  screen at STARTED while it animates in or out, so taps during a transition
+  (about 700 ms) are dropped.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)

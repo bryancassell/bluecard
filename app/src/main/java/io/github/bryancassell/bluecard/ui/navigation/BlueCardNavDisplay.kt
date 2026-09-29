@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -37,17 +36,17 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()
         ),
-        // Navigation callbacks are wrapped in dropUnlessResumed. NavDisplay holds a screen
-        // at STARTED while it animates in or out, and a screen that is leaving still takes
-        // the taps that the incoming screen doesn't, so without this a quick double tap
-        // could open the next screen twice.
+        // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
+        // twice.
         entryProvider = entryProvider {
             entry<Onboarding> { OnboardingRoute() }
-            entry<Home> { HomeRoute(onOpenBadges = dropUnlessResumed { backStack.add(Badges) }) }
-            entry<Badges> {
-                BadgesRoute(
-                    onOpenBadge = dropUnlessResumed { id: String -> backStack.add(BadgeDetail(id)) }
-                )
+            entry<Home> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key)
+                HomeRoute(onOpenBadges = { navigate(Badges) })
+            }
+            entry<Badges> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key)
+                BadgesRoute(onOpenBadge = { navigate(BadgeDetail(it)) })
             }
             entry<BadgeDetail> { key -> BadgeDetailScreen(badgeId = key.badgeId) }
         }

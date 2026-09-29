@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.LocalDate
+import java.util.Locale
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -116,6 +117,22 @@ class BadgesViewModelTest {
             listOf("Archery", "bird Study", "Écologie", "Zoology"),
             state.badges.map { it.name }
         )
+    }
+
+    @Test
+    fun uiState_sortsByEnglishRules_whateverTheDeviceLanguage() = runTest {
+        // Czech sorts "ch" as its own letter, after "h".
+        val deviceLocale = Locale.getDefault()
+        Locale.setDefault(Locale.forLanguageTag("cs"))
+        try {
+            catalogRepository.badges = listOf(badge("h", "Hiking"), badge("c", "Chess"))
+            startCollecting(viewModel)
+
+            val state = viewModel.uiState.value as BadgesUiState.Ready
+            assertEquals(listOf("Chess", "Hiking"), state.badges.map { it.name })
+        } finally {
+            Locale.setDefault(deviceLocale)
+        }
     }
 
     @Test
