@@ -221,11 +221,17 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
-  snapshot, which it does once a frame. Saved state has a size limit, so Badges
-  search and the requirement comment have a length limit (`TextLengthLimit`);
-  Onboarding's fields don't have one yet. It keeps as much of an edit, such as
-  a long paste, as fits, and never cuts the text already in the field or splits
-  an emoji.
+  snapshot, which it does once a frame. Saved state has a size limit, so every
+  text field has a length limit (`TextLengthLimit`): 100 characters for
+  Onboarding's name and Badges search, 20 for the unit number and 2,000 for the
+  requirement comment. It keeps as much of an edit, such as a long paste, as
+  fits, and never cuts the text already in the field or splits an emoji. A
+  single-line field keeps a pasted line break in its text but doesn't show one,
+  so the single-line fields (Onboarding's and Badges search) also replace each
+  line break with a space (`LineBreaksAsSpaces`). That runs after the length
+  limit, so the limit cuts a huge paste before it's scanned, and finds the edit
+  before a pasted line break becomes a space it could mistake for one already in
+  the field.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
