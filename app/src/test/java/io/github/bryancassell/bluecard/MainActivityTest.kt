@@ -2,11 +2,13 @@ package io.github.bryancassell.bluecard
 
 import android.app.Application
 import android.content.Intent
+import android.os.Bundle
 import android.view.View
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.getBoundsInRoot
@@ -22,6 +24,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.AnnotatedString
+import androidx.core.os.bundleOf
+import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.pressBack
@@ -149,6 +154,16 @@ class MainActivityTest {
         launch()
     }
 
+    // MainActivity is exported, so another app can start it with any extras. These are named
+    // like the screens' saved text fields, and built like the text they keep.
+    private fun launchWithExtrasNamedLikeTextFields() {
+        val intent = Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java)
+        for (key in listOf("name", "unit_number", "query", "comment")) {
+            intent.putExtra(key, bundleOf("text" to "From another app."))
+        }
+        scenario = ActivityScenario.launch(intent)
+    }
+
     // Home's heading is the scout's name. Matching the heading leaves out the Onboarding
     // field that holds the same name.
     private fun home() = composeTestRule.onNode(isHeading() and hasText("Alex Scout"))
@@ -162,6 +177,12 @@ class MainActivityTest {
     )
 
     private fun field(label: String) = composeTestRule.onNode(hasSetTextAction() and hasText(label))
+
+    private fun assertFieldEmpty(label: String) {
+        field(label).assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(""))
+        )
+    }
 
     private fun completeOnboarding() {
         field("Name").performTextInput("Alex Scout")
@@ -306,6 +327,37 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
+    }
+
+    @Test
+    fun launchExtras_doNotFillOnboardingFields() {
+        launchWithExtrasNamedLikeTextFields()
+
+        assertFieldEmpty("Name")
+        assertFieldEmpty("Unit number")
+    }
+
+    @Test
+    fun launchExtras_doNotFillSearchOrComment() {
+        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        launchWithExtrasNamedLikeTextFields()
+
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        assertFieldEmpty("Search merit badges")
+        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.onNodeWithText("First.").performClick()
+        assertFieldEmpty("Comment")
+    }
+
+    // Covers every ViewModel, including those scoped to the activity, whatever keys the
+    // screens save their text under.
+    @Test
+    fun launchExtras_areNotDefaultArguments() {
+        launchWithExtrasNamedLikeTextFields()
+
+        var defaultArgs: Bundle? = null
+        scenario.onActivity { defaultArgs = it.defaultViewModelCreationExtras[DEFAULT_ARGS_KEY] }
+        assertEquals(emptySet<String>(), defaultArgs?.keySet())
     }
 
     @Test
