@@ -9,7 +9,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
+import androidx.savedstate.savedState
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.bryancassell.bluecard.ui.BlueCardApp
 import io.github.bryancassell.bluecard.ui.stringsLocale
@@ -17,6 +21,15 @@ import io.github.bryancassell.bluecard.ui.stringsLocale
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
+
+    // ComponentActivity gives the extras of the intent that opened it to every ViewModel's
+    // SavedStateHandle as default arguments, and Navigation 3 passes them on to every screen.
+    // The activity is exported, so any app could fill a screen's saved state that way; BlueCard
+    // uses neither intent extras nor default arguments, so the defaults are left empty.
+    override val defaultViewModelCreationExtras: CreationExtras
+        get() = MutableCreationExtras(super.defaultViewModelCreationExtras).apply {
+            set(DEFAULT_ARGS_KEY, savedState())
+        }
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase)

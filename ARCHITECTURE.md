@@ -210,12 +210,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
   the back stack, so a change made after that isn't kept. (Copying the text
-  into `SavedStateHandle` had the same limit.) Navigation 3 also gives every
-  screen's `SavedStateHandle` the extras of the intent that opened the app as
-  default arguments, so `restoredText` ignores any value under its key that
-  isn't the kind of `Bundle` it keeps. An extra built like one still counts;
-  [#83](https://github.com/bryancassell/bluecard/issues/83) keeps the extras
-  out. The comment is kept only once the saved comment has loaded into
+  into `SavedStateHandle` had the same limit.) `restoredText` ignores any value
+  under its key that isn't the kind of `Bundle` it keeps. The extras of the
+  intent that opened the app don't reach it (see Navigation), so this only
+  guards against a value from somewhere else. The comment is kept only once the
+  saved comment has loaded into
   it (`restoredText` and `keepText`), so if the system stops the app before
   then, the page loads the saved comment again instead of restoring an empty
   field.
@@ -232,6 +231,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+  - **Screens' `SavedStateHandle`s don't start with the launching intent's
+    extras.** `ComponentActivity` gives them to ViewModels as default
+    arguments, and Navigation 3 passes the activity's defaults on to every
+    screen. `MainActivity` is exported, so any app could fill a screen's saved
+    state, such as the requirement comment, with an extra of the same name.
+    BlueCard uses neither intent extras nor default arguments, so `MainActivity`
+    overrides `defaultViewModelCreationExtras` to leave the default arguments
+    empty ([#83](https://github.com/bryancassell/bluecard/issues/83)). This
+    also covers ViewModels scoped to the activity.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens
