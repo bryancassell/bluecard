@@ -14,8 +14,9 @@ fun SavedStateHandle.textFieldState(key: String): TextFieldState =
 
 /**
  * The text [keepText] kept under [key] when the system stopped the app, or null if none.
- * Anything else under [key] is ignored, such as an extra of the intent that opened the app,
- * which Navigation 3 gives every screen's [SavedStateHandle] as a default argument.
+ * A value under [key] that isn't the kind of Bundle [keepText] keeps is ignored, such as a text
+ * extra of the intent that opened the app, which Navigation 3 gives every screen's
+ * [SavedStateHandle] as a default argument.
  */
 fun SavedStateHandle.restoredText(key: String): String? =
     (get<Any?>(key) as? Bundle)?.getString(TEXT)

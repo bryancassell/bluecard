@@ -212,8 +212,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   the back stack, so a change made after that isn't kept. (Copying the text
   into `SavedStateHandle` had the same limit.) Navigation 3 also gives every
   screen's `SavedStateHandle` the extras of the intent that opened the app as
-  default arguments, so `restoredText` ignores any value under its key that it
-  didn't keep. The comment is kept only once the saved comment has loaded into
+  default arguments, so `restoredText` ignores any value under its key that
+  isn't the kind of `Bundle` it keeps. An extra built like one still counts;
+  [#83](https://github.com/bryancassell/bluecard/issues/83) keeps the extras
+  out. The comment is kept only once the saved comment has loaded into
   it (`restoredText` and `keepText`), so if the system stops the app before
   then, the page loads the saved comment again instead of restoring an empty
   field.
@@ -626,7 +628,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   new ViewModel. Handing a second ViewModel the same `SavedStateHandle` doesn't
   run saved state providers, so it can't test them. `scenario.viewModel`
   creates the ViewModel when first read, so a test reads it before
-  `recreate()`.
+  `recreate()`. `recreate()` doesn't clear the ViewModel it replaces, so that
+  ViewModel's coroutines keep running and `onCleared` isn't called.
 - **Hilt in tests.** Tests that launch a Hilt activity use `HiltAndroidRule` and
   Hilt's test application, and `@TestInstallIn` modules replace production
   bindings such as the coroutine dispatcher. A test class that needs fakes
