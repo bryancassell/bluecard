@@ -196,8 +196,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   `RoomProgressRepository` wraps Room's `SQLiteException` in one. ViewModels then
   catch it without depending on a storage API (req. 9). Room's writes aren't
   wrapped yet: the first screen that saves progress wraps them the same way. A
-  corrupted database is the exception: the SQLite library deletes it, so
-  progress is lost without an error
+  corrupted database is the exception: the SQLite library deletes it. If a read
+  finds the corruption, the scout sees the load-failed message, and the app
+  reopens with no progress. If opening the database finds it, the progress is
+  gone without any message
   ([#70](https://github.com/bryancassell/bluecard/issues/70)).
 
 ### Dependency injection
