@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
@@ -35,6 +36,7 @@ class BadgesViewModelTest {
     private val version = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
+    private val badgeStart = BadgeStart(version, started)
 
     private fun badge(
         id: String,
@@ -211,7 +213,7 @@ class BadgesViewModelTest {
     @Test
     fun status_startedBadge_isInProgress() = runTest {
         progressRepository.startBadge("camping", version, started)
-        progressRepository.markRequirementCompleted("camping", "1", day)
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
         startCollecting(viewModel)
 
         assertEquals(BadgeStatus.InProgress, status("camping"))

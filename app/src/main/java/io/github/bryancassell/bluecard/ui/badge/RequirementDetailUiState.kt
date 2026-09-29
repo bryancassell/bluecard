@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.ui.SaveFailure
+import java.time.LocalDate
+
 /** What the Requirement detail screen shows. */
 sealed interface RequirementDetailUiState {
     /** The catalog is still loading. */
@@ -11,7 +14,18 @@ sealed interface RequirementDetailUiState {
     data class Ready(
         val badgeName: String,
         val requirement: RequirementItem,
-        val children: List<RequirementItem>
+        /**
+         * When the scout completed it, for a requirement they marked complete, or null if they
+         * gave no date or it isn't complete.
+         */
+        val completedDate: LocalDate?,
+        val children: List<RequirementItem>,
+        /** Whether the comment field differs from the saved comment, so it can be saved. */
+        val commentChanged: Boolean,
+        /** The latest date the scout can give as a completion date. */
+        val today: LocalDate,
+        /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
+        val saveFailure: SaveFailure? = null
     ) : RequirementDetailUiState
 
     /**

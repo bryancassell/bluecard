@@ -24,6 +24,15 @@ data class BadgeProgress(
     val completedOnPriorDate: LocalDate? = null
 )
 
+/**
+ * How to start a badge that hasn't been started, when something is recorded for it: on a
+ * requirements version (its effective date), on a date. See [ProgressRepository].
+ */
+data class BadgeStart(val requirementsVersion: LocalDate, val startedDate: LocalDate) {
+    /** The progress of badge [badgeId] when it's started this way. */
+    fun progress(badgeId: String) = BadgeProgress(badgeId, requirementsVersion, startedDate)
+}
+
 /** The badge's merit badge counselor. Every field is optional. */
 data class Counselor(
     val name: String? = null,
@@ -38,6 +47,12 @@ data class Counselor(
         Counselor(name?.ifBlank { null }, phone?.ifBlank { null }, email?.ifBlank { null })
             .takeIf { it != Counselor() }
 }
+
+/**
+ * A requirement's comment as repositories store it: without spaces around it, and null if
+ * nothing is left.
+ */
+fun normalizedComment(comment: String?): String? = comment?.trim()?.ifEmpty { null }
 
 @Entity(
     tableName = "requirement_progress",

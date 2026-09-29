@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -103,8 +104,45 @@ class BadgesScreenTest {
 
     private fun clearButton() = composeTestRule.onNodeWithContentDescription("Clear search")
 
-    private fun noMatchesMessage() =
-        composeTestRule.onNodeWithText("No merit badges match your search.")
+    // The count as the screen shows it. Screen readers get announcedCount() instead.
+    private fun shownCount() = composeTestRule.onNode(
+        hasText("merit badge", substring = true) and
+            SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
+    )
+
+    // The count as screen readers hear it: the line's live region.
+    private fun announcedCount() = composeTestRule.onNode(
+        hasText("merit badge", substring = true) and
+            SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
+    )
+
+    private fun noMatchesMessage() = composeTestRule.onNode(
+        hasText("No merit badges match your search.") and
+            SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
+    )
+
+    /**
+     * Waits as long as the scout must stop typing before screen readers hear a new count, from
+     * when the screen has caught up with the last change.
+     */
+    private fun pauseTyping() = waitFor(TypingPause.inWholeMilliseconds)
+
+    // Most of the pause, then enough more to pass it.
+    private val mostOfPause = TypingPause.inWholeMilliseconds - 200
+    private val restOfPause = 300L
+
+    /**
+     * Lets the screen catch up with the last change, waits [milliseconds] more, then lets it
+     * show what changed while it waited.
+     */
+    private fun waitFor(milliseconds: Long) {
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeByFrame()
+        composeTestRule.mainClock.advanceTimeBy(milliseconds)
+        composeTestRule.mainClock.advanceTimeByFrame()
+    }
+
+    private fun catchUp() = waitFor(0)
 
     private val many = (1..200).map {
         BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
@@ -123,6 +161,7 @@ class BadgesScreenTest {
         composeTestRule.onNode(loadingIndicator).assertIsDisplayed()
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()
+        shownCount().assertDoesNotExist()
     }
 
     @Test
@@ -136,6 +175,7 @@ class BadgesScreenTest {
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()
+        shownCount().assertDoesNotExist()
     }
 
     @Test
@@ -337,6 +377,21 @@ class BadgesScreenTest {
     }
 
     @Test
+    fun ready_showsHowManyBadges() {
+        show(BadgesUiState.Ready(badges))
+
+        shownCount().assertIsDisplayed().assert(hasText("4 merit badges"))
+        announcedCount().assert(hasText("4 merit badges"))
+    }
+
+    @Test
+    fun oneBadge_countIsSingular() {
+        show(BadgesUiState.Ready(badges.take(1)))
+
+        shownCount().assert(hasText("1 merit badge"))
+    }
+
+    @Test
     fun noMatches_showsMessageAndSearchField() {
         query.setTextAndPlaceCursorAtEnd("zoology")
         show(BadgesUiState.NoMatches)
@@ -368,6 +423,152 @@ class BadgesScreenTest {
         uiState = BadgesUiState.Ready(badges)
         row("Chess").assertIsDisplayed()
         assertEquals(field, searchField().fetchSemanticsNode().id)
+    }
+
+    // Screen readers announce a live region when its text changes. Compose announces only a
+    // node that was already shown, so the count must stay the same node as matches come and
+    // go, with only its text changing.
+    @Test
+    fun announcedCount_staysTheSamePoliteLiveRegion_asMatchesChange() {
+        show(BadgesUiState.Ready(badges))
+        val count = announcedCount()
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
+            )
+            .fetchSemanticsNode().id
+
+        uiState = BadgesUiState.Ready(badges.take(1))
+        pauseTyping()
+        announcedCount().assert(hasText("1 merit badge"))
+        assertEquals(count, announcedCount().fetchSemanticsNode().id)
+
+        uiState = BadgesUiState.NoMatches
+        pauseTyping()
+        announcedCount().assert(hasText("No merit badges match your search."))
+        assertEquals(count, announcedCount().fetchSemanticsNode().id)
+
+        // As when the scout clears the search.
+        uiState = BadgesUiState.Ready(badges)
+        pauseTyping()
+        announcedCount().assert(hasText("4 merit badges"))
+        assertEquals(count, announcedCount().fetchSemanticsNode().id)
+    }
+
+    // TalkBack doesn't let new speech cut off a polite live region, so a count announced as
+    // the scout types would hold back the keyboard's feedback on their next key.
+    @Test
+    fun announcedCount_changesOnlyOnceTypingPauses() {
+        show(BadgesUiState.Ready(badges))
+        composeTestRule.mainClock.autoAdvance = false
+
+        val announcedSize = announcedCount().fetchSemanticsNode().size
+
+        // Each keystroke filters the list straight away, as the ViewModel does.
+        query.setTextAndPlaceCursorAtEnd("c")
+        uiState = BadgesUiState.NoMatches
+        waitFor(mostOfPause)
+        // The screen shows the new count straight away.
+        shownCount().assert(hasText("No merit badges match your search."))
+        announcedCount().assert(hasText("4 merit badges"))
+        // TalkBack announces a live region when even its size changes, so the announced count
+        // mustn't change size with the shown one.
+        assertEquals(announcedSize, announcedCount().fetchSemanticsNode().size)
+
+        // A keystroke that leaves the same matches still restarts the wait.
+        query.setTextAndPlaceCursorAtEnd("c ")
+        waitFor(mostOfPause)
+        // Longer than the pause since the count first changed, but the scout kept typing.
+        announcedCount().assert(hasText("4 merit badges"))
+
+        waitFor(restOfPause)
+        announcedCount().assert(hasText("No merit badges match your search."))
+    }
+
+    // Deleting the search a key at a time is typing too, so it still waits for a pause.
+    @Test
+    fun deletingSearch_announcesCountOnceTypingPauses() {
+        query.setTextAndPlaceCursorAtEnd("chess")
+        show(BadgesUiState.Ready(badges.take(1)))
+        composeTestRule.mainClock.autoAdvance = false
+
+        query.setTextAndPlaceCursorAtEnd("")
+        uiState = BadgesUiState.Ready(badges)
+        waitFor(mostOfPause)
+        announcedCount().assert(hasText("1 merit badge"))
+
+        waitFor(restOfPause)
+        announcedCount().assert(hasText("4 merit badges"))
+    }
+
+    // After Clear search the scout is about to type a new search. The count is announced
+    // straight away, so it comes before TalkBack reads the search field rather than as the
+    // scout starts typing.
+    @Test
+    fun clearSearch_announcesNewCountWithoutWaiting() {
+        query.setTextAndPlaceCursorAtEnd("chess")
+        show(BadgesUiState.Ready(badges.take(1)))
+        composeTestRule.mainClock.autoAdvance = false
+
+        clearButton().performClick()
+        catchUp()
+        // The ViewModel lists every badge again a moment later.
+        uiState = BadgesUiState.Ready(badges)
+        catchUp()
+
+        announcedCount().assert(hasText("4 merit badges"))
+    }
+
+    // A count the scout typed but hadn't paused to hear isn't announced once they clear it.
+    @Test
+    fun clearSearch_beforeCountIsAnnounced_skipsClearedCount() {
+        query.setTextAndPlaceCursorAtEnd("chess")
+        show(BadgesUiState.Ready(badges.take(1)))
+        composeTestRule.mainClock.autoAdvance = false
+        query.setTextAndPlaceCursorAtEnd("chessz")
+        uiState = BadgesUiState.NoMatches
+        catchUp()
+
+        clearButton().performClick()
+        catchUp()
+        announcedCount().assert(hasText("1 merit badge"))
+
+        uiState = BadgesUiState.Ready(badges)
+        catchUp()
+        announcedCount().assert(hasText("4 merit badges"))
+    }
+
+    // Only the count that replaces the cleared one skips the wait.
+    @Test
+    fun afterClearSearch_deletingSearchStillWaitsForPause() {
+        query.setTextAndPlaceCursorAtEnd("chess")
+        show(BadgesUiState.Ready(badges.take(1)))
+        clearButton().performClick()
+        uiState = BadgesUiState.Ready(badges)
+        announcedCount().assert(hasText("4 merit badges"))
+        composeTestRule.mainClock.autoAdvance = false
+
+        query.setTextAndPlaceCursorAtEnd("c")
+        uiState = BadgesUiState.Ready(badges.take(3))
+        pauseTyping()
+        announcedCount().assert(hasText("3 merit badges"))
+        query.setTextAndPlaceCursorAtEnd("")
+        uiState = BadgesUiState.Ready(badges)
+        waitFor(mostOfPause)
+
+        announcedCount().assert(hasText("3 merit badges"))
+    }
+
+    // Once the catalog loads, the count is new on the screen, so screen readers don't
+    // announce it, and there's no reason to wait.
+    @Test
+    fun count_appearsWithoutWaiting_whenBadgesLoad() {
+        show(BadgesUiState.Loading)
+        composeTestRule.mainClock.autoAdvance = false
+
+        uiState = BadgesUiState.Ready(badges)
+        catchUp()
+
+        announcedCount().assert(hasText("4 merit badges"))
     }
 
     @Test
