@@ -35,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -45,6 +46,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.maxTextLength
 import androidx.compose.ui.semantics.semantics
@@ -99,15 +101,21 @@ fun BadgesScreen(
         // and the keyboard stays open as the scout types, and screen readers announce the
         // count when it changes.
         if (uiState is BadgesUiState.Ready || uiState == BadgesUiState.NoMatches) {
-            SearchField(query)
+            val count = if (uiState is BadgesUiState.Ready) {
+                val size = uiState.badges.size
+                pluralStringResource(R.plurals.badges_count, size, size)
+            } else {
+                stringResource(R.string.badges_no_matches)
+            }
+            // The count when the scout last pressed Clear search, until the count that
+            // replaces it is announced.
+            var countWhenCleared by remember { mutableStateOf<String?>(null) }
+            SearchField(query, onClear = { countWhenCleared = count })
             MatchCount(
-                if (uiState is BadgesUiState.Ready) {
-                    val count = uiState.badges.size
-                    pluralStringResource(R.plurals.badges_count, count, count)
-                } else {
-                    stringResource(R.string.badges_no_matches)
-                },
-                query
+                count = count,
+                query = query,
+                countWhenCleared = countWhenCleared,
+                onClearAnnounced = { countWhenCleared = null }
             )
         }
         when (uiState) {
@@ -169,7 +177,7 @@ private object SearchLengthLimit : InputTransformation {
 }
 
 @Composable
-private fun SearchField(query: TextFieldState) {
+private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
     // Read through derivedStateOf, so the field recomposes when the text goes between empty
@@ -189,6 +197,7 @@ private fun SearchField(query: TextFieldState) {
                 // to the field too, even when the field already had input focus (checked with
                 // TalkBack 17 on Android 17).
                 IconButton(onClick = {
+                    onClear()
                     query.clearText()
                     focusRequester.requestFocus()
                     keyboardController?.show()
@@ -219,36 +228,66 @@ private fun SearchField(query: TextFieldState) {
 }
 
 /**
- * How long the scout must stop typing before [MatchCount] shows a new count. TalkBack doesn't
+ * How long the scout must stop typing before screen readers hear a new count. TalkBack doesn't
  * let new speech cut off a polite live region, so a count spoken while the scout types holds
  * back their keyboard's feedback on the next key.
  */
-private val TypingPause = 1.seconds
+internal val TypingPause = 1.seconds
 
 /**
- * How many badges the list shows, or that none match, in [text]. A polite live region, so
- * screen readers announce it when it changes. A new [text] is shown once the scout has stopped
- * typing in [query] for [TypingPause], so the announcement comes after the keyboard's feedback
- * on the last key. Compose announces a live region only when a node that's already shown
- * changes (see ARCHITECTURE.md, UI layer), so it stays composed as the matches change, and only
+ * How many badges the list shows, or that none match. The line shows [count] straight away.
+ * Screen readers get it as a polite live region, which they announce when it changes, once the
+ * scout has stopped typing in [query] for [TypingPause], so the announcement comes after the
+ * keyboard's feedback on the last key.
+ *
+ * After Clear search, when the count changes from [countWhenCleared], the new count is
+ * announced straight away instead, before TalkBack reads the search field the scout is about to
+ * type in, and [onClearAnnounced] is called.
+ *
+ * Compose announces a live region only when a node that's already shown changes (see
+ * ARCHITECTURE.md, UI layer), so the live region stays composed as the matches change, and only
  * its text changes.
  */
 @Composable
-private fun MatchCount(text: String, query: TextFieldState) {
-    var shown by remember { mutableStateOf(text) }
+private fun MatchCount(
+    count: String,
+    query: TextFieldState,
+    countWhenCleared: String?,
+    onClearAnnounced: () -> Unit
+) {
+    // Read through derivedStateOf, so the count recomposes when the text changes, not when the
+    // cursor moves.
+    val typed by remember(query) { derivedStateOf { query.text.toString() } }
+    var announced by remember { mutableStateOf(count) }
     // Each keystroke restarts the wait, even one that leaves the count the same.
-    LaunchedEffect(text, query.text.toString()) {
-        delay(TypingPause)
-        shown = text
+    LaunchedEffect(count, typed) {
+        if (typed.isEmpty() && countWhenCleared != null && count != countWhenCleared) {
+            onClearAnnounced()
+        } else {
+            delay(TypingPause)
+        }
+        announced = count
     }
-    Text(
-        text = shown,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-            .semantics { liveRegion = LiveRegionMode.Polite }
-    )
+    Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+        // What screen readers hear. TalkBack announces a live region whenever it changes at
+        // all, even just its size, so this one is laid out from the announced count alone,
+        // apart from the count the line shows. It isn't drawn: the shown count is drawn in its
+        // place.
+        Text(
+            text = announced,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .semantics { liveRegion = LiveRegionMode.Polite }
+                .drawWithContent {}
+        )
+        Text(
+            text = count,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // Screen readers get the announced count instead.
+            modifier = Modifier.semantics { hideFromAccessibility() }
+        )
+    }
 }
 
 @Composable
