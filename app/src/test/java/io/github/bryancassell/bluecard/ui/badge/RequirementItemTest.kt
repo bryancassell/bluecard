@@ -28,9 +28,9 @@ class RequirementItemTest {
         numbers.associateWith { RequirementProgress("camping", it, completed = true) }
 
     @Test
-    fun leaf_isOneRowThatDoesNotOpen() {
+    fun leaf_hasNoSubRequirements() {
         assertEquals(
-            RequirementItem("1", "Plan a campout.", null, completed = false, opensDetail = false),
+            RequirementItem("1", "Plan a campout.", null, false, hasSubRequirements = false),
             leaf.toItem(emptyMap())
         )
     }
@@ -41,9 +41,15 @@ class RequirementItemTest {
     }
 
     @Test
-    fun someOfItsSubRequirements_isChoiceThatOpens() {
+    fun someOfItsSubRequirements_isChoiceWithSubRequirements() {
         assertEquals(
-            RequirementItem("2", "Do two of these.", Choice(2, 3), completed = false, true),
+            RequirementItem(
+                "2",
+                "Do two of these.",
+                Choice(2, 3),
+                false,
+                hasSubRequirements = true
+            ),
             twoOfThree.toItem(emptyMap())
         )
     }
@@ -67,7 +73,7 @@ class RequirementItemTest {
     }
 
     @Test
-    fun trackerOnly_doesNotOpenYet() {
+    fun trackerOnly_isMarkedCompleteByScout() {
         val log = Requirement(
             "4",
             "Keep a camping log.",
@@ -76,6 +82,6 @@ class RequirementItemTest {
             )
         )
 
-        assertFalse(log.toItem(emptyMap()).opensDetail)
+        assertFalse(log.toItem(emptyMap()).hasSubRequirements)
     }
 }

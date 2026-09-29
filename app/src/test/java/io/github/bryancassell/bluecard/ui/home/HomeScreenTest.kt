@@ -11,7 +11,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.visualText
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,7 +50,8 @@ class HomeScreenTest {
         }
     }
 
-    private fun text(text: String) = composeTestRule.onNodeWithText(text)
+    private fun text(text: String, substring: Boolean = false) =
+        composeTestRule.onNodeWithText(text, substring)
 
     private val loadingIndicator = SemanticsMatcher.expectValue(
         SemanticsProperties.ProgressBarRangeInfo,
@@ -87,6 +90,27 @@ class HomeScreenTest {
         text("Alex Scout").assert(isHeading()).assertIsDisplayed()
         text("Unit: 123").assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+    }
+
+    // Home is laid out left-to-right, like the English strings, but a name typed in Persian
+    // keeps its own direction: its final period is drawn at its end, which is on its left.
+    @Test
+    fun nameTypedInPersian_keepsItsPunctuationAtItsEnd() {
+        show(noProgress.copy(name = "علی رضایی."))
+
+        val name = composeTestRule.onNode(isHeading()).visualText()
+
+        assertTrue(name, name.startsWith("."))
+    }
+
+    // The same inside an English string.
+    @Test
+    fun unitNumberTypedInPersian_keepsItsPunctuationAtItsEnd() {
+        show(noProgress.copy(unitNumber = "گروه ۱۲۳."))
+
+        val unit = text("Unit:", substring = true).visualText()
+
+        assertTrue(unit, unit.startsWith("Unit: ."))
     }
 
     @Test

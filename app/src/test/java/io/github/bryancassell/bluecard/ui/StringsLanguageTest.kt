@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui
 
+import android.content.Context
 import android.content.res.Configuration
 import android.icu.text.PluralRules
 import android.os.LocaleList
@@ -17,6 +18,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -114,10 +116,11 @@ class StringsLanguageTest {
         assertEquals("other", form)
     }
 
-    // The layout follows the device's direction, so resources with a direction-specific
-    // version (such as drawable-ldrtl) must too.
+    // The layout follows the configuration's direction, which MainActivity sets from the
+    // strings' language, so resources with a direction-specific version (such as
+    // drawable-ldrtl) must too. Here the configuration is a Persian device's, unchanged.
     @Test
-    fun onPersianDevice_keepsDeviceLayoutDirection() {
+    fun onRightToLeftConfiguration_keepsItsLayoutDirection() {
         val direction = onDevice("fa-IR") {
             LocalResources.current.configuration.layoutDirection.toString()
         }
@@ -228,6 +231,14 @@ class StringsLanguageTest {
     fun stringsLocale_isStringsLanguage_notDevice() {
         lateinit var locale: Locale
         composeTestRule.setContent { locale = stringsLocale() }
+
+        assertEquals(Locale.forLanguageTag("en"), locale)
+    }
+
+    @Config(qualifiers = "fa")
+    @Test
+    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() {
+        val locale = stringsLocale(ApplicationProvider.getApplicationContext<Context>())
 
         assertEquals(Locale.forLanguageTag("en"), locale)
     }

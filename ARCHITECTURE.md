@@ -132,10 +132,23 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   this if crash reporting is added
   ([#63](https://github.com/bryancassell/bluecard/issues/63)). Until then,
   `catchLoadFailure` logs each failure it catches with `Log.w`, so logcat and bug
-  reports show which data failed and why. A failed save is logged the same way,
-  as in Onboarding. Screen readers don't announce the
+  reports show which data failed and why. A failed save is logged the same way.
+  Screen readers don't announce the
   message yet when it replaces the loading indicator
   ([#69](https://github.com/bryancassell/bluecard/issues/69)).
+- **Save failures are a UI state too.** When something can't be saved, a
+  repository throws an `IOException`. ViewModels that save progress launch each
+  write with a `SaveRunner` (`ui/SaveFailure.kt`), which logs the failure and
+  puts a `SaveFailure` in the screen's state. The screen shows "Couldn't save. Try
+  again." in a snackbar (`SaveFailedSnackbarHost`) and tells the ViewModel once
+  it's gone, which clears it. Each failure is a new object, and the snackbar is
+  keyed by it, so a failure that arrives just as the last one is cleared is
+  still shown. That's the pattern in the UI layer guide's
+  [Handle ViewModel events](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
+  which says ViewModel events "should always result in a UI state update". The
+  screen keeps showing what's stored, so a change that failed visibly didn't
+  happen. As with loads, any other exception crashes. Onboarding predates this
+  and shows its own message under its button.
 - **Reloading after a load failure has limits.** To keep it simple, the message
   has no "Try again" button; it asks the scout to close and reopen the app. A
   screen loads again only when its ViewModel is created, or when the screen is
@@ -190,7 +203,16 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   async updates, and encourages keeping `TextFieldState` in ViewModels. The
   ViewModel reads the text with `snapshotFlow` and copies it to
   `SavedStateHandle`, so it survives the system stopping the app. Onboarding's
-  name and unit number fields and Badges search work this way.
+  name and unit number fields, Badges search and the requirement comment work
+  this way. A ViewModel that fills a field with stored text once it
+  loads, as Requirement detail does with the saved comment, writes it in a
+  snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
+  only sees the change when Compose next applies changes made outside a
+  snapshot, which it does once a frame. Saved state has a size limit, so Badges
+  search and the requirement comment have a length limit (`TextLengthLimit`);
+  Onboarding's fields don't have one yet. It keeps as much of an edit, such as
+  a long paste, as fits, and never cuts the text already in the field or splits
+  an emoji.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -237,13 +259,36 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
 - **Text inside a string follows the strings' language, not the device's.**
   `strings_language` in `strings.xml` names the language of the strings the app
   shows, which differs from the device's when the app has no strings for it.
-  Lists inside a string (`rememberBadgeNameListFormatter`) and numbers are
+  Lists inside a string (`rememberBadgeNameListFormatter`), numbers and dates
+  (`rememberCompletionDateFormatter`) are
   formatted in that language, and plurals follow its rules, so a sentence never
   mixes two languages: on a Persian phone, English strings read "Do 2 of 3", not
   "Do ۲ of ۳", like catalog numbers such as "4c(1)" in the same row.
   `StringsLanguageTagTest` checks that each `strings.xml` names its own language
   with a well-formed tag: a wrong tag, such as "en" left in a translation, would
   replace the whole translation with English.
+- **Screens are laid out in the strings' language's direction, not the
+  device's** ([#66](https://github.com/bryancassell/bluecard/issues/66)). On a
+  Persian or Arabic phone, the English strings are laid out left-to-right as on
+  an English phone: a requirement's number comes before its text, and a
+  sentence's final period stays at its end. Mirrored, they would read as broken
+  English.
+  - **`MainActivity` sets it** in `attachBaseContext`, with an override
+    configuration in the direction of the strings' first locale
+    (`stringsLocale`). Setting it on the activity, not only in Compose, keeps
+    its views, Compose (which follows its view), keyboard and D-pad focus,
+    `LocalConfiguration` and the activity's resources in step.
+  - **The manifest keeps `android:supportsRtl="true"`,** so a right-to-left
+    translation would be laid out right-to-left with no other change.
+  - **Text the scout types keeps its own direction** (`ui/TypedText.kt`), so a
+    name typed in Persian reads right-to-left with its final period at its end.
+    Compose would otherwise give it the layout's direction and put the period at
+    its start. Fields the scout types in use `typedTextFieldStyle()`, whose text
+    direction follows the content. Typed text shown on screen, alone or inside
+    one of the app's strings (the name and "Unit: %1$s" on Home), goes through
+    `typedText()`, which wraps it with
+    [`BidiFormatter.unicodeWrap`](https://developer.android.com/training/basics/supporting-devices/languages#FormatText).
+    Code outside Compose, such as the PDF report, must wrap it the same way.
 - **`BlueCardApp` provides `LocalResources` in the strings' language**
   (`ProvideStringsLanguageResources`), so every `stringResource` and
   `pluralStringResource` follows it, with nothing to remember at each call.
@@ -253,16 +298,23 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     locales, so Android can fall back to them when the app has no strings in the
     first, such as for a pseudo-locale. When these are the device's own locales,
     as on an English phone, the device's resources are used unchanged.
-  - **Only the locales change.** The resources keep the device's layout
-    direction, which the layout follows
-    ([#66](https://github.com/bryancassell/bluecard/issues/66)).
+  - **Only the locales change.** The resources keep the configuration's layout
+    direction, which `MainActivity` sets, so direction-specific resources, such
+    as `drawable-ldrtl`, match the layout.
   - **Labels that follow the device:** those the app doesn't read through
     `LocalResources`, such as the text selection toolbar (Cut, Copy, Paste),
-    Material 3's labels and the role and state names TalkBack reads. Compose
+    Material 3's labels and the role and state names TalkBack reads. Material 3's
+    date picker formats its dates in the device's language too: in the version
+    the app uses (1.4.0), `rememberDatePickerState` takes no locale. Compose
     Foundation's right-click menu does read `LocalResources`, so it follows the
-    strings' language.
+    strings' language. These labels are laid out in the activity's direction,
+    so on a Persian phone the toolbar lists its Persian labels left-to-right,
+    except the date picker: `CompletionDatePickerDialog` lays it out in the
+    device's language's direction, because a Persian date laid out
+    left-to-right reads out of order.
   - **Code outside Compose** that formats a string with a number, such as the
-    PDF report, must use the same locales (`stringsLocales`).
+    PDF report, must use the same locales (`stringsLocales`), and lay out in the
+    first one's direction.
 - **Material 3** components and the existing `BlueCardTheme`.
 
 ### Data layer
@@ -285,13 +337,27 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   and Hilt both generate code, using the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
-- **Stored data that can't be read is reported as an `IOException`.** The
+- **Writes outlive the screen.** `RoomProgressRepository` runs each write in an
+  app-lifetime scope and waits for it, so leaving a screen cancels only the
+  wait, not the write. That's the pattern in the data layer guide's
+  [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
+  Writes take a first-come, first-served lock, so they happen in the order
+  they're made. A storage failure after the scout has left the screen goes
+  unreported, but a bug still crashes the app.
+- **Stored data that can't be read or saved is reported as an `IOException`.**
+  The
   [data layer guide](https://developer.android.com/topic/architecture/data-layer)
   ("Expose errors") says the data layer can expose errors "using custom
   exceptions". DataStore and the asset manager already throw `IOException`, and
-  `RoomProgressRepository` wraps Room's `SQLiteException` in one. ViewModels then
-  catch it without depending on a storage API (req. 9). Room's writes aren't
-  wrapped yet: the first screen that saves progress wraps them the same way. A
+  `RoomProgressRepository` wraps Room's `SQLiteException` in one, for its reads
+  and its writes. ViewModels then
+  catch it without depending on a storage API (req. 9). Errors that can only
+  come from a mistake in the app's code aren't wrapped, so they still crash as
+  bugs. SQLite's [result codes](https://www.sqlite.org/rescode.html) say that of
+  misuse of its interface ("the application is incorrectly coded"). This app
+  also counts a constraint violation, an out-of-range parameter or column
+  number and a datatype mismatch as bugs, because each write checks what it
+  needs first, such as that the badge is started. A
   corrupted database is the exception: the SQLite library deletes it. If a read
   finds the corruption, the scout sees the load-failed message, and the app
   reopens with no progress. If opening the database finds it, the progress is
@@ -306,8 +372,9 @@ using constructor injection. The
 says to use Hilt once an app has "multiple screens with ViewModels" or
 ViewModels scoped to the navigation back stack; BlueCard will have both. Hilt
 modules bind each repository interface to its implementation and provide the
-Room database, DataStore and a coroutine dispatcher (injected so tests can
-replace it).
+Room database, DataStore, a coroutine dispatcher, an app-lifetime
+`CoroutineScope` (`@ApplicationScope`) and a `Clock` for today's date (the
+dispatcher and clock injected so tests can replace them).
 
 ### Package layout
 
@@ -337,18 +404,21 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state, "mark completed on a prior date", and "generate report" once complete. |
-| **Requirement detail** | Sub-page for a requirement with sub-requirements or a tracker: its sub-requirements with their completion state, and its tracker. |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
+| **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, the scout's comment, and its tracker. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
 The PRD asks that requirements be understandable "without extensive
 scrolling", so the badge detail page lists only the top-level requirements. Each
 is one row: its official number, our one-line summary, "Do N of M" when only
 some of its sub-requirements are needed, and its completion state. A requirement
-with sub-requirements opens the requirement detail sub-page, which lists its
-sub-requirements the same way, and a sub-requirement with more of its own opens
-a sub-page in turn. A requirement with a tracker will open one too, once the
-sub-page shows trackers ([#40](https://github.com/bryancassell/bluecard/issues/40)). Each page shows one level of the requirement tree.
+without sub-requirements has a checkbox, so the scout can mark many of them
+complete without leaving the list. One with sub-requirements has a check once
+enough of them are done. Every row opens the requirement's own page, with its
+completion date and comment. A requirement with sub-requirements lists them
+there the same way, and each opens its own page in turn. A requirement with a
+tracker will show it there too
+([#40](https://github.com/bryancassell/bluecard/issues/40)). Each page shows one level of the requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
 version for a badge the scout hasn't started.
 
@@ -500,6 +570,31 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
   they update as soon as data is saved.
+  - **Recording anything starts the badge**, on the requirements version its
+    pages show until then (the newest), dated today (`ui/badge/ProgressRecorder.kt`).
+    There's no separate "start" step. `markRequirementCompleted` and
+    `setRequirementComment` take a `BadgeStart`, and `ProgressRepository` starts
+    the badge in the same transaction as the write, so a save that fails doesn't
+    leave the badge started. Other functions that record progress should take one
+    when a screen first calls them. Undoing everything recorded leaves the badge
+    started, so it stays In progress until the scout clears it
+    ([#45](https://github.com/bryancassell/bluecard/issues/45)).
+  - **Completing a requirement.** Only a requirement without sub-requirements is
+    marked complete; one with them is complete when enough of them are
+    (`Completion.kt`). Checking it, on its row or its page, records it completed
+    today. On its page, the scout can pick another date or remove it. Dates
+    after today can't be picked. Unchecking removes the date and keeps the
+    comment, but the page remembers the date until it closes: checking the
+    requirement again on that page brings the date back, so a mistaken tap
+    loses nothing. A date change applies only to a completed requirement, so
+    one that lands just after an uncheck can't complete it again.
+  - **Comments.** Every requirement can have one, including one with
+    sub-requirements, for notes about it as a whole. The page's comment field is
+    saved when the scout taps Save, which is enabled once the field differs from
+    the saved comment. The repository trims spaces around it
+    (`normalizedComment`), and an empty comment removes it. The field takes up
+    to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
+    stopping the app, but leaving the page discards it.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,
   requirement summaries, dates, comments and tracker data onto `PdfDocument`
   pages and writes the file to the app's cache directory. The scout can:
@@ -586,6 +681,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   reads throw an `IOException`, for testing each screen's `LoadFailed` state. The
   profile and progress contract tests check that the real repositories throw one
   too, using a folder where the DataStore file or the Room database should be.
+  The progress fake also has a `failSaves` switch for save failures, and the
+  contract tests check that Room's writes throw an `IOException` the same way.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
   interaction, fed by fake repositories or fixed UI state.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
@@ -613,6 +710,11 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Search result announcements | A visible count of the matches. Screen readers hear it from a polite live region that stays composed and is laid out apart from the shown count. It changes once typing pauses for a second, or straight away after Clear search | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed, doesn't let it be cut off, and announces a live region on any change, even of its size |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
+| Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
+| Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
+| Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
+| Requirement comments | On every requirement, saved with a Save button | The scout decides when a comment is saved, and a save that fails is reported right then, not while they're still typing |
+| Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | Catalog authoring | The project writes every summary, in no particular order | All badges get covered eventually; order doesn't affect the design |

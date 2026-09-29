@@ -5,4 +5,6 @@ class FakeProgressRepositoryTest : ProgressRepositoryContract() {
     override val repository = FakeProgressRepository()
 
     override fun unreadableRepository() = FakeProgressRepository().apply { failLoads = true }
+
+    override fun unwritableRepository() = FakeProgressRepository().apply { failSaves = true }
 }

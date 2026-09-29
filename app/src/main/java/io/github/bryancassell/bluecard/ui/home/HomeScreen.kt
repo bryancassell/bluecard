@@ -31,6 +31,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.typedText
 
 /** Connects the Home screen to its ViewModel. */
 @Composable
@@ -75,13 +76,13 @@ fun HomeScreen(
         ) {
             Column {
                 Text(
-                    text = uiState.name,
+                    text = typedText(uiState.name),
                     style = MaterialTheme.typography.headlineMedium,
                     // Lets screen reader users jump to it.
                     modifier = Modifier.semantics { heading() }
                 )
                 Text(
-                    text = stringResource(R.string.home_unit, uiState.unitNumber),
+                    text = stringResource(R.string.home_unit, typedText(uiState.unitNumber)),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
