@@ -146,12 +146,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   "Do ۲ of ۳", like catalog numbers such as "4c(1)" in the same row.
   `BlueCardApp` provides `LocalResources` in that language
   (`ProvideStringsLanguageResources`), so every `stringResource` and
-  `pluralStringResource` follows it, with nothing to remember at each call. When
-  one of the device's languages is the strings' language, its locale is used,
-  which keeps the device's region and digit choice. Compose Foundation's text
-  menu labels (such as Cut, Copy and Paste) are read from the same resources, so
-  they follow the strings' language too; Material 3's labels and the role and
-  state names TalkBack reads follow the device.
+  `pluralStringResource` follows it, with nothing to remember at each call. Its
+  locale is the device's first one in the strings' language and script, which
+  keeps the device's region and digit choice, or else the strings' language
+  itself. The device's other locales follow it, so Android falls back to them if
+  a translation's `strings_language` doesn't match its strings. Labels the app
+  doesn't read through `LocalResources`, such as the text selection toolbar
+  (Cut, Copy, Paste), Material 3's labels and the role and state names TalkBack
+  reads, follow the device.
 - **Material 3** components and the existing `BlueCardTheme`.
 
 ### Data layer

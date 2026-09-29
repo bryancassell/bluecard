@@ -11,40 +11,57 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.LocaleListCompat
 import io.github.bryancassell.bluecard.R
 import java.util.Locale
 
 /**
- * The language of the app's strings (`strings_language`). It isn't always the device's: the app
- * may not have strings for the device's language.
+ * The locale the app's strings are formatted in, from [stringsLocales]. It's in the language
+ * of the strings (`strings_language`), which isn't always the device's: the app may not have
+ * strings for the device's language.
  */
 @Composable
 @ReadOnlyComposable
-fun stringsLocale(): Locale = Locale.forLanguageTag(stringResource(R.string.strings_language))
+fun stringsLocale(): Locale =
+    stringsLocales(LocalConfiguration.current.locales, stringsLanguage())[0]
 
 /**
  * Provides [LocalResources] in the strings' language to [content], so every `stringResource`
  * and `pluralStringResource` formats numbers with its digits and picks plural forms by its
  * rules, and a sentence never mixes two languages.
- *
- * When one of the device's languages is the strings' language, its locale is used, keeping the
- * device's region and settings such as a chosen digit style.
  */
 // Lint warns that an app bundle may not install the resources for a locale set at runtime.
-// This locale is the language of the strings already shown, so their resources are installed.
+// These are the language of the strings already shown and the device's own locales, so their
+// resources are installed.
 @SuppressLint("AppBundleLocaleChanges")
 @Composable
 fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    val stringsLocale = stringsLocale()
-    val resources = remember(context, configuration, stringsLocale) {
-        val locale = configuration.locales.firstInLanguageOf(stringsLocale) ?: stringsLocale
-        val stringsConfiguration = Configuration(configuration).apply { setLocale(locale) }
+    val locales = stringsLocales(configuration.locales, stringsLanguage())
+    val resources = remember(context, configuration, locales) {
+        val stringsConfiguration = Configuration(configuration).apply { setLocales(locales) }
         context.createConfigurationContext(stringsConfiguration).resources
     }
     CompositionLocalProvider(LocalResources provides resources, content = content)
 }
 
-private fun LocaleList.firstInLanguageOf(locale: Locale): Locale? =
-    (0 until size()).map(::get).firstOrNull { it.language == locale.language }
+/**
+ * The locales to load and format the app's strings in. First, the device's first locale in the
+ * strings' language and script, which keeps the device's region and settings such as a chosen
+ * digit style, or else the strings' language itself. Then the device's other locales, so
+ * Android can fall back to them if the app has no strings in the first, such as when a
+ * translation's `strings_language` isn't a valid tag.
+ */
+internal fun stringsLocales(device: LocaleList, stringsLanguage: Locale): LocaleList {
+    val deviceLocales = List(device.size(), device::get)
+    val first = deviceLocales.firstOrNull {
+        LocaleListCompat.matchesLanguageAndScript(stringsLanguage, it)
+    } ?: stringsLanguage
+    return LocaleList(first, *deviceLocales.filter { it != first }.toTypedArray())
+}
+
+@Composable
+@ReadOnlyComposable
+private fun stringsLanguage(): Locale =
+    Locale.forLanguageTag(stringResource(R.string.strings_language))
