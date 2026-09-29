@@ -11,9 +11,10 @@ import androidx.navigation3.runtime.NavKey
  * that screen is on top of [shownBackStack], the screens NavDisplay is showing, which it
  * reads at the time of the call.
  *
- * A screen that is animating out still takes the taps the incoming screen doesn't, but it's
- * no longer on top, so a second tap, whether in the same frame or during the animation,
- * doesn't open another screen. Taps on the incoming screen work straight away.
+ * A screen ignores touches while it animates out ([rememberIgnoreTouchesNavEntryDecorator]),
+ * but a second tap before its animation starts, such as in the same frame as the first, or a
+ * screen reader's click can still reach it. It's no longer on top by then, so that doesn't
+ * open another screen.
  */
 @Composable
 fun rememberNavigateFrom(

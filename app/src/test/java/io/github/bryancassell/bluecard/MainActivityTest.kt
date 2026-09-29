@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -624,15 +625,16 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
-        // Let the list finish animating in; until then it doesn't take taps either. Badge
-        // detail's heading also says "Camping", so match the list's row.
+        // Let the list finish animating in. Badge detail's heading also says "Camping", so
+        // match the list's row.
         val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
             .assertIsDisplayed()
 
         // Tap a second time while the list is still fading out, as a quick double tap
-        // does. The second tap fails the test if the list is already gone. Badge detail is
-        // drawn on top and takes most such taps itself; doubleTap_onRequirement_opensItOnce
-        // shows the same navigation guarding a second tap that does reach the screen.
+        // does. The second tap fails the test if the list is already gone. Screens ignore
+        // touches while they animate, so neither screen takes it;
+        // doubleTap_onRequirement_opensItOnce shows navigation guarding a second tap that
+        // does reach the screen, in the same frame.
         composeTestRule.mainClock.autoAdvance = false
         camping.performClick()
         composeTestRule.mainClock.advanceTimeBy(100)
@@ -642,6 +644,48 @@ class MainActivityTest {
 
         pressBack()
 
+        assertBadgesShowing()
+    }
+
+    @Test
+    fun doubleTap_onBadge_doesNotPressOfficialLink() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
+            .assertIsDisplayed()
+
+        // The second tap of a quick double tap lands on Badge detail, which is fading in on
+        // top, 100 ms after the first. Which control is under the finger depends on the
+        // layout, so tap the link itself, as a double tap on a badge over it would.
+        composeTestRule.mainClock.autoAdvance = false
+        camping.performClick()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        composeTestRule.onNodeWithText("Official requirements").performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        var started: Intent? = null
+        scenario.onActivity { started = shadowOf(it).nextStartedActivity }
+        assertNull(started)
+    }
+
+    @Test
+    fun tap_onClosingScreenAfterBack_doesNothing() {
+        openCamping()
+        composeTestRule.waitForIdle()
+
+        // Badge detail is drawn on top of Badges while it fades out after Back. Tap its
+        // link after the double-tap timeout, while it's still there.
+        composeTestRule.mainClock.autoAdvance = false
+        pressBack()
+        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.onNodeWithText("Official requirements").performClick()
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        var started: Intent? = null
+        scenario.onActivity { started = shadowOf(it).nextStartedActivity }
+        assertNull(started)
         assertBadgesShowing()
     }
 
@@ -671,10 +715,12 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
 
-        // Tap a badge about 100 ms after opening the list, while it is still fading in.
+        // Tap a badge 400 ms after opening the list, after the 300 ms double-tap timeout,
+        // while it is still fading in.
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.onNodeWithText("Merit badges").performClick()
-        composeTestRule.mainClock.advanceTimeBy(100)
+        composeTestRule.mainClock.advanceTimeBy(400)
+        home().assertExists()
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.mainClock.autoAdvance = true
 

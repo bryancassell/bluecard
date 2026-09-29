@@ -38,11 +38,13 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         backStack = shownBackStack,
         modifier = modifier,
         onBack = { backStack.removeLastOrNull() },
-        // Keep each entry's saved UI state, and scope ViewModels to their entry so they
-        // are cleared when the entry leaves the back stack.
+        // Keep each entry's saved UI state, scope ViewModels to their entry so they are
+        // cleared when the entry leaves the back stack, and ignore touches on screens that
+        // are animating, so a double tap can't press a control on the screen it opened.
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
+            rememberIgnoreTouchesNavEntryDecorator()
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice.

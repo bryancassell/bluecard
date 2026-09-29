@@ -217,11 +217,35 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
-- **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
-  ignores a tap unless the tapping screen is on top of the screens `NavDisplay`
-  is showing. A screen that is animating out still takes taps, but it's no
-  longer on top, so a double tap can't open a screen twice. Taps on the
-  incoming screen work straight away.
+- **A double tap opens a screen once, and doesn't press anything on it.**
+  - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
+    ignores a tap unless the tapping screen is on top of the screens
+    `NavDisplay` is showing. So a second tap that reaches the screen it came
+    from, in the same frame as the first or as a screen reader's click, can't
+    open a screen twice.
+  - **Screens ignore touches while they animate**
+    (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens
+    during its 700 ms fade, and either can be on top: the new screen going
+    forward, the closing one going back (Navigation 3 gives the screen being
+    returned to a lower z-index). A cover over each animating screen takes
+    touches:
+    - **on a screen animating out, until it's gone.** Otherwise a tap could
+      press its controls wherever the new screen has nothing to press, or
+      anywhere after Back. So after Back, taps are ignored for the whole
+      700 ms.
+    - **on a screen animating in, for the double-tap timeout**
+      (`ViewConfiguration.doubleTapTimeoutMillis`, 300 ms). Otherwise the
+      second tap of a double tap would press whatever is under the finger on
+      the new screen, such as "Official requirements", which opens the browser
+      ([#61](https://github.com/bryancassell/bluecard/issues/61)). The first
+      screen appears without a transition and takes touches straight away.
+    - A touch that starts on a cover stays with it until the finger lifts, so a
+      swipe that starts then doesn't scroll.
+  - **Taps on a new screen work after the timeout, even while it's still
+    fading in.** [#56](https://github.com/bryancassell/bluecard/pull/56)
+    dropped `dropUnlessResumed` because it ignored taps for the whole
+    animation. Taps further apart than the timeout aren't a double tap to the
+    platform either.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
