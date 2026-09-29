@@ -72,14 +72,18 @@ class TrackerEntryViewModel @AssistedInject constructor(
     /** Whether the row was saved or deleted, so the page closes. */
     private val done = MutableStateFlow(false)
 
-    /** The saved entry, once the page loads; null for a new one or a row not filled in. */
-    private var savedEntryId: Long? = null
+    /**
+     * The row, once the page has loaded it. It's loaded only once, so the page shown again after
+     * a while, which restarts uiState, is the same form: still closing after a delete, say,
+     * rather than finding the row gone.
+     */
+    private var loaded: LoadedRow? = null
 
     val uiState: StateFlow<TrackerEntryUiState> = flow {
-        val row = load(
+        val row = loaded ?: load(
             catalogRepository.getBadges(),
             progressRepository.observeProgress(badgeId).first()
-        )
+        )?.also { loaded = it }
         if (row == null) {
             emit(TrackerEntryUiState.Unavailable)
         } else {
@@ -107,6 +111,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
         val columns: List<TrackerColumn>,
         /** The row it is, from 1: the one it fills, or its place in a log. */
         val shownNumber: Int,
+        /** Its saved entry; null for a new one or a row not filled in. */
+        val entryId: Long?,
         val saved: Map<String, String>
     )
 
@@ -127,13 +133,14 @@ class TrackerEntryViewModel @AssistedInject constructor(
             columns = row.columns,
             dates = row.columns.filter { it.type == TrackerColumnType.DATE }
                 .mapNotNull { column ->
-                    stored[column.id]?.let { column.id to LocalDate.parse(it) }
+                    stored[column.id]?.let(::storedDate)?.let { column.id to it }
                 }
                 .toMap(),
             // A row with nothing in it is deleted instead.
             canSave = !saving && !done && stored.isNotEmpty() && stored != row.saved,
-            // Stays while a save or delete is under way, which ignores another (finish).
-            canDelete = savedEntryId != null,
+            hasSavedEntry = row.entryId != null,
+            // Not while a save is under way, which would ignore it (finish).
+            canDelete = !saving && !done && row.entryId != null,
             today = LocalDate.now(clock),
             done = done,
             saveFailure = saveFailure
@@ -141,8 +148,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
     }
 
     /**
-     * Finds the row, and fills in the fields the first time. Null if the requirements the
-     * badge uses don't have the tracker, or the tracker doesn't have the row.
+     * Finds the row, and fills in the fields. Null if the requirements the badge uses don't have
+     * the tracker, or the tracker doesn't have the row.
      */
     private fun load(catalog: List<MeritBadge>, progress: BadgeProgressDetails?): LoadedRow? {
         val found = catalog.badgeRequirements(badgeId, progress) ?: return null
@@ -155,18 +162,16 @@ class TrackerEntryViewModel @AssistedInject constructor(
             else -> TrackerRow(item.rows.size + 1, null, emptyList())
         } ?: return null
         val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
-        savedEntryId = row.entryId
         loadFields(tracker.columns, saved)
-        return LoadedRow(found.badge.name, item, tracker.columns, row.number, saved)
+        return LoadedRow(found.badge.name, item, tracker.columns, row.number, row.entryId, saved)
     }
 
     /**
-     * Fills in the fields, the first time the page loads: with the values the system stopped
-     * the app with, if any, or else the [saved] ones. They're kept from then on, so if the
-     * system stops the app before then, the page loads the saved values again.
+     * Fills in the fields when the page loads: with the values the system stopped the app with,
+     * if any, or else the [saved] ones. They're kept from then on, so if the system stops the
+     * app before then, the page loads the saved values again.
      */
     private fun loadFields(columns: List<TrackerColumn>, saved: Map<String, String>) {
-        if (_fields.isNotEmpty()) return
         val restored = columns.associate { it.id to savedStateHandle.restoredText(fieldKey(it.id)) }
         val wasStopped = restored.values.any { it != null }
         for (column in columns) {
@@ -189,7 +194,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
     /** Saves the fields as the row, then closes the page. */
     fun save() {
         val values = _fields.mapValues { it.value.text.toString() }
-        val id = savedEntryId
+        val id = loaded?.entryId
         finish {
             if (id != null) {
                 progressRepository.updateTrackerEntry(id, values)
@@ -207,7 +212,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
 
     /** Deletes the saved row, then closes the page. */
     fun delete() {
-        val id = savedEntryId ?: return
+        val id = loaded?.entryId ?: return
         finish { progressRepository.deleteTrackerEntry(id) }
     }
 

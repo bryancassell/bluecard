@@ -23,11 +23,16 @@ sealed interface TrackerEntryUiState {
         val rowLabel: String,
         /** A field for each, in order. Text and number columns edit the screen's text fields. */
         val columns: List<TrackerColumn>,
-        /** The date columns' dates, by column ID. A column without a date is left out. */
+        /**
+         * The date columns' dates, by column ID. A column without a date, or whose value isn't
+         * one ([storedDate]), is left out.
+         */
         val dates: Map<String, LocalDate>,
         /** Whether the fields have something in them that differs from what's saved. */
         val canSave: Boolean,
-        /** Whether there's a saved entry to delete. */
+        /** Whether the row has a saved entry, which Delete deletes. */
+        val hasSavedEntry: Boolean,
+        /** Whether Delete can be used now: not while a save is under way. */
         val canDelete: Boolean,
         /** The latest date the scout can pick. */
         val today: LocalDate,

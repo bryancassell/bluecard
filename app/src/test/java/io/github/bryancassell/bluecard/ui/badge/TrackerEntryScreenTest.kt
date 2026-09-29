@@ -62,6 +62,7 @@ class TrackerEntryScreenTest {
         columns = columns,
         dates = emptyMap(),
         canSave = false,
+        hasSavedEntry = false,
         canDelete = false,
         today = today
     )
@@ -70,6 +71,7 @@ class TrackerEntryScreenTest {
     private val savedEntry = newEntry.copy(
         rowNumber = 2,
         dates = mapOf("date" to LocalDate.of(2026, 4, 15)),
+        hasSavedEntry = true,
         canDelete = true
     )
 
@@ -255,6 +257,13 @@ class TrackerEntryScreenTest {
 
         assertEquals(1, deletes)
         composeTestRule.onNodeWithText("Delete this session?").assertDoesNotExist()
+    }
+
+    @Test
+    fun whileSaving_deleteIsShownButCantBeUsed() {
+        show(savedEntry.copy(canDelete = false))
+
+        button("Delete").assertIsNotEnabled()
     }
 
     @Test

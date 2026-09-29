@@ -82,7 +82,7 @@ object CatalogValidator {
     private fun validateRowLabel(where: String, label: String): List<String> = when {
         label.isBlank() -> listOf("$where is blank")
 
-        label.first().isUpperCase() -> listOf(
+        !label.first().isLowerCase() -> listOf(
             "$where \"$label\" must start with a lowercase letter"
         )
 

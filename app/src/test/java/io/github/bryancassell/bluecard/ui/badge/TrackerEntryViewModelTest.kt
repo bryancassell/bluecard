@@ -17,15 +17,18 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -94,14 +97,15 @@ class TrackerEntryViewModelTest {
         entryId: Long? = null,
         rowNumber: Int? = null,
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
-        catalog: CatalogRepository = catalogRepository
+        catalog: CatalogRepository = catalogRepository,
+        progress: ProgressRepository = progressRepository
     ) = TrackerEntryViewModel(
         "personal-fitness",
         number,
         entryId,
         rowNumber,
         catalog,
-        progressRepository,
+        progress,
         clock,
         savedStateHandle
     )
@@ -194,6 +198,7 @@ class TrackerEntryViewModelTest {
                 columns = sessionColumns,
                 dates = emptyMap(),
                 canSave = false,
+                hasSavedEntry = false,
                 canDelete = false,
                 today = today
             ),
@@ -218,7 +223,18 @@ class TrackerEntryViewModelTest {
             }
         )
         assertFalse(viewModel.ready().canSave)
+        assertTrue(viewModel.ready().hasSavedEntry)
         assertTrue(viewModel.ready().canDelete)
+    }
+
+    @Test
+    fun dateColumnValueThatIsntADate_hasNoDate_andIsKept() = runTest {
+        val id = addSession(mapOf("date" to "Last Tuesday"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+
+        assertEquals(emptyMap<String, LocalDate>(), viewModel.ready().dates)
+        assertEquals("Last Tuesday", viewModel.text("date"))
     }
 
     @Test
@@ -356,6 +372,42 @@ class TrackerEntryViewModelTest {
     }
 
     @Test
+    fun delete_whileASaveIsUnderWay_cantBeUsed() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        val slowUpdates = SlowUpdates(progressRepository)
+        val viewModel = viewModel(entryId = id, progress = slowUpdates)
+        startCollecting(viewModel)
+        viewModel.type("activity", "Swim")
+
+        viewModel.save()
+
+        assertTrue(viewModel.ready().hasSavedEntry)
+        assertFalse(viewModel.ready().canDelete)
+        viewModel.delete()
+        slowUpdates.release.complete(Unit)
+        assertEquals(listOf(mapOf("activity" to "Swim")), entries().map { it.values })
+    }
+
+    @Test
+    fun shownAgainAfterDeleting_isStillClosing() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        val viewModel = viewModel(entryId = id)
+        val collecting =
+            backgroundScope.launch(mainDispatcherRule.testDispatcher) {
+                viewModel.uiState.collect {}
+            }
+        viewModel.delete()
+
+        // As when the scout leaves the app before the page closes, for longer than
+        // uiState's WhileSubscribed timeout, and comes back.
+        collecting.cancel()
+        advanceTimeBy(6_000)
+        startCollecting(viewModel)
+
+        assertTrue(viewModel.ready().done)
+    }
+
+    @Test
     fun delete_newEntry_doesNothing() = runTest {
         addSession(mapOf("activity" to "Run"))
         val viewModel = viewModel()
@@ -450,6 +502,17 @@ class TrackerEntryViewModelTest {
         assertNotNull(viewModel.ready().saveFailure)
         assertFalse(viewModel.ready().done)
         assertEquals(1, entries().size)
+    }
+
+    /** Holds each tracker entry update until [release] completes, as a slow disk would. */
+    private class SlowUpdates(private val progress: ProgressRepository) :
+        ProgressRepository by progress {
+        val release = CompletableDeferred<Unit>()
+
+        override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) {
+            release.await()
+            progress.updateTrackerEntry(id, values)
+        }
     }
 
     @Test

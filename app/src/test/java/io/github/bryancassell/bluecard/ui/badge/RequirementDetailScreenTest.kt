@@ -98,7 +98,15 @@ class RequirementDetailScreenTest {
                         TrackerValue(TrackerColumnType.NUMBER, "30")
                     )
                 ),
-                TrackerRow(2, 12, listOf(TrackerValue(TrackerColumnType.TEXT, "Swimming")))
+                TrackerRow(
+                    2,
+                    12,
+                    listOf(
+                        // Shown as it is, since it isn't a date.
+                        TrackerValue(TrackerColumnType.DATE, "Last Tuesday"),
+                        TrackerValue(TrackerColumnType.TEXT, "Swimming")
+                    )
+                )
             )
         )
     )
@@ -280,7 +288,7 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText("2 sessions").performScrollTo().assert(isHeading())
         row("Session 1").assert(hasText("Apr 12, 2026 · Running · 30"))
-        row("Session 2").assert(hasText("Swimming"))
+        row("Session 2").assert(hasText("Last Tuesday · Swimming"))
     }
 
     @Test

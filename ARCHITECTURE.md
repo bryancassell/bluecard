@@ -628,10 +628,11 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     today, as for completion dates), a number field that takes only digits and
     one decimal separator, or a text field of up to 500 characters. Save is
     enabled once the fields differ from what's saved and aren't all empty; a row
-    with nothing in it is deleted instead. The page reads what's saved when it
-    opens, and closes once a save or delete is done (`done` in its UI state),
-    so a save that fails keeps the page open with the scout's edit. Delete asks
-    first. Leaving the page discards an unsaved edit, as with a comment.
+    with nothing in it is deleted instead. The page reads what's saved once,
+    when it opens, so being shown again after a while doesn't reload it. It
+    closes once a save or delete is done (`done` in its UI state), so a save
+    that fails keeps the page open with the scout's edit. Delete asks first,
+    and can't be used while a save is under way. Leaving the page discards an unsaved edit, as with a comment.
     `addTrackerEntry` gives a fixed-row tracker's row that already has an entry
     the new values instead of adding a second one. The repository trims spaces
     around each value and drops blank ones (`normalizedTrackerValues`). A

@@ -101,9 +101,9 @@ fun EditableDate(
 
 /**
  * Asks for the date something was done on, such as when a requirement was completed, starting
- * at [initial]. Dates after [today] can't be picked. The picker itself follows the device's language, like other Material labels,
- * and is laid out in that language's direction, so a Persian calendar reads right-to-left
- * (ARCHITECTURE.md, UI layer).
+ * at [initial]. Dates after [today] can't be picked. The picker itself follows the device's
+ * language, like other Material labels, and is laid out in that language's direction, so a
+ * Persian calendar reads right-to-left (ARCHITECTURE.md, UI layer).
  */
 @Composable
 fun CompletionDatePickerDialog(

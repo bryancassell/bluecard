@@ -3,6 +3,8 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 /**
  * A requirement's tracker as its page shows it: how much is filled in, and its rows. A log,
@@ -46,6 +48,17 @@ data class TrackerRow(
 
 /** A value in a tracker row, as stored: a date is written as YYYY-MM-DD. */
 data class TrackerValue(val type: TrackerColumnType, val text: String)
+
+/**
+ * A date column's stored value as a date, or null if it isn't one. The app stores dates as
+ * YYYY-MM-DD, but a value from elsewhere may not be, such as one stored while a catalog edited
+ * during development had the column as text. It's shown as it is instead.
+ */
+fun storedDate(text: String): LocalDate? = try {
+    LocalDate.parse(text)
+} catch (e: DateTimeParseException) {
+    null
+}
 
 /** This tracker with the [entries] recorded for its requirement. */
 fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(

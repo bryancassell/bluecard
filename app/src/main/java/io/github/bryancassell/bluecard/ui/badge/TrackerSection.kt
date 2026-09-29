@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.ui.typedText
-import java.time.LocalDate
 
 // A requirement's tracker, on its page and in its row.
 
@@ -102,7 +101,8 @@ private fun trackerValuesText(values: List<TrackerValue>): String? {
     val formatter = rememberCompletionDateFormatter()
     return values.takeIf { it.isNotEmpty() }?.map { value ->
         when (value.type) {
-            TrackerColumnType.DATE -> formatter.format(LocalDate.parse(value.text))
+            TrackerColumnType.DATE ->
+                storedDate(value.text)?.let { formatter.format(it) } ?: typedText(value.text)
 
             // The scout typed it.
             TrackerColumnType.NUMBER, TrackerColumnType.TEXT -> typedText(value.text)

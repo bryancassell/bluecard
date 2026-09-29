@@ -73,6 +73,22 @@ class NumberInputTest {
     }
 
     @Test
+    fun keepsTheArabicDecimalSeparator() {
+        type("۲٫۵")
+
+        assertEquals("۲٫۵", state.text.toString())
+    }
+
+    @Test
+    fun rejectsASecondSeparatorOfAnotherKind() {
+        type("۲٫۵")
+
+        type(".")
+
+        assertEquals("۲٫۵", state.text.toString())
+    }
+
+    @Test
     fun keepsDigitsOfOtherScripts() {
         type("۳۰")
 

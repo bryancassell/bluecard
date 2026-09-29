@@ -193,6 +193,22 @@ class CatalogValidatorTest {
     }
 
     @Test
+    fun rowLabelsNotStartingWithALowercaseLetter() {
+        val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker"
+        assertEquals(
+            listOf(
+                "$where: rowLabel \" week\" must start with a lowercase letter",
+                "$where: rowLabelPlural \"3 weeks\" must start with a lowercase letter"
+            ),
+            errorsForRequirements(
+                requirement.copy(
+                    tracker = tracker.copy(rowLabel = " week", rowLabelPlural = "3 weeks")
+                )
+            )
+        )
+    }
+
+    @Test
     fun trackerWithoutColumns() {
         assertEquals(
             listOf(

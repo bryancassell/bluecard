@@ -231,8 +231,8 @@ private fun TrackerEntryButtons(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (uiState.canDelete) {
-            TextButton(onClick = { confirmingDelete = true }) {
+        if (uiState.hasSavedEntry) {
+            TextButton(onClick = { confirmingDelete = true }, enabled = uiState.canDelete) {
                 Text(stringResource(R.string.tracker_entry_delete))
             }
         }
