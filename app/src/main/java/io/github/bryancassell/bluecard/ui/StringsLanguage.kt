@@ -1,19 +1,18 @@
 package io.github.bryancassell.bluecard.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Configuration.SCREENLAYOUT_LAYOUTDIR_MASK
 import android.os.LocaleList
-import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.os.LocaleListCompat
 import io.github.bryancassell.bluecard.R
 import java.util.Locale
@@ -28,12 +27,16 @@ import java.util.Locale
 fun stringsLocale(): Locale =
     stringsLocales(LocalConfiguration.current.locales, stringsLanguage())[0]
 
+/** [stringsLocale] for code outside Compose, such as an activity before it has content. */
+fun stringsLocale(context: Context): Locale = stringsLocales(
+    context.resources.configuration.locales,
+    Locale.forLanguageTag(context.getString(R.string.strings_language))
+)[0]
+
 /**
  * Provides [LocalResources] in the strings' language to [content], so every `stringResource`
  * and `pluralStringResource` formats numbers with its digits and picks plural forms by its
- * rules, and a sentence never mixes two languages. Also provides those resources' layout
- * direction, which is the strings' language's, so English screens are laid out and read
- * left-to-right even on a right-to-left device.
+ * rules, and a sentence never mixes two languages.
  */
 // Lint warns that an app bundle may not install the resources for a locale set at runtime.
 // These are the language of the strings already shown and the device's own locales, so their
@@ -50,22 +53,20 @@ fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
         null
     } else {
         remember(context, configuration, locales) {
-            // setLocales also sets the layout direction from the first locale.
-            val stringsConfiguration = Configuration(configuration).apply { setLocales(locales) }
+            val stringsConfiguration = Configuration(configuration).apply {
+                setLocales(locales)
+                // setLocales also sets the layout direction from the first locale. Keep the
+                // configuration's, which the layout follows: MainActivity sets it from the
+                // strings' language.
+                screenLayout = screenLayout and SCREENLAYOUT_LAYOUTDIR_MASK.inv() or
+                    (configuration.screenLayout and SCREENLAYOUT_LAYOUTDIR_MASK)
+            }
             context.createConfigurationContext(stringsConfiguration).resources
         }
-    }
-    // Taking the direction from the resources keeps direction-specific resources, such as
-    // drawable-ldrtl, in step with the layout.
-    val providedConfiguration = (resources ?: LocalResources.current).configuration
-    val layoutDirection = when (providedConfiguration.layoutDirection) {
-        View.LAYOUT_DIRECTION_RTL -> LayoutDirection.Rtl
-        else -> LayoutDirection.Ltr
     }
     // One call either way keeps content at the same place in the composition, so its saved
     // state, such as the back stack, comes back after a language change.
     CompositionLocalProvider(
-        LocalLayoutDirection provides layoutDirection,
         *listOfNotNull(resources?.let { LocalResources provides it }).toTypedArray(),
         content = content
     )

@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -76,7 +77,10 @@ fun HomeScreen(
             Column {
                 Text(
                     text = uiState.name,
-                    style = MaterialTheme.typography.headlineMedium,
+                    // The name takes its own direction, such as right-to-left for a Persian
+                    // name, not the layout's (see ARCHITECTURE.md, UI layer).
+                    style = MaterialTheme.typography.headlineMedium
+                        .copy(textDirection = TextDirection.Content),
                     // Lets screen reader users jump to it.
                     modifier = Modifier.semantics { heading() }
                 )

@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -23,6 +24,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -73,6 +75,9 @@ fun OnboardingScreen(
         OutlinedTextField(
             state = name,
             enabled = uiState.canEdit,
+            // Text the scout types takes its own direction, such as right-to-left for a
+            // Persian name, not the layout's (see ARCHITECTURE.md, UI layer).
+            textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Content),
             label = { Text(stringResource(R.string.onboarding_name)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -85,6 +90,7 @@ fun OnboardingScreen(
         OutlinedTextField(
             state = unitNumber,
             enabled = uiState.canEdit,
+            textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Content),
             label = { Text(stringResource(R.string.onboarding_unit_number)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
             lineLimits = TextFieldLineLimits.SingleLine,

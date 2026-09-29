@@ -22,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.maxTextLength
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -159,6 +161,9 @@ private fun SearchField(query: TextFieldState) {
     val isEmpty by remember(query) { derivedStateOf { query.text.isEmpty() } }
     OutlinedTextField(
         state = query,
+        // Text the scout types takes its own direction, such as right-to-left in Persian, not
+        // the layout's (see ARCHITECTURE.md, UI layer).
+        textStyle = LocalTextStyle.current.copy(textDirection = TextDirection.Content),
         label = { Text(stringResource(R.string.badges_search)) },
         leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
         trailingIcon = if (isEmpty) {

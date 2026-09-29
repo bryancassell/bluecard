@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui
 
+import android.content.Context
 import android.content.res.Configuration
 import android.icu.text.PluralRules
 import android.os.LocaleList
@@ -13,12 +14,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -116,32 +116,16 @@ class StringsLanguageTest {
         assertEquals("other", form)
     }
 
-    // English strings are laid out left-to-right, as on an English phone, so rows and
-    // sentences read as English: a sentence's final period stays at its end.
-    @Config(qualifiers = "fa")
+    // The layout follows the configuration's direction, which MainActivity sets from the
+    // strings' language, so resources with a direction-specific version (such as
+    // drawable-ldrtl) must too. Here the configuration is a Persian device's, unchanged.
     @Test
-    fun onPersianDevice_laysOutInStringsLanguageDirection() {
-        lateinit var device: LayoutDirection
-        lateinit var provided: LayoutDirection
-        composeTestRule.setContent {
-            device = LocalLayoutDirection.current
-            ProvideStringsLanguageResources { provided = LocalLayoutDirection.current }
-        }
-
-        assertEquals(LayoutDirection.Rtl, device)
-        assertEquals(LayoutDirection.Ltr, provided)
-    }
-
-    // Resources with a direction-specific version (such as drawable-ldrtl) must follow the
-    // layout's direction.
-    @Config(qualifiers = "fa")
-    @Test
-    fun onPersianDevice_resourcesTakeStringsLanguageDirection() {
-        val direction = inStringsLanguage {
+    fun onRightToLeftConfiguration_keepsItsLayoutDirection() {
+        val direction = onDevice("fa-IR") {
             LocalResources.current.configuration.layoutDirection.toString()
         }
 
-        assertEquals(View.LAYOUT_DIRECTION_LTR.toString(), direction)
+        assertEquals(View.LAYOUT_DIRECTION_RTL.toString(), direction)
     }
 
     @Test
@@ -247,6 +231,14 @@ class StringsLanguageTest {
     fun stringsLocale_isStringsLanguage_notDevice() {
         lateinit var locale: Locale
         composeTestRule.setContent { locale = stringsLocale() }
+
+        assertEquals(Locale.forLanguageTag("en"), locale)
+    }
+
+    @Config(qualifiers = "fa")
+    @Test
+    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() {
+        val locale = stringsLocale(ApplicationProvider.getApplicationContext<Context>())
 
         assertEquals(Locale.forLanguageTag("en"), locale)
     }

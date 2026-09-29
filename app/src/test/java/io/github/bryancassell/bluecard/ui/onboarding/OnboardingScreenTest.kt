@@ -21,7 +21,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -190,5 +192,25 @@ class OnboardingScreenTest {
 
         assertEquals(1, keyboard.hides)
         assertEquals(1, saves)
+    }
+
+    // The layout is left-to-right, like the English strings, but a name typed in Persian
+    // reads right-to-left, with its final period at its end, on the left.
+    @Test
+    fun nameTypedInPersian_readsRightToLeft() {
+        show(OnboardingUiState())
+
+        field("Name").performTextInput("علی رضایی.")
+
+        assertEquals(ResolvedTextDirection.Rtl, field("Name").paragraphDirection())
+    }
+
+    @Test
+    fun unitNumberTypedInPersian_readsRightToLeft() {
+        show(OnboardingUiState())
+
+        field("Unit number").performTextInput("گروه ۱۲۳.")
+
+        assertEquals(ResolvedTextDirection.Rtl, field("Unit number").paragraphDirection())
     }
 }
