@@ -75,6 +75,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - When a test fails, fix the code or explain why the expectation is wrong. Never delete or loosen assertions, skip tests, or re-record screenshot baselines to get tests passing.
 - Prefer local tests; use instrumented tests only for behavior that requires a real Android runtime.
 
+## 6. Keeping Context Small
+
+- Check the app on an emulator through a subagent that reports back in text. When viewing a screenshot directly, crop it to the area being checked or scale it down first.
+- Read only the part of a file you need: find line numbers with grep, then print that range. Send broad searches to the Explore agent.
+- Edit PR descriptions and docs in place rather than rewriting them, and check `git diff --stat` before printing a full diff.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
