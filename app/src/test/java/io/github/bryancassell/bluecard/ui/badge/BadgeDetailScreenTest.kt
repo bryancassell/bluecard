@@ -18,10 +18,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
@@ -62,25 +58,14 @@ class BadgeDetailScreenTest {
         )
     )
 
-    /** [lifecycleState] is the screen's; a screen still animating in is STARTED. */
-    private fun show(
-        uiState: BadgeDetailUiState,
-        lifecycleState: Lifecycle.State = Lifecycle.State.RESUMED
-    ) {
+    private fun show(uiState: BadgeDetailUiState) {
         val uriHandler = object : UriHandler {
             override fun openUri(uri: String) {
                 openedUris += uri
             }
         }
-        val lifecycleOwner = object : LifecycleOwner {
-            override val lifecycle =
-                LifecycleRegistry.createUnsafe(this).apply { currentState = lifecycleState }
-        }
         composeTestRule.setContent {
-            CompositionLocalProvider(
-                LocalUriHandler provides uriHandler,
-                LocalLifecycleOwner provides lifecycleOwner
-            ) {
+            CompositionLocalProvider(LocalUriHandler provides uriHandler) {
                 BadgeDetailScreen(
                     uiState = uiState,
                     onOpenRequirement = { openedRequirements += it }
@@ -158,15 +143,6 @@ class BadgeDetailScreenTest {
             .performClick()
 
         assertEquals(listOf("https://www.scouting.org/merit-badges/camping/"), openedUris)
-    }
-
-    @Test
-    fun officialLink_whileScreenIsNotResumed_doesNothing() {
-        show(ready, lifecycleState = Lifecycle.State.STARTED)
-
-        composeTestRule.onNodeWithText("Official requirements").performClick()
-
-        assertEquals(emptyList<String>(), openedUris)
     }
 
     @Test

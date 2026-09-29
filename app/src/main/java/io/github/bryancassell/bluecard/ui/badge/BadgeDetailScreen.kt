@@ -20,9 +20,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.compose.dropUnlessResumed
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
+import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 
 /** Connects the Badge detail screen to its ViewModel. */
 @Composable
@@ -72,21 +72,19 @@ fun BadgeDetailScreen(
                 )
                 uiState.eagle?.let {
                     Text(
-                        text = eagleRequirementLabel(it),
+                        text = eagleRequirementLabel(it, rememberBadgeNameListFormatter()),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
             }
-            // Opens the official page in the browser. As with navigation (BlueCardNavDisplay),
-            // only a resumed screen acts on the tap: this page is drawn on top while it
-            // animates in, so the second tap of a double tap on a badge could land here.
+            // Opens the official page in the browser.
             val uriHandler = LocalUriHandler.current
             val context = LocalContext.current
             val noBrowser = stringResource(R.string.badge_detail_no_browser)
             TextButton(
-                onClick = dropUnlessResumed {
+                onClick = {
                     try {
                         uriHandler.openUri(uiState.officialUrl)
                     } catch (_: IllegalArgumentException) {

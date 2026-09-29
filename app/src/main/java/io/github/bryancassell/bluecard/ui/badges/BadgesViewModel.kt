@@ -25,7 +25,8 @@ class BadgesViewModel @Inject constructor(
         flow {
             val catalog = catalogRepository.getBadges()
             val eagleGroups = catalog.eagleGroups()
-            emit(catalog.sortedWith(badgeNameOrder()).map { it to it.eagleRequirement(eagleGroups) })
+            val badges = catalog.sortedWith(badgeNameOrder())
+            emit(badges.map { it to it.eagleRequirement(eagleGroups) })
         },
         progressRepository.observeAllProgress()
     ) { badges, progress ->

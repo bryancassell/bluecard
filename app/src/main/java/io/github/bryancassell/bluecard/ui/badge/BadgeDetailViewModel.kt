@@ -8,6 +8,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +33,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,
-            eagle = badge.eagleRequirement(catalog),
+            eagle = badge.eagleRequirement(catalog.eagleGroups()),
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map { it.toItem(found.recorded) }
         )

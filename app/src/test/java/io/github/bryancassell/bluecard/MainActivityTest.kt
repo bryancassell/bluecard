@@ -1,10 +1,13 @@
 package io.github.bryancassell.bluecard
 
+import android.app.Application
+import android.content.Intent
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -14,6 +17,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -43,7 +47,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowToast
 
 /**
  * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
@@ -83,7 +89,22 @@ class MainActivityTest {
                 requirementVersions = listOf(
                     RequirementsVersion(
                         LocalDate.of(2026, 1, 1),
-                        listOf(Requirement("1", "First."))
+                        listOf(
+                            Requirement("1", "First."),
+                            Requirement(
+                                "2",
+                                "Second.",
+                                requiredCount = 1,
+                                children = listOf(
+                                    Requirement("2a", "Choice A."),
+                                    Requirement(
+                                        "2b",
+                                        "Choice B.",
+                                        children = listOf(Requirement("2b(1)", "Part of B."))
+                                    )
+                                )
+                            )
+                        )
                     )
                 )
             )
@@ -140,6 +161,18 @@ class MainActivityTest {
         node.performClick()
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitForIdle()
+    }
+
+    private fun openCamping() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Camping").performClick()
+    }
+
+    /** Badges is showing, and Badge detail isn't. */
+    private fun assertBadgesShowing() {
+        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertDoesNotExist()
     }
 
     private fun assertActivityFinishing() {
@@ -258,29 +291,81 @@ class MainActivityTest {
 
     @Test
     fun openBadge_showsBadgeDetail() {
-        launchWithProfile()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        openCamping()
 
-        composeTestRule.onNodeWithText("Camping").performClick()
-
-        composeTestRule.onNodeWithText("Badge detail").assertIsDisplayed()
-        // The placeholder shows the ID of the badge it was opened for.
-        composeTestRule.onNodeWithText("camping").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Camping").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("First.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 
     @Test
     fun back_fromBadgeDetail_returnsToBadges() {
-        launchWithProfile()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
-        composeTestRule.onNodeWithText("Camping").performClick()
+        openCamping()
         // As in back_fromBadges_returnsHome, let the new entry settle before pressing back.
         composeTestRule.waitForIdle()
 
         pressBack()
 
-        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Badge detail").assertDoesNotExist()
+        assertBadgesShowing()
+    }
+
+    @Test
+    fun officialLink_opensOfficialPageInBrowser() {
+        openCamping()
+
+        composeTestRule.onNodeWithText("Official requirements").performClick()
+
+        var started: Intent? = null
+        scenario.onActivity { started = shadowOf(it).nextStartedActivity }
+        assertEquals(Intent.ACTION_VIEW, started?.action)
+        assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
+    }
+
+    @Test
+    fun officialLink_withNoAppForLinks_showsMessage() {
+        openCamping()
+        // Starting an activity nothing can handle now fails, as on a phone where parental
+        // controls block the browser.
+        shadowOf(ApplicationProvider.getApplicationContext<Application>()).checkActivities(true)
+
+        composeTestRule.onNodeWithText("Official requirements").performClick()
+
+        assertEquals("No app on this phone can open the link.", ShadowToast.getTextOfLatestToast())
+    }
+
+    @Test
+    fun openRequirement_showsRequirementDetail() {
+        openCamping()
+
+        composeTestRule.onNodeWithText("Second.").performClick()
+
+        composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Choice A.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertDoesNotExist()
+    }
+
+    @Test
+    fun openSubRequirement_showsItsOwnPage() {
+        openCamping()
+        composeTestRule.onNodeWithText("Second.").performClick()
+
+        composeTestRule.onNodeWithText("Choice B.").performClick()
+
+        composeTestRule.onNodeWithText("Requirement 2b").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Part of B.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromRequirementDetail_returnsToBadgeDetail() {
+        openCamping()
+        composeTestRule.onNodeWithText("Second.").performClick()
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
     @Test
@@ -362,12 +447,15 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
-        // Let the list finish animating in; until then it doesn't take taps either.
-        val camping = composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        // Let the list finish animating in; until then it doesn't take taps either. Badge
+        // detail's heading also says "Camping", so match the list's row.
+        val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
+            .assertIsDisplayed()
 
         // Tap a second time while the list is still fading out, as a quick double tap
-        // does. The list is still on screen then, and still takes taps that the incoming
-        // screen doesn't. The second tap fails the test if the list is already gone.
+        // does. The second tap fails the test if the list is already gone. Badge detail is
+        // drawn on top and takes most such taps itself; doubleTap_onRequirement_opensItOnce
+        // shows the same navigation guarding a second tap that does reach the screen.
         composeTestRule.mainClock.autoAdvance = false
         camping.performClick()
         composeTestRule.mainClock.advanceTimeBy(100)
@@ -377,7 +465,28 @@ class MainActivityTest {
 
         pressBack()
 
-        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        assertBadgesShowing()
+    }
+
+    @Test
+    fun doubleTap_onRequirement_opensItOnce() {
+        openCamping()
+
+        tapTwiceInOneFrame("Second.")
+        pressBack()
+
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onSubRequirement_opensItOnce() {
+        openCamping()
+        composeTestRule.onNodeWithText("Second.").performClick()
+
+        tapTwiceInOneFrame("Choice B.")
+        pressBack()
+
+        composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
     }
 
     @Test
@@ -392,7 +501,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.mainClock.autoAdvance = true
 
-        composeTestRule.onNodeWithText("Badge detail").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
     }
 
     @Test
@@ -413,7 +522,6 @@ class MainActivityTest {
         completeOnboarding()
 
         // Back where the scout was, not on a Badge detail opened while Onboarding showed.
-        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Badge detail").assertDoesNotExist()
+        assertBadgesShowing()
     }
 }
