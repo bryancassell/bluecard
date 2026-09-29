@@ -200,13 +200,19 @@ io.github.bryancassell.bluecard
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
 | **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state, "mark completed on a prior date", and "generate report" once complete. |
-| **Requirement detail** | Sub-page for requirements that need more room: trackers, long lists of choices, or many sub-requirements. |
+| **Requirement detail** | Sub-page for a requirement with sub-requirements or a tracker: its sub-requirements with their completion state, and its tracker. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
-Keeping the badge detail page short (the PRD asks that requirements be
-understandable "without extensive scrolling") is a UI concern for the feature
-issues: each requirement shows a one-line summary and its state, and anything
-larger opens the requirement detail sub-page.
+The PRD asks that requirements be understandable "without extensive
+scrolling", so the badge detail page lists only the top-level requirements. Each
+is one row: its official number, our one-line summary, "Do N of M" when only
+some of its sub-requirements are needed, and its completion state. A requirement
+with sub-requirements opens the requirement detail sub-page, which lists its
+sub-requirements the same way, and a sub-requirement with more of its own opens
+a sub-page in turn. A requirement with a tracker will open one too, once the
+sub-page shows trackers ([#40](https://github.com/bryancassell/bluecard/issues/40)). Each page shows one level of the requirement tree.
+Both pages show the requirements version the badge was started on, or the newest
+version for a badge the scout hasn't started.
 
 ## Merit badge catalog
 
@@ -326,6 +332,8 @@ leave a stale completion state behind.
 
 A badge's status (not started, in progress or completed) is derived the same
 way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees.
+Which requirements version a badge is worked on (the one it was started on, or
+the newest for a badge not started yet) comes from `data/progress/BadgeVersion.kt`.
 
 ## Key flows
 

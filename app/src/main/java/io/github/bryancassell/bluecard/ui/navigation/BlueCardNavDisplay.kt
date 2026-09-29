@@ -9,7 +9,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import io.github.bryancassell.bluecard.ui.badge.BadgeDetailScreen
+import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
+import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
 import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
 import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
 import io.github.bryancassell.bluecard.ui.home.HomeRoute
@@ -58,7 +59,21 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
                 BadgesRoute(onOpenBadge = { navigate(BadgeDetail(it)) })
             }
-            entry<BadgeDetail> { key -> BadgeDetailScreen(badgeId = key.badgeId) }
+            entry<BadgeDetail> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                BadgeDetailRoute(
+                    badgeId = key.badgeId,
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                )
+            }
+            entry<RequirementDetail> { key ->
+                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                RequirementDetailRoute(
+                    badgeId = key.badgeId,
+                    number = key.number,
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                )
+            }
             entry<DataManagement> { DataManagementScreen() }
         }
     )

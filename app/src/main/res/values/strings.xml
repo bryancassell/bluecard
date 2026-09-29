@@ -26,7 +26,25 @@
     <string name="badges_completed">Completed</string>
     <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
     <string name="badges_open_badge">open badge</string>
-    <string name="badge_detail_title">Badge detail</string>
+    <string name="badge_detail_official_page">Official requirements</string>
+    <string name="badge_detail_requirements">Requirements</string>
+    <!-- Shown when tapping the official requirements link, if no app on the phone can open
+         web links. -->
+    <string name="badge_detail_no_browser">No app on this phone can open the link.</string>
+    <!-- Shown in place of a badge's page when the catalog doesn't have the badge or its
+         requirements version. Only a catalog edited during development can cause this. -->
+    <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>
+    <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
+    <string name="requirement_choice">Do %1$d of %2$d</string>
+    <string name="requirement_completed">Completed</string>
+    <!-- Screen reader action on a requirement that opens its own page: "Double tap to open
+         requirement". -->
+    <string name="requirement_open">open requirement</string>
+    <!-- Heading of a requirement's page, with its official number, such as "Requirement 4b". -->
+    <string name="requirement_detail_title">Requirement %1$s</string>
+    <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
+         it, such as after the badge moves to another version. -->
+    <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
     <string name="data_management_title">Data management</string>
     <plurals name="home_completed">
         <item quantity="one">%1$d completed</item>
