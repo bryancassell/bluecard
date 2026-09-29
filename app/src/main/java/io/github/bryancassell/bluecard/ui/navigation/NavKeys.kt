@@ -20,3 +20,7 @@ data class BadgeDetail(val badgeId: String) : NavKey
 
 @Serializable
 data object DataManagement : NavKey
+
+/** A requirement of a badge, by its official number, such as "4c". */
+@Serializable
+data class RequirementDetail(val badgeId: String, val number: String) : NavKey
