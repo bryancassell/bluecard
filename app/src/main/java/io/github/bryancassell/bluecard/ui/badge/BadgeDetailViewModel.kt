@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
+import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -41,7 +42,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map { it.toItem(found.recorded) }
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
+    }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 
     @AssistedFactory
     interface Factory {

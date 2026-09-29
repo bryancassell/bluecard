@@ -192,6 +192,18 @@ class MainActivityTest {
     }
 
     @Test
+    fun unreadableProfile_showsLoadFailedMessage() {
+        fakeProfileRepository.failLoads = true
+        launch()
+
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
+        home().assertDoesNotExist()
+    }
+
+    @Test
     fun back_onOnboarding_leavesApp() {
         launch()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()

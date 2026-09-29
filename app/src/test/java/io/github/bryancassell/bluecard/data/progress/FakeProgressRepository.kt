@@ -1,9 +1,11 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import java.io.IOException
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 
 /**
@@ -14,11 +16,16 @@ class FakeProgressRepository : ProgressRepository {
     private val badges = MutableStateFlow<Map<String, BadgeProgressDetails>>(emptyMap())
     private var nextTrackerEntryId = 1L
 
+    /** When true, the flows throw, as Room's do when the database can't be opened. */
+    var failLoads = false
+
     override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> =
-        badges.map { all -> all.values.sortedBy { it.badge.badgeId } }
+        loadedBadges().map { all -> all.values.sortedBy { it.badge.badgeId } }
 
     override fun observeProgress(badgeId: String): Flow<BadgeProgressDetails?> =
-        badges.map { it[badgeId] }
+        loadedBadges().map { it[badgeId] }
+
+    private fun loadedBadges() = badges.onStart { if (failLoads) throw IOException("Load failed") }
 
     override suspend fun startBadge(
         badgeId: String,

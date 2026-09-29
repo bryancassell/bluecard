@@ -69,6 +69,18 @@ class BadgesScreenTest {
     }
 
     @Test
+    fun loadFailed_showsTitleAndMessage() {
+        show(BadgesUiState.LoadFailed)
+
+        composeTestRule.onNodeWithText("Merit badges").assert(isHeading()).assertIsDisplayed()
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assertIsDisplayed()
+        composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+        list().assertDoesNotExist()
+    }
+
+    @Test
     fun ready_showsBadgesInGivenOrder() {
         show(BadgesUiState.Ready(badges))
 

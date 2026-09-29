@@ -197,6 +197,17 @@ class BadgeDetailScreenTest {
     }
 
     @Test
+    fun loadFailed_showsMessageOnly() {
+        show(BadgeDetailUiState.LoadFailed)
+
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Requirements").assertDoesNotExist()
+        composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+    }
+
+    @Test
     fun longRequirementList_scrollsToLastRequirement() {
         // More top-level requirements than any badge has.
         val many = (1..20).map { RequirementItem("$it", "Requirement $it.", null, false, true) }

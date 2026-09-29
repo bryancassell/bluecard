@@ -1,9 +1,11 @@
 package io.github.bryancassell.bluecard.data.profile
 
+import java.io.IOException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -12,6 +14,9 @@ import org.junit.Test
  */
 abstract class ProfileRepositoryContract {
     protected abstract val repository: ProfileRepository
+
+    /** A repository whose stored profile can't be read. */
+    protected abstract fun unreadableRepository(): ProfileRepository
 
     @Test
     fun observeProfile_beforeSave_isNull() = runTest {
@@ -31,5 +36,14 @@ abstract class ProfileRepositoryContract {
         repository.saveProfile(Profile("Sam Scout", "456"))
 
         assertEquals(Profile("Sam Scout", "456"), repository.observeProfile().first())
+    }
+
+    @Test
+    fun observeProfile_whenUnreadable_throwsIOException() = runTest {
+        val error = runCatching {
+            unreadableRepository().observeProfile().first()
+        }.exceptionOrNull()
+
+        assertTrue("Expected an IOException, got $error", error is IOException)
     }
 }

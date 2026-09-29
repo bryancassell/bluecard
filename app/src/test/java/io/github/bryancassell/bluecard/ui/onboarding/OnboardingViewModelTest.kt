@@ -1,9 +1,12 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import java.io.IOException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -15,8 +18,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.shadows.ShadowLog
 
+// Robolectric, because a failed save reaches android.util.Log, which throws in plain local
+// tests (see ARCHITECTURE.md, Testing approach).
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class OnboardingViewModelTest {
     // A standard dispatcher queues the save, so tests can see the saving state.
     @get:Rule
@@ -130,6 +138,9 @@ class OnboardingViewModelTest {
         assertEquals(SaveStatus.Failed, state.saveStatus)
         assertTrue(state.canEdit)
         assertTrue(state.canSave)
+        val log = ShadowLog.getLogsForTag("Onboarding").single()
+        assertEquals(Log.WARN, log.type)
+        assertTrue(log.throwable is IOException)
 
         repository.failSaves = false
         viewModel.save()

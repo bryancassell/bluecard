@@ -72,6 +72,15 @@ class HomeScreenTest {
     }
 
     @Test
+    fun loadFailed_showsMessageOnly() {
+        show(HomeUiState.LoadFailed)
+
+        text("Couldn't load your data. Try closing and reopening BlueCard.").assertIsDisplayed()
+        composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+        text("Merit badges").assertDoesNotExist()
+    }
+
+    @Test
     fun ready_showsNameAsHeadingAndUnit() {
         show(noProgress)
 
