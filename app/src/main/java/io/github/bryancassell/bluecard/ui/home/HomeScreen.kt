@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 
 /** Connects the Home screen to its ViewModel. */
 @Composable
@@ -63,6 +64,8 @@ fun HomeScreen(
         ) {
             CircularProgressIndicator()
         }
+
+        HomeUiState.LoadFailed -> LoadFailedMessage(modifier)
 
         is HomeUiState.Ready -> Column(
             modifier = modifier

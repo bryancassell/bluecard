@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 
@@ -55,8 +57,10 @@ fun BadgeDetailScreen(
     when (uiState) {
         BadgeDetailUiState.Loading -> LoadingIndicator(modifier)
 
+        BadgeDetailUiState.LoadFailed -> LoadFailedMessage(modifier)
+
         BadgeDetailUiState.Unavailable ->
-            UnavailableMessage(stringResource(R.string.requirements_unavailable), modifier)
+            ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
 
         is BadgeDetailUiState.Ready -> Column(
             modifier = modifier.verticalScroll(rememberScrollState())

@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must come before super.onCreate(). Keep the splash screen up until the profile
-        // loads, so the app opens straight on Onboarding or Home.
+        // loads, or fails to load, so the app opens straight on Onboarding or Home.
         installSplashScreen().setKeepOnScreenCondition {
             viewModel.uiState.value == MainActivityUiState.Loading
         }

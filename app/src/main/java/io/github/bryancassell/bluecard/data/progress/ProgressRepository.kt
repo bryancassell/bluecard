@@ -10,6 +10,11 @@ import kotlinx.coroutines.flow.Flow
  * other functions that record progress throw [IllegalStateException] for a badge that
  * hasn't been started. Clearing, and changing or deleting a tracker entry that doesn't
  * exist, do nothing.
+ *
+ * Its flows throw an `IOException` when stored progress can't be read, such as when the
+ * database can't be opened. Its other functions don't report storage failures as an
+ * `IOException` yet, so catching one won't catch a failed write (see ARCHITECTURE.md,
+ * Data layer).
  */
 interface ProgressRepository {
     /** Every started badge, with its progress, updated whenever anything changes. */

@@ -5,6 +5,9 @@ sealed interface RequirementDetailUiState {
     /** The catalog is still loading. */
     data object Loading : RequirementDetailUiState
 
+    /** The catalog or progress couldn't be read. */
+    data object LoadFailed : RequirementDetailUiState
+
     data class Ready(
         val badgeName: String,
         val requirement: RequirementItem,

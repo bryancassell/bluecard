@@ -5,6 +5,8 @@
          plurals follow its rules, so a sentence never mixes two. Each translation sets its
          own, as a well-formed tag for its folder's language ("pt-BR", not "pt_BR"). -->
     <string name="strings_language">en</string>
+    <!-- Shown in place of a screen when the data stored on the phone can't be read. -->
+    <string name="load_failed">Couldn\'t load your data. Try closing and reopening BlueCard.</string>
     <string name="onboarding_title">Welcome to BlueCard</string>
     <string name="onboarding_message">Enter your name and unit number to get started.</string>
     <string name="onboarding_name">Name</string>

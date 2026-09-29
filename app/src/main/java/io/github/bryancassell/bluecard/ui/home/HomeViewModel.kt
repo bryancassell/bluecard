@@ -9,6 +9,7 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.status
+import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +41,8 @@ class HomeViewModel @Inject constructor(
             eagle = eagle.counts(),
             eagleTotal = eagle.size
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
+    }.catchLoadFailure(HomeUiState.LoadFailed)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 }
 
 /**

@@ -25,6 +25,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 
 /** Connects the Badges screen to its ViewModel. */
 @Composable
@@ -60,6 +61,8 @@ fun BadgesScreen(
             ) {
                 CircularProgressIndicator()
             }
+
+            BadgesUiState.LoadFailed -> LoadFailedMessage()
 
             // A lazy list composes only the rows on screen, so the full catalog scrolls
             // smoothly. Keys keep each row's state with its badge.

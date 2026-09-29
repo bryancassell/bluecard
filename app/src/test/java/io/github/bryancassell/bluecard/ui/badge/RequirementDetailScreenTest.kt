@@ -83,6 +83,16 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun loadFailed_showsMessageOnly() {
+        show(RequirementDetailUiState.LoadFailed)
+
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Requirement", substring = true).assertDoesNotExist()
+    }
+
+    @Test
     fun ready_showsRequirement() {
         show(ready)
 
