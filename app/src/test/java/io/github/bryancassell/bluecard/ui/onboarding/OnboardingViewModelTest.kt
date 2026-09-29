@@ -42,6 +42,18 @@ class OnboardingViewModelTest {
 
     private val state get() = viewModel.uiState.value
 
+    /** Saves that never finish, so the ViewModel stays in the saving state. */
+    private class NeverFinishingProfileRepository : ProfileRepository {
+        var saves = 0
+
+        override fun observeProfile(): Flow<Profile?> = flowOf(null)
+
+        override suspend fun saveProfile(profile: Profile) {
+            saves++
+            awaitCancellation()
+        }
+    }
+
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
      * coroutines testing guide: https://developer.android.com/kotlin/coroutines/test#statein
@@ -130,12 +142,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun save_whileSaving_showsSavingAndLocksTheForm() = runTest {
-        val neverFinishes = object : ProfileRepository {
-            override fun observeProfile(): Flow<Profile?> = flowOf(null)
-
-            override suspend fun saveProfile(profile: Profile) = awaitCancellation()
-        }
-        val viewModel = OnboardingViewModel(neverFinishes, savedStateHandle)
+        val viewModel = OnboardingViewModel(NeverFinishingProfileRepository(), savedStateHandle)
         startCollecting(viewModel)
         fillIn(viewModel = viewModel)
 
@@ -145,6 +152,19 @@ class OnboardingViewModelTest {
         assertEquals(SaveStatus.Saving, state.saveStatus)
         assertFalse(state.canEdit)
         assertFalse(state.canSave)
+    }
+
+    @Test
+    fun save_whileSaving_ignoresAnotherSave() = runTest {
+        val repository = NeverFinishingProfileRepository()
+        val viewModel = OnboardingViewModel(repository, savedStateHandle)
+        fillIn(viewModel = viewModel)
+
+        // As when the scout presses Done and then taps Get started.
+        viewModel.save()
+        viewModel.save()
+
+        assertEquals(1, repository.saves)
     }
 
     @Test

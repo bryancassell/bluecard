@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -57,7 +56,6 @@ fun OnboardingScreen(
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         // imePadding() before verticalScroll() shrinks the scrollable area to the space
         // above the keyboard, so every field and the button can be scrolled into view.
@@ -91,10 +89,10 @@ fun OnboardingScreen(
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            // Close the keyboard, as Done normally does, and save; the ViewModel ignores
-            // the save if the form is incomplete.
-            onKeyboardAction = {
-                keyboardController?.hide()
+            // Do what Done normally does, which closes the keyboard, and save; the ViewModel
+            // ignores the save if the form is incomplete.
+            onKeyboardAction = { performDefaultAction ->
+                performDefaultAction()
                 onSave()
             },
             modifier = Modifier.fillMaxWidth()
