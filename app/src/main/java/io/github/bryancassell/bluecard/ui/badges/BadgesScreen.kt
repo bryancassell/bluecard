@@ -12,9 +12,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,9 +26,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -125,9 +130,16 @@ fun BadgesScreen(
     }
 }
 
+/**
+ * Longer than any search needs. The field's text is saved with the screen's state, which has
+ * a size limit, so a huge paste mustn't reach it.
+ */
+private const val MAX_SEARCH_LENGTH = 100
+
 @Composable
 private fun SearchField(query: TextFieldState) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
     OutlinedTextField(
         state = query,
         label = { Text(stringResource(R.string.badges_search)) },
@@ -136,7 +148,12 @@ private fun SearchField(query: TextFieldState) {
             null
         } else {
             {
-                IconButton(onClick = { query.clearText() }) {
+                // The button disappears once the field is empty, so focus moves to the field
+                // rather than being lost, and the scout can type a new search.
+                IconButton(onClick = {
+                    query.clearText()
+                    focusRequester.requestFocus()
+                }) {
                     Icon(
                         painterResource(R.drawable.ic_close),
                         contentDescription = stringResource(R.string.badges_clear_search)
@@ -144,6 +161,7 @@ private fun SearchField(query: TextFieldState) {
                 }
             }
         },
+        inputTransformation = InputTransformation.maxLength(MAX_SEARCH_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         // The list already shows the matches, so the keyboard's search key only closes it.
@@ -151,6 +169,7 @@ private fun SearchField(query: TextFieldState) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+            .focusRequester(focusRequester)
     )
 }
 

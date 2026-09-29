@@ -47,8 +47,9 @@ class BadgesViewModel @Inject constructor(
         queryText
     ) { badges, progress, search ->
         val progressById = progress.associateBy { it.badge.badgeId }
-        val matches = badges.filter { (badge, _) -> badge.matchesSearch(search) }
-        if (matches.isEmpty()) {
+        val words = searchWords(search)
+        val matches = badges.filter { (badge, _) -> badge.matchesSearch(words) }
+        if (matches.isEmpty() && words.isNotEmpty()) {
             BadgesUiState.NoMatches
         } else {
             BadgesUiState.Ready(

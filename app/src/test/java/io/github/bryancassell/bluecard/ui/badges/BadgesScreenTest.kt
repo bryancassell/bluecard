@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -238,6 +239,27 @@ class BadgesScreenTest {
 
         assertEquals("", query.text.toString())
         clearButton().assertDoesNotExist()
+    }
+
+    @Test
+    fun clearButton_movesFocusToSearchField() {
+        query.setTextAndPlaceCursorAtEnd("camp")
+        show(BadgesUiState.Ready(badges))
+
+        clearButton().performClick()
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun searchField_acceptsAtMost100Characters() {
+        show(BadgesUiState.Ready(badges))
+        val longest = "a".repeat(100)
+        searchField().performTextInput(longest)
+
+        searchField().performTextInput("b")
+
+        assertEquals(longest, query.text.toString())
     }
 
     @Test

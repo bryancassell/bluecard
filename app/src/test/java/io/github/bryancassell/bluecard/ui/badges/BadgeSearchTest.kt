@@ -4,6 +4,7 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import java.time.LocalDate
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -21,6 +22,8 @@ class BadgeSearchTest {
         )
     )
 
+    private fun MeritBadge.matches(query: String) = matchesSearch(searchWords(query))
+
     private val fitness = badge(
         "Personal Fitness",
         "Build a lifelong habit of exercise, and track your progress for twelve weeks."
@@ -31,39 +34,54 @@ class BadgeSearchTest {
     )
 
     @Test
-    fun blankQuery_matchesEveryBadge() {
-        assertTrue(fitness.matchesSearch(""))
-        assertTrue(fitness.matchesSearch("   "))
+    fun searchWords_areRunsOfLettersAndDigits() {
+        assertEquals(
+            listOf("Signs", "signals", "3", "D", "scout", "s"),
+            searchWords("  Signs, signals 3-D. scout\u2019s ")
+        )
+    }
+
+    @Test
+    fun searchWords_ofOnlySpacesAndPunctuation_isEmpty() {
+        assertEquals(emptyList<String>(), searchWords(""))
+        assertEquals(emptyList<String>(), searchWords(" ., - "))
+    }
+
+    @Test
+    fun noWords_matchesEveryBadge() {
+        assertTrue(fitness.matches(""))
+        assertTrue(fitness.matches("   "))
+        assertTrue(fitness.matches("..."))
     }
 
     @Test
     fun wholeWordOfName_matches() {
-        assertTrue(fitness.matchesSearch("Fitness"))
+        assertTrue(fitness.matches("Fitness"))
     }
 
     @Test
     fun startOfWordInName_matches() {
-        assertTrue(fitness.matchesSearch("fit"))
-        assertTrue(fitness.matchesSearch("pers"))
+        assertTrue(fitness.matches("fit"))
+        assertTrue(fitness.matches("pers"))
     }
 
     @Test
     fun wordFromSummary_matches() {
-        assertTrue(fitness.matchesSearch("exercise"))
-        assertTrue(fitness.matchesSearch("lifelong"))
+        assertTrue(fitness.matches("exercise"))
+        assertTrue(fitness.matches("lifelong"))
     }
 
     @Test
     fun ignoresCase() {
-        assertTrue(fitness.matchesSearch("FITNESS"))
-        assertTrue(fitness.matchesSearch("eXeRcIsE"))
+        assertTrue(fitness.matches("FITNESS"))
+        assertTrue(fitness.matches("eXeRcIsE"))
     }
 
     @Test
     fun middleOfWord_doesNotMatch() {
         // "ness" is in "Fitness", and "rack" is in "track".
-        assertFalse(fitness.matchesSearch("ness"))
-        assertFalse(fitness.matchesSearch("rack"))
+        assertFalse(fitness.matches("ness"))
+        assertFalse(fitness.matches("rack"))
     }
 
     @Test
@@ -71,35 +89,58 @@ class BadgeSearchTest {
         // The first "ex" is inside "Flexible"; the second starts "exercise".
         val stretching = badge("Stretching", "Flexible joints, and exercise to keep them.")
 
-        assertTrue(stretching.matchesSearch("ex"))
+        assertTrue(stretching.matches("ex"))
     }
 
     @Test
     fun wordAfterPunctuation_matches() {
-        assertTrue(signs.matchesSearch("signals"))
-        assertTrue(signs.matchesSearch("codes"))
+        assertTrue(signs.matches("signals"))
+        assertTrue(signs.matches("codes"))
     }
 
     @Test
     fun everyWordMustMatch_inAnyOrder() {
-        assertTrue(fitness.matchesSearch("personal fitness"))
-        assertTrue(fitness.matchesSearch("fitness personal"))
-        assertTrue(signs.matchesSearch("signs signals"))
-        assertFalse(fitness.matchesSearch("personal cooking"))
+        assertTrue(fitness.matches("personal fitness"))
+        assertTrue(fitness.matches("fitness personal"))
+        assertTrue(signs.matches("signs signals"))
+        assertFalse(fitness.matches("personal cooking"))
     }
 
     @Test
     fun wordsCanMatchNameAndSummaryTogether() {
-        assertTrue(fitness.matchesSearch("fitness weeks"))
+        assertTrue(fitness.matches("fitness weeks"))
     }
 
     @Test
     fun extraSpaces_areIgnored() {
-        assertTrue(fitness.matchesSearch("  personal   fitness  "))
+        assertTrue(fitness.matches("  personal   fitness  "))
+    }
+
+    // A keyboard can add a period after a double space.
+    @Test
+    fun punctuationInQuery_isIgnored() {
+        assertTrue(fitness.matches("fitness."))
+        assertTrue(fitness.matches("personal, fitness"))
+    }
+
+    @Test
+    fun otherSpaces_separateWords() {
+        // A no-break space, as pasted text can have, and an ideographic space.
+        assertTrue(fitness.matches("personal\u00A0fitness"))
+        assertTrue(fitness.matches("personal\u3000fitness"))
+    }
+
+    @Test
+    fun straightAndCurlyApostrophes_matchEachOther() {
+        val camping = badge("Camping", "Plan a scout's first campout.")
+        val curly = badge("Cooking", "Cook a scout\u2019s meal.")
+
+        assertTrue(camping.matches("scout\u2019s"))
+        assertTrue(curly.matches("scout's"))
     }
 
     @Test
     fun unrelatedWord_doesNotMatch() {
-        assertFalse(fitness.matchesSearch("cooking"))
+        assertFalse(fitness.matches("cooking"))
     }
 }

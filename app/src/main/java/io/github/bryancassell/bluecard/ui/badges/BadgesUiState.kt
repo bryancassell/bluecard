@@ -13,7 +13,7 @@ sealed interface BadgesUiState {
      */
     data class Ready(val badges: List<BadgeListItem>) : BadgesUiState
 
-    /** No badge matches the search. */
+    /** The scout searched for something, and no badge matches it. */
     data object NoMatches : BadgesUiState
 }
 

@@ -2,18 +2,25 @@ package io.github.bryancassell.bluecard.ui.badges
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 
-private val whitespace = Regex("\\s+")
+// Anything but a letter or digit, the characters that isLetterOrDigit() rejects.
+private val nonWordCharacters = Regex("[^\\p{L}\\p{Nd}]+")
 
 /**
- * Whether this badge matches a search for [query]: every word of the query starts a word in
- * the badge's name or summary, in any order and ignoring case. "fit" and "fitness personal"
- * match Personal Fitness, but "art" doesn't match a summary just because it says "part". A
- * blank query matches every badge.
+ * The words of a search: its runs of letters and digits. Spaces and punctuation separate
+ * words, as they do in badge text, so "fitness." searches for "fitness".
  */
-fun MeritBadge.matchesSearch(query: String): Boolean =
-    query.split(whitespace).filter { it.isNotEmpty() }.all { word ->
-        name.hasWordStartingWith(word) || summary.hasWordStartingWith(word)
-    }
+fun searchWords(query: String): List<String> =
+    query.split(nonWordCharacters).filter { it.isNotEmpty() }
+
+/**
+ * Whether this badge matches a search for [words], from [searchWords]: every word starts a
+ * word in the badge's name or summary, in any order and ignoring case. "fit" and "fitness
+ * personal" match Personal Fitness, but "art" doesn't match a summary just because it says
+ * "part". A search with no words matches every badge.
+ */
+fun MeritBadge.matchesSearch(words: List<String>): Boolean = words.all { word ->
+    name.hasWordStartingWith(word) || summary.hasWordStartingWith(word)
+}
 
 /** Whether [prefix] appears at the start of a word in this text, ignoring case. */
 private fun String.hasWordStartingWith(prefix: String): Boolean {

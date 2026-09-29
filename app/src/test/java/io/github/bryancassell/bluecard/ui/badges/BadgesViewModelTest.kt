@@ -272,6 +272,14 @@ class BadgesViewModelTest {
     }
 
     @Test
+    fun emptyCatalog_withBlankSearch_isReadyWithNoBadges() = runTest {
+        catalogRepository.badges = emptyList()
+        startCollecting(viewModel)
+
+        assertEquals(BadgesUiState.Ready(emptyList()), viewModel.uiState.value)
+    }
+
+    @Test
     fun clearingSearch_listsEveryBadgeAgain() = runTest {
         startCollecting(viewModel)
         search("zoology")

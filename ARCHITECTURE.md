@@ -358,8 +358,11 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   scout's progress and the search text, to list the matching badges with each
   one's status from `data/progress/BadgeStatus.kt`. A badge matches when every
   word of the search starts a word in its name or summary, in any order and
-  ignoring case (`ui/badges/BadgeSearch.kt`); a blank search lists every badge.
-  The list stays alphabetical, and a new set of matches is shown from the top.
+  ignoring case (`ui/badges/BadgeSearch.kt`). Words are runs of letters and
+  digits, in the search and in badge text alike, so spaces and punctuation only
+  separate them; a search with no words lists every badge. The list stays
+  alphabetical, and a new set of matches is shown from the top. The search is
+  capped at 100 characters, because it's saved with the screen's state.
 - **Recording progress.** Badge and requirement screens call `ProgressRepository`
   functions (set completed date, set comment, add tracker row, set counselor,
   mark badge completed on a date); the screens observe progress as a `Flow`, so
