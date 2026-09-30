@@ -255,6 +255,39 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     The activity's default factory still passes the extras to a ViewModel
     created without creation extras. BlueCard creates none that way, and
     overriding the factory would replace Hilt's.
+- **Pages slide as the platform's activities do** (`ui/navigation/PageTransitions.kt`).
+  Material 3's [transition patterns](https://m3.material.io/styles/motion/transitions/transition-patterns)
+  say "Both Android and iOS should use platform defaults for forward and
+  backward navigation" between "screens at consecutive levels of hierarchy".
+  Navigation 3's defaults are a 700 ms crossfade, and a back gesture that
+  shrinks the page to 70%
+  ([#104](https://github.com/bryancassell/bluecard/issues/104)). BlueCard
+  plays AOSP's `activity_open_*` and `activity_close_*` animations instead, and
+  mirrors them in a right-to-left layout, as `anim-ldrtl` does:
+  - **Opening a page:** it slides in 96dp from the end, on top, and fades in
+    over 83 ms after 50 ms. The page left slides 96dp toward the start.
+  - **Back:** the closing page, on top, slides 96dp toward the end and fades
+    out over 83 ms after 35 ms. The page returned to slides in 96dp from the
+    start.
+  - **Slides take 450 ms with `fast_out_extra_slow_in`.** Compose's
+    `PathEasing` would draw that path, but it needs a native library that
+    Robolectric can't load, so the path's two cubic curves are each a
+    `CubicBezierEasing`.
+  - **The back gesture plays Back's slide, without shrinking the page.** The
+    [predictive back guide](https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back)
+    shrinks the page to 90% and fades through to the next one, and the
+    platform's own swipe back between activities shrinks both pages to 90%
+    (`DefaultCrossActivityBackAnimation`). The shrink looks strange here.
+    Navigation 3's [animation guide](https://developer.android.com/guide/navigation/navigation-3/animate-destinations)
+    reuses its Back animation for the gesture too. The swipe moves through the
+    transition, so the page has faded out about a quarter of the way across.
+  - **Each page paints the theme's background**
+    (`rememberPageBackgroundNavEntryDecorator`), the color the app's `Scaffold`
+    paints behind the pages, as an activity's window background does. The page
+    underneath doesn't fade, so a see-through page would show it through its
+    gaps. The platform also stretches a window's edge over the gap its slide
+    leaves (`<extend>`). Compose has no equivalent, so the gap shows the
+    `Scaffold`, which is the same color.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens
@@ -263,14 +296,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     open a screen twice.
   - **Screens ignore touches while they animate**
     (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens
-    during its 700 ms fade, and either can be on top: the new screen going
+    during their 450 ms slide, and either can be on top: the new screen going
     forward, the closing one going back (Navigation 3 gives the screen being
     returned to a lower z-index). A cover over each animating screen takes
     touches:
     - **on a screen animating out, until it's gone.** Otherwise a tap could
       press its controls wherever the new screen has nothing to press, or
       anywhere after Back. So after Back, taps are ignored for the whole
-      700 ms.
+      450 ms, though the closing screen has faded out after 118 ms.
     - **on a screen animating in, for the double-tap timeout**
       (`ViewConfiguration.doubleTapTimeoutMillis`, 300 ms). Otherwise the
       second tap of a double tap would press whatever is under the finger on
@@ -280,14 +313,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     - A touch that starts on a cover stays with it until the finger lifts, so a
       swipe that starts then doesn't scroll.
   - **Taps on a new screen work after the timeout, even while it's still
-    fading in.** [#56](https://github.com/bryancassell/bluecard/pull/56)
+    sliding in.** [#56](https://github.com/bryancassell/bluecard/pull/56)
     dropped `dropUnlessResumed` because it ignored taps for the whole
     animation. Taps further apart than the timeout aren't a double tap to the
     platform either.
   - **A screen still animating out can't be opened again** (`DrawnScreens`).
     `NavDisplay` keeps a screen's state, ViewModel included, until it's out of
     both the back stack and composition, so the same key pushed again during
-    its fade would bring it back as it was: a Tracker entry page that closed
+    its slide out would bring it back as it was: a Tracker entry page that closed
     after a save would reopen closed, with Save disabled. After Back, the
     closing screen's cover takes touches, but a screen reader's click still
     reaches the screen under it. So a decorator records the content keys of
@@ -813,7 +846,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   The progress fake also has a `failSaves` switch for save failures, and the
   contract tests check that Room's writes throw an `IOException` the same way.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
-  interaction, fed by fake repositories or fixed UI state.
+  interaction, fed by fake repositories or fixed UI state. Where only pixels
+  show the behavior, such as a page's background, a test draws with
+  Robolectric's native graphics (`@GraphicsMode(NATIVE)`) and reads them with
+  `captureToImage`.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.
@@ -827,6 +863,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Architecture | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | Modules | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | Navigation | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
+| Page transitions | The platform's activity slides, mirrored right-to-left; the back gesture plays Back's slide without shrinking the page; each page paints the theme's background | Material 3 says to use platform defaults between levels of hierarchy, and Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) aren't them. The predictive back guide's 90% shrink looks strange here. The slide moves one page over another, so pages must hide what's under them |
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |
