@@ -210,12 +210,15 @@ class TrackerEntryViewModel @AssistedInject constructor(
 
     /**
      * Fills in the fields when the page loads: with the values the system stopped the app with,
-     * if any, or else the [saved] ones. They're kept from then on, so if the system stops the
-     * app before then, the page loads the saved values again.
+     * or else the [saved] ones. They're kept from then on, so if the system stops the app before
+     * then, the page loads the saved values again.
      */
     private fun loadFields(columns: List<TrackerColumn>, saved: Map<String, String>) {
         val restored = columns.associate { it.id to savedStateHandle.restoredText(fieldKey(it.id)) }
-        val wasStopped = restored.values.any { it != null }
+        // All are kept together, so if one wasn't restored, such as when another value is under
+        // its key, the saved values are loaded into all of them, as in StoredTextFields. Leaving
+        // it empty would erase its saved value on the next save.
+        val wasStopped = restored.values.all { it != null }
         for (column in columns) {
             val text = if (wasStopped) restored[column.id] else saved[column.id]
             val field = TextFieldState(text.orEmpty())

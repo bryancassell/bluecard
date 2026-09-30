@@ -1,8 +1,10 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,6 +22,7 @@ import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.ui.keepText
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -651,6 +654,47 @@ class TrackerEntryViewModelTest {
             assertFalse(restored.ready().done)
             assertEquals(2, restored.ready().rowNumber)
             assertTrue(restored.ready().canSave)
+        }
+    }
+
+    @Test
+    fun appStoppedWithOnlySomeFieldsKept_loadsTheSavedValuesIntoAll() = runTest {
+        val id = addSession(mapOf("activity" to "Run", "minutes" to "30"))
+        var restoring = false
+        viewModelScenario<ViewModel> {
+            if (restoring) {
+                TrackerEntryViewModel(
+                    "personal-fitness",
+                    "7a",
+                    id,
+                    null,
+                    catalogRepository,
+                    progressRepository,
+                    clock,
+                    createSavedStateHandle()
+                )
+            } else {
+                ActivityKeptAloneViewModel(createSavedStateHandle())
+            }
+        }.use { scenario ->
+            // Created when first read.
+            scenario.viewModel
+            restoring = true
+
+            scenario.recreate()
+            val restored = scenario.viewModel as TrackerEntryViewModel
+            startCollecting(restored)
+
+            assertEquals("Run", restored.text("activity"))
+            assertEquals("30", restored.text("minutes"))
+            assertFalse(restored.ready().canSave)
+        }
+    }
+
+    /** Keeps only the Activity field's text, as if the others weren't restored. */
+    private class ActivityKeptAloneViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+        init {
+            savedStateHandle.keepText("field:activity", TextFieldState("Swam"))
         }
     }
 
