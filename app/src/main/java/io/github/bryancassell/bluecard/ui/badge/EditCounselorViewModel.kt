@@ -63,7 +63,8 @@ class EditCounselorViewModel @AssistedInject constructor(
         saved,
         saves.failure
     ) { catalog, progress, _, isSaved, saveFailure ->
-        // The badge is started on the version its pages show, so saving needs that version.
+        // Unavailable when Badge detail is, which then doesn't open this page. Starting the badge
+        // on a save (ProgressRecorder.badgeStart) needs the badge in the catalog too.
         val found = catalog.badgeRequirements(badgeId, progress)
             ?: return@combine EditCounselorUiState.Unavailable
         val stored = progress?.badge?.counselor

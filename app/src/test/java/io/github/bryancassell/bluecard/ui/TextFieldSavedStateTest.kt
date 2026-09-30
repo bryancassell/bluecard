@@ -14,8 +14,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * [textFieldState], [restoredText], [keepText] and [StoredTextFields]. Robolectric, because saved state is a
- * Bundle, and ViewModelScenario passes it through a Parcel as the system does.
+ * [textFieldState], [restoredText], [keepText] and [StoredTextFields]. Robolectric, because saved
+ * state is a Bundle, and ViewModelScenario passes it through a Parcel as the system does.
  */
 @RunWith(AndroidJUnit4::class)
 class TextFieldSavedStateTest {

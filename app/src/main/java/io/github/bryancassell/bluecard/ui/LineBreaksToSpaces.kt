@@ -17,5 +17,8 @@ object LineBreaksToSpaces : InputTransformation {
     }
 }
 
-/** A line break, counting "\r\n" as one. */
-private val LineBreak = Regex("\r\n|[\n\r\u0085  ]")
+/**
+ * A line break: "\r\n", or any one of the characters Unicode counts as a line break, such as a
+ * form feed pasted from a document.
+ */
+private val LineBreak = Regex("""\R""")

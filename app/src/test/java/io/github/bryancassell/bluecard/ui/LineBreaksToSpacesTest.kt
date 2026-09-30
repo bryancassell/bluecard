@@ -51,9 +51,10 @@ class LineBreaksToSpacesTest {
 
     @Test
     fun otherLineBreaks_becomeSpaces() {
-        field().performTextInput("a\rb\u0085c d e")
+        // Carriage return, vertical tab, form feed, next line, line separator, paragraph separator.
+        field().performTextInput("a\rb\u000Bc\u000Cd\u0085e\u2028f\u2029g")
 
-        assertEquals("a b c d e", state.text.toString())
+        assertEquals("a b c d e f g", state.text.toString())
     }
 
     @Test
