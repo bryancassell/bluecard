@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -205,6 +206,16 @@ class TextFieldSavedStateTest {
             restored.fields.loadOnce { stored }
 
             assertEquals("Pat Lee", restored.name.text.toString())
+        }
+    }
+
+    @Test
+    fun storedTextFields_storedTextWithoutAFieldsKey_throws() {
+        val fields = StoredTextFields(SavedStateHandle(), "name", "phone")
+
+        // As when a key is misspelled.
+        assertThrows(NoSuchElementException::class.java) {
+            fields.loadOnce { mapOf("Name" to "Pat Lee", "phone" to null) }
         }
     }
 

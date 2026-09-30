@@ -61,6 +61,8 @@ class StoredTextFields(private val savedStateHandle: SavedStateHandle, vararg ke
     /**
      * Puts the [stored] text, by key, in the fields and keeps them from then on, unless it's been
      * done already or the fields were restored instead. [stored] is called only when it's done.
+     * It has every field's key, with null for no text: a key it's missing is a bug, so it throws
+     * rather than leave the field empty, which would erase the stored text on the next save.
      */
     fun loadOnce(stored: () -> Map<String, String?>) {
         if (loaded) return
@@ -71,7 +73,9 @@ class StoredTextFields(private val savedStateHandle: SavedStateHandle, vararg ke
         // the change as soon as it's applied, not when Compose next applies changes made outside a
         // snapshot.
         Snapshot.withMutableSnapshot {
-            fields.forEach { (key, field) -> field.setTextAndPlaceCursorAtEnd(text[key].orEmpty()) }
+            fields.forEach { (key, field) ->
+                field.setTextAndPlaceCursorAtEnd(text.getValue(key).orEmpty())
+            }
         }
     }
 

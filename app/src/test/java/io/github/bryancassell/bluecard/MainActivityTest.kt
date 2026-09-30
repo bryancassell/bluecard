@@ -160,7 +160,7 @@ class MainActivityTest {
     // like the screens' saved text fields, and built like the text they keep.
     private fun launchWithExtrasNamedLikeTextFields() {
         val intent = Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java)
-        for (key in listOf("name", "unit_number", "query", "comment")) {
+        for (key in listOf("name", "unit_number", "query", "comment", "phone", "email")) {
             intent.putExtra(key, bundleOf("text" to "From another app."))
         }
         scenario = ActivityScenario.launch(intent)
@@ -349,6 +349,19 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.onNodeWithText("First.").performClick()
         assertFieldEmpty("Comment")
+    }
+
+    @Test
+    fun launchExtras_doNotFillCounselorFields() {
+        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        launchWithExtrasNamedLikeTextFields()
+
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        assertFieldEmpty("Name")
+        assertFieldEmpty("Phone")
+        assertFieldEmpty("Email")
     }
 
     // Covers every ViewModel, including those scoped to the activity, whatever keys the
