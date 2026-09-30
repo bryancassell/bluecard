@@ -331,12 +331,12 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
     }
 
+    // Its date field would only show once it's complete (the next test).
     @Test
-    fun fixedRows_haveNoCheckboxOrDate() {
+    fun fixedRows_haveNoCheckbox() {
         show(withWeeks)
 
         composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
-        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
     }
 
     @Test

@@ -102,7 +102,7 @@ data class TrackerEntry(
     val values: Map<String, String>,
     /**
      * The date the row was first saved, which changing it keeps. Null for a row saved before
-     * the app recorded it (database version 3).
+     * database version 3 and not changed since; changing it records the date it's changed on.
      */
     val addedDate: LocalDate? = null
 )

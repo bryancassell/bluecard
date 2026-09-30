@@ -140,7 +140,10 @@ class FakeProgressRepository : ProgressRepository {
                         if (it.id ==
                             filled.id
                         ) {
-                            it.copy(values = normalizedTrackerValues(values))
+                            it.copy(
+                                values = normalizedTrackerValues(values),
+                                addedDate = it.addedDate ?: addedDate
+                            )
                         } else {
                             it
                         }

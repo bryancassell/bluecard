@@ -82,7 +82,8 @@ interface ProgressRepository {
      * saving a row twice doesn't add two. Otherwise the row is added, even for an [id] deleted
      * in the meantime, and its new entry's ID is higher than any entry's before it, even a
      * deleted one's. An added row records [addedDate] as the date it was first saved
-     * ([TrackerEntry.addedDate]), and a row that already has an entry keeps its own. The values
+     * ([TrackerEntry.addedDate]). A row that already has an entry keeps its own, or records
+     * [addedDate] if it has none, as a row saved before database version 3 doesn't. The values
      * are stored as [normalizedTrackerValues]. A badge that hasn't been started is started with
      * [start], as in [markRequirementCompleted].
      */

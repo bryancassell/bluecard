@@ -586,16 +586,17 @@ At a high level. Exact fields are decided in the feature issues.
     `YYYY-MM-DD`). A row of a fixed-row tracker has at most one entry, which a
     unique index enforces. IDs only grow (`AUTOINCREMENT`), so a new entry's is
     higher than any before it, even a deleted one's. Each entry records the date
-    it was first saved (`addedDate`), which changing it keeps; entries saved
-    before database version 3 have none.
+    it was first saved (`addedDate`), which changing it keeps. An entry saved
+    before database version 3 has none until it's next changed, which records
+    that day.
 
 **Completion is derived, not stored**
 (`data/progress/Completion.kt`), from requirement progress, tracker entries and
 the catalog:
 
 - A requirement with children is complete when all of them are, or its "N of
-  these" count is. One with a tracker with a fixed number of rows is complete
-  when every row has an entry (`filledRows`, which the tracker's "8 of 12
+  these" count is, even if it also has a tracker. One without children but with
+  a tracker with a fixed number of rows is complete when every row has an entry (`filledRows`, which the tracker's "8 of 12
   weeks" count uses too). Any other requirement, including one with a log, is
   complete when the scout marked it complete (`isMarkedByHand`). A `completed`
   mark or date stored for a requirement that isn't marked by hand doesn't
@@ -707,7 +708,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     entries it needs: the scout marks its requirement complete, as one without a
     tracker. An added row records the date it was first saved, which the Tracker
     entry page passes to `addTrackerEntry` from its clock; changing the row
-    keeps that date.
+    keeps that date. A row saved before database version 3 has no date, so the
+    first change records that day as its date.
   - **Counselor.** Badge detail shows the counselor's name, phone and email,
     with a button to add or edit them. Tapping the phone opens the phone app
     with the number filled in (`ACTION_DIAL`, which needs no permission), and

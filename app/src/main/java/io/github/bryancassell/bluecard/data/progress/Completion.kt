@@ -22,10 +22,10 @@ val Requirement.isMarkedByHand: Boolean get() = children.isEmpty() && tracker?.r
  * (each keyed by requirement number), or null if it isn't.
  *
  * A requirement with children is complete when enough of them are: all of them, or its
- * `requiredCount`. Its date is when the last child it needed was completed. One with a tracker
- * with a fixed number of rows is complete when every row is filled in, on the date the last of
- * them was first saved. Any other requirement is complete when the scout marked it complete
- * ([isMarkedByHand]).
+ * `requiredCount`, even if it also has a tracker. Its date is when the last child it needed was
+ * completed. One without children but with a tracker with a fixed number of rows is complete
+ * when every row is filled in, on the date the last of them was first saved. Any other
+ * requirement is complete when the scout marked it complete ([isMarkedByHand]).
  */
 fun Requirement.completion(
     progress: Map<String, RequirementProgress>,

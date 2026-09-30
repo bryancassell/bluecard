@@ -86,21 +86,37 @@ interface ProgressDao {
      * Gives the entry already there for [entry]'s row [entry]'s values, or inserts [entry] with
      * a new ID, in a single transaction. Returns the entry's ID. The entry already there is
      * entry [TrackerEntry.id], if it's set and still there, or else for a row of a fixed-row
-     * tracker, the entry that fills it. It keeps its [TrackerEntry.addedDate].
+     * tracker, the entry that fills it. It keeps its [TrackerEntry.addedDate], or gets
+     * [entry]'s if it has none.
      */
     @Transaction
     suspend fun addTrackerEntry(entry: TrackerEntry): Long {
-        if (entry.id != 0L && updateTrackerEntry(entry.id, entry.values) == 1) return entry.id
+        if (entry.id != 0L && updateTrackerEntry(entry.id, entry.values, entry.addedDate) == 1) {
+            return entry.id
+        }
         val filled = entry.rowNumber?.let {
             getTrackerRowId(entry.badgeId, entry.requirementNumber, it)
         } ?: return insertTrackerEntry(entry.copy(id = 0))
-        updateTrackerEntry(filled, entry.values)
+        updateTrackerEntry(filled, entry.values, entry.addedDate)
         return filled
     }
 
-    /** Returns the number of entries it changed: 1, or 0 if there's no entry [id]. */
-    @Query("UPDATE tracker_entry SET `values` = :values WHERE id = :id")
-    suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Int
+    /**
+     * Gives entry [id] these [values], and [addedDate] if it has no date, as an entry saved
+     * before database version 3 doesn't. Returns the number of entries it changed: 1, or 0 if
+     * there's no entry [id].
+     */
+    @Query(
+        """
+        UPDATE tracker_entry SET `values` = :values, addedDate = COALESCE(addedDate, :addedDate)
+        WHERE id = :id
+        """
+    )
+    suspend fun updateTrackerEntry(
+        id: Long,
+        values: Map<String, String>,
+        addedDate: LocalDate?
+    ): Int
 
     @Query("DELETE FROM tracker_entry WHERE id = :id")
     suspend fun deleteTrackerEntry(id: Long)
