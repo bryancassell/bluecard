@@ -71,26 +71,23 @@ interface ProgressRepository {
     )
 
     /**
-     * Adds a row to requirement [number]'s tracker and returns its ID, which is higher than
-     * any entry's before it, even a deleted one's. [rowNumber] is the row
-     * it fills in a tracker with a fixed number of rows, from 1, or null in a log. A row that
-     * already has an entry gets these values instead, so saving one twice doesn't add two. The
-     * values are stored as [normalizedTrackerValues]. A badge that hasn't been started is
-     * started with [start], as in [markRequirementCompleted].
+     * Saves a row of requirement [number]'s tracker, in a single write, and returns its entry's
+     * ID. [rowNumber] is the row it fills in a tracker with a fixed number of rows, from 1, or
+     * null in a log. A row that already has an entry gets these values instead: entry [id], if
+     * given and still there, or in a fixed-row tracker the entry that fills [rowNumber], so
+     * saving a row twice doesn't add two. Otherwise the row is added, even for an [id] deleted
+     * in the meantime, and its new entry's ID is higher than any entry's before it, even a
+     * deleted one's. The values are stored as [normalizedTrackerValues]. A badge that hasn't
+     * been started is started with [start], as in [markRequirementCompleted].
      */
     suspend fun addTrackerEntry(
         badgeId: String,
         number: String,
         rowNumber: Int?,
         values: Map<String, String>,
-        start: BadgeStart
+        start: BadgeStart,
+        id: Long? = null
     ): Long
-
-    /**
-     * Replaces a tracker row's values, stored as [normalizedTrackerValues]. Returns false,
-     * changing nothing, if there's no entry [id], such as one deleted in the meantime.
-     */
-    suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Boolean
 
     suspend fun deleteTrackerEntry(id: Long)
 

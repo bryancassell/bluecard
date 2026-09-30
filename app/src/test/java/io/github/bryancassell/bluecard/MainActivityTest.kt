@@ -645,6 +645,30 @@ class MainActivityTest {
         assertEquals(emptyList<Map<String, String>>(), runBlocking { trackerValues("1") })
     }
 
+    @Test
+    fun screenReaderClick_onAddWhileTheRowsPageCloses_doesNothing() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        notesField().performTextInput("Rained all night.")
+        composeTestRule.waitForIdle()
+
+        // Saving closes the row's page, which fades out over the requirement's page and takes
+        // touches meanwhile. A screen reader's click still reaches Add night, which would open
+        // the closing page again, with the ViewModel it has closed.
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        notesField().assertExists()
+        composeTestRule.onNodeWithText("Add night").performSemanticsAction(SemanticsActions.OnClick)
+        composeTestRule.mainClock.autoAdvance = true
+        composeTestRule.waitForIdle()
+
+        notesField().assertDoesNotExist()
+        composeTestRule.onNodeWithText("1 night").performScrollTo().assertIsDisplayed()
+    }
+
     // Dates, like numbers, follow the strings' language, so on a Persian device the English
     // strings keep English month names and digits.
     @Config(qualifiers = "fa")

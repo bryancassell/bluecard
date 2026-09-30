@@ -18,11 +18,16 @@ class NavigateFromTest {
     // What NavDisplay shows: the back stack, or Onboarding in its place.
     private var shownBackStack: List<NavKey> = backStack
 
+    // Screens NavDisplay is still drawing, such as one animating out after Back.
+    private val drawn = mutableSetOf<NavKey>()
+
     /** Navigation from the Badges screen. */
     private fun navigateFromBadges(): (NavKey) -> Unit {
         lateinit var navigate: (NavKey) -> Unit
         composeTestRule.setContent {
-            navigate = rememberNavigateFrom(backStack, from = Badges) { shownBackStack }
+            navigate = rememberNavigateFrom(backStack, from = Badges, { it in drawn }) {
+                shownBackStack
+            }
         }
         return navigate
     }
@@ -44,6 +49,19 @@ class NavigateFromTest {
         navigate(BadgeDetail("chess"))
 
         assertEquals(listOf(Home, Badges, BadgeDetail("camping")), backStack)
+    }
+
+    @Test
+    fun screenStillDrawn_isntOpenedAgain() {
+        // As when a screen reader's click on Badges reopens the badge that is closing.
+        drawn += BadgeDetail("camping")
+        val navigate = navigateFromBadges()
+
+        navigate(BadgeDetail("camping"))
+        assertEquals(listOf(Home, Badges), backStack)
+
+        navigate(BadgeDetail("chess"))
+        assertEquals(listOf(Home, Badges, BadgeDetail("chess")), backStack)
     }
 
     @Test

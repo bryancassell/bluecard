@@ -83,14 +83,17 @@ interface ProgressDao {
     suspend fun getTrackerRowId(badgeId: String, number: String, rowNumber: Int): Long?
 
     /**
-     * Inserts [entry], or for a row of a fixed-row tracker that already has an entry, gives
-     * that one [entry]'s values, in a single transaction. Returns the entry's ID.
+     * Gives the entry already there for [entry]'s row [entry]'s values, or inserts [entry] with
+     * a new ID, in a single transaction. Returns the entry's ID. The entry already there is
+     * entry [TrackerEntry.id], if it's set and still there, or else for a row of a fixed-row
+     * tracker, the entry that fills it.
      */
     @Transaction
     suspend fun addTrackerEntry(entry: TrackerEntry): Long {
+        if (entry.id != 0L && updateTrackerEntry(entry.id, entry.values) == 1) return entry.id
         val filled = entry.rowNumber?.let {
             getTrackerRowId(entry.badgeId, entry.requirementNumber, it)
-        } ?: return insertTrackerEntry(entry)
+        } ?: return insertTrackerEntry(entry.copy(id = 0))
         updateTrackerEntry(filled, entry.values)
         return filled
     }

@@ -142,8 +142,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
                     stored[column.id]?.let(::storedDate)?.let { column.id to it }
                 }
                 .toMap(),
-            // A row with nothing in its fields is deleted instead.
-            canSave = !saving && !done && columns.any { it.id in stored } && stored != row.saved,
+            canSave = !saving && !done && isSavable(row, stored),
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,
@@ -180,16 +179,17 @@ class TrackerEntryViewModel @AssistedInject constructor(
      * the page: IDs only grow.
      */
     private fun closeIfAdded(entries: List<TrackerEntry>) {
-        val newest = savedStateHandle.get<Long>(NEWEST_ENTRY)
+        // A value of another kind under the key is ignored, as in restoredText.
+        val newest = savedStateHandle.get<Any?>(NEWEST_ENTRY) as? Long
             ?: (entries.maxOfOrNull { it.id } ?: 0L).also { savedStateHandle[NEWEST_ENTRY] = it }
         if (entries.any { it.id > newest }) done.value = true
     }
 
     /**
      * The row's values to save from the fields' [values], as stored. Values saved for columns
-     * the tracker no longer has, which an app update can remove (docs/catalog.md), are kept, so
-     * saving doesn't delete them. A number without a digit, such as a lone ".", isn't one, so
-     * it's left out.
+     * the tracker doesn't have are kept, so saving doesn't delete them. A shipped tracker never
+     * loses a column (docs/catalog.md), but a catalog edited during development can. A number
+     * without a digit, such as a lone ".", isn't one, so it's left out.
      */
     private fun valuesToSave(row: LoadedRow, values: Map<String, String>): Map<String, String> {
         val fields = row.tracker.columns.associate { column ->
@@ -199,6 +199,14 @@ class TrackerEntryViewModel @AssistedInject constructor(
         }
         return normalizedTrackerValues(row.saved + fields)
     }
+
+    /**
+     * Whether [stored], the values to save ([valuesToSave]), can be saved as [row]: they differ
+     * from what's saved, and the fields aren't all empty, since a row with nothing in its fields
+     * is deleted instead.
+     */
+    private fun isSavable(row: LoadedRow, stored: Map<String, String>): Boolean =
+        row.tracker.columns.any { it.id in stored } && stored != row.saved
 
     /**
      * Fills in the fields when the page loads: with the values the system stopped the app with,
@@ -225,24 +233,25 @@ class TrackerEntryViewModel @AssistedInject constructor(
         }
     }
 
-    /** Saves the fields as the row, then closes the page. */
+    /**
+     * Saves the fields as the row, then closes the page. Does nothing if they can't be saved
+     * ([TrackerEntryUiState.Ready.canSave]), which the Save button may not show yet.
+     */
     fun save() {
         val row = loaded ?: return
         val values = valuesToSave(row, _fields.mapValues { it.value.text.toString() })
+        if (!isSavable(row, values)) return
         finish {
             // An entry deleted since the page loaded is added again, keeping the scout's edit.
             // That happens if they delete it and reopen it before the delete is saved.
-            val updated =
-                row.entryId != null && progressRepository.updateTrackerEntry(row.entryId, values)
-            if (!updated) {
-                progressRepository.addTrackerEntry(
-                    badgeId,
-                    number,
-                    row.rowNumber,
-                    values,
-                    recorder.badgeStart()
-                )
-            }
+            progressRepository.addTrackerEntry(
+                badgeId,
+                number,
+                row.rowNumber,
+                values,
+                recorder.badgeStart(),
+                id = row.entryId
+            )
         }
     }
 

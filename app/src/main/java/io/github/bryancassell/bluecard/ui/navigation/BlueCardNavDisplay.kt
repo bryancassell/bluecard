@@ -2,9 +2,12 @@ package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -35,6 +38,10 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // Navigation reads this State when a screen is tapped, so a screen still animating out
     // after isSetUp changes navigates against what is shown now.
     val currentShownBackStack by rememberUpdatedState(shownBackStack)
+    val drawnScreens = remember { DrawnScreens() }
+    // Screens look up the entry of one they'd open, to check it isn't still drawn.
+    lateinit var entries: (NavKey) -> NavEntry<NavKey>
+    val isDrawn = { key: NavKey -> entries(key) in drawnScreens }
     NavDisplay(
         backStack = shownBackStack,
         modifier = modifier,
@@ -45,32 +52,37 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
-            rememberIgnoreTouchesNavEntryDecorator()
+            rememberIgnoreTouchesNavEntryDecorator(),
+            drawnScreens.decorator
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
-        // twice.
+        // twice, and a screen reader's click can't reopen one that's closing.
         entryProvider = entryProvider {
             entry<Onboarding> { OnboardingRoute() }
             entry<Home> { key ->
-                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 HomeRoute(
                     onOpenBadges = { navigate(Badges) },
                     onOpenDataManagement = { navigate(DataManagement) }
                 )
             }
             entry<Badges> { key ->
-                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 BadgesRoute(onOpenBadge = { navigate(BadgeDetail(it)) })
             }
             entry<BadgeDetail> { key ->
-                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 BadgeDetailRoute(
                     badgeId = key.badgeId,
                     onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
                 )
             }
             entry<RequirementDetail> { key ->
-                val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 RequirementDetailRoute(
                     badgeId = key.badgeId,
                     number = key.number,
@@ -91,6 +103,6 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 )
             }
             entry<DataManagement> { DataManagementScreen() }
-        }
+        }.also { entries = it }
     )
 }

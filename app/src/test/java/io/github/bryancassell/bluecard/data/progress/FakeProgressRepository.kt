@@ -124,14 +124,28 @@ class FakeProgressRepository : ProgressRepository {
         number: String,
         rowNumber: Int?,
         values: Map<String, String>,
-        start: BadgeStart
+        start: BadgeStart,
+        id: Long?
     ): Long {
         checkCanSave()
-        val filled = badges.value[badgeId]?.trackerEntries?.find {
+        val entries = badges.value[badgeId]?.trackerEntries.orEmpty()
+        val filled = entries.find { it.id == id } ?: entries.find {
             rowNumber != null && it.requirementNumber == number && it.rowNumber == rowNumber
         }
         if (filled != null) {
-            updateTrackerEntry(filled.id, values)
+            updateBadge(badgeId) { details ->
+                details.copy(
+                    trackerEntries = details.trackerEntries.map {
+                        if (it.id ==
+                            filled.id
+                        ) {
+                            it.copy(values = normalizedTrackerValues(values))
+                        } else {
+                            it
+                        }
+                    }
+                )
+            }
             return filled.id
         }
         val entry = TrackerEntry(
@@ -143,21 +157,6 @@ class FakeProgressRepository : ProgressRepository {
         )
         updateBadge(badgeId, start) { it.copy(trackerEntries = it.trackerEntries + entry) }
         return entry.id
-    }
-
-    override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Boolean {
-        checkCanSave()
-        if (badges.value.values.none { details -> details.trackerEntries.any { it.id == id } }) {
-            return false
-        }
-        updateEachBadge { details ->
-            details.copy(
-                trackerEntries = details.trackerEntries.map {
-                    if (it.id == id) it.copy(values = normalizedTrackerValues(values)) else it
-                }
-            )
-        }
-        return true
     }
 
     override suspend fun deleteTrackerEntry(id: Long) {

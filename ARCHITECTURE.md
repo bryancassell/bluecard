@@ -282,6 +282,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     dropped `dropUnlessResumed` because it ignored taps for the whole
     animation. Taps further apart than the timeout aren't a double tap to the
     platform either.
+  - **A screen still animating out can't be opened again** (`DrawnScreens`).
+    `NavDisplay` keeps a screen's state, ViewModel included, until it's out of
+    both the back stack and composition, so the same key pushed again during
+    its fade would bring it back as it was: a Tracker entry page that closed
+    after a save would reopen closed, with Save disabled. After Back, the
+    closing screen's cover takes touches, but a screen reader's click still
+    reaches the screen under it. So a decorator records the content keys of
+    the screens `NavDisplay` draws, and `rememberNavigateFrom` ignores opening
+    one of them.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -650,9 +659,12 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     entry's ID, if it has one, and its number, and the page goes by whichever
     its tracker uses: the entry in a log, the number in a fixed-row tracker.
     Save is enabled once the fields differ from what's saved and aren't all
-    empty; a row with nothing in it is deleted instead. Saving keeps values for
-    columns the tracker no longer has (see `docs/catalog.md`), and adds the
-    entry again if it was deleted since the page opened. The page reads what's
+    empty; a row with nothing in it is deleted instead. The page's ViewModel
+    checks that too, as the button can lag the fields by a frame. Saving keeps
+    values for columns the tracker doesn't have, though a shipped tracker never
+    loses one (`docs/catalog.md`). It's a single write (`addTrackerEntry` with
+    the row's entry ID), which adds the entry again if it was deleted since the
+    page opened. The page reads what's
     saved once, when it opens, so being shown again after a while doesn't
     reload it. It closes once a save or delete is done (`done` in its UI
     state), so a save that fails keeps the page open with the scout's edit. The

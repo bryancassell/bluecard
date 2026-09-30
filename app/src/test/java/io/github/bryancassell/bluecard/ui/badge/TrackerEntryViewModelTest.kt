@@ -253,7 +253,7 @@ class TrackerEntryViewModelTest {
 
     @Test
     fun valuesOfColumnsTheTrackerNoLongerHas_areKept_andArentAChange() = runTest {
-        // As when an update removes a column from the catalog.
+        // As when a catalog edited during development drops a column.
         val id = addSession(mapOf("activity" to "Run", "heart-rate" to "140"))
         val viewModel = viewModel(entryId = id)
         startCollecting(viewModel)
@@ -365,6 +365,22 @@ class TrackerEntryViewModelTest {
             }
         )
         assertTrue(viewModel.ready().done)
+    }
+
+    @Test
+    fun save_beforeTheButtonShowsItCantBeUsed_doesNothing() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+
+        // As when the scout clears the field and taps Save before the page redraws: Save is
+        // still enabled then.
+        viewModel.fields.getValue("activity").setTextAndPlaceCursorAtEnd("")
+        viewModel.save()
+        Snapshot.sendApplyNotifications()
+
+        assertEquals(listOf(mapOf("activity" to "Run")), entries().map { it.values })
+        assertFalse(viewModel.ready().done)
     }
 
     @Test
@@ -567,14 +583,21 @@ class TrackerEntryViewModelTest {
         assertEquals(1, entries().size)
     }
 
-    /** Holds each tracker entry update until [release] completes, as a slow disk would. */
+    /** Holds each tracker entry save until [release] completes, as a slow disk would. */
     private class SlowUpdates(private val progress: ProgressRepository) :
         ProgressRepository by progress {
         val release = CompletableDeferred<Unit>()
 
-        override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Boolean {
+        override suspend fun addTrackerEntry(
+            badgeId: String,
+            number: String,
+            rowNumber: Int?,
+            values: Map<String, String>,
+            start: BadgeStart,
+            id: Long?
+        ): Long {
             release.await()
-            return progress.updateTrackerEntry(id, values)
+            return progress.addTrackerEntry(badgeId, number, rowNumber, values, start, id)
         }
     }
 

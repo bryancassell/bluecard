@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -257,12 +256,32 @@ abstract class ProgressRepositoryContract {
             trackerValues("7a")
         )
 
-        assertTrue(
-            repository.updateTrackerEntry(first, mapOf("minutes" to "35", "notes" to "Ran a mile"))
+        val changed = mapOf("minutes" to "35", "notes" to "Ran a mile")
+        assertEquals(
+            first,
+            repository.addTrackerEntry(BADGE, "7a", null, changed, badgeStart, id = first)
         )
         repository.deleteTrackerEntry(second)
 
-        assertEquals(listOf(mapOf("minutes" to "35", "notes" to "Ran a mile")), trackerValues("7a"))
+        assertEquals(listOf(changed), trackerValues("7a"))
+    }
+
+    @Test
+    fun addTrackerEntry_withADeletedEntrysId_addsItAgain() = test {
+        val id = addLogEntry("7a", mapOf("minutes" to "30"))
+        repository.deleteTrackerEntry(id)
+
+        val added = repository.addTrackerEntry(
+            BADGE,
+            "7a",
+            null,
+            mapOf("minutes" to "35"),
+            badgeStart,
+            id = id
+        )
+
+        assertTrue("$added should be higher than $id", added > id)
+        assertEquals(listOf(mapOf("minutes" to "35")), trackerValues("7a"))
     }
 
     @Test
@@ -302,7 +321,8 @@ abstract class ProgressRepositoryContract {
         val id = addLogEntry("7a", mapOf("activity" to "  Run ", "minutes" to " ", "notes" to ""))
         assertEquals(listOf(mapOf("activity" to "Run")), trackerValues("7a"))
 
-        repository.updateTrackerEntry(id, mapOf("activity" to "", "minutes" to " 30 "))
+        val changed = mapOf("activity" to "", "minutes" to " 30 ")
+        repository.addTrackerEntry(BADGE, "7a", null, changed, badgeStart, id = id)
         assertEquals(listOf(mapOf("minutes" to "30")), trackerValues("7a"))
     }
 
@@ -392,7 +412,6 @@ abstract class ProgressRepositoryContract {
 
         repository.clearRequirement(UNSTARTED, "1")
         repository.clearBadge(UNSTARTED)
-        assertFalse(repository.updateTrackerEntry(999, mapOf("minutes" to "30")))
         repository.deleteTrackerEntry(999)
 
         assertNull(progress(UNSTARTED))
@@ -431,7 +450,6 @@ abstract class ProgressRepositoryContract {
             "addTrackerEntry" to {
                 unwritable.addTrackerEntry(BADGE, "7a", null, mapOf("minutes" to "30"), badgeStart)
             },
-            "updateTrackerEntry" to { unwritable.updateTrackerEntry(1, mapOf("minutes" to "30")) },
             "deleteTrackerEntry" to { unwritable.deleteTrackerEntry(1) },
             "clearRequirement" to { unwritable.clearRequirement(BADGE, "1") },
             "clearBadge" to { unwritable.clearBadge(BADGE) },

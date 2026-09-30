@@ -98,7 +98,7 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
     group = "verification"
     description = "Fails if any class has less than 80% line coverage from local tests."
     dependsOn("testDebugUnitTest")
-    // Generated Android, Hilt and Room classes, and @Preview functions (kept in
+    // Generated Android, Hilt, Room and Kotlin classes, and @Preview functions (kept in
     // *Preview.kt files), which only run in Android Studio.
     val exclusions = listOf(
         "**/R.class",
@@ -119,7 +119,10 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
         "**/dagger/hilt/internal/**",
         // Room: generated database and DAO implementations.
         "**/*_Impl.class",
-        "**/*_Impl\$*.class"
+        "**/*_Impl\$*.class",
+        // Kotlin: copies of an interface's default arguments for Java code compiled against
+        // older Kotlin. Kotlin callers use the interface's own static methods instead.
+        "**/*\$DefaultImpls.class"
     )
     val fileTrees = objects
     classDirectories.setFrom(
