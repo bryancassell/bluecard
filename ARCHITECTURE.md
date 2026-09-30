@@ -293,6 +293,22 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     reaches the screen under it. So a decorator records the content keys of
     the screens `NavDisplay` draws, and `rememberNavigateFrom` ignores opening
     one of them.
+- **A double tap starts another app once.** Badge detail's "Official
+  requirements" link and the counselor's phone and email start other apps with
+  one function from `rememberStartOtherApp` (`ui/`), which the screen shares
+  among them. The other app takes a moment to cover BlueCard, so both taps of a
+  double tap can reach the control, and a browser could open two tabs, or an
+  email app two drafts
+  ([#97](https://github.com/bryancassell/bluecard/issues/97)).
+  - **Once it has started an app, it ignores taps until BlueCard's window has
+    focus again**, as when the scout comes back. It waits for window focus
+    (`LocalWindowInfo.isWindowFocused`) rather than `ON_RESUME`: in desktop
+    windows, the other app opens in a window of its own, and BlueCard stays
+    resumed beside it, so the controls would stay locked while it's in view.
+  - **A tap that finds no app doesn't count.** It shows a message, and the next
+    tap tries again.
+  - **The link starts the browser with `ACTION_VIEW`**, as Compose's
+    `UriHandler` does, so all three handle "no app" the same way.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)

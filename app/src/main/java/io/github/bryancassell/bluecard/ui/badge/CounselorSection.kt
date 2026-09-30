@@ -1,9 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -15,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -25,14 +22,21 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
 import io.github.bryancassell.bluecard.ui.typedText
 
 /**
  * The badge's merit badge [counselor], with a button to enter one or edit it. Tapping the phone
- * number opens the phone app to call it, and tapping the email address opens an email app.
+ * number opens the phone app to call it, and tapping the email address opens an email app, each
+ * with [startOtherApp] ([rememberStartOtherApp]).
  */
 @Composable
-fun CounselorSection(counselor: Counselor?, onEdit: () -> Unit, modifier: Modifier = Modifier) {
+fun CounselorSection(
+    counselor: Counselor?,
+    onEdit: () -> Unit,
+    startOtherApp: (intent: Intent, noApp: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.badge_detail_counselor),
@@ -49,7 +53,8 @@ fun CounselorSection(counselor: Counselor?, onEdit: () -> Unit, modifier: Modifi
                 text = it,
                 intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null)),
                 onClickLabel = stringResource(R.string.badge_detail_call_counselor),
-                noApp = stringResource(R.string.badge_detail_no_phone_app)
+                noApp = stringResource(R.string.badge_detail_no_phone_app),
+                startOtherApp = startOtherApp
             )
         }
         counselor?.email?.let {
@@ -61,7 +66,8 @@ fun CounselorSection(counselor: Counselor?, onEdit: () -> Unit, modifier: Modifi
                 text = it,
                 intent = Intent(Intent.ACTION_SENDTO, "mailto:${Uri.encode(it, "@+")}".toUri()),
                 onClickLabel = stringResource(R.string.badge_detail_email_counselor),
-                noApp = stringResource(R.string.badge_detail_no_email_app)
+                noApp = stringResource(R.string.badge_detail_no_email_app),
+                startOtherApp = startOtherApp
             )
         }
         // Lines the button's text up with the heading's.
@@ -87,8 +93,8 @@ private fun CounselorItem(@DrawableRes icon: Int, text: String, modifier: Modifi
 }
 
 /**
- * A way to reach the counselor, which starts [intent] when tapped, or says [noApp] if no app
- * can handle it.
+ * A way to reach the counselor, which starts [intent] with [startOtherApp] when tapped, or says
+ * [noApp] if no app can handle it.
  */
 @Composable
 private fun ContactItem(
@@ -96,20 +102,16 @@ private fun ContactItem(
     text: String,
     intent: Intent,
     onClickLabel: String,
-    noApp: String
+    noApp: String,
+    startOtherApp: (intent: Intent, noApp: String) -> Unit
 ) {
-    val context = LocalContext.current
     CounselorItem(
         icon = icon,
         text = text,
         // ListItem reads as one item to screen readers, announced as a button that does
         // onClickLabel.
         modifier = Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button) {
-            try {
-                context.startActivity(intent)
-            } catch (_: ActivityNotFoundException) {
-                Toast.makeText(context, noApp, Toast.LENGTH_SHORT).show()
-            }
+            startOtherApp(intent, noApp)
         }
     )
 }
