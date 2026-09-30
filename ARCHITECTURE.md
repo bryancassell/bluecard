@@ -228,13 +228,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   Onboarding's name and Badges search, 20 for the unit number and a tracker
   row's number columns, 500 for its text columns and 2,000 for the requirement
   comment. It keeps as much of an edit, such as a long paste, as fits, and never
-  cuts the text already in the field or splits an emoji. A
-  single-line field keeps a pasted line break in its text but doesn't show one,
-  so the single-line fields (Onboarding's and Badges search) also replace each
-  line break with a space (`LineBreaksAsSpaces`). That runs after the length
-  limit, so the limit cuts a huge paste before it's scanned, and finds the edit
-  before a pasted line break becomes a space it could mistake for one already in
-  the field.
+  cuts the text already in the field or splits an emoji. A single-line field
+  keeps a pasted line break in its text but doesn't show one, so the single-line
+  text fields (Onboarding's, Badges search and a tracker row's text columns,
+  whose values its requirement's page shows on one line) also replace each line
+  break with a space (`LineBreaksAsSpaces`); a number field rejects one. That
+  runs after the length limit, so the limit cuts a huge paste before it's
+  scanned, and finds the edit before a pasted line break becomes a space it
+  could mistake for one already in the field.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -561,7 +562,8 @@ At a high level. Exact fields are decided in the feature issues.
     tracker with a fixed number of rows (null in a log), and the row's values
     keyed by the catalog's column IDs, all stored as text (a date as
     `YYYY-MM-DD`). A row of a fixed-row tracker has at most one entry, which a
-    unique index enforces.
+    unique index enforces. IDs only grow (`AUTOINCREMENT`), so a new entry's is
+    higher than any before it, even a deleted one's.
 
 **Completion is derived, not stored**
 (`data/progress/Completion.kt`), from requirement progress and the catalog:
@@ -643,13 +645,22 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     filled in or not. Either kind opens a row on the Tracker entry page, a form
     with a field for each column: a date with a date picker (no dates after
     today, as for completion dates), a number field that takes only digits and
-    one decimal separator, or a text field of up to 500 characters. Save is
-    enabled once the fields differ from what's saved and aren't all empty; a row
-    with nothing in it is deleted instead. The page reads what's saved once,
-    when it opens, so being shown again after a while doesn't reload it. It
-    closes once a save or delete is done (`done` in its UI state), so a save
-    that fails keeps the page open with the scout's edit. Delete asks first,
-    and can't be used while a save is under way. Leaving the page discards an unsaved edit, as with a comment.
+    one decimal separator (a separator without a digit isn't saved), or a
+    one-line text field of up to 500 characters. A row is opened with its
+    entry's ID, if it has one, and its number, and the page goes by whichever
+    its tracker uses: the entry in a log, the number in a fixed-row tracker.
+    Save is enabled once the fields differ from what's saved and aren't all
+    empty; a row with nothing in it is deleted instead. Saving keeps values for
+    columns the tracker no longer has (see `docs/catalog.md`), and adds the
+    entry again if it was deleted since the page opened. The page reads what's
+    saved once, when it opens, so being shown again after a while doesn't
+    reload it. It closes once a save or delete is done (`done` in its UI
+    state), so a save that fails keeps the page open with the scout's edit. The
+    system can stop the app after a save but before the page closes, as when
+    the scout leaves the app while saving; a new log entry's page restored then
+    closes if the log has an entry newer than the page, rather than offering to
+    add it again. Delete asks first, and can't be used while a save is under
+    way. Leaving the page discards an unsaved edit, as with a comment.
     `addTrackerEntry` gives a fixed-row tracker's row that already has an entry
     the new values instead of adding a second one. The repository trims spaces
     around each value and drops blank ones (`normalizedTrackerValues`). A

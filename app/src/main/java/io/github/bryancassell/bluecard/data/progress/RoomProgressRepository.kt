@@ -107,7 +107,7 @@ class RoomProgressRepository @Inject constructor(
     }
 
     override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) =
-        writing { dao.updateTrackerEntry(id, normalizedTrackerValues(values)) }
+        writing { dao.updateTrackerEntry(id, normalizedTrackerValues(values)) == 1 }
 
     override suspend fun deleteTrackerEntry(id: Long) = writing { dao.deleteTrackerEntry(id) }
 

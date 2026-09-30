@@ -71,7 +71,8 @@ interface ProgressRepository {
     )
 
     /**
-     * Adds a row to requirement [number]'s tracker and returns its ID. [rowNumber] is the row
+     * Adds a row to requirement [number]'s tracker and returns its ID, which is higher than
+     * any entry's before it, even a deleted one's. [rowNumber] is the row
      * it fills in a tracker with a fixed number of rows, from 1, or null in a log. A row that
      * already has an entry gets these values instead, so saving one twice doesn't add two. The
      * values are stored as [normalizedTrackerValues]. A badge that hasn't been started is
@@ -85,8 +86,11 @@ interface ProgressRepository {
         start: BadgeStart
     ): Long
 
-    /** Replaces a tracker row's values, stored as [normalizedTrackerValues]. */
-    suspend fun updateTrackerEntry(id: Long, values: Map<String, String>)
+    /**
+     * Replaces a tracker row's values, stored as [normalizedTrackerValues]. Returns false,
+     * changing nothing, if there's no entry [id], such as one deleted in the meantime.
+     */
+    suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Boolean
 
     suspend fun deleteTrackerEntry(id: Long)
 

@@ -299,7 +299,7 @@ class RequirementDetailScreenTest {
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .performClick()
 
-        assertEquals(listOf<Pair<Long?, Int?>>(12L to null), openedTrackerEntries)
+        assertEquals(listOf<Pair<Long?, Int?>>(12L to 2), openedTrackerEntries)
     }
 
     @Test
@@ -323,13 +323,13 @@ class RequirementDetailScreenTest {
     }
 
     @Test
-    fun fixedRow_opensByItsNumber_filledInOrNot() {
+    fun fixedRow_opensWithItsNumber_andItsEntryIfFilledIn() {
         show(withWeeks)
 
         row("Week 3").performClick()
         row("Week 2").performClick()
 
-        assertEquals(listOf<Pair<Long?, Int?>>(null to 3, null to 2), openedTrackerEntries)
+        assertEquals(listOf<Pair<Long?, Int?>>(null to 3, 5L to 2), openedTrackerEntries)
     }
 
     @Test

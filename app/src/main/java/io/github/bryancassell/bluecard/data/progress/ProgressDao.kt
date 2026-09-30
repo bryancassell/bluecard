@@ -95,8 +95,9 @@ interface ProgressDao {
         return filled
     }
 
+    /** Returns the number of entries it changed: 1, or 0 if there's no entry [id]. */
     @Query("UPDATE tracker_entry SET `values` = :values WHERE id = :id")
-    suspend fun updateTrackerEntry(id: Long, values: Map<String, String>)
+    suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Int
 
     @Query("DELETE FROM tracker_entry WHERE id = :id")
     suspend fun deleteTrackerEntry(id: Long)

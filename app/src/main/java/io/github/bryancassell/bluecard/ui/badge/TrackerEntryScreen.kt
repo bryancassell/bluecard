@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.NumberInput
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
@@ -165,9 +166,10 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
 
 /**
  * Plenty for a note in a tracker row. The fields' text is saved with the screen's state, which
- * has a size limit, so a huge paste mustn't reach it.
+ * has a size limit, so a huge paste mustn't reach it. A row's values are shown on one line in
+ * its requirement's tracker, so a pasted line break becomes a space.
  */
-private val TextLimit = TextLengthLimit(maxLength = 500)
+private val TextLimit = TextLengthLimit(maxLength = 500).then(LineBreaksAsSpaces)
 
 /** Longer than any number a scout would log. */
 private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = 20))
@@ -194,7 +196,8 @@ private fun TrackerField(
                     ?: stringResource(R.string.tracker_entry_no_date),
                 date = date,
                 today = today,
-                onDateChange = onDateChange
+                onDateChange = onDateChange,
+                label = column.label
             )
         }
 
@@ -213,6 +216,7 @@ private fun TrackerField(
             label = { Text(column.label) },
             inputTransformation = TextLimit,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            lineLimits = TextFieldLineLimits.SingleLine,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
         )
     }

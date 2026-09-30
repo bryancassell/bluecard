@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -75,7 +77,10 @@ class TrackerEntryScreenTest {
         canDelete = true
     )
 
-    private fun show(uiState: TrackerEntryUiState) {
+    private fun show(
+        uiState: TrackerEntryUiState,
+        fields: Map<String, TextFieldState> = this.fields
+    ) {
         composeTestRule.setContent {
             TrackerEntryScreen(
                 uiState = uiState,
@@ -181,6 +186,16 @@ class TrackerEntryScreenTest {
     }
 
     @Test
+    fun textField_replacesALineBreakWithASpace() {
+        show(newEntry)
+
+        // As when pasting.
+        field("Activity").performTextInput("Ran\nthen swam")
+
+        assertEquals("Ran then swam", fields.getValue("activity").text.toString())
+    }
+
+    @Test
     fun numberField_takesOnlyANumber() {
         show(newEntry)
 
@@ -221,6 +236,24 @@ class TrackerEntryScreenTest {
         button("Remove date").performClick()
 
         assertEquals(listOf<Pair<String, LocalDate?>>("date" to null), dateChanges)
+    }
+
+    @Test
+    fun dateButtons_sayWhichColumnTheySet() {
+        val dateColumns = listOf(
+            TrackerColumn("start", "Start", TrackerColumnType.DATE),
+            TrackerColumn("end", "End", TrackerColumnType.DATE)
+        )
+        show(
+            newEntry.copy(columns = dateColumns, dates = mapOf("end" to LocalDate.of(2026, 4, 15))),
+            fields = dateColumns.associate { it.id to TextFieldState() }
+        )
+
+        composeTestRule.onNodeWithContentDescription("Start: Add date").assertHasClickAction()
+        composeTestRule.onNodeWithContentDescription("End: Change date").assertHasClickAction()
+        composeTestRule.onNodeWithContentDescription("End: Remove date").performClick()
+
+        assertEquals(listOf<Pair<String, LocalDate?>>("end" to null), dateChanges)
     }
 
     @Test

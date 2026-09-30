@@ -73,8 +73,8 @@ fun RequirementDetailRoute(
  * A requirement's own page: whether it's complete, and when for one the scout marks complete,
  * its sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
  * its own page in turn, and a tracker row opens the Tracker entry page
- * ([onOpenTrackerEntry]): a log's entry by its ID, or a new one (null), or a fixed-row
- * tracker's row by its number.
+ * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
+ * log opens it with neither.
  */
 @Composable
 fun RequirementDetailScreen(
@@ -120,13 +120,7 @@ fun RequirementDetailScreen(
                 uiState.tracker?.let { tracker ->
                     TrackerSection(
                         tracker = tracker,
-                        onOpenRow = {
-                            if (tracker.addsRows) {
-                                onOpenTrackerEntry(it.entryId, null)
-                            } else {
-                                onOpenTrackerEntry(null, it.number)
-                            }
-                        },
+                        onOpenRow = { onOpenTrackerEntry(it.entryId, it.number) },
                         onAddRow = { onOpenTrackerEntry(null, null) },
                         modifier = Modifier.padding(top = 8.dp)
                     )

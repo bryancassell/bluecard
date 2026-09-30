@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.ui.typedText
+import java.time.format.DateTimeFormatter
 
 // A requirement's tracker, on its page and in its row.
 
@@ -54,8 +55,9 @@ fun TrackerSection(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .semantics { heading() }
         )
+        val formatter = rememberCompletionDateFormatter()
         tracker.rows.forEach { row ->
-            TrackerRowItem(tracker.rowTitle, row, onOpen = { onOpenRow(row) })
+            TrackerRowItem(tracker.rowTitle, row, formatter, onOpen = { onOpenRow(row) })
         }
         if (tracker.addsRows) {
             OutlinedButton(onClick = onAddRow, modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -71,10 +73,18 @@ fun TrackerSection(
     }
 }
 
-/** A tracker row: its title, such as "Week 3", and its values, if it has any. */
+/**
+ * A tracker row: its title, such as "Week 3", and its values, if it has any, with dates written
+ * by [formatter].
+ */
 @Composable
-private fun TrackerRowItem(rowTitle: String, row: TrackerRow, onOpen: () -> Unit) {
-    val values = trackerValuesText(row.values)
+private fun TrackerRowItem(
+    rowTitle: String,
+    row: TrackerRow,
+    formatter: DateTimeFormatter,
+    onOpen: () -> Unit
+) {
+    val values = trackerValuesText(row.values, formatter)
     ListItem(
         headlineContent = {
             Text(stringResource(R.string.tracker_row_title, rowTitle, row.number))
@@ -97,9 +107,8 @@ private fun TrackerRowItem(rowTitle: String, row: TrackerRow, onOpen: () -> Unit
 
 /** A row's values on one line, such as "Sep 12, 2026 · Running · 30", or null if it has none. */
 @Composable
-private fun trackerValuesText(values: List<TrackerValue>): String? {
-    val formatter = rememberCompletionDateFormatter()
-    return values.takeIf { it.isNotEmpty() }?.map { value ->
+private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFormatter): String? =
+    values.takeIf { it.isNotEmpty() }?.map { value ->
         when (value.type) {
             TrackerColumnType.DATE ->
                 storedDate(value.text)?.let { formatter.format(it) } ?: typedText(value.text)
@@ -108,4 +117,3 @@ private fun trackerValuesText(values: List<TrackerValue>): String? {
             TrackerColumnType.NUMBER, TrackerColumnType.TEXT -> typedText(value.text)
         }
     }?.joinToString(" · ")
-}

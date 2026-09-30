@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -256,10 +257,23 @@ abstract class ProgressRepositoryContract {
             trackerValues("7a")
         )
 
-        repository.updateTrackerEntry(first, mapOf("minutes" to "35", "notes" to "Ran a mile"))
+        assertTrue(
+            repository.updateTrackerEntry(first, mapOf("minutes" to "35", "notes" to "Ran a mile"))
+        )
         repository.deleteTrackerEntry(second)
 
         assertEquals(listOf(mapOf("minutes" to "35", "notes" to "Ran a mile")), trackerValues("7a"))
+    }
+
+    @Test
+    fun addTrackerEntry_afterDeletingTheNewest_getsAHigherId() = test {
+        addLogEntry("7a", mapOf("minutes" to "30"))
+        val newest = addLogEntry("7a", mapOf("minutes" to "45"))
+        repository.deleteTrackerEntry(newest)
+
+        val added = addLogEntry("7a", mapOf("minutes" to "50"))
+
+        assertTrue("$added should be higher than $newest", added > newest)
     }
 
     @Test
@@ -378,7 +392,7 @@ abstract class ProgressRepositoryContract {
 
         repository.clearRequirement(UNSTARTED, "1")
         repository.clearBadge(UNSTARTED)
-        repository.updateTrackerEntry(999, mapOf("minutes" to "30"))
+        assertFalse(repository.updateTrackerEntry(999, mapOf("minutes" to "30")))
         repository.deleteTrackerEntry(999)
 
         assertNull(progress(UNSTARTED))

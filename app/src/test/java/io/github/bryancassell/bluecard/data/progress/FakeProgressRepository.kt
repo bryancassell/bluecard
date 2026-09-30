@@ -145,8 +145,11 @@ class FakeProgressRepository : ProgressRepository {
         return entry.id
     }
 
-    override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) {
+    override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Boolean {
         checkCanSave()
+        if (badges.value.values.none { details -> details.trackerEntries.any { it.id == id } }) {
+            return false
+        }
         updateEachBadge { details ->
             details.copy(
                 trackerEntries = details.trackerEntries.map {
@@ -154,6 +157,7 @@ class FakeProgressRepository : ProgressRepository {
                 }
             )
         }
+        return true
     }
 
     override suspend fun deleteTrackerEntry(id: Long) {

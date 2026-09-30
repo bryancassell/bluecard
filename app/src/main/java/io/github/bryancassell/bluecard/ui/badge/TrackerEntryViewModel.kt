@@ -15,8 +15,10 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveRunner
@@ -37,7 +39,8 @@ import kotlinx.coroutines.flow.stateIn
 /**
  * One row of a requirement's tracker, for the scout to fill in, change or delete: in a log,
  * entry [entryId], or a new one when it's null; in a tracker with a fixed number of rows, row
- * [rowNumber].
+ * [rowNumber]. The tracker decides which of the two it goes by, so a row's page can be opened
+ * with both.
  *
  * It reads what's saved when the page opens, and the page is a form: the scout saves it, which
  * closes the page, or leaves to discard their changes.
@@ -107,14 +110,16 @@ class TrackerEntryViewModel @AssistedInject constructor(
     /** The row as the page loaded it: which one it is, and what it has saved. */
     private class LoadedRow(
         val badgeName: String,
-        val tracker: TrackerItem,
-        val columns: List<TrackerColumn>,
+        val tracker: TrackerDefinition,
         /** The row it is, from 1: the one it fills, or its place in a log. */
         val shownNumber: Int,
         /** Its saved entry; null for a new one or a row not filled in. */
         val entryId: Long?,
         val saved: Map<String, String>
-    )
+    ) {
+        /** The row it fills in a tracker with a fixed number of rows, or null in a log. */
+        val rowNumber: Int? get() = tracker.rowCount?.let { shownNumber }
+    }
 
     private fun ready(
         row: LoadedRow,
@@ -123,21 +128,22 @@ class TrackerEntryViewModel @AssistedInject constructor(
         done: Boolean,
         saveFailure: SaveFailure?
     ): TrackerEntryUiState.Ready {
-        val stored = normalizedTrackerValues(values)
+        val columns = row.tracker.columns
+        val stored = valuesToSave(row, values)
         return TrackerEntryUiState.Ready(
             badgeName = row.badgeName,
             requirementNumber = number,
             rowTitle = row.tracker.rowTitle,
             rowNumber = row.shownNumber,
             rowLabel = row.tracker.rowLabel,
-            columns = row.columns,
-            dates = row.columns.filter { it.type == TrackerColumnType.DATE }
+            columns = columns,
+            dates = columns.filter { it.type == TrackerColumnType.DATE }
                 .mapNotNull { column ->
                     stored[column.id]?.let(::storedDate)?.let { column.id to it }
                 }
                 .toMap(),
-            // A row with nothing in it is deleted instead.
-            canSave = !saving && !done && stored.isNotEmpty() && stored != row.saved,
+            // A row with nothing in its fields is deleted instead.
+            canSave = !saving && !done && columns.any { it.id in stored } && stored != row.saved,
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,
@@ -155,15 +161,43 @@ class TrackerEntryViewModel @AssistedInject constructor(
         val found = catalog.badgeRequirements(badgeId, progress) ?: return null
         val tracker = found.version.find(number)?.tracker ?: return null
         val entries = found.trackerEntries[number].orEmpty()
-        val item = tracker.toItem(entries)
+        val rows = tracker.toItem(entries).rows
         val row = when {
-            !item.addsRows -> item.rows.find { it.number == rowNumber }
-            entryId != null -> item.rows.find { it.entryId == entryId }
-            else -> TrackerRow(item.rows.size + 1, null, emptyList())
+            tracker.rowCount != null -> rows.find { it.number == rowNumber }
+            entryId != null -> rows.find { it.entryId == entryId }
+            else -> TrackerRow(rows.size + 1, null, emptyList()).also { closeIfAdded(entries) }
         } ?: return null
         val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
         loadFields(tracker.columns, saved)
-        return LoadedRow(found.badge.name, item, tracker.columns, row.number, row.entryId, saved)
+        return LoadedRow(found.badge.name, tracker, row.number, row.entryId, saved)
+    }
+
+    /**
+     * Closes a new log entry's page if it has already added its entry, given the log's
+     * [entries]. The system can stop the app after a save but before the page closes, as when
+     * the scout leaves the app while saving; the page it restores then closes, rather than
+     * offering to add the entry again. The page has added it if the log has an entry newer than
+     * the page: IDs only grow.
+     */
+    private fun closeIfAdded(entries: List<TrackerEntry>) {
+        val newest = savedStateHandle.get<Long>(NEWEST_ENTRY)
+            ?: (entries.maxOfOrNull { it.id } ?: 0L).also { savedStateHandle[NEWEST_ENTRY] = it }
+        if (entries.any { it.id > newest }) done.value = true
+    }
+
+    /**
+     * The row's values to save from the fields' [values], as stored. Values saved for columns
+     * the tracker no longer has, which an app update can remove (docs/catalog.md), are kept, so
+     * saving doesn't delete them. A number without a digit, such as a lone ".", isn't one, so
+     * it's left out.
+     */
+    private fun valuesToSave(row: LoadedRow, values: Map<String, String>): Map<String, String> {
+        val fields = row.tracker.columns.associate { column ->
+            val text = values[column.id].orEmpty()
+            val keep = column.type != TrackerColumnType.NUMBER || text.any { it.isDigit() }
+            column.id to if (keep) text else ""
+        }
+        return normalizedTrackerValues(row.saved + fields)
     }
 
     /**
@@ -193,16 +227,18 @@ class TrackerEntryViewModel @AssistedInject constructor(
 
     /** Saves the fields as the row, then closes the page. */
     fun save() {
-        val values = _fields.mapValues { it.value.text.toString() }
-        val id = loaded?.entryId
+        val row = loaded ?: return
+        val values = valuesToSave(row, _fields.mapValues { it.value.text.toString() })
         finish {
-            if (id != null) {
-                progressRepository.updateTrackerEntry(id, values)
-            } else {
+            // An entry deleted since the page loaded is added again, keeping the scout's edit.
+            // That happens if they delete it and reopen it before the delete is saved.
+            val updated =
+                row.entryId != null && progressRepository.updateTrackerEntry(row.entryId, values)
+            if (!updated) {
                 progressRepository.addTrackerEntry(
                     badgeId,
                     number,
-                    rowNumber,
+                    row.rowNumber,
                     values,
                     recorder.badgeStart()
                 )
@@ -249,6 +285,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
     }
 
     private companion object {
+        const val NEWEST_ENTRY = "newestEntry"
+
         fun fieldKey(columnId: String) = "field:$columnId"
     }
 }

@@ -252,6 +252,47 @@ class TrackerEntryViewModelTest {
     }
 
     @Test
+    fun valuesOfColumnsTheTrackerNoLongerHas_areKept_andArentAChange() = runTest {
+        // As when an update removes a column from the catalog.
+        val id = addSession(mapOf("activity" to "Run", "heart-rate" to "140"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().canSave)
+
+        viewModel.type("activity", "Swim")
+        viewModel.save()
+
+        assertEquals(
+            listOf(mapOf("activity" to "Swim", "heart-rate" to "140")),
+            entries().map { it.values }
+        )
+    }
+
+    @Test
+    fun onlyValuesOfColumnsTheTrackerNoLongerHas_cantBeSaved() = runTest {
+        val id = addSession(mapOf("activity" to "Run", "heart-rate" to "140"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+
+        viewModel.type("activity", "")
+
+        assertFalse(viewModel.ready().canSave)
+    }
+
+    @Test
+    fun numberWithoutADigit_isntSaved() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.type("minutes", ".")
+        assertFalse(viewModel.ready().canSave)
+        viewModel.type("activity", "Run")
+        viewModel.save()
+
+        assertEquals(listOf(mapOf("activity" to "Run")), entries().map { it.values })
+    }
+
+    @Test
     fun onlySpaces_cantBeSaved() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)
@@ -306,6 +347,27 @@ class TrackerEntryViewModelTest {
     }
 
     @Test
+    fun save_logEntryDeletedSinceThePageOpened_addsItAgainToTheLog() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        // Opened with its number too, as its requirement's page opens it.
+        val viewModel = viewModel(entryId = id, rowNumber = 1)
+        startCollecting(viewModel)
+        viewModel.type("activity", "Swim")
+        progressRepository.deleteTrackerEntry(id)
+
+        viewModel.save()
+
+        assertEquals(
+            listOf(null to mapOf("activity" to "Swim")),
+            entries().map {
+                it.rowNumber to
+                    it.values
+            }
+        )
+        assertTrue(viewModel.ready().done)
+    }
+
+    @Test
     fun save_againOnceSaved_addsNothingMore() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)
@@ -337,14 +399,15 @@ class TrackerEntryViewModelTest {
 
     @Test
     fun filledFixedRow_startsWithItsValues_andSaveChangesIt() = runTest {
-        progressRepository.addTrackerEntry(
+        val id = progressRepository.addTrackerEntry(
             "personal-fitness",
             "2",
             3,
             mapOf("income" to "10"),
             badgeStart
         )
-        val viewModel = viewModel(number = "2", rowNumber = 3)
+        // Opened with its entry too, as its requirement's page opens it.
+        val viewModel = viewModel(number = "2", entryId = id, rowNumber = 3)
         startCollecting(viewModel)
         assertEquals("10", viewModel.text("income"))
         assertTrue(viewModel.ready().canDelete)
@@ -509,9 +572,9 @@ class TrackerEntryViewModelTest {
         ProgressRepository by progress {
         val release = CompletableDeferred<Unit>()
 
-        override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) {
+        override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>): Boolean {
             release.await()
-            progress.updateTrackerEntry(id, values)
+            return progress.updateTrackerEntry(id, values)
         }
     }
 
@@ -529,6 +592,41 @@ class TrackerEntryViewModelTest {
 
             assertEquals("Run, then edited.", restored.text("activity"))
             assertEquals(mapOf("date" to LocalDate.of(2026, 5, 1)), restored.ready().dates)
+            assertTrue(restored.ready().canSave)
+        }
+    }
+
+    @Test
+    fun appStoppedAfterSavingANewEntry_closesThePageItRestores() = runTest {
+        addSession(mapOf("activity" to "Run"))
+        scenario(entryId = null).use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.type("activity", "Swim")
+            scenario.viewModel.save()
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertTrue(restored.ready().done)
+            assertEquals(2, entries().size)
+        }
+    }
+
+    @Test
+    fun appStoppedBeforeSavingANewEntry_restoresItsPage() = runTest {
+        // An entry from before the page opened doesn't close it.
+        addSession(mapOf("activity" to "Run"))
+        scenario(entryId = null).use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.type("activity", "Swim")
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertFalse(restored.ready().done)
+            assertEquals(2, restored.ready().rowNumber)
             assertTrue(restored.ready().canSave)
         }
     }

@@ -19,6 +19,10 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
   requirements change, add the new version and leave the old one in place:
   scouts' progress is saved against it. Never remove a shipped version or
   change its requirement numbers or structure.
+- **Keep a shipped tracker's columns.** Scouts' entries are saved by column
+  `id`, so once a version ships, never change a column's `id` or `type`, or the
+  tracker's `rowCount`. You can change a label or add a column. A column you
+  remove disappears from the page, but what scouts entered in it stays saved.
 
 ## Format
 

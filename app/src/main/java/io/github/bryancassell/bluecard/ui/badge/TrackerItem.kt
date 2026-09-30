@@ -61,16 +61,25 @@ fun storedDate(text: String): LocalDate? = try {
 }
 
 /** This tracker with the [entries] recorded for its requirement. */
-fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(
-    count = count(entries),
-    rowTitle = rowLabel.replaceFirstChar { it.titlecase() },
-    rowLabel = rowLabel,
-    rows = rows(entries)
-)
+fun TrackerDefinition.toItem(entries: List<TrackerEntry>): TrackerItem {
+    val rows = rows(entries)
+    return TrackerItem(
+        count = count(recorded = rows.count { it.entryId != null }),
+        rowTitle = rowTitle,
+        rowLabel = rowLabel,
+        rows = rows
+    )
+}
+
+/** What one row is called, capitalized for titles such as "Week 3". */
+val TrackerDefinition.rowTitle: String get() = rowLabel.replaceFirstChar { it.titlecase() }
 
 /** How much of this tracker the [entries] recorded for its requirement fill in. */
-fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
-    val recorded = rowCount?.let { count -> filledRows(entries, count).size } ?: entries.size
+fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount =
+    count(recorded = rowCount?.let { filledRows(entries, it).size } ?: entries.size)
+
+/** How much of this tracker is filled in, with [recorded] entries or rows filled in. */
+private fun TrackerDefinition.count(recorded: Int): TrackerCount {
     // The catalog is in English, so its row labels follow English plurals.
     val rows = if ((rowCount ?: recorded) == 1) rowLabel else rowLabelPlural
     return TrackerCount(recorded, rowCount, rows)
