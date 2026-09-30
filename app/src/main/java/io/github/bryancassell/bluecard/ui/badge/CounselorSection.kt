@@ -1,9 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -15,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -25,14 +22,21 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
 import io.github.bryancassell.bluecard.ui.typedText
 
 /**
  * The badge's merit badge [counselor], with a button to enter one or edit it. Tapping the phone
- * number opens the phone app to call it, and tapping the email address opens an email app.
+ * number opens the phone app to call it, and tapping the email address opens an email app, each
+ * with [startOtherApp] ([rememberStartOtherApp]).
  */
 @Composable
-fun CounselorSection(counselor: Counselor?, onEdit: () -> Unit, modifier: Modifier = Modifier) {
+fun CounselorSection(
+    counselor: Counselor?,
+    onEdit: () -> Unit,
+    startOtherApp: (intent: Intent, noApp: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.badge_detail_counselor),
@@ -44,24 +48,26 @@ fun CounselorSection(counselor: Counselor?, onEdit: () -> Unit, modifier: Modifi
         counselor?.name?.let { CounselorItem(R.drawable.ic_person, it) }
         counselor?.phone?.let {
             // ACTION_DIAL fills in the number without calling it, so it needs no permission.
+            val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null))
+            val noApp = stringResource(R.string.badge_detail_no_phone_app)
             ContactItem(
                 icon = R.drawable.ic_call,
                 text = it,
-                intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null)),
                 onClickLabel = stringResource(R.string.badge_detail_call_counselor),
-                noApp = stringResource(R.string.badge_detail_no_phone_app)
+                onClick = { startOtherApp(intent, noApp) }
             )
         }
         counselor?.email?.let {
             // Only email apps handle ACTION_SENDTO with a mailto: address. It keeps @ and + as
             // they are, since some apps show the address as the link spells it, and encodes
             // anything that would change the link, such as ? or #.
+            val intent = Intent(Intent.ACTION_SENDTO, "mailto:${Uri.encode(it, "@+")}".toUri())
+            val noApp = stringResource(R.string.badge_detail_no_email_app)
             ContactItem(
                 icon = R.drawable.ic_email,
                 text = it,
-                intent = Intent(Intent.ACTION_SENDTO, "mailto:${Uri.encode(it, "@+")}".toUri()),
                 onClickLabel = stringResource(R.string.badge_detail_email_counselor),
-                noApp = stringResource(R.string.badge_detail_no_email_app)
+                onClick = { startOtherApp(intent, noApp) }
             )
         }
         // Lines the button's text up with the heading's.
@@ -86,30 +92,23 @@ private fun CounselorItem(@DrawableRes icon: Int, text: String, modifier: Modifi
     )
 }
 
-/**
- * A way to reach the counselor, which starts [intent] when tapped, or says [noApp] if no app
- * can handle it.
- */
+/** A way to reach the counselor, which opens another app with [onClick] when tapped. */
 @Composable
 private fun ContactItem(
     @DrawableRes icon: Int,
     text: String,
-    intent: Intent,
     onClickLabel: String,
-    noApp: String
+    onClick: () -> Unit
 ) {
-    val context = LocalContext.current
     CounselorItem(
         icon = icon,
         text = text,
         // ListItem reads as one item to screen readers, announced as a button that does
         // onClickLabel.
-        modifier = Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button) {
-            try {
-                context.startActivity(intent)
-            } catch (_: ActivityNotFoundException) {
-                Toast.makeText(context, noApp, Toast.LENGTH_SHORT).show()
-            }
-        }
+        modifier = Modifier.clickable(
+            onClickLabel = onClickLabel,
+            role = Role.Button,
+            onClick = onClick
+        )
     )
 }

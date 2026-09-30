@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.widget.Toast
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,12 +13,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
@@ -26,6 +25,7 @@ import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
+import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
 
 /** Connects the Badge detail screen to its ViewModel. */
 @Composable
@@ -99,25 +99,20 @@ private fun BadgeDetails(
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
         }
-        // Opens the official page in the browser.
-        val uriHandler = LocalUriHandler.current
-        val context = LocalContext.current
+        // Opens the official page in the browser. The counselor's phone and email share the
+        // function, so quick taps on any of them open one app, once.
+        val startOtherApp = rememberStartOtherApp()
+        // Shown when no app can open web links, as when parental controls block the browser.
         val noBrowser = stringResource(R.string.badge_detail_no_browser)
         TextButton(
             onClick = {
-                try {
-                    uriHandler.openUri(uiState.officialUrl)
-                } catch (_: IllegalArgumentException) {
-                    // What Compose's UriHandler throws when no app can open web links,
-                    // as when parental controls block the browser.
-                    Toast.makeText(context, noBrowser, Toast.LENGTH_SHORT).show()
-                }
+                startOtherApp(Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri()), noBrowser)
             },
             modifier = Modifier.padding(horizontal = 4.dp)
         ) {
             Text(text = stringResource(R.string.badge_detail_official_page))
         }
-        CounselorSection(uiState.counselor, onEdit = onEditCounselor)
+        CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
         Text(
             text = stringResource(R.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,
