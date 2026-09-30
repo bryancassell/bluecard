@@ -2,6 +2,8 @@ package io.github.bryancassell.bluecard.ui
 
 import android.os.Bundle
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.core.os.bundleOf
 import androidx.lifecycle.SavedStateHandle
 
@@ -29,6 +31,55 @@ fun SavedStateHandle.restoredText(key: String): String? =
  */
 fun SavedStateHandle.keepText(key: String, state: TextFieldState) {
     setSavedStateProvider(key) { bundleOf(TEXT to state.text.toString()) }
+}
+
+/**
+ * Text fields that start as stored text, such as a saved comment, once it loads ([loadOnce]), or
+ * as the text the system stopped the app with. Their text is kept, as by [keepText], only once
+ * the stored text has loaded into them, so if the system stops the app before then, the screen
+ * loads the stored text again instead of restoring empty fields. The fields, under [keys], are
+ * kept and restored together.
+ */
+class StoredTextFields(private val savedStateHandle: SavedStateHandle, vararg keys: String) {
+    private val fields: Map<String, TextFieldState>
+
+    /** Whether the fields hold the stored text, or the text restored in its place. */
+    private var loaded: Boolean
+
+    init {
+        val restored = keys.associateWith { savedStateHandle.restoredText(it) }
+        fields = restored.mapValues { TextFieldState(it.value.orEmpty()) }
+        // All are kept together, so if one wasn't restored, such as when another value is under
+        // its key, the stored text is loaded into all of them.
+        loaded = restored.values.all { it != null }
+        if (loaded) keep()
+    }
+
+    /** The field under [key], which its text field edits directly. */
+    operator fun get(key: String): TextFieldState = fields.getValue(key)
+
+    /**
+     * Puts the [stored] text, by key, in the fields and keeps them from then on, unless it's been
+     * done already or the fields were restored instead. [stored] is called only when it's done.
+     * It has every field's key, with null for no text: a key it's missing is a bug, so it throws
+     * rather than leave the field empty, which would erase the stored text on the next save.
+     */
+    fun loadOnce(stored: () -> Map<String, String?>) {
+        if (loaded) return
+        loaded = true
+        keep()
+        val text = stored()
+        // In a snapshot of its own, so the fields' observers, such as a ViewModel's uiState, see
+        // the change as soon as it's applied, not when Compose next applies changes made outside a
+        // snapshot.
+        Snapshot.withMutableSnapshot {
+            fields.forEach { (key, field) ->
+                field.setTextAndPlaceCursorAtEnd(text.getValue(key).orEmpty())
+            }
+        }
+    }
+
+    private fun keep() = fields.forEach { (key, field) -> savedStateHandle.keepText(key, field) }
 }
 
 private const val TEXT = "text"

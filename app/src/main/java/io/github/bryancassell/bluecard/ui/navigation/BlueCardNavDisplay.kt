@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
+import io.github.bryancassell.bluecard.ui.badge.EditCounselorRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
 import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
 import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
@@ -65,7 +66,15 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate = rememberNavigateFrom(backStack, from = key) { currentShownBackStack }
                 BadgeDetailRoute(
                     badgeId = key.badgeId,
-                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
+                    onEditCounselor = { navigate(EditCounselor(key.badgeId)) }
+                )
+            }
+            entry<EditCounselor> { key ->
+                // Once saved, the page closes, unless the scout has already gone back.
+                EditCounselorRoute(
+                    badgeId = key.badgeId,
+                    onSaved = { backStack.closeIfOnTop(key) }
                 )
             }
             entry<RequirementDetail> { key ->

@@ -40,6 +40,28 @@
     <!-- Shown when tapping the official requirements link, if no app on the phone can open
          web links. -->
     <string name="badge_detail_no_browser">No app on this phone can open the link.</string>
+    <!-- Heading of the section of a badge's page about the scout's merit badge counselor. -->
+    <string name="badge_detail_counselor">Counselor</string>
+    <string name="badge_detail_add_counselor">Add counselor</string>
+    <string name="badge_detail_edit_counselor">Edit counselor</string>
+    <!-- Screen reader action on the counselor's phone number, which opens the phone app with
+         the number: "Double tap to call". -->
+    <string name="badge_detail_call_counselor">call</string>
+    <!-- Screen reader action on the counselor's email address, which opens an email app:
+         "Double tap to send email". -->
+    <string name="badge_detail_email_counselor">send email</string>
+    <!-- Shown when tapping the counselor's phone number, if no app on the phone can make
+         calls. -->
+    <string name="badge_detail_no_phone_app">No app on this phone can call the number.</string>
+    <!-- Shown when tapping the counselor's email address, if no app on the phone can send
+         email. -->
+    <string name="badge_detail_no_email_app">No app on this phone can send email.</string>
+    <!-- Heading of the page for entering the badge's merit badge counselor. -->
+    <string name="edit_counselor_title">Counselor</string>
+    <string name="edit_counselor_name">Name</string>
+    <string name="edit_counselor_phone">Phone</string>
+    <string name="edit_counselor_email">Email</string>
+    <string name="edit_counselor_save">Save</string>
     <!-- Shown in place of a badge's page when the catalog doesn't have the badge or its
          requirements version. Only a catalog edited during development can cause this. -->
     <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>

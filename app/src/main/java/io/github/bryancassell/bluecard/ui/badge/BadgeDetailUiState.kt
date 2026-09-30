@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 
@@ -19,6 +20,8 @@ sealed interface BadgeDetailUiState {
         val officialUrl: String,
         /** The top-level requirements of the version the scout works on. */
         val requirements: List<RequirementItem>,
+        /** The scout's merit badge counselor, or null if they haven't entered one. */
+        val counselor: Counselor? = null,
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
         val saveFailure: SaveFailure? = null
     ) : BadgeDetailUiState

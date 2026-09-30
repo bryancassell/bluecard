@@ -48,10 +48,11 @@ class RoomProgressRepository @Inject constructor(
         startedDate: LocalDate
     ) = writing { dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate)) }
 
-    override suspend fun setCounselor(badgeId: String, counselor: Counselor?) = ifStarted(badgeId) {
-        val stored = counselor?.normalized()
-        dao.updateCounselor(badgeId, stored?.name, stored?.phone, stored?.email)
-    }
+    override suspend fun setCounselor(badgeId: String, counselor: Counselor?, start: BadgeStart) =
+        ifStarted(badgeId, start) {
+            val stored = counselor?.normalized()
+            dao.updateCounselor(badgeId, stored?.name, stored?.phone, stored?.email)
+        }
 
     override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) =
         ifStarted(badgeId) { dao.updateCompletedOnPriorDate(badgeId, date) }
@@ -86,7 +87,7 @@ class RoomProgressRepository @Inject constructor(
         comment: String?,
         start: BadgeStart
     ): Unit = ifStarted(badgeId, start) {
-        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedComment(comment)) }
+        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedText(comment)) }
     }
 
     override suspend fun addTrackerEntry(

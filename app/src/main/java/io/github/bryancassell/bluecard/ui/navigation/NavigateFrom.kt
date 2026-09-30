@@ -27,3 +27,11 @@ fun rememberNavigateFrom(
         { to -> if (currentShownBackStack().lastOrNull() == from) backStack.add(to) }
     }
 }
+
+/**
+ * Closes the screen for [key] if it's on top of this back stack, as when the screen is done.
+ * Does nothing otherwise, such as when the scout has already gone back from it.
+ */
+fun MutableList<NavKey>.closeIfOnTop(key: NavKey) {
+    if (lastOrNull() == key) removeAt(lastIndex)
+}

@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.status
@@ -245,6 +246,24 @@ class BadgeDetailViewModelTest {
         assertEquals(
             mapOf("1" to true, "2" to true, "3" to false, "4" to false),
             viewModel.completed()
+        )
+    }
+
+    @Test
+    fun counselor_isShownOnceSaved() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertNull(viewModel.ready().counselor)
+
+        progressRepository.setCounselor(
+            "camping",
+            Counselor("Pat Lee", "555-0100", "pat@example.com"),
+            badgeStart
+        )
+
+        assertEquals(
+            Counselor("Pat Lee", "555-0100", "pat@example.com"),
+            viewModel.ready().counselor
         )
     }
 

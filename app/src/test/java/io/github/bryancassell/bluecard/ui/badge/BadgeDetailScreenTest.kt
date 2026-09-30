@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.app.Application
+import android.content.Intent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
@@ -7,6 +9,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -20,13 +23,19 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowToast
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -37,6 +46,7 @@ class BadgeDetailScreenTest {
     private val openedRequirements = mutableListOf<String>()
     private val openedUris = mutableListOf<String>()
     private val completedChanges = mutableListOf<Pair<String, Boolean>>()
+    private var counselorEdits = 0
     private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     private val ready = BadgeDetailUiState.Ready(
@@ -69,6 +79,7 @@ class BadgeDetailScreenTest {
                 BadgeDetailScreen(
                     uiState = uiState,
                     onOpenRequirement = { openedRequirements += it },
+                    onEditCounselor = { counselorEdits++ },
                     onCompletedChange = { number, completed ->
                         completedChanges +=
                             number to completed
@@ -86,6 +97,16 @@ class BadgeDetailScreenTest {
     private fun checkbox(number: String) = composeTestRule
         .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
         .performScrollTo()
+
+    private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")
+
+    private fun hasClickLabel(label: String) = SemanticsMatcher("click label is \"$label\"") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
+    }
+
+    private val application = ApplicationProvider.getApplicationContext<Application>()
+
+    private fun startedActivity(): Intent? = shadowOf(application).nextStartedActivity
 
     private val loadingIndicator = SemanticsMatcher.expectValue(
         SemanticsProperties.ProgressBarRangeInfo,
@@ -152,6 +173,127 @@ class BadgeDetailScreenTest {
             .performClick()
 
         assertEquals(listOf("https://www.scouting.org/merit-badges/camping/"), openedUris)
+    }
+
+    @Test
+    fun noCounselor_offersToAddOne() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Counselor").performScrollTo().assert(isHeading())
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+
+        assertEquals(1, counselorEdits)
+        composeTestRule.onNodeWithText("Edit counselor").assertDoesNotExist()
+    }
+
+    @Test
+    fun counselor_showsNamePhoneAndEmail_andCanBeEdited() {
+        show(ready.copy(counselor = counselor))
+
+        composeTestRule.onNodeWithText("Pat Lee").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Edit counselor").performScrollTo().performClick()
+
+        assertEquals(1, counselorEdits)
+        composeTestRule.onNodeWithText("Add counselor").assertDoesNotExist()
+    }
+
+    @Test
+    fun counselor_isBetweenOfficialLinkAndRequirements() {
+        show(ready.copy(counselor = counselor))
+
+        // Every part is laid out, on screen or not, so their positions give their order.
+        val tops = listOf("Official requirements", "Counselor", "Pat Lee", "Requirements").map {
+            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
+        }
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun counselorWithOnlyAName_hasNoWayToReachThem() {
+        show(ready.copy(counselor = Counselor(name = "Pat Lee")))
+
+        composeTestRule.onNodeWithText("Pat Lee").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasClickLabel("call")).assertDoesNotExist()
+        composeTestRule.onNode(hasClickLabel("send email")).assertDoesNotExist()
+    }
+
+    @Test
+    fun counselorPhone_opensPhoneAppWithTheNumber() {
+        show(ready.copy(counselor = counselor))
+
+        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .assert(hasClickLabel("call"))
+            .performClick()
+
+        val started = startedActivity()
+        assertEquals(Intent.ACTION_DIAL, started?.action)
+        assertEquals("tel", started?.data?.scheme)
+        assertEquals("+1 555-0100", started?.data?.schemeSpecificPart)
+    }
+
+    @Test
+    fun counselorEmail_opensEmailAppToWriteToThem() {
+        show(ready.copy(counselor = counselor))
+
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .assert(hasClickLabel("send email"))
+            .performClick()
+
+        val started = startedActivity()
+        assertEquals(Intent.ACTION_SENDTO, started?.action)
+        // Spelled as typed, since some email apps show the address as the link spells it.
+        assertEquals("mailto:pat@example.com", started?.dataString)
+    }
+
+    @Test
+    fun counselorEmail_withCharactersThatWouldChangeTheLink_areEncoded() {
+        // A ? would start the email's headers, such as its subject.
+        show(ready.copy(counselor = Counselor(email = "pat+scouts?x@example.com")))
+
+        composeTestRule.onNodeWithText("pat+scouts?x@example.com").performScrollTo().performClick()
+
+        val started = startedActivity()
+        assertEquals("mailto:pat+scouts%3Fx@example.com", started?.dataString)
+        assertEquals("pat+scouts?x@example.com", started?.data?.schemeSpecificPart)
+    }
+
+    @Test
+    fun counselorPhone_withNoPhoneApp_showsMessage() {
+        show(ready.copy(counselor = counselor))
+        // Starting an activity nothing can handle now fails, as on a tablet without a phone app.
+        shadowOf(application).checkActivities(true)
+
+        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().performClick()
+
+        assertEquals(
+            "No app on this phone can call the number.",
+            ShadowToast.getTextOfLatestToast()
+        )
+    }
+
+    @Test
+    fun counselorEmail_withNoEmailApp_showsMessage() {
+        show(ready.copy(counselor = counselor))
+        shadowOf(application).checkActivities(true)
+
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo().performClick()
+
+        assertEquals("No app on this phone can send email.", ShadowToast.getTextOfLatestToast())
+    }
+
+    // The page is laid out left-to-right, like the English strings, but a name typed in Persian
+    // keeps its own direction: its final period is drawn at its end, which is on its left.
+    @Test
+    fun counselorNameTypedInPersian_keepsItsPunctuationAtItsEnd() {
+        show(ready.copy(counselor = Counselor(name = "علی رضایی.")))
+
+        val name = composeTestRule.onNodeWithText("علی رضایی.", substring = true).visualText()
+
+        assertTrue(name, name.startsWith("."))
     }
 
     @Test
