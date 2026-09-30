@@ -245,8 +245,8 @@ class MainActivityTest {
         .filter { it.requirementNumber == number }.map { it.values }
 
     /**
-     * Home is showing again, scrolled to Camping's row as the scout left it, which can put the
-     * name above the screen.
+     * Home is showing again. It's found by Camping's row rather than the scout's name, because
+     * Home keeps its scroll position, which can leave the name above the screen.
      */
     private fun assertHomeBackAtCamping() {
         home().assertExists()

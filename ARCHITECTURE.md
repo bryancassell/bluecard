@@ -435,7 +435,7 @@ io.github.bryancassell.bluecard
 ├── ui/                 One package per screen: screen composable, ViewModel, UI state
 │   ├── onboarding/
 │   ├── home/
-│   ├── badges/         Browse and search
+│   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
 │   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
 │   ├── data/           Clear, export, import
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
