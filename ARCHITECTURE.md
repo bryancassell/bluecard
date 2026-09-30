@@ -293,6 +293,27 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     reaches the screen under it. So a decorator records the content keys of
     the screens `NavDisplay` draws, and `rememberNavigateFrom` ignores opening
     one of them.
+- **A double tap starts another app once.** Badge detail's "Official
+  requirements" link and the counselor's phone and email start other apps with
+  one function from `rememberStartOtherApp` (`ui/`), which the screen shares
+  among them. The other app takes a moment to cover BlueCard, so both taps of a
+  double tap can reach the control, and a browser could open two tabs, or an
+  email app two drafts
+  ([#97](https://github.com/bryancassell/bluecard/issues/97)).
+  - **After a tap, all three ignore taps for the double-tap timeout** (300 ms),
+    as a screen animating in does. A tap that finds no app counts too, so a
+    double tap shows its message once, and the next tap tries again.
+  - **It doesn't wait for the scout to come back from the other app.** Some
+    starts never take BlueCard's place, such as one that screen pinning blocks,
+    which doesn't throw, so waiting for BlueCard's window to get focus back, or
+    for `ON_RESUME`, could leave the controls locked. It would also misfire in
+    desktop windows, where the tap that focuses BlueCard's window can arrive
+    before the focus does. A tap more than 300 ms after the first can still
+    reach BlueCard if the other app hasn't covered it yet. On an Android 37
+    emulator, Android dropped most second taps that came 140–200 ms after the
+    first, as the other app took over, but not all of them.
+  - **The link starts the browser with `ACTION_VIEW`**, as Compose's
+    `UriHandler` does, so all three handle "no app" the same way.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -362,7 +383,30 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   - **Code outside Compose** that formats a string with a number, such as the
     PDF report, must use the same locales (`stringsLocales`), and lay out in the
     first one's direction.
-- **Material 3** components and the existing `BlueCardTheme`.
+- **Material 3** components, themed by `BlueCardTheme` with the blue card's
+  colors. Every phone shows the same colors:
+  - **No dynamic color.** The app doesn't take its colors from the wallpaper.
+  - **Light only, for now.** The one scheme, `BlueCardColorScheme` in
+    `ui/theme/Color.kt`, is used in dark mode too, until the app has a dark
+    scheme (#108). The window and splash screen backgrounds match it, and the
+    system bar icons stay dark. In dark mode the window theme isn't declared
+    light (`isLightTheme`), which opts out of Android's force dark and force
+    invert, so the system doesn't darken the colors either.
+    - **Known gap.** On Android 8.0 the splash screen's navigation bar icons
+      stay white on its light background until the app draws, because dark
+      navigation bar icons in a theme need Android 8.1.
+    - **Don't follow dark mode elsewhere.** `isSystemInDarkTheme()` still
+      reports the system's dark mode, and `-night` resources still apply in
+      it. Until #108, nothing but the window theme above should use either:
+      it would put dark-mode colors, images or bar icons on the light app.
+  - **Source.** Material Color Utilities' fidelity scheme from Scouting
+    America Blue (`#003F87`), which stays `primary`. The background and
+    surfaces are light tints of the card stock's Pale Blue (`#9AB3D5`). Errors
+    use Material's default red, because Scouting America Red (`#CE1126`) is
+    below 4.5:1 on the darker surfaces.
+  - **Readability first.** Readability comes before matching the card's colors
+    exactly. Every text color meets WCAG AA (4.5:1) on every surface, and
+    `BlueCardColorSchemeTest` checks each pair.
 
 ### Data layer
 

@@ -28,6 +28,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.core.os.bundleOf
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -461,6 +462,20 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
         pressBack()
         assertHomeBackAtCamping()
+    }
+
+    // BlueCardTheme is light in dark mode too, so the system bars keep dark icons, which show
+    // on its light background.
+    @Config(qualifiers = "night")
+    @Test
+    fun inDarkMode_systemBarIconsAreDark() {
+        launchWithProfile()
+
+        scenario.onActivity {
+            val insetsController = WindowCompat.getInsetsController(it.window, it.window.decorView)
+            assertTrue(insetsController.isAppearanceLightStatusBars)
+            assertTrue(insetsController.isAppearanceLightNavigationBars)
+        }
     }
 
     // The app formats every string in the strings' language, so on a Persian device the

@@ -169,6 +169,9 @@ private fun EagleCard(uiState: HomeUiState.Ready) {
         )
         LinearProgressIndicator(
             progress = { uiState.eagle.completed.toFloat() / uiState.eagleTotal },
+            // Material's default track color is almost the card's, so the bar's full length
+            // wouldn't show.
+            trackColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             // The text above says the same, so screen readers skip the bar rather than
             // read a percentage out of context.
             modifier = Modifier

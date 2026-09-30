@@ -1,14 +1,9 @@
 package io.github.bryancassell.bluecard.ui.theme
 
-import android.content.Context
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -16,63 +11,58 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
-/** Checks which color scheme BlueCardTheme picks for each combination of settings. */
+/**
+ * Checks that BlueCardTheme uses the app's own colors on every Android version, in light and
+ * dark mode, rather than the wallpaper's or Material's defaults.
+ */
 @RunWith(AndroidJUnit4::class)
 class BlueCardThemeTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val context: Context = ApplicationProvider.getApplicationContext()
-
-    private fun colorSchemeFor(darkTheme: Boolean, dynamicColor: Boolean): ColorScheme {
+    private fun colorScheme(): ColorScheme {
         lateinit var colorScheme: ColorScheme
         composeTestRule.setContent {
-            BlueCardTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
+            BlueCardTheme {
                 colorScheme = MaterialTheme.colorScheme
             }
         }
         return colorScheme
     }
 
-    @Test
-    fun dynamicColor_light_usesWallpaperLightScheme() {
-        assertEquals(
-            dynamicLightColorScheme(context).primary,
-            colorSchemeFor(darkTheme = false, dynamicColor = true).primary
-        )
+    // Dynamic color would give the wallpaper's primary on Android 12+, and the default schemes
+    // Material's purple, so primary and background tell the schemes apart.
+    private fun assertBlueCardColors(colorScheme: ColorScheme) {
+        assertEquals(BlueCardColorScheme.primary, colorScheme.primary)
+        assertEquals(BlueCardColorScheme.background, colorScheme.background)
     }
 
     @Test
-    fun dynamicColor_dark_usesWallpaperDarkScheme() {
-        assertEquals(
-            dynamicDarkColorScheme(context).primary,
-            colorSchemeFor(darkTheme = true, dynamicColor = true).primary
-        )
+    fun primary_isScoutingAmericaBlue() {
+        assertEquals(Color(0xFF003F87), colorScheme().primary)
     }
 
     @Test
-    fun noDynamicColor_light_usesDefaultLightScheme() {
-        assertEquals(
-            lightColorScheme().primary,
-            colorSchemeFor(darkTheme = false, dynamicColor = false).primary
-        )
+    @Config(sdk = [31], qualifiers = "notnight")
+    fun android12AndLater_lightMode_usesBlueCardColors() {
+        assertBlueCardColors(colorScheme())
     }
 
     @Test
-    fun noDynamicColor_dark_usesDefaultDarkScheme() {
-        assertEquals(
-            darkColorScheme().primary,
-            colorSchemeFor(darkTheme = true, dynamicColor = false).primary
-        )
+    @Config(sdk = [31], qualifiers = "night")
+    fun android12AndLater_darkMode_usesBlueCardColors() {
+        assertBlueCardColors(colorScheme())
     }
 
-    // Dynamic color needs Android 12 (API 31); older versions fall back to the default scheme.
     @Test
-    @Config(sdk = [30])
-    fun dynamicColor_beforeAndroid12_usesDefaultLightScheme() {
-        assertEquals(
-            lightColorScheme().primary,
-            colorSchemeFor(darkTheme = false, dynamicColor = true).primary
-        )
+    @Config(sdk = [30], qualifiers = "notnight")
+    fun android11_lightMode_usesBlueCardColors() {
+        assertBlueCardColors(colorScheme())
+    }
+
+    @Test
+    @Config(sdk = [30], qualifiers = "night")
+    fun android11_darkMode_usesBlueCardColors() {
+        assertBlueCardColors(colorScheme())
     }
 }
