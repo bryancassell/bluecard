@@ -19,6 +19,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -156,6 +157,29 @@ class BadgeDetailScreenTest {
         composeTestRule.onNodeWithText("Official requirements")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .performClick()
+
+        val started = startedActivity()
+        assertEquals(Intent.ACTION_VIEW, started?.action)
+        assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
+    }
+
+    // Screen readers say where the link goes, and don't read its icon.
+    @Test
+    fun officialLink_saysItOpensTheBrowser() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Official requirements")
+            .assert(hasClickLabel("open in browser"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+    }
+
+    // Labeling the click mustn't take away the click itself.
+    @Test
+    fun officialLink_screenReaderTap_opensOfficialPage() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Official requirements")
+            .performSemanticsAction(SemanticsActions.OnClick)
 
         val started = startedActivity()
         assertEquals(Intent.ACTION_VIEW, started?.action)
