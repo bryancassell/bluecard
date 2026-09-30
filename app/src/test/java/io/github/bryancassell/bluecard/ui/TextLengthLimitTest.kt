@@ -9,6 +9,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.text.TextRange
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -58,6 +59,39 @@ class TextLengthLimitTest {
         field().performTextInput("XYZ")
 
         assertEquals("aXbcd", state.text.toString())
+    }
+
+    @Test
+    fun pasteStartingLikeTheTextAfterTheCursor_keepsThatText() {
+        field().performTextInput("a b")
+        field().performTextInputSelection(TextRange(1))
+
+        // Starts with a space, as does the text after the cursor.
+        field().performTextInput(" xyz")
+
+        assertEquals("a x b", state.text.toString())
+    }
+
+    @Test
+    fun replacementStartingLikeTheTextFromTheSelectionOn_isCutAtItsEnd() {
+        field().performTextInput("a c")
+        field().performTextInputSelection(TextRange(0, 1))
+
+        // Starts with the selected "a" and the space after it, and ends with "a", so the
+        // same text could come from adding " xa", "a x" or "xa " instead.
+        field().performTextInput("a xa")
+
+        assertEquals("a x c", state.text.toString())
+    }
+
+    @Test
+    fun editBeforeTheCursor_keepsTheTextBetweenThem() {
+        field().performTextInput("a cd")
+
+        // Changes the word before the cursor, as a keyboard's autocorrect can.
+        field().performTextReplacement("abb cd")
+
+        assertEquals("ab cd", state.text.toString())
     }
 
     @Test
