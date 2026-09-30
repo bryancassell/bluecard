@@ -43,7 +43,7 @@ class RequirementDetailScreenTest {
 
     private val openedRequirements = mutableListOf<String>()
     private val openedTrackerEntries = mutableListOf<Pair<Long?, Int?>>()
-    private val completedChanges = mutableListOf<Pair<String, Boolean>>()
+    private val completedChanges = mutableListOf<Boolean>()
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
     private val saveFailuresShown = mutableListOf<SaveFailure>()
@@ -139,9 +139,7 @@ class RequirementDetailScreenTest {
                 onOpenTrackerEntry = { entryId, rowNumber ->
                     openedTrackerEntries += entryId to rowNumber
                 },
-                onCompletedChange = { number, completed ->
-                    completedChanges += number to completed
-                },
+                onCompletedChange = { completedChanges += it },
                 onCompletedDateChange = { dateChanges += it },
                 onSaveComment = { commentsSaved++ },
                 onSaveFailureShown = { saveFailuresShown += it }
@@ -152,10 +150,6 @@ class RequirementDetailScreenTest {
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
-
-    private fun rowCheckbox(number: String) = composeTestRule
-        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
-        .performScrollTo()
 
     // The requirement's own checkbox, labeled by the text next to it.
     private fun completedCheckbox() =
@@ -230,11 +224,13 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
     }
 
+    // No checkbox for the requirement or on its sub-requirements' rows: the scout marks each
+    // sub-requirement complete on its own page.
     @Test
     fun requirementWithSubRequirements_hasNoCheckboxOrDate() {
         show(ready)
 
-        composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
+        composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
         composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
     }
 
@@ -242,14 +238,11 @@ class RequirementDetailScreenTest {
     fun subRequirements_showNeededCountAndCompletion() {
         show(ready)
 
-        rowCheckbox("2a").assertIsOn()
-        rowCheckbox("2c").assertIsOff()
+        row("Cook a meal.").assert(hasContentDescription("Completed"))
+        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
         row(
             "Lead one hike."
         ).assert(hasText("Do 1 of 2")).assert(!hasContentDescription("Completed"))
-        composeTestRule.onNode(
-            hasContentDescription("Requirement 2b completed")
-        ).assertDoesNotExist()
     }
 
     @Test
@@ -333,17 +326,6 @@ class RequirementDetailScreenTest {
     }
 
     @Test
-    fun checkingSubRequirement_marksItCompleted() {
-        show(ready)
-
-        rowCheckbox("2c").performClick()
-        rowCheckbox("2a").performClick()
-
-        assertEquals(listOf("2c" to true, "2a" to false), completedChanges)
-        assertEquals(emptyList<String>(), openedRequirements)
-    }
-
-    @Test
     fun everySubRequirement_isButtonThatOpensIt() {
         show(ready)
 
@@ -370,7 +352,7 @@ class RequirementDetailScreenTest {
 
         completedCheckbox().performClick()
 
-        assertEquals(listOf("1" to true), completedChanges)
+        assertEquals(listOf(true), completedChanges)
     }
 
     @Test
@@ -379,7 +361,7 @@ class RequirementDetailScreenTest {
 
         completedCheckbox().assertIsOn().performClick()
 
-        assertEquals(listOf("1" to false), completedChanges)
+        assertEquals(listOf(false), completedChanges)
     }
 
     @Test

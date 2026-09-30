@@ -299,6 +299,9 @@ class RequirementDetailViewModelTest {
         progressRepository.markRequirementCompleted("camping", "2b(2)", day, badgeStart)
         assertTrue(viewModel.ready().children.single { it.number == "2b" }.completed)
         assertTrue(viewModel.ready().requirement.completed)
+
+        progressRepository.markRequirementNotCompleted("camping", "2a")
+        assertFalse(viewModel.ready().requirement.completed)
     }
 
     @Test
@@ -367,7 +370,7 @@ class RequirementDetailViewModelTest {
         assertFalse(viewModel.ready().requirement.completed)
         assertNull(viewModel.ready().completedDate)
 
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
         assertEquals(
             BadgeProgress("camping", newest, today),
@@ -378,38 +381,37 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun setCompleted_onBadgeStartedOnOlderVersion_keepsThatVersion() = runTest {
+        progressRepository.startBadge("camping", older, started)
+        val viewModel = viewModel("2a")
+        startCollecting(viewModel)
+
+        viewModel.setCompleted(true)
+
+        assertEquals(
+            BadgeProgress("camping", older, started),
+            progressRepository.observeProgress("camping").first()!!.badge
+        )
+        assertTrue(viewModel.ready().requirement.completed)
+    }
+
+    @Test
     fun setCompleted_false_undoesItAndRemovesDate() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
-        viewModel.setCompleted("1", false)
+        viewModel.setCompleted(false)
 
         assertFalse(viewModel.ready().requirement.completed)
         assertNull(viewModel.ready().completedDate)
     }
 
     @Test
-    fun completingEnoughSubRequirements_completesThisRequirement() = runTest {
-        val viewModel = viewModel("2")
-        startCollecting(viewModel)
-
-        viewModel.setCompleted("2a", true)
-        assertTrue(viewModel.ready().children.single { it.number == "2a" }.completed)
-        assertFalse(viewModel.ready().requirement.completed)
-
-        viewModel.setCompleted("2c", true)
-        assertTrue(viewModel.ready().requirement.completed)
-
-        viewModel.setCompleted("2a", false)
-        assertFalse(viewModel.ready().requirement.completed)
-    }
-
-    @Test
     fun setCompletedDate_changesTheDate() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
         viewModel.setCompletedDate(day)
 
@@ -421,10 +423,10 @@ class RequirementDetailViewModelTest {
     fun setCompletedDate_afterUnchecking_doesNotCompleteItAgain() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
         // As when the scout taps Remove date just after unchecking, before the page redraws.
-        viewModel.setCompleted("1", false)
+        viewModel.setCompleted(false)
         viewModel.setCompletedDate(null)
 
         assertFalse(viewModel.ready().requirement.completed)
@@ -434,11 +436,11 @@ class RequirementDetailViewModelTest {
     fun uncheckingThenChecking_onThisPage_keepsTheDate() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
         viewModel.setCompletedDate(day)
 
-        viewModel.setCompleted("1", false)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(false)
+        viewModel.setCompleted(true)
 
         assertEquals(day, viewModel.ready().completedDate)
     }
@@ -447,7 +449,7 @@ class RequirementDetailViewModelTest {
     fun setCompletedDate_null_removesTheDateButStaysCompleted() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
         viewModel.setCompletedDate(null)
 
@@ -556,7 +558,7 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
         viewModel.typeComment("Not saved yet.")
 
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
         assertEquals("Not saved yet.", viewModel.comment.text.toString())
         assertTrue(viewModel.ready().commentChanged)
@@ -638,11 +640,14 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
         progressRepository.failSaves = true
 
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
 
         val failure = viewModel.ready().saveFailure
         assertNotNull(failure)
         assertFalse(viewModel.ready().requirement.completed)
+        // Starting the badge failed with the rest.
+        progressRepository.failSaves = false
+        assertNull(progressRepository.observeProgress("camping").first())
 
         viewModel.onSaveFailureShown(failure!!)
 
@@ -653,7 +658,7 @@ class RequirementDetailViewModelTest {
     fun setCompletedDate_whenSaveFails_reportsIt() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
-        viewModel.setCompleted("1", true)
+        viewModel.setCompleted(true)
         progressRepository.failSaves = true
 
         viewModel.setCompletedDate(day)

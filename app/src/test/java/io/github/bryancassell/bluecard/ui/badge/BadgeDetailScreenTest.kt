@@ -13,8 +13,6 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsOff
-import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -27,7 +25,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
-import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -45,9 +42,7 @@ class BadgeDetailScreenTest {
 
     private val openedRequirements = mutableListOf<String>()
     private val openedUris = mutableListOf<String>()
-    private val completedChanges = mutableListOf<Pair<String, Boolean>>()
     private var counselorEdits = 0
-    private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     private val ready = BadgeDetailUiState.Ready(
         name = "Camping",
@@ -86,12 +81,7 @@ class BadgeDetailScreenTest {
                 BadgeDetailScreen(
                     uiState = uiState,
                     onOpenRequirement = { openedRequirements += it },
-                    onEditCounselor = { counselorEdits++ },
-                    onCompletedChange = { number, completed ->
-                        completedChanges +=
-                            number to completed
-                    },
-                    onSaveFailureShown = { saveFailuresShown += it }
+                    onEditCounselor = { counselorEdits++ }
                 )
             }
         }
@@ -100,10 +90,6 @@ class BadgeDetailScreenTest {
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
-
-    private fun checkbox(number: String) = composeTestRule
-        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
-        .performScrollTo()
 
     private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")
 
@@ -304,44 +290,21 @@ class BadgeDetailScreenTest {
     }
 
     @Test
-    fun requirementWithoutSubRequirements_hasCheckboxShowingCompletion() {
+    fun requirement_hasCheckOnlyWhenComplete() {
         show(ready)
 
-        checkbox("1").assertIsOn()
-        checkbox("3").assertIsOff()
-    }
-
-    @Test
-    fun requirementWithSubRequirements_hasCheckOnlyWhenComplete_andNoCheckbox() {
-        show(ready)
-
+        row("Plan a campout.").assert(hasContentDescription("Completed"))
+        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
         row("Do all of these.").assert(hasContentDescription("Completed"))
         row("Do two of these.").assert(!hasContentDescription("Completed"))
-        composeTestRule.onNode(
-            hasContentDescription("Requirement 2 completed")
-        ).assertDoesNotExist()
-        composeTestRule.onNode(
-            hasContentDescription("Requirement 4 completed")
-        ).assertDoesNotExist()
     }
 
+    // The scout marks a requirement complete on its own page.
     @Test
-    fun checkingRequirement_marksItCompleted() {
+    fun requirements_haveNoCheckbox() {
         show(ready)
 
-        checkbox("3").performClick()
-
-        assertEquals(listOf("3" to true), completedChanges)
-        assertEquals(emptyList<String>(), openedRequirements)
-    }
-
-    @Test
-    fun uncheckingRequirement_marksItNotCompleted() {
-        show(ready)
-
-        checkbox("1").performClick()
-
-        assertEquals(listOf("1" to false), completedChanges)
+        composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -375,29 +338,6 @@ class BadgeDetailScreenTest {
         }
 
         assertEquals(listOf("1", "2", "3"), openedRequirements)
-        assertEquals(emptyList<Pair<String, Boolean>>(), completedChanges)
-    }
-
-    @Test
-    fun saveFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
-        show(ready.copy(saveFailure = failure))
-
-        composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
-
-        // A short snackbar shows for 4 seconds.
-        composeTestRule.mainClock.advanceTimeBy(5_000)
-
-        composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
-        assertEquals(listOf(failure), saveFailuresShown)
-    }
-
-    @Test
-    fun noSaveFailure_showsNoMessage() {
-        show(ready)
-
-        composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
     }
 
     @Test

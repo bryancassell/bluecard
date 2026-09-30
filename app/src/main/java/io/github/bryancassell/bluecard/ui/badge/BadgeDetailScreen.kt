@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -25,8 +23,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
-import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -46,25 +42,21 @@ fun BadgeDetailRoute(
         uiState = uiState,
         onOpenRequirement = onOpenRequirement,
         onEditCounselor = onEditCounselor,
-        onCompletedChange = viewModel::setCompleted,
-        onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
 }
 
 /**
  * A badge's summary, whether it's Eagle-required, a link to its official page, the scout's
- * merit badge counselor, and its top-level requirements, which the scout can mark complete.
- * Each requirement opens its own page for the rest, and the counselor is entered on a page of
- * its own, which keeps this one short.
+ * merit badge counselor, and its top-level requirements. Each requirement opens its own page,
+ * where the scout marks it complete, and the counselor is entered on a page of its own, which
+ * keeps this one short.
  */
 @Composable
 fun BadgeDetailScreen(
     uiState: BadgeDetailUiState,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
-    onCompletedChange: (number: String, completed: Boolean) -> Unit,
-    onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -75,14 +67,8 @@ fun BadgeDetailScreen(
         BadgeDetailUiState.Unavailable ->
             ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
 
-        is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
-            BadgeDetails(uiState, onOpenRequirement, onEditCounselor, onCompletedChange)
-            SaveFailedSnackbarHost(
-                failure = uiState.saveFailure,
-                onShown = onSaveFailureShown,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
+        is BadgeDetailUiState.Ready ->
+            BadgeDetails(uiState, onOpenRequirement, onEditCounselor, modifier)
     }
 }
 
@@ -91,9 +77,9 @@ private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
-    onCompletedChange: (number: String, completed: Boolean) -> Unit
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -140,11 +126,7 @@ private fun BadgeDetails(
                 .semantics { heading() }
         )
         uiState.requirements.forEach {
-            RequirementRow(
-                item = it,
-                onOpen = onOpenRequirement,
-                onCompletedChange = onCompletedChange
-            )
+            RequirementRow(item = it, onOpen = onOpenRequirement)
         }
     }
 }
