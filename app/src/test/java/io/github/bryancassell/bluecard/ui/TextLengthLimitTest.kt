@@ -85,6 +85,57 @@ class TextLengthLimitTest {
     }
 
     @Test
+    fun replacementOfABackwardsSelection_isCutAtItsEnd() {
+        // Selected from right to left, as with Shift+Left. (Set in code, since the semantics
+        // action for selecting text always selects left to right.)
+        state.edit {
+            append("a c")
+            selection = TextRange(1, 0)
+        }
+
+        field().performTextInput("a xa")
+
+        assertEquals("a x c", state.text.toString())
+    }
+
+    @Test
+    fun replacementEndingWithTheSelectedText_isCutAtItsEnd() {
+        field().performTextInput("abc")
+        field().performTextInputSelection(TextRange(1, 3))
+
+        field().performTextInput("xyzbc")
+
+        assertEquals("axyzb", state.text.toString())
+    }
+
+    @Test
+    fun replacementEndingLikeTheSelectedText_isCutAtItsEnd() {
+        field().performTextInput("abc")
+        field().performTextInputSelection(TextRange(1, 3))
+
+        // Ends with "c", as does the selected "bc".
+        field().performTextInput("wxyzc")
+
+        assertEquals("awxyz", state.text.toString())
+    }
+
+    @Test
+    fun deletionFromTextAlreadyPastTheLimit_cutsItAtTheLimit() {
+        // Text set in code isn't limited. (Moving the cursor would cut it, so that's set in
+        // code too.)
+        state.edit {
+            append("aaaaaaa")
+            selection = TextRange(3)
+        }
+
+        // Takes out one "a", so the three before the cursor and the four after it still start
+        // and end the text, but overlap.
+        field().performTextReplacement("aaaaaa")
+
+        assertEquals("aaaaa", state.text.toString())
+    }
+
+    @Test
     fun editBeforeTheCursor_keepsTheTextBetweenThem() {
         field().performTextInput("a cd")
 

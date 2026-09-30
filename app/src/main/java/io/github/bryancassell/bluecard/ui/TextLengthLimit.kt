@@ -35,13 +35,22 @@ class TextLengthLimit(private val maxLength: Int) : InputTransformation {
         ) {
             keptAtEnd++
         }
-        // If they overlap, the edit could be at several places, as when a paste starts with
-        // the character after the cursor. Take the one that keeps the text after the replaced
-        // selection whole. An edit away from the selection, such as autocorrect changing the
-        // word before the cursor, is taken as close to the selection as it can be.
-        if (kept + keptAtEnd > shorter) {
-            kept = originalSelection.end.coerceIn(shorter - keptAtEnd, kept)
-            keptAtEnd = shorter - kept
+        // A paste or typing replaces the selection, so if the text before and after the
+        // selection is unchanged, the edit is taken to be there. The text alone can't place an
+        // edit that starts like the text after it or ends like the text it replaced. (What
+        // was before and after the selection can overlap in the new text only when text
+        // already too long loses some away from the selection.)
+        val selection = originalSelection
+        val afterSelection = original.length - selection.max
+        if (kept >= selection.min && keptAtEnd >= afterSelection &&
+            selection.min + afterSelection <= length
+        ) {
+            kept = selection.min
+            keptAtEnd = afterSelection
+        } else {
+            // An edit away from the selection, such as autocorrect changing the word before
+            // the cursor.
+            keptAtEnd = minOf(keptAtEnd, shorter - kept)
         }
         // Cut from the end of what the edit changed, at a boundary between characters.
         val characters = characters()

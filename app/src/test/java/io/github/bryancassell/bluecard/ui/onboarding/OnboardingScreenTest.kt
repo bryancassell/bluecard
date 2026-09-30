@@ -198,8 +198,8 @@ class OnboardingScreenTest {
         assertEquals("Troop 123", unitNumber.text.toString())
     }
 
-    // A pasted line break becomes a space like the one already after the cursor, which the
-    // length limit must not cut instead of the paste's end.
+    // The paste's line break becomes a space, and the length limit cuts the paste's end, not
+    // the space already after the cursor.
     @Test
     fun name_longPasteStartingWithLineBreak_keepsTheWordsAfterItApart() {
         show(OnboardingUiState())
