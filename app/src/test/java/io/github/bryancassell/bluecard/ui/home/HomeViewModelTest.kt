@@ -9,8 +9,11 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
+import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import java.time.LocalDate
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
@@ -83,6 +86,8 @@ class HomeViewModelTest {
 
     private fun ready() = viewModel.uiState.value as HomeUiState.Ready
 
+    private fun idsInProgress() = ready().badgesInProgress.map { it.id }
+
     private suspend fun start(badgeId: String) {
         progressRepository.startBadge(badgeId, version, started)
     }
@@ -145,7 +150,8 @@ class HomeViewModelTest {
                 unitNumber = "123",
                 badges = ProgressCounts(completed = 0, inProgress = 0),
                 eagle = ProgressCounts(completed = 0, inProgress = 0),
-                eagleTotal = 3
+                eagleTotal = 3,
+                badgesInProgress = emptyList()
             ),
             viewModel.uiState.value
         )
@@ -243,6 +249,72 @@ class HomeViewModelTest {
 
         progressRepository.clearAll()
         assertTrue(ready().hasNoProgress)
+    }
+
+    @Test
+    fun badgesInProgress_listsOnlyBadgesInProgress_alphabetically() = runTest {
+        // The catalog lists chess after swimming.
+        start("swimming")
+        start("chess")
+        start("camping")
+        complete("pottery")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("camping", "chess", "swimming"), idsInProgress())
+    }
+
+    @Test
+    fun badgesInProgress_showEachAsOnBadges() = runTest {
+        start("camping")
+        start("chess")
+        start("hiking")
+        startCollecting(viewModel)
+
+        assertEquals(
+            listOf(
+                BadgeListItem(
+                    id = "camping",
+                    name = "camping",
+                    eagle = EagleRequirement.Required,
+                    status = BadgeStatus.InProgress
+                ),
+                BadgeListItem(
+                    id = "chess",
+                    name = "chess",
+                    eagle = null,
+                    status = BadgeStatus.InProgress
+                ),
+                BadgeListItem(
+                    id = "hiking",
+                    name = "hiking",
+                    eagle = EagleRequirement.OneOf(listOf("cycling", "hiking", "swimming")),
+                    status = BadgeStatus.InProgress
+                )
+            ),
+            ready().badgesInProgress
+        )
+    }
+
+    @Test
+    fun badgesInProgress_leavesOutBadgeNotInCatalog() = runTest {
+        start("retired-badge")
+        start("chess")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("chess"), idsInProgress())
+    }
+
+    @Test
+    fun badgesInProgress_updateWhenProgressChanges() = runTest {
+        startCollecting(viewModel)
+        assertEquals(emptyList<String>(), idsInProgress())
+
+        // The first progress on a badge starts it.
+        progressRepository.markRequirementCompleted("chess", "1", day, badgeStart)
+        assertEquals(listOf("chess"), idsInProgress())
+
+        progressRepository.markRequirementCompleted("chess", "2", day, badgeStart)
+        assertEquals(emptyList<String>(), idsInProgress())
     }
 
     @Test

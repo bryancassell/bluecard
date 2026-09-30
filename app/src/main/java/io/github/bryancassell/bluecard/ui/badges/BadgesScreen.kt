@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badges
 
 import android.icu.text.ListFormatter
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.foundation.text.input.then
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -41,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
@@ -51,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
@@ -274,25 +270,4 @@ private fun MatchCount(
             modifier = Modifier.semantics { hideFromAccessibility() }
         )
     }
-}
-
-@Composable
-private fun BadgeRow(badge: BadgeListItem, listFormatter: ListFormatter, onClick: () -> Unit) {
-    val eagle = badge.eagle?.let { eagleRequirementLabel(it, listFormatter) }
-    val status = when (badge.status) {
-        BadgeStatus.NotStarted -> null
-        BadgeStatus.InProgress -> stringResource(R.string.badges_in_progress)
-        BadgeStatus.Completed -> stringResource(R.string.badges_completed)
-    }
-    ListItem(
-        headlineContent = { Text(badge.name) },
-        supportingContent = eagle?.let { { Text(it) } },
-        trailingContent = status?.let { { Text(it) } },
-        // Screen readers announce the row as a button that opens the badge.
-        modifier = Modifier.clickable(
-            onClickLabel = stringResource(R.string.badges_open_badge),
-            role = Role.Button,
-            onClick = onClick
-        )
-    )
 }

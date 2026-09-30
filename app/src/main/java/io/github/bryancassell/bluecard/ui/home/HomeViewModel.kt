@@ -9,6 +9,10 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.status
+import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
+import io.github.bryancassell.bluecard.ui.badges.badgeNameOrder
+import io.github.bryancassell.bluecard.ui.badges.eagleGroups
+import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,7 +21,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
-/** The scout's profile and a summary of their progress, kept up to date as either changes. */
+/**
+ * The scout's profile, a summary of their progress and the badges they have in progress, kept
+ * up to date as the profile or progress changes.
+ */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     profileRepository: ProfileRepository,
@@ -39,7 +46,8 @@ class HomeViewModel @Inject constructor(
             unitNumber = profile.unitNumber,
             badges = statusById.values.counts(),
             eagle = eagle.counts(),
-            eagleTotal = eagle.size
+            eagleTotal = eagle.size,
+            badgesInProgress = badgesInProgress(badges, statusById)
         )
     }.catchLoadFailure(HomeUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
@@ -58,6 +66,24 @@ private fun eagleStatuses(
     val groups = grouped.groupBy { it.eagleGroup }.values
     return single.map { statusById.getValue(it.id) } +
         groups.map { group -> group.maxOf { statusById.getValue(it.id) } }
+}
+
+/** The badges in progress, listed as on Badges. */
+private fun badgesInProgress(
+    badges: List<MeritBadge>,
+    statusById: Map<String, BadgeStatus>
+): List<BadgeListItem> {
+    val eagleGroups = badges.eagleGroups()
+    return badges.filter { statusById.getValue(it.id) == BadgeStatus.InProgress }
+        .sortedWith(badgeNameOrder())
+        .map { badge ->
+            BadgeListItem(
+                id = badge.id,
+                name = badge.name,
+                eagle = badge.eagleRequirement(eagleGroups),
+                status = BadgeStatus.InProgress
+            )
+        }
 }
 
 private fun Collection<BadgeStatus>.counts() = ProgressCounts(
