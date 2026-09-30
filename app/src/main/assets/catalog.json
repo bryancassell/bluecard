@@ -213,7 +213,7 @@
                     },
                     {
                       "number": "9b(2)",
-                      "summary": "Cover 4 miles or more by backpack, snowshoe or cross-country ski."
+                      "summary": "Backpack, snowshoe or cross-country ski at least 4 miles."
                     },
                     {
                       "number": "9b(3)",
@@ -259,7 +259,7 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "Discuss your rights and duties as a citizen of your community."
+              "summary": "Discuss what it takes to be a good citizen in your community."
             },
             {
               "number": "2",
@@ -275,11 +275,11 @@
                     },
                     {
                       "number": "2a(2)",
-                      "summary": "Your nearest hospital, fire station and police station."
+                      "summary": "The nearest fire station, police station and hospital."
                     },
                     {
                       "number": "2a(3)",
-                      "summary": "Parks, trails, playgrounds and other places for recreation."
+                      "summary": "Parks, playgrounds, recreation areas and trails."
                     },
                     {
                       "number": "2a(4)",
@@ -917,7 +917,7 @@
                 },
                 {
                   "number": "4c",
-                  "summary": "Show your counselor your menus and shopping list."
+                  "summary": "Review your plan and shopping list with your counselor."
                 },
                 {
                   "number": "4d",
@@ -947,7 +947,7 @@
                 },
                 {
                   "number": "5c",
-                  "summary": "Show your counselor your camp menus and shopping list."
+                  "summary": "Review your menus and shopping list with your counselor."
                 },
                 {
                   "number": "5d",
@@ -1033,7 +1033,7 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "Say what environmental science means to you and how it helps."
+              "summary": "Explain environmental science in your own words and how it helps."
             },
             {
               "number": "2",
@@ -1060,7 +1060,7 @@
                 },
                 {
                   "number": "3b",
-                  "summary": "Explain the links between air pollution and transportation."
+                  "summary": "Explain how air pollution and transportation affect each other."
                 },
                 {
                   "number": "3c",
@@ -1121,7 +1121,7 @@
                 },
                 {
                   "number": "6c",
-                  "summary": "Visit a project that improves habitat for an at-risk species."
+                  "summary": "Visit a habitat project for a threatened or endangered species."
                 }
               ]
             },
@@ -1354,7 +1354,7 @@
                     },
                     {
                       "number": "2b(2)",
-                      "summary": "Check a unit, home, car or camp kit with your counselor."
+                      "summary": "Inspect a unit, home, vehicle or camp kit with your counselor."
                     }
                   ]
                 }
@@ -1390,11 +1390,11 @@
                 },
                 {
                   "number": "3g",
-                  "summary": "Frostnip, frostbite, immersion foot and ice burns."
+                  "summary": "Immersion foot, frostnip, frostbite and ice burns."
                 },
                 {
                   "number": "3h",
-                  "summary": "Chafing, rope burns and other scrapes."
+                  "summary": "Scrapes such as chafing and rope burns."
                 },
                 {
                   "number": "3i",
@@ -1522,7 +1522,7 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Explain what happens in a heart attack."
+                  "summary": "Explain what a heart attack is."
                 },
                 {
                   "number": "7b",
@@ -1560,7 +1560,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Recognize and treat strains, muscle tears and tendon ruptures."
+                  "summary": "Describe signs of and first aid for strains, tears and ruptures."
                 },
                 {
                   "number": "8c",
@@ -1700,11 +1700,11 @@
                 },
                 {
                   "number": "12c",
-                  "summary": "Warning signs that someone might hurt themselves or others."
+                  "summary": "Signs someone may be a danger to themselves or others."
                 },
                 {
                   "number": "12d",
-                  "summary": "What to do if you see those warning signs."
+                  "summary": "What to do if you think someone may be a danger."
                 }
               ]
             },
@@ -2085,7 +2085,7 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Track what you actually earn, spend and save for those weeks.",
+                  "summary": "Record your actual income, expenses and savings for those weeks.",
                   "tracker": {
                     "columns": [
                       {
