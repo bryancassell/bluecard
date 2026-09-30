@@ -229,6 +229,14 @@ class MainActivityTest {
     private fun completedCheckbox() =
         composeTestRule.onNode(hasText("Completed") and isToggleable())
 
+    // Opens the requirement with this summary, marks it complete on its page, and goes back.
+    private fun completeOnItsPage(summary: String) {
+        composeTestRule.onNodeWithText(summary).performClick()
+        completedCheckbox().performClick()
+        composeTestRule.waitForIdle()
+        pressBack()
+    }
+
     private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
         .first()?.requirements?.singleOrNull { it.requirementNumber == number }
 
@@ -549,17 +557,11 @@ class MainActivityTest {
     @Test
     fun completingEnoughRequirements_completesTheBadge() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performClick()
-        completedCheckbox().performClick()
-        composeTestRule.waitForIdle()
-        pressBack()
+        completeOnItsPage("First.")
         composeTestRule.onNodeWithText("Second.").performClick()
 
         // Requirement 2 needs one of its two choices.
-        composeTestRule.onNodeWithText("Choice A.").performClick()
-        completedCheckbox().performClick()
-        composeTestRule.waitForIdle()
-        pressBack()
+        completeOnItsPage("Choice A.")
 
         composeTestRule.onNode(hasText("Choice A.") and hasContentDescription("Completed"))
             .assertIsDisplayed()

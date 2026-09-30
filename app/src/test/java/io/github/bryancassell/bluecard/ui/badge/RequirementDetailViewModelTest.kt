@@ -381,6 +381,21 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun setCompleted_onBadgeStartedOnOlderVersion_keepsThatVersion() = runTest {
+        progressRepository.startBadge("camping", older, started)
+        val viewModel = viewModel("2a")
+        startCollecting(viewModel)
+
+        viewModel.setCompleted(true)
+
+        assertEquals(
+            BadgeProgress("camping", older, started),
+            progressRepository.observeProgress("camping").first()!!.badge
+        )
+        assertTrue(viewModel.ready().requirement.completed)
+    }
+
+    @Test
     fun setCompleted_false_undoesItAndRemovesDate() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
@@ -630,6 +645,9 @@ class RequirementDetailViewModelTest {
         val failure = viewModel.ready().saveFailure
         assertNotNull(failure)
         assertFalse(viewModel.ready().requirement.completed)
+        // Starting the badge failed with the rest.
+        progressRepository.failSaves = false
+        assertNull(progressRepository.observeProgress("camping").first())
 
         viewModel.onSaveFailureShown(failure!!)
 

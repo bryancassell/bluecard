@@ -7,8 +7,8 @@ import io.github.bryancassell.bluecard.data.progress.completion
 
 /**
  * One requirement as a row: its number, our summary, whether it's complete, and how much of
- * its tracker is filled in. Every row opens the requirement's own page, for its
- * sub-requirements, completion date, comment and tracker.
+ * its tracker is filled in. Every row opens the requirement's own page, for marking it
+ * complete and for its sub-requirements, completion date, comment and tracker.
  */
 data class RequirementItem(
     val number: String,
@@ -18,7 +18,7 @@ data class RequirementItem(
     val completed: Boolean,
     /**
      * Whether it has sub-requirements, which decide whether it's complete. One without them
-     * is marked complete by the scout, with a checkbox on its row.
+     * is marked complete by the scout, on its own page.
      */
     val hasSubRequirements: Boolean,
     /** How much of its tracker is filled in, or null if it has none. */

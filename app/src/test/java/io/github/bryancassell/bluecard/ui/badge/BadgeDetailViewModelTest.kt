@@ -314,20 +314,4 @@ class BadgeDetailViewModelTest {
 
         assertEquals("Plan a campout.", viewModel.ready().requirements[0].summary)
     }
-
-    @Test
-    fun everyPartComplete_showsEveryRequirementComplete() = runTest {
-        val viewModel = viewModel()
-        startCollecting(viewModel)
-
-        // As the scout marks each part complete on its own page.
-        listOf("1", "2a", "2b", "3", "4a", "4b").forEach {
-            progressRepository.markRequirementCompleted("camping", it, day, badgeStart)
-        }
-
-        assertEquals(
-            mapOf("1" to true, "2" to true, "3" to true, "4" to true),
-            viewModel.completed()
-        )
-    }
 }

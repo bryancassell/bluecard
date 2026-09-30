@@ -645,8 +645,9 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     the scout can pick another date there or remove it. Dates after today can't
     be picked. Unchecking removes the date and keeps the comment, but the page
     remembers the date until it closes: checking the requirement again on that
-    page brings the date back, so a mistaken tap loses nothing. A date change applies only to a completed requirement, so
-    one that lands just after an uncheck can't complete it again.
+    page brings the date back, so a mistaken tap loses nothing. A date change
+    applies only to a completed requirement, so one that lands just after an
+    uncheck can't complete it again.
   - **Comments.** Every requirement can have one, including one with
     sub-requirements, for notes about it as a whole. The page's comment field is
     saved when the scout taps Save, which is enabled once the field differs from

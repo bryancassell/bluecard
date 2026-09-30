@@ -224,11 +224,13 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
     }
 
+    // No checkbox for the requirement or on its sub-requirements' rows: the scout marks each
+    // sub-requirement complete on its own page.
     @Test
     fun requirementWithSubRequirements_hasNoCheckboxOrDate() {
         show(ready)
 
-        composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
+        composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
         composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
     }
 
@@ -241,14 +243,6 @@ class RequirementDetailScreenTest {
         row(
             "Lead one hike."
         ).assert(hasText("Do 1 of 2")).assert(!hasContentDescription("Completed"))
-    }
-
-    // The scout marks a sub-requirement complete on its own page.
-    @Test
-    fun subRequirements_haveNoCheckbox() {
-        show(ready)
-
-        composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
