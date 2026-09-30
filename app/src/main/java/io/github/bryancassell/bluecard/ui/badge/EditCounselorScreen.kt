@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LineBreaksToSpaces
+import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -195,8 +195,9 @@ private fun CounselorField(
         state = state,
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(label)) },
-        // Each field is one line, so a pasted line break mustn't reach its text.
-        inputTransformation = LineBreaksToSpaces.then(lengthLimit),
+        // Each field is one line, so a pasted line break mustn't reach its text. After the
+        // limit, as LineBreaksAsSpaces explains.
+        inputTransformation = lengthLimit.then(LineBreaksAsSpaces),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = keyboardOptions,
         modifier = Modifier.fillMaxWidth()

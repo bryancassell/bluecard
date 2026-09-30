@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -21,6 +22,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.paragraphDirection
@@ -149,6 +152,75 @@ class OnboardingScreenTest {
 
         assertEquals("123", unitNumber.text.toString())
         assertEquals("", name.text.toString())
+    }
+
+    @Test
+    fun name_trimsTextPast100Characters() {
+        show(OnboardingUiState())
+        field("Name").performTextInput("a".repeat(90))
+
+        // As when pasting.
+        field("Name").performTextInput("b".repeat(20))
+
+        assertEquals("a".repeat(90) + "b".repeat(10), name.text.toString())
+        field("Name").assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 100))
+    }
+
+    @Test
+    fun unitNumber_trimsTextPast20Characters() {
+        show(OnboardingUiState())
+        field("Unit number").performTextInput("1".repeat(15))
+
+        // As when pasting.
+        field("Unit number").performTextInput("2".repeat(10))
+
+        assertEquals("1".repeat(15) + "2".repeat(5), unitNumber.text.toString())
+        field("Unit number")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 20))
+    }
+
+    // A single-line field shows a pasted line break as a space, so it's saved as one.
+    @Test
+    fun name_pastedLineBreak_becomesSpace() {
+        show(OnboardingUiState())
+
+        field("Name").performTextInput("Alex\nScout")
+
+        assertEquals("Alex Scout", name.text.toString())
+    }
+
+    @Test
+    fun unitNumber_pastedLineBreak_becomesSpace() {
+        show(OnboardingUiState())
+
+        field("Unit number").performTextInput("Troop\r\n123")
+
+        assertEquals("Troop 123", unitNumber.text.toString())
+    }
+
+    // The length limit finds what a paste changed before its line breaks become spaces.
+    // Otherwise a pasted line break, a space by then, would look like the space already after
+    // the cursor, and the limit would cut that space instead of the paste's end.
+    @Test
+    fun name_longPasteStartingWithLineBreak_keepsTheWordsAfterItApart() {
+        show(OnboardingUiState())
+        field("Name").performTextInput("A".repeat(89) + " Scout")
+        field("Name").performTextInputSelection(TextRange(89))
+
+        field("Name").performTextInput("\nJunior Assistant")
+
+        assertEquals("A".repeat(89) + " Juni Scout", name.text.toString())
+    }
+
+    @Test
+    fun unitNumber_longPasteStartingWithLineBreak_keepsTheWordsAfterItApart() {
+        show(OnboardingUiState())
+        field("Unit number").performTextInput("1".repeat(14) + " B")
+        field("Unit number").performTextInputSelection(TextRange(14))
+
+        field("Unit number").performTextInput("\n234567")
+
+        assertEquals("1".repeat(14) + " 234 B", unitNumber.text.toString())
     }
 
     @Test

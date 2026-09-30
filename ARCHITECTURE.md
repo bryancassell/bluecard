@@ -211,27 +211,44 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
   the back stack, so a change made after that isn't kept. (Copying the text
-  into `SavedStateHandle` had the same limit.) Navigation 3 also gives every
-  screen's `SavedStateHandle` the extras of the intent that opened the app as
-  default arguments, so `restoredText` ignores any value under its key that
-  isn't the kind of `Bundle` it keeps. An extra built like one still counts;
-  [#83](https://github.com/bryancassell/bluecard/issues/83) keeps the extras
-  out. `StoredTextFields` keeps a page's fields only once the stored text has
-  loaded into them (`loadOnce`), so if the system stops the app before then,
-  the page loads the stored text again instead of restoring empty fields. It
-  keeps and restores the fields together. It writes the stored text in a
+  into `SavedStateHandle` had the same limit.) `restoredText` ignores any value
+  under its key that isn't the kind of `Bundle` it keeps, as a backstop for the
+  extras of the intent that opened the app (see Navigation). `StoredTextFields`
+  keeps a page's fields only once the stored text has loaded into them
+  (`loadOnce`), so if the system stops the app before then, the page loads the
+  stored text again instead of restoring empty fields. It keeps and restores
+  the fields together. It writes the stored text in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
-  snapshot, which it does once a frame. Saved state has a size limit, so Badges
-  search, the requirement comment and the counselor's fields have a length
-  limit (`TextLengthLimit`);
-  Onboarding's fields don't have one yet. It keeps as much of an edit, such as
-  a long paste, as fits, and never cuts the text already in the field or splits
-  an emoji.
+  snapshot, which it does once a frame. Saved state has a size limit, so every
+  text field has a length limit (`TextLengthLimit`): 100 characters for
+  Onboarding's name, Badges search and the counselor's name, 20 for the unit
+  number, 50 for the counselor's phone, 254 for their email and 2,000 for the
+  requirement comment. It keeps as much of an edit, such as a long paste, as
+  fits, and never cuts the text already in the field or splits an emoji. A
+  single-line field keeps a pasted line break in its text but doesn't show one,
+  so the single-line fields (Onboarding's, Badges search and the counselor's)
+  also replace each line break with a space (`LineBreaksAsSpaces`). That runs after the length
+  limit, so the limit cuts a huge paste before it's scanned, and finds the edit
+  before a pasted line break becomes a space it could mistake for one already in
+  the field.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+  - **Screens' `SavedStateHandle`s don't start with the launching intent's
+    extras.** `ComponentActivity` gives them to ViewModels as default
+    arguments, and Navigation 3 passes the activity's defaults on to every
+    screen. `MainActivity` is exported, so any app could fill a screen's saved
+    state, such as the requirement comment, with an extra of the same name.
+    BlueCard uses neither intent extras nor default arguments, so `MainActivity`
+    overrides `defaultViewModelCreationExtras` to leave the default arguments
+    empty ([#83](https://github.com/bryancassell/bluecard/issues/83)). That
+    covers every ViewModel created with the activity's creation extras, as
+    Hilt and Navigation 3 create them, including those scoped to the activity.
+    The activity's default factory still passes the extras to a ViewModel
+    created without creation extras. BlueCard creates none that way, and
+    overriding the factory would replace Hilt's.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens
@@ -624,9 +641,7 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     drops empty ones; with none left, the counselor is removed. There's no
     format check: a phone number or email address that's wrong opens its app
     with what the scout typed. Each field is one line, and a line break pasted
-    into one becomes a space (`LineBreaksToSpaces`): `TextFieldLineLimits.SingleLine`
-    only draws it as a space, and the text would keep it. Onboarding's fields and
-    Badges search don't do this yet ([#90](https://github.com/bryancassell/bluecard/issues/90)).
+    into one becomes a space (`LineBreaksAsSpaces`, see UI layer).
     Once the save succeeds, the ViewModel sets
     `saved` in the UI state and the screen closes itself
     (`closeIfOnTop`, which does nothing if the scout has already gone back),
