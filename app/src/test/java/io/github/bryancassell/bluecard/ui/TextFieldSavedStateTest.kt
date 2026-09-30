@@ -40,6 +40,13 @@ class TextFieldSavedStateTest {
 
     private val stored = mapOf("name" to "Pat Lee", "phone" to null)
 
+    /** Keeps only a name field, so a restored StoredFieldsViewModel finds only "name" kept. */
+    private class NameKeptAloneViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
+        init {
+            savedStateHandle.keepText("name", TextFieldState("Kept alone"))
+        }
+    }
+
     @Test
     fun textFieldState_withNothingKept_startsEmpty() {
         viewModelScenario { FieldViewModel(createSavedStateHandle()) }.use { scenario ->
@@ -172,6 +179,29 @@ class TextFieldSavedStateTest {
             scenario.recreate()
             val restored = scenario.viewModel
             assertEquals("", restored.name.text.toString())
+            restored.fields.loadOnce { stored }
+
+            assertEquals("Pat Lee", restored.name.text.toString())
+        }
+    }
+
+    @Test
+    fun storedTextFields_withOnlySomeKept_loadTheStoredTextIntoAll() {
+        // They're kept together, so one kept without the others isn't trusted.
+        var restoring = false
+        viewModelScenario<ViewModel> {
+            if (restoring) {
+                StoredFieldsViewModel(createSavedStateHandle())
+            } else {
+                NameKeptAloneViewModel(createSavedStateHandle())
+            }
+        }.use { scenario ->
+            // Created when first read.
+            scenario.viewModel
+            restoring = true
+
+            scenario.recreate()
+            val restored = scenario.viewModel as StoredFieldsViewModel
             restored.fields.loadOnce { stored }
 
             assertEquals("Pat Lee", restored.name.text.toString())

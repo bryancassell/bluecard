@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.hasImeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -22,6 +23,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.paragraphDirection
@@ -136,6 +138,15 @@ class EditCounselorScreenTest {
         field("Email").assertIsFocused()
     }
 
+    @Test
+    fun keyboardAction_isNextUntilTheLastField_thenDone() {
+        show(ready)
+
+        field("Name").assert(hasImeAction(ImeAction.Next))
+        field("Phone").assert(hasImeAction(ImeAction.Next))
+        field("Email").assert(hasImeAction(ImeAction.Done))
+    }
+
     // The layout is left-to-right, like the English strings, but a name typed in Persian reads
     // right-to-left, with its final period at its end.
     @Test
@@ -220,9 +231,10 @@ class EditCounselorScreenTest {
         }
         assertEquals(0, closes)
 
-        uiState = ready.copy(saved = true)
+        // Saved before the saved counselor arrives from the database, which then changes the
+        // state again without closing the page again.
+        uiState = ready.copy(changed = true, saved = true)
         composeTestRule.waitForIdle()
-        // The saved counselor arriving from the database doesn't close it again.
         uiState = ready.copy(changed = false, saved = true)
         composeTestRule.waitForIdle()
 
