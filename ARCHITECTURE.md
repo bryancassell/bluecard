@@ -263,19 +263,25 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ([#104](https://github.com/bryancassell/bluecard/issues/104)).
   - **Opening a page:** it slides in from the end, and the page it leaves
     slides out toward the start.
-  - **Back, and a back swipe from either edge:** the closing page slides out
-    toward the end, and the page returned to follows it in from the start. The
-    pages never overlap, so neither fades.
-  - **Slides take 450 ms with `fast_out_extra_slow_in`,** Material's
-    emphasized easing. Compose's `PathEasing` would draw that path, but it
-    needs a native library that Robolectric can't load, so the path's two
-    cubic curves are each a `CubicBezierEasing`.
-  - **A back swipe moves the pages with the finger.** Its slide is linear, and
-    `NavDisplay` eases the rest of the way once the swipe is released. It
-    doesn't shrink the page, as the
-    [predictive back guide](https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back)
-    (to 90%) and the platform's own swipe back between activities
-    (`DefaultCrossActivityBackAnimation`) do. The shrink looks strange here.
+  - **Back, and a released back swipe from either edge:** the closing page
+    slides out toward the end, and the page returned to follows it in from the
+    start. The pages never overlap, so neither fades.
+  - **Slides take 450 ms with `FastOutSlowInEasing`,** the easing `tween`
+    uses by default. The platform's activity slides use Material's emphasized
+    easing (`fast_out_extra_slow_in`), which moves a full-width slide 90% of
+    the way in its first 170 ms, at up to 9dp per millisecond (77dp a frame at
+    120 Hz). On a Pixel 9, opening a page felt too fast, and a dropped frame
+    showed as a jump. `FastOutSlowInEasing` peaks at about 2.5dp per
+    millisecond.
+  - **A back swipe doesn't move the pages; releasing it plays Back's slide.**
+    A `BackHandler` after `NavDisplay` takes the gesture: the navigationevent
+    library gives a gesture to the enabled handler registered last, so
+    `NavDisplay`'s never gets its progress. The handler is off whenever
+    `NavDisplay`'s is, on Home and Onboarding, so the system's back-to-home
+    animation still plays there. This gives up the peek at the page underneath
+    that predictive back offers. When the pages followed the finger,
+    `NavDisplay` finished a released swipe with a tween from rest, ignoring the
+    finger's speed, and on a Pixel 9 that felt slow beside opening a page.
   - **The slides mirror in a right-to-left layout** (`SlideDirection.Start`
     and `End`).
   - **Pages are clipped to their area** (`clipToBounds` on `NavDisplay`).
@@ -863,7 +869,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Architecture | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | Modules | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | Navigation | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
-| Page transitions | Full-width slides, side by side, as Navigation 3's animation guide shows, with Material's emphasized easing; mirrored right-to-left; clipped to the pages' area; a back swipe from either edge plays Back's slide linearly, without shrinking the page | Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) looked strange. Material 3 advises the platform's 96dp slides, but on a Pixel 9 they felt too short, and a back swipe that faded or didn't slide looked bad. A linear swipe keeps the pages under the finger |
+| Page transitions | Full-width slides, side by side, as Navigation 3's animation guide shows, with `FastOutSlowInEasing`; mirrored right-to-left; clipped to the pages' area; a back swipe from either edge doesn't move the pages, and plays Back's slide once released | Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) looked strange. Material 3 advises the platform's 96dp slides, but on a Pixel 9 they felt too short, and a back swipe that faded or didn't slide looked bad. Emphasized easing made a full-width slide too fast, and a finished swipe too slow beside it |
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |

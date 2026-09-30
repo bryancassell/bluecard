@@ -13,15 +13,14 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Checks the easing, and the slides in a real NavDisplay laid out right-to-left. MainActivityTest
- * checks them left-to-right, the only direction the app's strings lay out in so far.
+ * Checks the slides in a real NavDisplay laid out right-to-left. MainActivityTest checks them
+ * left-to-right, the only direction the app's strings lay out in so far.
  */
 @RunWith(AndroidJUnit4::class)
 class PageTransitionsTest {
@@ -29,24 +28,6 @@ class PageTransitionsTest {
     val composeTestRule = createComposeRule()
 
     private val backStack = mutableStateListOf<NavKey>(Home)
-
-    @Test
-    fun easing_followsThePlatformPath() {
-        // Points on the path in PageTransitions.kt, found by solving its two curves directly.
-        val points = mapOf(
-            0f to 0f,
-            0.05f to 0.02061f,
-            0.1f to 0.09348f,
-            0.166666f to 0.4f,
-            0.25f to 0.77283f,
-            0.5f to 0.95061f,
-            0.75f to 0.9914f,
-            1f to 1f
-        )
-        for ((x, y) in points) {
-            assertEquals("at $x", y, FastOutExtraSlowInEasing.transform(x), 0.001f)
-        }
-    }
 
     private fun launchRightToLeft() {
         composeTestRule.setContent {

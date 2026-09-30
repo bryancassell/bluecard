@@ -1076,32 +1076,32 @@ class MainActivityTest {
     private fun meritBadgesButton() =
         composeTestRule.onNode(hasText("Merit badges") and hasClickAction())
 
-    /**
-     * Checks that halfway through a back swipe, the pages have moved half the width of the
-     * screen: linearly, with the finger. Home's start half is clipped off, so compare its
-     * button's end.
-     */
-    private fun assertPagesMovedHalfway(badgesAtRest: DpRect, homeButtonAtRest: DpRect) {
-        val half = composeTestRule.onRoot().getBoundsInRoot().width / 2
-        val badgesMoving = campingRow().getBoundsInRoot()
-        val homeButtonMoving = meritBadgesButton().getBoundsInRoot()
-
-        assertEquals((badgesAtRest.left + half).value, badgesMoving.left.value, 1f)
-        assertEquals((homeButtonAtRest.right - half).value, homeButtonMoving.right.value, 1f)
-        // Not shrunk, as Navigation 3's default does.
-        assertEquals(badgesAtRest.height, badgesMoving.height)
+    /** Checks that a back swipe held halfway hasn't moved Badges, or started drawing Home. */
+    private fun assertPagesNotMoved(badgesAtRest: DpRect) {
+        assertEquals(badgesAtRest, campingRow().getBoundsInRoot())
+        home().assertDoesNotExist()
     }
 
     @Test
-    fun backGesture_movesThePagesWithTheFinger() {
+    fun backGesture_doesNotMoveThePages() {
         launchWithProfile()
-        val homeButtonAtRest = meritBadgesButton().getBoundsInRoot()
         meritBadgesButton().performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
         swipeHalfwayBack()
 
-        assertPagesMovedHalfway(badgesAtRest, homeButtonAtRest)
+        assertPagesNotMoved(badgesAtRest)
+    }
+
+    @Test
+    fun backGesture_fromTheRightEdge_doesNotMoveThePagesEither() {
+        launchWithProfile()
+        meritBadgesButton().performClick()
+        val badgesAtRest = campingRow().getBoundsInRoot()
+
+        swipeHalfwayBack(NavigationEvent.EDGE_RIGHT)
+
+        assertPagesNotMoved(badgesAtRest)
     }
 
     @Test
@@ -1118,29 +1118,26 @@ class MainActivityTest {
     }
 
     @Test
-    fun backGesture_released_finishesOnThePreviousPage() {
+    fun backGesture_released_slidesToThePreviousPageAsBackDoes() {
         launchWithProfile()
         val homeAtRest = home().getBoundsInRoot()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
-        campingRow().assertIsDisplayed()
-
-        val gesture = swipeHalfwayBack()
-        scenario.onActivity { gesture.backCompleted() }
-
-        assertEquals(homeAtRest, home().getBoundsInRoot())
-        campingRow().assertDoesNotExist()
-    }
-
-    @Test
-    fun backGesture_fromTheRightEdge_movesThePagesTheSameWay() {
-        launchWithProfile()
-        val homeButtonAtRest = meritBadgesButton().getBoundsInRoot()
         meritBadgesButton().performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
-        swipeHalfwayBack(NavigationEvent.EDGE_RIGHT)
+        val gesture = swipeHalfwayBack()
+        composeTestRule.mainClock.autoAdvance = false
+        scenario.onActivity { gesture.backCompleted() }
+        // Hand the back stack change to Compose; see tap_onClosingScreenAfterBack_doesNothing.
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        val badgesMoving = campingRow().getBoundsInRoot()
+        val homeMoving = home().getBoundsInRoot()
+        composeTestRule.mainClock.autoAdvance = true
 
-        assertPagesMovedHalfway(badgesAtRest, homeButtonAtRest)
+        assertTrue(badgesMoving.left > badgesAtRest.left)
+        assertTrue(homeMoving.left < homeAtRest.left)
+        assertEquals(homeAtRest, home().getBoundsInRoot())
+        campingRow().assertDoesNotExist()
     }
 
     // Pages are laid out inside the system bars' insets, so a page sliding past the side of

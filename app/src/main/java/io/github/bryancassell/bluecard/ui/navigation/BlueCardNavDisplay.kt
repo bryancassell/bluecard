@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -61,8 +62,6 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         ),
         transitionSpec = { openPage() },
         popTransitionSpec = { closePage() },
-        // A back swipe from either edge plays Back's slide, without the default's shrink.
-        predictivePopTransitionSpec = { swipeBackPage() },
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.
         entryProvider = entryProvider {
@@ -121,4 +120,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             entry<DataManagement> { DataManagementScreen() }
         }.also { entries = it }
     )
+    // A back swipe doesn't move the pages; releasing it plays Back's slide. Back handlers
+    // registered later go first, so this one, added after NavDisplay's, takes the swipe's
+    // progress from it. It's off whenever NavDisplay's is, so Home and Onboarding keep the
+    // system's back-to-home animation.
+    BackHandler(enabled = shownBackStack.size > 1) { backStack.removeLastOrNull() }
 }
