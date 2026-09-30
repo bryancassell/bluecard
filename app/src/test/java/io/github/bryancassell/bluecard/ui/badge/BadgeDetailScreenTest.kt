@@ -270,10 +270,12 @@ class BadgeDetailScreenTest {
     }
 
     // All three controls share one guard, so a quick tap on another control, before the first
-    // app covers BlueCard, doesn't open a second app.
+    // app covers BlueCard, doesn't open a second app. The clock is stopped, so the taps all
+    // come within the double-tap timeout.
     @Test
     fun officialLink_thenCounselorPhoneAndEmail_opensOnlyBrowser() {
         show(ready.copy(counselor = counselor))
+        composeTestRule.mainClock.autoAdvance = false
 
         composeTestRule.onNodeWithText("Official requirements").performClick()
         composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().performClick()

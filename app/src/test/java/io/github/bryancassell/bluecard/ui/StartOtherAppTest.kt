@@ -2,8 +2,7 @@ package io.github.bryancassell.bluecard.ui
 
 import android.app.Application
 import android.content.Intent
-import android.view.View
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
@@ -14,14 +13,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.shadow.api.Shadow
 import org.robolectric.shadows.ShadowToast
-import org.robolectric.shadows.ShadowViewRootImpl
 
 /**
  * [rememberStartOtherApp], with Robolectric, which records the activities started and the
- * toasts shown. The other app never really opens, so the tests change the window's focus as
- * the platform does when it covers BlueCard and when the scout comes back.
+ * toasts shown. The test clock is stopped, so each test moves it past the double-tap timeout
+ * itself.
  */
 @RunWith(AndroidJUnit4::class)
 class StartOtherAppTest {
@@ -33,24 +30,21 @@ class StartOtherAppTest {
     private val noApp = "No app on this phone can open the link."
 
     private lateinit var startOtherApp: (Intent, String) -> Unit
-    private lateinit var view: View
+    private var doubleTapTimeoutMillis = 0L
 
     private fun show() {
+        composeTestRule.mainClock.autoAdvance = false
         composeTestRule.setContent {
-            view = LocalView.current
+            doubleTapTimeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
             startOtherApp = rememberStartOtherApp()
         }
     }
 
     private fun start() = composeTestRule.runOnIdle { startOtherApp(link, noApp) }
 
-    private fun startedActivity(): Intent? = shadowOf(application).nextStartedActivity
-
-    private fun setWindowFocused(focused: Boolean) {
-        composeTestRule.runOnIdle {
-            Shadow.extract<ShadowViewRootImpl>(view.rootView.parent)
-                .callWindowFocusChanged(focused)
-        }
+    private fun assertStartedOnce() {
+        assertEquals(link.dataString, shadowOf(application).nextStartedActivity?.dataString)
+        assertNull(shadowOf(application).nextStartedActivity)
     }
 
     @Test
@@ -59,52 +53,51 @@ class StartOtherAppTest {
 
         start()
 
-        assertEquals(link.dataString, startedActivity()?.dataString)
+        assertStartedOnce()
     }
 
     @Test
-    fun secondStart_whileTheAppOpens_isIgnored() {
+    fun secondStart_withinTheDoubleTapTimeout_isIgnored() {
         show()
 
         start()
-        start()
-        // The other app has taken focus, but BlueCard can still be under the finger.
-        setWindowFocused(false)
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeoutMillis / 2)
         start()
 
-        assertEquals(link.dataString, startedActivity()?.dataString)
-        assertNull(startedActivity())
+        assertStartedOnce()
     }
 
     @Test
-    fun start_afterComingBackToBlueCard_startsTheAppAgain() {
+    fun start_afterTheDoubleTapTimeout_startsTheAppAgain() {
         show()
         start()
-        startedActivity()
+        assertStartedOnce()
 
-        setWindowFocused(false)
-        setWindowFocused(true)
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeoutMillis)
         start()
 
-        assertEquals(link.dataString, startedActivity()?.dataString)
+        assertStartedOnce()
     }
 
     @Test
-    fun start_withNoApp_showsMessage_andTheNextStartTriesAgain() {
+    fun doubleStart_withNoApp_showsMessageOnce_andTheNextStartTriesAgain() {
         show()
         // Starting an activity nothing can handle now fails, as when parental controls block
         // the browser.
         shadowOf(application).checkActivities(true)
 
         start()
+        start()
 
         assertEquals(noApp, ShadowToast.getTextOfLatestToast())
-        assertNull(startedActivity())
+        assertEquals(1, ShadowToast.shownToastCount())
+        assertNull(shadowOf(application).nextStartedActivity)
 
         // An app that can open it, such as one the scout has just installed.
         shadowOf(application).checkActivities(false)
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeoutMillis)
         start()
 
-        assertEquals(link.dataString, startedActivity()?.dataString)
+        assertStartedOnce()
     }
 }

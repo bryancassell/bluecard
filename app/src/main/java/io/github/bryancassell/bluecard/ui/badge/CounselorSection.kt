@@ -48,26 +48,26 @@ fun CounselorSection(
         counselor?.name?.let { CounselorItem(R.drawable.ic_person, it) }
         counselor?.phone?.let {
             // ACTION_DIAL fills in the number without calling it, so it needs no permission.
+            val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null))
+            val noApp = stringResource(R.string.badge_detail_no_phone_app)
             ContactItem(
                 icon = R.drawable.ic_call,
                 text = it,
-                intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null)),
                 onClickLabel = stringResource(R.string.badge_detail_call_counselor),
-                noApp = stringResource(R.string.badge_detail_no_phone_app),
-                startOtherApp = startOtherApp
+                onClick = { startOtherApp(intent, noApp) }
             )
         }
         counselor?.email?.let {
             // Only email apps handle ACTION_SENDTO with a mailto: address. It keeps @ and + as
             // they are, since some apps show the address as the link spells it, and encodes
             // anything that would change the link, such as ? or #.
+            val intent = Intent(Intent.ACTION_SENDTO, "mailto:${Uri.encode(it, "@+")}".toUri())
+            val noApp = stringResource(R.string.badge_detail_no_email_app)
             ContactItem(
                 icon = R.drawable.ic_email,
                 text = it,
-                intent = Intent(Intent.ACTION_SENDTO, "mailto:${Uri.encode(it, "@+")}".toUri()),
                 onClickLabel = stringResource(R.string.badge_detail_email_counselor),
-                noApp = stringResource(R.string.badge_detail_no_email_app),
-                startOtherApp = startOtherApp
+                onClick = { startOtherApp(intent, noApp) }
             )
         }
         // Lines the button's text up with the heading's.
@@ -92,26 +92,23 @@ private fun CounselorItem(@DrawableRes icon: Int, text: String, modifier: Modifi
     )
 }
 
-/**
- * A way to reach the counselor, which starts [intent] with [startOtherApp] when tapped, or says
- * [noApp] if no app can handle it.
- */
+/** A way to reach the counselor, which opens another app with [onClick] when tapped. */
 @Composable
 private fun ContactItem(
     @DrawableRes icon: Int,
     text: String,
-    intent: Intent,
     onClickLabel: String,
-    noApp: String,
-    startOtherApp: (intent: Intent, noApp: String) -> Unit
+    onClick: () -> Unit
 ) {
     CounselorItem(
         icon = icon,
         text = text,
         // ListItem reads as one item to screen readers, announced as a button that does
         // onClickLabel.
-        modifier = Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button) {
-            startOtherApp(intent, noApp)
-        }
+        modifier = Modifier.clickable(
+            onClickLabel = onClickLabel,
+            role = Role.Button,
+            onClick = onClick
+        )
     )
 }

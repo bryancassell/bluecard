@@ -300,13 +300,18 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   double tap can reach the control, and a browser could open two tabs, or an
   email app two drafts
   ([#97](https://github.com/bryancassell/bluecard/issues/97)).
-  - **Once it has started an app, it ignores taps until BlueCard's window has
-    focus again**, as when the scout comes back. It waits for window focus
-    (`LocalWindowInfo.isWindowFocused`) rather than `ON_RESUME`: in desktop
-    windows, the other app opens in a window of its own, and BlueCard stays
-    resumed beside it, so the controls would stay locked while it's in view.
-  - **A tap that finds no app doesn't count.** It shows a message, and the next
-    tap tries again.
+  - **After a tap, all three ignore taps for the double-tap timeout** (300 ms),
+    as a screen animating in does. A tap that finds no app counts too, so a
+    double tap shows its message once, and the next tap tries again.
+  - **It doesn't wait for the scout to come back from the other app.** Some
+    starts never take BlueCard's place, such as one that screen pinning blocks,
+    which doesn't throw, so waiting for BlueCard's window to get focus back, or
+    for `ON_RESUME`, could leave the controls locked. It would also misfire in
+    desktop windows, where the tap that focuses BlueCard's window can arrive
+    before the focus does. A tap more than 300 ms later can still reach
+    BlueCard while the other app opens. But on an Android 37 emulator, Android
+    stopped sending touches to BlueCard once it paused, 120–160 ms after the
+    first tap.
   - **The link starts the browser with `ACTION_VIEW`**, as Compose's
     `UriHandler` does, so all three handle "no app" the same way.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
