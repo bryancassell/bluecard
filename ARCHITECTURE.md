@@ -406,7 +406,10 @@ ViewModels scoped to the navigation back stack; BlueCard will have both. Hilt
 modules bind each repository interface to its implementation and provide the
 Room database, DataStore, a coroutine dispatcher, an app-lifetime
 `CoroutineScope` (`@ApplicationScope`) and a `Clock` for today's date (the
-dispatcher and clock injected so tests can replace them).
+dispatcher and clock injected so tests can replace them). The clock reads the
+device's time zone each time it's read, not once when it's made, so "today"
+follows a time zone change on pages that are already open
+([#79](https://github.com/bryancassell/bluecard/issues/79)).
 
 ### Package layout
 
