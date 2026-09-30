@@ -8,12 +8,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.ui.SaveFailure
-import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
-import java.time.Clock
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -25,21 +22,16 @@ import kotlinx.coroutines.flow.stateIn
 class BadgeDetailViewModel @AssistedInject constructor(
     @Assisted badgeId: String,
     catalogRepository: CatalogRepository,
-    progressRepository: ProgressRepository,
-    clock: Clock
+    progressRepository: ProgressRepository
 ) : ViewModel() {
-    private val saves = SaveRunner(viewModelScope)
-    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
-
     val uiState: StateFlow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
             val catalog = catalogRepository.getBadges()
             emit(catalog to catalog.eagleGroups())
         },
-        progressRepository.observeProgress(badgeId),
-        saves.failure
-    ) { (catalog, eagleGroups), progress, saveFailure ->
+        progressRepository.observeProgress(badgeId)
+    ) { (catalog, eagleGroups), progress ->
         val found = catalog.badgeRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.badge
@@ -49,21 +41,10 @@ class BadgeDetailViewModel @AssistedInject constructor(
             eagle = badge.eagleRequirement(eagleGroups),
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map(found::item),
-            counselor = progress?.badge?.counselor,
-            saveFailure = saveFailure
+            counselor = progress?.badge?.counselor
         )
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
-
-    /** Marks requirement [number], one without sub-requirements, completed or not. */
-    fun setCompleted(number: String, completed: Boolean) {
-        saves.launch { recorder.setCompleted(number, completed) }
-    }
-
-    /** The scout has been told about [failure]. */
-    fun onSaveFailureShown(failure: SaveFailure) {
-        saves.onShown(failure)
-    }
 
     @AssistedFactory
     interface Factory {

@@ -10,7 +10,6 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -225,10 +224,6 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Merit badges").performClick()
         composeTestRule.onNodeWithText("Camping").performClick()
     }
-
-    // A requirement's checkbox on its row, on Badge detail or Requirement detail.
-    private fun rowCheckbox(number: String) = composeTestRule
-        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
 
     // The checkbox on a requirement's own page.
     private fun completedCheckbox() =
@@ -548,30 +543,26 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
-    @Test
-    fun checkingRequirement_onBadgeDetail_completesItToday() {
-        openCamping()
-
-        rowCheckbox("1").performClick()
-
-        rowCheckbox("1").assertIsOn()
-        assertEquals(
-            RequirementProgress("camping", "1", completed = true, completedDate = today),
-            runBlocking { recorded("1") }
-        )
-    }
-
     // The acceptance test of recording progress: completing enough sub-requirements completes
-    // their requirement, and completing every requirement completes the badge.
+    // their requirement, and completing every requirement completes the badge. The scout marks
+    // each one complete on its own page.
     @Test
     fun completingEnoughRequirements_completesTheBadge() {
         openCamping()
-        rowCheckbox("1").performClick()
+        composeTestRule.onNodeWithText("First.").performClick()
+        completedCheckbox().performClick()
+        composeTestRule.waitForIdle()
+        pressBack()
         composeTestRule.onNodeWithText("Second.").performClick()
 
         // Requirement 2 needs one of its two choices.
-        rowCheckbox("2a").performClick()
+        composeTestRule.onNodeWithText("Choice A.").performClick()
+        completedCheckbox().performClick()
+        composeTestRule.waitForIdle()
+        pressBack()
 
+        composeTestRule.onNode(hasText("Choice A.") and hasContentDescription("Completed"))
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
@@ -597,10 +588,11 @@ class MainActivityTest {
             RequirementProgress("camping", "1", true, today, "Planned it with my patrol."),
             runBlocking { recorded("1") }
         )
-        // Back on the badge's page, the requirement is checked.
+        // Back on the badge's page, the requirement's row shows its check.
         composeTestRule.waitForIdle()
         pressBack()
-        rowCheckbox("1").assertIsOn()
+        composeTestRule.onNode(hasText("First.") and hasContentDescription("Completed"))
+            .assertIsDisplayed()
     }
 
     private fun notesField() = composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))

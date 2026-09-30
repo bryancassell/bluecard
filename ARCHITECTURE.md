@@ -456,7 +456,7 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, "mark completed on a prior date", and "generate report" once complete. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
@@ -465,14 +465,13 @@ io.github.bryancassell.bluecard
 The PRD asks that requirements be understandable "without extensive
 scrolling", so the badge detail page lists only the top-level requirements. Each
 is one row: its official number, our one-line summary, "Do N of M" when only
-some of its sub-requirements are needed, and its completion state. A requirement
-without sub-requirements has a checkbox, so the scout can mark many of them
-complete without leaving the list. One with sub-requirements has a check once
-enough of them are done. A requirement with a tracker says how much of it is
-filled in, such as "8 of 12 weeks". Every row opens the requirement's own page,
-with its completion date and comment. A requirement with sub-requirements lists
-them there the same way, and each opens its own page in turn. A requirement
-with a tracker lists its rows there, and each opens the Tracker entry page (see
+some of its sub-requirements are needed, and a check once it's complete. A
+requirement with a tracker says how much of it is filled in, such as "8 of 12
+weeks". Every row opens the requirement's own page, with its completion date and
+comment. The scout marks a requirement without sub-requirements complete there.
+One with sub-requirements is complete once enough of them are, and lists them on
+its page the same way; each opens its own page in turn. A requirement with a
+tracker lists its rows there, and each opens the Tracker entry page (see
 [Key flows](#key-flows)). Each page shows one level of the requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
 version for a badge the scout hasn't started. The counselor takes a few lines
@@ -642,12 +641,11 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     ([#45](https://github.com/bryancassell/bluecard/issues/45)).
   - **Completing a requirement.** Only a requirement without sub-requirements is
     marked complete; one with them is complete when enough of them are
-    (`Completion.kt`). Checking it, on its row or its page, records it completed
-    today. On its page, the scout can pick another date or remove it. Dates
-    after today can't be picked. Unchecking removes the date and keeps the
-    comment, but the page remembers the date until it closes: checking the
-    requirement again on that page brings the date back, so a mistaken tap
-    loses nothing. A date change applies only to a completed requirement, so
+    (`Completion.kt`). Checking it on its page records it completed today, and
+    the scout can pick another date there or remove it. Dates after today can't
+    be picked. Unchecking removes the date and keeps the comment, but the page
+    remembers the date until it closes: checking the requirement again on that
+    page brings the date back, so a mistaken tap loses nothing. A date change applies only to a completed requirement, so
     one that lands just after an uncheck can't complete it again.
   - **Comments.** Every requirement can have one, including one with
     sub-requirements, for notes about it as a whole. The page's comment field is
@@ -839,7 +837,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Search result announcements | A visible count of the matches. Screen readers hear it from a polite live region that stays composed and is laid out apart from the shown count. It changes once typing pauses for a second, or straight away after Clear search | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed, doesn't let it be cut off, and announces a live region on any change, even of its size |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
-| Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
+| Marking requirements complete | A "Completed" checkbox on the requirement's page, dated today, with the date and comment beside it. Rows only open the requirement's page, with a check once it's complete | Chosen after using the app, in place of a checkbox on each row ([#103](https://github.com/bryancassell/bluecard/issues/103)). Each part takes a trip to its page, so marking many (Personal Fitness 3 has seven) is slower; the PRD's date and comment are optional |
 | Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
 | Trackers | Listed on the requirement's page; each row filled in on its own page with a field for each column, saved with a Save button. A fixed-row tracker shows every row, and a row keeps its number when another is deleted | Four or more fields don't fit in a dialog or a table row on a phone once the keyboard is up. Numbered rows match trackers such as a 13-week budget, where each week is its own row |

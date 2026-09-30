@@ -82,7 +82,7 @@ fun RequirementDetailScreen(
     comment: TextFieldState,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
-    onCompletedChange: (number: String, completed: Boolean) -> Unit,
+    onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     onSaveComment: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
@@ -102,20 +102,13 @@ fun RequirementDetailScreen(
                 RequirementHeader(uiState.badgeName, uiState.requirement)
                 val requirement = uiState.requirement
                 if (!requirement.hasSubRequirements) {
-                    CompletedCheckbox(
-                        completed = requirement.completed,
-                        onCompletedChange = { onCompletedChange(requirement.number, it) }
-                    )
+                    CompletedCheckbox(requirement.completed, onCompletedChange)
                     if (requirement.completed) {
                         CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
                     }
                 }
                 uiState.children.forEach {
-                    RequirementRow(
-                        item = it,
-                        onOpen = onOpenRequirement,
-                        onCompletedChange = onCompletedChange
-                    )
+                    RequirementRow(item = it, onOpen = onOpenRequirement)
                 }
                 uiState.tracker?.let { tracker ->
                     TrackerSection(
