@@ -234,7 +234,9 @@ class HomeScreenTest {
         show(withBadgesInProgress)
 
         row("Camping").assert(hasText("Eagle-required")).assert(hasText("In progress"))
-        row("Chess").assert(!hasText("Eagle-required")).assert(hasText("In progress"))
+        row("Chess")
+            .assert(!hasText("Eagle-required", substring = true))
+            .assert(hasText("In progress"))
         row("Hiking")
             .assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
             .assert(hasText("In progress"))

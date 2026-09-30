@@ -38,21 +38,26 @@ class HomeViewModelTest {
     private val day = LocalDate.of(2026, 4, 15)
     private val badgeStart = BadgeStart(version, started)
 
-    private fun badge(id: String, eagleRequired: Boolean = false, eagleGroup: String? = null) =
-        MeritBadge(
-            id = id,
-            name = id,
-            summary = "Our summary of $id.",
-            officialUrl = "https://www.scouting.org/merit-badges/$id/",
-            eagleRequired = eagleRequired,
-            eagleGroup = eagleGroup,
-            requirementVersions = listOf(
-                RequirementsVersion(
-                    version,
-                    listOf(Requirement("1", "First."), Requirement("2", "Second."))
-                )
+    // Named differently from their ids, so tests can tell the two apart.
+    private fun badge(
+        id: String,
+        name: String = id.replaceFirstChar(Char::uppercase),
+        eagleRequired: Boolean = false,
+        eagleGroup: String? = null
+    ) = MeritBadge(
+        id = id,
+        name = name,
+        summary = "Our summary of $id.",
+        officialUrl = "https://www.scouting.org/merit-badges/$id/",
+        eagleRequired = eagleRequired,
+        eagleGroup = eagleGroup,
+        requirementVersions = listOf(
+            RequirementsVersion(
+                version,
+                listOf(Requirement("1", "First."), Requirement("2", "Second."))
             )
         )
+    )
 
     // Two Eagle-required badges on their own, one "one of" group of three, and two
     // badges that aren't Eagle-required: 3 Eagle requirements in all.
@@ -252,15 +257,25 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun badgesInProgress_listsOnlyBadgesInProgress_alphabetically() = runTest {
-        // The catalog lists chess after swimming.
-        start("swimming")
-        start("chess")
-        start("camping")
-        complete("pottery")
+    fun badgesInProgress_listsOnlyBadgesInProgress_alphabeticallyByName() = runTest {
+        // In neither name nor id order, with ids that sort the other way from the names.
+        catalogRepository.badges = listOf(
+            badge("b", name = "Chess"),
+            badge("c", name = "Archery"),
+            badge("a", name = "Swimming"),
+            badge("d", name = "Pottery"),
+            badge("e", name = "Cooking")
+        )
+        start("a")
+        start("b")
+        start("c")
+        complete("d")
         startCollecting(viewModel)
 
-        assertEquals(listOf("camping", "chess", "swimming"), idsInProgress())
+        assertEquals(
+            listOf("Archery", "Chess", "Swimming"),
+            ready().badgesInProgress.map { it.name }
+        )
     }
 
     @Test
@@ -274,20 +289,20 @@ class HomeViewModelTest {
             listOf(
                 BadgeListItem(
                     id = "camping",
-                    name = "camping",
+                    name = "Camping",
                     eagle = EagleRequirement.Required,
                     status = BadgeStatus.InProgress
                 ),
                 BadgeListItem(
                     id = "chess",
-                    name = "chess",
+                    name = "Chess",
                     eagle = null,
                     status = BadgeStatus.InProgress
                 ),
                 BadgeListItem(
                     id = "hiking",
-                    name = "hiking",
-                    eagle = EagleRequirement.OneOf(listOf("cycling", "hiking", "swimming")),
+                    name = "Hiking",
+                    eagle = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming")),
                     status = BadgeStatus.InProgress
                 )
             ),

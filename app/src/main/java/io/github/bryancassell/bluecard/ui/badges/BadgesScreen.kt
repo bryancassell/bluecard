@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badges
 
-import android.icu.text.ListFormatter
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

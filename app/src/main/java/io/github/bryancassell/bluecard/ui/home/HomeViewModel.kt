@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
+import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.badges.badgeNameOrder
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
@@ -33,11 +34,19 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = combine(
         profileRepository.observeProfile(),
-        flow { emit(catalogRepository.getBadges()) },
+        // What depends only on the catalog is worked out when Home starts collecting, not on
+        // every profile or progress change.
+        flow {
+            val catalog = catalogRepository.getBadges()
+            val eagleGroups = catalog.eagleGroups()
+            val badges = catalog.sortedWith(badgeNameOrder())
+            emit(badges.map { it to it.eagleRequirement(eagleGroups) })
+        },
         progressRepository.observeAllProgress()
-    ) { profile, badges, progress ->
+    ) { profile, catalog, progress ->
         // Without a profile, the navigation root replaces Home with Onboarding.
         if (profile == null) return@combine HomeUiState.Loading
+        val badges = catalog.map { (badge, _) -> badge }
         val progressById = progress.associateBy { it.badge.badgeId }
         val statusById = badges.associate { it.id to it.status(progressById[it.id]) }
         val eagle = eagleStatuses(badges, statusById)
@@ -47,7 +56,7 @@ class HomeViewModel @Inject constructor(
             badges = statusById.values.counts(),
             eagle = eagle.counts(),
             eagleTotal = eagle.size,
-            badgesInProgress = badgesInProgress(badges, statusById)
+            badgesInProgress = badgesInProgress(catalog, statusById)
         )
     }.catchLoadFailure(HomeUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
@@ -68,23 +77,20 @@ private fun eagleStatuses(
         groups.map { group -> group.maxOf { statusById.getValue(it.id) } }
 }
 
-/** The badges in progress, listed as on Badges. */
+/** The badges in progress, listed as on Badges, in [catalog]'s order. */
 private fun badgesInProgress(
-    badges: List<MeritBadge>,
+    catalog: List<Pair<MeritBadge, EagleRequirement?>>,
     statusById: Map<String, BadgeStatus>
-): List<BadgeListItem> {
-    val eagleGroups = badges.eagleGroups()
-    return badges.filter { statusById.getValue(it.id) == BadgeStatus.InProgress }
-        .sortedWith(badgeNameOrder())
-        .map { badge ->
-            BadgeListItem(
-                id = badge.id,
-                name = badge.name,
-                eagle = badge.eagleRequirement(eagleGroups),
-                status = BadgeStatus.InProgress
-            )
-        }
-}
+): List<BadgeListItem> = catalog
+    .filter { (badge, _) -> statusById.getValue(badge.id) == BadgeStatus.InProgress }
+    .map { (badge, eagle) ->
+        BadgeListItem(
+            id = badge.id,
+            name = badge.name,
+            eagle = eagle,
+            status = BadgeStatus.InProgress
+        )
+    }
 
 private fun Collection<BadgeStatus>.counts() = ProgressCounts(
     completed = count { it == BadgeStatus.Completed },
