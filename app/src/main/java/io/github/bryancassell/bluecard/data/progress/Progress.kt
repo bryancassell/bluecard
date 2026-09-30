@@ -99,8 +99,20 @@ data class TrackerEntry(
     val requirementNumber: String,
     /** The row it fills in a tracker with a fixed number of rows, from 1; null in a log. */
     val rowNumber: Int? = null,
-    val values: Map<String, String>
+    val values: Map<String, String>,
+    /**
+     * The date the row was first saved, which changing it keeps. Null for a row saved before
+     * database version 3 and not changed since; changing it records the date it's changed on.
+     */
+    val addedDate: LocalDate? = null
 )
+
+/**
+ * The [entries] of a tracker with [rowCount] rows, by the row they fill. Only a catalog edited
+ * during development could leave an entry outside them.
+ */
+fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntry> =
+    entries.filter { it.rowNumber in 1..rowCount }.associateBy { it.rowNumber!! }
 
 /**
  * Tracker values as repositories store them: without spaces around each value, and without

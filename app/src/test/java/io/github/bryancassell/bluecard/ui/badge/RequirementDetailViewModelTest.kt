@@ -86,6 +86,16 @@ class RequirementDetailViewModelTest {
                                 )
                             )
                         )
+                    ),
+                    Requirement(
+                        "4",
+                        "Save for two weeks.",
+                        tracker = TrackerDefinition(
+                            listOf(TrackerColumn("saved", "Saved", TrackerColumnType.NUMBER)),
+                            "week",
+                            "weeks",
+                            rowCount = 2
+                        )
                     )
                 )
             ),
@@ -191,17 +201,29 @@ class RequirementDetailViewModelTest {
         assertEquals(
             RequirementDetailUiState.Ready(
                 badgeName = "Camping",
-                requirement = RequirementItem("2", "Do two of these.", Choice(2, 3), false, true),
+                requirement = RequirementItem(
+                    "2",
+                    "Do two of these.",
+                    Choice(2, 3),
+                    false,
+                    markedByHand = false
+                ),
                 completedDate = null,
                 children = listOf(
-                    RequirementItem("2a", "Cook a meal.", null, false, false),
-                    RequirementItem("2b", "Lead one hike.", Choice(1, 2), false, true),
+                    RequirementItem("2a", "Cook a meal.", null, false, markedByHand = true),
+                    RequirementItem(
+                        "2b",
+                        "Lead one hike.",
+                        Choice(1, 2),
+                        false,
+                        markedByHand = false
+                    ),
                     RequirementItem(
                         "2c",
                         "Keep a camping log.",
                         null,
                         false,
-                        false,
+                        markedByHand = true,
                         TrackerCount(0, null, "nights")
                     )
                 ),
@@ -222,8 +244,8 @@ class RequirementDetailViewModelTest {
         assertEquals("Lead one hike.", viewModel.ready().requirement.summary)
         assertEquals(
             listOf(
-                RequirementItem("2b(1)", "A day hike.", null, false, false),
-                RequirementItem("2b(2)", "A night hike.", null, false, false)
+                RequirementItem("2b(1)", "A day hike.", null, false, markedByHand = true),
+                RequirementItem("2b(2)", "A night hike.", null, false, markedByHand = true)
             ),
             viewModel.ready().children
         )
@@ -311,6 +333,7 @@ class RequirementDetailViewModelTest {
             "2c",
             null,
             mapOf("night" to "2026-04-10"),
+            today,
             badgeStart
         )
         val viewModel = viewModel("2c")
@@ -340,11 +363,38 @@ class RequirementDetailViewModelTest {
             "2c",
             null,
             mapOf("night" to "2026-04-10"),
+            today,
             badgeStart
         )
 
         assertEquals(TrackerCount(1, null, "night"), viewModel.ready().tracker!!.count)
     }
+
+    @Test
+    fun fixedRows_completeTheRequirementOnceEveryRowIsFilledIn() = runTest {
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().requirement.markedByHand)
+
+        val week1 = saveWeek(1, day)
+        assertFalse(viewModel.ready().requirement.completed)
+        saveWeek(2, today)
+        assertTrue(viewModel.ready().requirement.completed)
+
+        // Deleting a row makes it incomplete again.
+        progressRepository.deleteTrackerEntry(week1)
+        assertFalse(viewModel.ready().requirement.completed)
+    }
+
+    private suspend fun saveWeek(rowNumber: Int, addedDate: LocalDate) =
+        progressRepository.addTrackerEntry(
+            "camping",
+            "4",
+            rowNumber,
+            mapOf("saved" to "5"),
+            addedDate,
+            badgeStart
+        )
 
     private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
         .first()?.requirements?.singleOrNull { it.requirementNumber == number }

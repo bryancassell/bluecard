@@ -99,6 +99,46 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         )
     }
 
+    @Test
+    fun changingARowWithoutADate_recordsTheDateItsChangedOn() = runTest {
+        repository.startBadge("personal-management", start.requirementsVersion, start.startedDate)
+        // Saved before database version 3, which records no date: a row of a fixed-row
+        // tracker, and a log entry.
+        val dao = database.progressDao()
+        val week1 = dao.insertTrackerEntry(
+            TrackerEntry(0, "personal-management", "2a", 1, mapOf("income" to "10"))
+        )
+        val session = dao.insertTrackerEntry(
+            TrackerEntry(0, "personal-management", "9", null, mapOf("notes" to "Met"))
+        )
+        val today = LocalDate.of(2026, 9, 30)
+
+        // Changed by its row, and by its entry's ID.
+        repository.addTrackerEntry(
+            "personal-management",
+            "2a",
+            1,
+            mapOf("income" to "12"),
+            today,
+            start
+        )
+        repository.addTrackerEntry(
+            "personal-management",
+            "9",
+            null,
+            mapOf("notes" to "Met twice"),
+            today,
+            start,
+            id = session
+        )
+
+        assertEquals(
+            mapOf(week1 to today, session to today),
+            repository.observeProgress("personal-management").first()!!
+                .trackerEntries.associate { it.id to it.addedDate }
+        )
+    }
+
     /**
      * Makes every write of requirement progress fail, as a bug that breaks a constraint would.
      * SQLite reports a trigger's RAISE(ABORT) as a constraint violation:

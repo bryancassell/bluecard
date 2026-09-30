@@ -633,6 +633,7 @@ class MainActivityTest {
                 "1",
                 null,
                 mapOf("notes" to "Clear skies."),
+                today,
                 BadgeStart(LocalDate.of(2026, 1, 1), today)
             )
         }

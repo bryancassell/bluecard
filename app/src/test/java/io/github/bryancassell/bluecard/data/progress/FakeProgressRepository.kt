@@ -124,6 +124,7 @@ class FakeProgressRepository : ProgressRepository {
         number: String,
         rowNumber: Int?,
         values: Map<String, String>,
+        addedDate: LocalDate,
         start: BadgeStart,
         id: Long?
     ): Long {
@@ -139,7 +140,10 @@ class FakeProgressRepository : ProgressRepository {
                         if (it.id ==
                             filled.id
                         ) {
-                            it.copy(values = normalizedTrackerValues(values))
+                            it.copy(
+                                values = normalizedTrackerValues(values),
+                                addedDate = it.addedDate ?: addedDate
+                            )
                         } else {
                             it
                         }
@@ -153,7 +157,8 @@ class FakeProgressRepository : ProgressRepository {
             badgeId,
             number,
             rowNumber,
-            normalizedTrackerValues(values)
+            normalizedTrackerValues(values),
+            addedDate
         )
         updateBadge(badgeId, start) { it.copy(trackerEntries = it.trackerEntries + entry) }
         return entry.id

@@ -72,6 +72,41 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun migrate2To3_keepsTrackerEntries_withoutADate() = runTest {
+        helper.createDatabase(DATABASE, 2).use {
+            it.execSQL(
+                """
+                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
+                VALUES ('personal-management', '2026-01-01', '2026-03-01')
+                """
+            )
+            it.execSQL(
+                """
+                INSERT INTO tracker_entry (id, badgeId, requirementNumber, rowNumber, `values`)
+                VALUES (1, 'personal-management', '2a', 1, '{"income":"10"}'),
+                    (2, 'personal-management', '2a', 2, '{"income":"20"}')
+                """
+            )
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 3, true).close()
+
+        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        try {
+            val progress = database.progressDao().observe("personal-management").first()!!
+            assertEquals(
+                listOf(
+                    TrackerEntry(1, "personal-management", "2a", 1, mapOf("income" to "10")),
+                    TrackerEntry(2, "personal-management", "2a", 2, mapOf("income" to "20"))
+                ),
+                progress.trackerEntries.sortedBy { it.id }
+            )
+        } finally {
+            database.close()
+        }
+    }
+
     private companion object {
         const val DATABASE = "migration-test.db"
     }
