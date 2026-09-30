@@ -12,7 +12,8 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
   The app links to the official page for the full wording.
 - **Match the official structure.** Requirement numbers, nesting and "do N of the
   following" counts must match the official page exactly, because scouts and
-  counselors use those numbers.
+  counselors use those numbers. The one exception is either/or children (see
+  `requiredCount` below).
 - **Current requirements only, until the first release.** Write each badge's
   current requirements as its only version.
 - **After the first release, keep every shipped version.** When a badge's
@@ -83,7 +84,7 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 | `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. It identifies the requirement, so it must be unique within the version. |
 | `summary` | Yes | Our own one-line summary. Aim for 12 words or fewer. |
 | `children` | No | Sub-requirements, in official order. |
-| `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. |
+| `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
 | `tracker` | No | For requirements that need repeated entries, such as a weekly log. See below. |
 
 ### Tracker
