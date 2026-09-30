@@ -122,26 +122,41 @@ class FakeProgressRepository : ProgressRepository {
     override suspend fun addTrackerEntry(
         badgeId: String,
         number: String,
-        values: Map<String, String>
+        rowNumber: Int?,
+        values: Map<String, String>,
+        start: BadgeStart,
+        id: Long?
     ): Long {
         checkCanSave()
-        requireStarted(badgeId)
-        val id = nextTrackerEntryId++
-        updateBadge(badgeId) {
-            it.copy(trackerEntries = it.trackerEntries + TrackerEntry(id, badgeId, number, values))
+        val entries = badges.value[badgeId]?.trackerEntries.orEmpty()
+        val filled = entries.find { it.id == id } ?: entries.find {
+            rowNumber != null && it.requirementNumber == number && it.rowNumber == rowNumber
         }
-        return id
-    }
-
-    override suspend fun updateTrackerEntry(id: Long, values: Map<String, String>) {
-        checkCanSave()
-        updateEachBadge { details ->
-            details.copy(
-                trackerEntries = details.trackerEntries.map {
-                    if (it.id == id) it.copy(values = values) else it
-                }
-            )
+        if (filled != null) {
+            updateBadge(badgeId) { details ->
+                details.copy(
+                    trackerEntries = details.trackerEntries.map {
+                        if (it.id ==
+                            filled.id
+                        ) {
+                            it.copy(values = normalizedTrackerValues(values))
+                        } else {
+                            it
+                        }
+                    }
+                )
+            }
+            return filled.id
         }
+        val entry = TrackerEntry(
+            nextTrackerEntryId++,
+            badgeId,
+            number,
+            rowNumber,
+            normalizedTrackerValues(values)
+        )
+        updateBadge(badgeId, start) { it.copy(trackerEntries = it.trackerEntries + entry) }
+        return entry.id
     }
 
     override suspend fun deleteTrackerEntry(id: Long) {
@@ -174,10 +189,6 @@ class FakeProgressRepository : ProgressRepository {
 
     private fun checkCanSave() {
         if (failSaves) throw IOException("Save failed")
-    }
-
-    private fun requireStarted(badgeId: String) {
-        if (badgeId !in badges.value) throw notStartedError(badgeId)
     }
 
     /**

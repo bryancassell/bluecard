@@ -56,10 +56,12 @@ data class Requirement(
 @Serializable
 data class TrackerDefinition(
     val columns: List<TrackerColumn>,
+    /** What one row is called, in lowercase, such as "week". Titles capitalize it. */
+    val rowLabel: String,
+    /** [rowLabel] in the plural, such as "weeks". */
+    val rowLabelPlural: String,
     /** A fixed number of rows (for example 12 weeks); null means any number. */
-    val rowCount: Int? = null,
-    /** What one row is called, such as "Week". */
-    val rowLabel: String? = null
+    val rowCount: Int? = null
 )
 
 @Serializable

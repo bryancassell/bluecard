@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * One requirement of a badge and its sub-requirements, with the scout's progress: whether
- * it's complete and when, and their comment on it.
+ * it's complete and when, their comment on it, and its tracker.
  */
 @HiltViewModel(assistedFactory = RequirementDetailViewModel.Factory::class)
 class RequirementDetailViewModel @AssistedInject constructor(
@@ -48,26 +48,55 @@ class RequirementDetailViewModel @AssistedInject constructor(
     private val saves = SaveRunner(viewModelScope)
     private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
-    val uiState: StateFlow<RequirementDetailUiState> = combine(
+    /**
+     * The requirement as recorded, or null if the badge's requirements don't have it. It's
+     * built when the catalog or progress changes, not on each keystroke in the comment.
+     */
+    private val recorded = combine(
         flow { emit(catalogRepository.getBadges()) },
-        progressRepository.observeProgress(badgeId),
-        // Works the state out again as the scout types.
-        snapshotFlow { comment.text.toString() },
-        saves.failure
-    ) { catalog, progress, _, saveFailure ->
+        progressRepository.observeProgress(badgeId)
+    ) { catalog, progress ->
         // Checked on every change, not only when the page opens, because which version
         // the badge uses depends on its progress.
         val found = catalog.badgeRequirements(badgeId, progress)
-        val requirement = found?.version?.find(number)
-            ?: return@combine RequirementDetailUiState.Unavailable
-        val recorded = found.recorded[number]
-        fields.loadOnce { mapOf(COMMENT to recorded?.comment) }
+        found?.version?.find(number)?.let { requirement ->
+            val recorded = found.recorded[number]
+            RecordedRequirement(
+                badgeName = found.badge.name,
+                requirement = found.item(requirement),
+                completedDate = recorded?.completedDate,
+                children = requirement.children.map(found::item),
+                tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
+                comment = recorded?.comment
+            )
+        }
+    }
+
+    private class RecordedRequirement(
+        val badgeName: String,
+        val requirement: RequirementItem,
+        val completedDate: LocalDate?,
+        val children: List<RequirementItem>,
+        val tracker: TrackerItem?,
+        /** The saved comment. */
+        val comment: String?
+    )
+
+    val uiState: StateFlow<RequirementDetailUiState> = combine(
+        recorded,
+        // Works the state out again as the scout types.
+        snapshotFlow { comment.text.toString() },
+        saves.failure
+    ) { recorded, _, saveFailure ->
+        if (recorded == null) return@combine RequirementDetailUiState.Unavailable
+        fields.loadOnce { mapOf(COMMENT to recorded.comment) }
         RequirementDetailUiState.Ready(
-            badgeName = found.badge.name,
-            requirement = requirement.toItem(found.recorded),
-            completedDate = recorded?.completedDate,
-            children = requirement.children.map { it.toItem(found.recorded) },
-            commentChanged = normalizedText(comment.text.toString()) != recorded?.comment,
+            badgeName = recorded.badgeName,
+            requirement = recorded.requirement,
+            completedDate = recorded.completedDate,
+            children = recorded.children,
+            tracker = recorded.tracker,
+            commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
             today = today(),
             saveFailure = saveFailure
         )

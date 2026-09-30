@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Checkbox
@@ -24,8 +25,9 @@ import io.github.bryancassell.bluecard.R
 
 /**
  * A requirement's row, which opens its page: its number, summary, "Do N of M" when only some
- * sub-requirements are needed, and whether it's complete. A requirement the scout marks
- * complete has a checkbox for it; one with sub-requirements has a check once enough are done.
+ * sub-requirements are needed, how much of its tracker is filled in, and whether it's complete.
+ * A requirement the scout marks complete has a checkbox for it; one with sub-requirements has a
+ * check once enough are done.
  */
 @Composable
 fun RequirementRow(
@@ -37,7 +39,16 @@ fun RequirementRow(
     ListItem(
         leadingContent = { Text(item.number, style = MaterialTheme.typography.titleMedium) },
         headlineContent = { Text(item.summary) },
-        supportingContent = item.choice?.let { { Text(choiceLabel(it)) } },
+        supportingContent = if (item.choice == null && item.tracker == null) {
+            null
+        } else {
+            {
+                Column {
+                    item.choice?.let { Text(choiceLabel(it)) }
+                    item.tracker?.let { Text(trackerCountLabel(it)) }
+                }
+            }
+        },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (!item.hasSubRequirements) {

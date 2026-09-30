@@ -48,7 +48,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
             summary = badge.summary,
             eagle = badge.eagleRequirement(eagleGroups),
             officialUrl = badge.officialUrl,
-            requirements = found.version.requirements.map { it.toItem(found.recorded) },
+            requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
             saveFailure = saveFailure
         )

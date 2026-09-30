@@ -63,7 +63,14 @@ class BadgeDetailScreenTest {
                 false,
                 hasSubRequirements = true
             ),
-            RequirementItem("3", "Keep a camping log.", null, false, hasSubRequirements = false),
+            RequirementItem(
+                "3",
+                "Keep a camping log.",
+                null,
+                false,
+                hasSubRequirements = false,
+                tracker = TrackerCount(8, 12, "nights")
+            ),
             RequirementItem("4", "Do all of these.", null, true, hasSubRequirements = true)
         )
     )
@@ -343,6 +350,13 @@ class BadgeDetailScreenTest {
 
         row("Do two of these.").assert(hasText("Do 2 of 3"))
         row("Plan a campout.").assert(!hasText("Do", substring = true))
+    }
+
+    @Test
+    fun requirementWithTracker_showsHowMuchIsFilledIn() {
+        show(ready)
+
+        row("Keep a camping log.").assert(hasText("8 of 12 nights"))
     }
 
     @Test

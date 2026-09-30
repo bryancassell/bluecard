@@ -58,6 +58,12 @@ android {
         }
     }
 
+    // MigrationTestHelper reads each database version's schema from assets. The Room plugin
+    // adds the schemas to instrumented tests' assets only, and migration tests run locally,
+    // where Robolectric reads the debug build's assets. So debug builds carry the schemas too;
+    // release builds don't.
+    sourceSets.getByName("debug").assets.directories.add("$projectDir/schemas")
+
     testCoverage {
         jacocoVersion = libs.versions.jacoco.get()
     }
@@ -92,7 +98,7 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
     group = "verification"
     description = "Fails if any class has less than 80% line coverage from local tests."
     dependsOn("testDebugUnitTest")
-    // Generated Android, Hilt and Room classes, and @Preview functions (kept in
+    // Generated Android, Hilt, Room and Kotlin classes, and @Preview functions (kept in
     // *Preview.kt files), which only run in Android Studio.
     val exclusions = listOf(
         "**/R.class",
@@ -113,7 +119,10 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
         "**/dagger/hilt/internal/**",
         // Room: generated database and DAO implementations.
         "**/*_Impl.class",
-        "**/*_Impl\$*.class"
+        "**/*_Impl\$*.class",
+        // Kotlin: copies of an interface's default arguments for Java code compiled against
+        // older Kotlin. Kotlin callers use the interface's own static methods instead.
+        "**/*\$DefaultImpls.class"
     )
     val fileTrees = objects
     classDirectories.setFrom(
@@ -194,6 +203,8 @@ dependencies {
     // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
     testImplementation(libs.androidx.lifecycle.viewmodel.testing)
     testImplementation(libs.hilt.android.testing)
+    // MigrationTestHelper, which checks each database migration against the committed schemas.
+    testImplementation(libs.androidx.room.testing)
     kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.junit)
     // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.

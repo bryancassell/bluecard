@@ -20,12 +20,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -52,6 +48,7 @@ fun RequirementDetailRoute(
     badgeId: String,
     number: String,
     onOpenRequirement: (number: String) -> Unit,
+    onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RequirementDetailViewModel =
         hiltViewModel<RequirementDetailViewModel, RequirementDetailViewModel.Factory> {
@@ -63,6 +60,7 @@ fun RequirementDetailRoute(
         uiState = uiState,
         comment = viewModel.comment,
         onOpenRequirement = onOpenRequirement,
+        onOpenTrackerEntry = onOpenTrackerEntry,
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
         onSaveComment = viewModel::saveComment,
@@ -73,14 +71,17 @@ fun RequirementDetailRoute(
 
 /**
  * A requirement's own page: whether it's complete, and when for one the scout marks complete,
- * its sub-requirements, and the scout's [comment] on it. It will show the requirement's tracker
- * once trackers are built (#40). A sub-requirement opens its own page in turn.
+ * its sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
+ * its own page in turn, and a tracker row opens the Tracker entry page
+ * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
+ * log opens it with neither.
  */
 @Composable
 fun RequirementDetailScreen(
     uiState: RequirementDetailUiState,
     comment: TextFieldState,
     onOpenRequirement: (number: String) -> Unit,
+    onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
     onCompletedChange: (number: String, completed: Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     onSaveComment: () -> Unit,
@@ -114,6 +115,14 @@ fun RequirementDetailScreen(
                         item = it,
                         onOpen = onOpenRequirement,
                         onCompletedChange = onCompletedChange
+                    )
+                }
+                uiState.tracker?.let { tracker ->
+                    TrackerSection(
+                        tracker = tracker,
+                        onOpenRow = { onOpenTrackerEntry(it.entryId, it.number) },
+                        onAddRow = { onOpenTrackerEntry(null, null) },
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
                 CommentField(comment, uiState.commentChanged, onSaveComment)
@@ -186,44 +195,17 @@ private fun CompletedCheckbox(completed: Boolean, onCompletedChange: (Boolean) -
 /** The date a completed requirement was completed on, which the scout can change or remove. */
 @Composable
 private fun CompletionDate(date: LocalDate?, today: LocalDate, onDateChange: (LocalDate?) -> Unit) {
-    var picking by rememberSaveable { mutableStateOf(false) }
     val formatter = rememberCompletionDateFormatter()
-    Text(
+    EditableDate(
         text = if (date == null) {
             stringResource(R.string.requirement_no_date)
         } else {
             stringResource(R.string.requirement_completed_on, formatter.format(date))
         },
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.padding(horizontal = 16.dp)
+        date = date,
+        today = today,
+        onDateChange = onDateChange
     )
-    // Lines the buttons' text up with the date's.
-    Row(modifier = Modifier.padding(horizontal = 4.dp)) {
-        TextButton(onClick = { picking = true }) {
-            val label = if (date == null) {
-                R.string.requirement_add_date
-            } else {
-                R.string.requirement_change_date
-            }
-            Text(stringResource(label))
-        }
-        if (date != null) {
-            TextButton(onClick = { onDateChange(null) }) {
-                Text(stringResource(R.string.requirement_remove_date))
-            }
-        }
-    }
-    if (picking) {
-        CompletionDatePickerDialog(
-            initial = date ?: today,
-            today = today,
-            onConfirm = {
-                picking = false
-                onDateChange(it)
-            },
-            onDismiss = { picking = false }
-        )
-    }
 }
 
 /**

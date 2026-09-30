@@ -1,0 +1,184 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "67dcaffcb2188a16a46be6fa4f75ba25",
+    "entities": [
+      {
+        "tableName": "badge_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`badgeId` TEXT NOT NULL, `requirementsVersion` TEXT NOT NULL, `startedDate` TEXT NOT NULL, `completedOnPriorDate` TEXT, `counselor_name` TEXT, `counselor_phone` TEXT, `counselor_email` TEXT, PRIMARY KEY(`badgeId`))",
+        "fields": [
+          {
+            "fieldPath": "badgeId",
+            "columnName": "badgeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requirementsVersion",
+            "columnName": "requirementsVersion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedDate",
+            "columnName": "startedDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedOnPriorDate",
+            "columnName": "completedOnPriorDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "counselor.name",
+            "columnName": "counselor_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "counselor.phone",
+            "columnName": "counselor_phone",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "counselor.email",
+            "columnName": "counselor_email",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "badgeId"
+          ]
+        }
+      },
+      {
+        "tableName": "requirement_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`badgeId` TEXT NOT NULL, `requirementNumber` TEXT NOT NULL, `completed` INTEGER NOT NULL, `completedDate` TEXT, `comment` TEXT, PRIMARY KEY(`badgeId`, `requirementNumber`), FOREIGN KEY(`badgeId`) REFERENCES `badge_progress`(`badgeId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "badgeId",
+            "columnName": "badgeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requirementNumber",
+            "columnName": "requirementNumber",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completed",
+            "columnName": "completed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedDate",
+            "columnName": "completedDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "comment",
+            "columnName": "comment",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "badgeId",
+            "requirementNumber"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "badge_progress",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "badgeId"
+            ],
+            "referencedColumns": [
+              "badgeId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "tracker_entry",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `badgeId` TEXT NOT NULL, `requirementNumber` TEXT NOT NULL, `rowNumber` INTEGER, `values` TEXT NOT NULL, FOREIGN KEY(`badgeId`) REFERENCES `badge_progress`(`badgeId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "badgeId",
+            "columnName": "badgeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requirementNumber",
+            "columnName": "requirementNumber",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rowNumber",
+            "columnName": "rowNumber",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "values",
+            "columnName": "values",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tracker_entry_badgeId_requirementNumber_rowNumber",
+            "unique": true,
+            "columnNames": [
+              "badgeId",
+              "requirementNumber",
+              "rowNumber"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_tracker_entry_badgeId_requirementNumber_rowNumber` ON `${TABLE_NAME}` (`badgeId`, `requirementNumber`, `rowNumber`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "badge_progress",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "badgeId"
+            ],
+            "referencedColumns": [
+              "badgeId"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '67dcaffcb2188a16a46be6fa4f75ba25')"
+    ]
+  }
+}

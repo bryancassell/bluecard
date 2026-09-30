@@ -19,6 +19,10 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
   requirements change, add the new version and leave the old one in place:
   scouts' progress is saved against it. Never remove a shipped version or
   change its requirement numbers or structure.
+- **Keep a shipped tracker's columns.** Scouts' entries are saved by column
+  `id`, so once a version ships, never remove a column or change its `id` or
+  `type`, and never change the tracker's `rowCount`. You can change a column's
+  label or add a column.
 
 ## Format
 
@@ -89,8 +93,9 @@ A tracker is a table the scout fills in, one row per entry.
 | Field | Required | Meaning |
 |---|---|---|
 | `columns` | Yes | The table's columns, each with an `id` (lowercase words joined by `-`, unique within the tracker), a `label` shown to the scout, and a `type`: `date`, `number` or `text`. |
-| `rowCount` | No | A fixed number of rows, such as `13` for a 13-week budget. Leave it out to allow any number. |
-| `rowLabel` | No | What one row is called, such as `Week` or `Session`. |
+| `rowLabel` | Yes | What one row is called, in lowercase, such as `week` or `session`. The app capitalizes it for titles, such as "Week 3". |
+| `rowLabelPlural` | Yes | `rowLabel` in the plural, in lowercase, such as `weeks`. The requirement's row shows it in a count, such as "8 of 12 weeks". |
+| `rowCount` | No | A fixed number of rows, such as `13` for a 13-week budget. The scout fills in each one ("Week 1" to "Week 13"). Leave it out for a log the scout adds rows to, any number of them. |
 
 Example, a log of exercise sessions:
 
@@ -101,7 +106,8 @@ Example, a log of exercise sessions:
     { "id": "activity", "label": "Activity", "type": "text" },
     { "id": "minutes", "label": "Minutes", "type": "number" }
   ],
-  "rowLabel": "Session"
+  "rowLabel": "session",
+  "rowLabelPlural": "sessions"
 }
 ```
 
@@ -126,8 +132,8 @@ It checks that:
 - every version has requirements, and requirement numbers are unique within it;
 - every requirement has a number and a summary, and `requiredCount` is between 1
   and the number of children;
-- trackers have at least one column, unique column IDs, labels, and a
-  `rowCount` of at least 1 when set.
+- trackers have at least one column, unique column IDs, labels, row labels
+  that start with a lowercase letter, and a `rowCount` of at least 1 when set.
 
 It can't check that the structure matches the official page or that summaries
 are in our own words; reviewers check those.

@@ -76,7 +76,9 @@ class BadgeDetailViewModelTest {
                         "3",
                         "Keep a camping log.",
                         tracker = TrackerDefinition(
-                            listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE))
+                            listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE)),
+                            "night",
+                            "nights"
                         )
                     ),
                     Requirement(
@@ -167,7 +169,14 @@ class BadgeDetailViewModelTest {
                     RequirementItem("1", "Plan a campout.", null, false, false),
                     RequirementItem("2", "Do two of these.", Choice(2, 3), false, true),
                     // The scout marks a requirement with a tracker complete themselves.
-                    RequirementItem("3", "Keep a camping log.", null, false, false),
+                    RequirementItem(
+                        "3",
+                        "Keep a camping log.",
+                        null,
+                        false,
+                        false,
+                        TrackerCount(0, null, "nights")
+                    ),
                     RequirementItem("4", "Do all of these.", null, false, true)
                 )
             ),
@@ -279,6 +288,29 @@ class BadgeDetailViewModelTest {
 
         progressRepository.markRequirementNotCompleted("camping", "1")
         assertEquals(false, viewModel.completed()["1"])
+    }
+
+    @Test
+    fun trackerCount_updatesAsEntriesAreAdded() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        progressRepository.addTrackerEntry(
+            "camping",
+            "3",
+            null,
+            mapOf("night" to "2026-04-10"),
+            badgeStart
+        )
+        progressRepository.addTrackerEntry(
+            "camping",
+            "3",
+            null,
+            mapOf("night" to "2026-04-11"),
+            badgeStart
+        )
+
+        assertEquals(TrackerCount(2, null, "nights"), viewModel.ready().requirements[2].tracker)
     }
 
     @Test

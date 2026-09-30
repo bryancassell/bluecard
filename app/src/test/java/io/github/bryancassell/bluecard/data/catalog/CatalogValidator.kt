@@ -73,8 +73,21 @@ object CatalogValidator {
                 if (column.label.isBlank()) add("$where: column \"${column.id}\" has a blank label")
             }
             tracker.rowCount?.let { if (it < 1) add("$where: rowCount must be at least 1") }
-            if (tracker.rowLabel?.isBlank() == true) add("$where: rowLabel is blank")
+            addAll(validateRowLabel("$where: rowLabel", tracker.rowLabel))
+            addAll(validateRowLabel("$where: rowLabelPlural", tracker.rowLabelPlural))
         }
+
+    // Lowercase, because the app uses it inside sentences ("8 of 12 weeks") and capitalizes it
+    // for titles ("Week 3").
+    private fun validateRowLabel(where: String, label: String): List<String> = when {
+        label.isBlank() -> listOf("$where is blank")
+
+        !label.first().isLowerCase() -> listOf(
+            "$where \"$label\" must start with a lowercase letter"
+        )
+
+        else -> emptyList()
+    }
 
     private fun Requirement.withDescendants(): List<Requirement> =
         listOf(this) + children.flatMap { it.withDescendants() }

@@ -80,7 +80,9 @@ class RequirementDetailViewModelTest {
                                 "2c",
                                 "Keep a camping log.",
                                 tracker = TrackerDefinition(
-                                    listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE))
+                                    listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE)),
+                                    "night",
+                                    "nights"
                                 )
                             )
                         )
@@ -194,8 +196,16 @@ class RequirementDetailViewModelTest {
                 children = listOf(
                     RequirementItem("2a", "Cook a meal.", null, false, false),
                     RequirementItem("2b", "Lead one hike.", Choice(1, 2), false, true),
-                    RequirementItem("2c", "Keep a camping log.", null, false, false)
+                    RequirementItem(
+                        "2c",
+                        "Keep a camping log.",
+                        null,
+                        false,
+                        false,
+                        TrackerCount(0, null, "nights")
+                    )
                 ),
+                tracker = null,
                 commentChanged = false,
                 today = today,
                 saveFailure = null
@@ -289,6 +299,48 @@ class RequirementDetailViewModelTest {
         progressRepository.markRequirementCompleted("camping", "2b(2)", day, badgeStart)
         assertTrue(viewModel.ready().children.single { it.number == "2b" }.completed)
         assertTrue(viewModel.ready().requirement.completed)
+    }
+
+    @Test
+    fun requirementWithTracker_showsItsEntries() = runTest {
+        progressRepository.addTrackerEntry(
+            "camping",
+            "2c",
+            null,
+            mapOf("night" to "2026-04-10"),
+            badgeStart
+        )
+        val viewModel = viewModel("2c")
+        startCollecting(viewModel)
+
+        assertEquals(
+            TrackerItem(
+                count = TrackerCount(1, null, "night"),
+                rowTitle = "Night",
+                rowLabel = "night",
+                rows = listOf(
+                    TrackerRow(1, 1, listOf(TrackerValue(TrackerColumnType.DATE, "2026-04-10")))
+                )
+            ),
+            viewModel.ready().tracker
+        )
+    }
+
+    @Test
+    fun tracker_updatesAsEntriesAreAdded() = runTest {
+        val viewModel = viewModel("2c")
+        startCollecting(viewModel)
+        assertEquals(emptyList<TrackerRow>(), viewModel.ready().tracker!!.rows)
+
+        progressRepository.addTrackerEntry(
+            "camping",
+            "2c",
+            null,
+            mapOf("night" to "2026-04-10"),
+            badgeStart
+        )
+
+        assertEquals(TrackerCount(1, null, "night"), viewModel.ready().tracker!!.count)
     }
 
     private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")

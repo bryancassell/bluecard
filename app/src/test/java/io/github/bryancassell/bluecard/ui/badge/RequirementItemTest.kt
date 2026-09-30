@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -31,13 +32,13 @@ class RequirementItemTest {
     fun leaf_hasNoSubRequirements() {
         assertEquals(
             RequirementItem("1", "Plan a campout.", null, false, hasSubRequirements = false),
-            leaf.toItem(emptyMap())
+            leaf.toItem(emptyMap(), emptyMap())
         )
     }
 
     @Test
     fun leaf_markedComplete_isCompleted() {
-        assertTrue(leaf.toItem(done("1")).completed)
+        assertTrue(leaf.toItem(done("1"), emptyMap()).completed)
     }
 
     @Test
@@ -50,14 +51,14 @@ class RequirementItemTest {
                 false,
                 hasSubRequirements = true
             ),
-            twoOfThree.toItem(emptyMap())
+            twoOfThree.toItem(emptyMap(), emptyMap())
         )
     }
 
     @Test
     fun choice_isCompletedOnceEnoughAreDone() {
-        assertFalse(twoOfThree.toItem(done("2a")).completed)
-        assertTrue(twoOfThree.toItem(done("2a", "2c")).completed)
+        assertFalse(twoOfThree.toItem(done("2a"), emptyMap()).completed)
+        assertTrue(twoOfThree.toItem(done("2a", "2c"), emptyMap()).completed)
     }
 
     @Test
@@ -69,19 +70,39 @@ class RequirementItemTest {
             children = listOf(Requirement("3a", "A."), Requirement("3b", "B."))
         )
 
-        assertNull(both.toItem(emptyMap()).choice)
+        assertNull(both.toItem(emptyMap(), emptyMap()).choice)
     }
+
+    private val log = Requirement(
+        "4",
+        "Keep a camping log.",
+        tracker = TrackerDefinition(
+            listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE)),
+            "night",
+            "nights"
+        )
+    )
 
     @Test
     fun trackerOnly_isMarkedCompleteByScout() {
-        val log = Requirement(
-            "4",
-            "Keep a camping log.",
-            tracker = TrackerDefinition(
-                listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE))
-            )
+        assertFalse(log.toItem(emptyMap(), emptyMap()).hasSubRequirements)
+    }
+
+    @Test
+    fun tracker_countsItsOwnRequirementsEntries() {
+        val entries = listOf(
+            TrackerEntry(1, "camping", "4", values = mapOf("night" to "2026-05-01")),
+            TrackerEntry(2, "camping", "4", values = mapOf("night" to "2026-05-02"))
         )
 
-        assertFalse(log.toItem(emptyMap()).hasSubRequirements)
+        assertEquals(
+            TrackerCount(2, null, "nights"),
+            log.toItem(emptyMap(), mapOf("4" to entries, "5" to entries.take(1))).tracker
+        )
+    }
+
+    @Test
+    fun noTracker_hasNoCount() {
+        assertNull(leaf.toItem(emptyMap(), emptyMap()).tracker)
     }
 }
