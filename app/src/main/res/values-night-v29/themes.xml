@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        In dark mode, Android 10+ can darken a light-themed app itself: force dark, and
+        on newer versions the user's expanded dark theme (force invert). Either would
+        replace the blue card's colors, which BlueCardTheme keeps in dark mode too. Both
+        skip a theme that isn't declared light, so in dark mode this one isn't. In light
+        mode it stays declared light, so Android's own popups, such as the text
+        selection toolbar, are light too.
+    -->
+    <style name="Base.Theme.BlueCard" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:isLightTheme">false</item>
+    </style>
+</resources>
