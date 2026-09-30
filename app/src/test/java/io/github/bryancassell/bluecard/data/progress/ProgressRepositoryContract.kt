@@ -63,7 +63,7 @@ abstract class ProgressRepositoryContract {
 
     @Test
     fun startBadge_again_keepsExistingProgress() = test {
-        repository.setCounselor(BADGE, Counselor(name = "Pat"))
+        repository.setCounselor(BADGE, Counselor(name = "Pat"), badgeStart)
         repository.startBadge(BADGE, LocalDate.of(2027, 1, 1), day)
 
         val badge = progress()!!.badge
@@ -88,28 +88,46 @@ abstract class ProgressRepositoryContract {
 
     @Test
     fun setCounselor_savesUpdatesAndClears() = test {
-        repository.setCounselor(BADGE, Counselor("Pat Lee", "555-0100", "pat@example.com"))
+        repository.setCounselor(
+            BADGE,
+            Counselor("Pat Lee", "555-0100", "pat@example.com"),
+            badgeStart
+        )
         assertEquals(
             Counselor("Pat Lee", "555-0100", "pat@example.com"),
             progress()!!.badge.counselor
         )
 
-        repository.setCounselor(BADGE, Counselor(name = "Sam"))
+        repository.setCounselor(BADGE, Counselor(name = "Sam"), badgeStart)
         assertEquals(Counselor(name = "Sam"), progress()!!.badge.counselor)
 
-        repository.setCounselor(BADGE, null)
+        repository.setCounselor(BADGE, null, badgeStart)
         assertNull(progress()!!.badge.counselor)
     }
 
     @Test
+    fun setCounselor_trimsSpacesAroundEachField() = test {
+        repository.setCounselor(
+            BADGE,
+            Counselor(" Pat Lee ", "\t555-0100", "pat@example.com\n"),
+            badgeStart
+        )
+
+        assertEquals(
+            Counselor("Pat Lee", "555-0100", "pat@example.com"),
+            progress()!!.badge.counselor
+        )
+    }
+
+    @Test
     fun setCounselor_dropsBlankFields_andRemovesAnEmptyCounselor() = test {
-        repository.setCounselor(BADGE, Counselor(name = "Pat", phone = " ", email = ""))
+        repository.setCounselor(BADGE, Counselor(name = "Pat", phone = " ", email = ""), badgeStart)
         assertEquals(Counselor(name = "Pat"), progress()!!.badge.counselor)
 
-        repository.setCounselor(BADGE, Counselor(name = "  "))
+        repository.setCounselor(BADGE, Counselor(name = "  "), badgeStart)
         assertNull(progress()!!.badge.counselor)
 
-        repository.setCounselor(BADGE, Counselor())
+        repository.setCounselor(BADGE, Counselor(), badgeStart)
         assertNull(progress()!!.badge.counselor)
     }
 
@@ -210,12 +228,13 @@ abstract class ProgressRepositoryContract {
         repository.markRequirementCompleted(UNSTARTED, "1", day, BadgeStart(version, day))
         repository.setRequirementComment(OTHER, "1", "Next week.", BadgeStart(version, day))
         repository.addTrackerEntry(
-            COOKING,
+            FOURTH,
             "4",
             null,
-            mapOf("meal" to "Chili"),
+            mapOf("miles" to "10"),
             BadgeStart(version, day)
         )
+        repository.setCounselor(THIRD, Counselor(name = "Pat"), BadgeStart(version, day))
 
         assertEquals(BadgeProgress(UNSTARTED, version, day), progress(UNSTARTED)!!.badge)
         assertEquals(
@@ -227,10 +246,18 @@ abstract class ProgressRepositoryContract {
             listOf(RequirementProgress(OTHER, "1", comment = "Next week.")),
             progress(OTHER)!!.requirements
         )
-        assertEquals(BadgeProgress(COOKING, version, day), progress(COOKING)!!.badge)
+        assertEquals(BadgeProgress(FOURTH, version, day), progress(FOURTH)!!.badge)
         assertEquals(
-            listOf(mapOf("meal" to "Chili")),
-            progress(COOKING)!!.trackerEntries.map { it.values }
+            listOf(mapOf("miles" to "10")),
+            progress(FOURTH)!!.trackerEntries.map { it.values }
+        )
+        assertEquals(
+            BadgeProgressDetails(
+                BadgeProgress(THIRD, version, day, counselor = Counselor(name = "Pat")),
+                emptyList(),
+                emptyList()
+            ),
+            progress(THIRD)
         )
     }
 
@@ -241,8 +268,12 @@ abstract class ProgressRepositoryContract {
         repository.markRequirementCompleted(BADGE, "1", day, later)
         repository.setRequirementComment(BADGE, "2", "Hi", later)
         repository.addTrackerEntry(BADGE, "7a", null, mapOf("minutes" to "30"), later)
+        repository.setCounselor(BADGE, Counselor(name = "Pat"), later)
 
-        assertEquals(BadgeProgress(BADGE, version, started), progress()!!.badge)
+        assertEquals(
+            BadgeProgress(BADGE, version, started, counselor = Counselor(name = "Pat")),
+            progress()!!.badge
+        )
         assertEquals(listOf("1", "2"), progress()!!.requirements.map { it.requirementNumber })
         assertEquals(listOf(mapOf("minutes" to "30")), trackerValues("7a"))
     }
@@ -347,7 +378,7 @@ abstract class ProgressRepositoryContract {
     @Test
     fun clearBadge_removesEverythingForThatBadgeOnly() = test {
         repository.startBadge("archery", version, started)
-        repository.setCounselor(BADGE, Counselor(name = "Pat"))
+        repository.setCounselor(BADGE, Counselor(name = "Pat"), badgeStart)
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
         addLogEntry("7a", mapOf("minutes" to "30"))
         repository.markRequirementCompleted("archery", "1", day, badgeStart)
@@ -388,7 +419,6 @@ abstract class ProgressRepositoryContract {
     @Test
     fun recordingOnAnUnstartedBadge_failsAndRecordsNothing() = test {
         val writes: List<Pair<String, suspend () -> Unit>> = listOf(
-            "setCounselor" to { repository.setCounselor(UNSTARTED, Counselor(name = "Pat")) },
             "setCompletedOnPriorDate" to { repository.setCompletedOnPriorDate(UNSTARTED, day) },
             "markRequirementNotCompleted" to {
                 repository.markRequirementNotCompleted(UNSTARTED, "1")
@@ -437,7 +467,8 @@ abstract class ProgressRepositoryContract {
         val unwritable = unwritableRepository()
         val writes: List<Pair<String, suspend () -> Unit>> = listOf(
             "startBadge" to { unwritable.startBadge(BADGE, version, started) },
-            "setCounselor" to { unwritable.setCounselor(BADGE, Counselor(name = "Pat")) },
+            "setCounselor" to
+                { unwritable.setCounselor(BADGE, Counselor(name = "Pat"), badgeStart) },
             "setCompletedOnPriorDate" to { unwritable.setCompletedOnPriorDate(BADGE, day) },
             "markRequirementCompleted" to
                 { unwritable.markRequirementCompleted(BADGE, "1", day, badgeStart) },
@@ -466,6 +497,7 @@ abstract class ProgressRepositoryContract {
         const val BADGE = "personal-fitness"
         const val UNSTARTED = "archery"
         const val OTHER = "camping"
-        const val COOKING = "cooking"
+        const val THIRD = "cooking"
+        const val FOURTH = "cycling"
     }
 }

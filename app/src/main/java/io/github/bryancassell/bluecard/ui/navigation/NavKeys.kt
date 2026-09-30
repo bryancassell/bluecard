@@ -37,3 +37,7 @@ data class TrackerEntryDetail(
     val entryId: Long? = null,
     val rowNumber: Int? = null
 ) : NavKey
+
+/** The page for entering a badge's merit badge counselor. */
+@Serializable
+data class EditCounselor(val badgeId: String) : NavKey

@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
+import io.github.bryancassell.bluecard.ui.badge.EditCounselorRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
 import io.github.bryancassell.bluecard.ui.badge.TrackerEntryRoute
 import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
@@ -77,7 +78,15 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 BadgeDetailRoute(
                     badgeId = key.badgeId,
-                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) }
+                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
+                    onEditCounselor = { navigate(EditCounselor(key.badgeId)) }
+                )
+            }
+            entry<EditCounselor> { key ->
+                // Once saved, the page closes, unless the scout has already gone back.
+                EditCounselorRoute(
+                    badgeId = key.badgeId,
+                    onSaved = { backStack.closeIfOnTop(key) }
                 )
             }
             entry<RequirementDetail> { key ->
@@ -99,7 +108,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     entryId = key.entryId,
                     rowNumber = key.rowNumber,
                     // Only while it's on top, so it can't close a screen opened after it.
-                    onClose = { if (backStack.lastOrNull() == key) backStack.removeLastOrNull() }
+                    onClose = { backStack.closeIfOnTop(key) }
                 )
             }
             entry<DataManagement> { DataManagementScreen() }

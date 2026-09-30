@@ -40,19 +40,20 @@ data class Counselor(
     val email: String? = null
 ) {
     /**
-     * This counselor with blank fields removed, or null if no field is left. Room reads
-     * a counselor with every field empty back as null, so repositories store this form.
+     * This counselor with spaces around each field trimmed and empty fields removed, or null if
+     * no field is left. Room reads a counselor with every field empty back as null, so
+     * repositories store this form.
      */
     fun normalized(): Counselor? =
-        Counselor(name?.ifBlank { null }, phone?.ifBlank { null }, email?.ifBlank { null })
+        Counselor(normalizedText(name), normalizedText(phone), normalizedText(email))
             .takeIf { it != Counselor() }
 }
 
 /**
- * A requirement's comment as repositories store it: without spaces around it, and null if
- * nothing is left.
+ * Text the scout typed, such as a requirement's comment, as repositories store it: without
+ * spaces around it, and null if nothing is left.
  */
-fun normalizedComment(comment: String?): String? = comment?.trim()?.ifEmpty { null }
+fun normalizedText(text: String?): String? = text?.trim()?.ifEmpty { null }
 
 @Entity(
     tableName = "requirement_progress",

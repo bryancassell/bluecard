@@ -9,6 +9,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.text.TextRange
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -58,6 +59,90 @@ class TextLengthLimitTest {
         field().performTextInput("XYZ")
 
         assertEquals("aXbcd", state.text.toString())
+    }
+
+    @Test
+    fun pasteStartingLikeTheTextAfterTheCursor_keepsThatText() {
+        field().performTextInput("a b")
+        field().performTextInputSelection(TextRange(1))
+
+        // Starts with a space, as does the text after the cursor.
+        field().performTextInput(" xyz")
+
+        assertEquals("a x b", state.text.toString())
+    }
+
+    @Test
+    fun replacementStartingLikeTheTextFromTheSelectionOn_isCutAtItsEnd() {
+        field().performTextInput("a c")
+        field().performTextInputSelection(TextRange(0, 1))
+
+        // Starts with the selected "a" and the space after it, and ends with "a", so the
+        // same text could come from adding " xa", "a x" or "xa " instead.
+        field().performTextInput("a xa")
+
+        assertEquals("a x c", state.text.toString())
+    }
+
+    @Test
+    fun replacementOfABackwardsSelection_isCutAtItsEnd() {
+        // Selected from right to left, as with Shift+Left. (Set in code, since the semantics
+        // action for selecting text always selects left to right.)
+        state.edit {
+            append("a c")
+            selection = TextRange(1, 0)
+        }
+
+        field().performTextInput("a xa")
+
+        assertEquals("a x c", state.text.toString())
+    }
+
+    @Test
+    fun replacementEndingWithTheSelectedText_isCutAtItsEnd() {
+        field().performTextInput("abc")
+        field().performTextInputSelection(TextRange(1, 3))
+
+        field().performTextInput("xyzbc")
+
+        assertEquals("axyzb", state.text.toString())
+    }
+
+    @Test
+    fun replacementEndingLikeTheSelectedText_isCutAtItsEnd() {
+        field().performTextInput("abc")
+        field().performTextInputSelection(TextRange(1, 3))
+
+        // Ends with "c", as does the selected "bc".
+        field().performTextInput("wxyzc")
+
+        assertEquals("awxyz", state.text.toString())
+    }
+
+    @Test
+    fun deletionFromTextAlreadyPastTheLimit_cutsItAtTheLimit() {
+        // Text set in code isn't limited. (Moving the cursor would cut it, so that's set in
+        // code too.)
+        state.edit {
+            append("aaaaaaa")
+            selection = TextRange(3)
+        }
+
+        // Takes out one "a", so the three before the cursor and the four after it still start
+        // and end the text, but overlap.
+        field().performTextReplacement("aaaaaa")
+
+        assertEquals("aaaaa", state.text.toString())
+    }
+
+    @Test
+    fun editBeforeTheCursor_keepsTheTextBetweenThem() {
+        field().performTextInput("a cd")
+
+        // Changes the word before the cursor, as a keyboard's autocorrect can.
+        field().performTextReplacement("abb cd")
+
+        assertEquals("ab cd", state.text.toString())
     }
 
     @Test

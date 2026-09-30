@@ -204,38 +204,40 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   ViewModel creates the state with `SavedStateHandle.textFieldState`
   (`ui/TextFieldSavedState.kt`), which restores the text and keeps it with a
   [saved state provider](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate#non-parcelable).
-  Onboarding's name and unit number fields, Badges search, the requirement
-  comment and a tracker row's fields work this way. The provider reads the text each time the system
+  Onboarding's name and unit number fields and Badges search work this way.
+  Fields that start as stored text, the requirement comment and the counselor's
+  fields, use `StoredTextFields` instead (below), and a tracker row's fields
+  work like it. The provider reads the text each time the system
   saves state, so the text survives the system stopping the app even if it
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
   the back stack, so a change made after that isn't kept. (Copying the text
   into `SavedStateHandle` had the same limit.) `restoredText` ignores any value
   under its key that isn't the kind of `Bundle` it keeps, as a backstop for the
-  extras of the intent that opened the app (see Navigation). The comment is
-  kept only once the saved comment has loaded into
-  it (`restoredText` and `keepText`), so if the system stops the app before
-  then, the page loads the saved comment again instead of restoring an empty
-  field. A tracker row's fields work the same way. Its date columns are text
-  fields too, holding the date as `YYYY-MM-DD` as it's stored, so they're kept
-  the same way; the page shows them as dates with a date picker.
-  A ViewModel that fills a field with stored text once it
-  loads, as Requirement detail does with the saved comment, writes it in a
+  extras of the intent that opened the app (see Navigation). `StoredTextFields`
+  keeps a page's fields only once the stored text has loaded into them
+  (`loadOnce`), so if the system stops the app before then, the page loads the
+  stored text again instead of restoring empty fields. It keeps and restores
+  the fields together. The Tracker entry page does the same for a row's fields
+  itself, since which fields it has depends on the catalog, which loads with
+  the row. Its date columns are text fields too, holding the date as
+  `YYYY-MM-DD` as it's stored, so they're kept the same way; the page shows them
+  as dates with a date picker. `StoredTextFields` writes the stored text in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
   snapshot, which it does once a frame. Saved state has a size limit, so every
   text field has a length limit (`TextLengthLimit`): 100 characters for
-  Onboarding's name and Badges search, 20 for the unit number and a tracker
-  row's number columns, 500 for its text columns and 2,000 for the requirement
-  comment. It keeps as much of an edit, such as a long paste, as fits, and never
-  cuts the text already in the field or splits an emoji. A single-line field
-  keeps a pasted line break in its text but doesn't show one, so the single-line
-  text fields (Onboarding's, Badges search and a tracker row's text columns,
-  whose values its requirement's page shows on one line) also replace each line
-  break with a space (`LineBreaksAsSpaces`); a number field rejects one. That
-  runs after the length limit, so the limit cuts a huge paste before it's
-  scanned, and finds the edit before a pasted line break becomes a space it
-  could mistake for one already in the field.
+  Onboarding's name, Badges search and the counselor's name, 20 for the unit
+  number and a tracker row's number columns, 50 for the counselor's phone, 254
+  for their email, 500 for a tracker row's text columns and 2,000 for the
+  requirement comment. It keeps as much of an edit, such as a long paste, as
+  fits, and never cuts the text already in the field or splits an emoji. A
+  single-line field keeps a pasted line break in its text but doesn't show one,
+  so the single-line text fields (Onboarding's, Badges search, the counselor's
+  and a tracker row's text columns, whose values its requirement's page shows on
+  one line) also replace each line break with a space (`LineBreaksAsSpaces`); a
+  number field rejects one. That runs after the length limit, so the limit cuts
+  a huge paste before it's scanned.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
@@ -419,7 +421,12 @@ ViewModels scoped to the navigation back stack; BlueCard will have both. Hilt
 modules bind each repository interface to its implementation and provide the
 Room database, DataStore, a coroutine dispatcher, an app-lifetime
 `CoroutineScope` (`@ApplicationScope`) and a `Clock` for today's date (the
-dispatcher and clock injected so tests can replace them).
+dispatcher and clock injected so tests can replace them). The clock reads the
+device's time zone each time it's read, not once when it's made, so after a
+time zone change, a page that's already open records dates in the new zone
+([#79](https://github.com/bryancassell/bluecard/issues/79)). A "today" held in
+a page's UI state, such as the date picker's latest date, catches up the next
+time that state updates.
 
 ### Package layout
 
@@ -429,7 +436,7 @@ io.github.bryancassell.bluecard
 │   ├── onboarding/
 │   ├── home/
 │   ├── badges/         Browse and search
-│   ├── badge/          Badge detail and requirement sub-pages
+│   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
 │   ├── data/           Clear, export, import
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
 │   └── theme/
@@ -449,9 +456,10 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details, requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
+| **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
 The PRD asks that requirements be understandable "without extensive
@@ -467,7 +475,9 @@ them there the same way, and each opens its own page in turn. A requirement
 with a tracker lists its rows there, and each opens the Tracker entry page (see
 [Key flows](#key-flows)). Each page shows one level of the requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
-version for a badge the scout hasn't started.
+version for a badge the scout hasn't started. The counselor takes a few lines
+between the official link and the requirements, and is entered on a page of its
+own.
 
 ## Merit badge catalog
 
@@ -624,8 +634,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   - **Recording anything starts the badge**, on the requirements version its
     pages show until then (the newest), dated today (`ui/badge/ProgressRecorder.kt`).
     There's no separate "start" step. `markRequirementCompleted`,
-    `setRequirementComment` and `addTrackerEntry` take a `BadgeStart`, and `ProgressRepository` starts
-    the badge in the same transaction as the write, so a save that fails doesn't
+    `setRequirementComment`, `addTrackerEntry` and `setCounselor` take a
+    `BadgeStart`, and `ProgressRepository` starts the badge in the same transaction as the write, so a save that fails doesn't
     leave the badge started. Other functions that record progress should take one
     when a screen first calls them. Undoing everything recorded leaves the badge
     started, so it stays In progress until the scout clears it
@@ -643,7 +653,7 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     sub-requirements, for notes about it as a whole. The page's comment field is
     saved when the scout taps Save, which is enabled once the field differs from
     the saved comment. The repository trims spaces around it
-    (`normalizedComment`), and an empty comment removes it. The field takes up
+    (`normalizedText`), and an empty comment removes it. The field takes up
     to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
     stopping the app, but leaving the page discards it.
   - **Trackers.** The catalog defines each tracker's columns (date, number or
@@ -678,6 +688,29 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     around each value and drops blank ones (`normalizedTrackerValues`). A
     tracker doesn't complete its requirement: the scout marks it complete, as
     one without a tracker.
+  - **Counselor.** Badge detail shows the counselor's name, phone and email,
+    with a button to add or edit them. Tapping the phone opens the phone app
+    with the number filled in (`ACTION_DIAL`, which needs no permission), and
+    tapping the email opens an email app (`ACTION_SENDTO` with a `mailto:`
+    address). If no app can, as on a tablet without a phone app, a message
+    says so. The fields are edited on Edit counselor and saved when the scout
+    taps Save, which is enabled once they differ from the saved counselor. The
+    repository trims spaces around each field (`Counselor.normalized`) and
+    drops empty ones; with none left, the counselor is removed. There's no
+    format check: a phone number or email address that's wrong opens its app
+    with what the scout typed. Each field is one line, and a line break pasted
+    into one becomes a space (`LineBreaksAsSpaces`, see UI layer).
+    Once the save succeeds, the ViewModel sets
+    `saved` in the UI state and the screen closes itself
+    (`closeIfOnTop`, which does nothing if the scout has already gone back),
+    following the UI layer guide's
+    [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
+    of navigating from UI state. The screen then tells the ViewModel it has
+    closed (`onClosed`), which clears `saved`, so the page works again if it's
+    opened before its ViewModel is cleared. The page stays open if a field
+    changed while it saved, so the change isn't lost. A save that fails keeps the page open with its
+    fields and the snackbar, so the scout can try again. Leaving the page
+    without saving discards the edits, as with a comment.
 - **PDF report.** `ReportRepository` draws the profile, badge, counselor,
   requirement summaries, dates, comments and tracker data onto `PdfDocument`
   pages and writes the file to the app's cache directory. The scout can:
@@ -811,6 +844,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
 | Trackers | Listed on the requirement's page; each row filled in on its own page with a field for each column, saved with a Save button. A fixed-row tracker shows every row, and a row keeps its number when another is deleted | Four or more fields don't fit in a dialog or a table row on a phone once the keyboard is up. Numbered rows match trackers such as a 13-week budget, where each week is its own row |
 | Tracker row names | The catalog gives the singular and plural in lowercase ("week", "weeks"), and the app capitalizes the singular for titles | Counts read naturally ("8 of 12 weeks", "1 session") without the app pluralizing catalog text |
+| Counselor details | Shown on Badge detail; edited on a page of their own with a Save button, which closes it once the save succeeds; the phone and email open the phone and email apps | Entered once and read often, so Badge detail stays short; closing only after a successful save shows a failure while the scout can still try again; `ACTION_DIAL` and `ACTION_SENDTO` need no permissions |
 | Requirement comments | On every requirement, saved with a Save button | The scout decides when a comment is saved, and a save that fails is reported right then, not while they're still typing |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |

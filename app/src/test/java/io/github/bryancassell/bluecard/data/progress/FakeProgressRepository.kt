@@ -54,9 +54,9 @@ class FakeProgressRepository : ProgressRepository {
         }
     }
 
-    override suspend fun setCounselor(badgeId: String, counselor: Counselor?) {
+    override suspend fun setCounselor(badgeId: String, counselor: Counselor?, start: BadgeStart) {
         checkCanSave()
-        updateBadge(badgeId) {
+        updateBadge(badgeId, start) {
             it.copy(badge = it.badge.copy(counselor = counselor?.normalized()))
         }
     }
@@ -116,7 +116,7 @@ class FakeProgressRepository : ProgressRepository {
         start: BadgeStart
     ) {
         checkCanSave()
-        updateRequirement(badgeId, number, start) { it.copy(comment = normalizedComment(comment)) }
+        updateRequirement(badgeId, number, start) { it.copy(comment = normalizedText(comment)) }
     }
 
     override suspend fun addTrackerEntry(

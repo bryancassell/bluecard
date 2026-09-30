@@ -36,6 +36,7 @@ import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 fun BadgeDetailRoute(
     badgeId: String,
     onOpenRequirement: (number: String) -> Unit,
+    onEditCounselor: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BadgeDetailViewModel =
         hiltViewModel<BadgeDetailViewModel, BadgeDetailViewModel.Factory> { it.create(badgeId) }
@@ -44,6 +45,7 @@ fun BadgeDetailRoute(
     BadgeDetailScreen(
         uiState = uiState,
         onOpenRequirement = onOpenRequirement,
+        onEditCounselor = onEditCounselor,
         onCompletedChange = viewModel::setCompleted,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
@@ -51,14 +53,16 @@ fun BadgeDetailRoute(
 }
 
 /**
- * A badge's summary, whether it's Eagle-required, a link to its official page, and its
- * top-level requirements, which the scout can mark complete. Each requirement opens its own
- * page for the rest, which keeps this one short.
+ * A badge's summary, whether it's Eagle-required, a link to its official page, the scout's
+ * merit badge counselor, and its top-level requirements, which the scout can mark complete.
+ * Each requirement opens its own page for the rest, and the counselor is entered on a page of
+ * its own, which keeps this one short.
  */
 @Composable
 fun BadgeDetailScreen(
     uiState: BadgeDetailUiState,
     onOpenRequirement: (number: String) -> Unit,
+    onEditCounselor: () -> Unit,
     onCompletedChange: (number: String, completed: Boolean) -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
@@ -72,7 +76,7 @@ fun BadgeDetailScreen(
             ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
 
         is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
-            BadgeDetails(uiState, onOpenRequirement, onCompletedChange)
+            BadgeDetails(uiState, onOpenRequirement, onEditCounselor, onCompletedChange)
             SaveFailedSnackbarHost(
                 failure = uiState.saveFailure,
                 onShown = onSaveFailureShown,
@@ -86,6 +90,7 @@ fun BadgeDetailScreen(
 private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
     onOpenRequirement: (number: String) -> Unit,
+    onEditCounselor: () -> Unit,
     onCompletedChange: (number: String, completed: Boolean) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -126,6 +131,7 @@ private fun BadgeDetails(
         ) {
             Text(text = stringResource(R.string.badge_detail_official_page))
         }
+        CounselorSection(uiState.counselor, onEdit = onEditCounselor)
         Text(
             text = stringResource(R.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,

@@ -25,6 +25,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.core.os.bundleOf
@@ -51,6 +52,7 @@ import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
+import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
@@ -175,7 +177,7 @@ class MainActivityTest {
     // like the screens' saved text fields, and built like the text they keep.
     private fun launchWithExtrasNamedLikeTextFields() {
         val intent = Intent(ApplicationProvider.getApplicationContext(), MainActivity::class.java)
-        for (key in listOf("name", "unit_number", "query", "comment")) {
+        for (key in listOf("name", "unit_number", "query", "comment", "phone", "email")) {
             intent.putExtra(key, bundleOf("text" to "From another app."))
         }
         scenario = ActivityScenario.launch(intent)
@@ -368,6 +370,19 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.onNodeWithText("First.").performClick()
         assertFieldEmpty("Comment")
+    }
+
+    @Test
+    fun launchExtras_doNotFillCounselorFields() {
+        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        launchWithExtrasNamedLikeTextFields()
+
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        assertFieldEmpty("Name")
+        assertFieldEmpty("Phone")
+        assertFieldEmpty("Email")
     }
 
     // Covers every ViewModel, including those scoped to the activity, whatever keys the
@@ -669,6 +684,57 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("1 night").performScrollTo().assertIsDisplayed()
     }
 
+    private suspend fun counselor() =
+        progressRepository.observeProgress("camping").first()?.badge?.counselor
+
+    @Test
+    fun counselor_savedOnItsPage_showsOnBadgeDetail() {
+        openCamping()
+
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        field("Name").performTextInput("Pat Lee")
+        field("Phone").performTextInput("555-0100")
+        field("Email").performTextInput("pat@example.com")
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        assertEquals(
+            Counselor("Pat Lee", "555-0100", "pat@example.com"),
+            runBlocking {
+                counselor()
+            }
+        )
+        // Saving closes the page, back to the badge's.
+        field("Name").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Pat Lee").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("555-0100").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo().assertIsDisplayed()
+
+        // Editing it starts from what's saved.
+        composeTestRule.onNodeWithText("Edit counselor").performScrollTo().performClick()
+        field("Phone").performTextClearance()
+        composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
+
+        assertEquals(
+            Counselor(name = "Pat Lee", email = "pat@example.com"),
+            runBlocking { counselor() }
+        )
+        composeTestRule.onNodeWithText("555-0100").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromEditCounselor_discardsChanges() {
+        openCamping()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        field("Name").performTextInput("Pat Lee")
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pat Lee").assertDoesNotExist()
+        assertNull(runBlocking { progressRepository.observeProgress("camping").first() })
+    }
+
     // Dates, like numbers, follow the strings' language, so on a Persian device the English
     // strings keep English month names and digits.
     @Config(qualifiers = "fa")
@@ -868,6 +934,17 @@ class MainActivityTest {
         pressBack()
 
         composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onAddCounselor_opensItOnce() {
+        openCamping()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo()
+
+        tapTwiceInOneFrame("Add counselor")
+        pressBack()
+
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
     }
 
     @Test
