@@ -932,7 +932,7 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
 
         // Data management slides away beside Home, so once Home's 300 ms double-tap timeout
-        // has passed, Home takes a tap where Data management no longer is, before the 450 ms
+        // has passed, Home takes a tap where Data management no longer is, before the 375 ms
         // slide ends.
         composeTestRule.mainClock.autoAdvance = false
         pressBack()
@@ -985,11 +985,11 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
 
-        // Tap a badge 400 ms after opening the list, after the 300 ms double-tap timeout,
+        // Tap a badge 350 ms after opening the list, after the 300 ms double-tap timeout,
         // while it is still sliding in.
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.onNodeWithText("Merit badges").performClick()
-        composeTestRule.mainClock.advanceTimeBy(400)
+        composeTestRule.mainClock.advanceTimeBy(350)
         home().assertExists()
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.mainClock.autoAdvance = true

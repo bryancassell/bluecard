@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.IntOffset
 // SlideDirection.Start and End mirror the slides in a right-to-left layout. ARCHITECTURE.md says
 // why BlueCard doesn't use the platform's shorter slides, as Material 3 advises, or their easing.
 private val slide: FiniteAnimationSpec<IntOffset> =
-    tween(durationMillis = 450, easing = FastOutSlowInEasing)
+    tween(durationMillis = 375, easing = FastOutSlowInEasing)
 
 /** Opening a page: it slides in from the end, and the page it leaves slides out toward the start. */
 fun AnimatedContentTransitionScope<*>.openPage(): ContentTransform =
