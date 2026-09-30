@@ -2,6 +2,508 @@
   "formatVersion": 1,
   "badges": [
     {
+      "id": "camping",
+      "name": "Camping",
+      "summary": "Plan, pack and cook for campouts, and camp at least 20 nights.",
+      "officialUrl": "https://www.scouting.org/merit-badges/camping/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to stay safe while camping.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain camping hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain why weather matters and how to prepare for storms."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Show first aid for common camping injuries and illnesses."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn Leave No Trace and the Outdoor Code, and plan to follow them."
+            },
+            {
+              "number": "3",
+              "summary": "Plan an overnight trek and find your way with a topo map.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Use a compass."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Use a GPS receiver."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Use a smartphone GPS app."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Help organize campouts.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Make a duty roster for your patrol's overnight campout."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Help a patrol or Webelos unit get ready for a campout."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Know how to dress and pack for a campout.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "List warm- and cold-weather clothing, and explain layering."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Discuss the right footwear for different weather."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Explain how to care for and store clothing, footwear and bedding."
+                },
+                {
+                  "number": "5d",
+                  "summary": "List the Scout Basic Essentials and why each is needed."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Have your Scoutmaster inspect you and your pack."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn about tents, water, packs and sleeping gear.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Compare four kinds of tents, and pitch one with a partner."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain camp sanitation, and treat water two ways."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain how to choose a good tent site."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Compare internal- and external-frame packs."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Choose and care for a sleeping bag, and make a ground bed."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Get ready for a patrol overnight campout.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "List the personal and patrol gear you'll need."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Pack your gear and your share of patrol gear properly."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Plan and cook camp meals.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Explain stove and fuel safety.",
+                  "children": [
+                    {
+                      "number": "8a(1)",
+                      "summary": "Propane or butane stoves."
+                    },
+                    {
+                      "number": "8a(2)",
+                      "summary": "Liquid-fuel stoves."
+                    },
+                    {
+                      "number": "8a(3)",
+                      "summary": "Storing extra fuel."
+                    }
+                  ]
+                },
+                {
+                  "number": "8b",
+                  "summary": "Compare kinds of lightweight stoves."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Plan a seven-meal camp menu and food list for your patrol."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Cook three planned meals at camp, one on a lightweight stove."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Build your camping experience.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Camp at least 20 nights at Scouting activities.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Start date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "place",
+                        "label": "Event or place",
+                        "type": "text"
+                      },
+                      {
+                        "id": "nights",
+                        "label": "Nights",
+                        "type": "number"
+                      },
+                      {
+                        "id": "shelter",
+                        "label": "Slept in",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "campout",
+                    "rowLabelPlural": "campouts"
+                  }
+                },
+                {
+                  "number": "9b",
+                  "summary": "On your campouts, do two outdoor adventures.",
+                  "requiredCount": 2,
+                  "children": [
+                    {
+                      "number": "9b(1)",
+                      "summary": "Hike up a mountain, climbing at least 1,000 feet."
+                    },
+                    {
+                      "number": "9b(2)",
+                      "summary": "Backpack, snowshoe or cross-country ski at least 4 miles."
+                    },
+                    {
+                      "number": "9b(3)",
+                      "summary": "Bike at least 15 miles or four hours."
+                    },
+                    {
+                      "number": "9b(4)",
+                      "summary": "Take a nonmotorized water trip of 5 miles or four hours."
+                    },
+                    {
+                      "number": "9b(5)",
+                      "summary": "Plan and go on an overnight snow campout."
+                    },
+                    {
+                      "number": "9b(6)",
+                      "summary": "Rappel down a route of at least 30 feet."
+                    }
+                  ]
+                },
+                {
+                  "number": "9c",
+                  "summary": "On a campout, do an approved conservation project."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Discuss what camping taught you and how Scout ideals apply."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "citizenship-in-the-community",
+      "name": "Citizenship in the Community",
+      "summary": "Learn how your local community works and volunteer to help it.",
+      "officialUrl": "https://www.scouting.org/merit-badges/citizenship-in-the-community/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss what it takes to be a good citizen in your community."
+            },
+            {
+              "number": "2",
+              "summary": "Get to know your community and its government.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Map local places and record how far they are from home.",
+                  "children": [
+                    {
+                      "number": "2a(1)",
+                      "summary": "Government buildings, such as city hall and the courthouse."
+                    },
+                    {
+                      "number": "2a(2)",
+                      "summary": "The nearest fire station, police station and hospital."
+                    },
+                    {
+                      "number": "2a(3)",
+                      "summary": "Parks, playgrounds, recreation areas and trails."
+                    },
+                    {
+                      "number": "2a(4)",
+                      "summary": "Historic or other interesting places."
+                    }
+                  ]
+                },
+                {
+                  "number": "2b",
+                  "summary": "Chart your local or state government's top offices."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "See local government at work.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Attend a local government meeting in person."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain which side you favored on an issue debated there."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Look into a local issue that matters to you.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Find which branch of local government handles it."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Interview someone from that branch about it."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Share what you learned with your counselor."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Watch and discuss a movie about someone improving their community."
+            },
+            {
+              "number": "6",
+              "summary": "List taxpayer-funded local services and why they matter."
+            },
+            {
+              "number": "7",
+              "summary": "Get to know a local charity and volunteer for it.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Find three local charities outside Scouting that interest you."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research one of them."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Volunteer at least eight hours for it, then discuss.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number"
+                      },
+                      {
+                        "id": "work",
+                        "label": "What you did",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "session",
+                    "rowLabelPlural": "sessions"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Present your community's history, people, highlights and challenges."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "citizenship-in-the-nation",
+      "name": "Citizenship in the Nation",
+      "summary": "Learn how the U.S. government works and how citizens take part.",
+      "officialUrl": "https://www.scouting.org/merit-badges/citizenship-in-the-nation/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain what the Constitution is, what it does and why it matters."
+            },
+            {
+              "number": "2",
+              "summary": "List the Preamble's six purposes and how they affect you."
+            },
+            {
+              "number": "3",
+              "summary": "Explain the three branches of the federal government.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "What each branch does."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Why power is split among branches."
+                },
+                {
+                  "number": "3c",
+                  "summary": "How the branches check and balance each other."
+                },
+                {
+                  "number": "3d",
+                  "summary": "How citizens can take part in each branch."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain why these founding documents and ideas matter.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "The Declaration of Independence."
+                },
+                {
+                  "number": "4b",
+                  "summary": "The Bill of Rights and the 14th Amendment."
+                },
+                {
+                  "number": "4c",
+                  "summary": "E Pluribus Unum, the traditional national motto."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Follow the national news for five days and discuss one issue."
+            },
+            {
+              "number": "6",
+              "summary": "Study a speech that shaped the nation's history.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Who gave it."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Its historical setting."
+                },
+                {
+                  "number": "6c",
+                  "summary": "The national problems it addressed."
+                },
+                {
+                  "number": "6d",
+                  "summary": "What it said."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Why it matters to the nation's history."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Pick a line that speaks to you and explain why."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Visit or research places of national importance.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Visit a National Historic Landmark or registered historic place."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Tour your state capitol or the U.S. Capitol."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Tour a federal facility."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Research a national monument and why it matters."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Write to your member of Congress about a national issue."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "citizenship-in-the-world",
       "name": "Citizenship in the World",
       "summary": "Learn how nations govern, cooperate and relate to one another.",
@@ -151,6 +653,1111 @@
                 {
                   "number": "7e",
                   "summary": "Attend an international festival or cultural event."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "communication",
+      "name": "Communication",
+      "summary": "Practice listening, speaking, writing and presenting to different audiences.",
+      "officialUrl": "https://www.scouting.org/merit-badges/communication/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2019-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Look at how you communicate.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Log a day of your communication activities.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "time",
+                        "label": "Time of day",
+                        "type": "text"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "text"
+                      },
+                      {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "activity",
+                    "rowLabelPlural": "activities"
+                  }
+                },
+                {
+                  "number": "1b",
+                  "summary": "Keep a three-day journal of your listening.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "heard",
+                        "label": "What you listened to",
+                        "type": "text"
+                      },
+                      {
+                        "id": "purpose",
+                        "label": "Why you listened",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                },
+                {
+                  "number": "1c",
+                  "summary": "Share stories in a small group and observe how each person communicates."
+                },
+                {
+                  "number": "1d",
+                  "summary": "List ways to communicate and when each works poorly."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Present yourself or an idea.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Describe yourself creatively and present it to your counselor."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Make a sales pitch for something you believe in."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Write a five-minute speech and give it to a group."
+            },
+            {
+              "number": "4",
+              "summary": "Interview someone and introduce them as a guest speaker."
+            },
+            {
+              "number": "5",
+              "summary": "Attend a public meeting and report every side fairly."
+            },
+            {
+              "number": "6",
+              "summary": "Plan and teach a skill, then check what was learned."
+            },
+            {
+              "number": "7",
+              "summary": "Share your writing with others.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Write to a newspaper or magazine editor."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Build a webpage or blog with three entries."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Design a newsletter, brochure or flyer for a group."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Plan and emcee a court of honor, campfire or interfaith service."
+            },
+            {
+              "number": "9",
+              "summary": "Explore careers in communication and study one closely."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cooking",
+      "name": "Cooking",
+      "summary": "Learn food safety and nutrition, and cook at home, in camp and on the trail.",
+      "officialUrl": "https://www.scouting.org/merit-badges/cooking/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to cook and handle food safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain cooking hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for burns, cuts, choking and allergic reactions."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain safe food storage and how to avoid cross-contamination."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Discuss food allergies, intolerances and foodborne illness."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Explain food labels and how to spot common allergens."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn the basics of good nutrition.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Give examples, servings and serving sizes for each food group."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain why to limit oils and sugars."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Track your activity and calorie needs for five days.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "text"
+                      },
+                      {
+                        "id": "calories",
+                        "label": "Calories needed",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 5
+                  }
+                },
+                {
+                  "number": "2d",
+                  "summary": "Discuss your eating habits and how to eat healthier."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Explain food label terms and work out nutrition for two servings."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn cooking basics.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Discuss ten cooking methods, their equipment and heat control."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Compare cooking on a camp stove with a charcoal or wood fire."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain how to time a meal so everything is ready together."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain how taste, texture and smell affect what we eat."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Cook at home.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Plan three days of meals plus a dessert."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Find recipes, make a shopping list and cost each meal."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Review your plan and shopping list with your counselor."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Cook breakfast, lunch, dinner and dessert using five methods."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Time each meal, and have an adult confirm you cooked it."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Get feedback on each meal and discuss what you learned."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Cook at camp.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Plan four meals, a snack and a dessert for your patrol."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Find recipes, scale them, and budget the cost per person."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Review your menus and shopping list with your counselor."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Cook the four meals outdoors using the required methods."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Make the snack and dessert outdoors."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Get feedback on each meal and discuss what you learned."
+                },
+                {
+                  "number": "5g",
+                  "summary": "Lead cleanup, and handle leftovers and waste properly."
+                },
+                {
+                  "number": "5h",
+                  "summary": "Discuss how you followed Leave No Trace and the Outdoor Code."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Cook on the trail.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Plan a day of lightweight trail meals and a snack."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Make a shopping list and cost each meal."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Review your menu and repackaging plan with your counselor."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Cook two meals and a snack on a hike or backpacking trip."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Get feedback on each meal and discuss what you learned."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Explain sharing the load, cleanup and protecting food from animals."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Look at cooking in your future.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explore careers in cooking and study one closely."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Explore how cooking could become a hobby or healthy habit."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "environmental-science",
+      "name": "Environmental Science",
+      "summary": "Study ecosystems, pollution and conservation, and how people affect nature.",
+      "officialUrl": "https://www.scouting.org/merit-badges/environmental-science/",
+      "eagleRequired": true,
+      "eagleGroup": "environmental-science-sustainability",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain environmental science in your own words and how it helps."
+            },
+            {
+              "number": "2",
+              "summary": "Study an ecosystem.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Observe an approved area's ecosystem over two days."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Note its parts, how they interact, and how people affect it."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explore air pollution.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Learn about particulate matter and test for it."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain how air pollution and transportation affect each other."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Study the Clean Air Act and its results."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explore water pollution.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Find where your water comes from and review a quality report."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Study the environmental effects of a local flood or drought."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Study the Clean Water Act and its results."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore land pollution.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "List chemicals used on an area and their effects."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Study erosion at a real site and how to reduce it."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Study a Superfund site's cause, effects and cleanup."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore rare, threatened or endangered species.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Report on an endangered species in your state."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Report on a species that has recovered."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Visit a habitat project for a threatened or endangered species."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore pollution prevention and conservation.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Find five ways to save resources and practice two for a week."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Collect 10 examples of reduce, reuse, recycle, and explain them."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Find five future hazardous wastes at home and how to dispose of them."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore pollination.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "List five local pollinators and the plants that draw them."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Watch flowers for an hour and record their pollinators."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Learn how pollinators support farming, with four crop examples."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Investigate two invasive species in your area."
+            },
+            {
+              "number": "10",
+              "summary": "Identify a construction project's environmental impacts and alternatives."
+            },
+            {
+              "number": "11",
+              "summary": "Explore careers in environmental science and study one closely."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "family-life",
+      "name": "Family Life",
+      "summary": "Explore what makes a family strong and do your part at home.",
+      "officialUrl": "https://www.scouting.org/merit-badges/family-life/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Outline what a family is and why families matter."
+            },
+            {
+              "number": "2",
+              "summary": "Discuss why you're important to your family."
+            },
+            {
+              "number": "3",
+              "summary": "Do at least five chores for 90 days and keep a record.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "start",
+                    "label": "Week starting",
+                    "type": "date"
+                  },
+                  {
+                    "id": "chores",
+                    "label": "Chores done and how often",
+                    "type": "text"
+                  }
+                ],
+                "rowLabel": "week",
+                "rowLabelPlural": "weeks",
+                "rowCount": 13
+              }
+            },
+            {
+              "number": "4",
+              "summary": "Plan and complete a home project that helps your family."
+            },
+            {
+              "number": "5",
+              "summary": "Do a project with your family and discuss it.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Its goal."
+                },
+                {
+                  "number": "5b",
+                  "summary": "How each family member took part."
+                },
+                {
+                  "number": "5c",
+                  "summary": "How it turned out."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Plan and hold family meetings.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Discuss how to plan and run a family meeting."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Make an agenda and hold meetings on these topics.",
+                  "children": [
+                    {
+                      "number": "6b(1)",
+                      "summary": "How the Scout Oath and Law shape your family life."
+                    },
+                    {
+                      "number": "6b(2)",
+                      "summary": "The biggest dangers and addictions young people face."
+                    },
+                    {
+                      "number": "6b(3)",
+                      "summary": "How growing up physically and mentally affects your choices."
+                    },
+                    {
+                      "number": "6b(4)",
+                      "summary": "Personal and family finances."
+                    },
+                    {
+                      "number": "6b(5)",
+                      "summary": "Handling a family crisis, and who can help."
+                    },
+                    {
+                      "number": "6b(6)",
+                      "summary": "How technology affects your family."
+                    },
+                    {
+                      "number": "6b(7)",
+                      "summary": "Good manners and etiquette."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Discuss what makes a good parent or guardian."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "first-aid",
+      "name": "First Aid",
+      "summary": "Learn to prevent, recognize and treat injuries and sudden illnesses.",
+      "officialUrl": "https://www.scouting.org/merit-badges/first-aid/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to handle a first aid emergency.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain how to check the scene and assess the emergency."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how to get help at home and in the backcountry."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Show how to prevent spreading infection and dispose of supplies."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Show how to check and manage airway and breathing."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Show a full exam of an injured person."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Explain why shock is an emergency."
+                },
+                {
+                  "number": "1g",
+                  "summary": "Define triage and give examples."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Get ready for first aid emergencies.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss the Scout health and medical record and why it matters."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Work with first-aid kits.",
+                  "children": [
+                    {
+                      "number": "2b(1)",
+                      "summary": "Build a hiking first-aid kit and show how to use it."
+                    },
+                    {
+                      "number": "2b(2)",
+                      "summary": "Inspect a unit, home, vehicle or camp kit with your counselor."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Treat and prevent wounds that don't bleed outside.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Bruises and hematomas."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Heat burns and scalds."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Chemical burns."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Electrical burns."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Sunburn."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Snow blindness."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Immersion foot, frostnip, frostbite and ice burns."
+                },
+                {
+                  "number": "3h",
+                  "summary": "Scrapes such as chafing and rope burns."
+                },
+                {
+                  "number": "3i",
+                  "summary": "Blisters."
+                },
+                {
+                  "number": "3j",
+                  "summary": "Punctures from splinters, nails and fishhooks."
+                },
+                {
+                  "number": "3k",
+                  "summary": "Poisonous plant rashes."
+                },
+                {
+                  "number": "3l",
+                  "summary": "Chigger, tick, mosquito and gnat bites."
+                },
+                {
+                  "number": "3m",
+                  "summary": "Bee stings."
+                },
+                {
+                  "number": "3n",
+                  "summary": "Spider bites."
+                },
+                {
+                  "number": "3o",
+                  "summary": "Scorpion stings."
+                },
+                {
+                  "number": "3p",
+                  "summary": "Bites from pets, wild mammals or people."
+                },
+                {
+                  "number": "3q",
+                  "summary": "Venomous snakebites."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Treat and prevent bleeding wounds.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Nosebleeds."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Scrapes and shallow cuts with mild bleeding."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Deep wounds with severe bleeding."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain when to use a tourniquet, and show applying one."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Treat and prevent breathing emergencies.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Choking."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Asthma attacks."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Anaphylaxis from stings, foods or other allergens."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Inhalation injuries."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Altitude sickness."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Treat and prevent causes of losing consciousness.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Fainting."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Low blood sugar."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Seizures."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Drug overdose and alcohol poisoning."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Blacking out underwater."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Cold water shock and drowning."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Lightning strikes and electric shock."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Know how to respond to a heart attack.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain what a heart attack is."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Describe its signs and first aid."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Explain when CPR should be given."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Show CPR on an approved training device."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Explain what an AED does."
+                },
+                {
+                  "number": "7f",
+                  "summary": "Show or simulate using an AED."
+                },
+                {
+                  "number": "7g",
+                  "summary": "Find AEDs in public places near you."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Treat muscle and bone injuries.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Compare strains, tears, ruptures, sprains, dislocations and fractures."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Describe signs of and first aid for strains, tears and ruptures."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Describe signs and complications of sprains, fractures and dislocations."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Show bandages for these injuries.",
+                  "children": [
+                    {
+                      "number": "8d(1)",
+                      "summary": "Slings for arm or collarbone fractures."
+                    },
+                    {
+                      "number": "8d(2)",
+                      "summary": "Wraps for a sprained ankle."
+                    },
+                    {
+                      "number": "8d(3)",
+                      "summary": "Wraps for a sprained wrist or hurt hand."
+                    }
+                  ]
+                },
+                {
+                  "number": "8e",
+                  "summary": "Show how to handle and splint fractures or dislocations.",
+                  "children": [
+                    {
+                      "number": "8e(1)",
+                      "summary": "Fingers and toes."
+                    },
+                    {
+                      "number": "8e(2)",
+                      "summary": "Forearm or wrist."
+                    },
+                    {
+                      "number": "8e(3)",
+                      "summary": "Upper leg."
+                    },
+                    {
+                      "number": "8e(4)",
+                      "summary": "Lower leg or ankle."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Treat head and spine injuries.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Describe head, neck and back injuries and how to prevent them."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Describe concussion signs and first aid."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Show how to bandage an open head wound."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Show first aid for a possible neck or back injury."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Know when and how to move a patient.",
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Explain when an injured person should or shouldn't be moved."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Choose and show ways to move someone."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Show solo and two-person carries out of a smoky room."
+                },
+                {
+                  "number": "10d",
+                  "summary": "Carry someone with a sprained ankle 25 yards, alone and with a partner."
+                },
+                {
+                  "number": "10e",
+                  "summary": "Lead helpers to improvise a stretcher and carry someone 25 yards."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Treat and prevent heat and cold conditions.",
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Dehydration and overhydration."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Heat cramps and sore muscles after exercise."
+                },
+                {
+                  "number": "11c",
+                  "summary": "Heat exhaustion."
+                },
+                {
+                  "number": "11d",
+                  "summary": "Heatstroke."
+                },
+                {
+                  "number": "11e",
+                  "summary": "Chest pain from cold exposure."
+                },
+                {
+                  "number": "11f",
+                  "summary": "Hypothermia."
+                }
+              ]
+            },
+            {
+              "number": "12",
+              "summary": "Understand mental health conditions.",
+              "children": [
+                {
+                  "number": "12a",
+                  "summary": "Reactions to at least three stressful situations."
+                },
+                {
+                  "number": "12b",
+                  "summary": "How to prepare for and handle those situations."
+                },
+                {
+                  "number": "12c",
+                  "summary": "Signs someone may be a danger to themselves or others."
+                },
+                {
+                  "number": "12d",
+                  "summary": "What to do if you think someone may be a danger."
+                }
+              ]
+            },
+            {
+              "number": "13",
+              "summary": "Treat and prevent other conditions.",
+              "children": [
+                {
+                  "number": "13a",
+                  "summary": "Something in the eye."
+                },
+                {
+                  "number": "13b",
+                  "summary": "Damaged or knocked-out teeth."
+                },
+                {
+                  "number": "13c",
+                  "summary": "Vomiting and diarrhea from food poisoning."
+                },
+                {
+                  "number": "13d",
+                  "summary": "Stomach pain."
+                },
+                {
+                  "number": "13e",
+                  "summary": "Stroke."
+                }
+              ]
+            },
+            {
+              "number": "14",
+              "summary": "Plan and teach a first aid skill using the EDGE method."
+            },
+            {
+              "number": "15",
+              "summary": "Explore emergency medical services.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "15a",
+                  "summary": "Visit an emergency medical station and learn about responders' work."
+                },
+                {
+                  "number": "15b",
+                  "summary": "Interview an emergency medical professional about their career."
+                },
+                {
+                  "number": "15c",
+                  "summary": "Explore careers in emergency medical services and study one."
+                },
+                {
+                  "number": "15d",
+                  "summary": "Explore how emergency medical skills could become a hobby."
                 }
               ]
             }
@@ -374,6 +1981,486 @@
                   "summary": "Explore how fitness could become a lifelong hobby."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "personal-management",
+      "name": "Personal Management",
+      "summary": "Learn to budget, save, invest and manage your time.",
+      "officialUrl": "https://www.scouting.org/merit-badges/personal-management/",
+      "eagleRequired": true,
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Plan how your family would buy something expensive.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Pick a major purchase your family might make."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Write a plan to save for it.",
+                  "children": [
+                    {
+                      "number": "1b(1)",
+                      "summary": "Discuss it with your counselor."
+                    },
+                    {
+                      "number": "1b(2)",
+                      "summary": "Discuss it with your family."
+                    },
+                    {
+                      "number": "1b(3)",
+                      "summary": "Discuss how other family needs fit in."
+                    }
+                  ]
+                },
+                {
+                  "number": "1c",
+                  "summary": "Write a shopping strategy for it.",
+                  "children": [
+                    {
+                      "number": "1c(1)",
+                      "summary": "Judge its quality using ratings or reviews."
+                    },
+                    {
+                      "number": "1c(2)",
+                      "summary": "Compare prices from at least two sources."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Budget and track your money for 13 weeks.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Make a 13-week budget of income, expenses and savings.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "income",
+                        "label": "Expected income",
+                        "type": "number"
+                      },
+                      {
+                        "id": "expenses",
+                        "label": "Expected expenses",
+                        "type": "number"
+                      },
+                      {
+                        "id": "savings",
+                        "label": "Expected savings",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "week",
+                    "rowLabelPlural": "weeks",
+                    "rowCount": 13
+                  }
+                },
+                {
+                  "number": "2b",
+                  "summary": "Compare your expected income and expenses.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "2b(1)",
+                      "summary": "If you'd overspend, find ways to balance the budget."
+                    },
+                    {
+                      "number": "2b(2)",
+                      "summary": "If you'd have money left over, decide how to use it."
+                    }
+                  ]
+                },
+                {
+                  "number": "2c",
+                  "summary": "Record your actual income, expenses and savings for those weeks.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "income",
+                        "label": "Income",
+                        "type": "number"
+                      },
+                      {
+                        "id": "expenses",
+                        "label": "Expenses",
+                        "type": "number"
+                      },
+                      {
+                        "id": "savings",
+                        "label": "Savings",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "week",
+                    "rowLabelPlural": "weeks",
+                    "rowCount": 13
+                  }
+                },
+                {
+                  "number": "2d",
+                  "summary": "Compare your budget with what happened, and discuss changes."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Discuss five ideas about money and how you feel about it.",
+              "requiredCount": 5,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "How getting money makes you feel."
+                },
+                {
+                  "number": "3b",
+                  "summary": "How the cash you carry affects your spending."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Buyer's remorse, and how new things feel months later."
+                },
+                {
+                  "number": "3d",
+                  "summary": "How hunger affects food shopping."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Whether something you bought lived up to its ads."
+                },
+                {
+                  "number": "3f",
+                  "summary": "What happens to money in a savings account."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Charitable giving and why people give."
+                },
+                {
+                  "number": "3h",
+                  "summary": "How you can manage your money better."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain saving and investing basics.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Saving versus investing, and when to use each."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Return on investment and risk."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Simple and compound interest."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Diversification."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Why saving for retirement matters."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain how common investments work.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Common stocks."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Mutual funds."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Life insurance."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Certificates of deposit."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Savings accounts."
+                },
+                {
+                  "number": "5f",
+                  "summary": "U.S. savings bonds."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain why people buy insurance and how it works.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Car insurance."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Health insurance."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Homeowner's or renter's insurance."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Whole and term life insurance."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explain borrowing and credit.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Loans, interest and APR."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Different ways to borrow."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Charge, debit and credit cards, and their costs and pitfalls."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Credit reports and how your choices affect them."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Ways to reduce or pay off debt."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Practice managing your time for a week.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "List next week's tasks in order of importance."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Schedule a week of activities and tasks."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Follow your schedule and keep a daily diary.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "diary",
+                        "label": "Tasks done, and when compared with your plan",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 7
+                  }
+                },
+                {
+                  "number": "8d",
+                  "summary": "Review how your schedule worked and what you'd change."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Write a plan for a project on paper.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Define the goal."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Make a timeline of the steps."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Describe the project."
+                },
+                {
+                  "number": "9d",
+                  "summary": "List the resources and how they'll help."
+                },
+                {
+                  "number": "9e",
+                  "summary": "Make a budget."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Look at a future career and its costs.",
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Pick a career and discuss what it takes."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Explain its costs and how you'd pay for them."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "swimming",
+      "name": "Swimming",
+      "summary": "Build swimming strokes, water safety and rescue skills.",
+      "officialUrl": "https://www.scouting.org/merit-badges/swimming/",
+      "eagleRequired": true,
+      "eagleGroup": "cycling-hiking-swimming",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to stay safe and healthy in the water.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Review how Safe Swim Defense prevents common drownings."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating swimming-related health problems."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Pass the Scouting America swimmer test first."
+            },
+            {
+              "number": "3",
+              "summary": "Swim five strokes with good form.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Front crawl or trudgen."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Back crawl."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Sidestroke."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Breaststroke."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Elementary backstroke."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Swim 150 yards without stopping, using all five strokes."
+            },
+            {
+              "number": "5",
+              "summary": "Show water rescue skills.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Show reaching and throwing rescues, and why they come first."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Show a line rescue as both tender and rescuer."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Float and stay safe in the water.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Float faceup for at least three minutes."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Survival float for at least five minutes."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Show the HELP and huddle positions in a life jacket."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain why swimming in cold water speeds hypothermia."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do surface dives in deep water.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Surface dive feetfirst and bring up an object."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Surface dive headfirst and bring it up again."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Dive headfirst to 5 feet and swim underwater, three times."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Show a standing headfirst dive and a long shallow dive."
+            },
+            {
+              "number": "9",
+              "summary": "Explain how swimming benefits fitness and health."
             }
           ]
         }
