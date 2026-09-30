@@ -308,10 +308,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     which doesn't throw, so waiting for BlueCard's window to get focus back, or
     for `ON_RESUME`, could leave the controls locked. It would also misfire in
     desktop windows, where the tap that focuses BlueCard's window can arrive
-    before the focus does. A tap more than 300 ms later can still reach
-    BlueCard while the other app opens. But on an Android 37 emulator, Android
-    stopped sending touches to BlueCard once it paused, 120–160 ms after the
-    first tap.
+    before the focus does. A tap more than 300 ms after the first can still
+    reach BlueCard if the other app hasn't covered it yet. On an Android 37
+    emulator, Android dropped most second taps that came 140–200 ms after the
+    first, as the other app took over, but not all of them.
   - **The link starts the browser with `ACTION_VIEW`**, as Compose's
     `UriHandler` does, so all three handle "no app" the same way.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
