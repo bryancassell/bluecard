@@ -2,8 +2,10 @@ package io.github.bryancassell.bluecard
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -47,10 +49,19 @@ class MainActivity : ComponentActivity() {
             viewModel.uiState.value == MainActivityUiState.Loading
         }
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // BlueCardTheme is light in dark mode too, so the system bars keep dark icons. These
+        // are enableEdgeToEdge's default styles, except that they never detect dark mode.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { false },
+            navigationBarStyle = SystemBarStyle.auto(DefaultLightScrim, DefaultDarkScrim) { false }
+        )
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             BlueCardApp(uiState)
         }
     }
 }
+
+// enableEdgeToEdge's default navigation bar scrims, which androidx.activity keeps internal.
+private val DefaultLightScrim = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+private val DefaultDarkScrim = Color.argb(0x80, 0x1b, 0x1b, 0x1b)

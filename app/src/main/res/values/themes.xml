@@ -2,9 +2,11 @@
 <resources>
     <!--
         Window theme once the splash screen (Theme.BlueCard.Starting in splash.xml)
-        is dismissed; the app's real theme is BlueCardTheme in Kotlin.
-        values-night/themes.xml overrides the parent in dark mode so the window
-        matches the Compose theme.
+        is dismissed; the app's real theme is BlueCardTheme in Kotlin. It's light in
+        dark mode too, like BlueCardTheme, and its background is BlueCardTheme's, so no
+        other color shows before the first frame.
     -->
-    <style name="Theme.BlueCard" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.BlueCard" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+    </style>
 </resources>
