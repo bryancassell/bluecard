@@ -5,7 +5,8 @@
         it looks the same on Android 8 to 11 as on 12+. installSplashScreen() switches to
         postSplashScreenTheme. Its background is set, not left to follow dark mode, so it
         matches the app's. Its system bar icons are dark to show on that background, as
-        MainActivity keeps them once the app draws.
+        MainActivity keeps them once the app draws. Android 8.0 can't make the navigation
+        bar's icons dark, so there they stay white until the app draws (ARCHITECTURE.md).
     -->
     <style name="Theme.BlueCard.Starting" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">@color/background</item>

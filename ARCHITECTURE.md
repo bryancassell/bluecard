@@ -371,6 +371,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     system bar icons stay dark. In dark mode the window theme isn't declared
     light (`isLightTheme`), which opts out of Android's force dark and force
     invert, so the system doesn't darken the colors either.
+    - **Known gap.** On Android 8.0 the splash screen's navigation bar icons
+      stay white on its light background until the app draws, because dark
+      navigation bar icons in a theme need Android 8.1.
+    - **Don't follow dark mode elsewhere.** `isSystemInDarkTheme()` still
+      reports the system's dark mode, and `-night` resources still apply in
+      it. Until #108, nothing but the window theme above should use either:
+      it would put dark-mode colors, images or bar icons on the light app.
   - **Source.** Material Color Utilities' fidelity scheme from Scouting
     America Blue (`#003F87`), which stays `primary`. The background and
     surfaces are light tints of the card stock's Pale Blue (`#9AB3D5`). Errors
