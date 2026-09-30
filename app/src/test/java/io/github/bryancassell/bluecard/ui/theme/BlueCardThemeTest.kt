@@ -43,13 +43,13 @@ class BlueCardThemeTest {
     }
 
     @Test
-    @Config(qualifiers = "notnight")
+    @Config(sdk = [31], qualifiers = "notnight")
     fun android12AndLater_lightMode_usesBlueCardColors() {
         assertBlueCardColors(colorScheme())
     }
 
     @Test
-    @Config(qualifiers = "night")
+    @Config(sdk = [31], qualifiers = "night")
     fun android12AndLater_darkMode_usesBlueCardColors() {
         assertBlueCardColors(colorScheme())
     }

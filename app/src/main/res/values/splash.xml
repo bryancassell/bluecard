@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!--
         MainActivity's launch theme: the splash screen, from androidx core-splashscreen so
         it looks the same on Android 8 to 11 as on 12+. installSplashScreen() switches to
         postSplashScreenTheme. Its background is set, not left to follow dark mode, so it
-        matches the app's.
+        matches the app's. Its system bar icons are dark to show on that background, as
+        MainActivity keeps them once the app draws.
     -->
     <style name="Theme.BlueCard.Starting" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">@color/background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
         <item name="postSplashScreenTheme">@style/Theme.BlueCard</item>

@@ -367,8 +367,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   - **No dynamic color.** The app doesn't take its colors from the wallpaper.
   - **Light only, for now.** The one scheme, `BlueCardColorScheme` in
     `ui/theme/Color.kt`, is used in dark mode too, until the app has a dark
-    scheme (#108). The window and splash screen backgrounds match it, and
-    `MainActivity` keeps the system bar icons dark.
+    scheme (#108). The window and splash screen backgrounds match it, and the
+    system bar icons stay dark. In dark mode the window theme isn't declared
+    light (`isLightTheme`), which opts out of Android's force dark and force
+    invert, so the system doesn't darken the colors either.
   - **Source.** Material Color Utilities' fidelity scheme from Scouting
     America Blue (`#003F87`), which stays `primary`. The background and
     surfaces are light tints of the card stock's Pale Blue (`#9AB3D5`). Errors
