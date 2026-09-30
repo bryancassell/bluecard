@@ -6,8 +6,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -46,8 +44,6 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // Screens look up the entry of one they'd open, to check it isn't still drawn.
     lateinit var entries: (NavKey) -> NavEntry<NavKey>
     val isDrawn = { key: NavKey -> entries(key) in drawnScreens }
-    val density = LocalDensity.current
-    val layoutDirection = LocalLayoutDirection.current
     NavDisplay(
         backStack = shownBackStack,
         // Pages slide past the sides of their area. Clip them to it, so they don't draw under
@@ -55,20 +51,18 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         modifier = modifier.clipToBounds(),
         onBack = { backStack.removeLastOrNull() },
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
-        // cleared when the entry leaves the back stack, paint each page so it hides the one
-        // it slides over, and ignore touches on screens that are animating, so a double tap
-        // can't press a control on the screen it opened.
+        // cleared when the entry leaves the back stack, and ignore touches on screens that
+        // are animating, so a double tap can't press a control on the screen it opened.
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
-            rememberPageBackgroundNavEntryDecorator(),
             rememberIgnoreTouchesNavEntryDecorator(),
             drawnScreens.decorator
         ),
-        transitionSpec = { openPage(density, layoutDirection) },
-        popTransitionSpec = { closePage(density, layoutDirection) },
-        // The back gesture plays Back's slide, without the default's shrink.
-        predictivePopTransitionSpec = { swipeBackPage(density, layoutDirection, it) },
+        transitionSpec = { openPage() },
+        popTransitionSpec = { closePage() },
+        // A back swipe from either edge plays Back's slide, without the default's shrink.
+        predictivePopTransitionSpec = { swipeBackPage() },
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.
         entryProvider = entryProvider {

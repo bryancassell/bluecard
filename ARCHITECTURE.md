@@ -255,54 +255,42 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     The activity's default factory still passes the extras to a ViewModel
     created without creation extras. BlueCard creates none that way, and
     overriding the factory would replace Hilt's.
-- **Pages slide as the platform's activities do** (`ui/navigation/PageTransitions.kt`).
-  Material 3's [transition patterns](https://m3.material.io/styles/motion/transitions/transition-patterns)
-  say "Both Android and iOS should use platform defaults for forward and
-  backward navigation" between "screens at consecutive levels of hierarchy".
-  Navigation 3's defaults are a 700 ms crossfade, and a back gesture that
-  shrinks the page to 70%
-  ([#104](https://github.com/bryancassell/bluecard/issues/104)). BlueCard
-  plays AOSP's `activity_open_*` and `activity_close_*` animations instead, and
-  mirrors them in a right-to-left layout, as `anim-ldrtl` does:
-  - **Opening a page:** it slides in 96dp from the end, on top, and fades in
-    over 83 ms after 50 ms. The page left slides 96dp toward the start.
-  - **Back:** the closing page, on top, slides 96dp toward the end and fades
-    out over 83 ms after 35 ms. The page returned to slides in 96dp from the
-    start. Once faded out, the closing page shrinks to nothing (`shrinkOut`)
-    until its slide ends, so it stops taking touches (see below).
-  - **Slides take 450 ms with `fast_out_extra_slow_in`.** Compose's
-    `PathEasing` would draw that path, but it needs a native library that
-    Robolectric can't load, so the path's two cubic curves are each a
-    `CubicBezierEasing`.
-  - **The back gesture plays Back's slide, without shrinking the page.** The
+- **Pages slide the full width of their area, side by side**
+  (`ui/navigation/PageTransitions.kt`), as Navigation 3's
+  [animation guide](https://developer.android.com/guide/navigation/navigation-3/animate-destinations)
+  shows. Navigation 3's defaults are a 700 ms crossfade, and a back gesture
+  that shrinks the page to 70%
+  ([#104](https://github.com/bryancassell/bluecard/issues/104)).
+  - **Opening a page:** it slides in from the end, and the page it leaves
+    slides out toward the start.
+  - **Back, and a back swipe from either edge:** the closing page slides out
+    toward the end, and the page returned to follows it in from the start. The
+    pages never overlap, so neither fades.
+  - **Slides take 450 ms with `fast_out_extra_slow_in`,** Material's
+    emphasized easing. Compose's `PathEasing` would draw that path, but it
+    needs a native library that Robolectric can't load, so the path's two
+    cubic curves are each a `CubicBezierEasing`.
+  - **A back swipe moves the pages with the finger.** Its slide is linear, and
+    `NavDisplay` eases the rest of the way once the swipe is released. It
+    doesn't shrink the page, as the
     [predictive back guide](https://developer.android.com/design/ui/mobile/guides/patterns/predictive-back)
-    shrinks the page to 90% and fades through to the next one, and the
-    platform's own swipe back between activities shrinks both pages to 90%
-    (`DefaultCrossActivityBackAnimation`). The shrink looks strange here.
-    Navigation 3's [animation guide](https://developer.android.com/guide/navigation/navigation-3/animate-destinations)
-    reuses its Back animation for the gesture too. Two things follow the
-    platform's swipe back instead (`swipeBackPage`):
-    - **The page stays opaque until the swipe is halfway across,** because the
-      swipe can still be cancelled. The platform keeps it opaque for the whole
-      swipe, and fades it over 90 ms once the swipe commits. `NavDisplay`
-      plays the swipe and what follows its release as one transition, so the
-      fade sits at one point on it: 83 ms after 225 ms. Released before
-      halfway, the page has faded out within about 180 ms, sooner the further
-      it was swiped.
-    - **A swipe from the end edge doesn't slide the page,** which would move
-      it against the finger. The platform's swipe back doesn't move the page
-      sideways for a right-edge swipe either.
+    (to 90%) and the platform's own swipe back between activities
+    (`DefaultCrossActivityBackAnimation`) do. The shrink looks strange here.
+  - **The slides mirror in a right-to-left layout** (`SlideDirection.Start`
+    and `End`).
   - **Pages are clipped to their area** (`clipToBounds` on `NavDisplay`).
     `NavDisplay` doesn't clip its `AnimatedContent`, so a sliding page would
-    draw up to 96dp under a navigation bar or cutout at the side, as in
-    landscape.
-  - **Each page paints the theme's background**
-    (`rememberPageBackgroundNavEntryDecorator`), the color the app's `Scaffold`
-    paints behind the pages, as an activity's window background does. The page
-    underneath doesn't fade, so a see-through page would show it through its
-    gaps. The platform also stretches a window's edge over the gap its slide
-    leaves (`<extend>`). Compose has no equivalent, so the gap shows the
-    `Scaffold`, which is the same color.
+    draw under a navigation bar or cutout at the side, as in landscape.
+  - **This isn't what Material 3 advises.** Its
+    [transition patterns](https://m3.material.io/styles/motion/transitions/transition-patterns)
+    say "Both Android and iOS should use platform defaults for forward and
+    backward navigation" between "screens at consecutive levels of
+    hierarchy", and "Don't use a Lateral transition for navigating
+    hierarchical screens. Sliding content the full width of the screen is
+    excessive for a high frequency transition." BlueCard first played the
+    platform's activity slides, which move 96dp and fade. On a Pixel 9,
+    opening a page felt too short, the back swipe's fade looked bad, and a
+    swipe from the right edge that didn't slide the page looked broken.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens
@@ -310,17 +298,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     from, in the same frame as the first or as a screen reader's click, can't
     open a screen twice.
   - **Screens ignore touches while they animate**
-    (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens
-    during their 450 ms slide, and either can be on top: the new screen going
-    forward, the closing one going back (Navigation 3 gives the screen being
-    returned to a lower z-index). A cover over each animating screen takes
-    touches:
-    - **on a screen animating out, until it's gone.** Otherwise a tap could
-      press its controls wherever the new screen has nothing to press, or
-      anywhere after Back. A closing screen is gone for touches once it has
-      faded out and shrunk to nothing, 118 ms after Back. So the screen
-      returned to takes taps once its double-tap timeout ends, before the
-      450 ms slide does.
+    (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens,
+    side by side, during their 450 ms slide. A cover over each animating screen
+    takes touches:
+    - **on a screen animating out, until it's gone.** Otherwise a tap on the
+      part still on screen could press its controls. After Back, the screen
+      returned to takes taps where the closing screen has slid away once its
+      double-tap timeout ends, before the 450 ms slide does.
     - **on a screen animating in, for the double-tap timeout**
       (`ViewConfiguration.doubleTapTimeoutMillis`, 300 ms). Otherwise the
       second tap of a double tap would press whatever is under the finger on
@@ -338,9 +322,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     `NavDisplay` keeps a screen's state, ViewModel included, until it's out of
     both the back stack and composition, so the same key pushed again during
     its slide out would bring it back as it was: a Tracker entry page that closed
-    after a save would reopen closed, with Save disabled. After Back, taps and
-    a screen reader's clicks reach the screen under the closing one well
-    before the closing screen leaves composition. So a decorator records the
+    after a save would reopen closed, with Save disabled. After Back, taps reach
+    the screen returned to where the closing one has slid away, and a screen
+    reader's clicks reach it straight away, before the closing screen leaves
+    composition. So a decorator records the
     content keys of the screens `NavDisplay` draws, and `rememberNavigateFrom`
     ignores opening one of them: tapping the row that opened the closing
     screen does nothing until its slide ends.
@@ -864,10 +849,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   The progress fake also has a `failSaves` switch for save failures, and the
   contract tests check that Room's writes throw an `IOException` the same way.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
-  interaction, fed by fake repositories or fixed UI state. Where only pixels
-  show the behavior, such as a page's background, a test draws with
-  Robolectric's native graphics (`@GraphicsMode(NATIVE)`) and reads them with
-  `captureToImage`.
+  interaction, fed by fake repositories or fixed UI state.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.
@@ -881,7 +863,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Architecture | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | Modules | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | Navigation | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
-| Page transitions | The platform's activity slides, mirrored right-to-left, clipped to the pages' area; the back gesture plays Back's slide without shrinking the page, keeps it opaque until halfway, and doesn't slide it against the finger; each page paints the theme's background; a closing page stops taking touches once it has faded out | Material 3 says to use platform defaults between levels of hierarchy, and Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) aren't them. The predictive back guide's 90% shrink looks strange here. The platform's swipe back keeps the page opaque until commit and doesn't move it against a right-edge swipe. The slide moves one page over another, so pages must hide what's under them |
+| Page transitions | Full-width slides, side by side, as Navigation 3's animation guide shows, with Material's emphasized easing; mirrored right-to-left; clipped to the pages' area; a back swipe from either edge plays Back's slide linearly, without shrinking the page | Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) looked strange. Material 3 advises the platform's 96dp slides, but on a Pixel 9 they felt too short, and a back swipe that faded or didn't slide looked bad. A linear swipe keeps the pages under the finger |
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |

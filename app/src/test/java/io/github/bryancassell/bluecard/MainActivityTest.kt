@@ -11,7 +11,6 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
-import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -29,10 +28,11 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import androidx.core.graphics.Insets
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
@@ -678,9 +678,9 @@ class MainActivityTest {
         notesField().performTextInput("Rained all night.")
         composeTestRule.waitForIdle()
 
-        // Saving closes the row's page, which slides out over the requirement's page and takes
-        // touches meanwhile. A screen reader's click still reaches Add night, which would open
-        // the closing page again, with the ViewModel it has closed.
+        // Saving closes the row's page, which slides away beside the requirement's page and
+        // takes touches where it still is. A screen reader's click still reaches Add night,
+        // which would open the closing page again, with the ViewModel it has closed.
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
         composeTestRule.waitForIdle()
@@ -884,8 +884,8 @@ class MainActivityTest {
         val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
             .assertIsDisplayed()
 
-        // The second tap of a quick double tap lands on Badge detail, which is sliding in on
-        // top, 100 ms after the first. Which control is under the finger depends on the
+        // The second tap of a quick double tap lands on Badge detail, which is sliding in,
+        // 100 ms after the first. Which control is under the finger depends on the
         // layout, so tap the link itself, as a double tap on a badge over it would.
         composeTestRule.mainClock.autoAdvance = false
         camping.performClick()
@@ -902,22 +902,20 @@ class MainActivityTest {
     @Test
     fun tap_onClosingScreenAfterBack_doesNothing() {
         openCamping()
-        val link = composeTestRule.onNodeWithText("Official requirements")
-            .fetchSemanticsNode().boundsInRoot.center
+        composeTestRule.waitForIdle()
 
-        // After Back, Badge detail fades out and then shrinks to nothing until its slide
-        // ends. Tap where its link was, after the double-tap timeout, while it's still there.
+        // After Back, Badge detail slides away beside Badges. Tap its link while it's still
+        // on screen.
         composeTestRule.mainClock.autoAdvance = false
         pressBack()
         // Under Robolectric, Espresso doesn't wait for Compose, and nothing else in this test
         // runs Compose's coroutines before the tap, so hand the back stack change to Compose
         // now. With the clock stopped, this doesn't let time pass.
         composeTestRule.waitForIdle()
-        composeTestRule.mainClock.advanceTimeBy(400)
-        // Badges is sliding in under Badge detail.
+        composeTestRule.mainClock.advanceTimeBy(100)
+        // Badges is sliding in beside Badge detail.
         composeTestRule.onNodeWithText("Merit badges").assertExists()
-        composeTestRule.onNodeWithText("Official requirements").assertExists()
-        composeTestRule.onRoot().performTouchInput { click(link) }
+        composeTestRule.onNodeWithText("Official requirements").performClick()
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitForIdle()
 
@@ -933,8 +931,9 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Manage data").performClick()
         composeTestRule.waitForIdle()
 
-        // Data management has faded out and stopped taking touches well before its 450 ms
-        // slide ends, so Home takes a tap once its 300 ms double-tap timeout has passed.
+        // Data management slides away beside Home, so once Home's 300 ms double-tap timeout
+        // has passed, Home takes a tap where Data management no longer is, before the 450 ms
+        // slide ends.
         composeTestRule.mainClock.autoAdvance = false
         pressBack()
         // Hand the back stack change to Compose; see tap_onClosingScreenAfterBack_doesNothing.
@@ -1073,20 +1072,36 @@ class MainActivityTest {
         return gesture
     }
 
+    // Badges' title says "Merit badges" too.
+    private fun meritBadgesButton() =
+        composeTestRule.onNode(hasText("Merit badges") and hasClickAction())
+
+    /**
+     * Checks that halfway through a back swipe, the pages have moved half the width of the
+     * screen: linearly, with the finger. Home's start half is clipped off, so compare its
+     * button's end.
+     */
+    private fun assertPagesMovedHalfway(badgesAtRest: DpRect, homeButtonAtRest: DpRect) {
+        val half = composeTestRule.onRoot().getBoundsInRoot().width / 2
+        val badgesMoving = campingRow().getBoundsInRoot()
+        val homeButtonMoving = meritBadgesButton().getBoundsInRoot()
+
+        assertEquals((badgesAtRest.left + half).value, badgesMoving.left.value, 1f)
+        assertEquals((homeButtonAtRest.right - half).value, homeButtonMoving.right.value, 1f)
+        // Not shrunk, as Navigation 3's default does.
+        assertEquals(badgesAtRest.height, badgesMoving.height)
+    }
+
     @Test
-    fun backGesture_slidesThePageRightWithoutShrinkingIt() {
+    fun backGesture_movesThePagesWithTheFinger() {
         launchWithProfile()
-        val homeAtRest = home().getBoundsInRoot()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        val homeButtonAtRest = meritBadgesButton().getBoundsInRoot()
+        meritBadgesButton().performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
         swipeHalfwayBack()
-        val badgesMoving = campingRow().getBoundsInRoot()
-        val homeMoving = home().getBoundsInRoot()
 
-        assertTrue(badgesMoving.left > badgesAtRest.left)
-        assertEquals(badgesAtRest.height, badgesMoving.height)
-        assertTrue(homeMoving.left < homeAtRest.left)
+        assertPagesMovedHalfway(badgesAtRest, homeButtonAtRest)
     }
 
     @Test
@@ -1116,18 +1131,16 @@ class MainActivityTest {
         campingRow().assertDoesNotExist()
     }
 
-    // The finger moves left, so a page sliding right would move against it.
     @Test
-    fun backGesture_fromTheRightEdge_leavesThePageInPlace() {
+    fun backGesture_fromTheRightEdge_movesThePagesTheSameWay() {
         launchWithProfile()
-        val homeAtRest = home().getBoundsInRoot()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        val homeButtonAtRest = meritBadgesButton().getBoundsInRoot()
+        meritBadgesButton().performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
         swipeHalfwayBack(NavigationEvent.EDGE_RIGHT)
 
-        assertEquals(badgesAtRest, campingRow().getBoundsInRoot())
-        assertTrue(home().getBoundsInRoot().left < homeAtRest.left)
+        assertPagesMovedHalfway(badgesAtRest, homeButtonAtRest)
     }
 
     // Pages are laid out inside the system bars' insets, so a page sliding past the side of
