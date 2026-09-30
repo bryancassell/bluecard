@@ -106,7 +106,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         RequirementDetailUiState.Loading
     )
 
-    /** Marks this requirement, one without sub-requirements, completed or not. */
+    /** Marks this requirement, one the scout marks by hand, completed or not. */
     fun setCompleted(completed: Boolean) {
         saves.launch { recorder.setCompleted(number, completed) }
     }

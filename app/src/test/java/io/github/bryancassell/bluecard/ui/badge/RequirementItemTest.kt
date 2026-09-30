@@ -29,9 +29,9 @@ class RequirementItemTest {
         numbers.associateWith { RequirementProgress("camping", it, completed = true) }
 
     @Test
-    fun leaf_hasNoSubRequirements() {
+    fun leaf_isMarkedByHand() {
         assertEquals(
-            RequirementItem("1", "Plan a campout.", null, false, hasSubRequirements = false),
+            RequirementItem("1", "Plan a campout.", null, false, markedByHand = true),
             leaf.toItem(emptyMap(), emptyMap())
         )
     }
@@ -49,7 +49,7 @@ class RequirementItemTest {
                 "Do two of these.",
                 Choice(2, 3),
                 false,
-                hasSubRequirements = true
+                markedByHand = false
             ),
             twoOfThree.toItem(emptyMap(), emptyMap())
         )
@@ -84,8 +84,32 @@ class RequirementItemTest {
     )
 
     @Test
-    fun trackerOnly_isMarkedCompleteByScout() {
-        assertFalse(log.toItem(emptyMap(), emptyMap()).hasSubRequirements)
+    fun log_isMarkedByHand() {
+        assertTrue(log.toItem(emptyMap(), emptyMap()).markedByHand)
+        assertTrue(log.toItem(done("4"), emptyMap()).completed)
+    }
+
+    private val weeks = Requirement(
+        "5",
+        "Save for two weeks.",
+        tracker = TrackerDefinition(
+            listOf(TrackerColumn("saved", "Saved", TrackerColumnType.NUMBER)),
+            "week",
+            "weeks",
+            rowCount = 2
+        )
+    )
+
+    private fun week(id: Long, rowNumber: Int) =
+        TrackerEntry(id, "camping", "5", rowNumber, mapOf("saved" to "5"))
+
+    @Test
+    fun fixedRowTracker_isCompletedOnceEveryRowIsFilled() {
+        assertFalse(weeks.toItem(emptyMap(), emptyMap()).markedByHand)
+        assertFalse(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).completed)
+        assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).completed)
+        // Marking it complete by hand doesn't count.
+        assertFalse(weeks.toItem(done("5"), emptyMap()).completed)
     }
 
     @Test

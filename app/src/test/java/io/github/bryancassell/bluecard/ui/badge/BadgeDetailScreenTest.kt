@@ -50,23 +50,23 @@ class BadgeDetailScreenTest {
         eagle = EagleRequirement.Required,
         officialUrl = "https://www.scouting.org/merit-badges/camping/",
         requirements = listOf(
-            RequirementItem("1", "Plan a campout.", null, true, hasSubRequirements = false),
+            RequirementItem("1", "Plan a campout.", null, true, markedByHand = true),
             RequirementItem(
                 "2",
                 "Do two of these.",
                 Choice(2, 3),
                 false,
-                hasSubRequirements = true
+                markedByHand = false
             ),
             RequirementItem(
                 "3",
                 "Keep a camping log.",
                 null,
                 false,
-                hasSubRequirements = false,
+                markedByHand = false,
                 tracker = TrackerCount(8, 12, "nights")
             ),
-            RequirementItem("4", "Do all of these.", null, true, hasSubRequirements = true)
+            RequirementItem("4", "Do all of these.", null, true, markedByHand = false)
         )
     )
 
@@ -365,7 +365,9 @@ class BadgeDetailScreenTest {
     @Test
     fun longRequirementList_scrollsToLastRequirement() {
         // More top-level requirements than any badge has.
-        val many = (1..20).map { RequirementItem("$it", "Requirement $it.", null, false, true) }
+        val many = (1..20).map {
+            RequirementItem("$it", "Requirement $it.", null, false, markedByHand = false)
+        }
         show(ready.copy(requirements = many))
 
         row("Requirement 20.").assertIsDisplayed().performClick()

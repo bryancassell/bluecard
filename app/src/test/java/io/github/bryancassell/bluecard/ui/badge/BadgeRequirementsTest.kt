@@ -90,7 +90,7 @@ class BadgeRequirementsTest {
         val found = catalog.badgeRequirements("camping", startedOn(newest.effectiveDate, "2a"))!!
 
         assertEquals(
-            RequirementItem("2", "Do one of these.", Choice(1, 2), true, true),
+            RequirementItem("2", "Do one of these.", Choice(1, 2), true, markedByHand = false),
             found.item(newest.requirements[1])
         )
     }

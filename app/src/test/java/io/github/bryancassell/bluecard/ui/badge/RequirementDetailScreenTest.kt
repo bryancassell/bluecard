@@ -52,17 +52,29 @@ class RequirementDetailScreenTest {
     /** A requirement with sub-requirements. */
     private val ready = RequirementDetailUiState.Ready(
         badgeName = "Camping",
-        requirement = RequirementItem("2", "Do two of these.", Choice(2, 3), false, true),
+        requirement = RequirementItem(
+            "2",
+            "Do two of these.",
+            Choice(2, 3),
+            false,
+            markedByHand = false
+        ),
         completedDate = null,
         children = listOf(
-            RequirementItem("2a", "Cook a meal.", null, completed = true, false),
-            RequirementItem("2b", "Lead one hike.", Choice(1, 2), completed = false, true),
+            RequirementItem("2a", "Cook a meal.", null, completed = true, markedByHand = true),
+            RequirementItem(
+                "2b",
+                "Lead one hike.",
+                Choice(1, 2),
+                completed = false,
+                markedByHand = false
+            ),
             RequirementItem(
                 "2c",
                 "Keep a camping log.",
                 null,
                 completed = false,
-                false,
+                markedByHand = true,
                 TrackerCount(3, null, "nights")
             )
         ),
@@ -74,7 +86,7 @@ class RequirementDetailScreenTest {
     /** A requirement without sub-requirements, not completed. */
     private val leaf = RequirementDetailUiState.Ready(
         badgeName = "Camping",
-        requirement = RequirementItem("1", "Plan a campout.", null, false, false),
+        requirement = RequirementItem("1", "Plan a campout.", null, false, markedByHand = true),
         completedDate = null,
         children = emptyList(),
         tracker = null,
@@ -111,8 +123,12 @@ class RequirementDetailScreenTest {
         )
     )
 
-    /** A requirement with a tracker of three weeks, the second filled in. */
+    /**
+     * A requirement with a tracker of three weeks, the second filled in. Its rows decide whether
+     * it's complete.
+     */
     private val withWeeks = leaf.copy(
+        requirement = RequirementItem("2", "Keep a budget.", null, false, markedByHand = false),
         tracker = TrackerItem(
             count = TrackerCount(1, 3, "weeks"),
             rowTitle = "Week",
@@ -313,6 +329,30 @@ class RequirementDetailScreenTest {
         row("Week 2").assert(hasText("20"))
         row("Week 3")
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
+    }
+
+    @Test
+    fun fixedRows_haveNoCheckboxOrDate() {
+        show(withWeeks)
+
+        composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_areLabeledCompleted_withNoCheckboxOrDate() {
+        show(withWeeks.copy(requirement = withWeeks.requirement.copy(completed = true)))
+
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
+        composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun log_keepsItsCheckbox() {
+        show(withLog)
+
+        completedCheckbox().assertIsOff()
     }
 
     @Test

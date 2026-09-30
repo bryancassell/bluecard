@@ -81,14 +81,17 @@ interface ProgressRepository {
      * given and still there, or in a fixed-row tracker the entry that fills [rowNumber], so
      * saving a row twice doesn't add two. Otherwise the row is added, even for an [id] deleted
      * in the meantime, and its new entry's ID is higher than any entry's before it, even a
-     * deleted one's. The values are stored as [normalizedTrackerValues]. A badge that hasn't
-     * been started is started with [start], as in [markRequirementCompleted].
+     * deleted one's. An added row records [addedDate] as the date it was first saved
+     * ([TrackerEntry.addedDate]), and a row that already has an entry keeps its own. The values
+     * are stored as [normalizedTrackerValues]. A badge that hasn't been started is started with
+     * [start], as in [markRequirementCompleted].
      */
     suspend fun addTrackerEntry(
         badgeId: String,
         number: String,
         rowNumber: Int?,
         values: Map<String, String>,
+        addedDate: LocalDate,
         start: BadgeStart,
         id: Long? = null
     ): Long

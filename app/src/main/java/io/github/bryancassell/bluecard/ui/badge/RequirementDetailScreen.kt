@@ -101,7 +101,7 @@ fun RequirementDetailScreen(
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 RequirementHeader(uiState.badgeName, uiState.requirement)
                 val requirement = uiState.requirement
-                if (!requirement.hasSubRequirements) {
+                if (requirement.markedByHand) {
                     CompletedCheckbox(requirement.completed, onCompletedChange)
                     if (requirement.completed) {
                         CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
@@ -154,8 +154,8 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        // One without sub-requirements has a checkbox instead.
-        if (requirement.hasSubRequirements && requirement.completed) {
+        // One the scout marks by hand has a checkbox instead.
+        if (!requirement.markedByHand && requirement.completed) {
             Text(
                 text = stringResource(R.string.requirement_completed),
                 style = MaterialTheme.typography.titleSmall,

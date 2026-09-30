@@ -86,7 +86,7 @@ interface ProgressDao {
      * Gives the entry already there for [entry]'s row [entry]'s values, or inserts [entry] with
      * a new ID, in a single transaction. Returns the entry's ID. The entry already there is
      * entry [TrackerEntry.id], if it's set and still there, or else for a row of a fixed-row
-     * tracker, the entry that fills it.
+     * tracker, the entry that fills it. It keeps its [TrackerEntry.addedDate].
      */
     @Transaction
     suspend fun addTrackerEntry(entry: TrackerEntry): Long {

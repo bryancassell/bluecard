@@ -156,18 +156,24 @@ class BadgeDetailViewModelTest {
                 eagle = EagleRequirement.Required,
                 officialUrl = "https://www.scouting.org/merit-badges/camping/",
                 requirements = listOf(
-                    RequirementItem("1", "Plan a campout.", null, false, false),
-                    RequirementItem("2", "Do two of these.", Choice(2, 3), false, true),
-                    // The scout marks a requirement with a tracker complete themselves.
+                    RequirementItem("1", "Plan a campout.", null, false, markedByHand = true),
+                    RequirementItem(
+                        "2",
+                        "Do two of these.",
+                        Choice(2, 3),
+                        false,
+                        markedByHand = false
+                    ),
+                    // The scout marks a requirement with a log complete themselves.
                     RequirementItem(
                         "3",
                         "Keep a camping log.",
                         null,
                         false,
-                        false,
+                        markedByHand = true,
                         TrackerCount(0, null, "nights")
                     ),
-                    RequirementItem("4", "Do all of these.", null, false, true)
+                    RequirementItem("4", "Do all of these.", null, false, markedByHand = false)
                 )
             ),
             viewModel.uiState.value
@@ -181,7 +187,15 @@ class BadgeDetailViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(
-            listOf(RequirementItem("1", "An older first requirement.", null, false, false)),
+            listOf(
+                RequirementItem(
+                    "1",
+                    "An older first requirement.",
+                    null,
+                    false,
+                    markedByHand = true
+                )
+            ),
             viewModel.ready().requirements
         )
     }
@@ -290,6 +304,7 @@ class BadgeDetailViewModelTest {
             "3",
             null,
             mapOf("night" to "2026-04-10"),
+            started,
             badgeStart
         )
         progressRepository.addTrackerEntry(
@@ -297,6 +312,7 @@ class BadgeDetailViewModelTest {
             "3",
             null,
             mapOf("night" to "2026-04-11"),
+            started,
             badgeStart
         )
 
