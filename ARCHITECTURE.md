@@ -479,7 +479,7 @@ io.github.bryancassell.bluecard
 ├── ui/                 One package per screen: screen composable, ViewModel, UI state
 │   ├── onboarding/
 │   ├── home/
-│   ├── badges/         Browse and search
+│   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
 │   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
 │   ├── data/           Clear, export, import
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
@@ -498,7 +498,7 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
+| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, opening its Badge detail. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
 | **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, "mark completed on a prior date", and "generate report" once complete. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
@@ -674,7 +674,11 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   Eagle-required progress against the Eagle-required badges in the catalog.
   Each Eagle "one of" group (such as Cycling, Hiking and Swimming) counts once,
   with the status of its furthest-along badge, because earning any of them meets
-  the requirement. Progress on a badge that isn't in the catalog isn't counted.
+  the requirement. It also lists the badges in progress, so the scout can get
+  back to one without searching Badges: alphabetically, in the row Badges uses
+  (`ui/badges/BadgeRow.kt`), and all of them, since a scout rarely has more than
+  a few going at once. Screen readers hear the rows as a list, as on Badges.
+  Progress on a badge that isn't in the catalog isn't counted or listed.
 - **Browse and search.** The Badges ViewModel combines the catalog, the
   scout's progress and the search text, to list the matching badges with each
   one's status from `data/progress/BadgeStatus.kt`. A badge matches when every

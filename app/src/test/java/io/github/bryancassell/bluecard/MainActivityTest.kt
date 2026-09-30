@@ -245,6 +245,15 @@ class MainActivityTest {
         .observeProgress("camping").first()?.trackerEntries.orEmpty()
         .filter { it.requirementNumber == number }.map { it.values }
 
+    /**
+     * Home is showing again. It's found by Camping's row rather than the scout's name, because
+     * Home keeps its scroll position, which can leave the name above the screen.
+     */
+    private fun assertHomeBackAtCamping() {
+        home().assertExists()
+        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsDisplayed()
+    }
+
     /** Badges is showing, and Badge detail isn't. */
     private fun assertBadgesShowing() {
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
@@ -434,6 +443,25 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
         composeTestRule.onNodeWithText("First.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
+    }
+
+    @Test
+    fun openBadgeInProgress_fromHome_showsBadgeDetail() {
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Camping").performScrollTo().performClick()
+
+        home().assertDoesNotExist()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+        pressBack()
+        assertHomeBackAtCamping()
     }
 
     // BlueCardTheme is light in dark mode too, so the system bars keep dark icons, which show
@@ -848,6 +876,24 @@ class MainActivityTest {
         pressBack()
 
         home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onBadgeInProgress_opensItOnce() {
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Camping").performScrollTo()
+
+        tapTwiceInOneFrame("Camping")
+        pressBack()
+
+        assertHomeBackAtCamping()
     }
 
     @Test
