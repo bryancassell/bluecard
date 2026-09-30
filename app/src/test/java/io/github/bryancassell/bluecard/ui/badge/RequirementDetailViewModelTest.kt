@@ -617,7 +617,7 @@ class RequirementDetailViewModelTest {
     fun anotherValueUnderTheCommentKey_loadsTheSavedComment() = runTest {
         progressRepository.startBadge("camping", newest, started)
         progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
-        // As when the intent that opened the app has an extra named "comment".
+        // A value keepText didn't keep.
         val viewModel = RequirementDetailViewModel(
             "camping",
             "1",

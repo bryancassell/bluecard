@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
+import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 
 /**
@@ -47,6 +50,18 @@ fun OnboardingRoute(
         modifier = modifier
     )
 }
+
+/**
+ * Longer than any real name. The field's text is saved with the screen's state, which has a
+ * size limit, so a huge paste mustn't reach it.
+ */
+private val NameLengthLimit = TextLengthLimit(maxLength = 100)
+
+/**
+ * Longer than any real unit number, even written out as "Troop 1234 B". Limited for the same
+ * reason as the name.
+ */
+private val UnitNumberLengthLimit = TextLengthLimit(maxLength = 20)
 
 /** First launch: asks for the scout's [name] and [unitNumber]. */
 @Composable
@@ -77,6 +92,7 @@ fun OnboardingScreen(
             textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.onboarding_name)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
+            inputTransformation = NameLengthLimit.then(LineBreaksAsSpaces),
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
@@ -90,6 +106,7 @@ fun OnboardingScreen(
             textStyle = typedTextFieldStyle(),
             label = { Text(stringResource(R.string.onboarding_unit_number)) },
             supportingText = { Text(stringResource(R.string.onboarding_required)) },
+            inputTransformation = UnitNumberLengthLimit.then(LineBreaksAsSpaces),
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             // Do what Done normally does, which closes the keyboard, and save; the ViewModel

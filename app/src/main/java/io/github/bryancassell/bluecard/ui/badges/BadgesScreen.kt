@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.then
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +52,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
@@ -193,7 +195,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
                 }
             }
         },
-        inputTransformation = SearchLengthLimit,
+        inputTransformation = SearchLengthLimit.then(LineBreaksAsSpaces),
         lineLimits = TextFieldLineLimits.SingleLine,
         // Asks the keyboard not to autocorrect the start of a word into a different word
         // that no longer matches. Some keyboards ignore this: Gboard still corrects typos

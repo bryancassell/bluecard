@@ -210,12 +210,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   changed while nothing collected the screen's UI state. Navigation 3 saves a
   screen's state once when it leaves the display, and not again while it's in
   the back stack, so a change made after that isn't kept. (Copying the text
-  into `SavedStateHandle` had the same limit.) Navigation 3 also gives every
-  screen's `SavedStateHandle` the extras of the intent that opened the app as
-  default arguments, so `restoredText` ignores any value under its key that
-  isn't the kind of `Bundle` it keeps. An extra built like one still counts;
-  [#83](https://github.com/bryancassell/bluecard/issues/83) keeps the extras
-  out. The comment is kept only once the saved comment has loaded into
+  into `SavedStateHandle` had the same limit.) `restoredText` ignores any value
+  under its key that isn't the kind of `Bundle` it keeps, as a backstop for the
+  extras of the intent that opened the app (see Navigation). The comment is
+  kept only once the saved comment has loaded into
   it (`restoredText` and `keepText`), so if the system stops the app before
   then, the page loads the saved comment again instead of restoring an empty
   field. A tracker row's fields work the same way. Its date columns are text
@@ -225,16 +223,35 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   loads, as Requirement detail does with the saved comment, writes it in a
   snapshot of its own (`Snapshot.withMutableSnapshot`): otherwise `snapshotFlow`
   only sees the change when Compose next applies changes made outside a
-  snapshot, which it does once a frame. Saved state has a size limit, so Badges
-  search, the requirement comment and a tracker row's fields have a length
-  limit (`TextLengthLimit`);
-  Onboarding's fields don't have one yet. It keeps as much of an edit, such as
-  a long paste, as fits, and never cuts the text already in the field or splits
-  an emoji.
+  snapshot, which it does once a frame. Saved state has a size limit, so every
+  text field has a length limit (`TextLengthLimit`): 100 characters for
+  Onboarding's name and Badges search, 20 for the unit number and a tracker
+  row's number columns, 500 for its text columns and 2,000 for the requirement
+  comment. It keeps as much of an edit, such as a long paste, as fits, and never
+  cuts the text already in the field or splits an emoji. A
+  single-line field keeps a pasted line break in its text but doesn't show one,
+  so the single-line fields (Onboarding's and Badges search) also replace each
+  line break with a space (`LineBreaksAsSpaces`). That runs after the length
+  limit, so the limit cuts a huge paste before it's scanned, and finds the edit
+  before a pasted line break becomes a space it could mistake for one already in
+  the field.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+  - **Screens' `SavedStateHandle`s don't start with the launching intent's
+    extras.** `ComponentActivity` gives them to ViewModels as default
+    arguments, and Navigation 3 passes the activity's defaults on to every
+    screen. `MainActivity` is exported, so any app could fill a screen's saved
+    state, such as the requirement comment, with an extra of the same name.
+    BlueCard uses neither intent extras nor default arguments, so `MainActivity`
+    overrides `defaultViewModelCreationExtras` to leave the default arguments
+    empty ([#83](https://github.com/bryancassell/bluecard/issues/83)). That
+    covers every ViewModel created with the activity's creation extras, as
+    Hilt and Navigation 3 create them, including those scoped to the activity.
+    The activity's default factory still passes the extras to a ViewModel
+    created without creation extras. BlueCard creates none that way, and
+    overriding the factory would replace Hilt's.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens
