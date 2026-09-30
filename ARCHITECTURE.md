@@ -229,9 +229,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   single-line field keeps a pasted line break in its text but doesn't show one,
   so the single-line fields (Onboarding's and Badges search) also replace each
   line break with a space (`LineBreaksAsSpaces`). That runs after the length
-  limit, so the limit cuts a huge paste before it's scanned, and finds the edit
-  before a pasted line break becomes a space it could mistake for one already in
-  the field.
+  limit, so the limit cuts a huge paste before it's scanned.
 - **Navigation uses [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)**,
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
