@@ -730,7 +730,13 @@ class MainActivityTest {
         // link after the double-tap timeout, while it's still there.
         composeTestRule.mainClock.autoAdvance = false
         pressBack()
+        // Under Robolectric, Espresso doesn't wait for Compose, and nothing else in this test
+        // runs Compose's coroutines before the tap, so hand the back stack change to Compose
+        // now. With the clock stopped, this doesn't let time pass.
+        composeTestRule.waitForIdle()
         composeTestRule.mainClock.advanceTimeBy(400)
+        // Badges is fading in under Badge detail.
+        composeTestRule.onNodeWithText("Merit badges").assertExists()
         composeTestRule.onNodeWithText("Official requirements").performClick()
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitForIdle()
