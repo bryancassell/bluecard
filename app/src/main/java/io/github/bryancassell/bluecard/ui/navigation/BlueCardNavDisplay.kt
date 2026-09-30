@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -49,7 +50,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val layoutDirection = LocalLayoutDirection.current
     NavDisplay(
         backStack = shownBackStack,
-        modifier = modifier,
+        // Pages slide past the sides of their area. Clip them to it, so they don't draw under
+        // a navigation bar or cutout at the side.
+        modifier = modifier.clipToBounds(),
         onBack = { backStack.removeLastOrNull() },
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
         // cleared when the entry leaves the back stack, paint each page so it hides the one
@@ -64,8 +67,8 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         ),
         transitionSpec = { openPage(density, layoutDirection) },
         popTransitionSpec = { closePage(density, layoutDirection) },
-        // The back gesture drives the same slide as Back, without the default's shrink.
-        predictivePopTransitionSpec = { closePage(density, layoutDirection) },
+        // The back gesture plays Back's slide, without the default's shrink.
+        predictivePopTransitionSpec = { swipeBackPage(density, layoutDirection, it) },
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.
         entryProvider = entryProvider {
