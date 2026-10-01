@@ -25,7 +25,7 @@ espressoCore = "3.7.0"
 robolectric = "4.17"
 # Screenshot tests under Robolectric; see ARCHITECTURE.md (Testing).
 roborazzi = "1.76.0"
-spotless = "8.10.2"
+spotless = "8.10.3"
 # ktlint is run by Spotless; this pins the ktlint engine version.
 ktlint = "1.8.0"
 # Coverage engine used by both AGP (test data) and Gradle (verification).
