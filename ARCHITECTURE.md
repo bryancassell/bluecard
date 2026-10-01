@@ -637,7 +637,9 @@ Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a
 badge that isn't started, rather than throw: `markRequirementNotCompleted` and
-the report functions.
+the report functions. Clearing doesn't delete a report shared before from the
+cache: an app it was shared with, such as an email app that reads it only when
+it sends, may still need it.
 
 ### Export and import
 
