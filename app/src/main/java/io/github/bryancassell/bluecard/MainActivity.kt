@@ -16,8 +16,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.bryancassell.bluecard.text.stringsLocale
 import io.github.bryancassell.bluecard.ui.BlueCardApp
-import io.github.bryancassell.bluecard.ui.stringsLocale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

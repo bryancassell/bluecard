@@ -4,6 +4,7 @@ import java.time.LocalDate
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -153,5 +154,49 @@ class CatalogTest {
             Json.decodeFromString(LocalDateSerializer, "\"January 1, 2026\"")
         }
         assertEquals("\"January 1, 2026\" is not a date in YYYY-MM-DD form", error.message)
+    }
+
+    private val children =
+        listOf(Requirement("1a", "A."), Requirement("1b", "B."), Requirement("1c", "C."))
+
+    @Test
+    fun choiceCount_isTheChildrenNeeded_whenFewerThanAll() {
+        val choice = Requirement("1", "Do two.", requiredCount = 2, children = children)
+
+        assertEquals(2, choice.choiceCount)
+    }
+
+    // A count of all the children is no choice.
+    @Test
+    fun choiceCount_ofAllTheChildrenOrNone_isNull() {
+        assertNull(Requirement("1", "Do all.", requiredCount = 3, children = children).choiceCount)
+        assertNull(Requirement("1", "Do all.", children = children).choiceCount)
+        assertNull(Requirement("1", "Do it.").choiceCount)
+    }
+
+    private val columns = listOf(TrackerColumn("notes", "Notes", TrackerColumnType.TEXT))
+
+    @Test
+    fun rowTitle_isTheRowLabelCapitalized() {
+        assertEquals("Week", TrackerDefinition(columns, "week", "weeks").rowTitle)
+    }
+
+    @Test
+    fun rowsLabel_inLog_agreesWithTheCountRecorded() {
+        val log = TrackerDefinition(columns, "session", "sessions")
+
+        assertEquals("sessions", log.rowsLabel(0))
+        assertEquals("session", log.rowsLabel(1))
+        assertEquals("sessions", log.rowsLabel(5))
+    }
+
+    // "1 of 12 weeks": the label agrees with the number of rows.
+    @Test
+    fun rowsLabel_withFixedRows_agreesWithTheRowCount() {
+        val twelve = TrackerDefinition(columns, "week", "weeks", rowCount = 12)
+        val one = TrackerDefinition(columns, "week", "weeks", rowCount = 1)
+
+        assertEquals("weeks", twelve.rowsLabel(1))
+        assertEquals("week", one.rowsLabel(0))
     }
 }

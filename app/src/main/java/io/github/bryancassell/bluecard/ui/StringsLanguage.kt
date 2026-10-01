@@ -1,11 +1,8 @@
 package io.github.bryancassell.bluecard.ui
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Configuration.SCREENLAYOUT_LAYOUTDIR_MASK
-import android.content.res.Resources
-import android.os.LocaleList
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -13,23 +10,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.core.os.LocaleListCompat
-import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.text.stringsLanguage
+import io.github.bryancassell.bluecard.text.stringsLocales
 import java.util.Locale
 
 /**
  * The locale the app's strings are formatted in, from [stringsLocales]. It's in the language
  * of the strings (`strings_language`), which isn't always the device's: the app may not have
- * strings for the device's language.
+ * strings for the device's language. Code outside Compose uses `text.stringsLocale(context)`.
  */
 @Composable
 @ReadOnlyComposable
 fun stringsLocale(): Locale =
     stringsLocales(LocalConfiguration.current.locales, stringsLanguage())[0]
-
-/** [stringsLocale] for code outside Compose, such as an activity before it has content. */
-fun stringsLocale(context: Context): Locale =
-    stringsLocales(context.resources.configuration.locales, stringsLanguage(context.resources))[0]
 
 /**
  * Provides [LocalResources] in the strings' language to [content], so every `stringResource`
@@ -70,24 +63,6 @@ fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
     )
 }
 
-/**
- * The locales to load and format the app's strings in. First, the device's first locale in the
- * strings' language and script, which keeps the device's region and settings such as a chosen
- * digit style, or else the strings' language itself. Then the device's other locales, so
- * Android can fall back to them if the app has no strings in the first, such as when a
- * translation's `strings_language` isn't a valid tag.
- */
-internal fun stringsLocales(device: LocaleList, stringsLanguage: Locale): LocaleList {
-    val deviceLocales = List(device.size(), device::get)
-    val first = deviceLocales.firstOrNull {
-        LocaleListCompat.matchesLanguageAndScript(stringsLanguage, it)
-    } ?: stringsLanguage
-    return LocaleList(first, *deviceLocales.filter { it != first }.toTypedArray())
-}
-
 @Composable
 @ReadOnlyComposable
 private fun stringsLanguage(): Locale = stringsLanguage(LocalResources.current)
-
-private fun stringsLanguage(resources: Resources): Locale =
-    Locale.forLanguageTag(resources.getString(R.string.strings_language))

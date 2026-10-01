@@ -4,10 +4,8 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
-import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -115,17 +113,6 @@ class TrackerItemTest {
 
         assertEquals("Week", item.rowTitle)
         assertEquals("week", item.rowLabel)
-    }
-
-    @Test
-    fun storedDate_readsYearMonthDay() {
-        assertEquals(LocalDate.of(2026, 9, 12), storedDate("2026-09-12"))
-    }
-
-    @Test
-    fun storedDate_thatIsntADate_isNull() {
-        assertNull(storedDate("Last Tuesday"))
-        assertNull(storedDate("2026-02-30"))
     }
 
     @Test

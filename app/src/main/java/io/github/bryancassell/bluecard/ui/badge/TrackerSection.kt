@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.ui.typedText
 import java.time.format.DateTimeFormatter
 
