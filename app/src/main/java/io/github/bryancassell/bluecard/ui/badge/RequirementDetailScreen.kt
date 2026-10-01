@@ -20,12 +20,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -38,13 +34,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
-import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -147,7 +141,7 @@ fun RequirementDetailScreen(
                 }
                 CommentField(comment, uiState.commentChanged, onSaveComment)
                 if (uiState.canClear) {
-                    ClearProgress(
+                    ClearRequirement(
                         number = requirement.number,
                         hasChildren = uiState.children.isNotEmpty(),
                         unsavedNotes = uiState.commentChanged,
@@ -286,45 +280,29 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
 /**
  * Clears what the scout recorded for the requirement, and for those under it if it
  * [hasChildren], once they confirm. The dialog warns that [unsavedNotes], changes to the notes
- * not saved yet, go too. Red, and last on the page, so it isn't tapped by mistake.
+ * not saved yet, go too.
  */
 @Composable
-private fun ClearProgress(
+private fun ClearRequirement(
     number: String,
     hasChildren: Boolean,
     unsavedNotes: Boolean,
     onClear: () -> Unit
 ) {
-    var confirming by rememberSaveable { mutableStateOf(false) }
-    TextButton(
-        onClick = { confirming = true },
-        colors = removalButtonColors(),
-        // Lines the button's text up with the page's, as for Add counselor.
-        modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
-    ) {
-        Text(stringResource(R.string.requirement_clear))
-    }
-    if (confirming) {
-        ConfirmDialog(
-            title = stringResource(R.string.requirement_clear_title, number),
-            message = stringResource(
-                when {
-                    hasChildren && unsavedNotes ->
-                        R.string.requirement_clear_message_with_children_and_unsaved_notes
+    ClearProgress(
+        title = stringResource(R.string.requirement_clear_title, number),
+        message = stringResource(
+            when {
+                hasChildren && unsavedNotes ->
+                    R.string.requirement_clear_message_with_children_and_unsaved_notes
 
-                    hasChildren -> R.string.requirement_clear_message_with_children
+                hasChildren -> R.string.requirement_clear_message_with_children
 
-                    unsavedNotes -> R.string.requirement_clear_message_with_unsaved_notes
+                unsavedNotes -> R.string.requirement_clear_message_with_unsaved_notes
 
-                    else -> R.string.requirement_clear_message
-                }
-            ),
-            confirmLabel = stringResource(R.string.requirement_clear_confirm),
-            onConfirm = {
-                confirming = false
-                onClear()
-            },
-            onDismiss = { confirming = false }
-        )
-    }
+                else -> R.string.requirement_clear_message
+            }
+        ),
+        onClear = onClear
+    )
 }

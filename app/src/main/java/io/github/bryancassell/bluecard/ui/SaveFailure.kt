@@ -74,6 +74,23 @@ fun SaveFailedSnackbarHost(
     message: String = stringResource(R.string.save_failed)
 ) {
     val hostState = remember { SnackbarHostState() }
+    SaveFailureSnackbar(failure, onShown, hostState, message)
+    SnackbarHost(hostState, modifier)
+}
+
+/**
+ * Shows [failure] in [hostState] as [SaveFailedSnackbarHost] does, for a screen that has more
+ * than one kind of failure, each with its own [message], to show in one host: [hostState]
+ * shows one snackbar at a time, as Material asks, and queues the rest. One still waiting its
+ * turn when the screen goes is dropped, as one showing is.
+ */
+@Composable
+fun SaveFailureSnackbar(
+    failure: SaveFailure?,
+    onShown: (SaveFailure) -> Unit,
+    hostState: SnackbarHostState,
+    message: String = stringResource(R.string.save_failed)
+) {
     if (failure != null) {
         val currentOnShown by rememberUpdatedState(onShown)
         // Keyed by the failure, so one that replaces another is shown too.
@@ -87,5 +104,4 @@ fun SaveFailedSnackbarHost(
             }
         }
     }
-    SnackbarHost(hostState, modifier)
 }

@@ -175,7 +175,7 @@ class MainActivityTest {
     val progressRepository: ProgressRepository = FakeProgressRepository()
 
     // PdfDocument only runs on a device.
-    private val fakeReportRepository = FakeReportRepository()
+    private val fakeReportRepository = FakeReportRepository(progressRepository)
 
     @BindValue
     @JvmField

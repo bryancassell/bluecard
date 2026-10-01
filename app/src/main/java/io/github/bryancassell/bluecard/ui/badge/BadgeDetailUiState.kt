@@ -25,13 +25,17 @@ sealed interface BadgeDetailUiState {
         val counselor: Counselor? = null,
         /** Whether the badge is complete, so its report can be shared or saved. */
         val completed: Boolean = false,
+        /** Whether the badge is started, so its progress can be cleared. */
+        val canClear: Boolean = false,
         /**
          * The badge's report, once it's ready to share, until the screen has opened the share
          * sheet with it.
          */
         val reportToShare: Uri? = null,
         /** The report couldn't be created or saved, and the scout hasn't been told yet. */
-        val reportFailure: SaveFailure? = null
+        val reportFailure: SaveFailure? = null,
+        /** The badge's progress couldn't be cleared, and the scout hasn't been told yet. */
+        val saveFailure: SaveFailure? = null
     ) : BadgeDetailUiState
 
     /**
