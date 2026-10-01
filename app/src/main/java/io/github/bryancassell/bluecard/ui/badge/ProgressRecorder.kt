@@ -40,6 +40,16 @@ class ProgressRecorder(
     }
 
     /**
+     * Clears everything recorded for the requirements numbered in [numbers]. Checking one again
+     * on this page then dates it today, even while the clear is being saved: its date from
+     * before is forgotten first. A clear that fails forgets it too, as the scout meant it to.
+     */
+    suspend fun clear(numbers: Collection<String>) {
+        uncheckedDates -= numbers
+        progressRepository.clearRequirements(badgeId, numbers)
+    }
+
+    /**
      * How the badge is started if the scout records something before starting it: on the
      * requirements version its pages show until then ([badgeRequirements]), today.
      */

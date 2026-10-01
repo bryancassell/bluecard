@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -61,13 +63,16 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val found = catalog.badgeRequirements(badgeId, progress)
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
+            val numbersWithin = requirement.numbersWithin()
             RecordedRequirement(
                 badgeName = found.badge.name,
                 requirement = found.item(requirement),
                 completedDate = recorded?.completedDate,
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
-                comment = recorded?.comment
+                comment = recorded?.comment,
+                numbersWithin = numbersWithin,
+                hasRecorded = found.hasRecorded(numbersWithin)
             )
         }
     }
@@ -79,8 +84,18 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val children: List<RequirementItem>,
         val tracker: TrackerItem?,
         /** The saved comment. */
-        val comment: String?
+        val comment: String?,
+        /** The numbers of this requirement and of every one under it. */
+        val numbersWithin: List<String>,
+        /** Whether anything is recorded for them, for the scout to clear. */
+        val hasRecorded: Boolean
     )
+
+    /**
+     * The requirement as the page last showed it, or null before it has. [clear] reads it, so
+     * it queues its write as soon as it's called, in order with the page's other changes.
+     */
+    private var shown: RecordedRequirement? = null
 
     val uiState: StateFlow<RequirementDetailUiState> = combine(
         recorded,
@@ -90,6 +105,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
     ) { recorded, _, saveFailure ->
         if (recorded == null) return@combine RequirementDetailUiState.Unavailable
         fields.loadOnce { mapOf(COMMENT to recorded.comment) }
+        shown?.let { followSavedComment(before = it.comment, saved = recorded.comment) }
+        shown = recorded
         RequirementDetailUiState.Ready(
             badgeName = recorded.badgeName,
             requirement = recorded.requirement,
@@ -97,6 +114,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             children = recorded.children,
             tracker = recorded.tracker,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
+            canClear = recorded.hasRecorded,
             today = today(),
             saveFailure = saveFailure
         )
@@ -122,6 +140,28 @@ class RequirementDetailViewModel @AssistedInject constructor(
         saves.launch {
             progressRepository.setRequirementComment(badgeId, number, text, recorder.badgeStart())
         }
+    }
+
+    /**
+     * Shows the [saved] comment in the comment field when it changes from [before] without the
+     * scout typing it, as when it's cleared, unless the field has an unsaved edit, which stays
+     * for the scout to save or not. It's done as the change is shown, so the field is never a
+     * frame behind it.
+     */
+    private fun followSavedComment(before: String?, saved: String?) {
+        if (saved == before || normalizedText(comment.text.toString()) != before) return
+        // In a snapshot of its own, so the field has changed before uiState reads it.
+        Snapshot.withMutableSnapshot { comment.setTextAndPlaceCursorAtEnd(saved.orEmpty()) }
+    }
+
+    /**
+     * Clears everything recorded for this requirement and every one under it. The comment field
+     * then shows the cleared comment, unless it has an unsaved edit ([followSavedComment]).
+     */
+    fun clear() {
+        // The button shows only once the page has.
+        val numbers = shown?.numbersWithin ?: return
+        saves.launch { recorder.clear(numbers) }
     }
 
     /** The scout has been told about [failure]. */

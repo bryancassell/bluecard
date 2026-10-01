@@ -24,6 +24,11 @@ sealed interface RequirementDetailUiState {
         val tracker: TrackerItem?,
         /** Whether the comment field differs from the saved comment, so it can be saved. */
         val commentChanged: Boolean,
+        /**
+         * Whether anything is recorded for this requirement or one under it, which the scout can
+         * clear.
+         */
+        val canClear: Boolean,
         /** The latest date the scout can give as a completion date. */
         val today: LocalDate,
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */

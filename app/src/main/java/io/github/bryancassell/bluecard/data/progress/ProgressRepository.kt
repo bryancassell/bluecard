@@ -8,8 +8,10 @@ import kotlinx.coroutines.flow.Flow
  *
  * A badge must be started before anything is recorded for it, with [startBadge] or with the
  * [BadgeStart] that some functions take and start it with: the other functions that record
- * progress throw [IllegalStateException] for a badge that hasn't been started. Clearing, and changing or
- * deleting a tracker entry that doesn't exist, do nothing.
+ * progress throw [IllegalStateException] for a badge that hasn't been started, except
+ * [markRequirementNotCompleted], which does nothing for one. Clearing a badge or requirements
+ * with nothing recorded, and changing or deleting a tracker entry that doesn't exist, do
+ * nothing too.
  *
  * Its flows throw an `IOException` when stored progress can't be read, such as when the
  * database can't be opened, and its other functions throw one when progress can't be saved.
@@ -51,7 +53,8 @@ interface ProgressRepository {
     /**
      * Undoes completion and removes the completion date; the comment stays. Returns the
      * requirement's progress from before, read in the same transaction, or null if nothing was
-     * recorded for it, so a caller can bring its date back.
+     * recorded for it, so a caller can bring its date back. Does nothing for a badge that isn't
+     * started, as when its progress was cleared just before.
      */
     suspend fun markRequirementNotCompleted(badgeId: String, number: String): RequirementProgress?
 
@@ -99,8 +102,11 @@ interface ProgressRepository {
 
     suspend fun deleteTrackerEntry(id: Long)
 
-    /** Clears one requirement's completion, date, comment and tracker entries. */
-    suspend fun clearRequirement(badgeId: String, number: String)
+    /**
+     * Clears the completion, date, comment and tracker entries of each requirement numbered in
+     * [numbers], in one transaction. The badge stays started.
+     */
+    suspend fun clearRequirements(badgeId: String, numbers: Collection<String>)
 
     /** Clears everything recorded for a badge, including its counselor. */
     suspend fun clearBadge(badgeId: String)
