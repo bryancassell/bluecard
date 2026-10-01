@@ -28,6 +28,7 @@ class CatalogTest {
                     "number": "1",
                     "summary": "Do two of these.",
                     "requiredCount": 2,
+                    "ownWork": "Plan your hikes.",
                     "children": [
                       { "number": "1a", "summary": "First." },
                       { "number": "1b", "summary": "Second." },
@@ -70,6 +71,7 @@ class CatalogTest {
                                     number = "1",
                                     summary = "Do two of these.",
                                     requiredCount = 2,
+                                    ownWork = "Plan your hikes.",
                                     children = listOf(
                                         Requirement(number = "1a", summary = "First."),
                                         Requirement(number = "1b", summary = "Second."),

@@ -13,12 +13,14 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -102,12 +104,14 @@ class BadgeDetailViewModelTest {
 
     private val catalogRepository = FakeCatalogRepository(listOf(chess, camping))
     private val progressRepository = FakeProgressRepository()
-    private val reportRepository = FakeReportRepository()
+    private val reportRepository = FakeReportRepository(progressRepository)
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private fun viewModel(badgeId: String = "camping") =
-        BadgeDetailViewModel(badgeId, catalogRepository, progressRepository, reportRepository)
+    private fun viewModel(
+        badgeId: String = "camping",
+        progress: ProgressRepository = progressRepository
+    ) = BadgeDetailViewModel(badgeId, catalogRepository, progress, reportRepository)
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -469,5 +473,149 @@ class BadgeDetailViewModelTest {
         viewModel.saveReport(Uri.parse("content://documents/chess-report.pdf"))
 
         assertNotNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun badgeNotStarted_cantBeCleared() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().canClear)
+    }
+
+    // A badge stays started, and in progress, after everything recorded for it is undone.
+    @Test
+    fun badgeStarted_withNothingRecorded_canBeCleared() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertTrue(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun clear_removesEverythingRecordedForTheBadge_andNothingElse() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        progressRepository.setRequirementComment("camping", "2a", "Made chili.", badgeStart)
+        progressRepository.addTrackerEntry(
+            "camping",
+            "3",
+            null,
+            mapOf("night" to "2026-04-10"),
+            started,
+            badgeStart
+        )
+        progressRepository.setCounselor("camping", Counselor("Pat Lee", null, null), badgeStart)
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        completeChess()
+        val chessBefore = progressRepository.observeProgress("chess").first()
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertTrue(viewModel.ready().completed)
+
+        viewModel.clear()
+
+        assertNull(progressRepository.observeProgress("camping").first())
+        assertEquals(chessBefore, progressRepository.observeProgress("chess").first())
+        val ready = viewModel.ready()
+        assertFalse(ready.canClear)
+        assertFalse(ready.completed)
+        assertNull(ready.counselor)
+        assertTrue(ready.requirements.none { it.completed })
+        assertEquals(TrackerCount(0, null, "nights"), ready.requirements[2].tracker)
+        assertNull(ready.saveFailure)
+    }
+
+    // Otherwise the share sheet would open with a report of what the scout just cleared.
+    @Test
+    fun clear_whileAReportIsBeingCreatedToShare_dropsIt() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        val writing = CompletableDeferred<Unit>()
+        reportRepository.writing = writing
+        viewModel.shareReport()
+
+        viewModel.clear()
+        writing.complete(Unit)
+
+        assertNull(viewModel.ready().reportToShare)
+        assertNull(viewModel.ready().reportFailure)
+        assertNull(progressRepository.observeProgress("chess").first())
+    }
+
+    private val clearSaved = CompletableDeferred<Unit>()
+
+    /** Saves a clear only once [clearSaved] lets it through, as Room takes a moment to. */
+    private val slowClears = object : ProgressRepository by progressRepository {
+        override suspend fun clearBadge(badgeId: String) {
+            clearSaved.await()
+            progressRepository.clearBadge(badgeId)
+        }
+    }
+
+    // As when the scout confirms Clear, then taps Share report before the page redraws.
+    @Test
+    fun shareReport_rightAfterAClear_waitsForIt_andSharesNothing() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess", slowClears)
+        startCollecting(viewModel)
+
+        viewModel.clear()
+        viewModel.shareReport()
+        assertEquals(emptyList<String>(), reportRepository.shared)
+        clearSaved.complete(Unit)
+
+        assertEquals(listOf("chess"), reportRepository.shared)
+        assertNull(viewModel.ready().reportToShare)
+        assertNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun saveReport_rightAfterAClear_waitsForIt_andSavesNothing() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess", slowClears)
+        startCollecting(viewModel)
+
+        viewModel.clear()
+        viewModel.saveReport(Uri.parse("content://documents/chess-report.pdf"))
+        clearSaved.complete(Unit)
+
+        assertEquals(emptyList<Pair<String, Uri>>(), reportRepository.saved)
+        assertNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun shareReport_afterAClearThatFailed_sharesTheReport() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+        viewModel.clear()
+        progressRepository.failSaves = false
+
+        viewModel.shareReport()
+
+        assertEquals(FakeReportRepository.reportUri("chess"), viewModel.ready().reportToShare)
+    }
+
+    @Test
+    fun clear_whenItCantBeSaved_showsFailureUntilItsShown() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+
+        viewModel.clear()
+
+        val failure = viewModel.ready().saveFailure
+        assertNotNull(failure)
+        // Told as a save that failed, not as a report.
+        assertNull(viewModel.ready().reportFailure)
+        assertTrue(viewModel.ready().canClear)
+        assertEquals(true, viewModel.completed()["1"])
+
+        viewModel.onSaveFailureShown(failure!!)
+        assertNull(viewModel.ready().saveFailure)
     }
 }

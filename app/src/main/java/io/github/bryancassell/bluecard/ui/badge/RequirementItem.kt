@@ -4,12 +4,13 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
 
 /**
  * One requirement as a row: its number, our summary, whether it's complete, and how much of
- * its tracker is filled in. Every row opens the requirement's own page, for marking it
- * complete and for its sub-requirements, completion date, comment and tracker.
+ * its tracker is filled in. Every row opens the requirement's own page, for marking it or its
+ * own work complete and for its sub-requirements, completion date, comment and tracker.
  */
 data class RequirementItem(
     val number: String,
@@ -19,30 +20,40 @@ data class RequirementItem(
     val completed: Boolean,
     /**
      * Whether the scout marks it complete by hand, with a checkbox on its page. Otherwise its
-     * sub-requirements or its tracker's rows decide ([isMarkedByHand]).
+     * sub-requirements or its tracker's rows decide ([isMarkedByHand]); one with [ownWork] has a
+     * checkbox for that work instead.
      */
     val markedByHand: Boolean,
     /** How much of its tracker is filled in, or null if it has none. */
     val tracker: TrackerCount? = null,
     /**
-     * Whether it's no longer needed: it isn't complete, but a requirement it's part of is, such
-     * as a choice the scout didn't pick once enough others are complete.
+     * Whether it's no longer needed: it isn't complete, but a requirement it's part of has enough
+     * complete sub-requirements, such as a choice the scout didn't pick once enough others are
+     * complete. That requirement may still need its own work.
      */
-    val notNeeded: Boolean = false
+    val notNeeded: Boolean = false,
+    /** The work it asks for besides its sub-requirements, or null if it asks for none. */
+    val ownWork: OwnWork? = null
 )
+
+/**
+ * Work a requirement asks for besides its sub-requirements ([Requirement.ownWork]), which the
+ * scout marks complete by hand: our [summary] of it, and whether it's [completed].
+ */
+data class OwnWork(val summary: String, val completed: Boolean)
 
 /** "Do [required] of [of]" sub-requirements. */
 data class Choice(val required: Int, val of: Int)
 
 /**
  * [progress] and [trackerEntries] are what the scout recorded on the badge, keyed by
- * requirement number. [partOfCompleted] is whether a requirement this one is part of, at any
- * depth, is complete.
+ * requirement number. [partOfHasEnough] is whether a requirement this one is part of, at any
+ * depth, has enough complete sub-requirements ([hasEnoughChildren]).
  */
 fun Requirement.toItem(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,
-    partOfCompleted: Boolean = false
+    partOfHasEnough: Boolean = false
 ): RequirementItem {
     val completed = completion(progress, trackerEntries) != null
     return RequirementItem(
@@ -52,6 +63,7 @@ fun Requirement.toItem(
         completed = completed,
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
-        notNeeded = partOfCompleted && !completed
+        notNeeded = partOfHasEnough && !completed,
+        ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) }
     )
 }

@@ -51,8 +51,8 @@ class PdfReportRepository @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
-    override suspend fun createReportToShare(badgeId: String): Uri = withContext(ioDispatcher) {
-        val report = report(badgeId)
+    override suspend fun createReportToShare(badgeId: String): Uri? = withContext(ioDispatcher) {
+        val report = report(badgeId) ?: return@withContext null
         // Read for each report, so it follows a change to the phone's language.
         val strings = stringsLanguageResources(context)
         val folder = File(context.cacheDir, REPORTS_FOLDER)
@@ -80,15 +80,20 @@ class PdfReportRepository @Inject constructor(
 
     /**
      * Writes the report to [destination]. The report is made before the destination is opened,
-     * which empties it, so a report that can't be made leaves a file the scout chose to replace
-     * as it was.
+     * which empties it, so a report that can't be made, or a badge that isn't started, leaves a
+     * file the scout chose to replace as it was.
      */
     private suspend fun save(badgeId: String, destination: Uri) {
         val pdf: ByteArray
         val out: OutputStream
         try {
+            val report = report(badgeId)
+            if (report == null) {
+                deleteIfEmpty(destination)
+                return
+            }
             pdf = ByteArrayOutputStream().also {
-                write(report(badgeId), stringsLanguageResources(context), it)
+                write(report, stringsLanguageResources(context), it)
             }.toByteArray()
             out = openForWriting(destination)
         } catch (e: Exception) {
@@ -106,16 +111,15 @@ class PdfReportRepository @Inject constructor(
         }
     }
 
-    private suspend fun report(badgeId: String): BadgeReport {
+    /** Badge [badgeId]'s report, or null if it isn't started, as when it was just cleared. */
+    private suspend fun report(badgeId: String): BadgeReport? {
         val profile = checkNotNull(profileRepository.observeProfile().first()) {
             "The scout hasn't saved their profile"
         }
         val badge = checkNotNull(catalogRepository.getBadges().find { it.id == badgeId }) {
             "The catalog has no badge $badgeId"
         }
-        val progress = checkNotNull(progressRepository.observeProgress(badgeId).first()) {
-            "Badge $badgeId hasn't been started"
-        }
+        val progress = progressRepository.observeProgress(badgeId).first() ?: return null
         return checkNotNull(badge.report(profile, progress, LocalDate.now(clock))) {
             "The catalog has no requirements for $badgeId"
         }

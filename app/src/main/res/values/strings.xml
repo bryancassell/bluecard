@@ -105,9 +105,16 @@
     <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
          it, such as after the badge moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
-    <!-- Button at the bottom of a requirement's page, which asks before clearing what the
-         scout recorded for it. -->
-    <string name="requirement_clear">Clear progress</string>
+    <!-- Button at the bottom of a badge's or a requirement's page, which asks before clearing
+         what the scout recorded for it, and the dialog's button that clears it. -->
+    <string name="clear_progress">Clear progress</string>
+    <string name="clear_progress_confirm">Clear</string>
+    <!-- Asks before a badge's progress is cleared, with its name, such as "Clear progress on
+         Camping?" -->
+    <string name="badge_detail_clear_title">Clear progress on %1$s?</string>
+    <string name="badge_detail_clear_message">What you recorded for it will be removed.</string>
+    <!-- In place of the one above when the scout has entered the badge's counselor. -->
+    <string name="badge_detail_clear_message_with_counselor">What you recorded for it will be removed, including its counselor.</string>
     <!-- Asks before a requirement's progress is cleared, with its official number, such as
          "Clear progress on requirement 4b?" -->
     <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>
@@ -118,7 +125,6 @@
          saving them. -->
     <string name="requirement_clear_message_with_unsaved_notes">What you recorded for it will be removed, along with unsaved changes to its notes.</string>
     <string name="requirement_clear_message_with_children_and_unsaved_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its notes.</string>
-    <string name="requirement_clear_confirm">Clear</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
          rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
     <string name="tracker_count">%1$d %2$s</string>

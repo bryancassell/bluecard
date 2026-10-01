@@ -20,7 +20,9 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 - **After the first release, keep every shipped version.** When a badge's
   requirements change, add the new version and leave the old one in place:
   scouts' progress is saved against it. Never remove a shipped version or
-  change its requirement numbers or structure.
+  change its requirement numbers or structure, and don't add or remove
+  `ownWork` on one: completion is worked out from the catalog each time, so it
+  would change which badges scouts have completed.
 - **Keep a shipped tracker's columns.** Scouts' entries are saved by column
   `id`, so once a version ships, never remove a column or change its `id` or
   `type`, and never change the tracker's `rowCount`. You can change a column's
@@ -112,6 +114,7 @@ Fine, even when it matches the official text word for word:
 | `children` | No | Sub-requirements, in official order. |
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
 | `tracker` | No | For requirements that need repeated entries, such as a weekly log. See below. |
+| `ownWork` | No | For a requirement with `children` that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are. Add it for any ask no child covers, including a closing step such as discussing what you did with your counselor. Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). The `summary` still describes the whole requirement. |
 
 ### Tracker
 
@@ -157,8 +160,9 @@ It checks that:
 - a badge doesn't have two versions with the same effective date, and
   `eagleGroup` is only set on Eagle-required badges;
 - every version has requirements, and requirement numbers are unique within it;
-- every requirement has a number and a summary, and `requiredCount` is between 1
-  and the number of children;
+- every requirement has a number and a summary, `requiredCount` is between 1
+  and the number of children, and `ownWork` is only set, and not blank, on a
+  requirement with children;
 - trackers have at least one column, unique column IDs, labels, row labels
   that start with a lowercase letter, and a `rowCount` of at least 1 when set.
 

@@ -35,6 +35,7 @@ class CatalogValidatorTest {
             number = "2",
             summary = "Do one of these.",
             requiredCount = 1,
+            ownWork = "Explain why.",
             children = listOf(
                 Requirement(number = "2a", summary = "A."),
                 Requirement(number = "2b", summary = "B.", tracker = tracker.copy(rowCount = 3))
@@ -163,6 +164,20 @@ class CatalogValidatorTest {
         assertEquals(
             listOf("$where: requiredCount is 1 but it has 0 children"),
             errorsForRequirements(requirement.copy(requiredCount = 1))
+        )
+    }
+
+    @Test
+    fun ownWorkWithoutChildrenOrBlank() {
+        val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\""
+        assertEquals(
+            listOf("$where: ownWork but it has no children"),
+            errorsForRequirements(requirement.copy(ownWork = "Explain why."))
+        )
+        val children = listOf(Requirement(number = "1a", summary = "A."))
+        assertEquals(
+            listOf("$where: ownWork is blank"),
+            errorsForRequirements(requirement.copy(ownWork = " ", children = children))
         )
     }
 
