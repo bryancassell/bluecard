@@ -7,9 +7,10 @@ import android.provider.OpenableColumns
 import android.util.Log
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStream
 
-private const val TAG = "SaveDocument"
+private const val TAG = "Documents"
 
 /**
  * Writes [content] to [destination], a document the scout chose with the system file picker,
@@ -40,6 +41,17 @@ suspend fun ContentResolver.saveDocument(destination: Uri, content: suspend () -
         throw e
     }
 }
+
+/**
+ * Opens [source], such as a document the scout chose with the system file picker, to read. As
+ * when one is opened to write ([openForWriting]), the app that holds it can refuse with an
+ * exception that isn't an IOException, which is reported as one.
+ */
+fun ContentResolver.openDocument(source: Uri): InputStream = try {
+    openInputStream(source)
+} catch (e: RuntimeException) {
+    throw IOException("Couldn't open $source", e)
+} ?: throw IOException("Couldn't open $source: its provider recently crashed")
 
 /**
  * Opens [destination], truncating it: with "w", a provider may leave the end of a longer file

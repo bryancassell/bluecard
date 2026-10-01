@@ -30,6 +30,9 @@ class DataManagementViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DataManagementUiState(today = LocalDate.now(clock)))
     val uiState: StateFlow<DataManagementUiState> = _uiState.asStateFlow()
 
+    /** How many exports, reads and imports are under way. */
+    private var running = 0
+
     /** Exports the scout's data to [destination], a document they chose to create. */
     fun export(destination: Uri) = work(Kind.ExportFailed) {
         backupRepository.exportBackup(destination)
@@ -68,12 +71,14 @@ class DataManagementViewModel @Inject constructor(
     }
 
     /**
-     * Runs [action], marking the screen as working until it's done. If it throws an
-     * [IOException], which repositories throw when a file or the scout's data can't be read or
-     * saved, logs it and shows [failure]. Any other exception is a bug, so it still crashes the
-     * app, as in SaveRunner.
+     * Runs [action], marking the screen as working until it and any other action under way are
+     * done, since one can start before another ends, as when two taps open two file pickers. If
+     * it throws an [IOException], which repositories throw when a file or the scout's data can't
+     * be read or saved, logs it and shows [failure]. Any other exception is a bug, so it still
+     * crashes the app, as in SaveRunner.
      */
     private fun work(failure: Kind, action: suspend () -> Unit) {
+        running++
         _uiState.update { it.copy(working = true) }
         viewModelScope.launch {
             try {
@@ -84,7 +89,8 @@ class DataManagementViewModel @Inject constructor(
                 Log.w(TAG, "Export or import failed: $failure", e)
                 show(failure)
             } finally {
-                _uiState.update { it.copy(working = false) }
+                running--
+                _uiState.update { it.copy(working = running > 0) }
             }
         }
     }

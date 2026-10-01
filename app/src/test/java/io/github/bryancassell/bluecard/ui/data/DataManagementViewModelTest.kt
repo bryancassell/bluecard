@@ -76,6 +76,24 @@ class DataManagementViewModelTest {
         assertFalse(viewModel.uiState.value.working)
     }
 
+    // As when a second tap opens a second file picker before the first covers BlueCard.
+    @Test
+    fun working_whileTwoOverlap_lastsUntilBothAreDone() {
+        val viewModel = viewModel()
+        val exporting = CompletableDeferred<Unit>()
+        val reading = CompletableDeferred<Unit>()
+        backupRepository.working = exporting
+        viewModel.export(destination)
+        backupRepository.working = reading
+        viewModel.read(export)
+
+        exporting.complete(Unit)
+        assertTrue(viewModel.uiState.value.working)
+        reading.complete(Unit)
+
+        assertFalse(viewModel.uiState.value.working)
+    }
+
     @Test
     fun export_whenItCantBeSaved_saysSo_untilItsShown() {
         val viewModel = viewModel()

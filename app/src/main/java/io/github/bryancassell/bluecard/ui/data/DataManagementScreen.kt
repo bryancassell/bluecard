@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.ui.data
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
@@ -71,7 +73,7 @@ fun DataManagementScreen(
     val createDocument = rememberLauncherForActivityResult(CreateDocument(JSON)) { destination ->
         destination?.let(onExport)
     }
-    val openDocument = rememberLauncherForActivityResult(OpenDocument()) { source ->
+    val openDocument = rememberLauncherForActivityResult(OpenOpenableDocument()) { source ->
         source?.let(onImport)
     }
     val fileName = exportFileName(LocalResources.current, uiState.today)
@@ -158,6 +160,17 @@ private val Kind.text: Int
     }
 
 private const val JSON = "application/json"
+
+/**
+ * Opens a document that can be read as a file, as the [ACTION_OPEN_DOCUMENT] docs say to ask
+ * for: the file picker leaves out virtual documents, such as a Google Doc, which can't be.
+ *
+ * [ACTION_OPEN_DOCUMENT]: https://developer.android.com/reference/android/content/Intent#ACTION_OPEN_DOCUMENT
+ */
+private class OpenOpenableDocument : OpenDocument() {
+    override fun createIntent(context: Context, input: Array<String>): Intent =
+        super.createIntent(context, input).addCategory(Intent.CATEGORY_OPENABLE)
+}
 
 /**
  * Any file. An export copied to the phone some other way may not be labeled as JSON, and the

@@ -1,10 +1,24 @@
 package io.github.bryancassell.bluecard.data.backup
 
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import io.github.bryancassell.bluecard.data.profile.PROFILE_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.data.profile.UNIT_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import java.time.LocalDate
 import kotlinx.serialization.json.Json
@@ -15,6 +29,59 @@ class BackupFormatTest {
     private val version = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
+
+    private fun badge(id: String, vararg requirements: Requirement) = MeritBadge(
+        id = id,
+        name = id,
+        summary = "Our summary.",
+        officialUrl = "https://www.scouting.org/merit-badges/$id/",
+        requirementVersions = listOf(RequirementsVersion(version, requirements.toList()))
+    )
+
+    private fun column(id: String, type: TrackerColumnType) = TrackerColumn(id, id, type)
+
+    /** The badges this app's catalog has, with the requirements the tests record. */
+    private val catalog = listOf(
+        badge(
+            "camping",
+            Requirement("4", "Do these.", children = listOf(Requirement("4b", "Pitch a tent."))),
+            Requirement("5", "Cook."),
+            Requirement("6", "Plan a trip."),
+            Requirement("7", "Hike."),
+            Requirement(
+                "9",
+                "Camp.",
+                children = listOf(
+                    Requirement(
+                        "9a",
+                        "Log your nights.",
+                        tracker = TrackerDefinition(
+                            listOf(
+                                column("date", TrackerColumnType.DATE),
+                                column("nights", TrackerColumnType.NUMBER),
+                                column("note", TrackerColumnType.TEXT)
+                            ),
+                            "campout",
+                            "campouts"
+                        )
+                    ),
+                    Requirement(
+                        "9b",
+                        "Camp three times.",
+                        tracker = TrackerDefinition(
+                            listOf(column("place", TrackerColumnType.TEXT)),
+                            "campout",
+                            "campouts",
+                            rowCount = 3
+                        )
+                    )
+                )
+            )
+        ),
+        badge("swimming", Requirement("1", "Swim."))
+    )
+
+    private fun decode(json: String) = decodeBackup(json, catalog)
 
     private val camping = BadgeProgressDetails(
         BadgeProgress("camping", version, started, Counselor("Pat Lee", email = "pat@example.com")),
@@ -112,12 +179,12 @@ class BackupFormatTest {
 
     @Test
     fun decodeBackup_ofAnExport_givesBackWhatWasExported() {
-        assertEquals(valid(backup.asImported()), decodeBackup(encodeBackup(backup)))
+        assertEquals(valid(backup.asImported()), decode(encodeBackup(backup)))
     }
 
     @Test
     fun decodeBackup_readsEveryFieldOfTheFormat() {
-        assertEquals(valid(backup.asImported()), decodeBackup(exportJson))
+        assertEquals(valid(backup.asImported()), decode(exportJson))
     }
 
     @Test
@@ -126,7 +193,7 @@ class BackupFormatTest {
             { "formatVersion": 1, "profile": { "name": "Alex", "unitNumber": "12" }, "badges": [] }
         """
 
-        assertEquals(valid(Backup(Profile("Alex", "12"), emptyList())), decodeBackup(json))
+        assertEquals(valid(Backup(Profile("Alex", "12"), emptyList())), decode(json))
     }
 
     // A newer format may lay the rest out differently, so it's told apart before it's read.
@@ -134,7 +201,45 @@ class BackupFormatTest {
     fun decodeBackup_fromANewerFormat_isNewerFormat() {
         assertEquals(
             BackupReadResult.NewerFormat,
-            decodeBackup("""{ "formatVersion": 2, "scout": "Alex" }""")
+            decode("""{ "formatVersion": 2, "scout": "Alex" }""")
+        )
+    }
+
+    // An export from a newer version of the app can have badges or requirements versions this
+    // one doesn't, in the same format.
+    @Test
+    fun decodeBackup_withABadgeOrVersionTheCatalogDoesntHave_isNewerFormat() {
+        val archery = BadgeProgressDetails(
+            BadgeProgress("archery", version, started),
+            emptyList(),
+            emptyList()
+        )
+        val newerVersion = camping.copy(
+            badge = camping.badge.copy(requirementsVersion = LocalDate.of(2027, 1, 1))
+        )
+        for (progress in listOf(archery, newerVersion)) {
+            val newer = backup.copy(progress = listOf(swimming, progress))
+
+            assertEquals(BackupReadResult.NewerFormat, decode(encodeBackup(newer)))
+        }
+    }
+
+    // Read without a tree of the whole file, which a deep one would overflow the stack with.
+    @Test
+    fun decodeBackup_ofADeeplyNestedFile_isntReadIntoATree() {
+        val deep = "[".repeat(100_000) + "]".repeat(100_000)
+
+        assertEquals(
+            BackupReadResult.Invalid,
+            decode("""{ "formatVersion": 1, "profile": $deep, "badges": [] }""")
+        )
+        assertEquals(
+            BackupReadResult.Invalid,
+            decode("""{ "other": $deep, "formatVersion": 1 }""")
+        )
+        assertEquals(
+            BackupReadResult.NewerFormat,
+            decode("""{ "other": $deep, "formatVersion": 2 }""")
         )
     }
 
@@ -154,7 +259,7 @@ class BackupFormatTest {
             exportJson.take(exportJson.length / 2)
         )
         for (file in files) {
-            assertEquals("For: $file", BackupReadResult.Invalid, decodeBackup(file))
+            assertEquals("For: $file", BackupReadResult.Invalid, decode(file))
         }
     }
 
@@ -174,61 +279,98 @@ class BackupFormatTest {
             val file = exportJson.replaceFirst(from, to)
             check(file != exportJson) { "No $from in the file" }
 
-            assertEquals("With $to", BackupReadResult.Invalid, decodeBackup(file))
+            assertEquals("With $to", BackupReadResult.Invalid, decode(file))
         }
     }
 
     @Test
     fun decodeBackup_ofProgressTheAppCantHaveRecorded_isInvalid() {
-        val tooLong = "x".repeat(MAX_IMPORTED_TEXT_LENGTH + 1)
         fun withCamping(change: (BadgeProgressDetails) -> BadgeProgressDetails) =
             backup.copy(progress = listOf(change(camping), swimming))
         fun withRequirement(requirement: RequirementProgress) =
             withCamping { it.copy(requirements = it.requirements + requirement) }
-        fun withEntry(entry: TrackerEntry) =
-            withCamping { it.copy(trackerEntries = it.trackerEntries + entry) }
+        fun withEntry(number: String, rowNumber: Int?, values: Map<String, String> = mapOf()) =
+            withCamping {
+                val entry = TrackerEntry(9, "camping", number, rowNumber, values)
+                it.copy(trackerEntries = it.trackerEntries + entry)
+            }
+        fun withCounselor(counselor: Counselor) =
+            withCamping { it.copy(badge = it.badge.copy(counselor = counselor)) }
         val backups = mapOf(
             "two of a badge" to backup.copy(progress = listOf(camping, swimming, camping)),
             "two of a requirement" to withRequirement(RequirementProgress("camping", "5")),
-            "two entries in a row" to withEntry(TrackerEntry(9, "camping", "9b", 2, mapOf())),
-            "row 0" to withEntry(TrackerEntry(9, "camping", "9b", 0, mapOf())),
+            "a requirement not in the version" to
+                withRequirement(RequirementProgress("camping", "8")),
+            "a blank requirement number" to withRequirement(RequirementProgress("camping", "")),
             "a date on a requirement not completed" to
                 withRequirement(RequirementProgress("camping", "7", false, day)),
+            "two entries in a row" to withEntry("9b", 2),
+            "row 0" to withEntry("9b", 0),
+            "a row past the tracker's rows" to withEntry("9b", 4),
+            "a fixed-row tracker's entry without a row" to withEntry("9b", null),
+            "a log's entry with a row" to withEntry("9a", 1),
+            "an entry for a requirement without a tracker" to withEntry("5", null),
+            "an entry for a requirement not in the version" to withEntry("8", null),
+            "an entry in a column the tracker doesn't have" to
+                withEntry("9a", null, mapOf("weather" to "Rain")),
+            "a date column without a date" to withEntry("9a", null, mapOf("date" to "May 2")),
             "a blank name" to backup.copy(profile = Profile(" ", "Troop 12")),
             "a blank unit number" to backup.copy(profile = Profile("Alex", "")),
-            "a blank badge ID" to
-                withCamping { it.copy(badge = it.badge.copy(badgeId = " ")) },
-            "a blank requirement number" to withRequirement(RequirementProgress("camping", "")),
-            "an entry with a blank requirement number" to
-                withEntry(TrackerEntry(9, "camping", " ", null, mapOf())),
-            "an entry with a blank column" to
-                withEntry(TrackerEntry(9, "camping", "9a", null, mapOf("" to "2"))),
-            "a long name" to backup.copy(profile = Profile(tooLong, "Troop 12")),
-            "a long badge ID" to
-                withCamping { it.copy(badge = it.badge.copy(badgeId = tooLong)) },
-            "long notes" to withRequirement(RequirementProgress("camping", "7", comment = tooLong)),
-            "a long phone number" to withCamping {
-                it.copy(badge = it.badge.copy(counselor = Counselor(phone = tooLong)))
-            },
-            "a long tracker value" to
-                withEntry(TrackerEntry(9, "camping", "9a", null, mapOf("nights" to tooLong)))
+            "a long name" to
+                backup.copy(profile = Profile(tooLong(PROFILE_NAME_MAX_LENGTH), "Troop 12")),
+            "a long unit number" to
+                backup.copy(profile = Profile("Alex", tooLong(UNIT_NUMBER_MAX_LENGTH))),
+            "a long counselor name" to
+                withCounselor(Counselor(name = tooLong(COUNSELOR_NAME_MAX_LENGTH))),
+            "a long phone number" to
+                withCounselor(Counselor(phone = tooLong(COUNSELOR_PHONE_MAX_LENGTH))),
+            "a long email address" to
+                withCounselor(Counselor(email = tooLong(COUNSELOR_EMAIL_MAX_LENGTH))),
+            "long notes" to withRequirement(
+                RequirementProgress("camping", "7", comment = tooLong(NOTES_MAX_LENGTH))
+            ),
+            "a long tracker note" to
+                withEntry("9a", null, mapOf("note" to tooLong(TRACKER_TEXT_MAX_LENGTH))),
+            "a long tracker number" to
+                withEntry("9a", null, mapOf("nights" to tooLong(TRACKER_NUMBER_MAX_LENGTH)))
         )
         for ((name, invalid) in backups) {
-            val read = decodeBackup(encodeBackup(invalid))
+            val read = decode(encodeBackup(invalid))
 
             assertEquals("With $name", BackupReadResult.Invalid, read)
         }
     }
 
+    /** Text one character longer than [maxLength]. */
+    private fun tooLong(maxLength: Int) = "x".repeat(maxLength + 1)
+
+    // As long as each field lets the scout type, so the app takes back all it exported.
     @Test
-    fun decodeBackup_withTextAsLongAsAllowed_isValid() {
-        val longest = "x".repeat(MAX_IMPORTED_TEXT_LENGTH)
-        val notes = RequirementProgress("camping", "7", comment = longest)
-        val withNotes = backup.copy(
-            progress = listOf(camping.copy(requirements = camping.requirements + notes), swimming)
+    fun decodeBackup_withTextAsLongAsEachFieldTakes_isValid() {
+        fun longest(maxLength: Int) = "x".repeat(maxLength)
+        val counselor = Counselor(
+            longest(COUNSELOR_NAME_MAX_LENGTH),
+            longest(COUNSELOR_PHONE_MAX_LENGTH),
+            longest(COUNSELOR_EMAIL_MAX_LENGTH)
+        )
+        val values = mapOf(
+            "note" to longest(TRACKER_TEXT_MAX_LENGTH),
+            "nights" to longest(TRACKER_NUMBER_MAX_LENGTH)
+        )
+        val longestBackup = Backup(
+            Profile(longest(PROFILE_NAME_MAX_LENGTH), longest(UNIT_NUMBER_MAX_LENGTH)),
+            listOf(
+                BadgeProgressDetails(
+                    BadgeProgress("camping", version, started, counselor),
+                    listOf(
+                        RequirementProgress("camping", "7", comment = longest(NOTES_MAX_LENGTH))
+                    ),
+                    listOf(TrackerEntry(0, "camping", "9a", null, values))
+                )
+            )
         )
 
-        assertEquals(valid(withNotes.asImported()), decodeBackup(encodeBackup(withNotes)))
+        assertEquals(valid(longestBackup), decode(encodeBackup(longestBackup)))
     }
 
     // As repositories store what the scout types, so an edited file can't store what the app
@@ -241,7 +383,18 @@ class BackupFormatTest {
                 BadgeProgressDetails(
                     BadgeProgress("camping", version, started, Counselor(" Pat ", " ", null)),
                     listOf(RequirementProgress("camping", "6", comment = "  ")),
-                    listOf(TrackerEntry(1, "camping", "9a", null, mapOf("a" to " 1 ", "b" to " ")))
+                    listOf(
+                        TrackerEntry(
+                            1,
+                            "camping",
+                            "9a",
+                            null,
+                            mapOf(
+                                "nights" to " 1 ",
+                                "note" to " "
+                            )
+                        )
+                    )
                 ),
                 BadgeProgressDetails(
                     BadgeProgress("swimming", version, started, Counselor(" ", "", " ")),
@@ -256,7 +409,7 @@ class BackupFormatTest {
                 BadgeProgressDetails(
                     BadgeProgress("camping", version, started, Counselor("Pat")),
                     listOf(RequirementProgress("camping", "6")),
-                    listOf(TrackerEntry(0, "camping", "9a", null, mapOf("a" to "1")))
+                    listOf(TrackerEntry(0, "camping", "9a", null, mapOf("nights" to "1")))
                 ),
                 BadgeProgressDetails(
                     BadgeProgress("swimming", version, started),
@@ -266,6 +419,6 @@ class BackupFormatTest {
             )
         )
 
-        assertEquals(valid(tidy), decodeBackup(encodeBackup(untidy)))
+        assertEquals(valid(tidy), decode(encodeBackup(untidy)))
     }
 }

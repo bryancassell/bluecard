@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.profile.PROFILE_NAME_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.profile.UNIT_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
@@ -51,17 +53,8 @@ fun OnboardingRoute(
     )
 }
 
-/**
- * Longer than any real name. The field's text is saved with the screen's state, which has a
- * size limit, so a huge paste mustn't reach it.
- */
-private val NameLengthLimit = TextLengthLimit(maxLength = 100)
-
-/**
- * Longer than any real unit number, even written out as "Troop 1234 B". Limited for the same
- * reason as the name.
- */
-private val UnitNumberLengthLimit = TextLengthLimit(maxLength = 20)
+private val NameLengthLimit = TextLengthLimit(maxLength = PROFILE_NAME_MAX_LENGTH)
+private val UnitNumberLengthLimit = TextLengthLimit(maxLength = UNIT_NUMBER_MAX_LENGTH)
 
 /** First launch: asks for the scout's [name] and [unitNumber]. */
 @Composable

@@ -41,6 +41,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
@@ -166,14 +168,13 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
 }
 
 /**
- * Plenty for a note in a tracker row. The fields' text is saved with the screen's state, which
- * has a size limit, so a huge paste mustn't reach it. A row's values are shown on one line in
- * its requirement's tracker, so a pasted line break becomes a space.
+ * A row's values are shown on one line in its requirement's tracker, so a pasted line break
+ * becomes a space.
  */
-private val TextLimit = TextLengthLimit(maxLength = 500).then(LineBreaksAsSpaces)
+private val TextLimit =
+    TextLengthLimit(maxLength = TRACKER_TEXT_MAX_LENGTH).then(LineBreaksAsSpaces)
 
-/** Longer than any number a scout would log. */
-private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = 20))
+private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = TRACKER_NUMBER_MAX_LENGTH))
 
 /** The field for one column: a date with a picker, or a text field for text or a number. */
 @Composable

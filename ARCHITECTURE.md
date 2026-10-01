@@ -220,9 +220,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   Fields that start as stored text, such as the requirement notes and the
   counselor's fields, use `StoredTextFields` from the same file.
 - **Every text field has a length limit** (`TextLengthLimit`), because saved
-  state has a size limit. Each field's limit is set, with its reason, where the
-  field is declared. Single-line text fields also replace a pasted line break
-  with a space (`LineBreaksAsSpaces`); number fields reject one.
+  state has a size limit. Each stored field's limit is a constant, with its
+  reason, beside the data it limits (for example `NOTES_MAX_LENGTH` in
+  `data/progress/Progress.kt`), because import holds a file to the same limits
+  (see [Export and import](#export-and-import)). Single-line text fields also
+  replace a pasted line break with a space (`LineBreaksAsSpaces`); number
+  fields reject one.
 
 ### Navigation
 
@@ -638,8 +641,9 @@ profile, and clearing a requirement leaves its badge started.
 
 Export writes a single JSON document (a format version, the profile and all
 progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`,
-as Save report does (`data/SaveDocument.kt`). Import reads one with
-`ActivityResultContracts.OpenDocument`, checks the format version and validates
+as Save report does (`data/Documents.kt`). Import reads one with
+`ActivityResultContracts.OpenDocument`, asking only for documents that can be
+opened as a file (`CATEGORY_OPENABLE`), checks the format version and validates
 it before changing anything, since import replaces all current data (see
 [`PRD.md`](PRD.md#design-decisions)).
 
@@ -647,14 +651,19 @@ it before changing anything, since import replaces all current data (see
   (`BACKUP_FORMAT_VERSION` in `data/backup/BackupFormat.kt`), even an added
   field. Every field is required and unknown fields are rejected, so an older
   app turns away a newer file rather than importing it without what it doesn't
-  know. A file's version is read first, since a newer format may lay the rest
-  out differently.
+  know. So does raising a field's length limit, which import holds a file to.
+  A file's version is read first, since a newer format may lay the rest out
+  differently.
 - **Import checks the whole file before it changes anything:** that it's JSON
-  in this format, and that it holds only what the app could have recorded (for
-  example, each badge once and only a completed requirement with a date). It
-  also caps the file's size, so a large file picked by mistake can't use up the
-  app's memory, and each text's length, so imported text fits in a screen's
-  saved state (see [Text fields](#text-fields)).
+  in this format, and that it holds only what this version of the app could
+  have recorded. Each badge and requirements version must be in the catalog: a
+  newer app's catalog can add some without a new format version, so a file
+  with one the catalog doesn't have is reported as from a newer version too.
+  Each requirement, tracker row and column must be in that version, and no text
+  longer than its field takes, so none is cut short when the scout edits it.
+- **The file is decoded as it's read, never into a tree of the whole file,**
+  and its size is capped, so a large or deeply nested file picked by mistake
+  can't use up the app's memory or stack.
 - **Progress is replaced in one transaction, then the profile is saved**
   (`ProgressRepository.replaceAll`). The profile is in DataStore, so the two
   can't share a transaction. If replacing progress fails, nothing has changed;

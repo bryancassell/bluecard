@@ -176,6 +176,8 @@ class DataManagementScreenTest {
 
         val picker = launchedForResult.single()
         assertEquals(Intent.ACTION_OPEN_DOCUMENT, picker.action)
+        // Only documents it can read, not virtual ones such as a Google Doc.
+        assertEquals(setOf(Intent.CATEGORY_OPENABLE), picker.categories)
         assertEquals(listOf("*/*"), picker.getStringArrayExtra(Intent.EXTRA_MIME_TYPES)?.toList())
         assertEquals(listOf(file), read)
         assertEquals(0, importsConfirmed)

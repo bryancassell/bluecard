@@ -14,6 +14,9 @@ sealed interface BackupReadResult {
     /** Not a BlueCard export, or one that was changed or damaged. */
     data object Invalid : BackupReadResult
 
-    /** An export from a newer version of the app, in a format this one can't read. */
+    /**
+     * An export from a newer version of the app: in a format this one can't read, or with a
+     * badge or requirements version that this one's catalog doesn't have.
+     */
     data object NewerFormat : BackupReadResult
 }

@@ -8,6 +8,15 @@ import android.provider.DocumentsContract
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType.NUMBER
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType.TEXT
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -60,6 +69,37 @@ class JsonBackupRepositoryTest {
     private val day = LocalDate.of(2026, 4, 15)
     private val profile = Profile("Alex Scout", "Troop 12")
 
+    private fun badge(id: String, vararg requirements: Requirement) = MeritBadge(
+        id = id,
+        name = id,
+        summary = "Our summary.",
+        officialUrl = "https://www.scouting.org/merit-badges/$id/",
+        requirementVersions = listOf(
+            RequirementsVersion(start.requirementsVersion, requirements.toList())
+        )
+    )
+
+    private fun tracker(column: String, type: TrackerColumnType, rowCount: Int? = null) =
+        TrackerDefinition(listOf(TrackerColumn(column, column, type)), "row", "rows", rowCount)
+
+    private val catalogRepository = FakeCatalogRepository(
+        listOf(
+            badge(
+                "camping",
+                Requirement("4b", "Pitch a tent."),
+                Requirement("5", "Cook."),
+                Requirement("6", "Plan a trip."),
+                Requirement("9a", "Log nights.", tracker = tracker("nights", NUMBER)),
+                Requirement(
+                    "9b",
+                    "Camp three times.",
+                    tracker = tracker("place", TEXT, rowCount = 3)
+                )
+            ),
+            badge("hiking"),
+            badge("swimming")
+        )
+    )
     private val profileRepository = FakeProfileRepository(profile)
     private val progressRepository = FakeProgressRepository()
 
@@ -73,6 +113,7 @@ class JsonBackupRepositoryTest {
         externalScope: CoroutineScope = this.externalScope
     ) = JsonBackupRepository(
         context,
+        catalogRepository,
         profileRepository,
         progressRepository,
         ioDispatcher,
@@ -125,6 +166,9 @@ class JsonBackupRepositoryTest {
 
     private fun document(text: String) = document(text.encodeToByteArray())
 
+    /** What [file], written by an export, holds. */
+    private fun readExport(file: File) = decodeBackup(file.readText(), catalogRepository.badges)
+
     @Before
     fun recordProgress() = runTest {
         progressRepository.markRequirementCompleted("camping", "4b", day, start)
@@ -151,7 +195,7 @@ class JsonBackupRepositoryTest {
 
         repository.exportBackup(destination)
 
-        assertEquals(BackupReadResult.Valid(storedBackup()), decodeBackup(file.readText()))
+        assertEquals(BackupReadResult.Valid(storedBackup()), readExport(file))
     }
 
     // The scout could keep an empty file without noticing that it failed.
@@ -205,7 +249,7 @@ class JsonBackupRepositoryTest {
         caller.cancel()
         advanceUntilIdle()
 
-        assertEquals(BackupReadResult.Valid(storedBackup()), decodeBackup(file.readText()))
+        assertEquals(BackupReadResult.Valid(storedBackup()), readExport(file))
     }
 
     @Test
@@ -215,6 +259,34 @@ class JsonBackupRepositoryTest {
         val read = repository.readBackup(document(encodeBackup(backup)).first)
 
         assertEquals(BackupReadResult.Valid(backup), read)
+    }
+
+    // An editor can add one when it saves the file.
+    @Test
+    fun readBackup_ofAnExportWithAByteOrderMark_isValid() = runTest {
+        val backup = storedBackup()
+
+        val read = repository.readBackup(document("\uFEFF" + encodeBackup(backup)).first)
+
+        assertEquals(BackupReadResult.Valid(backup), read)
+    }
+
+    @Test
+    fun readBackup_ofAnExportWithABadgeTheCatalogDoesntHave_isNewerFormat() = runTest {
+        val archery = BadgeProgressDetails(start.progress("archery"), emptyList(), emptyList())
+        val newer = Backup(profile, listOf(archery))
+
+        val read = repository.readBackup(document(encodeBackup(newer)).first)
+
+        assertEquals(BackupReadResult.NewerFormat, read)
+    }
+
+    @Test
+    fun readBackup_whenTheCatalogCantBeRead_throwsIOException() = runTest {
+        val (source, _) = document(encodeBackup(storedBackup()))
+        catalogRepository.failLoads = true
+
+        assertThrows<IOException> { repository.readBackup(source) }
     }
 
     @Test

@@ -3,6 +3,8 @@ package io.github.bryancassell.bluecard.data.backup
 import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.openDocument
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
@@ -10,7 +12,6 @@ import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.CharacterCodingException
 import javax.inject.Inject
@@ -21,13 +22,15 @@ import kotlinx.coroutines.withContext
 
 /**
  * [BackupRepository] that writes and reads exports as JSON ([encodeBackup], [decodeBackup]),
- * through the content resolver, so it reaches any document the scout picks.
+ * through the content resolver, so it reaches any document the scout picks. A file is checked
+ * against the catalog of badges in this version of the app.
  *
  * Exporting and importing run in [externalScope], so each finishes even if the scout leaves
  * the screen ([runOutlivingCaller]).
  */
 class JsonBackupRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -49,7 +52,8 @@ class JsonBackupRepository @Inject constructor(
     }
 
     override suspend fun readBackup(source: Uri): BackupReadResult = withContext(ioDispatcher) {
-        val bytes = open(source).use { it.readAtMost(MAX_FILE_SIZE) }
+        val bytes = context.contentResolver.openDocument(source)
+            .use { it.readAtMost(MAX_FILE_SIZE) }
             ?: return@withContext BackupReadResult.Invalid
         val json = try {
             bytes.decodeToString(throwOnInvalidSequence = true)
@@ -57,7 +61,8 @@ class JsonBackupRepository @Inject constructor(
             // Not text, such as a photo. Caught here, since it's an IOException too.
             return@withContext BackupReadResult.Invalid
         }
-        decodeBackup(json)
+        // An editor can add a byte order mark when it saves the file, which JSON doesn't allow.
+        decodeBackup(json.removePrefix("\uFEFF"), catalogRepository.getBadges())
     }
 
     // Progress first: it's replaced in one transaction, so if that fails, nothing has changed.
@@ -66,24 +71,14 @@ class JsonBackupRepository @Inject constructor(
         profileRepository.saveProfile(backup.profile)
     }
 
-    /**
-     * Opens [source] to read. As with a document opened to write ([saveDocument]), an app that
-     * holds it can refuse with an exception that isn't an IOException, which is reported as one.
-     */
-    private fun open(source: Uri): InputStream = try {
-        context.contentResolver.openInputStream(source)
-    } catch (e: RuntimeException) {
-        throw IOException("Couldn't open $source", e)
-    } ?: throw IOException("Couldn't open $source: its provider recently crashed")
-
     /** Everything left in this stream, or null if it holds more than [limit] bytes. */
     private fun InputStream.readAtMost(limit: Int): ByteArray? {
-        val read = ByteArrayOutputStream()
+        val bytes = ByteArrayOutputStream()
         val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        while (read.size() <= limit) {
+        while (bytes.size() <= limit) {
             val count = read(buffer)
-            if (count == -1) return read.toByteArray()
-            read.write(buffer, 0, count)
+            if (count == -1) return bytes.toByteArray()
+            bytes.write(buffer, 0, count)
         }
         return null
     }
