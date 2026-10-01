@@ -42,7 +42,7 @@ data class BadgeRequirements(
  * Badge [badgeId] from this catalog with the scout's [progress] on it, or null if the
  * catalog doesn't have the badge or the version it was started on. Only a catalog edited
  * during development can cause that: released catalogs keep every badge and version they
- * shipped (ARCHITECTURE.md, Merit badge catalog).
+ * shipped (ARCHITECTURE.md, Requirement versions).
  */
 fun List<MeritBadge>.badgeRequirements(
     badgeId: String,

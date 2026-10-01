@@ -39,7 +39,7 @@ import java.time.format.DateTimeFormatter
 /**
  * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
  * 2026", in the language of the strings around it, with that language's digits
- * (ARCHITECTURE.md, UI layer).
+ * (ARCHITECTURE.md, Language and layout direction).
  */
 @Composable
 fun rememberCompletionDateFormatter(): DateTimeFormatter {
@@ -119,7 +119,8 @@ private fun Modifier.readAs(description: String?): Modifier =
  * Asks for the date something was done on, such as when a requirement was completed, starting
  * at [initial]. Dates after [today] can't be picked. The picker itself follows the device's
  * language, like other Material labels, and is laid out in that language's direction, so a
- * Persian calendar reads right-to-left (ARCHITECTURE.md, UI layer).
+ * Persian calendar reads right-to-left: laid out left-to-right, as the app's screens are, its
+ * dates would read out of order.
  */
 @Composable
 fun CompletionDatePickerDialog(

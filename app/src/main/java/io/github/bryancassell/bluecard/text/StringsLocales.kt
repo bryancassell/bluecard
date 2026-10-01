@@ -10,8 +10,8 @@ import io.github.bryancassell.bluecard.R
 import java.util.Locale
 
 // The language the app's strings are in, which isn't always the device's: the app may not have
-// strings for the device's language (ARCHITECTURE.md, UI layer). Compose code uses the
-// functions in ui/StringsLanguage.kt, which build on these.
+// strings for the device's language (ARCHITECTURE.md, Language and layout direction). Compose
+// code uses the functions in ui/StringsLanguage.kt, which build on these.
 
 /**
  * The locale the app's strings are formatted in, from [stringsLocales], for code outside Compose,

@@ -69,7 +69,7 @@ internal class PlacedText(
 /**
  * Lays [report] out on pages, with its text from [resources], which must be in the strings'
  * language (`stringsLanguageResources`). Dates and numbers are formatted in their first
- * locale, and text is laid out in its direction (ARCHITECTURE.md, UI layer).
+ * locale, and text is laid out in its direction (ARCHITECTURE.md, Language and layout direction).
  */
 fun layOutReport(report: BadgeReport, resources: Resources): List<ReportPage> =
     ReportComposer(resources).apply { add(report) }.pages()

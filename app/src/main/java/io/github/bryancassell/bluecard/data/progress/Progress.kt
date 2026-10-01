@@ -75,6 +75,10 @@ data class RequirementProgress(
     val completed: Boolean = false,
     /** Optional date the requirement was completed; only set when [completed]. */
     val completedDate: LocalDate? = null,
+    /**
+     * The scout's notes on the requirement. The page called them a comment before it called
+     * them Notes (#127); the code and database kept the name, so the rename needed no migration.
+     */
     val comment: String? = null
 )
 

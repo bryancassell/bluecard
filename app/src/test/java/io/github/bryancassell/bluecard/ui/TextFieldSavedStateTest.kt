@@ -17,6 +17,12 @@ import org.junit.runner.RunWith
 /**
  * [textFieldState], [restoredText], [keepText] and [StoredTextFields]. Robolectric, because saved
  * state is a Bundle, and ViewModelScenario passes it through a Parcel as the system does.
+ *
+ * ViewModelScenario's `recreate()` saves state and restores it into a new ViewModel. Handing a
+ * second ViewModel the same SavedStateHandle instead wouldn't run saved state providers, so it
+ * couldn't test them. `scenario.viewModel` creates the ViewModel when first read, so a test reads
+ * it before `recreate()`. `recreate()` doesn't clear the ViewModel it replaces, so that
+ * ViewModel's coroutines keep running and `onCleared` isn't called.
  */
 @RunWith(AndroidJUnit4::class)
 class TextFieldSavedStateTest {

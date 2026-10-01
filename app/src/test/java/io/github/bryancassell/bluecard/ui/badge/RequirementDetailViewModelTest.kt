@@ -41,7 +41,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 // Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, Testing approach).
+// plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class RequirementDetailViewModelTest {
     @get:Rule

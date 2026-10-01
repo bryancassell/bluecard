@@ -28,6 +28,12 @@ fun stringsLocale(): Locale =
  * Provides [LocalResources] in the strings' language to [content], so every `stringResource`
  * and `pluralStringResource` formats numbers with its digits and picks plural forms by its
  * rules, and a sentence never mixes two languages.
+ *
+ * Labels the app doesn't read through [LocalResources] still follow the device's language, such
+ * as the text selection toolbar (Cut, Copy, Paste), Material 3's labels and the role and state
+ * names TalkBack reads, and are laid out in the activity's direction, except the date picker,
+ * which `CompletionDatePickerDialog` lays out in the device's language's direction. Compose
+ * Foundation's right-click menu does read [LocalResources], so it follows the strings' language.
  */
 // Lint warns that an app bundle may not install the resources for a locale set at runtime.
 // These are the language of the strings already shown and the device's own locales, so their
