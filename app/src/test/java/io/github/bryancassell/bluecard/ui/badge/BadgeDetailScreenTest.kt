@@ -2,6 +2,9 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.app.Application
 import android.content.Intent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -9,24 +12,32 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
+import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -35,6 +46,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowToast
 
@@ -156,17 +168,54 @@ class BadgeDetailScreenTest {
             .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
     }
 
-    // Robolectric's default graphics measure every character as 1px wide, so nothing wraps.
+    // The icon is decorative, so screen readers read only the text.
+    @Test
+    fun eagleLabel_isReadOnce() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Eagle-required", useUnmergedTree = true)
+            .onParent()
+            .onChildren()
+            .filter(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription))
+            .assertCountEquals(0)
+    }
+
+    // The tag's fill is what sets the label apart from the blue text buttons below it. Only
+    // Robolectric's native graphics draw real pixels and measure real text.
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
-    fun longEagleLabel_wrapsWithoutBeingCutOff() {
-        show(ready.copy(eagle = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))))
+    fun eagleLabel_isOnTheTagsFill() {
+        composeTestRule.setContent {
+            BlueCardTheme { BadgeDetailScreen(ready, onOpenRequirement = {}, onEditCounselor = {}) }
+        }
+
+        // The text's top-left corner is clear of its letters, so it shows what's behind them.
+        val pixels = composeTestRule.onNodeWithText("Eagle-required").captureToImage().toPixelMap()
+        assertEquals(BlueCardColorScheme.primaryFixedDim, pixels[0, 0])
+    }
+
+    // At twice the font size on a narrow phone, a group's label needs several lines.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "w320dp")
+    @Test
+    fun longEagleLabel_atLargeFontSize_wrapsWithoutBeingCutOff() {
+        val group = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))
+        composeTestRule.setContent {
+            val density = Density(LocalDensity.current.density, fontScale = 2f)
+            CompositionLocalProvider(LocalDensity provides density) {
+                BadgeDetailScreen(
+                    ready.copy(eagle = group),
+                    onOpenRequirement = {},
+                    onEditCounselor = {}
+                )
+            }
+        }
 
         val layouts = mutableListOf<TextLayoutResult>()
         composeTestRule.onNodeWithText("Eagle-required", substring = true)
             .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val layout = layouts.single()
-        assertTrue("Expected it to wrap", layout.lineCount > 1)
+        assertTrue("Expected 3+ lines, was ${layout.lineCount}", layout.lineCount >= 3)
         assertFalse("Expected nothing cut off", layout.hasVisualOverflow)
     }
 
