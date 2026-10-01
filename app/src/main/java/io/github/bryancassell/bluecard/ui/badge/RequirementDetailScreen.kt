@@ -69,6 +69,7 @@ fun RequirementDetailRoute(
         onOpenTrackerEntry = onOpenTrackerEntry,
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
+        today = viewModel::today,
         onSaveComment = viewModel::saveComment,
         onClear = viewModel::clear,
         onSaveFailureShown = viewModel::onSaveFailureShown,
@@ -92,6 +93,7 @@ fun RequirementDetailScreen(
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
     onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
+    today: () -> LocalDate,
     onSaveComment: () -> Unit,
     onClear: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
@@ -113,7 +115,7 @@ fun RequirementDetailScreen(
                 if (requirement.markedByHand) {
                     CompletedCheckbox(requirement.completed, onCompletedChange)
                     if (requirement.completed) {
-                        CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
+                        CompletionDate(uiState.completedDate, today, onCompletedDateChange)
                     }
                 }
                 RequirementRows(items = uiState.children, onOpen = onOpenRequirement)
@@ -211,7 +213,11 @@ private fun CompletedCheckbox(completed: Boolean, onCompletedChange: (Boolean) -
 
 /** The date a completed requirement was completed on, which the scout can change or remove. */
 @Composable
-private fun CompletionDate(date: LocalDate?, today: LocalDate, onDateChange: (LocalDate?) -> Unit) {
+private fun CompletionDate(
+    date: LocalDate?,
+    today: () -> LocalDate,
+    onDateChange: (LocalDate?) -> Unit
+) {
     val formatter = rememberCompletionDateFormatter()
     EditableDate(
         text = if (date == null) {

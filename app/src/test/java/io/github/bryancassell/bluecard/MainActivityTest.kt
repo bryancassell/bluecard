@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -75,7 +76,9 @@ import io.github.bryancassell.bluecard.di.ClockModule
 import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
 import io.github.bryancassell.bluecard.di.ReportModule
+import io.github.bryancassell.bluecard.testing.FakeClock
 import java.time.Clock
+import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.flow.first
@@ -180,9 +183,11 @@ class MainActivityTest {
 
     private val today = LocalDate.of(2026, 5, 20)
 
+    private val fakeClock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
+
     @BindValue
     @JvmField
-    val clock: Clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    val clock: Clock = fakeClock
 
     private lateinit var scenario: ActivityScenario<MainActivity>
 
@@ -878,6 +883,35 @@ class MainActivityTest {
         val ok = composeTestRule.onNodeWithText("OK").getBoundsInRoot()
         val cancel = composeTestRule.onNodeWithText("Cancel").getBoundsInRoot()
         assertTrue(ok.right <= cancel.left)
+    }
+
+    // A day in the date picker, which reads each day as its full date.
+    private fun pickerDay(date: String) =
+        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
+
+    // As when the system stops the app with the picker open, and the scout then crosses a date
+    // line westward: the picker comes back with its selection, which it no longer offers.
+    @Test
+    fun datePicker_restoredWithAnEarlierToday_cantConfirmADayItDoesntOffer() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+        completedCheckbox().performClick()
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        // It opens at the completion date, today.
+        pickerDay("May 20, 2026")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        fakeClock.now -= Duration.ofDays(1)
+
+        scenario.recreate()
+
+        pickerDay("May 20, 2026")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+            .assertIsNotEnabled()
+        composeTestRule.onNodeWithText("OK").assertIsNotEnabled()
+        pickerDay("May 19, 2026").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(LocalDate.of(2026, 5, 19), runBlocking { recorded("1") }?.completedDate)
     }
 
     @Test

@@ -19,9 +19,7 @@ object ClockModule {
 /**
  * The system clock in the device's time zone at the moment it's read. [Clock.systemDefaultZone]
  * keeps the zone it was made in, so a page left open through a time zone change, as when a scout
- * travels to camp, would go on using the old zone for "today" (#79). A "today" held in a page's
- * UI state, such as the date picker's latest date, still catches up only the next time that
- * state updates.
+ * travels to camp, would go on using the old zone for "today" (#79).
  */
 private object DeviceClock : Clock() {
     override fun getZone(): ZoneId = ZoneId.systemDefault()

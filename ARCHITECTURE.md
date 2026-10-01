@@ -175,6 +175,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   not by sending one-off events to the UI, as the recommendations page advises.
   A page that closes itself once its save succeeds does so from UI state too
   (see [Recording progress](#recording-progress)).
+- **A date that must be current when the scout acts is read then**, not held in
+  UI state, which updates only when the page's data changes. The date picker's
+  latest date works this way: screens pass their ViewModel's `today()` down, and
+  the picker calls it as it opens, so a page left open past midnight offers the
+  new day. It's a read, not an event, and an exception to state flowing down.
 
 ### Load and save failures
 
