@@ -9,6 +9,8 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextInputSelection
+import androidx.compose.ui.text.TextRange
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -51,6 +53,18 @@ class SingleLineInputTest {
         field().performTextInput("abcd\r\nef")
 
         assertEquals("abcd ", state.text.toString())
+    }
+
+    @Test
+    fun pasteInTheMiddle_isCutAndKeepsCursorAfterIt() {
+        field().performTextInput("abcd")
+        field().performTextInputSelection(TextRange(2))
+
+        // Only "x\n" fits, and its line break becomes a space.
+        field().performTextInput("x\ny\nz")
+
+        assertEquals("abx cd", state.text.toString())
+        assertEquals(TextRange(4), state.selection)
     }
 
     @Test

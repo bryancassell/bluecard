@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -21,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,10 +112,6 @@ fun EditCounselorScreen(
     }
 }
 
-private val NameInput = singleLineInput(maxLength = COUNSELOR_NAME_MAX_LENGTH)
-private val PhoneInput = singleLineInput(maxLength = COUNSELOR_PHONE_MAX_LENGTH)
-private val EmailInput = singleLineInput(maxLength = COUNSELOR_EMAIL_MAX_LENGTH)
-
 @Composable
 private fun CounselorFields(
     uiState: EditCounselorUiState.Ready,
@@ -146,7 +142,7 @@ private fun CounselorFields(
         CounselorField(
             state = name,
             label = R.string.edit_counselor_name,
-            input = NameInput,
+            maxLength = COUNSELOR_NAME_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Next
@@ -155,7 +151,7 @@ private fun CounselorFields(
         CounselorField(
             state = phone,
             label = R.string.edit_counselor_phone,
-            input = PhoneInput,
+            maxLength = COUNSELOR_PHONE_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next
@@ -164,7 +160,7 @@ private fun CounselorFields(
         CounselorField(
             state = email,
             label = R.string.edit_counselor_email,
-            input = EmailInput,
+            maxLength = COUNSELOR_EMAIL_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
@@ -188,9 +184,10 @@ private fun CounselorFields(
 private fun CounselorField(
     state: TextFieldState,
     @StringRes label: Int,
-    input: InputTransformation,
+    maxLength: Int,
     keyboardOptions: KeyboardOptions
 ) {
+    val input = remember(maxLength) { singleLineInput(maxLength) }
     OutlinedTextField(
         state = state,
         textStyle = typedTextFieldStyle(),

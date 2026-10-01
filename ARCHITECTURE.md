@@ -230,8 +230,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   `data/progress/Progress.kt`), because import holds a file to the same limits
   (see [Export and import](#export-and-import)). Single-line text fields take
   their limit from `singleLineInput` (`ui/SingleLineInput.kt`), which then
-  replaces a pasted line break with a space (`LineBreaksAsSpaces`); number
-  fields reject one.
+  replaces a pasted line break with a space (`LineBreaksAsSpaces`). Number
+  fields instead chain `NumberInput`, which rejects a line break, with their
+  `TextLengthLimit`.
 
 ### Navigation
 
