@@ -348,7 +348,10 @@ class BadgeDetailScreenTest {
     fun completeRequirement_saysCompletedOnce() {
         show(ready)
 
-        row("Plan a campout.").assert(!hasContentDescription("Completed"))
+        row("Plan a campout.")
+            .assert(hasStateDescription("Completed"))
+            .assert(!hasContentDescription("Completed"))
+            .assert(!hasText("Completed"))
     }
 
     // The scout marks a requirement complete on its own page.

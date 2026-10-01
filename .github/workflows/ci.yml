@@ -50,5 +50,4 @@ jobs:
           path: |
             app/build/reports/
             app/build/test-results/
-            app/src/test/screenshots/*_actual.png
-            app/src/test/screenshots/*_compare.png
+            app/build/outputs/roborazzi/

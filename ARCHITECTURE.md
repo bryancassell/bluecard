@@ -514,8 +514,8 @@ until the requirement is complete, then filled in Scouting America Blue with a
 check on its corner, so what's done and what's left stand apart at a glance.
 Once a requirement is complete, those under it that aren't, such as the choices
 the scout didn't pick, are no longer needed: their box is filled in grey, with
-"Not needed" under the summary. Screen readers read "Completed", "Not completed"
-or "Not needed" as the row's state. A
+"Not needed" under the summary, and their pages say "Not needed" too. Screen
+readers read "Completed", "Not completed" or "Not needed" as the row's state. A
 requirement with a tracker says how much of it is filled in, such as "8 of 12
 weeks". Every row opens the requirement's own page, with its completion date and
 comment. The scout marks a requirement complete there by hand, unless it has
@@ -899,8 +899,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   and every test run, `./gradlew check` and CI included, compares against them
   (`roborazzi.test.verify` in `gradle.properties`). After an intended change,
   `./gradlew recordRoborazziDebug` records them again, and the new images are
-  reviewed in the diff. A failed comparison writes `*_actual.png` and
-  `*_compare.png` beside them, which git ignores and CI uploads.
+  reviewed in the diff. A failed comparison writes the new image and one
+  comparing the two to `app/build/outputs/roborazzi/`, which CI uploads.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.

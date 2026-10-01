@@ -98,22 +98,23 @@ class BadgeRequirementsTest {
     }
 
     @Test
-    fun partOfCompleted_isWhetherARequirementItsPartOfIsComplete() {
+    fun item_partOfCompletedRequirement_isNotNeeded() {
         // 2a completes 2, which needs one of its two choices.
         val found = catalog.badgeRequirements("camping", startedOn(newest.effectiveDate, "2a"))!!
 
-        assertTrue(found.partOfCompleted("2b"))
-        assertTrue(found.partOfCompleted("2b(1)"))
-        assertFalse(found.partOfCompleted("2"))
-        assertFalse(found.partOfCompleted("1"))
-        assertFalse(found.partOfCompleted("9"))
+        assertTrue(found.item(newest.find("2b")!!).notNeeded)
+        assertTrue(found.item(newest.find("2b(1)")!!).notNeeded)
+        // Complete itself.
+        assertFalse(found.item(newest.find("2a")!!).notNeeded)
+        // Top-level: part of no requirement.
+        assertFalse(found.item(newest.find("1")!!).notNeeded)
     }
 
     @Test
-    fun partOfCompleted_beforeAnyIsComplete_isFalse() {
+    fun item_beforeARequirementItsPartOfIsComplete_isNeeded() {
         val found = catalog.badgeRequirements("camping", null)!!
 
-        assertFalse(found.partOfCompleted("2b(1)"))
+        assertFalse(found.item(newest.find("2b(1)")!!).notNeeded)
     }
 
     @Test

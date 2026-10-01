@@ -234,6 +234,20 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun requirementNoLongerNeeded_isLabeledNotNeeded() {
+        show(ready.copy(requirement = ready.requirement.copy(notNeeded = true)))
+
+        composeTestRule.onNodeWithText("Not needed").assertIsDisplayed()
+    }
+
+    @Test
+    fun neededRequirement_isNotLabeledNotNeeded() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Not needed").assertDoesNotExist()
+    }
+
+    @Test
     fun completedRequirement_isLabeledCompleted() {
         show(ready.copy(requirement = ready.requirement.copy(completed = true)))
 

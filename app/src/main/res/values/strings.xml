@@ -71,9 +71,9 @@
     <!-- Screen readers read it as the state of a requirement's row until it's complete, then
          read "Completed". -->
     <string name="requirement_not_completed">Not completed</string>
-    <!-- On the row of a requirement that isn't complete but no longer needs to be, because a
-         requirement it's part of is complete, such as a choice the scout didn't pick. Screen
-         readers read it as the row's state. -->
+    <!-- On the row and page of a requirement that isn't complete but no longer needs to be,
+         because a requirement it's part of is complete, such as a choice the scout didn't pick.
+         Screen readers read it as the row's state. -->
     <string name="requirement_not_needed">Not needed</string>
     <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
          open requirement". -->

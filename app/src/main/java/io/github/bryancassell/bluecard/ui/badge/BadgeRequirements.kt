@@ -19,16 +19,14 @@ data class BadgeRequirements(
     /** The scout's tracker entries, keyed by requirement number. */
     val trackerEntries: Map<String, List<TrackerEntry>>
 ) {
-    /**
-     * [requirement] of this badge as a row. [partOfCompleted] is whether a requirement it's part
-     * of is complete.
-     */
-    fun item(requirement: Requirement, partOfCompleted: Boolean = false) =
-        requirement.toItem(recorded, trackerEntries, partOfCompleted)
+    /** [requirement] of this badge as a row. */
+    fun item(requirement: Requirement) =
+        requirement.toItem(recorded, trackerEntries, partOfCompleted(requirement.number))
 
     /** Whether a requirement that the one numbered [number] is part of, at any depth, is complete. */
-    fun partOfCompleted(number: String): Boolean =
-        version.ancestorsOf(number).any { it.completion(recorded, trackerEntries) != null }
+    private fun partOfCompleted(number: String): Boolean = version.pathTo(number).orEmpty()
+        .dropLast(1)
+        .any { it.completion(recorded, trackerEntries) != null }
 }
 
 /**
@@ -52,19 +50,14 @@ fun List<MeritBadge>.badgeRequirements(
 }
 
 /** The requirement numbered [number], at any depth, or null if there is none. */
-fun RequirementsVersion.find(number: String): Requirement? = requirements.firstNotNullOfOrNull {
-    it.find(number)
-}
-
-private fun Requirement.find(number: String): Requirement? =
-    if (this.number == number) this else children.firstNotNullOfOrNull { it.find(number) }
+fun RequirementsVersion.find(number: String): Requirement? = pathTo(number)?.last()
 
 /**
- * The requirements that the one numbered [number] is part of, outermost first: none for a
- * top-level requirement or one not in this version.
+ * The requirements from the top level down to the one numbered [number], or null if there is
+ * none.
  */
-private fun RequirementsVersion.ancestorsOf(number: String): List<Requirement> =
-    requirements.firstNotNullOfOrNull { it.pathTo(number) }?.dropLast(1).orEmpty()
+private fun RequirementsVersion.pathTo(number: String): List<Requirement>? =
+    requirements.firstNotNullOfOrNull { it.pathTo(number) }
 
 /** This requirement down to the one numbered [number], or null if that isn't in it. */
 private fun Requirement.pathTo(number: String): List<Requirement>? = if (this.number == number) {
