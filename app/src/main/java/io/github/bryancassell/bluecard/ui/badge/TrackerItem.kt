@@ -4,6 +4,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.filledRows
+import io.github.bryancassell.bluecard.data.progress.numberedRows
 
 /**
  * A requirement's tracker as its page shows it: how much is filled in, and its rows. A log,
@@ -56,29 +57,15 @@ fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(
     rows = rows(entries)
 )
 
-/** What one row is called, capitalized for titles such as "Week 3". */
-val TrackerDefinition.rowTitle: String get() = rowLabel.replaceFirstChar { it.titlecase() }
-
 /** How much of this tracker the [entries] recorded for its requirement fill in. */
 fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
     val recorded = rowCount?.let { count -> filledRows(entries, count).size } ?: entries.size
-    // The catalog is in English, so its row labels follow English plurals.
-    val rows = if ((rowCount ?: recorded) == 1) rowLabel else rowLabelPlural
-    return TrackerCount(recorded, rowCount, rows)
+    return TrackerCount(recorded, rowCount, rowsLabel(recorded))
 }
 
 private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow> =
-    if (rowCount == null) {
-        // In the order they were added.
-        entries.sortedBy { it.id }.mapIndexed { index, entry ->
-            TrackerRow(index + 1, entry.id, values(entry))
-        }
-    } else {
-        val filled = filledRows(entries, rowCount)
-        (1..rowCount).map { number ->
-            val entry = filled[number]
-            TrackerRow(number, entry?.id, entry?.let { values(it) }.orEmpty())
-        }
+    numberedRows(entries).map { (number, entry) ->
+        TrackerRow(number, entry?.id, entry?.let { values(it) }.orEmpty())
     }
 
 private fun TrackerDefinition.values(entry: TrackerEntry): List<TrackerValue> =

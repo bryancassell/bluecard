@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -114,6 +115,20 @@ data class TrackerEntry(
  */
 fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntry> =
     entries.filter { it.rowNumber in 1..rowCount }.associateBy { it.rowNumber!! }
+
+/**
+ * The rows of this tracker with the [entries] recorded for its requirement, each with its
+ * number from 1: in a log, each entry in the order it was added; with a fixed number of rows,
+ * every row, with its entry, or null if it isn't filled in.
+ */
+fun TrackerDefinition.numberedRows(entries: List<TrackerEntry>): List<Pair<Int, TrackerEntry?>> {
+    val count = rowCount
+    if (count == null) {
+        return entries.sortedBy { it.id }.mapIndexed { index, entry -> index + 1 to entry }
+    }
+    val filled = filledRows(entries, count)
+    return (1..count).map { it to filled[it] }
+}
 
 /**
  * Tracker values as repositories store them: without spaces around each value, and without

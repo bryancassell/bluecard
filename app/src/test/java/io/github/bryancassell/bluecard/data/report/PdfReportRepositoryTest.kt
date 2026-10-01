@@ -1,7 +1,10 @@
 package io.github.bryancassell.bluecard.data.report
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.ProviderInfo
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
@@ -24,6 +27,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -100,6 +104,33 @@ class PdfReportRepositoryTest {
         Robolectric.buildContentProvider(FileProvider::class.java).create(info)
     }
 
+    private val documents = "io.github.bryancassell.bluecard.test.documents"
+
+    // Like the provider the system file picker saved to.
+    private val documentsProvider = Robolectric.buildContentProvider(
+        FolderDocumentsProvider::class.java
+    ).create(
+        ProviderInfo().apply {
+            authority = documents
+            exported = true
+            grantUriPermissions = true
+            readPermission = Manifest.permission.MANAGE_DOCUMENTS
+            writePermission = Manifest.permission.MANAGE_DOCUMENTS
+        }
+    ).get()
+
+    @Before
+    fun setUpDocuments() {
+        documentsProvider.folder = folder.newFolder("documents")
+    }
+
+    /** A document the file picker created, as it does before the report is saved to it. */
+    private fun createdDocument(text: String = ""): Pair<Uri, File> {
+        val file = File(documentsProvider.folder, "Chess merit badge report.pdf")
+        file.writeText(text)
+        return DocumentsContract.buildDocumentUri(documents, file.name) to file
+    }
+
     @Before
     fun completeChess() = runTest {
         val start = BadgeStart(newest, LocalDate.of(2026, 3, 1))
@@ -165,6 +196,46 @@ class PdfReportRepositoryTest {
 
         assertEquals(pdfWriter.lastWritten, destination.readText())
         assertTrue("Chess" in destination.readText())
+    }
+
+    @Test
+    fun saveReport_toADocument_replacesWhatItHeld() = runTest {
+        // Longer than the report, so a report written over it without truncating it would end
+        // with the rest of it.
+        val (document, file) = createdDocument("An older, longer file. ".repeat(500))
+
+        repository.saveReport("chess", document)
+
+        assertEquals(pdfWriter.lastWritten, file.readText())
+    }
+
+    // The scout could send an empty or partial file without noticing that it failed.
+    @Test
+    fun saveReport_whenTheReportCantBeWritten_deletesTheDocument() = runTest {
+        val (document, file) = createdDocument()
+        pdfWriter.failWrites = true
+
+        assertThrows<IOException> { repository.saveReport("chess", document) }
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun saveReport_whenProgressCantBeRead_deletesTheDocument() = runTest {
+        val (document, file) = createdDocument()
+        progressRepository.failLoads = true
+
+        assertThrows<IOException> { repository.saveReport("chess", document) }
+        assertFalse(file.exists())
+    }
+
+    // Another app's refusal isn't a mistake in BlueCard, so the scout sees that it failed
+    // rather than the app closing.
+    @Test
+    fun saveReport_whenTheDocumentsProviderRefuses_throwsIOException() = runTest {
+        val (document, _) = createdDocument()
+        documentsProvider.refuseOpening = true
+
+        assertThrows<IOException> { repository.saveReport("chess", document) }
     }
 
     @Test

@@ -53,7 +53,7 @@ class OtherAppStarter internal constructor(
 
     /** Starts another app with [intent], or shows [noApp] if no app on the phone can. */
     operator fun invoke(intent: Intent, noApp: String) {
-        start(noApp) { context.startActivity(intent) }
+        tap { start(noApp) { context.startActivity(intent) } }
     }
 
     /**
@@ -61,16 +61,25 @@ class OtherAppStarter internal constructor(
      * file to create, or shows [noApp] if no app on the phone can handle it.
      */
     fun <I> launch(launcher: ActivityResultLauncher<I>, input: I, noApp: String) {
-        start(noApp) { launcher.launch(input) }
+        tap { start(noApp) { launcher.launch(input) } }
     }
 
-    private fun start(noApp: String, start: () -> Unit) {
+    /**
+     * Runs [action] for a tap that opens another app once something is ready, such as Share
+     * report, which opens the share sheet once the report is created. It's ignored, and ignores
+     * other taps, as a start is.
+     */
+    fun tap(action: () -> Unit) {
         if (ignoring) return
         ignoring = true
         scope.launch {
             delay(timeoutMillis)
             ignoring = false
         }
+        action()
+    }
+
+    private fun start(noApp: String, start: () -> Unit) {
         try {
             start()
         } catch (_: ActivityNotFoundException) {

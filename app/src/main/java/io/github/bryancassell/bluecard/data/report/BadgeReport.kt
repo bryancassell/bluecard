@@ -11,7 +11,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
-import io.github.bryancassell.bluecard.data.progress.filledRows
+import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import java.time.LocalDate
 
@@ -89,8 +89,7 @@ private fun Requirement.toReport(
 ): ReportRequirement = ReportRequirement(
     number = number,
     summary = summary,
-    // A count of all the children is no choice.
-    requiredCount = requiredCount?.takeIf { it < children.size },
+    requiredCount = choiceCount,
     completion = completion(recorded, entries),
     comment = recorded[number]?.comment,
     tracker = tracker?.toReport(entries[number].orEmpty()),
@@ -98,16 +97,12 @@ private fun Requirement.toReport(
 )
 
 private fun TrackerDefinition.toReport(entries: List<TrackerEntry>): ReportTracker {
-    val numbered = if (rowCount == null) {
-        entries.sortedBy { it.id }.mapIndexed { index, entry -> index + 1 to entry }
-    } else {
-        filledRows(entries, rowCount).toList().sortedBy { (number, _) -> number }
-    }
-    val rows = numbered.map { (number, entry) ->
-        ReportTrackerRow(
-            number,
-            columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }
-        )
+    // The rows filled in, without the empty rows of a tracker with a fixed number of them.
+    val rows = numberedRows(entries).mapNotNull { (number, entry) ->
+        entry?.let { ReportTrackerRow(number, values(it)) }
     }
     return ReportTracker(this, rows)
 }
+
+private fun TrackerDefinition.values(entry: TrackerEntry): List<Pair<TrackerColumn, String>> =
+    columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }

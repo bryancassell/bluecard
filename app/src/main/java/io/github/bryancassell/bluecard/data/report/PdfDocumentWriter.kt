@@ -16,8 +16,13 @@ class PdfDocumentWriter @Inject constructor() : ReportPdfWriter {
             pages.forEachIndexed { index, page ->
                 val info = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, index + 1).create()
                 val pdfPage = document.startPage(info)
-                page.draw(pdfPage.canvas)
-                document.finishPage(pdfPage)
+                // Finished even if drawing fails, as close() throws on an unfinished page and
+                // would hide the failure.
+                try {
+                    page.draw(pdfPage.canvas)
+                } finally {
+                    document.finishPage(pdfPage)
+                }
             }
             document.writeTo(out)
         } finally {

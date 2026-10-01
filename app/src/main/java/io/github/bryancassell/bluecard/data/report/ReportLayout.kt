@@ -13,16 +13,14 @@ import android.text.TextUtils
 import android.view.View
 import androidx.annotation.StringRes
 import androidx.core.graphics.withTranslation
-import androidx.core.text.BidiFormatter
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.text.completionDateFormatter
+import io.github.bryancassell.bluecard.text.typedText
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DecimalStyle
-import java.time.format.FormatStyle
 
 // A badge's report, laid out on US Letter pages. Sizes are in PDF points, 1/72 of an inch.
 
@@ -102,13 +100,8 @@ private class ReportComposer(private val resources: Resources) {
     private val rightToLeft =
         TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
-    // The same format as dates on screen (rememberCompletionDateFormatter): "Apr 15, 2026".
-    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-        .withLocale(locale)
-        .withDecimalStyle(DecimalStyle.of(locale))
-
-    // Text the scout typed keeps its own direction (ARCHITECTURE.md, UI layer).
-    private val bidiFormatter = BidiFormatter.getInstance(locale)
+    // Dates are written as on screen.
+    private val dateFormatter = completionDateFormatter(locale)
 
     private val paints = Style.entries.associateWith { style ->
         TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -163,23 +156,16 @@ private class ReportComposer(private val resources: Resources) {
     private fun add(tracker: ReportTracker, indent: Int) {
         val definition = tracker.definition
         val recorded = tracker.rows.size
-        // As on the requirement's page (TrackerDefinition.count): "5 sessions" in a log, or
-        // "8 of 12 weeks". The catalog is in English, so its row labels follow English plurals.
-        val rows = if ((definition.rowCount ?: recorded) == 1) {
-            definition.rowLabel
-        } else {
-            definition.rowLabelPlural
-        }
+        // As on the requirement's page: "5 sessions" in a log, or "8 of 12 weeks".
+        val rows = definition.rowsLabel(recorded)
         val count = definition.rowCount?.let {
             string(R.string.tracker_count_of, recorded, it, rows)
         } ?: string(R.string.tracker_count, recorded, rows)
         add(Style.Body, count, indent, spaceBefore = 4f, keepWithNext = recorded > 0)
-        // Capitalized for titles, as TrackerDefinition.rowTitle is.
-        val rowTitle = definition.rowLabel.replaceFirstChar { it.titlecase() }
         tracker.rows.forEach { row ->
             add(
                 Style.Subheading,
-                string(R.string.tracker_row_title, rowTitle, row.number),
+                string(R.string.tracker_row_title, definition.rowTitle, row.number),
                 indent,
                 spaceBefore = 4f,
                 keepWithNext = row.values.isNotEmpty()
@@ -210,7 +196,8 @@ private class ReportComposer(private val resources: Resources) {
     private fun string(@StringRes id: Int, vararg args: Any): String =
         resources.getString(id, *args)
 
-    private fun typed(text: String): String = bidiFormatter.unicodeWrap(text)
+    // Text the scout typed keeps its own direction, as on screen.
+    private fun typed(text: String): String = typedText(text, locale)
 
     private fun date(date: LocalDate): String = dateFormatter.format(date)
 
@@ -256,11 +243,8 @@ private class ReportComposer(private val resources: Resources) {
         paragraphs.forEachIndexed { index, paragraph ->
             if (pages.last().isNotEmpty()) {
                 y += paragraph.spaceBefore
-                if (paragraph.keepWithNext && index < paragraphs.lastIndex) {
-                    val next = paragraphs[index + 1]
-                    val withNext = layouts[index].height + next.spaceBefore +
-                        layouts[index + 1].getLineBottom(0)
-                    if (y + withNext > CONTENT_BOTTOM) newPage()
+                if (paragraph.keepWithNext && y + keptHeight(index, layouts) > CONTENT_BOTTOM) {
+                    newPage()
                 }
             }
             var layout = layouts[index]
@@ -274,7 +258,9 @@ private class ReportComposer(private val resources: Resources) {
                     val text = layout.text
                     val split = layout.getLineStart(fitting)
                     place(layOut(paragraph, text.subSequence(0, split)), paragraph)
-                    layout = layOut(paragraph, text.subSequence(split, text.length))
+                    val rest = text.subSequence(split, text.length)
+                    // Typed text in another direction keeps it on the next page.
+                    layout = layOut(paragraph, openDirections(text.subSequence(0, split)) + rest)
                 }
                 newPage()
             }
@@ -285,6 +271,25 @@ private class ReportComposer(private val resources: Resources) {
             val footer = layOut(number, Style.Footer, CONTENT_WIDTH, Layout.Alignment.ALIGN_CENTER)
             ReportPage(texts + PlacedText(footer, MARGIN.toFloat(), FOOTER_TOP.toFloat()))
         }
+    }
+
+    /**
+     * The height that the paragraph at [index], which is kept with the next one, needs at the
+     * foot of a page: all of it, and of each paragraph after it that's kept with the next, with
+     * the spaces between them, then the first line of the next paragraph. So a heading followed
+     * by a requirement's title, which is kept with its next line too, moves to the next page
+     * with both.
+     */
+    private fun keptHeight(index: Int, layouts: List<StaticLayout>): Float {
+        var height = 0f
+        var last = index
+        while (paragraphs[last].keepWithNext && last < paragraphs.lastIndex) {
+            height += layouts[last].height + paragraphs[last + 1].spaceBefore
+            last++
+        }
+        // The last paragraph of a report has none after it.
+        if (last == index) return layouts[index].height.toFloat()
+        return height + layouts[last].getLineBottom(0)
     }
 
     /** [text], all or part of [paragraph], laid out in its style. */
@@ -309,3 +314,40 @@ private class ReportComposer(private val resources: Resources) {
             .build()
     }
 }
+
+/**
+ * The bidi embeddings, overrides and isolates that are still open at the end of [text], in
+ * order, to start the rest of a split paragraph with. Text the scout typed in another direction
+ * is wrapped in an embedding ([typedText]), so the rest of it keeps its direction on the next
+ * page. A line break closes them all, as it ends a paragraph for the bidi algorithm.
+ */
+internal fun openDirections(text: CharSequence): String {
+    val open = ArrayDeque<Char>()
+    for (char in text) {
+        when (char) {
+            in EMBEDDINGS, in ISOLATES -> open.addLast(char)
+
+            // Closes the last embedding or override, but not one outside an isolate.
+            POP_DIRECTIONAL_FORMATTING ->
+                if (open.isNotEmpty() && open.last() in EMBEDDINGS) open.removeLast()
+
+            // Closes the last isolate and everything opened inside it.
+            POP_DIRECTIONAL_ISOLATE -> {
+                val isolate = open.indexOfLast { it in ISOLATES }
+                if (isolate >= 0) repeat(open.size - isolate) { open.removeLast() }
+            }
+
+            '\n' -> open.clear()
+        }
+    }
+    return open.joinToString("")
+}
+
+/** Left-to-right and right-to-left embeddings and overrides. */
+private const val EMBEDDINGS = "\u202A\u202B\u202D\u202E"
+
+/** Left-to-right, right-to-left and first-strong isolates. */
+private const val ISOLATES = "\u2066\u2067\u2068"
+
+private const val POP_DIRECTIONAL_FORMATTING = '\u202C'
+private const val POP_DIRECTIONAL_ISOLATE = '\u2069'

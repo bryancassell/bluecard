@@ -355,12 +355,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     ignores opening one of them: tapping the row that opened the closing
     screen does nothing until its slide ends.
 - **A double tap starts another app once.** Badge detail's "Official
-  requirements" link, the counselor's phone and email, and the report's share
-  sheet and file picker start other apps with one `OtherAppStarter` from
+  requirements" link, the counselor's phone and email, and "Share report" and
+  "Save report" start other apps with one `OtherAppStarter` from
   `rememberStartOtherApp` (`ui/`), which the screen shares among them. The
   other app takes a moment to cover BlueCard, so both taps of a double tap can
   reach the control, and a browser could open two tabs, or an email app two
-  drafts ([#97](https://github.com/bryancassell/bluecard/issues/97)).
+  drafts ([#97](https://github.com/bryancassell/bluecard/issues/97)). "Share
+  report" opens the share sheet only once its report is created, so its tap
+  goes through the starter (`tap`), and the share sheet is started without
+  it.
   - **After a tap, all of them ignore taps for the double-tap timeout** (300 ms),
     as a screen animating in does. A tap that finds no app counts too, so a
     double tap shows its message once, and the next tap tries again.
@@ -421,7 +424,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     one of the app's strings (the name and "Unit: %1$s" on Home), goes through
     `typedText()`, which wraps it with
     [`BidiFormatter.unicodeWrap`](https://developer.android.com/training/basics/supporting-devices/languages#FormatText).
-    Code outside Compose, such as the PDF report, must wrap it the same way.
+    Code outside Compose, such as the PDF report, wraps it with
+    `text.typedText(text, locale)`, which `typedText()` uses too.
 - **`BlueCardApp` provides `LocalResources` in the strings' language**
   (`ProvideStringsLanguageResources`), so every `stringResource` and
   `pluralStringResource` follows it, with nothing to remember at each call.
@@ -446,8 +450,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     device's language's direction, because a Persian date laid out
     left-to-right reads out of order.
   - **Code outside Compose** that formats a string with a number, such as the
-    PDF report, must use the same locales (`stringsLocales`), and lay out in the
-    first one's direction.
+    PDF report, uses the same locales, through `stringsLanguageResources`
+    (`text/`), and lays out in the first one's direction. Dates are formatted
+    with `completionDateFormatter`, as on screen.
 - **Material 3** components, themed by `BlueCardTheme` with the blue card's
   colors. Every phone shows the same colors:
   - **No dynamic color.** The app doesn't take its colors from the wallpaper.
@@ -555,6 +560,8 @@ io.github.bryancassell.bluecard
 │   ├── progress/       ProgressRepository + Room entities and DAOs
 │   ├── report/         ReportRepository (PDF)
 │   └── backup/         BackupRepository (export/import format)
+├── text/               The strings' locales, and dates and typed text formatted in them, for the
+│                       screens and for code outside Compose, such as the PDF report
 └── di/                 Hilt modules
 ```
 
@@ -861,9 +868,12 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     of each. `StaticLayout` lays the text out in the strings' language and
     direction (`stringsLanguageResources`), with typed text wrapped as on
     screen. A paragraph that doesn't fit continues on the next page, laid out
-    again from the line where it broke, so each line is in the PDF once.
-    Headings, requirement titles and tracker row titles move to the next page
-    with the first line after them.
+    again from the line where it broke, so each line is in the PDF once, and
+    reopening the bidi embeddings still open there, so text the scout typed in
+    another direction keeps it. Headings, requirement titles, tracker counts and
+    tracker row titles move to the next page with the first line after them;
+    a run of them, such as a heading followed by a requirement's title, moves
+    together.
   - **`PdfDocumentWriter`** draws the pages onto framework `PdfDocument` pages
     and writes the PDF.
   - **Share** it through the
@@ -877,13 +887,20 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   - **Save** it to a location they choose with the
     [system file picker](https://developer.android.com/training/data-storage/shared/documents-files)
     (`ActivityResultContracts.CreateDocument`), which suggests the same name.
-    The report is written straight into the document they create. Neither
-    needs storage permissions.
+    The report is written straight into the document they create, truncating
+    it (mode `"wt"`: `ContentResolver` says a provider's `"w"` "may or may not
+    truncate"). Neither needs storage permissions.
 
   A report that can't be created or saved shows "Couldn't create the report.
-  Try again." in a snackbar, as a failed save does (`SaveRunner`). Share
-  ignores taps while a report is being created, so a double tap opens one
-  share sheet.
+  Try again." in a snackbar, as a failed save does (`SaveRunner`). The file
+  picker creates the document before the report is written, so a failed save
+  deletes it (`DocumentsContract.deleteDocument`), if its provider allows that,
+  rather than leave an empty or partial PDF for the scout to send. A provider
+  that refuses to open the document with an exception other than an
+  `IOException`, such as a `SecurityException`, isn't a mistake in BlueCard's
+  code, so it's reported as an `IOException` too. A double tap opens one share
+  sheet (see [UI layer](#ui-layer)). If the scout leaves Badge detail before
+  the report is ready, its share sheet opens when they come back.
 
   `androidx.pdf` is not used: it is for viewing PDFs, is still in beta, and
   requires API 28 (BlueCard's minimum is 26).

@@ -32,6 +32,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,6 +46,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
@@ -140,7 +143,7 @@ private fun BadgeDetails(
     // Opens the official page in the browser. The counselor's phone and email and the report
     // share it, so quick taps on any of them open one app, once.
     val startOtherApp = rememberStartOtherApp()
-    uiState.reportToShare?.let { ShareReport(it, startOtherApp, onReportShared) }
+    uiState.reportToShare?.let { ShareReport(it, onReportShared) }
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -231,14 +234,14 @@ private fun ReportButtons(
         // Null when the scout leaves the file picker without saving.
         destination?.let(onSave)
     }
-    val fileName = stringResource(R.string.report_file_name, badgeName) + ".pdf"
+    val fileName = reportFileName(LocalResources.current, badgeName)
     val noFilePicker = stringResource(R.string.badge_detail_no_file_picker)
     // Wraps the buttons onto two lines when they don't fit on one, as with large text.
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Button(onClick = onShare) {
+        Button(onClick = { startOtherApp.tap(onShare) }) {
             Text(stringResource(R.string.badge_detail_share_report))
         }
         // Outlined as the official link is.
@@ -255,13 +258,17 @@ private fun ReportButtons(
     }
 }
 
-/** Opens the share sheet with the badge's [report], once, then calls [onShared]. */
+/**
+ * Opens the share sheet with the badge's [report], once, then calls [onShared]. The Share
+ * report tap already went through the screen's [OtherAppStarter], so this doesn't, and the
+ * share sheet is always there to start.
+ */
 @Composable
-private fun ShareReport(report: Uri, startOtherApp: OtherAppStarter, onShared: () -> Unit) {
-    val noApp = stringResource(R.string.badge_detail_no_share_app)
+private fun ShareReport(report: Uri, onShared: () -> Unit) {
+    val context = LocalContext.current
     val currentOnShared by rememberUpdatedState(onShared)
     LaunchedEffect(report) {
-        startOtherApp(shareIntent(report), noApp)
+        context.startActivity(shareIntent(report))
         currentOnShared()
     }
 }

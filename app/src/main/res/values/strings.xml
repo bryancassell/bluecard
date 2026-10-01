@@ -127,8 +127,6 @@
          recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
     <string name="badge_detail_share_report">Share report</string>
     <string name="badge_detail_save_report">Save report</string>
-    <!-- Shown when tapping Share report, if no app on the phone can share it. -->
-    <string name="badge_detail_no_share_app">No app on this phone can share the report.</string>
     <!-- Shown when tapping Save report, if no app on the phone can save files. -->
     <string name="badge_detail_no_file_picker">No app on this phone can save files.</string>
     <!-- Shown briefly when a badge's report couldn't be created or saved. -->

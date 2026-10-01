@@ -563,6 +563,17 @@ class BadgeDetailScreenTest {
         assertNull(startedActivity())
     }
 
+    // The share sheet opens once the report is created, so the second tap of a double tap
+    // could come after it's ready and create it again.
+    @Test
+    fun shareReport_doubleTap_asksForTheReportOnce() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Share report").performTouchInput { doubleClick() }
+
+        assertEquals(1, reportShareRequests)
+    }
+
     @Test
     fun reportToShare_opensShareSheetWithIt_once() {
         val report = Uri.parse("content://io.github.bryancassell.bluecard.reports/camping.pdf")

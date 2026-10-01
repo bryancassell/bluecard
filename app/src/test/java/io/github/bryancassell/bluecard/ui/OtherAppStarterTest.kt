@@ -176,4 +176,34 @@ class OtherAppStarterTest {
 
         assertEquals(noApp, ShadowToast.getTextOfLatestToast())
     }
+
+    private var taps = 0
+
+    private fun tap() = composeTestRule.runOnIdle { startOtherApp.tap { taps++ } }
+
+    @Test
+    fun tap_runsItsAction_onceInTheDoubleTapTimeout() {
+        show()
+
+        tap()
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeoutMillis / 2)
+        tap()
+        assertEquals(1, taps)
+
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeoutMillis)
+        tap()
+        assertEquals(2, taps)
+    }
+
+    // Share report then the official link: the share sheet opens, not the browser too.
+    @Test
+    fun start_withinTheDoubleTapTimeoutOfATap_isIgnored() {
+        show()
+
+        tap()
+        start()
+
+        assertEquals(1, taps)
+        assertNull(shadowOf(application).nextStartedActivity)
+    }
 }

@@ -253,6 +253,76 @@ class ReportLayoutTest {
         }
     }
 
+    /**
+     * A report whose "Requirements" heading is further down the first page the longer [nameWords]
+     * is, and whose [count] requirements each have a log with a few rows.
+     */
+    private fun reportWithTrackers(nameWords: Int, count: Int) = report(
+        profile = Profile("Alex" + " Scout".repeat(nameWords), "123"),
+        requirements = (1..count).map { number ->
+            requirement(
+                "$number",
+                "Requirement number $number of the badge.",
+                Completion(LocalDate.of(2026, 4, 1)),
+                tracker = ReportTracker(
+                    log,
+                    (1..(number + nameWords) % 4).map {
+                        ReportTrackerRow(it, listOf(nights to "$it", place to "Lake $it"))
+                    }
+                )
+            )
+        }
+    )
+
+    // A heading followed by a requirement's title, or a tracker's count followed by its first
+    // row's title, is a run of paragraphs that each go with the next. Catches one left at the
+    // foot of a page wherever the page breaks fall. A count with no rows after it ends its
+    // requirement, so it can be.
+    @Test
+    fun headingsTitlesAndTrackerCounts_areNeverLastOnAPage() {
+        val kept = Regex("""Counselor|Requirements|.* of the badge\.|[1-9]\d* trips?|Trip \d+""")
+        for (nameWords in 0..240 step 3) {
+            val pages = layOut(reportWithTrackers(nameWords, count = 12))
+            pages.dropLast(1).forEachIndexed { index, page ->
+                val last = page.lines.dropLast(1).last()
+                assertFalse(
+                    "Page ${index + 1}, $nameWords words in the name, ends with \"$last\"",
+                    kept.matches(last)
+                )
+            }
+        }
+    }
+
+    // A Persian comment keeps its direction on the next page (ARCHITECTURE.md, UI layer).
+    @Test
+    fun typedTextSplitAcrossPages_keepsItsDirectionOnTheNextPage() {
+        val comment = "سلام دنیا ".repeat(800).trim()
+        val pages = layOut(report(listOf(requirement("1", "Write.", comment = comment))))
+
+        val rightToLeftEmbedding = "\u202B"
+        val continued = pages[1].lines.first()
+        assertTrue("Page 2 starts \"$continued\"", continued.startsWith(rightToLeftEmbedding))
+    }
+
+    @Test
+    fun openDirections_areThoseNotClosed_inOrder() {
+        // Right-to-left embedding, left-to-right isolate, and their closings.
+        val rle = "\u202B"
+        val pdf = "\u202C"
+        val lri = "\u2066"
+        val pdi = "\u2069"
+
+        assertEquals("", openDirections("a$rle b$pdf c"))
+        assertEquals(rle, openDirections("a$rle b"))
+        assertEquals(rle + lri, openDirections("$rle a$lri b"))
+        // A PDF doesn't close an embedding outside the isolate it's in.
+        assertEquals(rle + lri, openDirections("$rle a$lri b$pdf"))
+        // A PDI closes its isolate and what's open inside it.
+        assertEquals(rle, openDirections("$rle a$lri b$rle c$pdi"))
+        // A line break ends the paragraph, and everything open in it.
+        assertEquals("", openDirections("$rle a\nb"))
+    }
+
     @Test
     fun paragraphLongerThanThePageSpace_continuesOnTheNextPage_withEveryWordOnce() {
         val words = (1..1200).map { "word$it" }
