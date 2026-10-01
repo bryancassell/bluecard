@@ -115,7 +115,6 @@ class RequirementDetailViewModel @AssistedInject constructor(
             tracker = recorded.tracker,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
             canClear = recorded.hasRecorded,
-            today = today(),
             saveFailure = saveFailure
         )
     }.catchLoadFailure(RequirementDetailUiState.LoadFailed).stateIn(
@@ -187,7 +186,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
         saves.onShown(failure)
     }
 
-    private fun today() = LocalDate.now(clock)
+    /** The latest date the scout can give as a completion date, read from the clock each time. */
+    fun today(): LocalDate = LocalDate.now(clock)
 
     @AssistedFactory
     interface Factory {

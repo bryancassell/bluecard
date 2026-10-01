@@ -21,9 +21,10 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.keepText
-import java.time.Clock
+import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
@@ -53,7 +54,7 @@ class TrackerEntryViewModelTest {
     private val started = LocalDate.of(2026, 3, 1)
     private val badgeStart = BadgeStart(newest, started)
     private val today = LocalDate.of(2026, 5, 20)
-    private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
     // Trackers defined only here, in test catalog data, as a new one would be in the catalog.
     private val sessionColumns = listOf(
@@ -202,12 +203,22 @@ class TrackerEntryViewModelTest {
                 dates = emptyMap(),
                 canSave = false,
                 hasSavedEntry = false,
-                canDelete = false,
-                today = today
+                canDelete = false
             ),
             viewModel.uiState.value
         )
         assertEquals(listOf("", "", ""), sessionColumns.map { viewModel.text(it.id) })
+    }
+
+    @Test
+    fun today_isFromTheClock_whenAsked() {
+        val viewModel = viewModel()
+        assertEquals(today, viewModel.today())
+
+        // The page stays open past midnight.
+        clock.now += Duration.ofDays(1)
+
+        assertEquals(today.plusDays(1), viewModel.today())
     }
 
     @Test

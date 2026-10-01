@@ -50,7 +50,8 @@ class RequirementDetailScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val today = LocalDate.of(2026, 5, 20)
+    /** What the page reads as today when the picker opens, which a test can move on. */
+    private var today = LocalDate.of(2026, 5, 20)
 
     private val openedRequirements = mutableListOf<String>()
     private val openedTrackerEntries = mutableListOf<Pair<Long?, Int?>>()
@@ -92,8 +93,7 @@ class RequirementDetailScreenTest {
         ),
         tracker = null,
         commentChanged = false,
-        canClear = false,
-        today = today
+        canClear = false
     )
 
     /** A requirement without sub-requirements, not completed. */
@@ -104,8 +104,7 @@ class RequirementDetailScreenTest {
         children = emptyList(),
         tracker = null,
         commentChanged = false,
-        canClear = false,
-        today = today
+        canClear = false
     )
 
     /** A requirement with a log, a tracker the scout adds rows to. */
@@ -182,6 +181,7 @@ class RequirementDetailScreenTest {
                 },
                 onCompletedChange = { completedChanges += it },
                 onCompletedDateChange = { dateChanges += it },
+                today = { today },
                 onSaveComment = { commentsSaved++ },
                 onClear = { clears++ },
                 onSaveFailureShown = { saveFailuresShown += it }
@@ -651,6 +651,45 @@ class RequirementDetailScreenTest {
 
         pickerDay("May 20, 2026").assertIsEnabled()
         pickerDay("May 21, 2026").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
+        show(completedLeaf.copy(completedDate = null))
+        today = LocalDate.of(2026, 5, 21)
+
+        composeTestRule.onNodeWithText("Add date").performScrollTo().performClick()
+        pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
+    }
+
+    @Test
+    fun changeDate_onAPageOpenPastMidnight_offersTheNewDay() {
+        show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 18)))
+        today = LocalDate.of(2026, 5, 21)
+
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        pickerDay("May 22, 2026").assertIsNotEnabled()
+        pickerDay("May 21, 2026").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
+    }
+
+    // As when it was recorded while the device's clock was ahead.
+    @Test
+    fun changeDate_ofADateAfterToday_opensAtToday() {
+        show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 22)))
+
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        pickerDay(
+            "May 20, 2026"
+        ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
     @Test

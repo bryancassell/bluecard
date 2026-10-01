@@ -35,8 +35,6 @@ sealed interface TrackerEntryUiState {
         val hasSavedEntry: Boolean,
         /** Whether Delete can be used now: not while a save is under way. */
         val canDelete: Boolean,
-        /** The latest date the scout can pick. */
-        val today: LocalDate,
         /** The entry was saved or deleted, so the screen closes. */
         val done: Boolean = false,
         /** Something couldn't be saved, and the scout hasn't been told yet. */

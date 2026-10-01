@@ -49,15 +49,16 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
 
 /**
  * [text] about a date something was done on, such as "Completed on Apr 15, 2026", with buttons
- * to pick the date or remove it. Dates after [today] can't be picked. Screen readers read the
- * date's [label], if it has one, with each button, such as "Start: Add date", so the buttons of
- * a page with more than one date aren't all the same to them.
+ * to pick the date or remove it. Dates after [today] can't be picked. It's read as the picker
+ * opens, so a page left open past midnight offers the new day. Screen readers read the date's
+ * [label], if it has one, with each button, such as "Start: Add date", so the buttons of a page
+ * with more than one date aren't all the same to them.
  */
 @Composable
 fun EditableDate(
     text: String,
     date: LocalDate?,
-    today: LocalDate,
+    today: () -> LocalDate,
     onDateChange: (LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null
@@ -99,9 +100,10 @@ fun EditableDate(
         }
     }
     if (picking) {
+        val latest = remember { today() }
         CompletionDatePickerDialog(
-            initial = date ?: today,
-            today = today,
+            initial = date ?: latest,
+            today = latest,
             onConfirm = {
                 picking = false
                 onDateChange(it)
@@ -117,7 +119,9 @@ private fun Modifier.readAs(description: String?): Modifier =
 
 /**
  * Asks for the date something was done on, such as when a requirement was completed, starting
- * at [initial]. Dates after [today] can't be picked. The picker itself follows the device's
+ * at [initial]. Dates after [today] can't be picked or confirmed, so it starts at [today]
+ * instead of a later [initial], such as a date recorded while the device's clock was ahead,
+ * which Material 3 would otherwise show selected. The picker itself follows the device's
  * language, like other Material labels, and is laid out in that language's direction, so a
  * Persian calendar reads right-to-left: laid out left-to-right, as the app's screens are, its
  * dates would read out of order.
@@ -130,15 +134,18 @@ fun CompletionDatePickerDialog(
     onDismiss: () -> Unit
 ) {
     val state = rememberDatePickerState(
-        initialSelectedDateMillis = initial.toPickerMillis(),
+        initialSelectedDateMillis = initial.coerceAtMost(today).toPickerMillis(),
         selectableDates = remember(today) { NotAfter(today) }
     )
     CompositionLocalProvider(LocalLayoutDirection provides pickerLayoutDirection()) {
         DatePickerDialog(
             onDismissRequest = onDismiss,
             confirmButton = {
-                // Null while a typed date isn't valid.
+                // Null while a typed date isn't valid. One the picker doesn't offer can still
+                // be selected when it's restored with an earlier today, as when the system
+                // stopped the app and the scout then crossed a date line westward.
                 val selected = state.selectedDateMillis
+                    ?.takeIf(state.selectableDates::isSelectableDate)
                 TextButton(
                     onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
                     enabled = selected != null

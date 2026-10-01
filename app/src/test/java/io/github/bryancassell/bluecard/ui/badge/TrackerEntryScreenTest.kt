@@ -39,7 +39,8 @@ class TrackerEntryScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val today = LocalDate.of(2026, 5, 20)
+    /** What the page reads as today when the picker opens, which a test can move on. */
+    private var today = LocalDate.of(2026, 5, 20)
 
     private val columns = listOf(
         TrackerColumn("date", "Date", TrackerColumnType.DATE),
@@ -65,8 +66,7 @@ class TrackerEntryScreenTest {
         dates = emptyMap(),
         canSave = false,
         hasSavedEntry = false,
-        canDelete = false,
-        today = today
+        canDelete = false
     )
 
     /** A saved entry, with a date. */
@@ -86,6 +86,7 @@ class TrackerEntryScreenTest {
                 uiState = uiState,
                 fields = fields,
                 onDateChange = { columnId, date -> dateChanges += columnId to date },
+                today = { today },
                 onSave = { saves++ },
                 onDelete = { deletes++ },
                 onClose = { closes++ },
@@ -219,6 +220,21 @@ class TrackerEntryScreenTest {
 
         assertEquals(
             listOf<Pair<String, LocalDate?>>("date" to LocalDate.of(2026, 5, 11)),
+            dateChanges
+        )
+    }
+
+    @Test
+    fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
+        show(newEntry)
+        today = LocalDate.of(2026, 5, 21)
+
+        button("Add date").performClick()
+        pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(
+            listOf<Pair<String, LocalDate?>>("date" to LocalDate.of(2026, 5, 21)),
             dateChanges
         )
     }
