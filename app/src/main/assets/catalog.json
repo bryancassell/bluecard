@@ -385,6 +385,7 @@
               "number": "3",
               "summary": "Plan an overnight trek and find your way with a topo map.",
               "requiredCount": 1,
+              "ownWork": "Write a plan for an overnight trek.",
               "children": [
                 {
                   "number": "3a",
@@ -814,6 +815,7 @@
             {
               "number": "3",
               "summary": "Show you know the basics, then teach a beginner with Scouting EDGE.",
+              "ownWork": "Teach these basics to a beginner using Scouting EDGE.",
               "children": [
                 {
                   "number": "3a",
@@ -1318,6 +1320,7 @@
               "number": "7",
               "summary": "Do two activities and share what you learned.",
               "requiredCount": 2,
+              "ownWork": "Tell your counselor what you learned from the two you did.",
               "children": [
                 {
                   "number": "7a",
@@ -1741,6 +1744,7 @@
             {
               "number": "4",
               "summary": "Clean, adjust and check a bike for your counselor to inspect.",
+              "ownWork": "Clean and adjust a bike with a safety checklist, then have your counselor inspect it.",
               "children": [
                 {
                   "number": "4a",
@@ -1965,6 +1969,7 @@
                   "number": "1b",
                   "summary": "Chart how each aspect applies to 10 emergencies, and discuss them.",
                   "requiredCount": 10,
+                  "ownWork": "Discuss your chart with your counselor.",
                   "children": [
                     {
                       "number": "1b(1)",
@@ -2234,6 +2239,7 @@
             {
               "number": "2",
               "summary": "Study an ecosystem.",
+              "ownWork": "Discuss your ecosystem study with your counselor.",
               "children": [
                 {
                   "number": "2a",
@@ -2249,6 +2255,7 @@
               "number": "3",
               "summary": "Explore air pollution.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "3a",
@@ -2268,6 +2275,7 @@
               "number": "4",
               "summary": "Explore water pollution.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "4a",
@@ -2287,6 +2295,7 @@
               "number": "5",
               "summary": "Explore land pollution.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "5a",
@@ -2306,6 +2315,7 @@
               "number": "6",
               "summary": "Explore rare, threatened or endangered species.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "6a",
@@ -2325,6 +2335,7 @@
               "number": "7",
               "summary": "Explore pollution prevention and conservation.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "7a",
@@ -2344,6 +2355,7 @@
               "number": "8",
               "summary": "Explore pollination.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "8a",
@@ -2421,6 +2433,7 @@
             {
               "number": "5",
               "summary": "Do a project with your family and discuss it.",
+              "ownWork": "Plan a project your family takes part in, and do it together.",
               "children": [
                 {
                   "number": "5a",
@@ -2447,6 +2460,7 @@
                 {
                   "number": "6b",
                   "summary": "Make an agenda and hold meetings on these topics.",
+                  "ownWork": "Write an agenda with these topics, review it with a parent, then hold the meetings.",
                   "children": [
                     {
                       "number": "6b(1)",
@@ -3751,6 +3765,7 @@
               "number": "3",
               "summary": "Make a leather project that uses at least five of these steps.",
               "requiredCount": 5,
+              "ownWork": "Make one or more finished leather items.",
               "children": [
                 {
                   "number": "3a",
@@ -3949,6 +3964,7 @@
             {
               "number": "14",
               "summary": "Discuss what to do if a victim goes under, and dive to recover a weight.",
+              "ownWork": "Discuss with your counselor what to do if a victim sinks before you reach them.",
               "children": [
                 {
                   "number": "14a",
@@ -4242,6 +4258,7 @@
                 {
                   "number": "1b",
                   "summary": "Write a plan to save for it.",
+                  "ownWork": "Write a plan for how your family would save for it.",
                   "children": [
                     {
                       "number": "1b(1)",
@@ -4260,6 +4277,7 @@
                 {
                   "number": "1c",
                   "summary": "Write a shopping strategy for it.",
+                  "ownWork": "Write a shopping strategy for the purchase.",
                   "children": [
                     {
                       "number": "1c(1)",
@@ -4307,6 +4325,7 @@
                   "number": "2b",
                   "summary": "Compare your expected income and expenses.",
                   "requiredCount": 1,
+                  "ownWork": "Compare the income you expect with the expenses you expect.",
                   "children": [
                     {
                       "number": "2b(1)",
@@ -4535,6 +4554,7 @@
             {
               "number": "9",
               "summary": "Write a plan for a project on paper.",
+              "ownWork": "Discuss your finished plan with your counselor.",
               "children": [
                 {
                   "number": "9a",
@@ -4641,6 +4661,7 @@
               "number": "4",
               "summary": "Photograph one subject two ways, for two of these, and share the results.",
               "requiredCount": 2,
+              "ownWork": "Share your photos with your counselor.",
               "children": [
                 {
                   "number": "4a",
@@ -4664,6 +4685,7 @@
               "number": "5",
               "summary": "Take three of these kinds of photos and share them.",
               "requiredCount": 3,
+              "ownWork": "Share your photos with your counselor.",
               "children": [
                 {
                   "number": "5a",
@@ -4695,6 +4717,7 @@
               "number": "6",
               "summary": "Explain photo-editing software, then improve one of your photos one way.",
               "requiredCount": 1,
+              "ownWork": "Describe how editing software can improve a photo, then share your edit with your counselor.",
               "children": [
                 {
                   "number": "6a",
@@ -4713,6 +4736,7 @@
             {
               "number": "7",
               "summary": "With new photos, tell a visual story about an event or topic.",
+              "ownWork": "Take new photos of an event or topic for your story.",
               "children": [
                 {
                   "number": "7a",
@@ -4775,7 +4799,8 @@
                 },
                 {
                   "number": "1g",
-                  "summary": "Take a hunter education course or get your state's hunting laws, then:",
+                  "summary": "Learn your state's hunting laws and what you may hunt.",
+                  "ownWork": "Take a hunter education course or get a copy of your state's hunting laws.",
                   "children": [
                     {
                       "number": "1g(1)",
@@ -5013,7 +5038,8 @@
                 },
                 {
                   "number": "1g",
-                  "summary": "Take a hunter education course or get your state's hunting laws, then:",
+                  "summary": "Learn your state's hunting laws and what you may hunt.",
+                  "ownWork": "Take a hunter education course or get a copy of your state's hunting laws.",
                   "children": [
                     {
                       "number": "1g(1)",
@@ -5196,6 +5222,7 @@
             {
               "number": "3",
               "summary": "Build and fly a model rocket twice (or model a NASA rocket); explain its parts.",
+              "ownWork": "Build, fly and recover a model rocket, then fly it for a set goal; or model a NASA rocket and give its history.",
               "children": [
                 {
                   "number": "3a",
@@ -5294,6 +5321,7 @@
             {
               "number": "7",
               "summary": "Design a crewed base elsewhere in the solar system, with drawings or a model.",
+              "ownWork": "Design a base somewhere in the solar system, and draw it or build a model.",
               "children": [
                 {
                   "number": "7a",
@@ -5340,6 +5368,7 @@
               "number": "2",
               "summary": "Water: do one and discuss it with your counselor.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "2a",
@@ -5359,6 +5388,7 @@
               "number": "3",
               "summary": "Food: do one and discuss it with your counselor.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "3a",
@@ -5395,6 +5425,7 @@
               "number": "4",
               "summary": "Community: do one and discuss it with your counselor.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "4a",
@@ -5414,6 +5445,7 @@
               "number": "5",
               "summary": "Energy: do one and discuss it with your counselor.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "5a",
@@ -5433,6 +5465,7 @@
               "number": "6",
               "summary": "Stuff: do one and discuss it with your counselor.",
               "requiredCount": 1,
+              "ownWork": "Discuss the one you did with your counselor.",
               "children": [
                 {
                   "number": "6a",
@@ -5452,6 +5485,7 @@
               "number": "7",
               "summary": "Explore two big-picture topics and discuss them with your counselor.",
               "requiredCount": 2,
+              "ownWork": "Discuss the two you did with your counselor.",
               "children": [
                 {
                   "number": "7a",

@@ -6,9 +6,9 @@ import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.backup.BackupReadResult
 import io.github.bryancassell.bluecard.data.backup.FakeBackupRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
-import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
@@ -28,7 +28,7 @@ class DataManagementViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val today = LocalDate.of(2026, 10, 1)
-    private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
     private val backupRepository = FakeBackupRepository()
 
@@ -49,8 +49,19 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun uiState_startsWithToday_andNothingUnderWay() {
-        assertEquals(DataManagementUiState(today = today), viewModel().uiState.value)
+    fun uiState_startsWithNothingUnderWay() {
+        assertEquals(DataManagementUiState(), viewModel().uiState.value)
+    }
+
+    // So the name suggested for an export has the day it's made, even past midnight.
+    @Test
+    fun today_isFromTheClock_whenAsked() {
+        val viewModel = viewModel()
+        assertEquals(today, viewModel.today())
+
+        clock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+        assertEquals(today.plusDays(1), viewModel.today())
     }
 
     @Test

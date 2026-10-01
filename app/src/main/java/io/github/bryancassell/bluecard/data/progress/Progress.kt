@@ -92,8 +92,13 @@ fun normalizedText(text: String?): String? = text?.trim()?.ifEmpty { null }
 data class RequirementProgress(
     val badgeId: String,
     val requirementNumber: String,
+    /**
+     * Whether the scout marked it complete. For a requirement with own work, it's that work they
+     * marked complete, and the requirement is only complete once enough of its sub-requirements
+     * are too ([completion]).
+     */
     val completed: Boolean = false,
-    /** Optional date the requirement was completed; only set when [completed]. */
+    /** Optional date the scout gave when they marked it [completed]; only set when it is. */
     val completedDate: LocalDate? = null,
     /**
      * The scout's notes on the requirement. The page called them a comment before it called

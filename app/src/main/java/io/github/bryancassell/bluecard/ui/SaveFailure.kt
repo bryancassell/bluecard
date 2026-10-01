@@ -75,6 +75,22 @@ fun SaveFailedSnackbarHost(
 }
 
 /**
+ * Shows [failure] in [hostState] as [SaveFailedSnackbarHost] does, for a screen that has more
+ * than one kind of failure, each with its own [message], to show in one host: [hostState]
+ * shows one snackbar at a time, as Material asks, and queues the rest. One still waiting its
+ * turn when the screen goes is dropped, as one showing is.
+ */
+@Composable
+fun SaveFailureSnackbar(
+    failure: SaveFailure?,
+    onShown: (SaveFailure) -> Unit,
+    hostState: SnackbarHostState,
+    message: String = stringResource(R.string.save_failed)
+) {
+    MessageSnackbar(failure, message, onShown, hostState)
+}
+
+/**
  * Shows a snackbar with [text] for each [message] from UI state, then calls [onShown] once it's
  * gone, or the screen is, so the ViewModel can clear it. That's how the UI layer guide has the
  * UI show a message from UI state:
@@ -91,6 +107,18 @@ fun <T : Any> MessageSnackbarHost(
     modifier: Modifier = Modifier
 ) {
     val hostState = remember { SnackbarHostState() }
+    MessageSnackbar(message, text, onShown, hostState)
+    SnackbarHost(hostState, modifier)
+}
+
+/** Shows [message] in [hostState] as [MessageSnackbarHost] does. */
+@Composable
+private fun <T : Any> MessageSnackbar(
+    message: T?,
+    text: String,
+    onShown: (T) -> Unit,
+    hostState: SnackbarHostState
+) {
     if (message != null) {
         val currentOnShown by rememberUpdatedState(onShown)
         // Keyed by the message, so one that replaces another is shown too.
@@ -104,5 +132,4 @@ fun <T : Any> MessageSnackbarHost(
             }
         }
     }
-    SnackbarHost(hostState, modifier)
 }

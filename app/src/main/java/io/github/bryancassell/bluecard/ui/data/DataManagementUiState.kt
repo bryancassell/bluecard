@@ -1,12 +1,9 @@
 package io.github.bryancassell.bluecard.ui.data
 
 import io.github.bryancassell.bluecard.data.backup.Backup
-import java.time.LocalDate
 
 /** What the Data management screen shows: export and import. */
 data class DataManagementUiState(
-    /** Today, which the name suggested for an export has in it. */
-    val today: LocalDate,
     /** Whether an export, a file being read or an import is under way. The buttons wait. */
     val working: Boolean = false,
     /**

@@ -25,13 +25,16 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class DataManagementViewModel @Inject constructor(
     private val backupRepository: BackupRepository,
-    clock: Clock
+    private val clock: Clock
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(DataManagementUiState(today = LocalDate.now(clock)))
+    private val _uiState = MutableStateFlow(DataManagementUiState())
     val uiState: StateFlow<DataManagementUiState> = _uiState.asStateFlow()
 
     /** How many exports, reads and imports are under way. */
     private var running = 0
+
+    /** Today, read from the clock each time, for the name suggested for an export. */
+    fun today(): LocalDate = LocalDate.now(clock)
 
     /** Exports the scout's data to [destination], a document they chose to create. */
     fun export(destination: Uri) = work(Kind.ExportFailed) {

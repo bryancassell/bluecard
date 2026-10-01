@@ -20,12 +20,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -39,13 +35,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
-import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
-import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -70,6 +64,7 @@ fun RequirementDetailRoute(
         onOpenTrackerEntry = onOpenTrackerEntry,
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
+        today = viewModel::today,
         onSaveComment = viewModel::saveComment,
         onClear = viewModel::clear,
         onSaveFailureShown = viewModel::onSaveFailureShown,
@@ -79,7 +74,8 @@ fun RequirementDetailRoute(
 
 /**
  * A requirement's own page: whether it's complete, and when for one the scout marks complete,
- * its sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
+ * the same for its own work if it asks for some besides its sub-requirements, its
+ * sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
  * its own page in turn, and a tracker row opens the Tracker entry page
  * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
  * log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
@@ -93,6 +89,7 @@ fun RequirementDetailScreen(
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
     onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
+    today: () -> LocalDate,
     onSaveComment: () -> Unit,
     onClear: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
@@ -111,11 +108,28 @@ fun RequirementDetailScreen(
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 RequirementHeader(uiState.badgeName, uiState.requirement)
                 val requirement = uiState.requirement
-                if (requirement.markedByHand) {
-                    CompletedCheckbox(requirement.completed, onCompletedChange)
-                    if (requirement.completed) {
-                        CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
+                // Its own work is stored as the requirement's own progress, like one marked by
+                // hand, so it has the same checkbox and date.
+                val ownWork = requirement.ownWork
+                if (requirement.markedByHand || ownWork != null) {
+                    val checked = ownWork?.completed ?: requirement.completed
+                    CompletedCheckbox(
+                        label = ownWork?.summary ?: stringResource(R.string.requirement_completed),
+                        checked = checked,
+                        onCheckedChange = onCompletedChange
+                    )
+                    if (checked) {
+                        CompletionDate(uiState.completedDate, today, onCompletedDateChange)
                     }
+                }
+                // Right above the sub-requirements it counts, below the checkbox for its own work.
+                requirement.choice?.let {
+                    Text(
+                        text = choiceLabel(it),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                    )
                 }
                 RequirementRows(items = uiState.children, onOpen = onOpenRequirement)
                 uiState.tracker?.let { tracker ->
@@ -128,7 +142,7 @@ fun RequirementDetailScreen(
                 }
                 CommentField(comment, uiState.commentChanged, onSaveComment)
                 if (uiState.canClear) {
-                    ClearProgress(
+                    ClearRequirement(
                         number = requirement.number,
                         hasChildren = uiState.children.isNotEmpty(),
                         unsavedNotes = uiState.commentChanged,
@@ -163,14 +177,8 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
             modifier = Modifier.semantics { heading() }
         )
         Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
-        requirement.choice?.let {
-            Text(
-                text = choiceLabel(it),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        // One the scout marks by hand has a checkbox instead.
+        // One the scout marks by hand has a "Completed" checkbox instead. One with own work
+        // shows it here, as its checkbox is only for that work.
         if (!requirement.markedByHand && requirement.completed) {
             Text(
                 text = stringResource(R.string.requirement_completed),
@@ -190,29 +198,36 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
     }
 }
 
-/** The whole row toggles the checkbox, and screen readers read it as one checkbox. */
+/**
+ * The whole row toggles the checkbox, and screen readers read it as one checkbox. A long
+ * [label], such as a summary of a requirement's own work, wraps.
+ */
 @Composable
-private fun CompletedCheckbox(completed: Boolean, onCompletedChange: (Boolean) -> Unit) {
+private fun CompletedCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .toggleable(value = completed, role = Role.Checkbox, onValueChange = onCompletedChange)
+            .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange)
             .heightIn(min = 56.dp)
             .padding(horizontal = 16.dp)
     ) {
-        Checkbox(checked = completed, onCheckedChange = null)
+        Checkbox(checked = checked, onCheckedChange = null)
         Text(
-            text = stringResource(R.string.requirement_completed),
+            text = label,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
         )
     }
 }
 
 /** The date a completed requirement was completed on, which the scout can change or remove. */
 @Composable
-private fun CompletionDate(date: LocalDate?, today: LocalDate, onDateChange: (LocalDate?) -> Unit) {
+private fun CompletionDate(
+    date: LocalDate?,
+    today: () -> LocalDate,
+    onDateChange: (LocalDate?) -> Unit
+) {
     val formatter = rememberCompletionDateFormatter()
     EditableDate(
         text = if (date == null) {
@@ -262,45 +277,29 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
 /**
  * Clears what the scout recorded for the requirement, and for those under it if it
  * [hasChildren], once they confirm. The dialog warns that [unsavedNotes], changes to the notes
- * not saved yet, go too. Red, and last on the page, so it isn't tapped by mistake.
+ * not saved yet, go too.
  */
 @Composable
-private fun ClearProgress(
+private fun ClearRequirement(
     number: String,
     hasChildren: Boolean,
     unsavedNotes: Boolean,
     onClear: () -> Unit
 ) {
-    var confirming by rememberSaveable { mutableStateOf(false) }
-    TextButton(
-        onClick = { confirming = true },
-        colors = removalButtonColors(),
-        // Lines the button's text up with the page's, as for Add counselor.
-        modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
-    ) {
-        Text(stringResource(R.string.requirement_clear))
-    }
-    if (confirming) {
-        ConfirmDialog(
-            title = stringResource(R.string.requirement_clear_title, number),
-            message = stringResource(
-                when {
-                    hasChildren && unsavedNotes ->
-                        R.string.requirement_clear_message_with_children_and_unsaved_notes
+    ClearProgress(
+        title = stringResource(R.string.requirement_clear_title, number),
+        message = stringResource(
+            when {
+                hasChildren && unsavedNotes ->
+                    R.string.requirement_clear_message_with_children_and_unsaved_notes
 
-                    hasChildren -> R.string.requirement_clear_message_with_children
+                hasChildren -> R.string.requirement_clear_message_with_children
 
-                    unsavedNotes -> R.string.requirement_clear_message_with_unsaved_notes
+                unsavedNotes -> R.string.requirement_clear_message_with_unsaved_notes
 
-                    else -> R.string.requirement_clear_message
-                }
-            ),
-            confirmLabel = stringResource(R.string.requirement_clear_confirm),
-            onConfirm = {
-                confirming = false
-                onClear()
-            },
-            onDismiss = { confirming = false }
-        )
-    }
+                else -> R.string.requirement_clear_message
+            }
+        ),
+        onClear = onClear
+    )
 }

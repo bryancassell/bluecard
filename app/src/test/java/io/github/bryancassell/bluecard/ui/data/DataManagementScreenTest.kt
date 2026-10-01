@@ -76,7 +76,10 @@ class DataManagementScreenTest {
         }
     }
 
-    private val ready = DataManagementUiState(today = LocalDate.of(2026, 10, 1))
+    private val ready = DataManagementUiState()
+
+    /** The date the screen reads when Export is tapped. */
+    private var today = LocalDate.of(2026, 10, 1)
     private val backup = Backup(Profile("Sam Scout", "Crew 7"), emptyList())
 
     /** The UI state shown, which a test can change after [show]. */
@@ -90,6 +93,7 @@ class DataManagementScreenTest {
             ) {
                 DataManagementScreen(
                     uiState = uiState,
+                    today = { today },
                     onExport = { exported += it },
                     onImport = { read += it },
                     onConfirmImport = { importsConfirmed++ },
@@ -134,6 +138,20 @@ class DataManagementScreenTest {
         assertEquals("application/json", picker.type)
         assertEquals("BlueCard export 2026-10-01.json", picker.getStringExtra(Intent.EXTRA_TITLE))
         assertEquals(listOf(file), exported)
+    }
+
+    // A screen left open past midnight suggests the new day.
+    @Test
+    fun export_namesTheFileWithTheDayItsTapped() {
+        show()
+        today = LocalDate.of(2026, 10, 2)
+
+        exportButton().performClick()
+
+        assertEquals(
+            "BlueCard export 2026-10-02.json",
+            launchedForResult.single().getStringExtra(Intent.EXTRA_TITLE)
+        )
     }
 
     @Test

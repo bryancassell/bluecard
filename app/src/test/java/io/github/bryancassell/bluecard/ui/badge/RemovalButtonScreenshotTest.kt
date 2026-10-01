@@ -49,14 +49,14 @@ class RemovalButtonScreenshotTest {
                         children = emptyList(),
                         tracker = null,
                         commentChanged = false,
-                        canClear = true,
-                        today = today
+                        canClear = true
                     ),
                     comment = TextFieldState(),
                     onOpenRequirement = {},
                     onOpenTrackerEntry = { _, _ -> },
                     onCompletedChange = {},
                     onCompletedDateChange = {},
+                    today = { today },
                     onSaveComment = {},
                     onClear = {},
                     onSaveFailureShown = {}
@@ -82,11 +82,11 @@ class RemovalButtonScreenshotTest {
                         dates = emptyMap(),
                         canSave = false,
                         hasSavedEntry = true,
-                        canDelete = true,
-                        today = today
+                        canDelete = true
                     ),
                     fields = columns.associate { it.id to TextFieldState("Ran 2 miles") },
                     onDateChange = { _, _ -> },
+                    today = { today },
                     onSave = {},
                     onDelete = {},
                     onClose = {},

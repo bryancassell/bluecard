@@ -34,6 +34,7 @@ import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
+import java.time.LocalDate
 
 /** Connects the Data management screen to its ViewModel. */
 @Composable
@@ -44,6 +45,7 @@ fun DataManagementRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     DataManagementScreen(
         uiState = uiState,
+        today = viewModel::today,
         onExport = viewModel::export,
         onImport = viewModel::read,
         onConfirmImport = viewModel::confirmImport,
@@ -55,12 +57,13 @@ fun DataManagementRoute(
 
 /**
  * Export and import of the scout's data. Export saves it to a file the scout creates with the
- * system file picker ([onExport]). Import reads a file they pick ([onImport]) and, once it's
+ * system file picker ([onExport]), suggesting a name with [today]'s date, read as it opens. Import reads a file they pick ([onImport]) and, once it's
  * checked, asks before replacing everything with it ([onConfirmImport]).
  */
 @Composable
 fun DataManagementScreen(
     uiState: DataManagementUiState,
+    today: () -> LocalDate,
     onExport: (destination: Uri) -> Unit,
     onImport: (source: Uri) -> Unit,
     onConfirmImport: () -> Unit,
@@ -76,7 +79,7 @@ fun DataManagementScreen(
     val openDocument = rememberLauncherForActivityResult(OpenOpenableDocument()) { source ->
         source?.let(onImport)
     }
-    val fileName = exportFileName(LocalResources.current, uiState.today)
+    val resources = LocalResources.current
     val noFileSaver = stringResource(R.string.no_file_saver)
     val noFileOpener = stringResource(R.string.data_management_no_file_opener)
     Box(modifier = modifier) {
@@ -98,7 +101,10 @@ fun DataManagementScreen(
                 description = R.string.data_management_export_description,
                 button = R.string.data_management_export,
                 enabled = !uiState.working,
-                onClick = { startOtherApp.launch(createDocument, fileName, noFileSaver) }
+                onClick = {
+                    val fileName = exportFileName(resources, today())
+                    startOtherApp.launch(createDocument, fileName, noFileSaver)
+                }
             )
             Section(
                 heading = R.string.data_management_import_heading,

@@ -25,7 +25,10 @@ class ProgressRecorder(
     /** The dates of requirements unchecked on this page, by number; null for no date. */
     private val uncheckedDates = mutableMapOf<String, LocalDate?>()
 
-    /** Marks requirement [number], one the scout marks by hand, completed or not. */
+    /**
+     * Marks requirement [number], one the scout marks by hand, or its own work, for one with own
+     * work, completed or not.
+     */
     suspend fun setCompleted(number: String, completed: Boolean) {
         if (completed) {
             val date = if (number in uncheckedDates) uncheckedDates.getValue(number) else today()

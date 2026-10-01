@@ -15,17 +15,23 @@ private const val TAG = "Documents"
 /**
  * Writes [content] to [destination], a document the scout chose with the system file picker,
  * replacing what it held. The content is made before the destination is opened, which empties
- * it, so content that can't be made leaves a file the scout chose to replace as it was.
+ * it, so content that can't be made leaves a file the scout chose to replace as it was. So
+ * does no content (null), such as a report on a badge that was just cleared, which writes
+ * nothing.
  *
  * Throws what making the content throws, or an [IOException] if the document can't be opened
  * or written. Either way, it doesn't leave behind the empty document the file picker made, or
  * one that opening emptied.
  */
-suspend fun ContentResolver.saveDocument(destination: Uri, content: suspend () -> ByteArray) {
+suspend fun ContentResolver.saveDocument(destination: Uri, content: suspend () -> ByteArray?) {
     val bytes: ByteArray
     val out: OutputStream
     try {
-        bytes = content()
+        bytes = content() ?: run {
+            // The file picker made an empty document for the content, which isn't left behind.
+            deleteIfEmpty(destination)
+            return
+        }
         out = openForWriting(destination)
     } catch (e: Exception) {
         // The file picker made an empty document for the content, which isn't left behind.

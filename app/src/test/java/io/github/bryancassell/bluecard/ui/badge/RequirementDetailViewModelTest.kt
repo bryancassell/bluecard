@@ -19,8 +19,9 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
-import java.time.Clock
+import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
@@ -53,7 +54,7 @@ class RequirementDetailViewModelTest {
     private val day = LocalDate.of(2026, 4, 15)
     private val badgeStart = BadgeStart(newest, started)
     private val today = LocalDate.of(2026, 5, 20)
-    private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
     private val camping = MeritBadge(
         id = "camping",
@@ -100,6 +101,15 @@ class RequirementDetailViewModelTest {
                             "weeks",
                             rowCount = 2
                         )
+                    ),
+                    Requirement(
+                        "5",
+                        "Pack your gear, then show it.",
+                        children = listOf(
+                            Requirement("5a", "Your tent."),
+                            Requirement("5b", "Your stove.")
+                        ),
+                        ownWork = "Pack your gear."
                     )
                 )
             ),
@@ -225,7 +235,6 @@ class RequirementDetailViewModelTest {
                 tracker = null,
                 commentChanged = false,
                 canClear = false,
-                today = today,
                 saveFailure = null
             ),
             viewModel.uiState.value
@@ -432,11 +441,14 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun today_isFromTheClock() = runTest {
+    fun today_isFromTheClock_whenAsked() {
         val viewModel = viewModel("1")
-        startCollecting(viewModel)
+        assertEquals(today, viewModel.today())
 
-        assertEquals(today, viewModel.ready().today)
+        // The page stays open past midnight.
+        clock.now += Duration.ofDays(1)
+
+        assertEquals(today.plusDays(1), viewModel.today())
     }
 
     @Test
@@ -482,6 +494,24 @@ class RequirementDetailViewModelTest {
         assertFalse(viewModel.ready().requirement.completed)
         assertNull(viewModel.ready().completedDate)
     }
+
+    @Test
+    fun setCompleted_onRequirementWithOwnWork_marksItsOwnWork_thenSubRequirementsCompleteIt() =
+        runTest {
+            val viewModel = viewModel("5")
+            startCollecting(viewModel)
+            assertEquals(OwnWork("Pack your gear.", false), viewModel.ready().requirement.ownWork)
+
+            viewModel.setCompleted(true)
+
+            assertEquals(OwnWork("Pack your gear.", true), viewModel.ready().requirement.ownWork)
+            assertEquals(today, viewModel.ready().completedDate)
+            assertFalse(viewModel.ready().requirement.completed)
+
+            progressRepository.markRequirementCompleted("camping", "5a", day, badgeStart)
+            progressRepository.markRequirementCompleted("camping", "5b", day, badgeStart)
+            assertTrue(viewModel.ready().requirement.completed)
+        }
 
     @Test
     fun setCompletedDate_changesTheDate() = runTest {

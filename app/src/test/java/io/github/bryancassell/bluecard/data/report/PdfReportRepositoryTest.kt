@@ -38,6 +38,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -168,7 +169,7 @@ class PdfReportRepositoryTest {
 
     @Test
     fun createReportToShare_writesTheBadgesReport_whereOtherAppsCanReadIt() = runTest {
-        val report = repository.createReportToShare("chess")
+        val report = repository.createReportToShare("chess")!!
 
         assertEquals("content", report.scheme)
         assertEquals("io.github.bryancassell.bluecard.reports", report.authority)
@@ -186,7 +187,7 @@ class PdfReportRepositoryTest {
     // The app the scout shares it with shows its name, as an email attachment does.
     @Test
     fun createReportToShare_namesTheFileAfterTheBadge() = runTest {
-        val report = repository.createReportToShare("chess")
+        val report = repository.createReportToShare("chess")!!
 
         val name = context.contentResolver.query(report, null, null, null, null)!!.use {
             it.moveToFirst()
@@ -205,7 +206,7 @@ class PdfReportRepositoryTest {
             BadgeStart(newest, today)
         )
 
-        val report = repository.createReportToShare("chess")
+        val report = repository.createReportToShare("chess")!!
 
         assertTrue("Notes: Taught my brother." in report.read())
         val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
@@ -216,7 +217,7 @@ class PdfReportRepositoryTest {
     // it sends it.
     @Test
     fun createReportToShare_again_leavesTheEarlierReportWhole_forAnAppReadingIt() = runTest {
-        val earlier = repository.createReportToShare("chess")
+        val earlier = repository.createReportToShare("chess")!!
         val written = pdfWriter.lastWritten
         context.contentResolver.openInputStream(earlier)!!.use { reading ->
             progressRepository.setRequirementComment(
@@ -234,7 +235,7 @@ class PdfReportRepositoryTest {
 
     @Test
     fun createReportToShare_whenItCantBeWritten_leavesTheEarlierReport() = runTest {
-        val earlier = repository.createReportToShare("chess")
+        val earlier = repository.createReportToShare("chess")!!
         val written = pdfWriter.lastWritten
         pdfWriter.failWrites = true
 
@@ -391,13 +392,44 @@ class PdfReportRepositoryTest {
         assertThrows<IOException> { repository.createReportToShare("chess") }
     }
 
-    // The screen offers a report only for a completed badge, which is started, after
-    // Onboarding has saved the profile, so each of these is a bug.
+    // As when the scout clears the badge and taps Share report before the page redraws.
     @Test
-    fun report_forBadgeNotStarted_noProfile_orBadgeNotInCatalog_throwsIllegalState() = runTest {
-        catalogRepository.badges = listOf(chess, chess.copy(id = "chess-2"))
-        assertThrows<IllegalStateException> { repository.createReportToShare("chess-2") }
+    fun createReportToShare_forBadgeNotStarted_makesNoReport() = runTest {
+        progressRepository.clearBadge("chess")
 
+        assertNull(repository.createReportToShare("chess"))
+        assertNull(pdfWriter.lastWritten)
+        val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
+        assertEquals(emptyList<String>(), files.orEmpty().toList())
+    }
+
+    // As when the scout clears the badge, taps Save report before the page redraws, and picks
+    // where to save it.
+    @Test
+    fun saveReport_forBadgeNotStarted_savesNothing_andDeletesTheEmptyDocument() = runTest {
+        progressRepository.clearBadge("chess")
+        val (document, file) = createdDocument()
+
+        repository.saveReport("chess", document)
+
+        assertNull(pdfWriter.lastWritten)
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun saveReport_forBadgeNotStarted_overAnOlderReport_leavesItAsItWas() = runTest {
+        progressRepository.clearBadge("chess")
+        val (document, file) = createdDocument("An older report.")
+
+        repository.saveReport("chess", document)
+
+        assertEquals("An older report.", file.readText())
+    }
+
+    // The screen offers a report only after Onboarding has saved the profile, for a badge in
+    // the catalog, so each of these is a bug.
+    @Test
+    fun report_noProfile_orBadgeNotInCatalog_throwsIllegalState() = runTest {
         assertThrows<IllegalStateException> { repository.createReportToShare("cooking") }
 
         profileRepository.removeProfile()

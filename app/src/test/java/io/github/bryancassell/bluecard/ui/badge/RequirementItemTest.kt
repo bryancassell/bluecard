@@ -43,12 +43,12 @@ class RequirementItemTest {
 
     @Test
     fun partOfCompletedRequirement_whenNotComplete_isNotNeeded() {
-        assertTrue(leaf.toItem(emptyMap(), emptyMap(), partOfCompleted = true).notNeeded)
+        assertTrue(leaf.toItem(emptyMap(), emptyMap(), partOfHasEnough = true).notNeeded)
     }
 
     @Test
     fun partOfCompletedRequirement_whenComplete_isCompletedRatherThanNotNeeded() {
-        val item = leaf.toItem(done("1"), emptyMap(), partOfCompleted = true)
+        val item = leaf.toItem(done("1"), emptyMap(), partOfHasEnough = true)
 
         assertTrue(item.completed)
         assertFalse(item.notNeeded)
@@ -72,6 +72,28 @@ class RequirementItemTest {
     fun choice_isCompletedOnceEnoughAreDone() {
         assertFalse(twoOfThree.toItem(done("2a"), emptyMap()).completed)
         assertTrue(twoOfThree.toItem(done("2a", "2c"), emptyMap()).completed)
+    }
+
+    private val ownWorkAndTwoOfThree = twoOfThree.copy(ownWork = "Pack your gear.")
+
+    @Test
+    fun ownWork_isMarkedOnItsOwn_andTheRequirementIsCompletedOnlyWithEnoughChildren() {
+        val marked = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
+        assertEquals(OwnWork("Pack your gear.", completed = true), marked.ownWork)
+        assertFalse(marked.markedByHand)
+        assertFalse(marked.completed)
+
+        val children = ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap())
+        assertEquals(OwnWork("Pack your gear.", completed = false), children.ownWork)
+        assertFalse(children.completed)
+
+        assertTrue(ownWorkAndTwoOfThree.toItem(done("2", "2a", "2c"), emptyMap()).completed)
+    }
+
+    @Test
+    fun withoutOwnWork_hasNone() {
+        assertNull(twoOfThree.toItem(done("2"), emptyMap()).ownWork)
+        assertNull(leaf.toItem(done("1"), emptyMap()).ownWork)
     }
 
     @Test

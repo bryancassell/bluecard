@@ -45,8 +45,8 @@ class PdfReportRepository @Inject constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
-    override suspend fun createReportToShare(badgeId: String): Uri = withContext(ioDispatcher) {
-        val report = report(badgeId)
+    override suspend fun createReportToShare(badgeId: String): Uri? = withContext(ioDispatcher) {
+        val report = report(badgeId) ?: return@withContext null
         // Read for each report, so it follows a change to the phone's language.
         val strings = stringsLanguageResources(context)
         val folder = File(context.cacheDir, REPORTS_FOLDER)
@@ -72,24 +72,28 @@ class PdfReportRepository @Inject constructor(
             withContext(ioDispatcher) { save(badgeId, destination) }
         }
 
-    /** Writes the report to [destination] ([saveDocument]). */
+    /**
+     * Writes the report to [destination] ([saveDocument]), or nothing for a badge that isn't
+     * started, as when it was just cleared.
+     */
     private suspend fun save(badgeId: String, destination: Uri) =
         context.contentResolver.saveDocument(destination) {
-            ByteArrayOutputStream().also {
-                write(report(badgeId), stringsLanguageResources(context), it)
-            }.toByteArray()
+            report(badgeId)?.let { report ->
+                ByteArrayOutputStream().also {
+                    write(report, stringsLanguageResources(context), it)
+                }.toByteArray()
+            }
         }
 
-    private suspend fun report(badgeId: String): BadgeReport {
+    /** Badge [badgeId]'s report, or null if it isn't started, as when it was just cleared. */
+    private suspend fun report(badgeId: String): BadgeReport? {
         val profile = checkNotNull(profileRepository.observeProfile().first()) {
             "The scout hasn't saved their profile"
         }
         val badge = checkNotNull(catalogRepository.getBadges().find { it.id == badgeId }) {
             "The catalog has no badge $badgeId"
         }
-        val progress = checkNotNull(progressRepository.observeProgress(badgeId).first()) {
-            "Badge $badgeId hasn't been started"
-        }
+        val progress = progressRepository.observeProgress(badgeId).first() ?: return null
         return checkNotNull(badge.report(profile, progress, LocalDate.now(clock))) {
             "The catalog has no requirements for $badgeId"
         }

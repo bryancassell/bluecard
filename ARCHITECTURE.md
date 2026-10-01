@@ -175,6 +175,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   not by sending one-off events to the UI, as the recommendations page advises.
   A page that closes itself once its save succeeds does so from UI state too
   (see [Recording progress](#recording-progress)).
+- **A date that must be current when the scout acts is read then**, not held in
+  UI state, which updates only when the page's data changes. The date picker's
+  latest date works this way: screens pass their ViewModel's `today()` down, and
+  the picker calls it as it opens, so a page left open past midnight offers the
+  new day. It's a read, not an event, and an exception to state flowing down.
 
 ### Load and save failures
 
@@ -424,7 +429,7 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, opening its Badge detail. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
@@ -536,14 +541,23 @@ Completion is derived, not stored (`data/progress/Completion.kt`), from
 requirement progress, tracker entries and the catalog:
 
 - A requirement with children is complete when enough of them are, even if it
-  also has a tracker. One without children but with a fixed-row tracker is
-  complete when every row has an entry. Any other
+  also has a tracker. One that also asks for work of its own (`ownWork` in the
+  catalog) needs the scout to mark that complete too. One without children but
+  with a fixed-row tracker is complete when every row has an entry. Any other
   requirement, including one with a log, is complete when the scout marked it
   complete.
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
-- The completion date is when the last requirement it needed was completed, or
-  the prior date for a badge marked that way.
+- The completion date is when the last requirement or own work it needed was
+  completed, or the prior date for a badge marked that way.
+
+A requirement's own work is stored as that requirement's own
+`RequirementProgress`, as for one marked complete by hand, so it needs no new
+table. The catalog marks the requirements that have own work, rather than every
+requirement with children needing a check, because most only group their
+children. The work can't be a child of its own, because the catalog's numbers
+and nesting must match the official page
+([#143](https://github.com/bryancassell/bluecard/issues/143)).
 
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
@@ -634,8 +648,16 @@ shows a snackbar, as a failed save does (`SaveRunner`).
 of a requirement and every one under it (`clearRequirements`), each in one
 transaction, after a confirmation dialog. Every removal of what the scout
 recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
-opened by a button with `removalButtonColors`. Clearing progress does not clear the
-profile, and clearing a requirement leaves its badge started.
+opened by a button with `removalButtonColors`. Badge detail and Requirement
+detail share their Clear progress button and its dialog
+(`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
+Clearing a requirement leaves its badge started, and clearing a badge deletes
+its `BadgeProgress`, so it's no longer started. A page can show a badge for a
+moment after it's cleared, so a function a page calls then does nothing for a
+badge that isn't started, rather than throw: `markRequirementNotCompleted` and
+the report functions. Clearing doesn't delete a report shared before from the
+cache: an app it was shared with, such as an email app that reads it only when
+it sends, may still need it.
 
 ### Export and import
 

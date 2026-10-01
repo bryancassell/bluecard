@@ -111,6 +111,21 @@ class BadgeRequirementsTest {
     }
 
     @Test
+    fun item_partOfRequirementWithEnoughDone_isNotNeeded_beforeItsOwnWorkIs() {
+        val withOwnWork = newest.copy(
+            requirements = newest.requirements.map {
+                if (it.number == "2") it.copy(ownWork = "Share what you did.") else it
+            }
+        )
+        val found = listOf(badge("camping", withOwnWork))
+            .badgeRequirements("camping", startedOn(withOwnWork.effectiveDate, "2a"))!!
+
+        assertFalse(found.item(withOwnWork.find("2")!!).completed)
+        assertTrue(found.item(withOwnWork.find("2b")!!).notNeeded)
+        assertTrue(found.item(withOwnWork.find("2b(1)")!!).notNeeded)
+    }
+
+    @Test
     fun item_beforeARequirementItsPartOfIsComplete_isNeeded() {
         val found = catalog.badgeRequirements("camping", null)!!
 

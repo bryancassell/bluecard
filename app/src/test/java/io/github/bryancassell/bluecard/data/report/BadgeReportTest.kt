@@ -183,6 +183,27 @@ class BadgeReportTest {
     }
 
     @Test
+    fun requirementNotCompleted_inOneWithEnoughDoneButNotItsOwnWork_isNotNeeded() {
+        val withOwnWork = camping.copy(
+            requirementVersions = camping.requirementVersions.map { version ->
+                version.copy(
+                    requirements = version.requirements.map {
+                        if (it.number == "2") it.copy(ownWork = "Share what you did.") else it
+                    }
+                )
+            }
+        )
+        val report = withOwnWork.report(
+            profile,
+            progress(listOf(completed("2a", LocalDate.of(2026, 4, 2)), completed("2c", null))),
+            today
+        )!!
+
+        assertNull(report.requirement("2").completion)
+        assertTrue(report.requirement("2b").notNeeded)
+    }
+
+    @Test
     fun badge_isCompletedOnItsLastRequirementsDate() {
         val all = listOf("1", "2a", "2b", "3", "4b").mapIndexed { index, number ->
             completed(number, LocalDate.of(2026, 5, index + 1))

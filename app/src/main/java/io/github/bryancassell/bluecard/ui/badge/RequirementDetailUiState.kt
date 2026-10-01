@@ -15,8 +15,9 @@ sealed interface RequirementDetailUiState {
         val badgeName: String,
         val requirement: RequirementItem,
         /**
-         * When the scout completed it, for a requirement they marked complete, or null if they
-         * gave no date or it isn't complete.
+         * When the scout completed it, for a requirement they marked complete, or its own work,
+         * for one with own work they marked complete ([RequirementItem.ownWork]). Null if they
+         * gave no date or it isn't marked complete.
          */
         val completedDate: LocalDate?,
         val children: List<RequirementItem>,
@@ -29,8 +30,6 @@ sealed interface RequirementDetailUiState {
          * clear.
          */
         val canClear: Boolean,
-        /** The latest date the scout can give as a completion date. */
-        val today: LocalDate,
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
         val saveFailure: SaveFailure? = null
     ) : RequirementDetailUiState
