@@ -121,20 +121,23 @@ interface ProgressDao {
     @Query("DELETE FROM tracker_entry WHERE id = :id")
     suspend fun deleteTrackerEntry(id: Long)
 
-    /** Clears one requirement's date, comment and tracker entries. */
+    /** Clears the requirements' dates, comments and tracker entries. */
     @Transaction
-    suspend fun deleteRequirement(badgeId: String, number: String) {
-        deleteRequirementProgress(badgeId, number)
-        deleteTrackerEntries(badgeId, number)
+    suspend fun deleteRequirements(badgeId: String, numbers: Collection<String>) {
+        deleteRequirementProgress(badgeId, numbers)
+        deleteTrackerEntries(badgeId, numbers)
     }
 
     @Query(
-        "DELETE FROM requirement_progress WHERE badgeId = :badgeId AND requirementNumber = :number"
+        "DELETE FROM requirement_progress " +
+            "WHERE badgeId = :badgeId AND requirementNumber IN (:numbers)"
     )
-    suspend fun deleteRequirementProgress(badgeId: String, number: String)
+    suspend fun deleteRequirementProgress(badgeId: String, numbers: Collection<String>)
 
-    @Query("DELETE FROM tracker_entry WHERE badgeId = :badgeId AND requirementNumber = :number")
-    suspend fun deleteTrackerEntries(badgeId: String, number: String)
+    @Query(
+        "DELETE FROM tracker_entry WHERE badgeId = :badgeId AND requirementNumber IN (:numbers)"
+    )
+    suspend fun deleteTrackerEntries(badgeId: String, numbers: Collection<String>)
 
     /** Deletes a badge's progress; its requirement progress and tracker entries cascade. */
     @Query("DELETE FROM badge_progress WHERE badgeId = :badgeId")

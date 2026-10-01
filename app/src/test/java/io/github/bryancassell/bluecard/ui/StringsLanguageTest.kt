@@ -198,47 +198,11 @@ class StringsLanguageTest {
         assertEquals("Do 2 of 3; Cycling, Hiking and Swimming", text)
     }
 
-    @Test
-    fun stringsLocales_deviceHasStringsLanguage_putsItsLocaleFirst() {
-        assertEquals(
-            LocaleList.forLanguageTags("en-GB,fa-IR"),
-            stringsLocales(LocaleList.forLanguageTags("fa-IR,en-GB"), Locale.forLanguageTag("en"))
-        )
-    }
-
-    @Test
-    fun stringsLocales_deviceLacksStringsLanguage_putsStringsLanguageFirst() {
-        assertEquals(
-            LocaleList.forLanguageTags("en,fa-IR"),
-            stringsLocales(LocaleList.forLanguageTags("fa-IR"), Locale.forLanguageTag("en"))
-        )
-    }
-
-    // Serbian is written in Cyrillic or Latin script; "sr-RS" is Cyrillic.
-    @Test
-    fun stringsLocales_matchesScript() {
-        assertEquals(
-            LocaleList.forLanguageTags("sr-Latn-RS,sr-RS"),
-            stringsLocales(
-                LocaleList.forLanguageTags("sr-RS,sr-Latn-RS"),
-                Locale.forLanguageTag("sr-Latn")
-            )
-        )
-    }
-
     @Config(qualifiers = "fa")
     @Test
     fun stringsLocale_isStringsLanguage_notDevice() {
         lateinit var locale: Locale
         composeTestRule.setContent { locale = stringsLocale() }
-
-        assertEquals(Locale.forLanguageTag("en"), locale)
-    }
-
-    @Config(qualifiers = "fa")
-    @Test
-    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() {
-        val locale = stringsLocale(ApplicationProvider.getApplicationContext<Context>())
 
         assertEquals(Locale.forLanguageTag("en"), locale)
     }

@@ -6,16 +6,14 @@ import android.database.sqlite.SQLiteDatatypeMismatchException
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteMisuseException
 import androidx.room.withTransaction
+import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -69,7 +67,7 @@ class RoomProgressRepository @Inject constructor(
     }
 
     override suspend fun markRequirementNotCompleted(badgeId: String, number: String) =
-        ifStarted(badgeId) {
+        ifStarted(badgeId, notStarted = { null }) {
             dao.updateRequirement(badgeId, number) {
                 it.copy(completed = false, completedDate = null)
             }
@@ -113,8 +111,8 @@ class RoomProgressRepository @Inject constructor(
 
     override suspend fun deleteTrackerEntry(id: Long) = writing { dao.deleteTrackerEntry(id) }
 
-    override suspend fun clearRequirement(badgeId: String, number: String) =
-        writing { dao.deleteRequirement(badgeId, number) }
+    override suspend fun clearRequirements(badgeId: String, numbers: Collection<String>) =
+        writing { dao.deleteRequirements(badgeId, numbers) }
 
     override suspend fun clearBadge(badgeId: String) = writing { dao.deleteBadge(badgeId) }
 
@@ -138,25 +136,18 @@ class RoomProgressRepository @Inject constructor(
 
     /**
      * Runs [write] in [externalScope] and waits for it. If the caller is cancelled, only the
-     * wait is: the write still finishes. Reports a database that can't be written, such as one
-     * that can't be opened or a full disk, as an [IOException], in the same way as
-     * [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too, but it
-     * crashes the app through [externalScope] even if the caller is gone.
+     * wait is: the write still finishes ([runOutlivingCaller]). Reports a database that can't be
+     * written, such as one that can't be opened or a full disk, as an [IOException], in the same
+     * way as [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too,
+     * but it crashes the app through [externalScope] even if the caller is gone.
      */
-    private suspend fun <T> writing(write: suspend () -> T): T {
-        val result = CompletableDeferred<T>()
-        // Started in the caller's thread, so writes queue for writeOrder in the order they're
-        // made.
-        externalScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            try {
-                result.complete(writeOrder.withLock { write() })
-            } catch (e: Throwable) {
-                val storageFailure = e is SQLiteException && e.isStorageFailure()
-                result.completeExceptionally(if (storageFailure) IOException(e) else e)
-                if (!storageFailure) throw e
-            }
+    // Started in the caller's thread, so writes queue for writeOrder in the order they're made.
+    private suspend fun <T> writing(write: suspend () -> T): T = externalScope.runOutlivingCaller {
+        try {
+            writeOrder.withLock { write() }
+        } catch (e: SQLiteException) {
+            throw if (e.isStorageFailure()) IOException(e) else e
         }
-        return result.await()
     }
 
     /**
@@ -174,16 +165,18 @@ class RoomProgressRepository @Inject constructor(
 
     /**
      * Runs [action] if the badge is started, or once [start] has started it, checking and
-     * writing in one transaction.
+     * writing in one transaction. Without [start], a badge that isn't started gets [notStarted]
+     * instead, which throws [notStartedError] unless the caller gives another.
      */
     private suspend fun <T> ifStarted(
         badgeId: String,
         start: BadgeStart? = null,
+        notStarted: () -> T = { throw notStartedError(badgeId) },
         action: suspend () -> T
     ): T = writing {
         database.withTransaction {
             if (!dao.isStarted(badgeId)) {
-                if (start == null) throw notStartedError(badgeId)
+                if (start == null) return@withTransaction notStarted()
                 dao.insertBadge(start.progress(badgeId))
             }
             action()

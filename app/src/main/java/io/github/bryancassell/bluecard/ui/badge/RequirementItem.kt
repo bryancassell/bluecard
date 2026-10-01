@@ -48,8 +48,7 @@ fun Requirement.toItem(
     return RequirementItem(
         number = number,
         summary = summary,
-        // A count of all the children is no choice.
-        choice = requiredCount?.takeIf { it < children.size }?.let { Choice(it, children.size) },
+        choice = choiceCount?.let { Choice(it, children.size) },
         completed = completed,
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),

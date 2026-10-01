@@ -20,8 +20,12 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -34,11 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -64,6 +70,7 @@ fun RequirementDetailRoute(
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
         onSaveComment = viewModel::saveComment,
+        onClear = viewModel::clear,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
@@ -74,7 +81,8 @@ fun RequirementDetailRoute(
  * its sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
  * its own page in turn, and a tracker row opens the Tracker entry page
  * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
- * log opens it with neither.
+ * log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
+ * ([onClear]), with what's recorded for the requirements under it.
  */
 @Composable
 fun RequirementDetailScreen(
@@ -85,6 +93,7 @@ fun RequirementDetailScreen(
     onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     onSaveComment: () -> Unit,
+    onClear: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -117,6 +126,9 @@ fun RequirementDetailScreen(
                     )
                 }
                 CommentField(comment, uiState.commentChanged, onSaveComment)
+                if (uiState.canClear) {
+                    ClearProgress(requirement.number, uiState.children.isNotEmpty(), onClear)
+                }
             }
             SaveFailedSnackbarHost(
                 failure = uiState.saveFailure,
@@ -242,5 +254,40 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
         ) {
             Text(stringResource(R.string.requirement_save_comment))
         }
+    }
+}
+
+/**
+ * Clears what the scout recorded for the requirement, and for those under it if it
+ * [hasChildren], once they confirm. Red, and last on the page, so it isn't tapped by mistake.
+ */
+@Composable
+private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> Unit) {
+    var confirming by rememberSaveable { mutableStateOf(false) }
+    TextButton(
+        onClick = { confirming = true },
+        colors = removalButtonColors(),
+        // Lines the button's text up with the page's, as for Add counselor.
+        modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
+    ) {
+        Text(stringResource(R.string.requirement_clear))
+    }
+    if (confirming) {
+        ConfirmDialog(
+            title = stringResource(R.string.requirement_clear_title, number),
+            message = stringResource(
+                if (hasChildren) {
+                    R.string.requirement_clear_message_with_children
+                } else {
+                    R.string.requirement_clear_message
+                }
+            ),
+            confirmLabel = stringResource(R.string.requirement_clear_confirm),
+            onConfirm = {
+                confirming = false
+                onClear()
+            },
+            onDismiss = { confirming = false }
+        )
     }
 }

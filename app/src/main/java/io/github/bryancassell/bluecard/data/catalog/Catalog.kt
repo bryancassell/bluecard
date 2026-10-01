@@ -50,7 +50,10 @@ data class Requirement(
     val requiredCount: Int? = null,
     val children: List<Requirement> = emptyList(),
     val tracker: TrackerDefinition? = null
-)
+) {
+    /** How many of its children must be done when that's fewer than all of them, or null. */
+    val choiceCount: Int? get() = requiredCount?.takeIf { it < children.size }
+}
 
 /** Repeated entries a requirement needs, such as a weekly exercise log. */
 @Serializable
@@ -62,7 +65,18 @@ data class TrackerDefinition(
     val rowLabelPlural: String,
     /** A fixed number of rows (for example 12 weeks); null means any number. */
     val rowCount: Int? = null
-)
+) {
+    /** What one row is called, capitalized for titles such as "Week 3". */
+    val rowTitle: String get() = rowLabel.replaceFirstChar { it.titlecase() }
+
+    /**
+     * What the rows are called in a count of the [recorded] ones, agreeing with the number:
+     * "1 session" or "5 sessions" in a log, and "8 of 12 weeks" with a fixed number of rows. The
+     * catalog is in English, so its row labels follow English plurals.
+     */
+    fun rowsLabel(recorded: Int): String =
+        if ((rowCount ?: recorded) == 1) rowLabel else rowLabelPlural
+}
 
 @Serializable
 data class TrackerColumn(val id: String, val label: String, val type: TrackerColumnType)

@@ -94,6 +94,9 @@
     <!-- Label of the field for the scout's notes about a requirement. -->
     <string name="requirement_comment">Notes</string>
     <string name="requirement_save_comment">Save notes</string>
+    <!-- Button that closes a dialog asking to confirm removing something, such as a tracker
+         row, without removing it. -->
+    <string name="confirm_dialog_cancel">Cancel</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>
@@ -102,6 +105,16 @@
     <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
          it, such as after the badge moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
+    <!-- Button at the bottom of a requirement's page, which asks before clearing what the
+         scout recorded for it. -->
+    <string name="requirement_clear">Clear progress</string>
+    <!-- Asks before a requirement's progress is cleared, with its official number, such as
+         "Clear progress on requirement 4b?" -->
+    <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>
+    <string name="requirement_clear_message">What you recorded for it will be removed.</string>
+    <!-- For a requirement with sub-requirements, such as 4a and 4b under 4. -->
+    <string name="requirement_clear_message_with_children">What you recorded for it and the requirements under it will be removed.</string>
+    <string name="requirement_clear_confirm">Clear</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
          rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
     <string name="tracker_count">%1$d %2$s</string>
@@ -125,11 +138,52 @@
          session?" -->
     <string name="tracker_entry_delete_title">Delete this %1$s?</string>
     <string name="tracker_entry_delete_message">What you entered in it will be removed.</string>
-    <string name="tracker_entry_cancel">Cancel</string>
     <!-- Shown in place of a tracker row's page when the requirements the badge uses don't have
          the tracker or the row, such as after the row was deleted. -->
     <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
     <string name="data_management_title">Data management</string>
+    <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
+         recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
+    <string name="badge_detail_share_report">Share report</string>
+    <string name="badge_detail_save_report">Save report</string>
+    <!-- Shown when tapping Save report, if no app on the phone can save files. -->
+    <string name="badge_detail_no_file_picker">No app on this phone can save files.</string>
+    <!-- Shown briefly when a badge's report couldn't be created or saved. -->
+    <string name="report_failed">Couldn\'t create the report. Try again.</string>
+    <!-- The report's file name, without its ".pdf" extension, with the badge's name, such as
+         "Camping merit badge report". -->
+    <string name="report_file_name">%1$s merit badge report</string>
+    <!-- The rest of these are printed in the report, a PDF of everything the scout recorded
+         for a badge, to give to their counselor or keep. -->
+    <!-- Above the badge's name, at the top of the first page. -->
+    <string name="report_kind">Merit badge report</string>
+    <string name="report_scout">Scout: %1$s</string>
+    <string name="report_unit">Unit: %1$s</string>
+    <!-- The effective date of the requirements the scout worked on, such as "Requirements
+         effective Jan 1, 2026". -->
+    <string name="report_requirements_version">Requirements effective %1$s</string>
+    <!-- The day the report was made, such as "Created on Sep 30, 2026". -->
+    <string name="report_created_on">Created on %1$s</string>
+    <!-- When the badge or a requirement was completed, such as "Completed on Apr 15, 2026". -->
+    <string name="report_completed_on">Completed on %1$s</string>
+    <!-- For a badge or requirement that's complete but has no completion date. -->
+    <string name="report_completed">Completed</string>
+    <string name="report_not_completed">Not completed</string>
+    <!-- Heading of the merit badge counselor's details. -->
+    <string name="report_counselor">Counselor</string>
+    <string name="report_counselor_name">Name</string>
+    <string name="report_counselor_phone">Phone</string>
+    <string name="report_counselor_email">Email</string>
+    <string name="report_requirements">Requirements</string>
+    <!-- A requirement's official number and our summary of it, such as "4b. Cook a meal." -->
+    <string name="report_requirement">%1$s. %2$s</string>
+    <!-- Label of the scout's notes about a requirement, as on its page. -->
+    <string name="report_comment">Notes</string>
+    <!-- A label and its value, such as "Phone: 555-0100" or, in a tracker row,
+         "Minutes: 30". -->
+    <string name="report_labeled_value">%1$s: %2$s</string>
+    <!-- At the foot of each page, such as "Page 1 of 3". -->
+    <string name="report_page">Page %1$d of %2$d</string>
     <plurals name="home_completed">
         <item quantity="one">%1$d completed</item>
         <item quantity="other">%1$d completed</item>

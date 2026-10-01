@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
 

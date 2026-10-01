@@ -6,7 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 // What the scout records, stored in Room. Badges and requirements are identified by
 // catalog IDs: a badge's ID and a requirement's official number within the badge's
@@ -115,11 +117,36 @@ fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntr
     entries.filter { it.rowNumber in 1..rowCount }.associateBy { it.rowNumber!! }
 
 /**
+ * The rows of this tracker with the [entries] recorded for its requirement, each with its
+ * number from 1: in a log, each entry in the order it was added; with a fixed number of rows,
+ * every row, with its entry, or null if it isn't filled in.
+ */
+fun TrackerDefinition.numberedRows(entries: List<TrackerEntry>): List<Pair<Int, TrackerEntry?>> {
+    val count = rowCount
+    if (count == null) {
+        return entries.sortedBy { it.id }.mapIndexed { index, entry -> index + 1 to entry }
+    }
+    val filled = filledRows(entries, count)
+    return (1..count).map { it to filled[it] }
+}
+
+/**
  * Tracker values as repositories store them: without spaces around each value, and without
  * values that are blank.
  */
 fun normalizedTrackerValues(values: Map<String, String>): Map<String, String> =
     values.mapValues { it.value.trim() }.filterValues { it.isNotEmpty() }
+
+/**
+ * A date column's stored value as a date, or null if it isn't one. The app stores dates as
+ * YYYY-MM-DD, but a value from elsewhere may not be, such as one stored while a catalog edited
+ * during development had the column as text. It's shown as it is instead.
+ */
+fun storedDate(text: String): LocalDate? = try {
+    LocalDate.parse(text)
+} catch (e: DateTimeParseException) {
+    null
+}
 
 /** A started badge with everything recorded for it. */
 data class BadgeProgressDetails(

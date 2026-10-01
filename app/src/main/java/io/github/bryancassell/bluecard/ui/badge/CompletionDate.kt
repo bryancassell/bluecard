@@ -29,13 +29,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.text.completionDateFormatter
 import io.github.bryancassell.bluecard.ui.stringsLocale
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.format.DecimalStyle
-import java.time.format.FormatStyle
 
 /**
  * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
@@ -45,11 +44,7 @@ import java.time.format.FormatStyle
 @Composable
 fun rememberCompletionDateFormatter(): DateTimeFormatter {
     val locale = stringsLocale()
-    return remember(locale) {
-        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-            .withLocale(locale)
-            .withDecimalStyle(DecimalStyle.of(locale))
-    }
+    return remember(locale) { completionDateFormatter(locale) }
 }
 
 /**

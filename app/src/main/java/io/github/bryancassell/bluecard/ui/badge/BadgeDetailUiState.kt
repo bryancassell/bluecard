@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 
 /** What the Badge detail screen shows. */
@@ -20,7 +22,16 @@ sealed interface BadgeDetailUiState {
         /** The top-level requirements of the version the scout works on. */
         val requirements: List<RequirementItem>,
         /** The scout's merit badge counselor, or null if they haven't entered one. */
-        val counselor: Counselor? = null
+        val counselor: Counselor? = null,
+        /** Whether the badge is complete, so its report can be shared or saved. */
+        val completed: Boolean = false,
+        /**
+         * The badge's report, once it's ready to share, until the screen has opened the share
+         * sheet with it.
+         */
+        val reportToShare: Uri? = null,
+        /** The report couldn't be created or saved, and the scout hasn't been told yet. */
+        val reportFailure: SaveFailure? = null
     ) : BadgeDetailUiState
 
     /**

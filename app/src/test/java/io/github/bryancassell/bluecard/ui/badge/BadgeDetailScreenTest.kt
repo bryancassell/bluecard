@@ -1,7 +1,14 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
@@ -37,10 +44,13 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
+import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
@@ -64,6 +74,36 @@ class BadgeDetailScreenTest {
 
     private val openedRequirements = mutableListOf<String>()
     private var counselorEdits = 0
+    private var reportShareRequests = 0
+    private var reportsShared = 0
+    private val reportsSaved = mutableListOf<Uri>()
+    private val reportFailuresShown = mutableListOf<SaveFailure>()
+
+    /** The intents of the activities launched for a result, such as the file picker's. */
+    private val launchedForResult = mutableListOf<Intent>()
+
+    /** What the file picker gives back for the file name it's given, or throws. */
+    private var pickDestination: (fileName: String) -> Uri? = { destination }
+    private val destination = Uri.parse("content://documents/camping-report.pdf")
+
+    /**
+     * Stands in for the activity's result registry, so the file picker gives its result
+     * straight away, as the testing guide shows:
+     * https://developer.android.com/training/basics/intents/result#test
+     */
+    private val resultRegistryOwner = object : ActivityResultRegistryOwner {
+        override val activityResultRegistry = object : ActivityResultRegistry() {
+            override fun <I, O> onLaunch(
+                requestCode: Int,
+                contract: ActivityResultContract<I, O>,
+                input: I,
+                options: ActivityOptionsCompat?
+            ) {
+                launchedForResult += contract.createIntent(application, input)
+                dispatchResult(requestCode, pickDestination(input as String))
+            }
+        }
+    }
 
     private val ready = BadgeDetailUiState.Ready(
         name = "Camping",
@@ -96,14 +136,35 @@ class BadgeDetailScreenTest {
         layoutDirection: LayoutDirection = LayoutDirection.Ltr
     ) {
         composeTestRule.setContent {
-            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            CompositionLocalProvider(
+                LocalLayoutDirection provides layoutDirection,
+                LocalActivityResultRegistryOwner provides resultRegistryOwner
+            ) {
                 BadgeDetailScreen(
                     uiState = uiState,
                     onOpenRequirement = { openedRequirements += it },
-                    onEditCounselor = { counselorEdits++ }
+                    onEditCounselor = { counselorEdits++ },
+                    onShareReport = { reportShareRequests++ },
+                    onReportShared = { reportsShared++ },
+                    onSaveReport = { reportsSaved += it },
+                    onReportFailureShown = { reportFailuresShown += it }
                 )
             }
         }
+    }
+
+    /** The screen showing [uiState], for tests that only look at it. */
+    @Composable
+    private fun NoActionsBadgeDetailScreen(uiState: BadgeDetailUiState) {
+        BadgeDetailScreen(
+            uiState,
+            onOpenRequirement = {},
+            onEditCounselor = {},
+            onShareReport = {},
+            onReportShared = {},
+            onSaveReport = {},
+            onReportFailureShown = {}
+        )
     }
 
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
@@ -197,7 +258,7 @@ class BadgeDetailScreenTest {
     @Test
     fun eagleLabel_isOnTheTagsFill() {
         composeTestRule.setContent {
-            BlueCardTheme { BadgeDetailScreen(ready, onOpenRequirement = {}, onEditCounselor = {}) }
+            BlueCardTheme { NoActionsBadgeDetailScreen(ready) }
         }
 
         // The text's top-left corner is clear of its letters, so it shows what's behind them.
@@ -214,11 +275,7 @@ class BadgeDetailScreenTest {
         composeTestRule.setContent {
             val density = Density(LocalDensity.current.density, fontScale = 2f)
             CompositionLocalProvider(LocalDensity provides density) {
-                BadgeDetailScreen(
-                    ready.copy(eagle = group),
-                    onOpenRequirement = {},
-                    onEditCounselor = {}
-                )
+                NoActionsBadgeDetailScreen(ready.copy(eagle = group))
             }
         }
 
@@ -580,5 +637,142 @@ class BadgeDetailScreenTest {
         row("Requirement 20.").assertIsDisplayed().performClick()
 
         assertEquals(listOf("20"), openedRequirements)
+    }
+
+    private val completed = ready.copy(completed = true)
+
+    @Test
+    fun incompleteBadge_hasNoReport() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Share report").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Save report").assertDoesNotExist()
+    }
+
+    @Test
+    fun completeBadge_offersToShareAndSaveItsReport() {
+        show(completed)
+
+        listOf("Share report", "Save report").forEach {
+            composeTestRule.onNodeWithText(it)
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                .assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun reportButtons_areBetweenOfficialLinkAndCounselor() {
+        show(completed)
+
+        val tops = listOf("Official requirements", "Share report", "Counselor").map {
+            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
+        }
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun shareReport_asksForTheReport() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Share report").performClick()
+
+        assertEquals(1, reportShareRequests)
+        // The share sheet opens once the report is ready.
+        assertNull(startedActivity())
+    }
+
+    // The share sheet opens once the report is created, so the second tap of a double tap
+    // could come after it's ready and create it again.
+    @Test
+    fun shareReport_doubleTap_asksForTheReportOnce() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Share report").performTouchInput { doubleClick() }
+
+        assertEquals(1, reportShareRequests)
+    }
+
+    @Test
+    fun reportToShare_opensShareSheetWithIt_once() {
+        val report = Uri.parse("content://io.github.bryancassell.bluecard.reports/camping.pdf")
+        show(completed.copy(reportToShare = report))
+        composeTestRule.waitForIdle()
+
+        val chooser = startedActivity()
+        assertEquals(Intent.ACTION_CHOOSER, chooser?.action)
+        val send =
+            IntentCompat.getParcelableExtra(chooser!!, Intent.EXTRA_INTENT, Intent::class.java)!!
+        assertEquals(Intent.ACTION_SEND, send.action)
+        assertEquals("application/pdf", send.type)
+        assertEquals(
+            report,
+            IntentCompat.getParcelableExtra(send, Intent.EXTRA_STREAM, Uri::class.java)
+        )
+        // Lets the app the scout picks read the report, and the share sheet show it.
+        assertTrue(send.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+        assertEquals(report, send.clipData?.getItemAt(0)?.uri)
+        assertEquals(1, reportsShared)
+        assertNull(startedActivity())
+    }
+
+    @Test
+    fun saveReport_asksWhereToSaveIt_andSavesItThere() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Save report").performClick()
+
+        val picker = launchedForResult.single()
+        assertEquals(Intent.ACTION_CREATE_DOCUMENT, picker.action)
+        assertEquals("application/pdf", picker.type)
+        assertEquals("Camping merit badge report.pdf", picker.getStringExtra(Intent.EXTRA_TITLE))
+        assertEquals(listOf(destination), reportsSaved)
+    }
+
+    @Test
+    fun leavingFilePickerWithoutSaving_savesNothing() {
+        pickDestination = { null }
+        show(completed)
+
+        composeTestRule.onNodeWithText("Save report").performClick()
+
+        assertEquals(1, launchedForResult.size)
+        assertEquals(emptyList<Uri>(), reportsSaved)
+    }
+
+    // The file picker takes a moment to cover BlueCard, so the second tap reaches the button.
+    @Test
+    fun saveReport_doubleTap_opensFilePickerOnce() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Save report").performTouchInput { doubleClick() }
+
+        assertEquals(1, launchedForResult.size)
+    }
+
+    @Test
+    fun saveReport_withNoFilePicker_showsMessage() {
+        pickDestination = { throw ActivityNotFoundException() }
+        show(completed)
+
+        composeTestRule.onNodeWithText("Save report").performClick()
+
+        assertEquals("No app on this phone can save files.", ShadowToast.getTextOfLatestToast())
+        assertEquals(emptyList<Uri>(), reportsSaved)
+    }
+
+    @Test
+    fun reportFailed_showsMessage_thenReportsItShown() {
+        val failure = SaveFailure()
+        show(completed.copy(reportFailure = failure))
+
+        val message = "Couldn't create the report. Try again."
+        composeTestRule.onNodeWithText(message).assertIsDisplayed()
+        assertEquals(emptyList<SaveFailure>(), reportFailuresShown)
+
+        // A short snackbar shows for 4 seconds.
+        composeTestRule.mainClock.advanceTimeBy(5_000)
+
+        composeTestRule.onNodeWithText(message).assertDoesNotExist()
+        assertEquals(listOf(failure), reportFailuresShown)
     }
 }

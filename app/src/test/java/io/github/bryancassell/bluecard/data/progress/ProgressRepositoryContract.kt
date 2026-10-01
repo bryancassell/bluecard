@@ -389,21 +389,26 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun clearRequirement_removesOnlyThatRequirement() = test {
+    fun clearRequirements_removesOnlyThoseRequirements_andTheBadgeStaysStarted() = test {
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
+        repository.setRequirementComment(BADGE, "7", "Picked 7a and 7b.", badgeStart)
         repository.setRequirementComment(BADGE, "7a", "Week 1 went well.", badgeStart)
         addLogEntry("7a", mapOf("minutes" to "30"))
         addLogEntry("7b", mapOf("mile" to "9:30"))
+        addLogEntry("8", mapOf("pushups" to "20"))
 
-        repository.clearRequirement(BADGE, "7a")
+        repository.clearRequirements(BADGE, listOf("7", "7a", "7b"))
 
+        assertNull(requirement("7"))
         assertNull(requirement("7a"))
         assertEquals(emptyList<Map<String, String>>(), trackerValues("7a"))
+        assertEquals(emptyList<Map<String, String>>(), trackerValues("7b"))
         assertEquals(
             RequirementProgress(BADGE, "1", completed = true, completedDate = day),
             requirement("1")
         )
-        assertEquals(listOf(mapOf("mile" to "9:30")), trackerValues("7b"))
+        assertEquals(listOf(mapOf("pushups" to "20")), trackerValues("8"))
+        assertEquals(BadgeProgress(BADGE, version, started), progress()!!.badge)
     }
 
     @Test
@@ -448,20 +453,12 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun recordingOnAnUnstartedBadge_failsAndRecordsNothing() = test {
-        val writes: List<Pair<String, suspend () -> Unit>> = listOf(
-            "setCompletedOnPriorDate" to { repository.setCompletedOnPriorDate(UNSTARTED, day) },
-            "markRequirementNotCompleted" to {
-                repository.markRequirementNotCompleted(UNSTARTED, "1")
-            }
-        )
-        for ((name, write) in writes) {
-            try {
-                write()
-                fail("$name should fail for a badge that hasn't been started")
-            } catch (e: IllegalStateException) {
-                assertEquals(notStartedError(UNSTARTED).message, e.message)
-            }
+    fun setCompletedOnPriorDate_onAnUnstartedBadge_failsAndRecordsNothing() = test {
+        try {
+            repository.setCompletedOnPriorDate(UNSTARTED, day)
+            fail("setCompletedOnPriorDate should fail for a badge that hasn't been started")
+        } catch (e: IllegalStateException) {
+            assertEquals(notStartedError(UNSTARTED).message, e.message)
         }
         assertNull(progress(UNSTARTED))
     }
@@ -471,10 +468,13 @@ abstract class ProgressRepositoryContract {
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
         val before = progress()
 
-        repository.clearRequirement(UNSTARTED, "1")
+        repository.clearRequirements(UNSTARTED, listOf("1"))
         repository.clearBadge(UNSTARTED)
         repository.deleteTrackerEntry(999)
+        // As when the scout unchecks a requirement on a page shown before its badge was cleared.
+        val unchecked = repository.markRequirementNotCompleted(UNSTARTED, "1")
 
+        assertNull(unchecked)
         assertNull(progress(UNSTARTED))
         assertEquals(before, progress())
     }
@@ -514,7 +514,7 @@ abstract class ProgressRepositoryContract {
                 unwritable.addTrackerEntry(BADGE, "7a", null, values, day, badgeStart)
             },
             "deleteTrackerEntry" to { unwritable.deleteTrackerEntry(1) },
-            "clearRequirement" to { unwritable.clearRequirement(BADGE, "1") },
+            "clearRequirements" to { unwritable.clearRequirements(BADGE, listOf("1")) },
             "clearBadge" to { unwritable.clearBadge(BADGE) },
             "clearAll" to { unwritable.clearAll() }
         )
