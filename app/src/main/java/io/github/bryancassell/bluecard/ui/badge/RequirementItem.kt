@@ -8,9 +8,10 @@ import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
 
 /**
- * One requirement as a row: its number, our summary, whether it's complete, and how much of
- * its tracker is filled in. Every row opens the requirement's own page, for marking it or its
- * own work complete and for its sub-requirements, completion date, comment and tracker.
+ * One requirement as a row: its number, our summary, whether it's complete or partly complete,
+ * and how much of its tracker is filled in. Every row opens the requirement's own page, for
+ * marking it or its own work complete and for its sub-requirements, completion date, comment and
+ * tracker.
  */
 data class RequirementItem(
     val number: String,
@@ -33,7 +34,17 @@ data class RequirementItem(
      */
     val notNeeded: Boolean = false,
     /** The work it asks for besides its sub-requirements, or null if it asks for none. */
-    val ownWork: OwnWork? = null
+    val ownWork: OwnWork? = null,
+    /**
+     * Whether part of it is complete, though it isn't and is still needed: its own work, or a
+     * requirement under it at any depth.
+     */
+    val partlyCompleted: Boolean = false,
+    /**
+     * How many of the sub-requirements it needs are complete, while it's [partlyCompleted] and
+     * at least one is, or null.
+     */
+    val completeCount: CompleteCount? = null
 )
 
 /**
@@ -44,6 +55,9 @@ data class OwnWork(val summary: String, val completed: Boolean)
 
 /** "Do [required] of [of]" sub-requirements. */
 data class Choice(val required: Int, val of: Int)
+
+/** [complete] of the [needed] sub-requirements a requirement needs are complete. */
+data class CompleteCount(val complete: Int, val needed: Int)
 
 /**
  * [progress] and [trackerEntries] are what the scout recorded on the badge, keyed by
@@ -56,6 +70,10 @@ fun Requirement.toItem(
     partOfHasEnough: Boolean = false
 ): RequirementItem {
     val completed = completion(progress, trackerEntries) != null
+    val notNeeded = partOfHasEnough && !completed
+    val stillNeeded = !completed && !notNeeded
+    val needed = requiredCount ?: children.size
+    val completeChildren = children.count { it.completion(progress, trackerEntries) != null }
     return RequirementItem(
         number = number,
         summary = summary,
@@ -63,7 +81,24 @@ fun Requirement.toItem(
         completed = completed,
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
-        notNeeded = partOfHasEnough && !completed,
-        ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) }
+        notNeeded = notNeeded,
+        ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
+        partlyCompleted = stillNeeded && hasCompletePart(progress, trackerEntries),
+        // More than the number needed are complete only while its own work isn't.
+        completeCount = if (stillNeeded && completeChildren > 0) {
+            CompleteCount(minOf(completeChildren, needed), needed)
+        } else {
+            null
+        }
     )
 }
+
+/** Whether its own work, or any requirement under it at any depth, is complete. */
+private fun Requirement.hasCompletePart(
+    progress: Map<String, RequirementProgress>,
+    trackerEntries: Map<String, List<TrackerEntry>>
+): Boolean = (ownWork != null && progress[number]?.completed == true) ||
+    children.any {
+        it.completion(progress, trackerEntries) != null ||
+            it.hasCompletePart(progress, trackerEntries)
+    }

@@ -13,8 +13,8 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * How a requirement's row looks in each state, which screen readers can't tell apart from
- * its semantics: the number's box outlined, filled with a check, or filled in grey. Each test
- * checks its row against a reference image in `src/test/screenshots`.
+ * its semantics: the number's box outlined, tinted, filled with a check, or filled in grey. Each
+ * test checks its row against a reference image in `src/test/screenshots`.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -51,6 +51,19 @@ class RequirementRowScreenshotTest {
             null,
             completed = true,
             markedByHand = true
+        )
+    )
+
+    @Test
+    fun partlyCompleted() = capture(
+        RequirementItem(
+            "3",
+            "Plan an overnight trek and find your way with a topo map.",
+            Choice(2, 3),
+            completed = false,
+            markedByHand = false,
+            partlyCompleted = true,
+            completeCount = CompleteCount(1, 2)
         )
     )
 
