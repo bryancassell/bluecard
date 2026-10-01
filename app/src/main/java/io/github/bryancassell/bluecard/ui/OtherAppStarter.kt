@@ -45,8 +45,8 @@ fun rememberStartOtherApp(): OtherAppStarter {
  * screen pinning blocks, which doesn't throw, and the controls would stay locked. Waiting for
  * focus would also misfire in desktop windows, where the tap that focuses BlueCard's window can
  * arrive before the focus does. So a tap after the timeout can still reach BlueCard if the other
- * app hasn't covered it yet: on an Android 17 (API 37) emulator, Android dropped most second taps that
- * came 140–200 ms after the first, as the other app took over, but not all of them.
+ * app hasn't covered it yet: on an Android 17 (API 37) emulator, Android dropped most second
+ * taps that came 140–200 ms after the first, as the other app took over, but not all of them.
  */
 class OtherAppStarter internal constructor(
     private val context: Context,

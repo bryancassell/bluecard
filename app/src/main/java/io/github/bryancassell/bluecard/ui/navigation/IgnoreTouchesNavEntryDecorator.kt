@@ -27,7 +27,7 @@ import kotlinx.coroutines.delay
  * screen's controls wherever they're still drawn.
  *
  * An arriving screen takes taps once the timeout ends, even while it's still sliding in.
- * `dropUnlessResumed`, used before (#56), ignored taps for the whole animation. Taps further
+ * `dropUnlessResumed`, which #56 dropped, ignored taps for the whole animation. Taps further
  * apart than the timeout aren't a double tap to the platform either.
  */
 @Composable

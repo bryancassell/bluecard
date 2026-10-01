@@ -198,7 +198,7 @@ class ReportLayoutTest {
     }
 
     // A Persian name keeps its own direction, so its period stays at its end
-    // (ARCHITECTURE.md, UI layer).
+    // (ARCHITECTURE.md, Language and layout direction).
     @Test
     fun textTheScoutTyped_keepsItsOwnDirection() {
         val name = "علی رضایی."
@@ -303,7 +303,7 @@ class ReportLayoutTest {
         }
     }
 
-    // A Persian comment keeps its direction on the next page (ARCHITECTURE.md, UI layer).
+    // A Persian comment keeps its direction on the next page (see ReportLayout).
     @Test
     fun typedTextSplitAcrossPages_keepsItsDirectionOnTheNextPage() {
         val comment = "سلام دنیا ".repeat(800).trim()

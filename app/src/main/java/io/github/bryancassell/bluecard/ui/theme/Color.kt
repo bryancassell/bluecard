@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * The app's only color scheme, used on every phone in light and dark mode, so the app looks like
- * the merit badge blue card (see ARCHITECTURE.md, UI layer).
+ * the merit badge blue card (see ARCHITECTURE.md, Theme).
  *
  * Material 3's standard light tones of the palettes that Material Color Utilities' fidelity
  * scheme makes from Scouting America Blue, #003F87, except:

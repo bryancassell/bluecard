@@ -10,7 +10,7 @@ import io.github.bryancassell.bluecard.text.typedText
 // Text the scout types, such as their name, may be in another language than the app's strings,
 // and so in another direction: a Persian name reads right-to-left while the screen is laid out
 // left-to-right for English strings. It keeps its own direction, so its punctuation stays at its
-// end (see ARCHITECTURE.md, UI layer).
+// end (see ARCHITECTURE.md, Language and layout direction).
 
 /** The text style for a field the scout types in: its text takes its own direction. */
 @Composable

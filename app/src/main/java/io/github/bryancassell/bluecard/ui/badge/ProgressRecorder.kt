@@ -9,7 +9,7 @@ import java.time.LocalDate
 /**
  * Records progress on badge [badgeId] for one of its pages. Recording anything starts the
  * badge, in the same transaction, so the scout never has to start it separately
- * (ARCHITECTURE.md, Key flows).
+ * (ARCHITECTURE.md, Recording progress).
  *
  * A page keeps one for as long as it's open, because it remembers the date of each
  * requirement the scout unchecks on it: checking the requirement again brings that date back,

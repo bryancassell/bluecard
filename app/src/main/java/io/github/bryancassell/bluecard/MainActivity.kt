@@ -38,8 +38,9 @@ class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase)
         // Lay out in the strings' language's direction, not the device's, so English strings
-        // read left-to-right on a Persian phone (see ARCHITECTURE.md, UI layer). Setting it on
-        // the activity keeps its views, Compose, focus and resources in step.
+        // read left-to-right on a Persian phone (see ARCHITECTURE.md, Language and layout
+        // direction). Setting it on the activity keeps its views, Compose, focus and resources in
+        // step.
         applyOverrideConfiguration(
             Configuration().apply { setLayoutDirection(stringsLocale(newBase)) }
         )

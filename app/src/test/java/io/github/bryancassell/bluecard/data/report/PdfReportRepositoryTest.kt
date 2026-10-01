@@ -411,7 +411,7 @@ class PdfReportRepositoryTest {
     }
 
     // The app has only English strings, so a report on a Persian phone is in English, with
-    // English digits, as the screens are (ARCHITECTURE.md, UI layer).
+    // English digits, as the screens are (ARCHITECTURE.md, Language and layout direction).
     @Config(qualifiers = "fa")
     @Test
     fun report_onPersianPhone_isInTheStringsLanguage() = runTest {

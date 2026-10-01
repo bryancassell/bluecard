@@ -3,8 +3,9 @@
 This is the high-level technical design for BlueCard. It explains how the app is
 structured to meet [`PRD.md`](PRD.md). It is a map, not a detailed spec: it
 records the technical decisions, the conventions new code must follow, and why.
-How each part works is in the comments of the code that builds it, and choices
-about how the app looks and behaves are in
+How each part works is in the comments of the code that builds it; for a part
+not built yet, such as export and import, its feature issue fills in the
+details. Choices about how the app looks and behaves are in
 [`PRD.md`](PRD.md#design-decisions).
 
 Sources were checked on 2026-09-28. "Recommended" in this document means Android's
@@ -309,17 +310,16 @@ both taps of a double tap can reach it.
 
 ### Theme
 
-- **Material 3** components, themed by `BlueCardTheme` with the blue card's
-  colors (`BlueCardColorScheme` in `ui/theme/Color.kt`), chosen in
-  [`PRD.md`](PRD.md#design-decisions). There's no dynamic color, and the one
-  light scheme is used in dark mode too, until the app has a dark scheme
+- **Material 3** components, themed by `BlueCardTheme` with one light color
+  scheme (`BlueCardColorScheme` in `ui/theme/Color.kt`), as
+  [`PRD.md`](PRD.md#design-decisions)'s Colors row chooses.
+- **Don't follow dark mode** until the app has a dark scheme
   ([#108](https://github.com/bryancassell/bluecard/issues/108)).
-- **Don't follow dark mode elsewhere.** `isSystemInDarkTheme()` still reports
-  the system's dark mode, and `-night` resources still apply in it. Until #108,
-  nothing but the window theme should use either: it would put dark-mode
-  colors, images or bar icons on the light app.
-- **`BlueCardColorSchemeTest` checks that every text color meets WCAG AA**
-  (4.5:1) on every surface.
+  `isSystemInDarkTheme()` still reports the system's dark mode, and `-night`
+  resources still apply in it. Nothing but the window theme should use either:
+  it would put dark-mode colors, images or bar icons on the light app.
+- **`BlueCardColorSchemeTest` checks the PRD's contrast rule** for every text
+  color on every surface.
 
 ## Data layer
 
@@ -331,7 +331,7 @@ both taps of a double tap can reach it.
 | `CatalogRepository` | Merit badges, requirements, requirement versions (read-only) | JSON file in `assets/`, parsed with [kotlinx.serialization](https://kotlinlang.org/docs/serialization.html) |
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
 | `ReportRepository` | Building a badge's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
-| `BackupRepository` | Export and import of all user data | JSON written to or read from a user-chosen file |
+| `BackupRepository` (not built yet) | Export and import of all user data | JSON written to or read from a user-chosen file |
 
 - **Storage choice:** the DataStore guide says it is "ideal for small datasets"
   and to "consider using Room" for larger or relational data. The profile is two
@@ -351,8 +351,12 @@ both taps of a double tap can reach it.
   screen cancels only the wait, not the write. Saving a PDF report does too.
   That's the pattern in the data layer guide's
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
-- **Writes happen in the order they're made.** A storage failure after the
-  scout has left the screen goes unreported, but a bug still crashes the app.
+  A storage failure after the scout has left the screen goes unreported, but a
+  bug still crashes the app.
+- **Writes happen in the order they're made.** Each takes a first-come,
+  first-served lock (`writing` in `RoomProgressRepository`), so a new write
+  must go through it too: otherwise it could run ahead of writes already
+  queued, such as a save of notes ahead of a clear.
 
 ### Storage errors
 
@@ -403,7 +407,7 @@ io.github.bryancassell.bluecard
 │   ├── catalog/        CatalogRepository + JSON models
 │   ├── progress/       ProgressRepository + Room entities and DAOs
 │   ├── report/         ReportRepository (PDF)
-│   └── backup/         BackupRepository (export/import format)
+│   └── backup/         BackupRepository (export/import format), not built yet
 ├── text/               The strings' locales, and dates and typed text formatted in them, for the
 │                       screens and for code outside Compose, such as the PDF report
 └── di/                 Hilt modules
@@ -422,12 +426,10 @@ io.github.bryancassell.bluecard
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
-The PRD asks that requirements be understandable "without extensive
-scrolling", so each page shows one level of the requirement tree: Badge detail
-lists only the top-level requirements, and each requirement's page lists the
-ones directly under it. Both show the requirements version the badge was
-started on, or the newest version for a badge the scout hasn't started
-(`data/progress/BadgeVersion.kt`).
+Badge detail and each requirement's page show one level of the requirement
+tree (see [`PRD.md`](PRD.md#design-decisions)'s Requirement list). Both show
+the requirements version the badge was started on, or the newest version for a
+badge the scout hasn't started (`data/progress/BadgeVersion.kt`).
 
 ## Merit badge catalog
 
@@ -472,9 +474,9 @@ switch to the new ones.
   badge's requirements change, the app update adds the new version and keeps
   every version it has shipped, so a badge already on an older version never
   loses its requirements.
-- **Each badge the scout works on records its version.** It defaults to the
-  newest. The picker also offers the one before it, when the catalog has one,
-  which covers scouts who started shortly before a change.
+- **Each badge the scout works on records its version**: the newest, or the
+  one before it, as the PRD's journeys ask. Older versions stay in the catalog
+  for badges already on them, but aren't offered.
 - **A badge stays on its version** when an app update brings newer
   requirements, so recorded progress keeps matching its requirements. The scout
   can switch it to the newest version themselves, which starts its requirement
@@ -555,16 +557,15 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
 the navigation root shows Onboarding instead of the back stack; once the profile
 is saved, it shows the back stack, which starts at Home. If the profile can't be
 read, it shows the load-failed message instead (see
-[Navigation](#navigation)).
+[Load and save failures](#load-and-save-failures)).
 
 ### Home summary
 
 The Home ViewModel combines the profile, the catalog and the scout's progress.
 It counts badges completed and in progress, and Eagle-required progress against
-the Eagle-required badges in the catalog. Each Eagle "one of" group (such as
-Cycling, Hiking and Swimming) counts once, with the status of its
-furthest-along badge, because earning any of them meets the requirement. It
-also lists every badge in progress, in the row Badges uses
+the Eagle-required badges in the catalog, counting each Eagle "one of" group
+once (see [`PRD.md`](PRD.md#design-decisions)). It also lists every badge in
+progress, in the row Badges uses
 (`ui/badges/BadgeRow.kt`).
 
 ### Browse and search
@@ -676,9 +677,10 @@ How the architecture supports the testing rules in `CLAUDE.md`.
   as an abstract test class (for example `ProgressRepositoryContract`). The real
   implementation's test and the fake's test both extend it, so the fake used by
   other features' tests behaves like the real repository.
-- **Failures in tests.** Fakes have `failLoads` and `failSaves` switches that
-  make their reads or writes throw an `IOException`, for testing each screen's
-  failure states. The profile and progress contract tests check that the real
+- **Failures in tests.** Fakes have switches that make their reads
+  (`failLoads`: catalog, profile, progress) or writes (`failSaves`: profile,
+  progress, report) throw an `IOException`, for testing each screen's failure
+  states. The profile and progress contract tests check that the real
   repositories throw one too.
 
 ### ViewModel tests

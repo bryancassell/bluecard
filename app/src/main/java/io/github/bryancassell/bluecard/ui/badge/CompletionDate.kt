@@ -39,7 +39,7 @@ import java.time.format.DateTimeFormatter
 /**
  * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
  * 2026", in the language of the strings around it, with that language's digits
- * (ARCHITECTURE.md, UI layer).
+ * (ARCHITECTURE.md, Language and layout direction).
  */
 @Composable
 fun rememberCompletionDateFormatter(): DateTimeFormatter {

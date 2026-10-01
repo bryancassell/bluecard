@@ -13,7 +13,7 @@ import java.util.Locale
 /**
  * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
  * 2026", in [locale], the strings' locale ([stringsLocale]), with its digits
- * (ARCHITECTURE.md, UI layer).
+ * (ARCHITECTURE.md, Language and layout direction).
  */
 fun completionDateFormatter(locale: Locale): DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
@@ -24,7 +24,7 @@ fun completionDateFormatter(locale: Locale): DateTimeFormatter =
  * [text] the scout typed, to show on its own or inside one of the app's strings, which are in
  * [locale] ([stringsLocale]). It's wrapped so it keeps its own direction within the strings'
  * language's: a Persian name keeps its final period at its end in an English sentence
- * (ARCHITECTURE.md, UI layer).
+ * (ARCHITECTURE.md, Language and layout direction).
  */
 fun typedText(text: String, locale: Locale): String =
     BidiFormatter.getInstance(locale).unicodeWrap(text)

@@ -29,7 +29,7 @@ import org.junit.runner.RunWith
 import org.robolectric.shadows.ShadowLog
 
 // Robolectric, because a failed save reaches android.util.Log, which throws in plain local
-// tests (see ARCHITECTURE.md, Testing approach).
+// tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class OnboardingViewModelTest {
     @get:Rule
