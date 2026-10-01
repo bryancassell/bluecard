@@ -220,8 +220,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   counselor's fields, use `StoredTextFields` from the same file.
 - **Every text field has a length limit** (`TextLengthLimit`), because saved
   state has a size limit. Each field's limit is set, with its reason, where the
-  field is declared. Single-line fields also replace a pasted line break with a
-  space (`LineBreaksAsSpaces`).
+  field is declared. Single-line text fields also replace a pasted line break
+  with a space (`LineBreaksAsSpaces`); number fields reject one.
 
 ### Navigation
 
@@ -245,7 +245,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   could fill a screen's saved state. BlueCard uses neither intent extras nor
   default arguments, so `MainActivity` overrides
   `defaultViewModelCreationExtras` to leave them empty
-  ([#83](https://github.com/bryancassell/bluecard/issues/83)).
+  ([#83](https://github.com/bryancassell/bluecard/issues/83)). That covers
+  every ViewModel created with the activity's creation extras, as Hilt and
+  Navigation 3 create them. The activity's default factory still passes the
+  extras to a ViewModel created without creation extras, so create none that
+  way; overriding the factory instead would replace Hilt's.
 - **Pages slide the full width of their area, side by side**
   (`ui/navigation/PageTransitions.kt`), as Navigation 3's
   [animation guide](https://developer.android.com/guide/navigation/navigation-3/animate-destinations)
@@ -263,9 +267,9 @@ both taps of a double tap can reach it.
 - **Screens open other screens with `rememberNavigateFrom`**
   (`ui/navigation/`), which ignores a tap unless the tapping screen is on top,
   and doesn't reopen a screen still animating out (`DrawnScreens`). Screens
-  also ignore touches while they animate
-  (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap doesn't press
-  anything on the new screen
+  also ignore touches while they animate out, and for the double-tap timeout as
+  they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
+  doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)).
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberStartOtherApp` (`ui/`), shared among the screen's controls that open
@@ -306,15 +310,16 @@ both taps of a double tap can reach it.
 ### Theme
 
 - **Material 3** components, themed by `BlueCardTheme` with the blue card's
-  colors (`BlueCardColorScheme` in `ui/theme/Color.kt`). There's no dynamic
-  color, and the one light scheme is used in dark mode too, until the app has a
-  dark scheme ([#108](https://github.com/bryancassell/bluecard/issues/108)).
+  colors (`BlueCardColorScheme` in `ui/theme/Color.kt`), chosen in
+  [`PRD.md`](PRD.md#design-decisions). There's no dynamic color, and the one
+  light scheme is used in dark mode too, until the app has a dark scheme
+  ([#108](https://github.com/bryancassell/bluecard/issues/108)).
 - **Don't follow dark mode elsewhere.** `isSystemInDarkTheme()` still reports
   the system's dark mode, and `-night` resources still apply in it. Until #108,
   nothing but the window theme should use either: it would put dark-mode
   colors, images or bar icons on the light app.
-- **Every text color meets WCAG AA (4.5:1) on every surface**, and
-  `BlueCardColorSchemeTest` checks each pair.
+- **`BlueCardColorSchemeTest` checks that every text color meets WCAG AA**
+  (4.5:1) on every surface.
 
 ## Data layer
 
@@ -524,8 +529,9 @@ At a high level. The exact fields are in the code.
 Completion is derived, not stored (`data/progress/Completion.kt`), from
 requirement progress, tracker entries and the catalog:
 
-- A requirement with children is complete when enough of them are. One with a
-  fixed-row tracker is complete when every row has an entry. Any other
+- A requirement with children is complete when enough of them are, even if it
+  also has a tracker. One without children but with a fixed-row tracker is
+  complete when every row has an entry. Any other
   requirement, including one with a log, is complete when the scout marked it
   complete.
 - A badge is complete when all its top-level requirements are, or when it was
@@ -585,11 +591,12 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 - **The repository cleans up what the scout types:** it trims spaces around
   each value and drops blank ones (`normalizedText`, `normalizedTrackerValues`,
   `Counselor.normalized`).
-- **A page with a Save button closes itself from UI state** once its save
-  succeeds (`saved` or `done` in its UI state), following the UI layer guide's
+- **A page that closes once its save succeeds closes itself from UI state**
+  (`saved` or `done` in its UI state), following the UI layer guide's
   [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
   of navigating from UI state, so a save that fails keeps the page open with the
-  scout's edit. Edit counselor and Tracker entry work this way.
+  scout's edit. Edit counselor and Tracker entry work this way; Requirement
+  detail stays open after its notes are saved.
 
 ### PDF report
 
@@ -620,7 +627,9 @@ shows a snackbar, as a failed save does (`SaveRunner`).
 
 `ProgressRepository` deletes all progress, one badge's progress, or the progress
 of a requirement and every one under it (`clearRequirements`), each in one
-transaction, after a confirmation dialog. Clearing progress does not clear the
+transaction, after a confirmation dialog. Every removal of what the scout
+recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
+opened by a button with `removalButtonColors`. Clearing progress does not clear the
 profile, and clearing a requirement leaves its badge started.
 
 ### Export and import
@@ -628,8 +637,8 @@ profile, and clearing a requirement leaves its badge started.
 Export writes a single JSON document (a format version, the profile and all
 progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`.
 Import reads one with `ActivityResultContracts.OpenDocument`, checks the format
-version and validates it before changing anything. Import **replaces all
-current data** (profile and progress), after a warning that says so.
+version and validates it before changing anything, since import replaces all
+current data (see [`PRD.md`](PRD.md#design-decisions)).
 
 ### Backup
 
@@ -667,10 +676,10 @@ How the architecture supports the testing rules in `CLAUDE.md`.
   as an abstract test class (for example `ProgressRepositoryContract`). The real
   implementation's test and the fake's test both extend it, so the fake used by
   other features' tests behaves like the real repository.
-- **Failures in tests.** Each fake has a `failLoads` switch that makes its
-  reads throw an `IOException`, for testing each screen's `LoadFailed` state,
-  and the progress fake has a `failSaves` switch for save failures. The
-  contract tests check that the real repositories throw one too.
+- **Failures in tests.** Fakes have `failLoads` and `failSaves` switches that
+  make their reads or writes throw an `IOException`, for testing each screen's
+  failure states. The profile and progress contract tests check that the real
+  repositories throw one too.
 
 ### ViewModel tests
 
@@ -723,7 +732,10 @@ together, so a test that fakes one of them supplies both.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally
-  with Robolectric's native graphics, and every test run, `./gradlew check` and
+  with Robolectric's native graphics on a fixed screen (`w360dp-h640dp-xhdpi`)
+  and on SDK 36 (`@Config(sdk = [36])`), because on SDK 37 Robolectric 4.17
+  draws only a class's first screenshot and leaves the rest blank. Every test
+  run, `./gradlew check` and
   CI included, compares them against the reference images committed in
   `app/src/test/screenshots/`. After an intended change,
   `./gradlew recordRoborazziDebug` records them again, and the new images are
@@ -770,7 +782,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
-| [Save, share, export, import](#pdf-report) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
+| [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |

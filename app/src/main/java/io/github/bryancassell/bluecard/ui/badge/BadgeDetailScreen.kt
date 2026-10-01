@@ -305,8 +305,10 @@ private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
 /**
  * Opens the share sheet with the badge's [report], once, then calls [onShared]. The Share
  * report tap already went through the screen's [OtherAppStarter], so this doesn't, and the
- * share sheet is always there to start. The report waits in UI state, so if the scout leaves
- * Badge detail before it's ready, the share sheet opens when they come back.
+ * share sheet is always there to start. The report waits in UI state, so if Badge detail is
+ * covered before it's ready, as by another app or a requirement's page, the share sheet opens
+ * once Badge detail shows again. Going back from Badge detail clears its ViewModel, and the
+ * report with it.
  */
 @Composable
 private fun ShareReport(report: Uri, onShared: () -> Unit) {

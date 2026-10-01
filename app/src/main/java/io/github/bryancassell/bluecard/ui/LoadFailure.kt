@@ -35,6 +35,11 @@ fun <T> Flow<T>.catchLoadFailure(failed: T): Flow<T> = catch {
  * moves the app to the background instead of finishing the activity, so reopening the app within
  * 5 seconds shows the message again. A failure after a screen has loaded also stays until the
  * screen loads again. A "Try again" button would fix both.
+ *
+ * Screen readers don't announce the message yet when it replaces the loading indicator, and the
+ * same goes for Onboarding's save-failed message (#69): Compose announces a live region only
+ * when a node that's already shown changes. Keeping one composed, as `MatchCount` on Badges
+ * does, could close the gap.
  */
 @Composable
 fun LoadFailedMessage(modifier: Modifier = Modifier) {

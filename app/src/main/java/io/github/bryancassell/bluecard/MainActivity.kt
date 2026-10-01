@@ -26,7 +26,10 @@ class MainActivity : ComponentActivity() {
     // ComponentActivity gives the extras of the intent that opened it to every ViewModel's
     // SavedStateHandle as default arguments, and Navigation 3 passes them on to every screen.
     // The activity is exported, so any app could fill a screen's saved state that way; BlueCard
-    // uses neither intent extras nor default arguments, so the defaults are left empty.
+    // uses neither intent extras nor default arguments, so the defaults are left empty (#83).
+    // That covers every ViewModel created with these creation extras, as Hilt and Navigation 3
+    // create them. The default factory still passes the extras to a ViewModel created without
+    // creation extras, so create none that way; overriding the factory would replace Hilt's.
     override val defaultViewModelCreationExtras: CreationExtras
         get() = MutableCreationExtras(super.defaultViewModelCreationExtras).apply {
             set(DEFAULT_ARGS_KEY, Bundle())
