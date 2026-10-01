@@ -57,6 +57,10 @@ object CatalogValidator {
                     add("$where: requiredCount is $count but it has $children children")
                 }
             }
+            requirement.ownWork?.let { ownWork ->
+                if (requirement.children.isEmpty()) add("$where: ownWork but it has no children")
+                if (ownWork.isBlank()) add("$where: ownWork is blank")
+            }
             requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }
         }
 

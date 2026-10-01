@@ -12,8 +12,9 @@ data class Completion(val date: LocalDate?)
 
 /**
  * Whether the scout marks this requirement complete by hand, on its page. A requirement with
- * children is complete once enough of them are instead, and one with a tracker with a fixed
- * number of rows once every row is filled in.
+ * children is complete once enough of them are instead (and the scout marks its
+ * [own work][Requirement.ownWork], if any, by hand), and one with a tracker with a fixed number
+ * of rows once every row is filled in.
  */
 val Requirement.isMarkedByHand: Boolean get() = children.isEmpty() && tracker?.rowCount == null
 
@@ -23,9 +24,10 @@ val Requirement.isMarkedByHand: Boolean get() = children.isEmpty() && tracker?.r
  *
  * A requirement with children is complete when enough of them are: all of them, or its
  * `requiredCount`, even if it also has a tracker. Its date is when the last child it needed was
- * completed. One without children but with a tracker with a fixed number of rows is complete
- * when every row is filled in, on the date the last of them was first saved. Any other
- * requirement is complete when the scout marked it complete ([isMarkedByHand]).
+ * completed. One with [own work][Requirement.ownWork] also needs the scout to mark that complete,
+ * and its date is the later of the two. One without children but with a tracker with a fixed
+ * number of rows is complete when every row is filled in, on the date the last of them was first
+ * saved. Any other requirement is complete when the scout marked it complete ([isMarkedByHand]).
  */
 fun Requirement.completion(
     progress: Map<String, RequirementProgress>,
@@ -33,11 +35,34 @@ fun Requirement.completion(
 ): Completion? {
     val rowCount = tracker?.rowCount
     return when {
-        children.isNotEmpty() -> childrenCompletion(progress, trackerEntries)
+        children.isNotEmpty() -> {
+            val byChildren = childrenCompletion(progress, trackerEntries) ?: return null
+            if (ownWork == null) {
+                byChildren
+            } else {
+                latestOf(listOf(byChildren, markedCompletion(progress) ?: return null))
+            }
+        }
+
         rowCount != null -> rowsCompletion(trackerEntries[number].orEmpty(), rowCount)
-        else -> progress[number]?.takeIf { it.completed }?.let { Completion(it.completedDate) }
+
+        else -> markedCompletion(progress)
     }
 }
+
+/**
+ * Whether enough of this requirement's children are complete that it needs no more of them,
+ * even if its [own work][Requirement.ownWork] isn't done yet. Its other children are then not
+ * needed.
+ */
+fun Requirement.hasEnoughChildren(
+    progress: Map<String, RequirementProgress>,
+    trackerEntries: Map<String, List<TrackerEntry>>
+): Boolean = children.isNotEmpty() && childrenCompletion(progress, trackerEntries) != null
+
+/** Complete once the scout marked it complete, on the date they gave. */
+private fun Requirement.markedCompletion(progress: Map<String, RequirementProgress>): Completion? =
+    progress[number]?.takeIf { it.completed }?.let { Completion(it.completedDate) }
 
 private fun Requirement.childrenCompletion(
     progress: Map<String, RequirementProgress>,
@@ -56,8 +81,7 @@ private fun Requirement.childrenCompletion(
 private fun rowsCompletion(entries: List<TrackerEntry>, rowCount: Int): Completion? {
     val filled = filledRows(entries, rowCount).values
     if (filled.size < rowCount) return null
-    val dates = filled.map { it.addedDate ?: return Completion(null) }
-    return Completion(dates.maxOrNull())
+    return latestOf(filled.map { Completion(it.addedDate) })
 }
 
 /**
@@ -69,7 +93,9 @@ fun BadgeProgressDetails.completion(version: RequirementsVersion): Completion? {
     badge.completedOnPriorDate?.let { return Completion(it) }
     val progress = requirements.associateBy { it.requirementNumber }
     val entries = trackerEntries.groupBy { it.requirementNumber }
-    val completed = version.requirements.map { it.completion(progress, entries) ?: return null }
-    val dates = completed.map { it.date ?: return Completion(null) }
-    return Completion(dates.maxOrNull())
+    return latestOf(version.requirements.map { it.completion(progress, entries) ?: return null })
 }
+
+/** Complete on the latest date of [completions], or with no date if one of them has none. */
+private fun latestOf(completions: List<Completion>): Completion =
+    Completion(completions.map { it.date ?: return Completion(null) }.maxOrNull())

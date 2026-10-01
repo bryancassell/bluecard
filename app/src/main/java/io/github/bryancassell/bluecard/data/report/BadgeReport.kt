@@ -11,6 +11,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import java.time.LocalDate
@@ -39,8 +40,9 @@ data class ReportRequirement(
     /** When it was completed, or null if it isn't complete. */
     val completion: Completion?,
     /**
-     * Whether it's no longer needed: it isn't complete, but a requirement it's part of is, such
-     * as a choice the scout didn't pick once enough others are complete. The screens say so too.
+     * Whether it's no longer needed: it isn't complete, but a requirement it's part of has enough
+     * complete sub-requirements, such as a choice the scout didn't pick once enough others are
+     * complete. The screens say so too.
      */
     val notNeeded: Boolean,
     val comment: String?,
@@ -88,11 +90,14 @@ fun MeritBadge.report(
     )
 }
 
-/** [partOfCompleted] is whether a requirement this one is part of, at any depth, is complete. */
+/**
+ * [partOfHasEnough] is whether a requirement this one is part of, at any depth, has enough
+ * complete sub-requirements ([hasEnoughChildren]).
+ */
 private fun Requirement.toReport(
     recorded: Map<String, RequirementProgress>,
     entries: Map<String, List<TrackerEntry>>,
-    partOfCompleted: Boolean = false
+    partOfHasEnough: Boolean = false
 ): ReportRequirement {
     val completion = completion(recorded, entries)
     return ReportRequirement(
@@ -100,11 +105,11 @@ private fun Requirement.toReport(
         summary = summary,
         requiredCount = choiceCount,
         completion = completion,
-        notNeeded = partOfCompleted && completion == null,
+        notNeeded = partOfHasEnough && completion == null,
         comment = recorded[number]?.comment,
         tracker = tracker?.toReport(entries[number].orEmpty()),
         children = children.map {
-            it.toReport(recorded, entries, partOfCompleted || completion != null)
+            it.toReport(recorded, entries, partOfHasEnough || hasEnoughChildren(recorded, entries))
         }
     )
 }

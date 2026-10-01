@@ -92,6 +92,52 @@ class CompletionTest {
         )
     }
 
+    // Like Photography 4: do two of 3a-3c, then something of its own (share the photos).
+    private val ownWorkAndTwoOf = twoOf.copy(ownWork = "Explain it.")
+
+    @Test
+    fun ownWork_incompleteUntilBothItAndEnoughChildrenAreDone() {
+        val children = arrayOf(done("3a", day(1)), done("3c", day(5)))
+        assertNull(ownWorkAndTwoOf.completion(progressOf(*children)))
+        assertNull(ownWorkAndTwoOf.completion(progressOf(done("3", day(2)), done("3a", day(1)))))
+        assertEquals(
+            Completion(day(5)),
+            ownWorkAndTwoOf.completion(progressOf(done("3", day(2)), *children))
+        )
+    }
+
+    @Test
+    fun ownWork_doneLast_datesTheRequirement() {
+        val progress = progressOf(done("3", day(9)), done("3a", day(1)), done("3c", day(5)))
+        assertEquals(Completion(day(9)), ownWorkAndTwoOf.completion(progress))
+    }
+
+    @Test
+    fun ownWork_anUndatedPartMeansNoDate() {
+        assertEquals(
+            Completion(null),
+            ownWorkAndTwoOf.completion(
+                progressOf(done("3"), done("3a", day(1)), done("3c", day(5)))
+            )
+        )
+        assertEquals(
+            Completion(null),
+            ownWorkAndTwoOf.completion(
+                progressOf(done("3", day(2)), done("3a", day(1)), done("3c"))
+            )
+        )
+    }
+
+    @Test
+    fun hasEnoughChildren_onceEnoughAreDone_evenWithoutItsOwnWork() {
+        assertFalse(ownWorkAndTwoOf.hasEnoughChildren(progressOf(done("3a")), emptyMap()))
+        assertTrue(
+            ownWorkAndTwoOf.hasEnoughChildren(progressOf(done("3a"), done("3c")), emptyMap())
+        )
+        assertTrue(twoOf.hasEnoughChildren(progressOf(done("3a"), done("3c")), emptyMap()))
+        assertFalse(leaf("1").hasEnoughChildren(progressOf(done("1")), emptyMap()))
+    }
+
     @Test
     fun nestedChoice_countsCompleteSubtrees() {
         // "Do two of 4a-4c", where 4c is itself "do two of 4c(1)-4c(3)".
@@ -142,6 +188,7 @@ class CompletionTest {
         assertTrue(leaf("1").isMarkedByHand)
         assertTrue(log.isMarkedByHand)
         assertFalse(allOf.isMarkedByHand)
+        assertFalse(ownWorkAndTwoOf.isMarkedByHand)
         assertFalse(weeks.isMarkedByHand)
     }
 

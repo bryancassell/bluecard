@@ -49,7 +49,13 @@ data class Requirement(
     /** How many children must be done; null means all of them. */
     val requiredCount: Int? = null,
     val children: List<Requirement> = emptyList(),
-    val tracker: TrackerDefinition? = null
+    val tracker: TrackerDefinition? = null,
+    /**
+     * Our own one-line summary of the work it asks for besides its children, such as a course
+     * to take before them, or null if it asks for none. Only a requirement with children has
+     * one.
+     */
+    val ownWork: String? = null
 ) {
     /** How many of its children must be done when that's fewer than all of them, or null. */
     val choiceCount: Int? get() = requiredCount?.takeIf { it < children.size }
