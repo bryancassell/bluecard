@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.data
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.view.ViewConfiguration
 import androidx.activity.ComponentDialog
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
@@ -21,6 +22,7 @@ import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.core.app.ActivityOptionsCompat
 import androidx.test.core.app.ApplicationProvider
@@ -33,6 +35,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowDialog
 import org.robolectric.shadows.ShadowToast
 
@@ -45,6 +48,7 @@ class DataManagementScreenTest {
     private val read = mutableListOf<Uri>()
     private var importsConfirmed = 0
     private var importsCancelled = 0
+    private var clears = 0
     private val messagesShown = mutableListOf<DataManagementMessage>()
 
     /** The intents of the activities launched for a result: the file picker's. */
@@ -77,6 +81,7 @@ class DataManagementScreenTest {
     }
 
     private val ready = DataManagementUiState()
+    private val started = ready.copy(canClear = true)
 
     /** The date the screen reads when Export is tapped. */
     private var today = LocalDate.of(2026, 10, 1)
@@ -98,6 +103,7 @@ class DataManagementScreenTest {
                     onImport = { read += it },
                     onConfirmImport = { importsConfirmed++ },
                     onCancelImport = { importsCancelled++ },
+                    onClearAll = { clears++ },
                     onMessageShown = { messagesShown += it }
                 )
             }
@@ -108,11 +114,18 @@ class DataManagementScreenTest {
 
     private fun importButton() = composeTestRule.onNodeWithText("Import")
 
-    @Test
-    fun showsWhatExportAndImportDo_underHeadings() {
-        show()
+    private fun clearButton() = composeTestRule.onNodeWithText("Clear all").performScrollTo()
 
-        for (heading in listOf("Data management", "Export data", "Import data")) {
+    @Test
+    fun showsWhatEachSectionDoes_underHeadings() {
+        show(started)
+
+        for (heading in listOf(
+            "Data management",
+            "Export data",
+            "Import data",
+            "Clear all progress"
+        )) {
             composeTestRule.onNode(hasTextAndHeading(heading)).assertIsDisplayed()
         }
         composeTestRule
@@ -121,8 +134,16 @@ class DataManagementScreenTest {
         composeTestRule
             .onNodeWithText("Replace everything on this phone with a file you exported.")
             .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                "Remove the progress on every badge, including counselors. Your name and unit " +
+                    "number stay."
+            )
+            .performScrollTo()
+            .assertIsDisplayed()
         exportButton().assertIsEnabled()
         importButton().assertIsEnabled()
+        clearButton().assertIsEnabled()
     }
 
     private fun hasTextAndHeading(text: String) = hasText(text) and isHeading()
@@ -225,10 +246,19 @@ class DataManagementScreenTest {
 
     @Test
     fun whileWorking_theButtonsWait() {
-        show(ready.copy(working = true))
+        show(started.copy(working = true))
 
         exportButton().assertIsNotEnabled()
         importButton().assertIsNotEnabled()
+        clearButton().assertIsNotEnabled()
+    }
+
+    @Test
+    fun clearAll_withNoBadgeStarted_isDisabled() {
+        show()
+
+        clearButton().assertIsNotEnabled()
+        exportButton().assertIsEnabled()
     }
 
     @Test
@@ -280,6 +310,74 @@ class DataManagementScreenTest {
     }
 
     @Test
+    fun clearAll_asksFirst_thenClears() {
+        show(started)
+
+        clearButton().performClick()
+        composeTestRule.onNodeWithText("Clear all progress?").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                "The progress on every badge will be removed, including counselors. Your name " +
+                    "and unit number stay."
+            )
+            .assertIsDisplayed()
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText("Clear").performClick()
+
+        assertEquals(1, clears)
+        composeTestRule.onNodeWithText("Clear all progress?").assertDoesNotExist()
+    }
+
+    @Test
+    fun clearAll_cancel_clearsNothing() {
+        show(started)
+
+        clearButton().performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText("Clear all progress?").assertDoesNotExist()
+    }
+
+    @Test
+    fun clearAll_back_closesTheDialog_andClearsNothing() {
+        show(started)
+
+        clearButton().performClick()
+        // As for the import dialog, Back is sent to the dialog itself.
+        composeTestRule.runOnIdle {
+            (ShadowDialog.getLatestDialog() as ComponentDialog).onBackPressedDispatcher
+                .onBackPressed()
+        }
+
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText("Clear all progress?").assertDoesNotExist()
+    }
+
+    // The file picker takes a moment to cover BlueCard. A tap on Clear all that reached it then
+    // would open the dialog under the picker, to be confirmed after the import. The screen is
+    // tall enough to show every button, since scrolling waits on the clock this test holds.
+    @Test
+    @Config(qualifiers = "h800dp")
+    fun clearAll_rightAfterImport_isIgnored() {
+        show(started)
+        composeTestRule.mainClock.autoAdvance = false
+        val doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
+        val clearButton = composeTestRule.onNodeWithText("Clear all")
+
+        importButton().performClick()
+        clearButton.performClick()
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout / 2)
+        composeTestRule.onNodeWithText("Clear all progress?").assertDoesNotExist()
+
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout)
+        clearButton.performClick()
+        composeTestRule.mainClock.advanceTimeByFrame()
+        composeTestRule.onNodeWithText("Clear all progress?").assertIsDisplayed()
+        assertEquals(listOf(file), read)
+    }
+
+    @Test
     fun eachMessage_isShown_thenReportedShown() {
         val texts = mapOf(
             Kind.ExportFailed to "Couldn't export. Try again.",
@@ -288,7 +386,9 @@ class DataManagementScreenTest {
             Kind.NewerFormat to
                 "This file is from a newer version of BlueCard. Update the app to import it.",
             Kind.ImportFailed to "Couldn't import. Try again.",
-            Kind.Imported to "Data imported."
+            Kind.Imported to "Data imported.",
+            Kind.ClearFailed to "Couldn't save. Try again.",
+            Kind.Cleared to "Progress cleared."
         )
         assertEquals(Kind.entries.toSet(), texts.keys)
         show()

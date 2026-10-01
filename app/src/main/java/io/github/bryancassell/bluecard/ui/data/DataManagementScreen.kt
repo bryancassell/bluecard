@@ -14,11 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
@@ -34,6 +39,7 @@ import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
+import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
 import java.time.LocalDate
 
 /** Connects the Data management screen to its ViewModel. */
@@ -50,15 +56,18 @@ fun DataManagementRoute(
         onImport = viewModel::read,
         onConfirmImport = viewModel::confirmImport,
         onCancelImport = viewModel::cancelImport,
+        onClearAll = viewModel::clearAll,
         onMessageShown = viewModel::onMessageShown,
         modifier = modifier
     )
 }
 
 /**
- * Export and import of the scout's data. Export saves it to a file the scout creates with the
- * system file picker ([onExport]), suggesting a name with [today]'s date, read as it opens. Import reads a file they pick ([onImport]) and, once it's
- * checked, asks before replacing everything with it ([onConfirmImport]).
+ * Export and import of the scout's data, and clearing all their progress. Export saves it to a
+ * file the scout creates with the system file picker ([onExport]), suggesting a name with
+ * [today]'s date, read as it opens. Import reads a file they pick ([onImport]) and, once it's
+ * checked, asks before replacing everything with it ([onConfirmImport]). Clear all asks before
+ * clearing every badge's progress ([onClearAll]).
  */
 @Composable
 fun DataManagementScreen(
@@ -68,6 +77,7 @@ fun DataManagementScreen(
     onImport: (source: Uri) -> Unit,
     onConfirmImport: () -> Unit,
     onCancelImport: () -> Unit,
+    onClearAll: () -> Unit,
     onMessageShown: (DataManagementMessage) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -82,6 +92,7 @@ fun DataManagementScreen(
     val resources = LocalResources.current
     val noFileSaver = stringResource(R.string.no_file_saver)
     val noFileOpener = stringResource(R.string.data_management_no_file_opener)
+    var confirmingClear by rememberSaveable { mutableStateOf(false) }
     Box(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -113,6 +124,17 @@ fun DataManagementScreen(
                 enabled = !uiState.working,
                 onClick = { startOtherApp.launch(openDocument, IMPORT_TYPES, noFileOpener) }
             )
+            // Red, and last on the page, so it isn't tapped by mistake.
+            Section(
+                heading = R.string.data_management_clear_heading,
+                description = R.string.data_management_clear_description,
+                button = R.string.data_management_clear,
+                enabled = uiState.canClear && !uiState.working,
+                // Through the screen's OtherAppStarter, so a tap just after Export or Import
+                // doesn't open the dialog under the file picker, to be confirmed after it.
+                onClick = { startOtherApp.tap { confirmingClear = true } },
+                colors = removalOutlinedButtonColors()
+            )
         }
         val message = uiState.message
         MessageSnackbarHost(
@@ -131,6 +153,18 @@ fun DataManagementScreen(
             onDismiss = onCancelImport
         )
     }
+    if (confirmingClear) {
+        ConfirmDialog(
+            title = stringResource(R.string.clear_all_confirm_title),
+            message = stringResource(R.string.clear_all_confirm_message),
+            confirmLabel = stringResource(R.string.clear_progress_confirm),
+            onConfirm = {
+                confirmingClear = false
+                onClearAll()
+            },
+            onDismiss = { confirmingClear = false }
+        )
+    }
 }
 
 /** A heading, what it does, and a button that does it. */
@@ -140,7 +174,8 @@ private fun Section(
     @StringRes description: Int,
     @StringRes button: Int,
     enabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors()
 ) {
     Text(
         text = stringResource(heading),
@@ -150,7 +185,7 @@ private fun Section(
             .semantics { heading() }
     )
     Text(text = stringResource(description), style = MaterialTheme.typography.bodyMedium)
-    OutlinedButton(onClick = onClick, enabled = enabled) {
+    OutlinedButton(onClick = onClick, enabled = enabled, colors = colors) {
         Text(stringResource(button))
     }
 }
@@ -163,6 +198,8 @@ private val Kind.text: Int
         Kind.NewerFormat -> R.string.import_newer_format
         Kind.ImportFailed -> R.string.import_failed
         Kind.Imported -> R.string.import_done
+        Kind.ClearFailed -> R.string.save_failed
+        Kind.Cleared -> R.string.clear_all_done
     }
 
 private const val JSON = "application/json"

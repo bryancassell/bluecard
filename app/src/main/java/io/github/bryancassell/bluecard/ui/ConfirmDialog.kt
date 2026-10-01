@@ -48,3 +48,12 @@ fun ConfirmDialog(
 @Composable
 fun removalButtonColors(): ButtonColors =
     ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+
+/**
+ * Colors of an outlined button that removes what the scout recorded, or opens the dialog that
+ * asks to, where the buttons beside it are outlined: red text, as [removalButtonColors] gives a
+ * text button. Outlined and text buttons have different default colors, so each needs its own.
+ */
+@Composable
+fun removalOutlinedButtonColors(): ButtonColors =
+    ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
