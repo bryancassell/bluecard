@@ -124,12 +124,18 @@ class RequirementDetailViewModel @AssistedInject constructor(
         RequirementDetailUiState.Loading
     )
 
-    /** Marks this requirement, one the scout marks by hand, completed or not. */
+    /**
+     * Marks this requirement, one the scout marks by hand, or its own work, for one with own
+     * work, completed or not.
+     */
     fun setCompleted(completed: Boolean) {
         saves.launch { recorder.setCompleted(number, completed) }
     }
 
-    /** Changes the date this requirement, which is complete, was completed on; null removes it. */
+    /**
+     * Changes the date this requirement, or its own work, was completed on, once marked complete;
+     * null removes it.
+     */
     fun setCompletedDate(date: LocalDate?) {
         saves.launch { progressRepository.setRequirementCompletedDate(badgeId, number, date) }
     }

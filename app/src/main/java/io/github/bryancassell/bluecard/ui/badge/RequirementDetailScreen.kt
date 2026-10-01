@@ -78,7 +78,8 @@ fun RequirementDetailRoute(
 
 /**
  * A requirement's own page: whether it's complete, and when for one the scout marks complete,
- * its sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
+ * the same for its own work if it asks for some besides its sub-requirements, its
+ * sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
  * its own page in turn, and a tracker row opens the Tracker entry page
  * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
  * log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
@@ -110,9 +111,17 @@ fun RequirementDetailScreen(
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 RequirementHeader(uiState.badgeName, uiState.requirement)
                 val requirement = uiState.requirement
-                if (requirement.markedByHand) {
-                    CompletedCheckbox(requirement.completed, onCompletedChange)
-                    if (requirement.completed) {
+                // Its own work is stored as the requirement's own progress, like one marked by
+                // hand, so it has the same checkbox and date.
+                val ownWork = requirement.ownWork
+                if (requirement.markedByHand || ownWork != null) {
+                    val checked = ownWork?.completed ?: requirement.completed
+                    CompletedCheckbox(
+                        label = ownWork?.summary ?: stringResource(R.string.requirement_completed),
+                        checked = checked,
+                        onCheckedChange = onCompletedChange
+                    )
+                    if (checked) {
                         CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
                     }
                 }
@@ -189,22 +198,25 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
     }
 }
 
-/** The whole row toggles the checkbox, and screen readers read it as one checkbox. */
+/**
+ * The whole row toggles the checkbox, and screen readers read it as one checkbox. A long
+ * [label], such as a summary of a requirement's own work, wraps.
+ */
 @Composable
-private fun CompletedCheckbox(completed: Boolean, onCompletedChange: (Boolean) -> Unit) {
+private fun CompletedCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .toggleable(value = completed, role = Role.Checkbox, onValueChange = onCompletedChange)
+            .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange)
             .heightIn(min = 56.dp)
             .padding(horizontal = 16.dp)
     ) {
-        Checkbox(checked = completed, onCheckedChange = null)
+        Checkbox(checked = checked, onCheckedChange = null)
         Text(
-            text = stringResource(R.string.requirement_completed),
+            text = label,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
         )
     }
 }

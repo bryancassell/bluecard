@@ -92,6 +92,42 @@ class CompletionTest {
         )
     }
 
+    // Like Photography 6: explain something, then do two of 3a-3c.
+    private val ownWorkAndTwoOf = twoOf.copy(ownWork = "Explain it.")
+
+    @Test
+    fun ownWork_incompleteUntilBothItAndEnoughChildrenAreDone() {
+        val children = arrayOf(done("3a", day(1)), done("3c", day(5)))
+        assertNull(ownWorkAndTwoOf.completion(progressOf(*children)))
+        assertNull(ownWorkAndTwoOf.completion(progressOf(done("3", day(2)), done("3a", day(1)))))
+        assertEquals(
+            Completion(day(5)),
+            ownWorkAndTwoOf.completion(progressOf(done("3", day(2)), *children))
+        )
+    }
+
+    @Test
+    fun ownWork_doneLast_datesTheRequirement() {
+        val progress = progressOf(done("3", day(9)), done("3a", day(1)), done("3c", day(5)))
+        assertEquals(Completion(day(9)), ownWorkAndTwoOf.completion(progress))
+    }
+
+    @Test
+    fun ownWork_anUndatedPartMeansNoDate() {
+        assertEquals(
+            Completion(null),
+            ownWorkAndTwoOf.completion(
+                progressOf(done("3"), done("3a", day(1)), done("3c", day(5)))
+            )
+        )
+        assertEquals(
+            Completion(null),
+            ownWorkAndTwoOf.completion(
+                progressOf(done("3", day(2)), done("3a", day(1)), done("3c"))
+            )
+        )
+    }
+
     @Test
     fun nestedChoice_countsCompleteSubtrees() {
         // "Do two of 4a-4c", where 4c is itself "do two of 4c(1)-4c(3)".
@@ -142,6 +178,7 @@ class CompletionTest {
         assertTrue(leaf("1").isMarkedByHand)
         assertTrue(log.isMarkedByHand)
         assertFalse(allOf.isMarkedByHand)
+        assertFalse(ownWorkAndTwoOf.isMarkedByHand)
         assertFalse(weeks.isMarkedByHand)
     }
 

@@ -100,6 +100,15 @@ class RequirementDetailViewModelTest {
                             "weeks",
                             rowCount = 2
                         )
+                    ),
+                    Requirement(
+                        "5",
+                        "Pack your gear, then show it.",
+                        children = listOf(
+                            Requirement("5a", "Your tent."),
+                            Requirement("5b", "Your stove.")
+                        ),
+                        ownWork = "Pack your gear."
                     )
                 )
             ),
@@ -482,6 +491,24 @@ class RequirementDetailViewModelTest {
         assertFalse(viewModel.ready().requirement.completed)
         assertNull(viewModel.ready().completedDate)
     }
+
+    @Test
+    fun setCompleted_onRequirementWithOwnWork_marksItsOwnWork_thenSubRequirementsCompleteIt() =
+        runTest {
+            val viewModel = viewModel("5")
+            startCollecting(viewModel)
+            assertEquals(OwnWork("Pack your gear.", false), viewModel.ready().requirement.ownWork)
+
+            viewModel.setCompleted(true)
+
+            assertEquals(OwnWork("Pack your gear.", true), viewModel.ready().requirement.ownWork)
+            assertEquals(today, viewModel.ready().completedDate)
+            assertFalse(viewModel.ready().requirement.completed)
+
+            progressRepository.markRequirementCompleted("camping", "5a", day, badgeStart)
+            progressRepository.markRequirementCompleted("camping", "5b", day, badgeStart)
+            assertTrue(viewModel.ready().requirement.completed)
+        }
 
     @Test
     fun setCompletedDate_changesTheDate() = runTest {

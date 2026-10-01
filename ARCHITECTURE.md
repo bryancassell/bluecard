@@ -532,14 +532,23 @@ Completion is derived, not stored (`data/progress/Completion.kt`), from
 requirement progress, tracker entries and the catalog:
 
 - A requirement with children is complete when enough of them are, even if it
-  also has a tracker. One without children but with a fixed-row tracker is
-  complete when every row has an entry. Any other
+  also has a tracker. One that also asks for work of its own (`ownWork` in the
+  catalog) needs the scout to mark that complete too. One without children but
+  with a fixed-row tracker is complete when every row has an entry. Any other
   requirement, including one with a log, is complete when the scout marked it
   complete.
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
-- The completion date is when the last requirement it needed was completed, or
-  the prior date for a badge marked that way.
+- The completion date is when the last requirement or own work it needed was
+  completed, or the prior date for a badge marked that way.
+
+A requirement's own work is stored as that requirement's own
+`RequirementProgress`, as for one marked complete by hand, so it needs no new
+table. The catalog marks the requirements that have own work, rather than every
+requirement with children needing a check, because most only group their
+children. The work can't be a child of its own, because the catalog's numbers
+and nesting must match the official page
+([#143](https://github.com/bryancassell/bluecard/issues/143)).
 
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.

@@ -8,8 +8,8 @@ import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
 
 /**
  * One requirement as a row: its number, our summary, whether it's complete, and how much of
- * its tracker is filled in. Every row opens the requirement's own page, for marking it
- * complete and for its sub-requirements, completion date, comment and tracker.
+ * its tracker is filled in. Every row opens the requirement's own page, for marking it or its
+ * own work complete and for its sub-requirements, completion date, comment and tracker.
  */
 data class RequirementItem(
     val number: String,
@@ -28,8 +28,16 @@ data class RequirementItem(
      * Whether it's no longer needed: it isn't complete, but a requirement it's part of is, such
      * as a choice the scout didn't pick once enough others are complete.
      */
-    val notNeeded: Boolean = false
+    val notNeeded: Boolean = false,
+    /** The work it asks for besides its sub-requirements, or null if it asks for none. */
+    val ownWork: OwnWork? = null
 )
+
+/**
+ * Work a requirement asks for besides its sub-requirements ([Requirement.ownWork]), which the
+ * scout marks complete by hand: our [summary] of it, and whether it's [completed].
+ */
+data class OwnWork(val summary: String, val completed: Boolean)
 
 /** "Do [required] of [of]" sub-requirements. */
 data class Choice(val required: Int, val of: Int)
@@ -52,6 +60,7 @@ fun Requirement.toItem(
         completed = completed,
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
-        notNeeded = partOfCompleted && !completed
+        notNeeded = partOfCompleted && !completed,
+        ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) }
     )
 }

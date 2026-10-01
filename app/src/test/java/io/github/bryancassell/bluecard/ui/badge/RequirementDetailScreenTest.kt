@@ -155,6 +155,17 @@ class RequirementDetailScreenTest {
         )
     )
 
+    /** A requirement with sub-requirements that asks for work of its own too, not done yet. */
+    private val withOwnWork = ready.copy(
+        requirement = ready.requirement.copy(ownWork = OwnWork("Pack your gear.", false))
+    )
+
+    /** [withOwnWork] with its own work marked complete, but not enough sub-requirements. */
+    private val ownWorkDone = withOwnWork.copy(
+        requirement = ready.requirement.copy(ownWork = OwnWork("Pack your gear.", true)),
+        completedDate = LocalDate.of(2026, 4, 15)
+    )
+
     private val completedLeaf = leaf.copy(
         requirement = leaf.requirement.copy(completed = true),
         completedDate = LocalDate.of(2026, 4, 15)
@@ -281,6 +292,48 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
         composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+    }
+
+    // Its own work has the checkbox, and its sub-requirements are listed under it.
+    @Test
+    fun requirementWithOwnWork_hasCheckboxForIt_andNoDate() {
+        show(withOwnWork)
+
+        composeTestRule.onNode(hasText("Pack your gear.") and isToggleable()).performScrollTo()
+            .assertIsOff()
+        composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+        row("Cook a meal.").assertIsDisplayed()
+    }
+
+    @Test
+    fun checkingOwnWork_marksItCompleted() {
+        show(withOwnWork)
+
+        composeTestRule.onNode(hasText("Pack your gear.") and isToggleable()).performScrollTo()
+            .performClick()
+
+        assertEquals(listOf(true), completedChanges)
+    }
+
+    @Test
+    fun ownWorkDone_isCheckedWithItsDate_butRequirementIsNotLabeledCompleted() {
+        show(ownWorkDone)
+
+        composeTestRule.onNode(hasText("Pack your gear.") and isToggleable()).performScrollTo()
+            .assertIsOn()
+            .performClick()
+        composeTestRule.onNodeWithText("Completed on Apr 15, 2026").performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+        assertEquals(listOf(false), completedChanges)
+    }
+
+    @Test
+    fun completedRequirementWithOwnWork_isLabeledCompleted() {
+        show(ownWorkDone.copy(requirement = ownWorkDone.requirement.copy(completed = true)))
+
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
     }
 
     @Test
