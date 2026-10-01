@@ -31,25 +31,25 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 ## What counts as copying
 
 Write each summary from what the requirement asks, not by editing the official
-sentence.
+sentence. Then read it next to the official text and ask: **could you say this
+differently without it reading oddly?** If you could, and the summary keeps the
+official wording anyway, reword it. That applies to a whole sentence and to a
+clause, such as "what it takes to be a good citizen in your community".
+Swapping or dropping a word or two isn't saying it differently.
 
-Not fine:
-
-- A whole official sentence, word for word or with a word dropped or swapped.
-- A distinctive clause from the official text, such as "what it takes to be a
-  good citizen in your community".
-
-Fine, even when it matches the official text word for word:
+Wording with no natural alternative is fine, even word for word:
 
 - Names of things, such as conditions, places, items and concepts.
 - Lists of names. Don't reorder a list just to make it differ.
-- Numbers, and short common phrases such as "with your counselor" or "in your
-  own words".
+- Numbers, and common phrases such as "with your counselor" or "in your own
+  words".
+- Short plain instructions with only one natural wording, such as "Tour a
+  federal facility." or "Earn the First Aid merit badge."
 
 | Official text | Summary | Verdict |
 |---|---|---|
-| Explain what a heart attack is. | Explain what a heart attack is. | Not fine: the whole sentence. |
-| Explain what a heart attack is. | Explain what happens during a heart attack. | Fine. |
+| Name and point out the major parts of a canoe. | Name and point out the main parts of a canoe. | Not fine: "Identify the main parts of a canoe." says it just as naturally. |
+| Tour a federal facility. | Tour a federal facility. | Fine: there's no other natural way to say it. |
 | Immersion foot, frostnip, frostbite, and ice burns | Immersion foot, frostnip, frostbite and ice burns. | Fine: a list of names. |
 | Describe the meaning of environmental science in your own words. | Explain environmental science in your own words and how it helps. | Fine: a name and a common phrase, in a sentence of our own. |
 
