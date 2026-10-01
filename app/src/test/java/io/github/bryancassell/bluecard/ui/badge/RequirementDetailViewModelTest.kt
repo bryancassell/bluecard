@@ -17,11 +17,13 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -874,7 +876,7 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun clear_keepsAnUnsavedEdit_forTheScoutToSaveOrNot() = runTest {
+    fun clear_discardsAnUnsavedEdit() = runTest {
         progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
         val viewModel = viewModel("1")
         startCollecting(viewModel)
@@ -883,15 +885,52 @@ class RequirementDetailViewModelTest {
         viewModel.clear()
 
         assertNull(recorded("1"))
-        assertEquals("Saved, then edited.", viewModel.comment.text.toString())
+        assertEquals("", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun clear_whileBeingSaved_showsTheSavedComment_andKeepsWhatsTypedAfter() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val clearSaved = CompletableDeferred<Unit>()
+        // Saves a clear only once it's let through, as Room takes a moment to.
+        val slowClears = object : ProgressRepository by progressRepository {
+            override suspend fun clearRequirements(badgeId: String, numbers: Collection<String>) {
+                clearSaved.await()
+                progressRepository.clearRequirements(badgeId, numbers)
+            }
+        }
+        val viewModel = RequirementDetailViewModel(
+            "camping",
+            "1",
+            catalogRepository,
+            slowClears,
+            clock,
+            savedStateHandle
+        )
+        startCollecting(viewModel)
+        viewModel.typeComment("Saved, then edited.")
+
+        viewModel.clear()
+
+        // The edit is gone straight away, and Save stays disabled until the clear is shown.
+        assertEquals("Saved.", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
+        viewModel.typeComment("Typed after Clear.")
+        clearSaved.complete(Unit)
+        advanceUntilIdle()
+
+        assertNull(recorded("1"))
+        assertEquals("Typed after Clear.", viewModel.comment.text.toString())
         assertTrue(viewModel.ready().commentChanged)
     }
 
     @Test
-    fun clear_whenSaveFails_reportsIt_andKeepsEverything() = runTest {
+    fun clear_whenSaveFails_reportsIt_andShowsWhatsStillSaved() = runTest {
         progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
         val viewModel = viewModel("1")
         startCollecting(viewModel)
+        viewModel.typeComment("Saved, then edited.")
         progressRepository.failSaves = true
 
         viewModel.clear()
@@ -899,6 +938,7 @@ class RequirementDetailViewModelTest {
         assertNotNull(viewModel.ready().saveFailure)
         assertEquals("Saved.", recorded("1")?.comment)
         assertEquals("Saved.", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
         assertTrue(viewModel.ready().canClear)
     }
 

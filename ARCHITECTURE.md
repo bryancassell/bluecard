@@ -885,12 +885,13 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     confirms, in order with the page's other changes, and finishes even if
     the page closes straight away. The page forgets a date it remembered
     from an uncheck as the clear starts, so checking the requirement again
-    dates it today, even while the clear is being saved. The notes field
-    shows the saved notes whenever it has no unsaved edit, in the same update
-    that shows they changed, so once the clear is saved it's empty, with no
-    frame where Save notes looks enabled. An unsaved edit stays, for the
-    scout to save or not, since the dialog clears only what's recorded. A
-    clear that fails shows the save-failed snackbar.
+    dates it today, even while the clear is being saved. Confirming also
+    discards an unsaved edit of the notes at once: the field shows the saved
+    notes again. It follows the saved notes whenever it has no unsaved edit,
+    in the same update that shows they changed, so it's empty once the clear
+    is saved, and Save notes stays disabled throughout. Notes typed while the
+    clear is being saved stay, as they came after it. A clear that fails
+    shows the save-failed snackbar, with the notes still saved in the field.
   - **Pages shown while their badge is cleared.** A page can show a badge
     for a moment after its progress is cleared, before it redraws. Unchecking
     a requirement of a badge that isn't started does nothing
@@ -1032,7 +1033,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Tracker row names | The catalog gives the singular and plural in lowercase ("week", "weeks"), and the app capitalizes the singular for titles | Counts read naturally ("8 of 12 weeks", "1 session") without the app pluralizing catalog text |
 | Counselor details | Shown on Badge detail; edited on a page of their own with a Save button, which closes it once the save succeeds; the phone and email open the phone and email apps | Entered once and read often, so Badge detail stays short; closing only after a successful save shows a failure while the scout can still try again; `ACTION_DIAL` and `ACTION_SENDTO` need no permissions |
 | Requirement notes | On every requirement, saved with a Save button | The scout decides when notes are saved, and a save that fails is reported right then, not while they're still typing |
-| Confirming a removal | Deleting a tracker row and clearing progress ask first, in one shared dialog (`ui/ConfirmDialog.kt`) with Cancel and a red confirm button, the theme's error color | Red marks the button that removes what the scout recorded, which can't be undone, so it stands apart from Cancel. Sharing the dialog keeps every removal alike |
+| Confirming a removal | Deleting a tracker row and clearing progress ask first, in one shared dialog (`ui/ConfirmDialog.kt`) with Cancel and a red confirm button, the theme's error color. The button that opens the dialog is red too (`removalButtonColors`) | Red marks the button that removes what the scout recorded, which can't be undone, so it stands apart from Cancel. Sharing the dialog keeps every removal alike |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |

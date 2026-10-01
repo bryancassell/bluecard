@@ -144,9 +144,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     /**
      * Shows the [saved] comment in the comment field when it changes from [before] without the
-     * scout typing it, as when it's cleared, unless the field has an unsaved edit, which stays
-     * for the scout to save or not. It's done as the change is shown, so the field is never a
-     * frame behind it.
+     * scout typing it, as when it's cleared, unless the field has an unsaved edit. It's done as
+     * the change is shown, so the field is never a frame behind it.
      */
     private fun followSavedComment(before: String?, saved: String?) {
         if (saved == before || normalizedText(comment.text.toString()) != before) return
@@ -155,13 +154,20 @@ class RequirementDetailViewModel @AssistedInject constructor(
     }
 
     /**
-     * Clears everything recorded for this requirement and every one under it. The comment field
-     * then shows the cleared comment, unless it has an unsaved edit ([followSavedComment]).
+     * Clears everything recorded for this requirement and every one under it, discarding an
+     * unsaved edit of the comment straight away: the field shows the saved comment again, which
+     * it then follows as the clear removes it ([followSavedComment]). Save stays disabled
+     * throughout, and a clear that fails leaves the field showing what's still saved. An edit
+     * typed while the clear is being saved stays, as it came after.
      */
     fun clear() {
         // The button shows only once the page has.
-        val numbers = shown?.numbersWithin ?: return
-        saves.launch { recorder.clear(numbers) }
+        val shown = shown ?: return
+        // In a snapshot of its own, so uiState sees the change straight away.
+        Snapshot.withMutableSnapshot {
+            comment.setTextAndPlaceCursorAtEnd(shown.comment.orEmpty())
+        }
+        saves.launch { recorder.clear(shown.numbersWithin) }
     }
 
     /** The scout has been told about [failure]. */
