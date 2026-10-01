@@ -241,6 +241,115 @@
       ]
     },
     {
+      "id": "art",
+      "name": "Art",
+      "summary": "Learn the elements and principles of art, work in several media, and explore art careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/art/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Talk with your counselor about what art is.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain what art is and name some of its forms."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain why art matters to people."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe your own connection to art and the feelings it gives you."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain line, value, shape, form, space, color and texture, with an example of each."
+            },
+            {
+              "number": "3",
+              "summary": "Discuss rhythm, balance, proportion, variety, emphasis and unity, the six design principles."
+            },
+            {
+              "number": "4",
+              "summary": "Draw or paint one subject in four different media.",
+              "requiredCount": 4,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Pen and ink."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Watercolors."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Pencil."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Pastels."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Oil paints."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Tempera."
+                },
+                {
+                  "number": "4g",
+                  "summary": "Acrylics."
+                },
+                {
+                  "number": "4h",
+                  "summary": "Charcoal."
+                },
+                {
+                  "number": "4i",
+                  "summary": "Drawing or painting on a computer."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Do one design or storytelling project.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Design a useful item, sketch or model it, and promote it with pictures."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Tell a story in pictures or a 3-D rendering."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Design a logo, explain what it means, and put it on something, with permission."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Visit a museum, gallery, exhibit, artists' co-op or workshop, and discuss what you learned."
+            },
+            {
+              "number": "7",
+              "summary": "Explore three art careers and the training one of them needs."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "camping",
       "name": "Camping",
       "summary": "Plan, pack and cook for campouts, and camp at least 20 nights.",
@@ -481,6 +590,181 @@
             {
               "number": "10",
               "summary": "Discuss what camping taught you and how Scout ideals apply."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "canoeing",
+      "name": "Canoeing",
+      "summary": "Learn canoe safety and gear, then paddle, maneuver and practice rescues with a partner.",
+      "officialUrl": "https://www.scouting.org/merit-badges/canoeing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to canoe safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Review canoeing hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Review preventing and treating common canoeing injuries and illnesses."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Discuss how Safety Afloat applies to canoeing."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Pass the Scouting America swimmer test before the rest of the requirements."
+            },
+            {
+              "number": "3",
+              "summary": "Learn about canoes.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Name and point out the main parts of a canoe."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe how a canoe's length and shape change how it handles."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about paddles.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Identify the parts of a paddle."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Show how to size a paddle for sitting and kneeling paddlers."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about life jackets and safety gear.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain why to always wear a life jacket and which kinds suit canoeing."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Pick and fit a life jacket of the right size."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Review why gear like a bailer, throw bag and spare paddle matters."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Review how to care for canoes, paddles and other gear."
+            },
+            {
+              "number": "7",
+              "summary": "With a partner, launch, land and move about in a canoe.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Carry the canoe to the water and launch it from a dock or shore."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Land the canoe and put it away properly."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Show kneeling and sitting positions and when to use each."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Trade places while afloat."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "With a partner, practice capsizes and rescues.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "In deep water, leave the canoe while holding on, then reenter with your partner's help."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Capsize the canoe on purpose and show how it holds you both up."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Bring a swamped canoe into shallow water 50 feet away, then empty and reenter it."
+                },
+                {
+                  "number": "8d",
+                  "summary": "In deep water, empty a swamped canoe and help its paddlers back in."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Rescue a conscious swimmer with a canoe."
+                },
+                {
+                  "number": "8f",
+                  "summary": "Throw a rescue bag within 3 feet of a swimmer 30 feet away; repack it."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "With a partner, show tandem maneuvers from both ends and both sides.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Pivot 180 degrees right, then back left, within two boat lengths."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Move sideways 10 feet and back."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Use the backstroke to stop within two boat lengths."
+                },
+                {
+                  "number": "9d",
+                  "summary": "From the stern alone, paddle straight 15 to 20 boat lengths with a steering stroke."
+                },
+                {
+                  "number": "9e",
+                  "summary": "Paddle together in a straight line for 15 to 20 boat lengths."
+                },
+                {
+                  "number": "9f",
+                  "summary": "Turn 90 degrees right, then left, in 5 to 10 boat lengths while moving."
+                },
+                {
+                  "number": "9g",
+                  "summary": "Paddle backward in a straight line three to four boat lengths."
+                },
+                {
+                  "number": "9h",
+                  "summary": "Paddle a figure 8 around markers three to four boat lengths apart."
+                }
+              ]
             }
           ]
         }
@@ -2750,6 +3034,392 @@
       ]
     },
     {
+      "id": "fishing",
+      "name": "Fishing",
+      "summary": "Learn fishing safety, tackle, knots and rules, then catch, clean and cook a fish.",
+      "officialUrl": "https://www.scouting.org/merit-badges/fishing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to fish safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain fishing hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating common fishing injuries and illnesses."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how to take out a barbed hook caught in someone's arm."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Name and explain five safety rules for fishing."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Compare two kinds of fishing outfits, identify rod and reel parts, and explain their care."
+            },
+            {
+              "number": "3",
+              "summary": "Show how to use two different kinds of fishing gear."
+            },
+            {
+              "number": "4",
+              "summary": "Tie the improved clinch, Palomar, uni, uni-to-uni and arbor knots, and explain their uses."
+            },
+            {
+              "number": "5",
+              "summary": "Identify five lures and five baits, how to fish each, and why baitfish aren't released."
+            },
+            {
+              "number": "6",
+              "summary": "Learn how anglers protect fish.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain how Leave No Trace and the Outdoor Code protect fishing resources."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain catch and release and how to return a fish safely."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Review your local fishing regulations and why they exist."
+            },
+            {
+              "number": "8",
+              "summary": "Explain good sportsmanship for anglers, including Leave No Trace and the Outdoor Code."
+            },
+            {
+              "number": "9",
+              "summary": "Catch a fish and identify it."
+            },
+            {
+              "number": "10",
+              "summary": "If rules and health allow, clean and cook a fish, ideally one you caught."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "geology",
+      "name": "Geology",
+      "summary": "Learn how rocks and Earth's resources form, then dig into one area of geology in depth.",
+      "officialUrl": "https://www.scouting.org/merit-badges/geology/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Define geology, explain how geologists study rocks, and why the present explains the past."
+            },
+            {
+              "number": "2",
+              "summary": "Pick three mined resources and discuss how each is found and processed."
+            },
+            {
+              "number": "3",
+              "summary": "Use a geologic map to identify an area's rock types, ages and structures."
+            },
+            {
+              "number": "4",
+              "summary": "Complete one geology option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4A",
+                  "summary": "Option A: surface and sedimentary processes.",
+                  "children": [
+                    {
+                      "number": "4A(1)",
+                      "summary": "Do an experiment showing how sediment settles out of water, and explain it."
+                    },
+                    {
+                      "number": "4A(2)",
+                      "summary": "Plot gradients for four stream types and explain their speed and sediment."
+                    },
+                    {
+                      "number": "4A(3)",
+                      "summary": "On a stream diagram, mark five features and the grain size in each."
+                    },
+                    {
+                      "number": "4A(4)",
+                      "summary": "Do an experiment showing that water carries sediment too fine to see."
+                    },
+                    {
+                      "number": "4A(5)",
+                      "summary": "Find and sketch clues to a stream's flow direction, and discuss them."
+                    }
+                  ]
+                },
+                {
+                  "number": "4B",
+                  "summary": "Option B: energy resources.",
+                  "children": [
+                    {
+                      "number": "4B(1)",
+                      "summary": "List the top five resources used to make electricity in the U.S."
+                    },
+                    {
+                      "number": "4B(2)",
+                      "summary": "Explain why oil and gas need a source rock, a reservoir rock and a trap."
+                    },
+                    {
+                      "number": "4B(3)",
+                      "summary": "Explain how seismic surveys, well logs, core samples and other tools find oil or gas."
+                    },
+                    {
+                      "number": "4B(4)",
+                      "summary": "Map a subsurface structure from 20 data points and explain how such maps find fuel."
+                    },
+                    {
+                      "number": "4B(5)",
+                      "summary": "Learn more about finding fossil fuels.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "4B(5)(a)",
+                          "summary": "Give a five-minute talk on finding, extracting and processing oil, gas or coal."
+                        },
+                        {
+                          "number": "4B(5)(b)",
+                          "summary": "Visit a drilling rig, talk with its geologist and see cutting samples."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "4C",
+                  "summary": "Option C: mineral resources.",
+                  "children": [
+                    {
+                      "number": "4C(1)",
+                      "summary": "Define rock and discuss the three classes of rock."
+                    },
+                    {
+                      "number": "4C(2)",
+                      "summary": "Define mineral and discuss how minerals form and are identified."
+                    },
+                    {
+                      "number": "4C(3)",
+                      "summary": "Collect or identify rocks and minerals.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "4C(3)(a)",
+                          "summary": "Collect 10 rocks or minerals, then label, classify and describe each.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "name",
+                                "label": "Specimen",
+                                "type": "text"
+                              },
+                              {
+                                "id": "source",
+                                "label": "Where you got it",
+                                "type": "text"
+                              },
+                              {
+                                "id": "class-origin",
+                                "label": "Class and origin",
+                                "type": "text"
+                              },
+                              {
+                                "id": "composition",
+                                "label": "Chemical composition",
+                                "type": "text"
+                              },
+                              {
+                                "id": "properties",
+                                "label": "Physical properties",
+                                "type": "text"
+                              }
+                            ],
+                            "rowLabel": "specimen",
+                            "rowLabelPlural": "specimens",
+                            "rowCount": 10
+                          }
+                        },
+                        {
+                          "number": "4C(3)(b)",
+                          "summary": "Identify 15 rocks and minerals with your counselor's help.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "name",
+                                "label": "Name",
+                                "type": "text"
+                              },
+                              {
+                                "id": "kind",
+                                "label": "Rock or mineral",
+                                "type": "text"
+                              },
+                              {
+                                "id": "details",
+                                "label": "Rock class or mineral properties",
+                                "type": "text"
+                              }
+                            ],
+                            "rowLabel": "specimen",
+                            "rowLabelPlural": "specimens",
+                            "rowCount": 15
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "number": "4C(4)",
+                      "summary": "Explain how three local road-building materials are made and used."
+                    },
+                    {
+                      "number": "4C(5)",
+                      "summary": "Learn how mined rocks and minerals are used.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "4C(5)(a)",
+                          "summary": "Visit a mine, quarry or gravel pit and report what's extracted and why."
+                        },
+                        {
+                          "number": "4C(5)(b)",
+                          "summary": "Discuss how two rocks and two minerals are mined and used."
+                        },
+                        {
+                          "number": "4C(5)(c)",
+                          "summary": "Visit a civil engineer's office to learn how geology guides construction."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "4D",
+                  "summary": "Option D: Earth history.",
+                  "children": [
+                    {
+                      "number": "4D(1)",
+                      "summary": "Chart geologic eras and periods, and find when your area's rocks may have formed."
+                    },
+                    {
+                      "number": "4D(2)",
+                      "summary": "Explain plate tectonics and how it places volcanoes, earthquakes and mountains."
+                    },
+                    {
+                      "number": "4D(3)",
+                      "summary": "Explain how burial and fossilization happen, and discuss extinction."
+                    },
+                    {
+                      "number": "4D(4)",
+                      "summary": "Explain what fossils reveal, and how animals in nine habitats find food."
+                    },
+                    {
+                      "number": "4D(5)",
+                      "summary": "Collect 10 fossils or identify 15, then classify them and tell what they show.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "name",
+                            "label": "Fossil",
+                            "type": "text"
+                          },
+                          {
+                            "id": "source",
+                            "label": "Where you got it",
+                            "type": "text"
+                          },
+                          {
+                            "id": "classification",
+                            "label": "Classification",
+                            "type": "text"
+                          },
+                          {
+                            "id": "life",
+                            "label": "How it lived and found food",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "fossil",
+                        "rowLabelPlural": "fossils"
+                      }
+                    },
+                    {
+                      "number": "4D(6)",
+                      "summary": "See fossils firsthand, or present your state fossil.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "4D(6)(a)",
+                          "summary": "Visit a museum or university fossil display and meet a curator or guide."
+                        },
+                        {
+                          "number": "4D(6)(b)",
+                          "summary": "Visit a local building made of fossil-bearing rock and report what you find."
+                        },
+                        {
+                          "number": "4D(6)(c)",
+                          "summary": "Visit a rock outcrop with fossils and report what you find."
+                        },
+                        {
+                          "number": "4D(6)(d)",
+                          "summary": "Present a display on your state fossil, with its image, age and classification."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Protect natural areas while you study geology.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Discuss how Leave No Trace and the Outdoor Code apply to geology."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain how you followed them while traveling and collecting specimens."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore a career or hobby connected to geology.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Research a geology career and discuss what appeals to you about it."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Research a hobby or healthy lifestyle that uses geology, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "hiking",
       "name": "Hiking",
       "summary": "Hike safely and responsibly, train for distance, and finish four 10-mile hikes and a 20-mile hike.",
@@ -2852,6 +3522,181 @@
                 "rowLabelPlural": "hikes",
                 "rowCount": 5
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kayaking",
+      "name": "Kayaking",
+      "summary": "Learn kayak safety, gear and strokes, then paddle, maneuver and practice rescues on the water.",
+      "officialUrl": "https://www.scouting.org/merit-badges/kayaking/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to kayak safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain kayaking hazards, including weather and water, and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Review preventing and treating common kayaking injuries and illnesses."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how Safety Afloat applies to kayaking."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Pass the Scouting America swimmer test before doing requirements 3 to 8."
+            },
+            {
+              "number": "3",
+              "summary": "Learn about kayaking safety gear.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain why to always wear a life jacket, and pick and fit one."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Review why gear like a bilge pump, throw bag and spare paddle matters."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about kayaks.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Name and point out the main parts of a kayak."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Compare recreational, whitewater and touring kayak designs."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain how to care for, maintain and store a kayak."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Discuss kayak paddles.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Using a paddle correctly."
+                },
+                {
+                  "number": "5b",
+                  "summary": "The parts of a paddle."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Caring for a paddle."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "In an open-cockpit, sit-on-top or inflatable kayak, practice capsizes and rescues.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Capsize and do a wet exit."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Get back in your kayak with help from a buddy boat."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Show a kayak-over-kayak rescue."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Show the HELP position."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Capsize, swim your kayak and paddle to shore, and empty it."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Paddling solo, show these strokes.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Forward stroke."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Backstroke."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Forward sweep."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Reverse sweep."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Draw stroke."
+                },
+                {
+                  "number": "7f",
+                  "summary": "Stern draw."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Paddling solo, show these maneuvers.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Paddle straight for 15 to 20 boat lengths, keeping the kayak balanced."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Pivot 180 degrees each way within two boat lengths."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Move sideways 10 feet to the right and to the left."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Stop within one boat length."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Turn 90 degrees right and left while moving forward."
+                },
+                {
+                  "number": "8f",
+                  "summary": "Paddle backward three to four boat lengths."
+                },
+                {
+                  "number": "8g",
+                  "summary": "Paddle a figure 8 around buoys three to four boat lengths apart."
+                }
+              ]
             }
           ]
         }
@@ -3732,6 +4577,166 @@
       ]
     },
     {
+      "id": "photography",
+      "name": "Photography",
+      "summary": "Learn how cameras and light work, practice composing and editing photos, and tell a story in pictures.",
+      "officialUrl": "https://www.scouting.org/merit-badges/photography/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn photography safety.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain photography hazards, including weather, sun and water, and how to handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Watch the Personal Safety Awareness \"Digital Safety\" video, with permission."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain how each of these affects a photo's quality.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Light: natural, low and artificial."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Exposure: aperture, shutter speed and ISO."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Depth of field."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Composition: rule of thirds, leading lines, framing and depth."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Angle of view."
+                },
+                {
+                  "number": "2f",
+                  "summary": "Stopping action and blurring motion."
+                },
+                {
+                  "number": "2g",
+                  "summary": "The decisive moment."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain a camera's main parts, how it works and how it makes an exposure."
+            },
+            {
+              "number": "4",
+              "summary": "Photograph one subject two ways, for two of these, and share the results.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "From two angles or perspectives."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Under artificial and natural light."
+                },
+                {
+                  "number": "4c",
+                  "summary": "With two depths of field."
+                },
+                {
+                  "number": "4d",
+                  "summary": "With two composition techniques."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Take three of these kinds of photos and share them.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "A close-up of a person."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Two or three people interacting."
+                },
+                {
+                  "number": "5c",
+                  "summary": "An action shot."
+                },
+                {
+                  "number": "5d",
+                  "summary": "An animal."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Nature."
+                },
+                {
+                  "number": "5f",
+                  "summary": "A candid, posed or camera-aware portrait."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain photo-editing software, then improve one of your photos one way.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Crop it."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Adjust its exposure or color."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Improve its impact another way."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "With new photos, tell a visual story about an event or topic.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Plan the photos your story needs."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Share your plan and get your counselor's OK before you start."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Order your best 8 to 12 photos on a poster or slides, and share them."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore three photography careers and how to prepare for one."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "rifle-shooting",
       "name": "Rifle Shooting",
       "summary": "Learn gun safety, then shoot a cartridge rifle, air rifle or muzzleloader on a supervised range.",
@@ -3964,6 +4969,353 @@
             {
               "number": "3",
               "summary": "Research how shooting skills could lead to a career or hobby, and discuss it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shotgun-shooting",
+      "name": "Shotgun Shooting",
+      "summary": "Learn gun safety, then shoot moving targets with a modern or muzzleloading shotgun on a supervised range.",
+      "officialUrl": "https://www.scouting.org/merit-badges/shotgun-shooting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn firearm safety, laws and resources.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain why anything that fires a projectile needs care and the right place."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain the basic safe gun-handling rules for every firearm."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain what you'd do if a friend at your home asked to see a gun."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain why and how to protect your eyes and ears."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Explain the key gun laws where you live."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Explain how hunting connects to managing wildlife wisely."
+                },
+                {
+                  "number": "1g",
+                  "summary": "Take a hunter education course or get your state's hunting laws, then:",
+                  "children": [
+                    {
+                      "number": "1g(1)",
+                      "summary": "Explain your state's key hunting laws and any gun or ammunition rules."
+                    },
+                    {
+                      "number": "1g(2)",
+                      "summary": "List the animals that can legally be hunted in your state."
+                    }
+                  ]
+                },
+                {
+                  "number": "1h",
+                  "summary": "Explain good hygiene while shooting."
+                },
+                {
+                  "number": "1i",
+                  "summary": "Explain three shotgun sports and where you could take part in them nearby."
+                },
+                {
+                  "number": "1j",
+                  "summary": "Discuss sources of information about firearms."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "On a supervised range, complete one shotgun option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2A",
+                  "summary": "Option A: modern shotshell shotgun.",
+                  "children": [
+                    {
+                      "number": "2A(1)",
+                      "summary": "Name a shotgun's main parts and action types, and how they work."
+                    },
+                    {
+                      "number": "2A(2)",
+                      "summary": "Show how to store and handle a shotgun safely."
+                    },
+                    {
+                      "number": "2A(3)",
+                      "summary": "Name the parts of a shotgun shell and what each does."
+                    },
+                    {
+                      "number": "2A(4)",
+                      "summary": "Identify shotgun gauges and which you'd pick for a given use."
+                    },
+                    {
+                      "number": "2A(5)",
+                      "summary": "Explain misfires, hangfires and squib fires, and how to prevent and handle them."
+                    },
+                    {
+                      "number": "2A(6)",
+                      "summary": "Shoot safely on a range, following its rules and commands."
+                    },
+                    {
+                      "number": "2A(7)",
+                      "summary": "Explain shotgun-cleaning safety and the supplies you need."
+                    },
+                    {
+                      "number": "2A(8)",
+                      "summary": "Clean a shotgun safely and correctly."
+                    },
+                    {
+                      "number": "2A(9)",
+                      "summary": "Discuss what to look for when choosing a shotgun."
+                    },
+                    {
+                      "number": "2A(10)",
+                      "summary": "Using the four fundamentals, hit 12 of 25 moving targets, twice."
+                    }
+                  ]
+                },
+                {
+                  "number": "2B",
+                  "summary": "Option B: muzzleloading shotgun.",
+                  "children": [
+                    {
+                      "number": "2B(1)",
+                      "summary": "Discuss how muzzleloading shotguns developed."
+                    },
+                    {
+                      "number": "2B(2)",
+                      "summary": "Name a muzzleloading shotgun's main parts and how they work."
+                    },
+                    {
+                      "number": "2B(3)",
+                      "summary": "Show how to store and handle a muzzleloading shotgun safely."
+                    },
+                    {
+                      "number": "2B(4)",
+                      "summary": "Name the grades of black powder and how to use each safely."
+                    },
+                    {
+                      "number": "2B(5)",
+                      "summary": "Discuss how to store black powder safely."
+                    },
+                    {
+                      "number": "2B(6)",
+                      "summary": "Discuss what makes up a proper load."
+                    },
+                    {
+                      "number": "2B(7)",
+                      "summary": "Name the steps and tools for loading a muzzleloading shotgun safely."
+                    },
+                    {
+                      "number": "2B(8)",
+                      "summary": "Explain why a muzzleloader fails to fire, and how to prevent and handle it."
+                    },
+                    {
+                      "number": "2B(9)",
+                      "summary": "Shoot a muzzleloading shotgun safely on a range, following its rules and commands."
+                    },
+                    {
+                      "number": "2B(10)",
+                      "summary": "Explain muzzleloader cleaning safety and the supplies you need."
+                    },
+                    {
+                      "number": "2B(11)",
+                      "summary": "Clean a muzzleloading shotgun safely and correctly."
+                    },
+                    {
+                      "number": "2B(12)",
+                      "summary": "Discuss what to look for when choosing a muzzleloading shotgun."
+                    },
+                    {
+                      "number": "2B(13)",
+                      "summary": "Using the four fundamentals, hit 5 of 15 moving targets, twice."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Research how shooting skills could lead to a career or hobby, and discuss it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "space-exploration",
+      "name": "Space Exploration",
+      "summary": "Learn why and how we explore space, fly a model rocket, and design a mission and a space base.",
+      "officialUrl": "https://www.scouting.org/merit-badges/space-exploration/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain why we explore space, covering these points.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Historical reasons."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Near-term goals for new knowledge."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Benefits for Earth's resources, technology and products."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Cooperation between nations."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Make a collector's card about a space pioneer and discuss four others."
+            },
+            {
+              "number": "3",
+              "summary": "Build and fly a model rocket twice (or model a NASA rocket); explain its parts.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Body tube."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Engine mount."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Fins."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Igniter."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Launch lug."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Nose cone."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Payload."
+                },
+                {
+                  "number": "3h",
+                  "summary": "Recovery system."
+                },
+                {
+                  "number": "3i",
+                  "summary": "Rocket engine."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Discuss and demonstrate each of these.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Action and reaction."
+                },
+                {
+                  "number": "4b",
+                  "summary": "How a rocket engine works."
+                },
+                {
+                  "number": "4c",
+                  "summary": "What keeps satellites in orbit."
+                },
+                {
+                  "number": "4d",
+                  "summary": "How pictures of Earth and other planets are taken and sent back."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Do two space mission projects.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Discuss the discoveries of one robotic and one historic crewed mission."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Make a blog, website, slide show or scrapbook on a planetary mission happening now."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Design a robotic mission that brings back samples from another world."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Describe the purpose, workings and parts of one crewed spacecraft.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "A space shuttle or other crewed orbital vehicle."
+                },
+                {
+                  "number": "6b",
+                  "summary": "The International Space Station."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Design a crewed base elsewhere in the solar system, with drawings or a model.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Energy source."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Construction."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Life support."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Purpose and function."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Research a space career and discuss what makes it interesting."
             }
           ]
         }
@@ -4273,6 +5625,285 @@
             {
               "number": "9",
               "summary": "Explain how swimming benefits fitness and health."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wilderness-survival",
+      "name": "Wilderness Survival",
+      "summary": "Learn to avoid and get through a survival situation: first aid, shelter, fire, signals and water.",
+      "officialUrl": "https://www.scouting.org/merit-badges/wilderness-survival/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn backcountry hazards and first aid.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Show or explain how to prevent and treat these backcountry problems.",
+                  "children": [
+                    {
+                      "number": "1a(1)",
+                      "summary": "Dehydration."
+                    },
+                    {
+                      "number": "1a(2)",
+                      "summary": "Heatstroke."
+                    },
+                    {
+                      "number": "1a(3)",
+                      "summary": "Hypothermia."
+                    },
+                    {
+                      "number": "1a(4)",
+                      "summary": "Shock."
+                    },
+                    {
+                      "number": "1a(5)",
+                      "summary": "Blisters."
+                    },
+                    {
+                      "number": "1a(6)",
+                      "summary": "Eye injuries."
+                    },
+                    {
+                      "number": "1a(7)",
+                      "summary": "Ankle and knee sprains."
+                    },
+                    {
+                      "number": "1a(8)",
+                      "summary": "Chigger, tick, mosquito and gnat bites."
+                    },
+                    {
+                      "number": "1a(9)",
+                      "summary": "Bee stings."
+                    },
+                    {
+                      "number": "1a(10)",
+                      "summary": "Spider bites."
+                    },
+                    {
+                      "number": "1a(11)",
+                      "summary": "Scorpion stings."
+                    },
+                    {
+                      "number": "1a(12)",
+                      "summary": "Wild mammal bites."
+                    },
+                    {
+                      "number": "1a(13)",
+                      "summary": "Venomous snakebites."
+                    }
+                  ]
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe how the Scout Basic Essentials help in a survival situation and a survival kit."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how a trip plan can keep you out of a survival situation."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain why each of the seven survival priorities matters."
+            },
+            {
+              "number": "3",
+              "summary": "Explain how to stay calm and upbeat when lost, and why it matters."
+            },
+            {
+              "number": "4",
+              "summary": "Assemble your own first-aid kit and survival kit, and show how to use them."
+            },
+            {
+              "number": "5",
+              "summary": "Learn to find shelter and stay protected.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Describe how you'd survive in each of these conditions.",
+                  "children": [
+                    {
+                      "number": "5a(1)",
+                      "summary": "Cold and snow."
+                    },
+                    {
+                      "number": "5a(2)",
+                      "summary": "Wet."
+                    },
+                    {
+                      "number": "5a(3)",
+                      "summary": "Hot and dry."
+                    },
+                    {
+                      "number": "5a(4)",
+                      "summary": "Windy."
+                    },
+                    {
+                      "number": "5a(5)",
+                      "summary": "On the water or at its edge."
+                    }
+                  ]
+                },
+                {
+                  "number": "5b",
+                  "summary": "Show the right clothing for extreme heat, cold and wet weather."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Explain how to stay safe around bears and raccoons."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Describe forest and snow survival shelters you could build or find."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Build a low-impact natural shelter and spend a night in it."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Build and light three fires, each a different way without matches."
+            },
+            {
+              "number": "7",
+              "summary": "Learn to signal for help.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain and show how to signal ground, air or water searchers."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Show how to signal with a mirror."
+                },
+                {
+                  "number": "7c",
+                  "summary": "From memory, describe and explain five ground-to-air signals."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Show three ways to make outdoor water safe to drink."
+            },
+            {
+              "number": "9",
+              "summary": "Explain why eating wild plants or animals is usually unwise when lost."
+            },
+            {
+              "number": "10",
+              "summary": "Explore a career or hobby connected to wilderness survival.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Research a related career and discuss what makes it interesting."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Research a related hobby or volunteer role, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wood-carving",
+      "name": "Wood Carving",
+      "summary": "Learn to carve safely, care for and sharpen your tools, and finish carvings of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/wood-carving/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to carve safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain wood-carving hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for carving injuries such as cuts, scratches and splinters."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Show you can handle a knife safely.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Earn the Totin' Chip."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Discuss the Safety Checklist for Carving."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn to care for carving tools.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how to use and care for five carving tools."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain and show how to use and care for several sharpening tools."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "On scrap wood or a project, show these cuts.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Paring cut."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Basic cut and push cut."
+                },
+                {
+                  "number": "4c",
+                  "summary": "V cut."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Stop cut or score line."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain why projects use different woods and why you chose yours."
+            },
+            {
+              "number": "6",
+              "summary": "Finish a simple carving in the round, of your own design or from the pamphlet."
+            },
+            {
+              "number": "7",
+              "summary": "Make a simple chip carving or low-relief carving."
             }
           ]
         }
