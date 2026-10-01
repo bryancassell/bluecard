@@ -44,7 +44,6 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
-import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.NumberInput
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
@@ -52,6 +51,7 @@ import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.removalButtonColors
+import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -173,8 +173,7 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
  * A row's values are shown on one line in its requirement's tracker, so a pasted line break
  * becomes a space.
  */
-private val TextLimit =
-    TextLengthLimit(maxLength = TRACKER_TEXT_MAX_LENGTH).then(LineBreaksAsSpaces)
+private val TextLimit = singleLineInput(maxLength = TRACKER_TEXT_MAX_LENGTH)
 
 private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = TRACKER_NUMBER_MAX_LENGTH))
 
