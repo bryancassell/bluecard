@@ -2,9 +2,14 @@ package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CompletionTest {
@@ -17,6 +22,10 @@ class CompletionTest {
 
     private fun progressOf(vararg progress: RequirementProgress) =
         progress.associateBy { it.requirementNumber }
+
+    /** Completion from requirement progress alone, with no tracker entries. */
+    private fun Requirement.completion(progress: Map<String, RequirementProgress>) =
+        completion(progress, emptyMap())
 
     // Requirement 2 needs both children; requirement 3 needs any two of three.
     private val allOf = Requirement(
@@ -110,15 +119,95 @@ class CompletionTest {
         )
     }
 
+    // Requirement 5 is a tracker with three rows, and requirement 6 a log.
+    private val income = listOf(TrackerColumn("income", "Income", TrackerColumnType.NUMBER))
+    private val weeks = Requirement(
+        number = "5",
+        summary = "Track three weeks.",
+        tracker = TrackerDefinition(income, "week", "weeks", rowCount = 3)
+    )
+    private val log = Requirement(
+        number = "6",
+        summary = "Keep a log.",
+        tracker = TrackerDefinition(income, "session", "sessions")
+    )
+
+    private fun row(number: String, rowNumber: Int?, addedDate: LocalDate? = null) =
+        TrackerEntry(0, BADGE, number, rowNumber, mapOf("income" to "10"), addedDate)
+
+    private fun entriesOf(vararg entries: TrackerEntry) = entries.groupBy { it.requirementNumber }
+
+    @Test
+    fun isMarkedByHand_onlyWithoutChildrenOrFixedRows() {
+        assertTrue(leaf("1").isMarkedByHand)
+        assertTrue(log.isMarkedByHand)
+        assertFalse(allOf.isMarkedByHand)
+        assertFalse(weeks.isMarkedByHand)
+    }
+
+    @Test
+    fun fixedRows_completeOnlyWhenEveryRowIsFilled() {
+        val twoRows = entriesOf(row("5", 1, day(1)), row("5", 3, day(2)))
+        assertNull(weeks.completion(progressOf(), twoRows))
+
+        val allRows = entriesOf(row("5", 1, day(1)), row("5", 2, day(4)), row("5", 3, day(2)))
+        assertEquals(Completion(day(4)), weeks.completion(progressOf(), allRows))
+    }
+
+    @Test
+    fun fixedRows_ignoreAStoredMark() {
+        assertNull(weeks.completion(progressOf(done("5", day(3))), entriesOf()))
+        val allRows = entriesOf(row("5", 1, day(1)), row("5", 2, day(4)), row("5", 3, day(2)))
+        assertEquals(Completion(day(4)), weeks.completion(progressOf(done("5", day(9))), allRows))
+    }
+
+    @Test
+    fun fixedRows_aRowWithoutADateMeansNoDate() {
+        val allRows = entriesOf(row("5", 1, day(1)), row("5", 2), row("5", 3, day(2)))
+        assertEquals(Completion(null), weeks.completion(progressOf(), allRows))
+    }
+
+    @Test
+    fun fixedRows_countOnlyTheirOwnRows() {
+        // Another requirement's rows, and a row outside the tracker, fill none of them.
+        val entries = entriesOf(
+            row("5", 1, day(1)),
+            row("5", 2, day(1)),
+            row("5", 4, day(1)),
+            row("7", 3, day(1))
+        )
+        assertNull(weeks.completion(progressOf(), entries))
+    }
+
+    @Test
+    fun log_completeOnlyWhenMarked() {
+        val entries = entriesOf(row("6", null, day(1)), row("6", null, day(2)))
+        assertNull(log.completion(progressOf(), entries))
+        assertEquals(Completion(day(3)), log.completion(progressOf(done("6", day(3))), entries))
+    }
+
+    @Test
+    fun children_withFixedRows_countTheirRows() {
+        val parent = Requirement(
+            number = "8",
+            summary = "Do both.",
+            children = listOf(leaf("8a"), weeks.copy(number = "8b"))
+        )
+        val rows = entriesOf(row("8b", 1, day(5)), row("8b", 2, day(6)), row("8b", 3, day(7)))
+        assertNull(parent.completion(progressOf(done("8a", day(2))), entriesOf()))
+        assertEquals(Completion(day(7)), parent.completion(progressOf(done("8a", day(2))), rows))
+    }
+
     private val version = RequirementsVersion(day(1), listOf(leaf("1"), allOf, twoOf))
 
     private fun badge(
         vararg progress: RequirementProgress,
-        completedOnPriorDate: LocalDate? = null
+        completedOnPriorDate: LocalDate? = null,
+        trackerEntries: List<TrackerEntry> = emptyList()
     ) = BadgeProgressDetails(
         BadgeProgress(BADGE, day(1), day(1), completedOnPriorDate = completedOnPriorDate),
         progress.toList(),
-        emptyList()
+        trackerEntries
     )
 
     @Test
@@ -145,6 +234,19 @@ class CompletionTest {
     fun badge_completeWithoutDateWhenANeededDateIsMissing() {
         val all = badge(done("1"), done("2a", day(3)), done("2b", day(8)), done("3a"), done("3b"))
         assertEquals(Completion(null), all.completion(version))
+    }
+
+    @Test
+    fun badge_countsAFilledTracker() {
+        val withTracker = RequirementsVersion(day(1), listOf(leaf("1"), weeks))
+        val twoRows = listOf(row("5", 1, day(3)), row("5", 2, day(10)))
+
+        assertNull(badge(done("1", day(2)), trackerEntries = twoRows).completion(withTracker))
+        assertEquals(
+            Completion(day(11)),
+            badge(done("1", day(2)), trackerEntries = twoRows + row("5", 3, day(11)))
+                .completion(withTracker)
+        )
     }
 
     @Test

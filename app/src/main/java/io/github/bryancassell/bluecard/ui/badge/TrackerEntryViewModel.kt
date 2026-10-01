@@ -252,6 +252,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
                 number,
                 row.rowNumber,
                 values,
+                addedDate = LocalDate.now(clock),
                 recorder.badgeStart(),
                 id = row.entryId
             )

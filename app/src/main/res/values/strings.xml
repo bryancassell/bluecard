@@ -68,9 +68,6 @@
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
-    <!-- Screen reader label for the checkbox on a requirement's row, with its official number,
-         such as "Requirement 4b completed". The screen reader adds whether it's checked. -->
-    <string name="requirement_completed_checkbox">Requirement %1$s completed</string>
     <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
          open requirement". -->
     <string name="requirement_open">open requirement</string>

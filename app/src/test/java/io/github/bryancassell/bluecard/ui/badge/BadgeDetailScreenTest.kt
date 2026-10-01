@@ -2,9 +2,6 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.app.Application
 import android.content.Intent
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -13,8 +10,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsOff
-import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -23,13 +19,14 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
-import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -44,10 +41,7 @@ class BadgeDetailScreenTest {
     val composeTestRule = createComposeRule()
 
     private val openedRequirements = mutableListOf<String>()
-    private val openedUris = mutableListOf<String>()
-    private val completedChanges = mutableListOf<Pair<String, Boolean>>()
     private var counselorEdits = 0
-    private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     private val ready = BadgeDetailUiState.Ready(
         name = "Camping",
@@ -55,55 +49,39 @@ class BadgeDetailScreenTest {
         eagle = EagleRequirement.Required,
         officialUrl = "https://www.scouting.org/merit-badges/camping/",
         requirements = listOf(
-            RequirementItem("1", "Plan a campout.", null, true, hasSubRequirements = false),
+            RequirementItem("1", "Plan a campout.", null, true, markedByHand = true),
             RequirementItem(
                 "2",
                 "Do two of these.",
                 Choice(2, 3),
                 false,
-                hasSubRequirements = true
+                markedByHand = false
             ),
             RequirementItem(
                 "3",
                 "Keep a camping log.",
                 null,
                 false,
-                hasSubRequirements = false,
+                markedByHand = false,
                 tracker = TrackerCount(8, 12, "nights")
             ),
-            RequirementItem("4", "Do all of these.", null, true, hasSubRequirements = true)
+            RequirementItem("4", "Do all of these.", null, true, markedByHand = false)
         )
     )
 
     private fun show(uiState: BadgeDetailUiState) {
-        val uriHandler = object : UriHandler {
-            override fun openUri(uri: String) {
-                openedUris += uri
-            }
-        }
         composeTestRule.setContent {
-            CompositionLocalProvider(LocalUriHandler provides uriHandler) {
-                BadgeDetailScreen(
-                    uiState = uiState,
-                    onOpenRequirement = { openedRequirements += it },
-                    onEditCounselor = { counselorEdits++ },
-                    onCompletedChange = { number, completed ->
-                        completedChanges +=
-                            number to completed
-                    },
-                    onSaveFailureShown = { saveFailuresShown += it }
-                )
-            }
+            BadgeDetailScreen(
+                uiState = uiState,
+                onOpenRequirement = { openedRequirements += it },
+                onEditCounselor = { counselorEdits++ }
+            )
         }
     }
 
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
-
-    private fun checkbox(number: String) = composeTestRule
-        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
-        .performScrollTo()
 
     private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")
 
@@ -179,7 +157,20 @@ class BadgeDetailScreenTest {
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .performClick()
 
-        assertEquals(listOf("https://www.scouting.org/merit-badges/camping/"), openedUris)
+        val started = startedActivity()
+        assertEquals(Intent.ACTION_VIEW, started?.action)
+        assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
+    }
+
+    // The browser takes a moment to cover BlueCard, so the second tap reaches the link too.
+    @Test
+    fun officialLink_doubleTap_opensBrowserOnce() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Official requirements").performTouchInput { doubleClick() }
+
+        assertEquals(Intent.ACTION_VIEW, startedActivity()?.action)
+        assertNull(startedActivity())
     }
 
     @Test
@@ -242,6 +233,17 @@ class BadgeDetailScreenTest {
     }
 
     @Test
+    fun counselorPhone_doubleTap_opensPhoneAppOnce() {
+        show(ready.copy(counselor = counselor))
+
+        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo()
+            .performTouchInput { doubleClick() }
+
+        assertEquals(Intent.ACTION_DIAL, startedActivity()?.action)
+        assertNull(startedActivity())
+    }
+
+    @Test
     fun counselorEmail_opensEmailAppToWriteToThem() {
         show(ready.copy(counselor = counselor))
 
@@ -254,6 +256,33 @@ class BadgeDetailScreenTest {
         assertEquals(Intent.ACTION_SENDTO, started?.action)
         // Spelled as typed, since some email apps show the address as the link spells it.
         assertEquals("mailto:pat@example.com", started?.dataString)
+    }
+
+    @Test
+    fun counselorEmail_doubleTap_opensEmailAppOnce() {
+        show(ready.copy(counselor = counselor))
+
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo()
+            .performTouchInput { doubleClick() }
+
+        assertEquals(Intent.ACTION_SENDTO, startedActivity()?.action)
+        assertNull(startedActivity())
+    }
+
+    // All three controls share one guard, so a quick tap on another control, before the first
+    // app covers BlueCard, doesn't open a second app. The clock is stopped, so the taps all
+    // come within the double-tap timeout.
+    @Test
+    fun officialLink_thenCounselorPhoneAndEmail_opensOnlyBrowser() {
+        show(ready.copy(counselor = counselor))
+        composeTestRule.mainClock.autoAdvance = false
+
+        composeTestRule.onNodeWithText("Official requirements").performClick()
+        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo().performClick()
+
+        assertEquals(Intent.ACTION_VIEW, startedActivity()?.action)
+        assertNull(startedActivity())
     }
 
     @Test
@@ -304,44 +333,21 @@ class BadgeDetailScreenTest {
     }
 
     @Test
-    fun requirementWithoutSubRequirements_hasCheckboxShowingCompletion() {
+    fun requirement_hasCheckOnlyWhenComplete() {
         show(ready)
 
-        checkbox("1").assertIsOn()
-        checkbox("3").assertIsOff()
-    }
-
-    @Test
-    fun requirementWithSubRequirements_hasCheckOnlyWhenComplete_andNoCheckbox() {
-        show(ready)
-
+        row("Plan a campout.").assert(hasContentDescription("Completed"))
+        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
         row("Do all of these.").assert(hasContentDescription("Completed"))
         row("Do two of these.").assert(!hasContentDescription("Completed"))
-        composeTestRule.onNode(
-            hasContentDescription("Requirement 2 completed")
-        ).assertDoesNotExist()
-        composeTestRule.onNode(
-            hasContentDescription("Requirement 4 completed")
-        ).assertDoesNotExist()
     }
 
+    // The scout marks a requirement complete on its own page.
     @Test
-    fun checkingRequirement_marksItCompleted() {
+    fun requirements_haveNoCheckbox() {
         show(ready)
 
-        checkbox("3").performClick()
-
-        assertEquals(listOf("3" to true), completedChanges)
-        assertEquals(emptyList<String>(), openedRequirements)
-    }
-
-    @Test
-    fun uncheckingRequirement_marksItNotCompleted() {
-        show(ready)
-
-        checkbox("1").performClick()
-
-        assertEquals(listOf("1" to false), completedChanges)
+        composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -375,29 +381,6 @@ class BadgeDetailScreenTest {
         }
 
         assertEquals(listOf("1", "2", "3"), openedRequirements)
-        assertEquals(emptyList<Pair<String, Boolean>>(), completedChanges)
-    }
-
-    @Test
-    fun saveFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
-        show(ready.copy(saveFailure = failure))
-
-        composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
-
-        // A short snackbar shows for 4 seconds.
-        composeTestRule.mainClock.advanceTimeBy(5_000)
-
-        composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
-        assertEquals(listOf(failure), saveFailuresShown)
-    }
-
-    @Test
-    fun noSaveFailure_showsNoMessage() {
-        show(ready)
-
-        composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
     }
 
     @Test
@@ -425,7 +408,9 @@ class BadgeDetailScreenTest {
     @Test
     fun longRequirementList_scrollsToLastRequirement() {
         // More top-level requirements than any badge has.
-        val many = (1..20).map { RequirementItem("$it", "Requirement $it.", null, false, true) }
+        val many = (1..20).map {
+            RequirementItem("$it", "Requirement $it.", null, false, markedByHand = false)
+        }
         show(ready.copy(requirements = many))
 
         row("Requirement 20.").assertIsDisplayed().performClick()

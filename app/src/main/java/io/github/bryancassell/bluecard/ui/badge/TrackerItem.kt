@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.filledRows
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -92,13 +93,6 @@ private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow
             TrackerRow(number, entry?.id, entry?.let { values(it) }.orEmpty())
         }
     }
-
-/**
- * The entries of a tracker with [rowCount] rows, by the row they fill. Only a catalog edited
- * during development could leave an entry outside them.
- */
-private fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntry> =
-    entries.filter { it.rowNumber in 1..rowCount }.associateBy { it.rowNumber!! }
 
 private fun TrackerDefinition.values(entry: TrackerEntry): List<TrackerValue> =
     columns.mapNotNull { column -> entry.values[column.id]?.let { TrackerValue(column.type, it) } }

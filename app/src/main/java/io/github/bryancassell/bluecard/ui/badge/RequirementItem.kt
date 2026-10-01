@@ -4,11 +4,12 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
 
 /**
  * One requirement as a row: its number, our summary, whether it's complete, and how much of
- * its tracker is filled in. Every row opens the requirement's own page, for its
- * sub-requirements, completion date, comment and tracker.
+ * its tracker is filled in. Every row opens the requirement's own page, for marking it
+ * complete and for its sub-requirements, completion date, comment and tracker.
  */
 data class RequirementItem(
     val number: String,
@@ -17,10 +18,10 @@ data class RequirementItem(
     val choice: Choice?,
     val completed: Boolean,
     /**
-     * Whether it has sub-requirements, which decide whether it's complete. One without them
-     * is marked complete by the scout, with a checkbox on its row.
+     * Whether the scout marks it complete by hand, with a checkbox on its page. Otherwise its
+     * sub-requirements or its tracker's rows decide ([isMarkedByHand]).
      */
-    val hasSubRequirements: Boolean,
+    val markedByHand: Boolean,
     /** How much of its tracker is filled in, or null if it has none. */
     val tracker: TrackerCount? = null
 )
@@ -40,7 +41,7 @@ fun Requirement.toItem(
     summary = summary,
     // A count of all the children is no choice.
     choice = requiredCount?.takeIf { it < children.size }?.let { Choice(it, children.size) },
-    completed = completion(progress) != null,
-    hasSubRequirements = children.isNotEmpty(),
+    completed = completion(progress, trackerEntries) != null,
+    markedByHand = isMarkedByHand,
     tracker = tracker?.count(trackerEntries[number].orEmpty())
 )

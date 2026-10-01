@@ -10,7 +10,6 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.width
 import androidx.core.graphics.Insets
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.navigationevent.DirectNavigationEventInput
@@ -236,13 +236,17 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Camping").performClick()
     }
 
-    // A requirement's checkbox on its row, on Badge detail or Requirement detail.
-    private fun rowCheckbox(number: String) = composeTestRule
-        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
-
     // The checkbox on a requirement's own page.
     private fun completedCheckbox() =
         composeTestRule.onNode(hasText("Completed") and isToggleable())
+
+    // Opens the requirement with this summary, marks it complete on its page, and goes back.
+    private fun completeOnItsPage(summary: String) {
+        composeTestRule.onNodeWithText(summary).performClick()
+        completedCheckbox().performClick()
+        composeTestRule.waitForIdle()
+        pressBack()
+    }
 
     private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
         .first()?.requirements?.singleOrNull { it.requirementNumber == number }
@@ -250,6 +254,15 @@ class MainActivityTest {
     private suspend fun trackerValues(number: String) = progressRepository
         .observeProgress("camping").first()?.trackerEntries.orEmpty()
         .filter { it.requirementNumber == number }.map { it.values }
+
+    /**
+     * Home is showing again. It's found by Camping's row rather than the scout's name, because
+     * Home keeps its scroll position, which can leave the name above the screen.
+     */
+    private fun assertHomeBackAtCamping() {
+        home().assertExists()
+        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsDisplayed()
+    }
 
     /** Badges is showing, and Badge detail isn't. */
     private fun assertBadgesShowing() {
@@ -442,6 +455,39 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 
+    @Test
+    fun openBadgeInProgress_fromHome_showsBadgeDetail() {
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Camping").performScrollTo().performClick()
+
+        home().assertDoesNotExist()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+        pressBack()
+        assertHomeBackAtCamping()
+    }
+
+    // BlueCardTheme is light in dark mode too, so the system bars keep dark icons, which show
+    // on its light background.
+    @Config(qualifiers = "night")
+    @Test
+    fun inDarkMode_systemBarIconsAreDark() {
+        launchWithProfile()
+
+        scenario.onActivity {
+            val insetsController = WindowCompat.getInsetsController(it.window, it.window.decorView)
+            assertTrue(insetsController.isAppearanceLightStatusBars)
+            assertTrue(insetsController.isAppearanceLightNavigationBars)
+        }
+    }
+
     // The app formats every string in the strings' language, so on a Persian device the
     // English strings keep English digits rather than "Do ۱ of ۲".
     @Config(qualifiers = "fa")
@@ -558,30 +604,20 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
-    @Test
-    fun checkingRequirement_onBadgeDetail_completesItToday() {
-        openCamping()
-
-        rowCheckbox("1").performClick()
-
-        rowCheckbox("1").assertIsOn()
-        assertEquals(
-            RequirementProgress("camping", "1", completed = true, completedDate = today),
-            runBlocking { recorded("1") }
-        )
-    }
-
     // The acceptance test of recording progress: completing enough sub-requirements completes
-    // their requirement, and completing every requirement completes the badge.
+    // their requirement, and completing every requirement completes the badge. The scout marks
+    // each one complete on its own page.
     @Test
     fun completingEnoughRequirements_completesTheBadge() {
         openCamping()
-        rowCheckbox("1").performClick()
+        completeOnItsPage("First.")
         composeTestRule.onNodeWithText("Second.").performClick()
 
         // Requirement 2 needs one of its two choices.
-        rowCheckbox("2a").performClick()
+        completeOnItsPage("Choice A.")
 
+        composeTestRule.onNode(hasText("Choice A.") and hasContentDescription("Completed"))
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
@@ -607,10 +643,11 @@ class MainActivityTest {
             RequirementProgress("camping", "1", true, today, "Planned it with my patrol."),
             runBlocking { recorded("1") }
         )
-        // Back on the badge's page, the requirement is checked.
+        // Back on the badge's page, the requirement's row shows its check.
         composeTestRule.waitForIdle()
         pressBack()
-        rowCheckbox("1").assertIsOn()
+        composeTestRule.onNode(hasText("First.") and hasContentDescription("Completed"))
+            .assertIsDisplayed()
     }
 
     private fun notesField() = composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
@@ -649,6 +686,7 @@ class MainActivityTest {
                 "1",
                 null,
                 mapOf("notes" to "Clear skies."),
+                today,
                 BadgeStart(LocalDate.of(2026, 1, 1), today)
             )
         }
@@ -848,6 +886,24 @@ class MainActivityTest {
         pressBack()
 
         home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onBadgeInProgress_opensItOnce() {
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Camping").performScrollTo()
+
+        tapTwiceInOneFrame("Camping")
+        pressBack()
+
+        assertHomeBackAtCamping()
     }
 
     @Test

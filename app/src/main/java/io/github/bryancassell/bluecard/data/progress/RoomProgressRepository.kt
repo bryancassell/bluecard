@@ -95,6 +95,7 @@ class RoomProgressRepository @Inject constructor(
         number: String,
         rowNumber: Int?,
         values: Map<String, String>,
+        addedDate: LocalDate,
         start: BadgeStart,
         id: Long?
     ): Long = ifStarted(badgeId, start) {
@@ -104,7 +105,8 @@ class RoomProgressRepository @Inject constructor(
                 badgeId = badgeId,
                 requirementNumber = number,
                 rowNumber = rowNumber,
-                values = normalizedTrackerValues(values)
+                values = normalizedTrackerValues(values),
+                addedDate = addedDate
             )
         )
     }

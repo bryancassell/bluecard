@@ -43,7 +43,7 @@ class RequirementDetailScreenTest {
 
     private val openedRequirements = mutableListOf<String>()
     private val openedTrackerEntries = mutableListOf<Pair<Long?, Int?>>()
-    private val completedChanges = mutableListOf<Pair<String, Boolean>>()
+    private val completedChanges = mutableListOf<Boolean>()
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
     private val saveFailuresShown = mutableListOf<SaveFailure>()
@@ -52,17 +52,29 @@ class RequirementDetailScreenTest {
     /** A requirement with sub-requirements. */
     private val ready = RequirementDetailUiState.Ready(
         badgeName = "Camping",
-        requirement = RequirementItem("2", "Do two of these.", Choice(2, 3), false, true),
+        requirement = RequirementItem(
+            "2",
+            "Do two of these.",
+            Choice(2, 3),
+            false,
+            markedByHand = false
+        ),
         completedDate = null,
         children = listOf(
-            RequirementItem("2a", "Cook a meal.", null, completed = true, false),
-            RequirementItem("2b", "Lead one hike.", Choice(1, 2), completed = false, true),
+            RequirementItem("2a", "Cook a meal.", null, completed = true, markedByHand = true),
+            RequirementItem(
+                "2b",
+                "Lead one hike.",
+                Choice(1, 2),
+                completed = false,
+                markedByHand = false
+            ),
             RequirementItem(
                 "2c",
                 "Keep a camping log.",
                 null,
                 completed = false,
-                false,
+                markedByHand = true,
                 TrackerCount(3, null, "nights")
             )
         ),
@@ -74,7 +86,7 @@ class RequirementDetailScreenTest {
     /** A requirement without sub-requirements, not completed. */
     private val leaf = RequirementDetailUiState.Ready(
         badgeName = "Camping",
-        requirement = RequirementItem("1", "Plan a campout.", null, false, false),
+        requirement = RequirementItem("1", "Plan a campout.", null, false, markedByHand = true),
         completedDate = null,
         children = emptyList(),
         tracker = null,
@@ -111,8 +123,12 @@ class RequirementDetailScreenTest {
         )
     )
 
-    /** A requirement with a tracker of three weeks, the second filled in. */
+    /**
+     * A requirement with a tracker of three weeks, the second filled in. Its rows decide whether
+     * it's complete.
+     */
     private val withWeeks = leaf.copy(
+        requirement = RequirementItem("2", "Keep a budget.", null, false, markedByHand = false),
         tracker = TrackerItem(
             count = TrackerCount(1, 3, "weeks"),
             rowTitle = "Week",
@@ -139,9 +155,7 @@ class RequirementDetailScreenTest {
                 onOpenTrackerEntry = { entryId, rowNumber ->
                     openedTrackerEntries += entryId to rowNumber
                 },
-                onCompletedChange = { number, completed ->
-                    completedChanges += number to completed
-                },
+                onCompletedChange = { completedChanges += it },
                 onCompletedDateChange = { dateChanges += it },
                 onSaveComment = { commentsSaved++ },
                 onSaveFailureShown = { saveFailuresShown += it }
@@ -152,10 +166,6 @@ class RequirementDetailScreenTest {
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
-
-    private fun rowCheckbox(number: String) = composeTestRule
-        .onNode(hasContentDescription("Requirement $number completed") and isToggleable())
-        .performScrollTo()
 
     // The requirement's own checkbox, labeled by the text next to it.
     private fun completedCheckbox() =
@@ -230,11 +240,13 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
     }
 
+    // No checkbox for the requirement or on its sub-requirements' rows: the scout marks each
+    // sub-requirement complete on its own page.
     @Test
     fun requirementWithSubRequirements_hasNoCheckboxOrDate() {
         show(ready)
 
-        composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
+        composeTestRule.onNode(isToggleable(), useUnmergedTree = true).assertDoesNotExist()
         composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
     }
 
@@ -242,14 +254,11 @@ class RequirementDetailScreenTest {
     fun subRequirements_showNeededCountAndCompletion() {
         show(ready)
 
-        rowCheckbox("2a").assertIsOn()
-        rowCheckbox("2c").assertIsOff()
+        row("Cook a meal.").assert(hasContentDescription("Completed"))
+        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
         row(
             "Lead one hike."
         ).assert(hasText("Do 1 of 2")).assert(!hasContentDescription("Completed"))
-        composeTestRule.onNode(
-            hasContentDescription("Requirement 2b completed")
-        ).assertDoesNotExist()
     }
 
     @Test
@@ -322,6 +331,30 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
     }
 
+    // Its date field would only show once it's complete (the next test).
+    @Test
+    fun fixedRows_haveNoCheckbox() {
+        show(withWeeks)
+
+        composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_areLabeledCompleted_withNoCheckboxOrDate() {
+        show(withWeeks.copy(requirement = withWeeks.requirement.copy(completed = true)))
+
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
+        composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun log_keepsItsCheckbox() {
+        show(withLog)
+
+        completedCheckbox().assertIsOff()
+    }
+
     @Test
     fun fixedRow_opensWithItsNumber_andItsEntryIfFilledIn() {
         show(withWeeks)
@@ -330,17 +363,6 @@ class RequirementDetailScreenTest {
         row("Week 2").performClick()
 
         assertEquals(listOf<Pair<Long?, Int?>>(null to 3, 5L to 2), openedTrackerEntries)
-    }
-
-    @Test
-    fun checkingSubRequirement_marksItCompleted() {
-        show(ready)
-
-        rowCheckbox("2c").performClick()
-        rowCheckbox("2a").performClick()
-
-        assertEquals(listOf("2c" to true, "2a" to false), completedChanges)
-        assertEquals(emptyList<String>(), openedRequirements)
     }
 
     @Test
@@ -370,7 +392,7 @@ class RequirementDetailScreenTest {
 
         completedCheckbox().performClick()
 
-        assertEquals(listOf("1" to true), completedChanges)
+        assertEquals(listOf(true), completedChanges)
     }
 
     @Test
@@ -379,7 +401,7 @@ class RequirementDetailScreenTest {
 
         completedCheckbox().assertIsOn().performClick()
 
-        assertEquals(listOf("1" to false), completedChanges)
+        assertEquals(listOf(false), completedChanges)
     }
 
     @Test

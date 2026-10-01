@@ -1,8 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.widget.Toast
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,23 +12,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
-import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
+import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
 
 /** Connects the Badge detail screen to its ViewModel. */
 @Composable
@@ -46,25 +42,21 @@ fun BadgeDetailRoute(
         uiState = uiState,
         onOpenRequirement = onOpenRequirement,
         onEditCounselor = onEditCounselor,
-        onCompletedChange = viewModel::setCompleted,
-        onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
 }
 
 /**
  * A badge's summary, whether it's Eagle-required, a link to its official page, the scout's
- * merit badge counselor, and its top-level requirements, which the scout can mark complete.
- * Each requirement opens its own page for the rest, and the counselor is entered on a page of
- * its own, which keeps this one short.
+ * merit badge counselor, and its top-level requirements. Each requirement opens its own page,
+ * where the scout marks it complete, and the counselor is entered on a page of its own, which
+ * keeps this one short.
  */
 @Composable
 fun BadgeDetailScreen(
     uiState: BadgeDetailUiState,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
-    onCompletedChange: (number: String, completed: Boolean) -> Unit,
-    onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -75,14 +67,8 @@ fun BadgeDetailScreen(
         BadgeDetailUiState.Unavailable ->
             ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
 
-        is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
-            BadgeDetails(uiState, onOpenRequirement, onEditCounselor, onCompletedChange)
-            SaveFailedSnackbarHost(
-                failure = uiState.saveFailure,
-                onShown = onSaveFailureShown,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
+        is BadgeDetailUiState.Ready ->
+            BadgeDetails(uiState, onOpenRequirement, onEditCounselor, modifier)
     }
 }
 
@@ -91,9 +77,9 @@ private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
-    onCompletedChange: (number: String, completed: Boolean) -> Unit
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -113,25 +99,20 @@ private fun BadgeDetails(
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
         }
-        // Opens the official page in the browser.
-        val uriHandler = LocalUriHandler.current
-        val context = LocalContext.current
+        // Opens the official page in the browser. The counselor's phone and email share the
+        // function, so quick taps on any of them open one app, once.
+        val startOtherApp = rememberStartOtherApp()
+        // Shown when no app can open web links, as when parental controls block the browser.
         val noBrowser = stringResource(R.string.badge_detail_no_browser)
         TextButton(
             onClick = {
-                try {
-                    uriHandler.openUri(uiState.officialUrl)
-                } catch (_: IllegalArgumentException) {
-                    // What Compose's UriHandler throws when no app can open web links,
-                    // as when parental controls block the browser.
-                    Toast.makeText(context, noBrowser, Toast.LENGTH_SHORT).show()
-                }
+                startOtherApp(Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri()), noBrowser)
             },
             modifier = Modifier.padding(horizontal = 4.dp)
         ) {
             Text(text = stringResource(R.string.badge_detail_official_page))
         }
-        CounselorSection(uiState.counselor, onEdit = onEditCounselor)
+        CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
         Text(
             text = stringResource(R.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,
@@ -140,11 +121,7 @@ private fun BadgeDetails(
                 .semantics { heading() }
         )
         uiState.requirements.forEach {
-            RequirementRow(
-                item = it,
-                onOpen = onOpenRequirement,
-                onCompletedChange = onCompletedChange
-            )
+            RequirementRow(item = it, onOpen = onOpenRequirement)
         }
     }
 }

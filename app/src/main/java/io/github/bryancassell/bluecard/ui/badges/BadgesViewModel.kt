@@ -31,30 +31,18 @@ class BadgesViewModel @Inject constructor(
     val uiState: StateFlow<BadgesUiState> = combine(
         // What depends only on the catalog is worked out when the list starts collecting,
         // not on every progress change or keystroke.
-        flow {
-            val catalog = catalogRepository.getBadges()
-            val eagleGroups = catalog.eagleGroups()
-            val badges = catalog.sortedWith(badgeNameOrder())
-            emit(badges.map { it to it.eagleRequirement(eagleGroups) })
-        },
+        flow { emit(catalogRepository.getBadges().inListOrder()) },
         progressRepository.observeAllProgress(),
         snapshotFlow { query.text.toString() }
     ) { badges, progress, search ->
         val progressById = progress.associateBy { it.badge.badgeId }
         val words = searchWords(search)
-        val matches = badges.filter { (badge, _) -> badge.matchesSearch(words) }
+        val matches = badges.filter { it.badge.matchesSearch(words) }
         if (matches.isEmpty() && words.isNotEmpty()) {
             BadgesUiState.NoMatches
         } else {
             BadgesUiState.Ready(
-                matches.map { (badge, eagle) ->
-                    BadgeListItem(
-                        id = badge.id,
-                        name = badge.name,
-                        eagle = eagle,
-                        status = badge.status(progressById[badge.id])
-                    )
-                }
+                matches.map { it.toListItem(it.badge.status(progressById[it.badge.id])) }
             )
         }
     }.catchLoadFailure(BadgesUiState.LoadFailed)

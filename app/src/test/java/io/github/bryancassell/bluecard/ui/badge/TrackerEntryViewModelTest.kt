@@ -150,7 +150,7 @@ class TrackerEntryViewModelTest {
         fields.getValue(columnId).text.toString()
 
     private suspend fun addSession(values: Map<String, String>) = progressRepository
-        .addTrackerEntry("personal-fitness", "7a", null, values, badgeStart)
+        .addTrackerEntry("personal-fitness", "7a", null, values, today, badgeStart)
 
     private suspend fun entries() =
         progressRepository.observeProgress("personal-fitness").first()?.trackerEntries.orEmpty()
@@ -326,7 +326,8 @@ class TrackerEntryViewModelTest {
                     "personal-fitness",
                     "7a",
                     null,
-                    mapOf("date" to "2026-05-01", "activity" to "Run", "minutes" to "30")
+                    mapOf("date" to "2026-05-01", "activity" to "Run", "minutes" to "30"),
+                    addedDate = today
                 )
             ),
             entries()
@@ -411,18 +412,20 @@ class TrackerEntryViewModelTest {
         viewModel.save()
 
         assertEquals(
-            listOf(TrackerEntry(1, "personal-fitness", "2", 2, mapOf("income" to "12.50"))),
+            listOf(TrackerEntry(1, "personal-fitness", "2", 2, mapOf("income" to "12.50"), today)),
             entries()
         )
     }
 
     @Test
-    fun filledFixedRow_startsWithItsValues_andSaveChangesIt() = runTest {
+    fun filledFixedRow_startsWithItsValues_andSaveChangesIt_keepingItsDate() = runTest {
+        val added = today.minusDays(7)
         val id = progressRepository.addTrackerEntry(
             "personal-fitness",
             "2",
             3,
             mapOf("income" to "10"),
+            added,
             badgeStart
         )
         // Opened with its entry too, as its requirement's page opens it.
@@ -435,8 +438,17 @@ class TrackerEntryViewModelTest {
         viewModel.save()
 
         assertEquals(
-            listOf(3 to mapOf("income" to "10", "notes" to "Mowed a lawn.")),
-            entries().map { it.rowNumber to it.values }
+            listOf(
+                TrackerEntry(
+                    id,
+                    "personal-fitness",
+                    "2",
+                    3,
+                    mapOf("income" to "10", "notes" to "Mowed a lawn."),
+                    addedDate = added
+                )
+            ),
+            entries()
         )
     }
 
@@ -596,11 +608,20 @@ class TrackerEntryViewModelTest {
             number: String,
             rowNumber: Int?,
             values: Map<String, String>,
+            addedDate: LocalDate,
             start: BadgeStart,
             id: Long?
         ): Long {
             release.await()
-            return progress.addTrackerEntry(badgeId, number, rowNumber, values, start, id)
+            return progress.addTrackerEntry(
+                badgeId,
+                number,
+                rowNumber,
+                values,
+                addedDate,
+                start,
+                id
+            )
         }
     }
 

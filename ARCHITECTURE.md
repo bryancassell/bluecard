@@ -354,6 +354,27 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     content keys of the screens `NavDisplay` draws, and `rememberNavigateFrom`
     ignores opening one of them: tapping the row that opened the closing
     screen does nothing until its slide ends.
+- **A double tap starts another app once.** Badge detail's "Official
+  requirements" link and the counselor's phone and email start other apps with
+  one function from `rememberStartOtherApp` (`ui/`), which the screen shares
+  among them. The other app takes a moment to cover BlueCard, so both taps of a
+  double tap can reach the control, and a browser could open two tabs, or an
+  email app two drafts
+  ([#97](https://github.com/bryancassell/bluecard/issues/97)).
+  - **After a tap, all three ignore taps for the double-tap timeout** (300 ms),
+    as a screen animating in does. A tap that finds no app counts too, so a
+    double tap shows its message once, and the next tap tries again.
+  - **It doesn't wait for the scout to come back from the other app.** Some
+    starts never take BlueCard's place, such as one that screen pinning blocks,
+    which doesn't throw, so waiting for BlueCard's window to get focus back, or
+    for `ON_RESUME`, could leave the controls locked. It would also misfire in
+    desktop windows, where the tap that focuses BlueCard's window can arrive
+    before the focus does. A tap more than 300 ms after the first can still
+    reach BlueCard if the other app hasn't covered it yet. On an Android 37
+    emulator, Android dropped most second taps that came 140–200 ms after the
+    first, as the other app took over, but not all of them.
+  - **The link starts the browser with `ACTION_VIEW`**, as Compose's
+    `UriHandler` does, so all three handle "no app" the same way.
 - **Launch:** Home is the fixed start destination. Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -427,7 +448,30 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   - **Code outside Compose** that formats a string with a number, such as the
     PDF report, must use the same locales (`stringsLocales`), and lay out in the
     first one's direction.
-- **Material 3** components and the existing `BlueCardTheme`.
+- **Material 3** components, themed by `BlueCardTheme` with the blue card's
+  colors. Every phone shows the same colors:
+  - **No dynamic color.** The app doesn't take its colors from the wallpaper.
+  - **Light only, for now.** The one scheme, `BlueCardColorScheme` in
+    `ui/theme/Color.kt`, is used in dark mode too, until the app has a dark
+    scheme (#108). The window and splash screen backgrounds match it, and the
+    system bar icons stay dark. In dark mode the window theme isn't declared
+    light (`isLightTheme`), which opts out of Android's force dark and force
+    invert, so the system doesn't darken the colors either.
+    - **Known gap.** On Android 8.0 the splash screen's navigation bar icons
+      stay white on its light background until the app draws, because dark
+      navigation bar icons in a theme need Android 8.1.
+    - **Don't follow dark mode elsewhere.** `isSystemInDarkTheme()` still
+      reports the system's dark mode, and `-night` resources still apply in
+      it. Until #108, nothing but the window theme above should use either:
+      it would put dark-mode colors, images or bar icons on the light app.
+  - **Source.** Material Color Utilities' fidelity scheme from Scouting
+    America Blue (`#003F87`), which stays `primary`. The background and
+    surfaces are light tints of the card stock's Pale Blue (`#9AB3D5`). Errors
+    use Material's default red, because Scouting America Red (`#CE1126`) is
+    below 4.5:1 on the darker surfaces.
+  - **Readability first.** Readability comes before matching the card's colors
+    exactly. Every text color meets WCAG AA (4.5:1) on every surface, and
+    `BlueCardColorSchemeTest` checks each pair.
 
 ### Data layer
 
@@ -500,7 +544,7 @@ io.github.bryancassell.bluecard
 ├── ui/                 One package per screen: screen composable, ViewModel, UI state
 │   ├── onboarding/
 │   ├── home/
-│   ├── badges/         Browse and search
+│   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
 │   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
 │   ├── data/           Clear, export, import
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
@@ -519,10 +563,10 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Links to Badges and Data management. |
+| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, opening its Badge detail. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state and checkboxes to mark requirements complete, "mark completed on a prior date", and "generate report" once complete. |
-| **Requirement detail** | Every requirement's own page: whether it's complete, the completion date of one the scout marks complete, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, "mark completed on a prior date", and "generate report" once complete. |
+| **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
 | **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
@@ -530,15 +574,18 @@ io.github.bryancassell.bluecard
 The PRD asks that requirements be understandable "without extensive
 scrolling", so the badge detail page lists only the top-level requirements. Each
 is one row: its official number, our one-line summary, "Do N of M" when only
-some of its sub-requirements are needed, and its completion state. A requirement
-without sub-requirements has a checkbox, so the scout can mark many of them
-complete without leaving the list. One with sub-requirements has a check once
-enough of them are done. A requirement with a tracker says how much of it is
-filled in, such as "8 of 12 weeks". Every row opens the requirement's own page,
-with its completion date and comment. A requirement with sub-requirements lists
-them there the same way, and each opens its own page in turn. A requirement
-with a tracker lists its rows there, and each opens the Tracker entry page (see
-[Key flows](#key-flows)). Each page shows one level of the requirement tree.
+some of its sub-requirements are needed, and a check once it's complete. A
+requirement with a tracker says how much of it is filled in, such as "8 of 12
+weeks". Every row opens the requirement's own page, with its completion date and
+comment. The scout marks a requirement complete there by hand, unless it has
+sub-requirements or a tracker with a fixed number of rows. One with
+sub-requirements is complete once enough of them are, and lists them on its page
+the same way; each opens its own page in turn. A requirement with a tracker
+lists its rows there, and each opens the Tracker entry page (see
+[Key flows](#key-flows)). One with a fixed number of rows is complete once every
+row is filled in. A page whose requirement completes this way has no checkbox or
+date field, and says "Completed" once it's done. Each page shows one level of the
+requirement tree.
 Both pages show the requirements version the badge was started on, or the newest
 version for a badge the scout hasn't started. The counselor takes a few lines
 between the official link and the requirements, and is entered on a page of its
@@ -647,19 +694,31 @@ At a high level. Exact fields are decided in the feature issues.
     keyed by the catalog's column IDs, all stored as text (a date as
     `YYYY-MM-DD`). A row of a fixed-row tracker has at most one entry, which a
     unique index enforces. IDs only grow (`AUTOINCREMENT`), so a new entry's is
-    higher than any before it, even a deleted one's.
+    higher than any before it, even a deleted one's. Each entry records the date
+    it was first saved (`addedDate`), which changing it keeps. An entry saved
+    before database version 3 has none until it's next changed, which records
+    that day.
 
 **Completion is derived, not stored**
-(`data/progress/Completion.kt`), from requirement progress and the catalog:
+(`data/progress/Completion.kt`), from requirement progress, tracker entries and
+the catalog:
 
-- A requirement without children is complete when the scout marked it complete.
-  One with children is complete when all of them are, or its "N of these"
-  count is.
+- A requirement with children is complete when all of them are, or its "N of
+  these" count is, even if it also has a tracker. One without children but with
+  a tracker with a fixed number of rows is complete when every row has an entry (`filledRows`, which the tracker's "8 of 12
+  weeks" count uses too). Any other requirement, including one with a log, is
+  complete when the scout marked it complete (`isMarkedByHand`). A `completed`
+  mark or date stored for a requirement that isn't marked by hand doesn't
+  count.
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
 - The completion date is when the last requirement it needed was completed. It
   is the prior date for a badge marked that way. It is unknown if a needed
   requirement has no date.
+- A fixed-row tracker's requirement is completed on the latest date one of its
+  rows was first saved (`TrackerEntry.addedDate`), and has no date if a row
+  has none. The tracker's own date column isn't used, because not every
+  tracker has one.
 
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
@@ -680,7 +739,11 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   Eagle-required progress against the Eagle-required badges in the catalog.
   Each Eagle "one of" group (such as Cycling, Hiking and Swimming) counts once,
   with the status of its furthest-along badge, because earning any of them meets
-  the requirement. Progress on a badge that isn't in the catalog isn't counted.
+  the requirement. It also lists the badges in progress, so the scout can get
+  back to one without searching Badges: alphabetically, in the row Badges uses
+  (`ui/badges/BadgeRow.kt`), and all of them, since a scout rarely has more than
+  a few going at once. Screen readers hear the rows as a list, as on Badges.
+  Progress on a badge that isn't in the catalog isn't counted or listed.
 - **Browse and search.** The Badges ViewModel combines the catalog, the
   scout's progress and the search text, to list the matching badges with each
   one's status from `data/progress/BadgeStatus.kt`. A badge matches when every
@@ -705,15 +768,16 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     when a screen first calls them. Undoing everything recorded leaves the badge
     started, so it stays In progress until the scout clears it
     ([#45](https://github.com/bryancassell/bluecard/issues/45)).
-  - **Completing a requirement.** Only a requirement without sub-requirements is
-    marked complete; one with them is complete when enough of them are
-    (`Completion.kt`). Checking it, on its row or its page, records it completed
-    today. On its page, the scout can pick another date or remove it. Dates
-    after today can't be picked. Unchecking removes the date and keeps the
-    comment, but the page remembers the date until it closes: checking the
-    requirement again on that page brings the date back, so a mistaken tap
-    loses nothing. A date change applies only to a completed requirement, so
-    one that lands just after an uncheck can't complete it again.
+  - **Completing a requirement.** Only a requirement without sub-requirements or
+    a fixed-row tracker is marked complete; one with sub-requirements is complete
+    when enough of them are, and one with a fixed-row tracker when every row is
+    filled in (`Completion.kt`). Checking it on its page records it completed today, and
+    the scout can pick another date there or remove it. Dates after today can't
+    be picked. Unchecking removes the date and keeps the comment, but the page
+    remembers the date until it closes: checking the requirement again on that
+    page brings the date back, so a mistaken tap loses nothing. A date change
+    applies only to a completed requirement, so one that lands just after an
+    uncheck can't complete it again.
   - **Comments.** Every requirement can have one, including one with
     sub-requirements, for notes about it as a whole. The page's comment field is
     saved when the scout taps Save, which is enabled once the field differs from
@@ -751,8 +815,14 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     `addTrackerEntry` gives a fixed-row tracker's row that already has an entry
     the new values instead of adding a second one. The repository trims spaces
     around each value and drops blank ones (`normalizedTrackerValues`). A
-    tracker doesn't complete its requirement: the scout marks it complete, as
-    one without a tracker.
+    fixed-row tracker completes its requirement once every row is filled in, and
+    deleting a row makes it incomplete again, as unchecking a sub-requirement
+    does to its parent. A log doesn't, because the catalog doesn't say how many
+    entries it needs: the scout marks its requirement complete, as one without a
+    tracker. An added row records the date it was first saved, which the Tracker
+    entry page passes to `addTrackerEntry` from its clock; changing the row
+    keeps that date. A row saved before database version 3 has no date, so the
+    first change records that day as its date.
   - **Counselor.** Badge detail shows the counselor's name, phone and email,
     with a button to add or edit them. Tapping the phone opens the phone app
     with the number filled in (`ACTION_DIAL`, which needs no permission), and
@@ -905,7 +975,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Search result announcements | A visible count of the matches. Screen readers hear it from a polite live region that stays composed and is laid out apart from the shown count. It changes once typing pauses for a second, or straight away after Clear search | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed, doesn't let it be cut off, and announces a live region on any change, even of its size |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
-| Marking requirements complete | A checkbox on each row without sub-requirements, dated today; the date and comment are on the requirement's page | Fast to mark many parts (Personal Fitness 3 has seven) while keeping the badge page short; the PRD's date and comment are optional |
+| Marking requirements complete | A "Completed" checkbox on the requirement's page, dated today, with the date and comment beside it. Rows only open the requirement's page, with a check once it's complete | Chosen after using the app, in place of a checkbox on each row ([#103](https://github.com/bryancassell/bluecard/issues/103)). Each part takes a trip to its page, so marking many (Personal Fitness 3 has seven) is slower; the PRD's date and comment are optional |
+| Completing a fixed-row tracker's requirement | Always inferred once every row is filled in, with no checkbox. Its date is when the last row was first saved. A log keeps the checkbox | A fixed-row tracker is a list of parts, like sub-requirements ([#105](https://github.com/bryancassell/bluecard/issues/105)). The tracker's date column isn't used, because Personal Management 2a and 2c have none. A log has no target in the catalog, such as Camping 9a's 20 nights |
 | Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
 | Trackers | Listed on the requirement's page; each row filled in on its own page with a field for each column, saved with a Save button. A fixed-row tracker shows every row, and a row keeps its number when another is deleted | Four or more fields don't fit in a dialog or a table row on a phone once the keyboard is up. Numbered rows match trackers such as a 13-week budget, where each week is its own row |

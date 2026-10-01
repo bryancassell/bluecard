@@ -78,6 +78,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate =
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 HomeRoute(
+                    onOpenBadge = { navigate(BadgeDetail(it)) },
                     onOpenBadges = { navigate(Badges) },
                     onOpenDataManagement = { navigate(DataManagement) }
                 )
