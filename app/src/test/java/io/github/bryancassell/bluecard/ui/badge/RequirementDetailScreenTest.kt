@@ -172,10 +172,9 @@ class RequirementDetailScreenTest {
         composeTestRule.onNode(hasText("Completed") and isToggleable()).performScrollTo()
 
     private fun commentField() =
-        composeTestRule.onNode(hasSetTextAction() and hasText("Comment")).performScrollTo()
+        composeTestRule.onNode(hasSetTextAction() and hasText("Notes")).performScrollTo()
 
-    private fun saveCommentButton() =
-        composeTestRule.onNodeWithText("Save comment").performScrollTo()
+    private fun saveCommentButton() = composeTestRule.onNodeWithText("Save notes").performScrollTo()
 
     // A day in the date picker, which reads each day as its full date.
     private fun pickerDay(date: String) =

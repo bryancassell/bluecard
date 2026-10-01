@@ -92,8 +92,8 @@
          button's text, such as "Start: Add date" in a tracker row. -->
     <string name="labeled_date_button">%1$s: %2$s</string>
     <!-- Label of the field for the scout's notes about a requirement. -->
-    <string name="requirement_comment">Comment</string>
-    <string name="requirement_save_comment">Save comment</string>
+    <string name="requirement_comment">Notes</string>
+    <string name="requirement_save_comment">Save notes</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>
