@@ -100,10 +100,10 @@ fun EditableDate(
         }
     }
     if (picking) {
-        val today = remember { today() }
+        val latest = remember { today() }
         CompletionDatePickerDialog(
-            initial = date ?: today,
-            today = today,
+            initial = date ?: latest,
+            today = latest,
             onConfirm = {
                 picking = false
                 onDateChange(it)
@@ -119,9 +119,9 @@ private fun Modifier.readAs(description: String?): Modifier =
 
 /**
  * Asks for the date something was done on, such as when a requirement was completed, starting
- * at [initial]. Dates after [today] can't be picked, so it starts at [today] instead of a later
- * [initial], such as a date recorded while the device's clock was ahead: Material 3 doesn't
- * check the date it starts at, and OK would save it again. The picker itself follows the device's
+ * at [initial]. Dates after [today] can't be picked or confirmed, so it starts at [today]
+ * instead of a later [initial], such as a date recorded while the device's clock was ahead,
+ * which Material 3 would otherwise show selected. The picker itself follows the device's
  * language, like other Material labels, and is laid out in that language's direction, so a
  * Persian calendar reads right-to-left: laid out left-to-right, as the app's screens are, its
  * dates would read out of order.
@@ -141,8 +141,11 @@ fun CompletionDatePickerDialog(
         DatePickerDialog(
             onDismissRequest = onDismiss,
             confirmButton = {
-                // Null while a typed date isn't valid.
+                // Null while a typed date isn't valid. One the picker doesn't offer can still
+                // be selected when it's restored with an earlier today, as when the system
+                // stopped the app and the scout then crossed a date line westward.
                 val selected = state.selectedDateMillis
+                    ?.takeIf(state.selectableDates::isSelectableDate)
                 TextButton(
                     onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
                     enabled = selected != null
