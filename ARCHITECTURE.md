@@ -560,6 +560,9 @@ requirement progress, tracker entries and the catalog:
   marked completed on a prior date.
 - The completion date is when the last requirement or own work it needed was
   completed, or the prior date for a badge marked that way.
+- A requirement has part done (`hasPartDone`) once anything in it that the scout
+  records is: its own work, a requirement under it at any depth, or a row of a
+  tracker on it or under it. Its row shows this until it's complete.
 
 A requirement's own work is stored as that requirement's own
 `RequirementProgress`, as for one marked complete by hand, so it needs no new

@@ -570,6 +570,45 @@ class BadgeDetailScreenTest {
         row("Plan a campout.").assert(!hasText("Do", substring = true))
     }
 
+    private fun withPartlyCompleted(number: String, count: CompleteCount?) = ready.copy(
+        requirements = ready.requirements.map {
+            if (it.number == number) {
+                it.copy(completed = false, partlyCompleted = true, completeCount = count)
+            } else {
+                it
+            }
+        }
+    )
+
+    @Test
+    fun partlyCompletedChoice_saysInProgress_andHowManyOfThoseNeededAreComplete() {
+        show(withPartlyCompleted("2", CompleteCount(1, 2)))
+
+        row("Do two of these.")
+            .assert(hasStateDescription("In progress"))
+            .assert(hasText("Do 2 of 3 (1 of 2 complete)"))
+    }
+
+    @Test
+    fun partlyCompletedRequirementNeedingAll_saysHowManyAreComplete() {
+        show(withPartlyCompleted("4", CompleteCount(2, 3)))
+
+        row("Do all of these.")
+            .assert(hasStateDescription("In progress"))
+            .assert(hasText("(2 of 3 complete)"))
+    }
+
+    // Only its own work, or a requirement further down, is complete.
+    @Test
+    fun partlyCompletedWithNoSubRequirementComplete_hasNoCount() {
+        show(withPartlyCompleted("2", null))
+
+        row("Do two of these.")
+            .assert(hasStateDescription("In progress"))
+            .assert(hasText("Do 2 of 3"))
+            .assert(!hasText("complete", substring = true))
+    }
+
     @Test
     fun requirementWithTracker_showsHowMuchIsFilledIn() {
         show(ready)

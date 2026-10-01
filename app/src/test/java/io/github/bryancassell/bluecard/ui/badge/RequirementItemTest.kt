@@ -97,6 +97,83 @@ class RequirementItemTest {
     }
 
     @Test
+    fun nothingComplete_isNotPartlyCompleted() {
+        val item = twoOfThree.toItem(emptyMap(), emptyMap())
+
+        assertFalse(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun someSubRequirementsComplete_isPartlyCompleted_countedTowardTheNumberNeeded() {
+        val item = twoOfThree.toItem(done("2a"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertEquals(CompleteCount(1, 2), item.completeCount)
+    }
+
+    @Test
+    fun allSubRequirementsNeeded_countsTowardAllOfThem() {
+        val all = twoOfThree.copy(requiredCount = null)
+
+        assertEquals(CompleteCount(2, 3), all.toItem(done("2a", "2c"), emptyMap()).completeCount)
+    }
+
+    @Test
+    fun complete_isNotPartlyCompleted() {
+        val item = twoOfThree.toItem(done("2a", "2c"), emptyMap())
+
+        assertFalse(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun enoughSubRequirementsButNotOwnWork_isPartlyCompleted_countingNoMoreThanNeeded() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2a", "2b", "2c"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertEquals(CompleteCount(2, 2), item.completeCount)
+    }
+
+    @Test
+    fun ownWorkComplete_isPartlyCompleted_withNoCount() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun requirementFurtherDownComplete_isPartlyCompleted_withNoCount() {
+        val deep = Requirement(
+            "7",
+            "Do these.",
+            children = listOf(
+                Requirement(
+                    "7a",
+                    "Do these too.",
+                    children = listOf(Requirement("7a(1)", "One."), Requirement("7a(2)", "Two."))
+                ),
+                Requirement("7b", "B.")
+            )
+        )
+
+        val item = deep.toItem(done("7a(1)"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun notNeeded_isNotPartlyCompleted() {
+        val item = twoOfThree.toItem(done("2a"), emptyMap(), partOfHasEnough = true)
+
+        assertTrue(item.notNeeded)
+        assertFalse(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
     fun countOfAllItsSubRequirements_isNoChoice() {
         val both = Requirement(
             "3",
@@ -145,6 +222,14 @@ class RequirementItemTest {
         assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).completed)
         // Marking it complete by hand doesn't count.
         assertFalse(weeks.toItem(done("5"), emptyMap()).completed)
+    }
+
+    @Test
+    fun trackerPartlyFilled_isPartlyCompleted_untilComplete() {
+        assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).partlyCompleted)
+        assertFalse(
+            weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).partlyCompleted
+        )
     }
 
     @Test

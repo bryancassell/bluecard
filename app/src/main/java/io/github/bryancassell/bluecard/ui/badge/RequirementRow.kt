@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -75,11 +76,12 @@ fun RequirementRows(
 }
 
 /**
- * A requirement's row, which opens its page: its number, in a box that's filled in once it's
- * complete, its summary, "Do N of M" when only some sub-requirements are needed, how much of its
- * tracker is filled in, and "Not needed" when it no longer is. Screen readers read "Completed",
- * "Not completed" or "Not needed" as its state. The scout marks a requirement complete on its
- * page.
+ * A requirement's row, which opens its page: its number, in a box that's tinted once part of it
+ * is complete and filled in once all of it is, its summary, "Do N of M" when only some
+ * sub-requirements are needed, how many of those it needs are complete, how much of its tracker is
+ * filled in, and "Not needed" when it no longer is. Screen readers read "Completed",
+ * "In progress", "Not completed" or "Not needed" as its state. The scout marks a requirement
+ * complete on its page.
  */
 @Composable
 private fun RequirementRow(
@@ -91,18 +93,20 @@ private fun RequirementRow(
         when {
             item.completed -> R.string.requirement_completed
             item.notNeeded -> R.string.requirement_not_needed
+            item.partlyCompleted -> R.string.requirement_in_progress
             else -> R.string.requirement_not_completed
         }
     )
+    val choiceAndCount = choiceAndCountLabel(item.choice, item.completeCount)
     ListItem(
         leadingContent = { RequirementNumber(item, numberWidth) },
         headlineContent = { Text(item.summary) },
-        supportingContent = if (item.choice == null && item.tracker == null && !item.notNeeded) {
+        supportingContent = if (choiceAndCount == null && item.tracker == null && !item.notNeeded) {
             null
         } else {
             {
                 Column {
-                    item.choice?.let { Text(choiceLabel(it)) }
+                    choiceAndCount?.let { Text(it) }
                     item.tracker?.let { Text(trackerCountLabel(it)) }
                     if (item.notNeeded) {
                         Text(
@@ -130,11 +134,13 @@ private fun RequirementRow(
 }
 
 /**
- * A requirement's number in a box, like the boxes on the blue card: outlined until the
- * requirement is complete, then filled in Scouting America Blue with a check on its top end
- * corner, or filled in grey once it's no longer needed. It's [minWidth] wide, room for the widest
+ * A requirement's number in a box, like the boxes on the blue card: outlined until part of the
+ * requirement is complete, then tinted light blue and outlined in Scouting America Blue with a
+ * half-filled circle on its top end corner, then filled in Scouting America Blue with a check
+ * there once all of it is complete, or filled in grey once it's no longer needed. The mark on the
+ * corner tells the states apart by more than color. It's [minWidth] wide, room for the widest
  * number in its list, but still widens to fit its own number if that measures wider. It grows
- * taller with the font size. The check is drawn only: its row reads the state.
+ * taller with the font size. The marks are drawn only: its row reads the state.
  */
 @Composable
 private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
@@ -148,23 +154,39 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
                 .then(
                     when {
                         item.completed -> Modifier.background(colors.primary, shape)
+
                         item.notNeeded -> Modifier.background(colors.surfaceContainerHighest, shape)
+
+                        item.partlyCompleted ->
+                            Modifier
+                                .background(colors.primaryContainer, shape)
+                                .border(2.dp, colors.primary, shape)
+
                         else -> Modifier.border(2.dp, colors.outline, shape)
                     }
                 )
                 // On every side: once the text outgrows the box, it stays clear of the edge and
-                // below the check.
+                // below the mark on its corner.
                 .padding(NumberBoxPadding)
         ) {
             Text(
                 text = item.number,
                 style = numberStyle,
-                color = if (item.completed) colors.onPrimary else colors.onSurfaceVariant
+                color = when {
+                    item.completed -> colors.onPrimary
+                    item.partlyCompleted -> colors.onPrimaryContainer
+                    else -> colors.onSurfaceVariant
+                }
             )
         }
-        if (item.completed) {
+        val mark = when {
+            item.completed -> R.drawable.ic_check
+            item.partlyCompleted -> R.drawable.ic_half_circle
+            else -> null
+        }
+        mark?.let {
             Icon(
-                painterResource(R.drawable.ic_check),
+                painterResource(it),
                 contentDescription = null,
                 tint = colors.primary,
                 modifier = Modifier
@@ -185,8 +207,34 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
 
 /** "Do 2 of 3". */
 @Composable
+@ReadOnlyComposable
 fun choiceLabel(choice: Choice): String =
     stringResource(R.string.requirement_choice, choice.required, choice.of)
+
+/** "Do 2 of 3 (1 of 2 complete)", "Do 2 of 3", "(1 of 3 complete)", or null for neither. */
+@Composable
+@ReadOnlyComposable
+private fun choiceAndCountLabel(choice: Choice?, count: CompleteCount?): String? = when {
+    choice != null && count != null -> pluralStringResource(
+        R.plurals.requirement_choice_and_complete_count,
+        count.complete,
+        choice.required,
+        choice.of,
+        count.complete,
+        count.needed
+    )
+
+    choice != null -> choiceLabel(choice)
+
+    count != null -> pluralStringResource(
+        R.plurals.requirement_complete_count,
+        count.complete,
+        count.complete,
+        count.needed
+    )
+
+    else -> null
+}
 
 /** Shown while the catalog loads. */
 @Composable

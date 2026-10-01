@@ -60,6 +60,29 @@ fun Requirement.hasEnoughChildren(
     trackerEntries: Map<String, List<TrackerEntry>>
 ): Boolean = children.isNotEmpty() && childrenCompletion(progress, trackerEntries) != null
 
+/**
+ * Whether any part of this requirement is done, complete or not: it or its
+ * [own work][Requirement.ownWork] is marked complete, a row of its tracker is filled in, or the
+ * same is true of a requirement under it at any depth. A complete requirement under it has a part
+ * done too, so it counts.
+ */
+fun Requirement.hasPartDone(
+    progress: Map<String, RequirementProgress>,
+    trackerEntries: Map<String, List<TrackerEntry>>
+): Boolean = ((isMarkedByHand || ownWork != null) && progress[number]?.completed == true) ||
+    hasTrackerRows(trackerEntries[number].orEmpty()) ||
+    children.any { it.hasPartDone(progress, trackerEntries) }
+
+/** Whether the [entries] recorded for it fill in a row of its tracker. */
+private fun Requirement.hasTrackerRows(entries: List<TrackerEntry>): Boolean {
+    val rowCount = tracker?.rowCount
+    return when {
+        tracker == null -> false
+        rowCount != null -> filledRows(entries, rowCount).isNotEmpty()
+        else -> entries.isNotEmpty()
+    }
+}
+
 /** Complete once the scout marked it complete, on the date they gave. */
 private fun Requirement.markedCompletion(progress: Map<String, RequirementProgress>): Completion? =
     progress[number]?.takeIf { it.completed }?.let { Completion(it.completedDate) }
@@ -68,7 +91,7 @@ private fun Requirement.childrenCompletion(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>
 ): Completion? {
-    val needed = requiredCount ?: children.size
+    val needed = neededCount
     val completed = children.mapNotNull { it.completion(progress, trackerEntries) }
     if (completed.size < needed) return null
     // With more complete children than needed, it was complete once the earliest

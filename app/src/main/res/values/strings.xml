@@ -71,9 +71,12 @@
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
-    <!-- Screen readers read it as the state of a requirement's row until it's complete, then
-         read "Completed". -->
+    <!-- Screen readers read it as the state of a requirement's row while nothing of it is
+         complete, then read "In progress" or "Completed". -->
     <string name="requirement_not_completed">Not completed</string>
+    <!-- Screen readers read it as the state of a requirement's row once part of it is complete,
+         such as one of its sub-requirements, until it's complete. -->
+    <string name="requirement_in_progress">In progress</string>
     <!-- On the row and page of a requirement that isn't complete but no longer needs to be,
          because a requirement it's part of is complete, such as a choice the scout didn't pick.
          Screen readers read it as the row's state. -->
@@ -246,5 +249,18 @@
     <plurals name="badges_count">
         <item quantity="one">%1$d merit badge</item>
         <item quantity="other">%1$d merit badges</item>
+    </plurals>
+    <!-- On the row of a requirement that isn't complete yet, how many of the sub-requirements it
+         needs are, such as "(1 of 3 complete)". The quantity is the number complete. -->
+    <plurals name="requirement_complete_count">
+        <item quantity="one">(%1$d of %2$d complete)</item>
+        <item quantity="other">(%1$d of %2$d complete)</item>
+    </plurals>
+    <!-- requirement_choice and requirement_complete_count on one line, such as
+         "Do 2 of 3 (1 of 2 complete)": 2 of its 3 sub-requirements are needed, and 1 of those 2
+         is complete. The quantity is the number complete. -->
+    <plurals name="requirement_choice_and_complete_count">
+        <item quantity="one">Do %1$d of %2$d (%3$d of %4$d complete)</item>
+        <item quantity="other">Do %1$d of %2$d (%3$d of %4$d complete)</item>
     </plurals>
 </resources>
