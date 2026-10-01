@@ -13,7 +13,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
@@ -59,6 +58,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.di.ClockModule
 import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
+import io.github.bryancassell.bluecard.testing.hasStateDescription
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -606,12 +606,12 @@ class MainActivityTest {
         // Requirement 2 needs one of its two choices.
         completeOnItsPage("Choice A.")
 
-        composeTestRule.onNode(hasText("Choice A.") and hasContentDescription("Completed"))
+        composeTestRule.onNode(hasText("Choice A.") and hasStateDescription("Completed"))
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
-        composeTestRule.onNode(hasText("Second.") and hasContentDescription("Completed"))
+        composeTestRule.onNode(hasText("Second.") and hasStateDescription("Completed"))
             .assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
@@ -633,10 +633,10 @@ class MainActivityTest {
             RequirementProgress("camping", "1", true, today, "Planned it with my patrol."),
             runBlocking { recorded("1") }
         )
-        // Back on the badge's page, the requirement's row shows its check.
+        // Back on the badge's page, the requirement's row shows it's complete.
         composeTestRule.waitForIdle()
         pressBack()
-        composeTestRule.onNode(hasText("First.") and hasContentDescription("Completed"))
+        composeTestRule.onNode(hasText("First.") and hasStateDescription("Completed"))
             .assertIsDisplayed()
     }
 

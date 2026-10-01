@@ -68,6 +68,9 @@
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
+    <!-- Screen readers read it as the state of a requirement's row until it's complete, then
+         read "Completed". -->
+    <string name="requirement_not_completed">Not completed</string>
     <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
          open requirement". -->
     <string name="requirement_open">open requirement</string>

@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.testing.hasStateDescription
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
@@ -333,13 +334,21 @@ class BadgeDetailScreenTest {
     }
 
     @Test
-    fun requirement_hasCheckOnlyWhenComplete() {
+    fun requirement_saysWhetherItsComplete() {
         show(ready)
 
-        row("Plan a campout.").assert(hasContentDescription("Completed"))
-        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
-        row("Do all of these.").assert(hasContentDescription("Completed"))
-        row("Do two of these.").assert(!hasContentDescription("Completed"))
+        row("Plan a campout.").assert(hasStateDescription("Completed"))
+        row("Keep a camping log.").assert(hasStateDescription("Not completed"))
+        row("Do all of these.").assert(hasStateDescription("Completed"))
+        row("Do two of these.").assert(hasStateDescription("Not completed"))
+    }
+
+    // The check on its number is drawn only: screen readers read "Completed" once, as its state.
+    @Test
+    fun completeRequirement_saysCompletedOnce() {
+        show(ready)
+
+        row("Plan a campout.").assert(!hasContentDescription("Completed"))
     }
 
     // The scout marks a requirement complete on its own page.

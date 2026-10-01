@@ -508,8 +508,11 @@ io.github.bryancassell.bluecard
 
 The PRD asks that requirements be understandable "without extensive
 scrolling", so the badge detail page lists only the top-level requirements. Each
-is one row: its official number, our one-line summary, "Do N of M" when only
-some of its sub-requirements are needed, and a check once it's complete. A
+is one row: its official number, our one-line summary, and "Do N of M" when only
+some of its sub-requirements are needed. The number sits in a box, outlined
+until the requirement is complete, then filled in Scouting America Blue with a
+check on its corner, so what's done and what's left stand apart at a glance.
+Screen readers read "Completed" or "Not completed" as the row's state. A
 requirement with a tracker says how much of it is filled in, such as "8 of 12
 weeks". Every row opens the requirement's own page, with its completion date and
 comment. The scout marks a requirement complete there by hand, unless it has

@@ -12,7 +12,6 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -25,6 +24,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.hasStateDescription
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -254,11 +254,11 @@ class RequirementDetailScreenTest {
     fun subRequirements_showNeededCountAndCompletion() {
         show(ready)
 
-        row("Cook a meal.").assert(hasContentDescription("Completed"))
-        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
+        row("Cook a meal.").assert(hasStateDescription("Completed"))
+        row("Keep a camping log.").assert(hasStateDescription("Not completed"))
         row(
             "Lead one hike."
-        ).assert(hasText("Do 1 of 2")).assert(!hasContentDescription("Completed"))
+        ).assert(hasText("Do 1 of 2")).assert(hasStateDescription("Not completed"))
     }
 
     @Test
@@ -274,7 +274,7 @@ class RequirementDetailScreenTest {
         }
         show(ready.copy(children = children))
 
-        row("Lead one hike.").assert(hasContentDescription("Completed"))
+        row("Lead one hike.").assert(hasStateDescription("Completed"))
     }
 
     @Test
