@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.then
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,9 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
@@ -154,7 +152,7 @@ fun BadgesScreen(
  * Longer than any search needs. The field's text is saved with the screen's state, which has
  * a size limit, so a huge paste mustn't reach it.
  */
-private val SearchLengthLimit = TextLengthLimit(maxLength = 100)
+private val SearchInput = singleLineInput(maxLength = 100)
 
 @Composable
 private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
@@ -190,7 +188,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
                 }
             }
         },
-        inputTransformation = SearchLengthLimit.then(LineBreaksAsSpaces),
+        inputTransformation = SearchInput,
         lineLimits = TextFieldLineLimits.SingleLine,
         // Asks the keyboard not to autocorrect the start of a word into a different word
         // that no longer matches. Some keyboards ignore this: Gboard still corrects typos

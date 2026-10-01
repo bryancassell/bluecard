@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,12 +38,11 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
-import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
-import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 
 /** Connects the Edit counselor screen to its ViewModel. */
@@ -113,10 +112,6 @@ fun EditCounselorScreen(
     }
 }
 
-private val NameLengthLimit = TextLengthLimit(maxLength = COUNSELOR_NAME_MAX_LENGTH)
-private val PhoneLengthLimit = TextLengthLimit(maxLength = COUNSELOR_PHONE_MAX_LENGTH)
-private val EmailLengthLimit = TextLengthLimit(maxLength = COUNSELOR_EMAIL_MAX_LENGTH)
-
 @Composable
 private fun CounselorFields(
     uiState: EditCounselorUiState.Ready,
@@ -147,7 +142,7 @@ private fun CounselorFields(
         CounselorField(
             state = name,
             label = R.string.edit_counselor_name,
-            lengthLimit = NameLengthLimit,
+            maxLength = COUNSELOR_NAME_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Next
@@ -156,7 +151,7 @@ private fun CounselorFields(
         CounselorField(
             state = phone,
             label = R.string.edit_counselor_phone,
-            lengthLimit = PhoneLengthLimit,
+            maxLength = COUNSELOR_PHONE_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
                 imeAction = ImeAction.Next
@@ -165,7 +160,7 @@ private fun CounselorFields(
         CounselorField(
             state = email,
             label = R.string.edit_counselor_email,
-            lengthLimit = EmailLengthLimit,
+            maxLength = COUNSELOR_EMAIL_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Done
@@ -189,16 +184,15 @@ private fun CounselorFields(
 private fun CounselorField(
     state: TextFieldState,
     @StringRes label: Int,
-    lengthLimit: TextLengthLimit,
+    maxLength: Int,
     keyboardOptions: KeyboardOptions
 ) {
+    val input = remember(maxLength) { singleLineInput(maxLength) }
     OutlinedTextField(
         state = state,
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(label)) },
-        // Each field is one line, so a pasted line break mustn't reach its text. After the
-        // limit, as LineBreaksAsSpaces explains.
-        inputTransformation = lengthLimit.then(LineBreaksAsSpaces),
+        inputTransformation = input,
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = keyboardOptions,
         modifier = Modifier.fillMaxWidth()

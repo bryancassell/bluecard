@@ -228,9 +228,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   state has a size limit. Each stored field's limit is a constant, with its
   reason, beside the data it limits (for example `NOTES_MAX_LENGTH` in
   `data/progress/Progress.kt`), because import holds a file to the same limits
-  (see [Export and import](#export-and-import)). Single-line text fields also
-  replace a pasted line break with a space (`LineBreaksAsSpaces`); number
-  fields reject one.
+  (see [Export and import](#export-and-import)). Single-line text fields take
+  their limit from `singleLineInput` (`ui/SingleLineInput.kt`), which then
+  replaces a pasted line break with a space (`LineBreaksAsSpaces`). Number
+  fields instead chain `NumberInput`, which rejects a line break, with their
+  `TextLengthLimit`.
 
 ### Navigation
 
