@@ -584,6 +584,8 @@ is one row: its official number, our one-line summary, and "Do N of M" when only
 some of its sub-requirements are needed. The number sits in a box, outlined
 until the requirement is complete, then filled in Scouting America Blue with a
 check on its corner, so what's done and what's left stand apart at a glance.
+Every box in a list is as wide as the list's widest number needs at the current
+font size, so the summaries all start in the same place.
 Once a requirement is complete, those under it that aren't, such as the choices
 the scout didn't pick, are no longer needed: their box is filled in grey, with
 "Not needed" under the summary, and their pages say "Not needed" too. Screen
