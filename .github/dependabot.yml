@@ -8,6 +8,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Why AndroidX skips the 3-day wait: "Continuous integration" in
+    # docs/toolchain.md. Remove this when #154 is done.
+    cooldown:
+      exclude: ["androidx.*"]
     groups:
       gradle-minor-and-patch:
         patterns: ["*"]

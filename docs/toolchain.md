@@ -292,3 +292,20 @@ GitHub Actions used by CI. Minor and patch updates arrive together in one pull
 request per ecosystem (Gradle, GitHub Actions); each major update gets its own
 pull request, since it may need code changes. CI runs on those pull requests
 like any other.
+
+Version updates propose a release only after it has been out for 3 days, so a
+broken or compromised release has time to be pulled first. Security updates
+don't wait, and neither do two kinds of dependency:
+
+- **AndroidX libraries**, which `dependabot.yml` excludes. With the wait on,
+  Dependabot never proposes a version it can't find a release date for, and
+  Google Maven only gives a date for an artifact's newest version. When that
+  newest version is a pre-release, the artifact's stable releases would never
+  be proposed. Libraries from other Google Maven groups (such as
+  `com.google.android.material`) have the same problem and need adding to the
+  exclusion. Removing it is tracked in
+  [#154](https://github.com/bryancassell/bluecard/issues/154).
+- **The Android Gradle plugin**, usually. Only its newest version gets a real
+  release date, and that is almost always a preview. Dependabot gives the
+  other versions one shared old date, so a new stable release is usually
+  proposed the day it comes out.
