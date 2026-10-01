@@ -95,13 +95,14 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
         // A file of its own: DataStore allows one active instance per file, and repository has one.
         val dataStore = newDataStore { File(folder.root, "held.preferences_pb") }
         val saving = CompletableDeferred<Unit>()
+        val written = CompletableDeferred<Unit>()
         // Holds the save until the caller is gone, as when the scout saves and leaves the page.
         val held = object : DataStore<Preferences> by dataStore {
             override suspend fun updateData(
                 transform: suspend (Preferences) -> Preferences
             ): Preferences {
                 saving.await()
-                return dataStore.updateData(transform)
+                return dataStore.updateData(transform).also { written.complete(Unit) }
             }
         }
         val repository = DataStoreProfileRepository(held, externalScope)
@@ -111,11 +112,11 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
         }
         caller.cancel()
         saving.complete(Unit)
+        // Reads once the write is done: a new DataStore read while its first write runs can miss
+        // the write (about 1 run in 70).
+        written.await()
 
-        assertEquals(
-            Profile("Alex Scout", "123"),
-            repository.observeProfile().first { it != null }
-        )
+        assertEquals(Profile("Alex Scout", "123"), repository.observeProfile().first())
     }
 
     @Test
