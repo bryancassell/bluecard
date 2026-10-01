@@ -861,7 +861,20 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun clear_emptiesTheCommentField_evenAnUnsavedEdit() = runTest {
+    fun clear_emptiesTheCommentField() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        viewModel.clear()
+
+        assertNull(recorded("1"))
+        assertEquals("", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun clear_keepsAnUnsavedEdit_forTheScoutToSaveOrNot() = runTest {
         progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
         val viewModel = viewModel("1")
         startCollecting(viewModel)
@@ -870,8 +883,8 @@ class RequirementDetailViewModelTest {
         viewModel.clear()
 
         assertNull(recorded("1"))
-        assertEquals("", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertEquals("Saved, then edited.", viewModel.comment.text.toString())
+        assertTrue(viewModel.ready().commentChanged)
     }
 
     @Test

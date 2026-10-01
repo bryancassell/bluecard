@@ -16,7 +16,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +44,7 @@ import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -268,7 +268,7 @@ private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> U
     var confirming by rememberSaveable { mutableStateOf(false) }
     TextButton(
         onClick = { confirming = true },
-        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+        colors = removalButtonColors(),
         // Lines the button's text up with the page's, as for Add counselor.
         modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
     ) {

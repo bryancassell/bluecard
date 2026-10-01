@@ -883,10 +883,14 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     as when everything is undone by hand. The page knows which requirements
     to clear from what it shows, so the clear is queued as soon as the scout
     confirms, in order with the page's other changes, and finishes even if
-    the page closes straight away. Once the clear succeeds, the page
-    empties its notes field, discarding an unsaved edit, and forgets a date it
-    remembered from an uncheck, so checking the requirement again dates it
-    today. A clear that fails keeps both and shows the save-failed snackbar.
+    the page closes straight away. The page forgets a date it remembered
+    from an uncheck as the clear starts, so checking the requirement again
+    dates it today, even while the clear is being saved. The notes field
+    shows the saved notes whenever it has no unsaved edit, in the same update
+    that shows they changed, so once the clear is saved it's empty, with no
+    frame where Save notes looks enabled. An unsaved edit stays, for the
+    scout to save or not, since the dialog clears only what's recorded. A
+    clear that fails shows the save-failed snackbar.
   - **Pages shown while their badge is cleared.** A page can show a badge
     for a moment after its progress is cleared, before it redraws. Unchecking
     a requirement of a badge that isn't started does nothing

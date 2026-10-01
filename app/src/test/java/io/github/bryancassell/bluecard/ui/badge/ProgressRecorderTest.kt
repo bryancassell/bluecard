@@ -7,11 +7,15 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -160,6 +164,29 @@ class ProgressRecorderTest {
         recorder.setCompleted("1", true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun checkingWhileAClearIsBeingSaved_datesItToday() = runTest {
+        val clearSaved = CompletableDeferred<Unit>()
+        // Saves a clear only once it's let through, as Room takes a moment to.
+        val slowClears = object : ProgressRepository by progressRepository {
+            override suspend fun clearRequirements(badgeId: String, numbers: Collection<String>) {
+                clearSaved.await()
+                progressRepository.clearRequirements(badgeId, numbers)
+            }
+        }
+        val recorder = ProgressRecorder("camping", catalogRepository, slowClears, clock)
+        recorder.setCompleted("1", true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+        recorder.setCompleted("1", false)
+
+        launch { recorder.clear(listOf("1")) }
+        runCurrent()
+        recorder.setCompleted("1", true)
+
+        assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+        clearSaved.complete(Unit)
     }
 
     @Test

@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -93,19 +92,21 @@ class RequirementDetailViewModel @AssistedInject constructor(
     )
 
     /**
-     * The numbers of this requirement and of every one under it, once the page has shown it, so
-     * [clear] queues its write as soon as it's called, in order with the page's other changes.
+     * The requirement as the page last showed it, or null before it has. [clear] reads it, so
+     * it queues its write as soon as it's called, in order with the page's other changes.
      */
-    private var numbersWithin: List<String>? = null
+    private var shown: RecordedRequirement? = null
 
     val uiState: StateFlow<RequirementDetailUiState> = combine(
-        recorded.onEach { numbersWithin = it?.numbersWithin },
+        recorded,
         // Works the state out again as the scout types.
         snapshotFlow { comment.text.toString() },
         saves.failure
     ) { recorded, _, saveFailure ->
         if (recorded == null) return@combine RequirementDetailUiState.Unavailable
         fields.loadOnce { mapOf(COMMENT to recorded.comment) }
+        shown?.let { followSavedComment(before = it.comment, saved = recorded.comment) }
+        shown = recorded
         RequirementDetailUiState.Ready(
             badgeName = recorded.badgeName,
             requirement = recorded.requirement,
@@ -142,18 +143,25 @@ class RequirementDetailViewModel @AssistedInject constructor(
     }
 
     /**
-     * Clears everything recorded for this requirement and every one under it, then empties the
-     * comment field, discarding an unsaved edit too. The field keeps its text if the clear
-     * fails, as the comment does.
+     * Shows the [saved] comment in the comment field when it changes from [before] without the
+     * scout typing it, as when it's cleared, unless the field has an unsaved edit, which stays
+     * for the scout to save or not. It's done as the change is shown, so the field is never a
+     * frame behind it.
+     */
+    private fun followSavedComment(before: String?, saved: String?) {
+        if (saved == before || normalizedText(comment.text.toString()) != before) return
+        // In a snapshot of its own, so the field has changed before uiState reads it.
+        Snapshot.withMutableSnapshot { comment.setTextAndPlaceCursorAtEnd(saved.orEmpty()) }
+    }
+
+    /**
+     * Clears everything recorded for this requirement and every one under it. The comment field
+     * then shows the cleared comment, unless it has an unsaved edit ([followSavedComment]).
      */
     fun clear() {
         // The button shows only once the page has.
-        val numbers = numbersWithin ?: return
-        saves.launch {
-            recorder.clear(numbers)
-            // In a snapshot of its own, so uiState sees the change straight away.
-            Snapshot.withMutableSnapshot { comment.clearText() }
-        }
+        val numbers = shown?.numbersWithin ?: return
+        saves.launch { recorder.clear(numbers) }
     }
 
     /** The scout has been told about [failure]. */

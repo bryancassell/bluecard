@@ -41,11 +41,12 @@ class ProgressRecorder(
 
     /**
      * Clears everything recorded for the requirements numbered in [numbers]. Checking one again
-     * on this page then dates it today: its date from before is cleared too.
+     * on this page then dates it today, even while the clear is being saved: its date from
+     * before is forgotten first. A clear that fails forgets it too, as the scout meant it to.
      */
     suspend fun clear(numbers: Collection<String>) {
-        progressRepository.clearRequirements(badgeId, numbers)
         uncheckedDates -= numbers
+        progressRepository.clearRequirements(badgeId, numbers)
     }
 
     /**

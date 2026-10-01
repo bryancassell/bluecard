@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,12 +29,7 @@ fun ConfirmDialog(
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
+            TextButton(onClick = onConfirm, colors = removalButtonColors()) {
                 Text(confirmLabel)
             }
         },
@@ -44,3 +40,11 @@ fun ConfirmDialog(
         }
     )
 }
+
+/**
+ * Colors of a text button that removes what the scout recorded, or asks to: red, the theme's
+ * error color.
+ */
+@Composable
+fun removalButtonColors(): ButtonColors =
+    ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
