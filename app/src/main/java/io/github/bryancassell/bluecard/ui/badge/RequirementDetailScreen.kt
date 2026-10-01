@@ -125,6 +125,15 @@ fun RequirementDetailScreen(
                         CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
                     }
                 }
+                // Right above the sub-requirements it counts, below the checkbox for its own work.
+                requirement.choice?.let {
+                    Text(
+                        text = choiceLabel(it),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                    )
+                }
                 RequirementRows(items = uiState.children, onOpen = onOpenRequirement)
                 uiState.tracker?.let { tracker ->
                     TrackerSection(
@@ -171,13 +180,6 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
             modifier = Modifier.semantics { heading() }
         )
         Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
-        requirement.choice?.let {
-            Text(
-                text = choiceLabel(it),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
         // One the scout marks by hand has a checkbox instead.
         if (!requirement.markedByHand && requirement.completed) {
             Text(

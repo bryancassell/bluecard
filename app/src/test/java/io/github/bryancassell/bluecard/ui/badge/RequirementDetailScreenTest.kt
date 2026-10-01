@@ -306,6 +306,31 @@ class RequirementDetailScreenTest {
         row("Cook a meal.").assertIsDisplayed()
     }
 
+    // The count sits right above the sub-requirements it counts, after the requirement's
+    // completion and the checkbox for its own work.
+    @Test
+    fun neededCount_sitsRightAboveSubRequirements() {
+        show(ready.copy(requirement = ready.requirement.copy(completed = true)))
+
+        val count = composeTestRule.onNodeWithText("Do 2 of 3").getUnclippedBoundsInRoot()
+        val completed = composeTestRule.onNodeWithText("Completed").getUnclippedBoundsInRoot()
+        val firstRow = composeTestRule.onNodeWithText("Cook a meal.").getUnclippedBoundsInRoot()
+        assertTrue(completed.bottom <= count.top)
+        assertTrue(count.bottom <= firstRow.top)
+    }
+
+    @Test
+    fun neededCount_sitsBelowOwnWorkCheckbox() {
+        show(withOwnWork)
+
+        val count = composeTestRule.onNodeWithText("Do 2 of 3").getUnclippedBoundsInRoot()
+        val checkbox = composeTestRule.onNode(hasText("Pack your gear.") and isToggleable())
+            .getUnclippedBoundsInRoot()
+        val firstRow = composeTestRule.onNodeWithText("Cook a meal.").getUnclippedBoundsInRoot()
+        assertTrue(checkbox.bottom <= count.top)
+        assertTrue(count.bottom <= firstRow.top)
+    }
+
     @Test
     fun checkingOwnWork_marksItCompleted() {
         show(withOwnWork)
