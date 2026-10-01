@@ -107,9 +107,7 @@ fun RequirementDetailScreen(
                         CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
                     }
                 }
-                uiState.children.forEach {
-                    RequirementRow(item = it, onOpen = onOpenRequirement)
-                }
+                RequirementRows(items = uiState.children, onOpen = onOpenRequirement)
                 uiState.tracker?.let { tracker ->
                     TrackerSection(
                         tracker = tracker,

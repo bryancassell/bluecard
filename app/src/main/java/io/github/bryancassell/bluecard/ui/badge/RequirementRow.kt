@@ -17,18 +17,54 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 
 // Composables shared by the Badge detail and Requirement detail screens.
+
+/** The smallest a number's box is, on each side. */
+private val NumberBoxMinSize = 40.dp
+
+/** Between a number and its box's edge. */
+private val NumberBoxPadding = 8.dp
+
+/**
+ * A list of requirements' rows. Every number's box is as wide as the widest number needs at the
+ * current font size, so the summaries after them line up.
+ */
+@Composable
+fun RequirementRows(
+    items: List<RequirementItem>,
+    onOpen: (number: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val numberStyle = MaterialTheme.typography.titleMedium
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val numberWidth = remember(items, numberStyle, textMeasurer, density) {
+        val widestNumber =
+            items.maxOfOrNull { textMeasurer.measure(it.number, numberStyle).size.width } ?: 0
+        with(density) {
+            maxOf(NumberBoxMinSize.roundToPx(), widestNumber + NumberBoxPadding.roundToPx() * 2)
+                .toDp()
+        }
+    }
+    Column(modifier) {
+        items.forEach { RequirementRow(it, numberWidth, onOpen) }
+    }
+}
 
 /**
  * A requirement's row, which opens its page: its number, in a box that's filled in once it's
@@ -38,8 +74,9 @@ import io.github.bryancassell.bluecard.R
  * page.
  */
 @Composable
-fun RequirementRow(
+private fun RequirementRow(
     item: RequirementItem,
+    numberWidth: Dp,
     onOpen: (number: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -51,7 +88,7 @@ fun RequirementRow(
         }
     )
     ListItem(
-        leadingContent = { RequirementNumber(item) },
+        leadingContent = { RequirementNumber(item, numberWidth) },
         headlineContent = { Text(item.summary) },
         supportingContent = if (item.choice == null && item.tracker == null && !item.notNeeded) {
             null
@@ -88,18 +125,19 @@ fun RequirementRow(
 /**
  * A requirement's number in a box, like the boxes on the blue card: outlined until the
  * requirement is complete, then filled in Scouting America Blue with a check on its top end
- * corner, or filled in grey once it's no longer needed. It grows with a long number, such as
- * "8a(1)", and with the font size. The check is drawn only: its row reads the state.
+ * corner, or filled in grey once it's no longer needed. It's at least [minWidth] wide, room for the
+ * widest number in its list, and grows taller with the font size. The check is drawn only: its
+ * row reads the state.
  */
 @Composable
-private fun RequirementNumber(item: RequirementItem) {
+private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
     val colors = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.medium
     Box {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .defaultMinSize(minWidth = 40.dp, minHeight = 40.dp)
+                .defaultMinSize(minWidth = minWidth, minHeight = NumberBoxMinSize)
                 .then(
                     when {
                         item.completed -> Modifier.background(colors.primary, shape)
@@ -109,7 +147,7 @@ private fun RequirementNumber(item: RequirementItem) {
                 )
                 // On every side: once the text outgrows the box, it stays clear of the edge and
                 // below the check.
-                .padding(8.dp)
+                .padding(NumberBoxPadding)
         ) {
             Text(
                 text = item.number,

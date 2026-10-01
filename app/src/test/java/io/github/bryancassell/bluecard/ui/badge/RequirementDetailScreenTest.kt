@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasStateDescription
@@ -21,7 +23,9 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
@@ -29,9 +33,12 @@ import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -308,6 +315,66 @@ class RequirementDetailScreenTest {
         show(ready)
 
         row("Keep a camping log.").assert(hasText("3 nights"))
+    }
+
+    /** Sub-requirements with these numbers, each summarized as "Summary of <number>.". */
+    private fun withSubRequirements(numbers: List<String>) = ready.copy(
+        children = numbers.map {
+            RequirementItem(it, "Summary of $it.", null, completed = false, markedByHand = true)
+        }
+    )
+
+    // Like Emergency Preparedness 1b's: too long for the box's minimum width, and not all as long
+    // as each other.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Test
+    fun subRequirementNumbersOfDifferentWidths_summariesLineUp() {
+        val numbers = listOf("1b(9)", "1b(10)", "1b(21)")
+        show(withSubRequirements(numbers))
+
+        // In the unmerged tree, each summary is a node of its own.
+        val starts = numbers.map {
+            composeTestRule.onNodeWithText("Summary of $it.", useUnmergedTree = true)
+                .getUnclippedBoundsInRoot()
+                .left
+        }
+        assertEquals(List(starts.size) { starts.first() }, starts)
+    }
+
+    // Archery's are the longest numbers in the catalog.
+    private val longestNumbers = listOf("5A(6)(a)(1)", "5A(6)(a)(2)", "5A(6)(a)(3)", "5A(6)(a)(4)")
+
+    private fun assertShownInFullOnOneLine(numbers: List<String>) {
+        for (number in numbers) {
+            val layouts = mutableListOf<TextLayoutResult>()
+            composeTestRule.onNodeWithText(number, useUnmergedTree = true)
+                .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            val layout = layouts.single()
+            assertEquals("Lines in $number", 1, layout.lineCount)
+            // Not hasVisualOverflow: the layout a Text reports is laid out across all the width
+            // it was offered, so it overflows the text's own width even when the text fits.
+            assertTrue(
+                "Expected none of $number cut off",
+                layout.getLineRight(0) <= layout.size.width && !layout.didOverflowHeight
+            )
+        }
+    }
+
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Test
+    fun longestNumbers_showInFullOnOneLine() {
+        show(withSubRequirements(longestNumbers))
+
+        assertShownInFullOnOneLine(longestNumbers)
+    }
+
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(fontScale = 2f)
+    @Test
+    fun longestNumbers_atLargestFontSize_showInFullOnOneLine() {
+        show(withSubRequirements(longestNumbers))
+
+        assertShownInFullOnOneLine(longestNumbers)
     }
 
     @Test
