@@ -44,6 +44,12 @@ class BadgeDetailViewModel @AssistedInject constructor(
     /** The report being created to share, if there is one. */
     private var creatingReport: Job? = null
 
+    /**
+     * The latest clear. A report asked for after it waits for it, so it doesn't read the badge
+     * from before, as it could in the moment before the page redraws without its report buttons.
+     */
+    private var clearing: Job? = null
+
     val uiState: StateFlow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
@@ -81,7 +87,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
      */
     fun shareReport() {
         if (creatingReport?.isActive == true) return
+        val clear = clearing
         creatingReport = reports.launch {
+            clear?.join()
             reportToShare.value = reportRepository.createReportToShare(badgeId)
         }
     }
@@ -93,7 +101,11 @@ class BadgeDetailViewModel @AssistedInject constructor(
 
     /** Saves the badge's report to [destination], a document the scout chose to create. */
     fun saveReport(destination: Uri) {
-        reports.launch { reportRepository.saveReport(badgeId, destination) }
+        val clear = clearing
+        reports.launch {
+            clear?.join()
+            reportRepository.saveReport(badgeId, destination)
+        }
     }
 
     /** The scout has been told about [failure]. */
@@ -109,7 +121,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     fun clear() {
         creatingReport?.cancel()
         reportToShare.value = null
-        saves.launch { progressRepository.clearBadge(badgeId) }
+        clearing = saves.launch { progressRepository.clearBadge(badgeId) }
     }
 
     /** The scout has been told that a clear failed ([failure]). */

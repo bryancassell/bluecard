@@ -81,7 +81,8 @@ fun SaveFailedSnackbarHost(
 /**
  * Shows [failure] in [hostState] as [SaveFailedSnackbarHost] does, for a screen that has more
  * than one kind of failure, each with its own [message], to show in one host: [hostState]
- * shows one snackbar at a time, as Material asks, and queues the rest.
+ * shows one snackbar at a time, as Material asks, and queues the rest. One still waiting its
+ * turn when the screen goes is dropped, as one showing is.
  */
 @Composable
 fun SaveFailureSnackbar(

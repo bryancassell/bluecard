@@ -786,7 +786,7 @@ class BadgeDetailScreenTest {
         assertEquals(listOf(failure), reportFailuresShown)
     }
 
-    private val started = ready.copy(canClear = true)
+    private val startedBadge = ready.copy(canClear = true)
 
     private fun clearButton() = composeTestRule.onNodeWithText("Clear progress").performScrollTo()
 
@@ -804,7 +804,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun clearButton_isLastOnThePage() {
-        show(started.copy(counselor = counselor))
+        show(startedBadge.copy(counselor = counselor))
 
         val tops = listOf("Counselor", "Do all of these.", "Clear progress").map {
             composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
@@ -814,7 +814,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun clear_asksFirst_thenClears() {
-        show(started)
+        show(startedBadge)
 
         clearButton().performClick()
         composeTestRule.onNodeWithText(clearTitle).assertIsDisplayed()
@@ -829,7 +829,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun clear_withCounselor_saysTheyAreRemovedToo() {
-        show(started.copy(counselor = counselor))
+        show(startedBadge.copy(counselor = counselor))
 
         clearButton().performClick()
 
@@ -840,7 +840,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun clear_cancel_clearsNothing() {
-        show(started)
+        show(startedBadge)
 
         clearButton().performClick()
         composeTestRule.onNodeWithText("Cancel").performClick()
@@ -851,7 +851,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun clear_back_closesTheDialog_andClearsNothing() {
-        show(started)
+        show(startedBadge)
 
         clearButton().performClick()
         // Espresso's pressBack doesn't reach the dialog's window under Robolectric, so Back is
@@ -869,7 +869,7 @@ class BadgeDetailScreenTest {
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
         val failure = SaveFailure()
-        show(started.copy(saveFailure = failure))
+        show(startedBadge.copy(saveFailure = failure))
 
         val message = "Couldn't save. Try again."
         composeTestRule.onNodeWithText(message).assertIsDisplayed()
