@@ -561,7 +561,7 @@
                     },
                     {
                       "number": "9b(2)",
-                      "summary": "Backpack, snowshoe or cross-country ski at least 4 miles."
+                      "summary": "Cover at least 4 miles backpacking, snowshoeing or cross-country skiing."
                     },
                     {
                       "number": "9b(3)",
@@ -944,7 +944,7 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "Discuss what it takes to be a good citizen in your community."
+              "summary": "Discuss what good citizenship looks like in your community."
             },
             {
               "number": "2",
@@ -2790,7 +2790,7 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Explain what a heart attack is."
+                  "summary": "Explain what happens during a heart attack."
                 },
                 {
                   "number": "7b",

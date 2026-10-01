@@ -9,7 +9,8 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 
 - **Our own words only.** Never copy text from Scouting America. Each badge gets a
   short summary and each requirement a one-line summary, written for this project.
-  The app links to the official page for the full wording.
+  The app links to the official page for the full wording. See
+  [What counts as copying](#what-counts-as-copying).
 - **Match the official structure.** Requirement numbers, nesting and "do N of the
   following" counts must match the official page exactly, because scouts and
   counselors use those numbers. The one exception is either/or children (see
@@ -24,6 +25,31 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
   `id`, so once a version ships, never remove a column or change its `id` or
   `type`, and never change the tracker's `rowCount`. You can change a column's
   label or add a column.
+
+## What counts as copying
+
+Write each summary from what the requirement asks, not by editing the official
+sentence.
+
+Not fine:
+
+- A whole official sentence, word for word or with a word dropped or swapped.
+- A distinctive clause from the official text, such as "what it takes to be a
+  good citizen in your community".
+
+Fine, even when it matches the official text word for word:
+
+- Names of things, such as conditions, places, items and concepts.
+- Lists of names. Don't reorder a list just to make it differ.
+- Numbers, and short common phrases such as "with your counselor" or "in your
+  own words".
+
+| Official text | Summary | Verdict |
+|---|---|---|
+| Explain what a heart attack is. | Explain what a heart attack is. | Not fine: the whole sentence. |
+| Explain what a heart attack is. | Explain what happens during a heart attack. | Fine. |
+| Immersion foot, frostnip, frostbite, and ice burns | Immersion foot, frostnip, frostbite and ice burns. | Fine: a list of names. |
+| Describe the meaning of environmental science in your own words. | Explain environmental science in your own words and how it helps. | Fine: a name and a common phrase, in a sentence of our own. |
 
 ## Format
 
@@ -137,4 +163,8 @@ It checks that:
   that start with a lowercase letter, and a `rowCount` of at least 1 when set.
 
 It can't check that the structure matches the official page or that summaries
-are in our own words; reviewers check those.
+are in our own words; reviewers check those. To check the wording, read each
+summary next to its requirement on the official page, using
+[What counts as copying](#what-counts-as-copying). Don't count words shared
+with the official text: lists and common phrases make long matches in summaries
+that are fine, and rewording to avoid them makes summaries read awkwardly.
