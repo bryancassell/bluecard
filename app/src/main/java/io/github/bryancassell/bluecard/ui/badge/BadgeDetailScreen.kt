@@ -2,12 +2,15 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,11 +20,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -110,11 +116,7 @@ private fun BadgeDetails(
                 modifier = Modifier.semantics { heading() }
             )
             uiState.eagle?.let {
-                Text(
-                    text = eagleRequirementLabel(it, rememberBadgeNameListFormatter()),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter()))
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
             val officialPage = Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri())
@@ -164,6 +166,40 @@ private fun BadgeDetails(
         )
         uiState.requirements.forEach {
             RequirementRow(item = it, onOpen = onOpenRequirement)
+        }
+    }
+}
+
+/**
+ * Says the badge is Eagle-required, as a filled tag. It's the only filled shape on the page, with
+ * small corners, so it doesn't look like the buttons near it, which are outlined or plain text and
+ * fully rounded. A long label wraps inside it.
+ */
+@Composable
+private fun EagleTag(label: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryFixedDim,
+        contentColor = MaterialTheme.colorScheme.onPrimaryFixed,
+        shape = MaterialTheme.shapes.extraSmall
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 6.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val style = MaterialTheme.typography.labelLarge
+            // A box one line tall keeps the icon centered on the first line at any font size.
+            // Where Android scales large text up less, Compose keeps a line's height in proportion
+            // to its font size rather than scaling it on its own, so the box does too.
+            val lineHeight = with(LocalDensity.current) { style.fontSize.toDp() } *
+                (style.lineHeight.value / style.fontSize.value)
+            Box(modifier = Modifier.height(lineHeight), contentAlignment = Alignment.Center) {
+                Icon(
+                    painterResource(R.drawable.ic_workspace_premium),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Text(text = label, style = style)
         }
     }
 }
