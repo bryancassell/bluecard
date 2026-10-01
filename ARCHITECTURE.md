@@ -331,7 +331,7 @@ both taps of a double tap can reach it.
 | `CatalogRepository` | Merit badges, requirements, requirement versions (read-only) | JSON file in `assets/`, parsed with [kotlinx.serialization](https://kotlinlang.org/docs/serialization.html) |
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
 | `ReportRepository` | Building a badge's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
-| `BackupRepository` (not built yet) | Export and import of all user data | JSON written to or read from a user-chosen file |
+| `BackupRepository` | Export and import of all user data | JSON written to or read from a user-chosen file |
 
 - **Storage choice:** the DataStore guide says it is "ideal for small datasets"
   and to "consider using Room" for larger or relational data. The profile is two
@@ -348,7 +348,8 @@ both taps of a double tap can reach it.
 
 - **Writes outlive the screen.** `RoomProgressRepository` runs each write in an
   app-lifetime scope and waits for it (`runOutlivingCaller`), so leaving a
-  screen cancels only the wait, not the write. Saving a PDF report does too.
+  screen cancels only the wait, not the write. Saving a PDF report, exporting
+  and importing do too.
   That's the pattern in the data layer guide's
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
   A storage failure after the scout has left the screen goes unreported, but a
@@ -407,7 +408,7 @@ io.github.bryancassell.bluecard
 │   ├── catalog/        CatalogRepository + JSON models
 │   ├── progress/       ProgressRepository + Room entities and DAOs
 │   ├── report/         ReportRepository (PDF)
-│   └── backup/         BackupRepository (export/import format), not built yet
+│   └── backup/         BackupRepository and the export format
 ├── text/               The strings' locales, and dates and typed text formatted in them, for the
 │                       screens and for code outside Compose, such as the PDF report
 └── di/                 Hilt modules
@@ -636,10 +637,32 @@ profile, and clearing a requirement leaves its badge started.
 ### Export and import
 
 Export writes a single JSON document (a format version, the profile and all
-progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`.
-Import reads one with `ActivityResultContracts.OpenDocument`, checks the format
-version and validates it before changing anything, since import replaces all
-current data (see [`PRD.md`](PRD.md#design-decisions)).
+progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`,
+as Save report does (`data/SaveDocument.kt`). Import reads one with
+`ActivityResultContracts.OpenDocument`, checks the format version and validates
+it before changing anything, since import replaces all current data (see
+[`PRD.md`](PRD.md#design-decisions)).
+
+- **Any change to the format needs a new format version**
+  (`BACKUP_FORMAT_VERSION` in `data/backup/BackupFormat.kt`), even an added
+  field. Every field is required and unknown fields are rejected, so an older
+  app turns away a newer file rather than importing it without what it doesn't
+  know. A file's version is read first, since a newer format may lay the rest
+  out differently.
+- **Import checks the whole file before it changes anything:** that it's JSON
+  in this format, and that it holds only what the app could have recorded (for
+  example, each badge once and only a completed requirement with a date). It
+  also caps the file's size, so a large file picked by mistake can't use up the
+  app's memory, and each text's length, so imported text fits in a screen's
+  saved state (see [Text fields](#text-fields)).
+- **Progress is replaced in one transaction, then the profile is saved**
+  (`ProgressRepository.replaceAll`). The profile is in DataStore, so the two
+  can't share a transaction. If replacing progress fails, nothing has changed;
+  if saving the profile then fails, the progress is already the file's, and
+  importing again replaces both.
+- **The file has no tracker entry IDs.** Entries are listed in the order they
+  were added, and an import gives them new IDs in that order, so each log keeps
+  its order and IDs keep growing.
 
 ### Backup
 
@@ -678,10 +701,10 @@ How the architecture supports the testing rules in `CLAUDE.md`.
   implementation's test and the fake's test both extend it, so the fake used by
   other features' tests behaves like the real repository.
 - **Failures in tests.** Fakes have switches that make their reads
-  (`failLoads`: catalog, profile, progress) or writes (`failSaves`: profile,
-  progress, report) throw an `IOException`, for testing each screen's failure
-  states. The profile and progress contract tests check that the real
-  repositories throw one too.
+  (`failLoads`: catalog, profile, progress; `failReads`: backup files) or
+  writes (`failSaves`: profile, progress, report, backup) throw an
+  `IOException`, for testing each screen's failure states. The profile and
+  progress contract tests check that the real repositories throw one too.
 
 ### ViewModel tests
 
@@ -709,7 +732,9 @@ the coroutine dispatcher. A test class that needs fakes removes the modules
 that bind those repositories with `@UninstallModules` and supplies the fakes
 with `@BindValue`, as `MainActivityTest` does. `ProfileModule` binds only the
 profile repository. `DataModule` binds the catalog and progress repositories
-together, so a test that fakes one of them supplies both.
+together, so a test that fakes one of them supplies both. `BackupModule` binds
+only the backup repository, so such a test still exports and imports through
+the real one.
 
 ### Room and migration tests
 
@@ -755,8 +780,10 @@ together, so a test that fakes one of them supplies both.
   (`PdfDocumentWriterTest`) writes a real PDF and reads it back; run it on an
   emulator with `./gradlew connectedAndroidTest`. CI has no emulator, so it
   doesn't run there.
-- **Backup tests** check that export followed by import restores the same
-  data.
+- **Backup tests:** `BackupFormatTest` pins the export format and checks each
+  of import's rules. `JsonBackupRepositoryTest` writes and reads documents
+  through a test documents provider, and checks that an export imported into an
+  empty Room database restores the same data.
 
 ### Coverage
 

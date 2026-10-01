@@ -146,12 +146,36 @@
          the tracker or the row, such as after the row was deleted. -->
     <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
     <string name="data_management_title">Data management</string>
+    <!-- Export saves the scout's name, unit number and all their progress to a file they
+         choose; import replaces all of it with what's in a file they exported. -->
+    <string name="data_management_export_heading">Export data</string>
+    <string name="data_management_export_description">Save your name, unit number and all your progress to a file.</string>
+    <string name="data_management_export">Export</string>
+    <string name="data_management_import_heading">Import data</string>
+    <string name="data_management_import_description">Replace everything on this phone with a file you exported.</string>
+    <string name="data_management_import">Import</string>
+    <!-- Shown when tapping Import, if no app on the phone can open files. -->
+    <string name="data_management_no_file_opener">No app on this phone can open files.</string>
+    <!-- The name the file picker suggests for an export, without its ".json" extension, with
+         the date in YYYY-MM-DD form, such as "BlueCard export 2026-10-01". -->
+    <string name="export_file_name">BlueCard export %1$s</string>
+    <!-- Asks before an import replaces everything, once the file is checked. -->
+    <string name="import_confirm_title">Replace all your data?</string>
+    <string name="import_confirm_message">Your name, unit number and all your progress will be replaced with the file\'s.</string>
+    <string name="import_confirm">Replace</string>
+    <!-- Shown briefly after an export or import, or when one couldn't be done. -->
+    <string name="export_failed">Couldn\'t export. Try again.</string>
+    <string name="import_read_failed">Couldn\'t open the file. Try again.</string>
+    <string name="import_invalid">This file isn\'t a BlueCard export.</string>
+    <string name="import_newer_format">This file is from a newer version of BlueCard. Update the app to import it.</string>
+    <string name="import_failed">Couldn\'t import. Try again.</string>
+    <string name="import_done">Data imported.</string>
     <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
          recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
     <string name="badge_detail_share_report">Share report</string>
     <string name="badge_detail_save_report">Save report</string>
-    <!-- Shown when tapping Save report, if no app on the phone can save files. -->
-    <string name="badge_detail_no_file_picker">No app on this phone can save files.</string>
+    <!-- Shown when tapping Save report or Export, if no app on the phone can save files. -->
+    <string name="no_file_saver">No app on this phone can save files.</string>
     <!-- Shown briefly when a badge's report couldn't be created or saved. -->
     <string name="report_failed">Couldn\'t create the report. Try again.</string>
     <!-- The report's file name, without its ".pdf" extension, with the badge's name, such as

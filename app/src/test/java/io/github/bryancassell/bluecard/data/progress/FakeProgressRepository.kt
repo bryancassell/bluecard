@@ -194,6 +194,14 @@ class FakeProgressRepository : ProgressRepository {
         badges.value = emptyMap()
     }
 
+    override suspend fun replaceAll(progress: List<BadgeProgressDetails>) {
+        checkCanSave()
+        badges.value = progress.associate { details ->
+            val entries = details.trackerEntries.map { it.copy(id = nextTrackerEntryId++) }
+            details.badge.badgeId to details.copy(trackerEntries = entries)
+        }
+    }
+
     private fun checkCanSave() {
         if (failSaves) throw IOException("Save failed")
     }

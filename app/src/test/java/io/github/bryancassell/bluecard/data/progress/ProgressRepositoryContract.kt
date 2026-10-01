@@ -443,6 +443,62 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun replaceAll_replacesAllProgressWithWhatItsGiven() = test {
+        repository.startBadge("archery", version, started)
+        repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
+        addLogEntry("7a", mapOf("minutes" to "30"))
+        val camping = BadgeProgressDetails(
+            BadgeProgress("camping", version, started, Counselor(name = "Pat", phone = "555")),
+            listOf(
+                RequirementProgress("camping", "4b", completed = true, completedDate = day),
+                RequirementProgress("camping", "5", comment = "Next trip")
+            ),
+            listOf(
+                TrackerEntry(
+                    badgeId = "camping",
+                    requirementNumber = "9a",
+                    rowNumber = 2,
+                    values = mapOf("nights" to "2"),
+                    addedDate = laterDay
+                ),
+                TrackerEntry(badgeId = "camping", requirementNumber = "9b", values = mapOf())
+            )
+        )
+        val swimming = BadgeProgressDetails(
+            BadgeProgress("swimming", version, started, completedOnPriorDate = laterDay),
+            emptyList(),
+            emptyList()
+        )
+
+        repository.replaceAll(listOf(camping, swimming))
+
+        // Without the tracker entries' new IDs, and with the requirements in a set order.
+        val stored = repository.observeAllProgress().first().map { details ->
+            details.copy(
+                requirements = details.requirements.sortedBy { it.requirementNumber },
+                trackerEntries = details.trackerEntries.sortedBy { it.id }.map { it.copy(id = 0) }
+            )
+        }
+        assertEquals(listOf(camping, swimming), stored)
+    }
+
+    @Test
+    fun replaceAll_givesTrackerEntriesNewIds_inTheOrderTheyreListed() = test {
+        val earlier = addLogEntry("7a", mapOf("minutes" to "30"))
+        // IDs that would put the log out of order, and clash with the entry already there.
+        val log = listOf(earlier + 2 to "first", earlier + 1 to "second", earlier to "third")
+            .map { (id, note) -> TrackerEntry(id, BADGE, "7a", values = mapOf("note" to note)) }
+
+        repository.replaceAll(
+            listOf(BadgeProgressDetails(BadgeProgress(BADGE, version, started), emptyList(), log))
+        )
+
+        val entries = progress()!!.trackerEntries.sortedBy { it.id }
+        assertEquals(listOf("first", "second", "third"), entries.map { it.values["note"] })
+        assertTrue(entries.all { it.id > earlier })
+    }
+
+    @Test
     fun observeProgress_emitsWhenProgressChanges() = test {
         val flow = repository.observeProgress(BADGE)
         flow.first { it != null }
@@ -516,7 +572,8 @@ abstract class ProgressRepositoryContract {
             "deleteTrackerEntry" to { unwritable.deleteTrackerEntry(1) },
             "clearRequirements" to { unwritable.clearRequirements(BADGE, listOf("1")) },
             "clearBadge" to { unwritable.clearBadge(BADGE) },
-            "clearAll" to { unwritable.clearAll() }
+            "clearAll" to { unwritable.clearAll() },
+            "replaceAll" to { unwritable.replaceAll(emptyList()) }
         )
         for ((name, write) in writes) {
             val error = runCatching { write() }.exceptionOrNull()
