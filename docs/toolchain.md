@@ -293,17 +293,19 @@ request per ecosystem (Gradle, GitHub Actions); each major update gets its own
 pull request, since it may need code changes. CI runs on those pull requests
 like any other.
 
-Dependabot proposes a release only after it has been out for 3 days, so a
-broken or compromised release has time to be pulled first. Two kinds of
-dependency don't get that wait:
+Version updates propose a release only after it has been out for 3 days, so a
+broken or compromised release has time to be pulled first. Security updates
+don't wait, and neither do two kinds of dependency:
 
-- **AndroidX libraries**, which `dependabot.yml` excludes. During the wait
-  Dependabot skips any version it can't find a release date for, and Google
-  Maven only gives a date for an artifact's newest version. When that newest
-  version is a pre-release, every stable release would be skipped. Libraries
-  from other Google Maven groups (such as `com.google.android.material`) have
-  the same problem and need adding to the exclusion. Removing it is tracked in
+- **AndroidX libraries**, which `dependabot.yml` excludes. With the wait on,
+  Dependabot never proposes a version it can't find a release date for, and
+  Google Maven only gives a date for an artifact's newest version. When that
+  newest version is a pre-release, the artifact's stable releases would never
+  be proposed. Libraries from other Google Maven groups (such as
+  `com.google.android.material`) have the same problem and need adding to the
+  exclusion. Removing it is tracked in
   [#154](https://github.com/bryancassell/bluecard/issues/154).
-- **The Android Gradle plugin.** Dependabot reads its release dates from a
-  response that gives every version the same old date, so new versions are
-  proposed on the day they are released.
+- **The Android Gradle plugin**, usually. Only its newest version gets a real
+  release date, and that is almost always a preview. Dependabot gives the
+  other versions one shared old date, so a new stable release is usually
+  proposed the day it comes out.

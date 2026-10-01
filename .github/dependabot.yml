@@ -8,11 +8,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    # Dependabot waits 3 days after a release by default and skips versions it
-    # can't date. Google Maven only dates an artifact's newest version, so when
-    # that is a pre-release, every stable AndroidX release would be skipped.
-    # Libraries from other Google Maven groups would need adding here too.
-    # Remove this when #154 is done.
+    # Why AndroidX skips the 3-day wait: "Continuous integration" in
+    # docs/toolchain.md. Remove this when #154 is done.
     cooldown:
       exclude: ["androidx.*"]
     groups:
