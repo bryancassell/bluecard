@@ -23,9 +23,18 @@ import java.io.OutputStream
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -83,15 +92,29 @@ class PdfReportRepositoryTest {
     private val profileRepository = FakeProfileRepository(Profile("Alex Scout", "123"))
     private val pdfWriter = FakePdfWriter()
 
-    private val repository = PdfReportRepository(
+    // As the app's scope, which outlives the screens.
+    private val externalScope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
+
+    private fun newRepository(
+        ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
+        externalScope: CoroutineScope = this.externalScope
+    ) = PdfReportRepository(
         context,
         catalogRepository,
         progressRepository,
         profileRepository,
         pdfWriter,
         Clock.fixed(today.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneOffset.UTC),
-        UnconfinedTestDispatcher()
+        ioDispatcher,
+        externalScope
     )
+
+    private val repository = newRepository()
+
+    @After
+    fun cancelExternalScope() {
+        externalScope.cancel()
+    }
 
     // FileProvider keeps each authority's folders from the first time it's used, while
     // Robolectric gives each test new ones. Starting the provider, as the system does when the
@@ -188,6 +211,39 @@ class PdfReportRepositoryTest {
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
     }
 
+    // An app the earlier report was shared with, such as an email app, may read it only when
+    // it sends it.
+    @Test
+    fun createReportToShare_again_leavesTheEarlierReportWhole_forAnAppReadingIt() = runTest {
+        val earlier = repository.createReportToShare("chess")
+        val written = pdfWriter.lastWritten
+        context.contentResolver.openInputStream(earlier)!!.use { reading ->
+            progressRepository.setRequirementComment(
+                "chess",
+                "1c",
+                "Taught my brother.",
+                BadgeStart(newest, today)
+            )
+
+            repository.createReportToShare("chess")
+
+            assertEquals(written, reading.reader().readText())
+        }
+    }
+
+    @Test
+    fun createReportToShare_whenItCantBeWritten_leavesTheEarlierReport() = runTest {
+        val earlier = repository.createReportToShare("chess")
+        val written = pdfWriter.lastWritten
+        pdfWriter.failWrites = true
+
+        assertThrows<IOException> { repository.createReportToShare("chess") }
+
+        assertEquals(written, earlier.read())
+        val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
+        assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
+    }
+
     @Test
     fun saveReport_writesTheBadgesReport_toTheDestination() = runTest {
         val destination = folder.newFile("report.pdf")
@@ -226,6 +282,63 @@ class PdfReportRepositoryTest {
 
         assertThrows<IOException> { repository.saveReport("chess", document) }
         assertFalse(file.exists())
+    }
+
+    // The scout chose to replace an older report in the file picker. Until there's a new one to
+    // write over it, it's theirs to keep.
+    @Test
+    fun saveReport_overAnOlderReport_whenItFailsBeforeWriting_leavesItAsItWas() = runTest {
+        val (document, file) = createdDocument("An older report.")
+
+        progressRepository.failLoads = true
+        assertThrows<IOException> { repository.saveReport("chess", document) }
+        assertEquals("An older report.", file.readText())
+        progressRepository.failLoads = false
+
+        pdfWriter.failWrites = true
+        assertThrows<IOException> { repository.saveReport("chess", document) }
+        assertEquals("An older report.", file.readText())
+        pdfWriter.failWrites = false
+
+        documentsProvider.refuseOpening = true
+        assertThrows<IOException> { repository.saveReport("chess", document) }
+        assertEquals("An older report.", file.readText())
+    }
+
+    @Test
+    fun saveReport_toAProviderThatDoesntSupportWt_replacesWhatTheDocumentHeld() = runTest {
+        val (document, file) = createdDocument("An older, longer file. ".repeat(500))
+        documentsProvider.unsupportedModes = setOf("wt")
+
+        repository.saveReport("chess", document)
+
+        assertEquals(pdfWriter.lastWritten, file.readText())
+    }
+
+    // Opening it emptied it, so what's left would be empty or partial.
+    @Test
+    fun saveReport_whenWritingToTheDocumentFails_deletesIt() = runTest {
+        val (document, file) = createdDocument("An older report.")
+        documentsProvider.failWrites = true
+
+        assertThrows<IOException> { repository.saveReport("chess", document) }
+        assertFalse(file.exists())
+    }
+
+    // As when the scout leaves the screen right after choosing where to save it.
+    @Test
+    fun saveReport_finishesEvenIfItsCallerIsCancelled() = runTest {
+        val (document, file) = createdDocument()
+        // Holds the save until the test runs it, after the caller is cancelled.
+        val repository = newRepository(StandardTestDispatcher(testScheduler), backgroundScope)
+
+        val caller = launch(start = CoroutineStart.UNDISPATCHED) {
+            repository.saveReport("chess", document)
+        }
+        caller.cancel()
+        advanceUntilIdle()
+
+        assertEquals(pdfWriter.lastWritten, file.readText())
     }
 
     // Another app's refusal isn't a mistake in BlueCard, so the scout sees that it failed

@@ -15,7 +15,9 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BadgeReportTest {
@@ -164,6 +166,20 @@ class BadgeReportTest {
         // Two of three are complete, but one has no date.
         assertEquals(Completion(null), report.requirement("2").completion)
         assertNull(report.requirement("3").completion)
+    }
+
+    // As the screens show it, so the counselor sees a choice the scout didn't pick isn't missing.
+    @Test
+    fun requirementNotCompleted_inACompletedOne_isNotNeeded() {
+        val report = report(
+            progress(listOf(completed("2a", LocalDate.of(2026, 4, 2)), completed("2c", null)))
+        )
+
+        assertTrue(report.requirement("2b").notNeeded)
+        assertFalse(report.requirement("2a").notNeeded)
+        assertFalse(report.requirement("2").notNeeded)
+        // Requirement 4 isn't complete.
+        assertFalse(report.requirement("4b").notNeeded)
     }
 
     @Test

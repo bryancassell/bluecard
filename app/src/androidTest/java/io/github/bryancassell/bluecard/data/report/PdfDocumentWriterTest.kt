@@ -51,6 +51,7 @@ class PdfDocumentWriterTest {
                 summary = "Requirement number $it of the badge.",
                 requiredCount = null,
                 completion = Completion(LocalDate.of(2026, 4, 1)),
+                notNeeded = false,
                 comment = "A comment on requirement $it, ".repeat(it % 5 + 1),
                 tracker = ReportTracker(
                     log,

@@ -47,9 +47,19 @@ class ReportLayoutTest {
         completion: Completion? = null,
         comment: String? = null,
         requiredCount: Int? = null,
+        notNeeded: Boolean = false,
         tracker: ReportTracker? = null,
         children: List<ReportRequirement> = emptyList()
-    ) = ReportRequirement(number, summary, requiredCount, completion, comment, tracker, children)
+    ) = ReportRequirement(
+        number,
+        summary,
+        requiredCount,
+        completion,
+        notNeeded,
+        comment,
+        tracker,
+        children
+    )
 
     private fun report(
         requirements: List<ReportRequirement>,
@@ -80,7 +90,7 @@ class ReportLayoutTest {
                 requiredCount = 2,
                 children = listOf(
                     requirement("2a", "Cook a meal.", Completion(LocalDate.of(2026, 4, 2))),
-                    requirement("2b", "Lead a hike."),
+                    requirement("2b", "Lead a hike.", notNeeded = true),
                     requirement("2c", "Pitch a tent.", Completion(null))
                 )
             ),
@@ -142,7 +152,7 @@ class ReportLayoutTest {
                 "2a. Cook a meal.",
                 "Completed on Apr 2, 2026",
                 "2b. Lead a hike.",
-                "Not completed",
+                "Not needed",
                 "2c. Pitch a tent.",
                 "Completed",
                 "3. Keep a camping log.",

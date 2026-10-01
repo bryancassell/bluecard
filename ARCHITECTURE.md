@@ -499,8 +499,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
 - **Writes outlive the screen.** `RoomProgressRepository` runs each write in an
-  app-lifetime scope and waits for it, so leaving a screen cancels only the
-  wait, not the write. That's the pattern in the data layer guide's
+  app-lifetime scope and waits for it (`runOutlivingCaller`), so leaving a
+  screen cancels only the wait, not the write. Saving a PDF report does too. That's the pattern in the data layer guide's
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
   Writes take a first-come, first-served lock, so they happen in the order
   they're made. A storage failure after the scout has left the screen goes
@@ -872,7 +872,9 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
   requirement shows "Do N of M" if it's a choice, whether it's complete and
   when, its notes, and its tracker's filled-in rows, each value with its
   column's label. A requirement with nothing recorded is listed as "Not
-  completed", so a counselor sees the whole badge.
+  completed", so a counselor sees the whole badge. One that isn't complete but
+  is part of a complete one, such as a choice the scout didn't pick, is "Not
+  needed", as on screen.
   - **Pages.** US Letter, with 0.75-inch margins and "Page 1 of 3" at the foot
     of each. `StaticLayout` lays the text out in the strings' language and
     direction (`stringsLanguageResources`), with typed text wrapped as on
@@ -892,19 +894,30 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     content URI, a read permission grant, and the URI as clip data for the
     sheet's preview). The file is in the cache directory's `reports/` folder,
     named "Camping merit badge report.pdf", so the app it's shared with shows
-    that name, and the badge's next report replaces it. Or
+    that name, and the badge's next report replaces it. The next report is
+    written beside it and renamed over it in one step, so an app that reads
+    the earlier one only when it sends it, as an email app may, never reads a
+    partly written file. Or
   - **Save** it to a location they choose with the
     [system file picker](https://developer.android.com/training/data-storage/shared/documents-files)
     (`ActivityResultContracts.CreateDocument`), which suggests the same name.
-    The report is written straight into the document they create, truncating
-    it (mode `"wt"`: `ContentResolver` says a provider's `"w"` "may or may not
-    truncate"). Neither needs storage permissions.
+    The report is made first, then written into the document they create,
+    truncating it (mode `"wt"`: `ContentResolver` says a provider's `"w"` "may
+    or may not truncate"). A provider that refuses `"wt"` is asked for
+    `"rwt"`, which Google Drive took when it refused `"wt"`
+    ([issue 180526528](https://issuetracker.google.com/issues/180526528)).
+    The save runs in the app's scope, as progress writes do (see
+    [Data layer](#data-layer)), so it finishes if the scout leaves Badge
+    detail. Neither needs storage permissions.
 
   A report that can't be created or saved shows "Couldn't create the report.
   Try again." in a snackbar, as a failed save does (`SaveRunner`). The file
-  picker creates the document before the report is written, so a failed save
-  deletes it (`DocumentsContract.deleteDocument`), if its provider allows that,
-  rather than leave an empty or partial PDF for the scout to send. A provider
+  picker creates an empty document before the report is written. A save that
+  fails before opening it deletes it (`DocumentsContract.deleteDocument`) only
+  if its provider says it's empty, so an older report the scout chose to
+  replace is kept. One that fails once it's open, which empties it, deletes
+  it, if its provider allows that, rather than leave an empty or partial PDF
+  for the scout to send. A provider
   that refuses to open the document with an exception other than an
   `IOException`, such as a `SecurityException`, isn't a mistake in BlueCard's
   code, so it's reported as an `IOException` too. A double tap opens one share

@@ -18,7 +18,10 @@ interface ReportRepository {
      */
     suspend fun createReportToShare(badgeId: String): Uri
 
-    /** Writes badge [badgeId]'s report to [destination], such as a document the scout chose. */
+    /**
+     * Writes badge [badgeId]'s report to [destination], such as a document the scout chose. It
+     * finishes even if the caller is cancelled, such as when the scout leaves the screen.
+     */
     suspend fun saveReport(badgeId: String, destination: Uri)
 }
 

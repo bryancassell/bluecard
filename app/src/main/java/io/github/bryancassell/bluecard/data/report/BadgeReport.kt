@@ -38,6 +38,11 @@ data class ReportRequirement(
     val requiredCount: Int?,
     /** When it was completed, or null if it isn't complete. */
     val completion: Completion?,
+    /**
+     * Whether it's no longer needed: it isn't complete, but a requirement it's part of is, such
+     * as a choice the scout didn't pick once enough others are complete. The screens say so too.
+     */
+    val notNeeded: Boolean,
     val comment: String?,
     /** Its tracker, or null if it has none. */
     val tracker: ReportTracker?,
@@ -83,18 +88,26 @@ fun MeritBadge.report(
     )
 }
 
+/** [partOfCompleted] is whether a requirement this one is part of, at any depth, is complete. */
 private fun Requirement.toReport(
     recorded: Map<String, RequirementProgress>,
-    entries: Map<String, List<TrackerEntry>>
-): ReportRequirement = ReportRequirement(
-    number = number,
-    summary = summary,
-    requiredCount = choiceCount,
-    completion = completion(recorded, entries),
-    comment = recorded[number]?.comment,
-    tracker = tracker?.toReport(entries[number].orEmpty()),
-    children = children.map { it.toReport(recorded, entries) }
-)
+    entries: Map<String, List<TrackerEntry>>,
+    partOfCompleted: Boolean = false
+): ReportRequirement {
+    val completion = completion(recorded, entries)
+    return ReportRequirement(
+        number = number,
+        summary = summary,
+        requiredCount = choiceCount,
+        completion = completion,
+        notNeeded = partOfCompleted && completion == null,
+        comment = recorded[number]?.comment,
+        tracker = tracker?.toReport(entries[number].orEmpty()),
+        children = children.map {
+            it.toReport(recorded, entries, partOfCompleted || completion != null)
+        }
+    )
+}
 
 private fun TrackerDefinition.toReport(entries: List<TrackerEntry>): ReportTracker {
     // The rows filled in, without the empty rows of a tracker with a fixed number of them.
