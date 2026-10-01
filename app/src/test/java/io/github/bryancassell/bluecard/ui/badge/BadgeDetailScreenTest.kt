@@ -2,6 +2,10 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.app.Application
 import android.content.Intent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -9,30 +13,46 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
+import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowToast
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -70,13 +90,18 @@ class BadgeDetailScreenTest {
         )
     )
 
-    private fun show(uiState: BadgeDetailUiState) {
+    private fun show(
+        uiState: BadgeDetailUiState,
+        layoutDirection: LayoutDirection = LayoutDirection.Ltr
+    ) {
         composeTestRule.setContent {
-            BadgeDetailScreen(
-                uiState = uiState,
-                onOpenRequirement = { openedRequirements += it },
-                onEditCounselor = { counselorEdits++ }
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                BadgeDetailScreen(
+                    uiState = uiState,
+                    onOpenRequirement = { openedRequirements += it },
+                    onEditCounselor = { counselorEdits++ }
+                )
+            }
         }
     }
 
@@ -143,6 +168,67 @@ class BadgeDetailScreenTest {
             .assertIsDisplayed()
     }
 
+    // The label only gives information, so it shouldn't be announced as something to tap.
+    @Test
+    fun eagleLabel_isNotAButton() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Eagle-required")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
+    }
+
+    // The icon is decorative, so screen readers read only the text.
+    @Test
+    fun eagleLabel_isReadOnce() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Eagle-required", useUnmergedTree = true)
+            .onParent()
+            .onChildren()
+            .filter(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription))
+            .assertCountEquals(0)
+    }
+
+    // The tag's fill is what sets the label apart from the blue text buttons below it. Only
+    // Robolectric's native graphics draw real pixels and measure real text.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Test
+    fun eagleLabel_isOnTheTagsFill() {
+        composeTestRule.setContent {
+            BlueCardTheme { BadgeDetailScreen(ready, onOpenRequirement = {}, onEditCounselor = {}) }
+        }
+
+        // The text's top-left corner is clear of its letters, so it shows what's behind them.
+        val pixels = composeTestRule.onNodeWithText("Eagle-required").captureToImage().toPixelMap()
+        assertEquals(BlueCardColorScheme.primaryFixedDim, pixels[0, 0])
+    }
+
+    // At twice the font size on a narrow phone, a group's label needs several lines.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "w320dp")
+    @Test
+    fun longEagleLabel_atLargeFontSize_wrapsWithoutBeingCutOff() {
+        val group = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))
+        composeTestRule.setContent {
+            val density = Density(LocalDensity.current.density, fontScale = 2f)
+            CompositionLocalProvider(LocalDensity provides density) {
+                BadgeDetailScreen(
+                    ready.copy(eagle = group),
+                    onOpenRequirement = {},
+                    onEditCounselor = {}
+                )
+            }
+        }
+
+        val layouts = mutableListOf<TextLayoutResult>()
+        composeTestRule.onNodeWithText("Eagle-required", substring = true)
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        assertTrue("Expected 3+ lines, was ${layout.lineCount}", layout.lineCount >= 3)
+        assertFalse("Expected nothing cut off", layout.hasVisualOverflow)
+    }
+
     @Test
     fun notEagleRequiredBadge_hasNoLabel() {
         show(ready.copy(eagle = null))
@@ -161,6 +247,52 @@ class BadgeDetailScreenTest {
         val started = startedActivity()
         assertEquals(Intent.ACTION_VIEW, started?.action)
         assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
+    }
+
+    // Screen readers say where the link goes, and don't read its icon.
+    @Test
+    fun officialLink_saysItOpensTheBrowser() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Official requirements")
+            .assert(hasClickLabel("open in browser"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+    }
+
+    // Labeling the click mustn't take away the click itself.
+    @Test
+    fun officialLink_screenReaderTap_opensOfficialPage() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Official requirements")
+            .performSemanticsAction(SemanticsActions.OnClick)
+
+        val started = startedActivity()
+        assertEquals(Intent.ACTION_VIEW, started?.action)
+        assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
+    }
+
+    // The button merges its label and icon, so these look inside it.
+    private fun officialLinkLabel() = composeTestRule
+        .onNodeWithText("Official requirements", useUnmergedTree = true)
+        .getBoundsInRoot()
+
+    private fun officialLinkIcon() = composeTestRule
+        .onNodeWithTag(OFFICIAL_LINK_ICON_TAG, useUnmergedTree = true)
+        .getBoundsInRoot()
+
+    @Test
+    fun officialLink_iconFollowsLabel() {
+        show(ready)
+
+        assertTrue(officialLinkIcon().left >= officialLinkLabel().right)
+    }
+
+    @Test
+    fun officialLink_rightToLeft_iconFollowsLabel() {
+        show(ready, LayoutDirection.Rtl)
+
+        assertTrue(officialLinkIcon().right <= officialLinkLabel().left)
     }
 
     // The browser takes a moment to cover BlueCard, so the second tap reaches the link too.

@@ -2,20 +2,39 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -72,6 +91,9 @@ fun BadgeDetailScreen(
     }
 }
 
+/** Test tag of the official requirements link's icon, which has no semantics of its own. */
+internal const val OFFICIAL_LINK_ICON_TAG = "officialLinkIcon"
+
 @Composable
 private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
@@ -79,6 +101,9 @@ private fun BadgeDetails(
     onEditCounselor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Opens the official page in the browser. The counselor's phone and email share the
+    // function, so quick taps on any of them open one app, once.
+    val startOtherApp = rememberStartOtherApp()
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -91,26 +116,45 @@ private fun BadgeDetails(
                 modifier = Modifier.semantics { heading() }
             )
             uiState.eagle?.let {
-                Text(
-                    text = eagleRequirementLabel(it, rememberBadgeNameListFormatter()),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter()))
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
-        }
-        // Opens the official page in the browser. The counselor's phone and email share the
-        // function, so quick taps on any of them open one app, once.
-        val startOtherApp = rememberStartOtherApp()
-        // Shown when no app can open web links, as when parental controls block the browser.
-        val noBrowser = stringResource(R.string.badge_detail_no_browser)
-        TextButton(
-            onClick = {
-                startOtherApp(Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri()), noBrowser)
-            },
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
-            Text(text = stringResource(R.string.badge_detail_official_page))
+            val officialPage = Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri())
+            // Shown when no app can open web links, as when parental controls block the browser.
+            val noBrowser = stringResource(R.string.badge_detail_no_browser)
+            val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
+            // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
+            // The theme's outline color, rather than Material's lighter default, keeps the outline
+            // visible on the tinted background, and the label is primary blue, like a link.
+            OutlinedButton(
+                onClick = { startOtherApp(officialPage, noBrowser) },
+                // The button keeps its own click action, with this label.
+                modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = ButtonDefaults.outlinedButtonBorder()
+                    .copy(brush = SolidColor(MaterialTheme.colorScheme.outline)),
+                // Material's padding for an icon before the label, flipped for one after it.
+                contentPadding = with(ButtonDefaults.ButtonWithIconContentPadding) {
+                    PaddingValues(
+                        start = calculateEndPadding(LayoutDirection.Ltr),
+                        top = calculateTopPadding(),
+                        end = calculateStartPadding(LayoutDirection.Ltr),
+                        bottom = calculateBottomPadding()
+                    )
+                }
+            ) {
+                Text(text = stringResource(R.string.badge_detail_official_page))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Icon(
+                    painterResource(R.drawable.ic_open_in_new),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(ButtonDefaults.IconSize)
+                        .testTag(OFFICIAL_LINK_ICON_TAG)
+                )
+            }
         }
         CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
         Text(
@@ -122,6 +166,40 @@ private fun BadgeDetails(
         )
         uiState.requirements.forEach {
             RequirementRow(item = it, onOpen = onOpenRequirement)
+        }
+    }
+}
+
+/**
+ * Says the badge is Eagle-required, as a filled tag. It's the only filled shape on the page, with
+ * small corners, so it doesn't look like the buttons near it, which are outlined or plain text and
+ * fully rounded. A long label wraps inside it.
+ */
+@Composable
+private fun EagleTag(label: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryFixedDim,
+        contentColor = MaterialTheme.colorScheme.onPrimaryFixed,
+        shape = MaterialTheme.shapes.extraSmall
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 6.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val style = MaterialTheme.typography.labelLarge
+            // A box one line tall keeps the icon centered on the first line at any font size.
+            // Where Android scales large text up less, Compose keeps a line's height in proportion
+            // to its font size rather than scaling it on its own, so the box does too.
+            val lineHeight = with(LocalDensity.current) { style.fontSize.toDp() } *
+                (style.lineHeight.value / style.fontSize.value)
+            Box(modifier = Modifier.height(lineHeight), contentAlignment = Alignment.Center) {
+                Icon(
+                    painterResource(R.drawable.ic_workspace_premium),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Text(text = label, style = style)
         }
     }
 }

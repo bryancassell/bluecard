@@ -21,10 +21,10 @@ import kotlinx.coroutines.delay
  * double-tap timeout after it starts animating in. The first screen takes touches straight
  * away.
  *
- * NavDisplay draws both screens during a transition, and either can be on top: the new one
- * going forward, the closing one going back. Without this, the second tap of a double tap
- * that opened a screen would press whatever is under the finger on it, and a tap could reach
- * a leaving screen's controls wherever the screen on top has none, or anywhere after Back.
+ * NavDisplay draws both screens during a transition: side by side as pages slide, or one over
+ * the other as they crossfade. Without this, the second tap of a double tap that opened a
+ * screen would press whatever is under the finger on it, and a tap could reach a leaving
+ * screen's controls wherever they're still drawn.
  */
 @Composable
 fun <T : Any> rememberIgnoreTouchesNavEntryDecorator(): NavEntryDecorator<T> = remember {

@@ -255,6 +255,66 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     The activity's default factory still passes the extras to a ViewModel
     created without creation extras. BlueCard creates none that way, and
     overriding the factory would replace Hilt's.
+- **Pages slide the full width of their area, side by side**
+  (`ui/navigation/PageTransitions.kt`), as Navigation 3's
+  [animation guide](https://developer.android.com/guide/navigation/navigation-3/animate-destinations)
+  shows. Navigation 3's defaults are a 700 ms crossfade, and a back gesture
+  that shrinks the page to 70%
+  ([#104](https://github.com/bryancassell/bluecard/issues/104)).
+  - **Opening a page:** it slides in from the end, and the page it leaves
+    slides out toward the start.
+  - **Back, and a released back swipe from either edge:** the closing page
+    slides out toward the end, and the page returned to follows it in from the
+    start. The pages never overlap, so neither fades. Back while a page is
+    still sliding in plays its opening slide backwards from where it is, as
+    `NavDisplay` does for a cancelled back swipe, so the pages stay side by
+    side.
+  - **Slides take 375 ms with `FastOutSlowInEasing`,** the easing `tween`
+    uses by default, and what Material's first
+    [duration guidance](https://m1.material.io/motion/duration-easing.html)
+    calls the standard curve. That guidance says "Large, complex, full-screen
+    transitions may have longer durations, occurring over 375ms", and
+    "Transitions that exceed 400ms may feel too slow." The platform's activity
+    slides take 450 ms with Material's emphasized easing
+    (`fast_out_extra_slow_in`), which moves a full-width slide 90% of the way
+    in its first 170 ms, at up to 9dp per millisecond (77dp a frame at
+    120 Hz). On a Pixel 9, opening a page felt too fast, and a dropped frame
+    showed as a jump. BlueCard's slide gets 90% of the way in 237 ms, and
+    peaks at about 3dp per millisecond.
+  - **A back swipe doesn't move the pages; releasing it plays Back's slide.**
+    The navigation root calls the `NavDisplay` overload that takes a
+    `SceneState` and a `NavigationEventState`, which registers no back handler,
+    and nothing reports a back swipe to that state. The root's own
+    `BackHandler` handles Back instead:
+    - **It's the only back handler at the root,** added before the screens.
+      The navigationevent library gives Back to the enabled handler added
+      last, so a handler a screen adds goes first, even when the screen is
+      composed along with the root, as after rotation.
+    - **It's off on Home and Onboarding,** so the system's back-to-home
+      animation plays there.
+    - **It checks the back stack as it is,** because its enabled state only
+      updates in the next frame. Two Backs before then would otherwise empty the
+      back stack and crash `NavDisplay`.
+
+    This gives up the peek at the page underneath that predictive back offers.
+    When the pages followed the finger, `NavDisplay` finished a released swipe
+    with a tween from rest, ignoring the finger's speed, and on a Pixel 9 that
+    felt slow beside opening a page.
+  - **The slides mirror in a right-to-left layout** (`SlideDirection.Start`
+    and `End`).
+  - **Pages are clipped to their area** (`clipToBounds` on `NavDisplay`).
+    `NavDisplay` doesn't clip its `AnimatedContent`, so a sliding page would
+    draw under a navigation bar or cutout at the side, as in landscape.
+  - **This isn't what Material 3 advises.** Its
+    [transition patterns](https://m3.material.io/styles/motion/transitions/transition-patterns)
+    say "Both Android and iOS should use platform defaults for forward and
+    backward navigation" between "screens at consecutive levels of
+    hierarchy", and "Don't use a Lateral transition for navigating
+    hierarchical screens. Sliding content the full width of the screen is
+    excessive for a high frequency transition." BlueCard first played the
+    platform's activity slides, which move 96dp and fade. On a Pixel 9,
+    opening a page felt too short, the back swipe's fade looked bad, and a
+    swipe from the right edge that didn't slide the page looked broken.
 - **A double tap opens a screen once, and doesn't press anything on it.**
   - **Screens navigate with `rememberNavigateFrom`** (`ui/navigation/`), which
     ignores a tap unless the tapping screen is on top of the screens
@@ -263,14 +323,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     open a screen twice.
   - **Screens ignore touches while they animate**
     (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens
-    during its 700 ms fade, and either can be on top: the new screen going
-    forward, the closing one going back (Navigation 3 gives the screen being
-    returned to a lower z-index). A cover over each animating screen takes
+    during a transition: side by side during their 375 ms slide, or one over
+    the other during a crossfade. A cover over each animating screen takes
     touches:
-    - **on a screen animating out, until it's gone.** Otherwise a tap could
-      press its controls wherever the new screen has nothing to press, or
-      anywhere after Back. So after Back, taps are ignored for the whole
-      700 ms.
+    - **on a screen animating out, until it's gone.** Otherwise a tap on the
+      part still on screen could press its controls. After Back, the screen
+      returned to takes taps where the closing screen has slid away once its
+      double-tap timeout ends, before the 375 ms slide does.
     - **on a screen animating in, for the double-tap timeout**
       (`ViewConfiguration.doubleTapTimeoutMillis`, 300 ms). Otherwise the
       second tap of a double tap would press whatever is under the finger on
@@ -280,19 +339,21 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     - A touch that starts on a cover stays with it until the finger lifts, so a
       swipe that starts then doesn't scroll.
   - **Taps on a new screen work after the timeout, even while it's still
-    fading in.** [#56](https://github.com/bryancassell/bluecard/pull/56)
+    sliding in.** [#56](https://github.com/bryancassell/bluecard/pull/56)
     dropped `dropUnlessResumed` because it ignored taps for the whole
     animation. Taps further apart than the timeout aren't a double tap to the
     platform either.
   - **A screen still animating out can't be opened again** (`DrawnScreens`).
     `NavDisplay` keeps a screen's state, ViewModel included, until it's out of
     both the back stack and composition, so the same key pushed again during
-    its fade would bring it back as it was: a Tracker entry page that closed
-    after a save would reopen closed, with Save disabled. After Back, the
-    closing screen's cover takes touches, but a screen reader's click still
-    reaches the screen under it. So a decorator records the content keys of
-    the screens `NavDisplay` draws, and `rememberNavigateFrom` ignores opening
-    one of them.
+    its slide out would bring it back as it was: a Tracker entry page that closed
+    after a save would reopen closed, with Save disabled. After Back, taps reach
+    the screen returned to where the closing one has slid away, and a screen
+    reader's clicks reach it straight away, before the closing screen leaves
+    composition. So a decorator records the
+    content keys of the screens `NavDisplay` draws, and `rememberNavigateFrom`
+    ignores opening one of them: tapping the row that opened the closing
+    screen does nothing until its slide ends.
 - **A double tap starts another app once.** Badge detail's "Official
   requirements" link and the counselor's phone and email start other apps with
   one function from `rememberStartOtherApp` (`ui/`), which the screen shares
@@ -318,6 +379,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
   say one-time setup screens "should not be considered start destinations".
+  When a profile is saved, or goes missing, Onboarding and the back stack
+  crossfade, as `NavDisplay` does by default (700 ms), rather than slide:
+  neither is a page of the other. The navigation root tells this apart from
+  opening a page by the bottom of the back stack changing.
   The splash screen stays up until the saved profile loads, using
   [core-splashscreen](https://developer.android.com/develop/ui/views/launch/splash-screen/migrate)'s
   `setKeepOnScreenCondition`, so the wrong screen never flashes first. The
@@ -889,7 +954,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   The progress fake also has a `failSaves` switch for save failures, and the
   contract tests check that Room's writes throw an `IOException` the same way.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
-  interaction, fed by fake repositories or fixed UI state.
+  interaction, fed by fake repositories or fixed UI state. A test that depends
+  on how text is measured, such as whether a long label wraps, uses
+  Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
+  graphics measure every character as 1px wide.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi)) check
   looks that semantics can't tell apart, such as a requirement row's number box
   in each state (`RequirementRowScreenshotTest`). They run locally with
@@ -914,6 +982,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Architecture | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | Modules | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | Navigation | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
+| Page transitions | Full-width slides, side by side, as Navigation 3's animation guide shows, with `FastOutSlowInEasing` over 375 ms, as Material's first duration guidance gives for full-screen transitions; mirrored right-to-left; clipped to the pages' area; a back swipe from either edge doesn't move the pages, and plays Back's slide once released; Onboarding and the back stack crossfade when they replace each other | Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) looked strange. Material 3 advises the platform's 96dp slides, but on a Pixel 9 they felt too short, and a back swipe that faded or didn't slide looked bad. Emphasized easing made a full-width slide too fast, and a finished swipe too slow beside it |
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |

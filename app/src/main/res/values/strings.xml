@@ -40,6 +40,9 @@
     <!-- Shown when tapping the official requirements link, if no app on the phone can open
          web links. -->
     <string name="badge_detail_no_browser">No app on this phone can open the link.</string>
+    <!-- Screen reader action on the official requirements link, which opens the badge's
+         official page in the browser: "Double tap to open in browser". -->
+    <string name="badge_detail_open_in_browser">open in browser</string>
     <!-- Heading of the section of a badge's page about the scout's merit badge counselor. -->
     <string name="badge_detail_counselor">Counselor</string>
     <string name="badge_detail_add_counselor">Add counselor</string>
