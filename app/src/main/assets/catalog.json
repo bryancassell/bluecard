@@ -2,6 +2,245 @@
   "formatVersion": 1,
   "badges": [
     {
+      "id": "archery",
+      "name": "Archery",
+      "summary": "Learn range safety and arrow care, then shoot a recurve, longbow or compound bow for score.",
+      "officialUrl": "https://www.scouting.org/merit-badges/archery/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to stay safe on the archery range.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain why anything that fires a projectile needs care and the right place."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain the five rules of range safety."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain the four whistle signals used on a range."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Show how to pull arrows from the target safely and put them away."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Explain the laws where you live for owning and using archery gear."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about arrows.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Name and point out the parts of an arrow."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe at least three kinds of arrows."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Name the four main materials arrow shafts are made of."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Make or repair arrows.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "2d(1)",
+                      "summary": "Build a full arrow from a bare shaft."
+                    },
+                    {
+                      "number": "2d(2)",
+                      "summary": "Replace at least three vanes, a point and a nock on arrows."
+                    }
+                  ]
+                },
+                {
+                  "number": "2e",
+                  "summary": "Explain how to care for and store arrows."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn about archery gear and terms.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how to use, care for and store tabs, arm guards, gloves and quivers."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain draw length, draw weight, mechanical release and barebow."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain how archery is organized and scored.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "How an end differs from a round."
+                },
+                {
+                  "number": "4b",
+                  "summary": "How field, target and 3-D archery differ."
+                },
+                {
+                  "number": "4c",
+                  "summary": "How to score the five-color World Archery target."
+                },
+                {
+                  "number": "4d",
+                  "summary": "How to score NFAA field and indoor targets."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "With a certified instructor, complete one bow option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5A",
+                  "summary": "Option A: recurve bow or longbow.",
+                  "children": [
+                    {
+                      "number": "5A(1)",
+                      "summary": "Name and point out the parts of your bow."
+                    },
+                    {
+                      "number": "5A(2)",
+                      "summary": "Explain how to care for and store a recurve bow or longbow."
+                    },
+                    {
+                      "number": "5A(3)",
+                      "summary": "Walk your counselor through USA Archery's 11 Steps of Shooting with your bow."
+                    },
+                    {
+                      "number": "5A(4)",
+                      "summary": "Show how to string a recurve bow or longbow."
+                    },
+                    {
+                      "number": "5A(5)",
+                      "summary": "Find and mark the nocking point on your bowstring with a bow square."
+                    },
+                    {
+                      "number": "5A(6)",
+                      "summary": "Shoot for a qualifying score.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "5A(6)(a)",
+                          "summary": "Shoot one round with a finger release and reach its score.",
+                          "requiredCount": 1,
+                          "children": [
+                            {
+                              "number": "5A(6)(a)(1)",
+                              "summary": "NFAA field round: 60 points."
+                            },
+                            {
+                              "number": "5A(6)(a)(2)",
+                              "summary": "Scouting America field round: 80 points."
+                            },
+                            {
+                              "number": "5A(6)(a)(3)",
+                              "summary": "World Archery or USA Archery indoor round: 80 points."
+                            },
+                            {
+                              "number": "5A(6)(a)(4)",
+                              "summary": "NFAA indoor round: 50 points."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "5A(6)(b)",
+                          "summary": "Shoot 30 arrows at 10 yards for 150 points on a five-color target."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "5B",
+                  "summary": "Option B: compound bow.",
+                  "children": [
+                    {
+                      "number": "5B(1)",
+                      "summary": "Name and point out the parts of your bow."
+                    },
+                    {
+                      "number": "5B(2)",
+                      "summary": "Explain how to care for and store a compound bow."
+                    },
+                    {
+                      "number": "5B(3)",
+                      "summary": "Walk your counselor through USA Archery's 11 Steps of Shooting with your bow."
+                    },
+                    {
+                      "number": "5B(4)",
+                      "summary": "Explain why a compound bow's string or cable is replaced at a shop."
+                    },
+                    {
+                      "number": "5B(5)",
+                      "summary": "Find and mark the nocking point on your bowstring."
+                    },
+                    {
+                      "number": "5B(6)",
+                      "summary": "Shoot for a qualifying score.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "5B(6)(a)",
+                          "summary": "Shoot one round with a finger release and reach its score.",
+                          "requiredCount": 1,
+                          "children": [
+                            {
+                              "number": "5B(6)(a)(1)",
+                              "summary": "NFAA field round: 70 points."
+                            },
+                            {
+                              "number": "5B(6)(a)(2)",
+                              "summary": "Scouting America field round: 90 points."
+                            },
+                            {
+                              "number": "5B(6)(a)(3)",
+                              "summary": "World Archery or USA Archery indoor round: 90 points."
+                            },
+                            {
+                              "number": "5B(6)(a)(4)",
+                              "summary": "NFAA indoor round: 60 points."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "5B(6)(b)",
+                          "summary": "Shoot 15 arrows at 10 yards and 15 at 15 yards for 160 points."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "camping",
       "name": "Camping",
       "summary": "Plan, pack and cook for campouts, and camp at least 20 nights.",
@@ -242,6 +481,168 @@
             {
               "number": "10",
               "summary": "Discuss what camping taught you and how Scout ideals apply."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chess",
+      "name": "Chess",
+      "summary": "Learn the rules, history and strategy of chess, then teach, play and compete.",
+      "officialUrl": "https://www.scouting.org/merit-badges/chess/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about chess history and a famous player.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Talk about how chess developed over time."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Learn about a famous chess player and their achievements."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Talk with your counselor about why chess is worth playing.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Why chess takes planning and strategy."
+                },
+                {
+                  "number": "2b",
+                  "summary": "How chess builds thinking and focus skills you can use elsewhere."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Good sportsmanship and manners at the board."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Show you know the basics, then teach a beginner with Scouting EDGE.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Name every chess piece."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Set up the board."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Show how each piece moves and captures, including special moves and check."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain the five ways a game can be drawn."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn notation and openings.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Keep score with algebraic notation."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Compare the opening, middle game and endgame."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain four opening principles and play the start of four openings."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Show five quick mates and traps on a board."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn strategy, tactics and checkmates.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain four elements of chess strategy."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain five chess tactics."
+                },
+                {
+                  "number": "5c",
+                  "summary": "From set positions, force checkmate with White moving first.",
+                  "children": [
+                    {
+                      "number": "5c(1)",
+                      "summary": "King and two rooks against a lone king."
+                    },
+                    {
+                      "number": "5c(2)",
+                      "summary": "King and queen against a lone king."
+                    },
+                    {
+                      "number": "5c(3)",
+                      "summary": "King and rook against a lone king."
+                    }
+                  ]
+                },
+                {
+                  "number": "5d",
+                  "summary": "Play out a king-and-pawn endgame from a set position.",
+                  "children": [
+                    {
+                      "number": "5d(1)",
+                      "summary": "With White to move, force the pawn through to promote."
+                    },
+                    {
+                      "number": "5d(2)",
+                      "summary": "With Black to move, force a draw."
+                    }
+                  ]
+                },
+                {
+                  "number": "5e",
+                  "summary": "Set up and solve five checkmate puzzles your counselor gives you."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain how tournaments work, from formats and pairings to ratings."
+            },
+            {
+              "number": "7",
+              "summary": "Play or run games, and review how they went.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Play three games and replay them with your counselor."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Play in a youth tournament and replay your games with your counselor."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Organize and run a tournament for at least four players."
+                }
+              ]
             }
           ]
         }
@@ -1021,6 +1422,517 @@
       ]
     },
     {
+      "id": "cycling",
+      "name": "Cycling",
+      "summary": "Ride safely, keep a bike in repair, and build up to a long road or trail ride.",
+      "officialUrl": "https://www.scouting.org/merit-badges/cycling/",
+      "eagleRequired": true,
+      "eagleGroup": "cycling-hiking-swimming",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Be ready for trouble on a ride.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain cycling hazards, how to handle them, and how to ride safely and visibly."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for cycling injuries and illnesses, and why to know local hazards."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain bike laws where you live and how to ride safely in traffic."
+            },
+            {
+              "number": "3",
+              "summary": "Explain what to wear and bring when riding, and know the bike safety guidelines."
+            },
+            {
+              "number": "4",
+              "summary": "Clean, adjust and check a bike for your counselor to inspect.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Show what to check regularly so the bike is safe."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Adjust the seat and handlebars to fit."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Adjust the brakes and gears."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Show every spot that needs regular oiling."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Fix a flat tire."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Show the bike meets local laws."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Show basic riding skills, from starting and stopping to signaling."
+            },
+            {
+              "number": "6",
+              "summary": "With a buddy, complete one riding option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6A",
+                  "summary": "Option A: road biking.",
+                  "children": [
+                    {
+                      "number": "6A(1)",
+                      "summary": "Show your counselor you can ride safely on the road.",
+                      "children": [
+                        {
+                          "number": "6A(1)(a)",
+                          "summary": "Turn left from mid-street, and show another way for heavy traffic."
+                        },
+                        {
+                          "number": "6A(1)(b)",
+                          "summary": "Make a right turn."
+                        },
+                        {
+                          "number": "6A(1)(c)",
+                          "summary": "Ride straight past a right-turn-only lane."
+                        },
+                        {
+                          "number": "6A(1)(d)",
+                          "summary": "Ride along the curb, the road's edge and parked cars safely."
+                        },
+                        {
+                          "number": "6A(1)(e)",
+                          "summary": "Cross railroad tracks safely."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "6A(2)",
+                      "summary": "Take two rides each of 10, 15 and 25 miles, and report on them.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date",
+                            "type": "date"
+                          },
+                          {
+                            "id": "miles",
+                            "label": "Miles",
+                            "type": "number"
+                          },
+                          {
+                            "id": "route",
+                            "label": "Route",
+                            "type": "text"
+                          },
+                          {
+                            "id": "notes",
+                            "label": "Interesting things you saw",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "ride",
+                        "rowLabelPlural": "rides",
+                        "rowCount": 6
+                      }
+                    },
+                    {
+                      "number": "6A(3)",
+                      "summary": "Then finish with a 50-mile ride.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "6A(3)(a)",
+                          "summary": "Map your own 50-mile route off main highways and ride it in eight hours."
+                        },
+                        {
+                          "number": "6A(3)(b)",
+                          "summary": "Ride an organized 50-mile tour in eight hours, then map it."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "6B",
+                  "summary": "Option B: trail or mixed-surface biking.",
+                  "children": [
+                    {
+                      "number": "6B(1)",
+                      "summary": "Show mountain bike handling skills.",
+                      "children": [
+                        {
+                          "number": "6B(1)(a)",
+                          "summary": "Basic riding positions and how to shift your body on the bike."
+                        },
+                        {
+                          "number": "6B(1)(b)",
+                          "summary": "Shifting gears for climbs and obstacles."
+                        },
+                        {
+                          "number": "6B(1)(c)",
+                          "summary": "Riding up and down hills, sitting, crouching or standing."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "6B(2)",
+                      "summary": "Show your counselor you can ride safely on a trail.",
+                      "children": [
+                        {
+                          "number": "6B(2)(a)",
+                          "summary": "Show trail courtesy and when to yield to others."
+                        },
+                        {
+                          "number": "6B(2)(b)",
+                          "summary": "Get past an obstacle by riding over it or walking around it."
+                        },
+                        {
+                          "number": "6B(2)(c)",
+                          "summary": "Ride over rocks, gravel and roots."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "6B(3)",
+                      "summary": "Explain trail-riding rules and when a trail isn't fit to ride."
+                    },
+                    {
+                      "number": "6B(4)",
+                      "summary": "Take two trail rides each of 2, 5 and 8 miles, and report on them.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date",
+                            "type": "date"
+                          },
+                          {
+                            "id": "miles",
+                            "label": "Miles",
+                            "type": "number"
+                          },
+                          {
+                            "id": "route",
+                            "label": "Route",
+                            "type": "text"
+                          },
+                          {
+                            "id": "notes",
+                            "label": "Interesting things you saw",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "ride",
+                        "rowLabelPlural": "rides",
+                        "rowCount": 6
+                      }
+                    },
+                    {
+                      "number": "6B(5)",
+                      "summary": "Map a 22-mile trail route and ride it in one day."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "emergency-preparedness",
+      "name": "Emergency Preparedness",
+      "summary": "Get your family and troop ready to prevent, handle and recover from emergencies.",
+      "officialUrl": "https://www.scouting.org/merit-badges/emergency-preparedness/",
+      "eagleRequired": true,
+      "eagleGroup": "emergency-preparedness-lifesaving",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn the five aspects of emergency preparedness.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Discuss prevention, protection, mitigation, response and recovery."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Chart how each aspect applies to 10 emergencies, and discuss them.",
+                  "requiredCount": 10,
+                  "children": [
+                    {
+                      "number": "1b(1)",
+                      "summary": "A stovetop or oven fire at home."
+                    },
+                    {
+                      "number": "1b(2)",
+                      "summary": "A fire involving flammable liquid at home."
+                    },
+                    {
+                      "number": "1b(3)",
+                      "summary": "A gas leak at home or while cooking outdoors."
+                    },
+                    {
+                      "number": "1b(4)",
+                      "summary": "Food poisoning."
+                    },
+                    {
+                      "number": "1b(5)",
+                      "summary": "A car crash."
+                    },
+                    {
+                      "number": "1b(6)",
+                      "summary": "A car broken down in the desert."
+                    },
+                    {
+                      "number": "1b(7)",
+                      "summary": "A car stuck in a blizzard."
+                    },
+                    {
+                      "number": "1b(8)",
+                      "summary": "An injury far from help."
+                    },
+                    {
+                      "number": "1b(9)",
+                      "summary": "A boating or water accident."
+                    },
+                    {
+                      "number": "1b(10)",
+                      "summary": "A toxic chemical spill or release."
+                    },
+                    {
+                      "number": "1b(11)",
+                      "summary": "An emergency at a nuclear power plant."
+                    },
+                    {
+                      "number": "1b(12)",
+                      "summary": "A fire or explosion in a public place."
+                    },
+                    {
+                      "number": "1b(13)",
+                      "summary": "Violence in a public place."
+                    },
+                    {
+                      "number": "1b(14)",
+                      "summary": "A wildfire."
+                    },
+                    {
+                      "number": "1b(15)",
+                      "summary": "An avalanche, snowslide or rockslide."
+                    },
+                    {
+                      "number": "1b(16)",
+                      "summary": "An earthquake."
+                    },
+                    {
+                      "number": "1b(17)",
+                      "summary": "A tsunami."
+                    },
+                    {
+                      "number": "1b(18)",
+                      "summary": "A flood or flash flood that cuts off water."
+                    },
+                    {
+                      "number": "1b(19)",
+                      "summary": "A hurricane that knocks out power."
+                    },
+                    {
+                      "number": "1b(20)",
+                      "summary": "A tornado."
+                    },
+                    {
+                      "number": "1b(21)",
+                      "summary": "A lightning storm."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Plan for emergencies with your family.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Hold a family meeting to plan for sheltering in place and evacuating."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Make and practice a home fire escape plan with a floor plan and meeting place."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Put together or check a family disaster kit, and explain its items."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Help prevent accidents and emergencies.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Inspect a home or similar building for hazards with an adult's help."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Plan how to prevent and handle emergencies on five family outings."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Show how to rescue someone safely from four dangers.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "A live electrical wire in the house."
+                },
+                {
+                  "number": "4b",
+                  "summary": "A building full of carbon monoxide."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Clothing on fire."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Drowning, without swimming out, including on ice."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Show how to signal for help.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Signal rescue aircraft or drones three ways."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Get searchers' attention when lost in the wilderness."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Get searchers' attention when stranded on the water."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "With a partner, carry an injured person out on two improvised stretchers."
+            },
+            {
+              "number": "7",
+              "summary": "Learn how emergencies are managed.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Describe the National Incident Management System and Incident Command System."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Find out how your community plans and trains for disasters."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Explain a troop's role within ICS during an emergency."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Prepare to serve in an emergency.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Discuss a troop's duties, training and safety for four emergency services.",
+                  "children": [
+                    {
+                      "number": "8a(1)",
+                      "summary": "Controlling crowds and traffic."
+                    },
+                    {
+                      "number": "8a(2)",
+                      "summary": "Carrying messages."
+                    },
+                    {
+                      "number": "8a(3)",
+                      "summary": "Collecting and handing out supplies."
+                    },
+                    {
+                      "number": "8a(4)",
+                      "summary": "Feeding, sheltering and sanitation for groups."
+                    }
+                  ]
+                },
+                {
+                  "number": "8b",
+                  "summary": "Write or explain your troop's plan for mobilizing for emergency service."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Put together or check a personal emergency service pack, and explain it."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Take part in a real or practice emergency service project."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Earn the First Aid merit badge."
+            },
+            {
+              "number": "10",
+              "summary": "Explore emergency services careers or hobbies.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Interview someone who manages disasters about their career."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Research the path into one emergency services career."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Research how emergency skills could become a hobby or healthy habit."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "environmental-science",
       "name": "Environmental Science",
       "summary": "Study ecosystems, pollution and conservation, and how people affect nature.",
@@ -1287,6 +2199,78 @@
             {
               "number": "7",
               "summary": "Discuss what makes a good parent or guardian."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fingerprinting",
+      "name": "Fingerprinting",
+      "summary": "Learn how fingerprints identify people, take a set of prints and classify their patterns.",
+      "officialUrl": "https://www.scouting.org/merit-badges/fingerprinting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Tell how fingerprinting began, and compare civil and criminal identification."
+            },
+            {
+              "number": "2",
+              "summary": "Learn how identification systems work.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Compare police fingerprint databases with fingerprint scanners for access control."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Discuss identifying people by things they carry, passwords and biometrics."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn the science of fingerprints.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Name where on the body ridged skin is found."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Name and explain the two principles fingerprint science rests on."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain what it takes to identify someone by fingerprints."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Take a clear set of fingerprints one way.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Make rolled and plain prints on a fingerprint card."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Record prints with tape, a pencil and paper."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Identify the three basic fingerprint patterns and their types, including on your own hand."
+            },
+            {
+              "number": "6",
+              "summary": "Research a career in biometrics or fingerprinting and discuss it."
             }
           ]
         }
@@ -1760,6 +2744,412 @@
                   "summary": "Explore how emergency medical skills could become a hobby."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hiking",
+      "name": "Hiking",
+      "summary": "Hike safely and responsibly, train for distance, and finish four 10-mile hikes and a 20-mile hike.",
+      "officialUrl": "https://www.scouting.org/merit-badges/hiking/",
+      "eagleRequired": true,
+      "eagleGroup": "cycling-hiking-swimming",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2023-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Be ready for trouble on the trail.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain common hiking hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for hiking injuries and illnesses."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Hike with good habits and outdoor ethics.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain and show good hiking practices, day and night, including foot care."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Recite the Leave No Trace Seven Principles and why each matters on a hike."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Recite the Outdoor Code and show how it applies on a hike."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain why hiking is aerobic, and plan how to train for long hikes."
+            },
+            {
+              "number": "4",
+              "summary": "Plan and take five long hikes, each on its own day without stopping overnight.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "First 10-mile hike."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Second 10-mile hike."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Third 10-mile hike."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Fourth 10-mile hike."
+                },
+                {
+                  "number": "4e",
+                  "summary": "20-mile hike."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "After each hike, write up the route, weather and what happened.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "date",
+                    "label": "Date",
+                    "type": "date"
+                  },
+                  {
+                    "id": "route",
+                    "label": "Route",
+                    "type": "text"
+                  },
+                  {
+                    "id": "weather",
+                    "label": "Weather",
+                    "type": "text"
+                  },
+                  {
+                    "id": "notes",
+                    "label": "What you saw and any challenges",
+                    "type": "text"
+                  }
+                ],
+                "rowLabel": "hike",
+                "rowLabelPlural": "hikes",
+                "rowCount": 5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leatherwork",
+      "name": "Leatherwork",
+      "summary": "Learn where leather comes from, then cut, tool, finish and braid leather projects of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/leatherwork/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2017-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Work safely with leather.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the hazards of leatherworking tools and materials and how to avoid them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for cuts, punctures, poisoning and reactions to leather chemicals."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain the basics of leather.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Where leather comes from."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Which animal hides become leather."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Five kinds of leather."
+                },
+                {
+                  "number": "2d",
+                  "summary": "What each kind of leather is best for."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Make a leather project that uses at least five of these steps.",
+              "requiredCount": 5,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Lay out and transfer a pattern."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Cut leather."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Punch holes."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Carve or stamp a design."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Dye or stain the leather and finish it."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Lace or stitch pieces together."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Set snaps and rivets."
+                },
+                {
+                  "number": "3h",
+                  "summary": "Smooth and finish the edges."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Braid something from leather, vinyl lace or paracord."
+            },
+            {
+              "number": "5",
+              "summary": "Go further with leather.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Learn how leather is tanned commercially and report on it."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Tan a small animal's skin, explaining your method and safety steps."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Care for a leather item, and compare leather with synthetics."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Visit a leather business and report on it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lifesaving",
+      "name": "Lifesaving",
+      "summary": "Learn to prevent drownings and rescue swimmers in trouble, starting with the safest methods.",
+      "officialUrl": "https://www.scouting.org/merit-badges/lifesaving/",
+      "eagleRequired": true,
+      "eagleGroup": "emergency-preparedness-lifesaving",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Review Safe Swim Defense with your counselor first."
+            },
+            {
+              "number": "2",
+              "summary": "Before the rescue requirements, show you're a strong swimmer.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Earn the Swimming merit badge."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Swim 400 yards nonstop, using four strokes for at least 50 yards each."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain the basics of water rescue.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Where drownings commonly happen and how to prevent them."
+                },
+                {
+                  "number": "3b",
+                  "summary": "How to spot someone in the water who needs help."
+                },
+                {
+                  "number": "3c",
+                  "summary": "The order to try rescue methods in."
+                },
+                {
+                  "number": "3d",
+                  "summary": "How the setting and the person's condition change the rescue."
+                },
+                {
+                  "number": "3e",
+                  "summary": "When not to go into the water to rescue someone."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Show reaching rescues with everyday items."
+            },
+            {
+              "number": "5",
+              "summary": "Show throwing rescues, landing an aid within reach 25 feet out."
+            },
+            {
+              "number": "6",
+              "summary": "Watch a rescue from a small boat or paddleboard and discuss how it went."
+            },
+            {
+              "number": "7",
+              "summary": "Name aids for a swimming rescue and why ones that float are best."
+            },
+            {
+              "number": "8",
+              "summary": "Rescue a conscious subject 30 feet out using two floating aids.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Hand off one aid and stay clear while the subject gets to safety."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Tow the subject to safety with the other aid."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Strip off street clothes fast and tow a subject with a shirt or towel."
+            },
+            {
+              "number": "10",
+              "summary": "Explain why to avoid grabbing a struggling subject, and show lead and wait."
+            },
+            {
+              "number": "11",
+              "summary": "Rescue a conscious subject 30 feet out without equipment.",
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Armpit tow a tired swimmer floating on their back."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Cross-chest carry an exhausted swimmer who is treading water."
+                }
+              ]
+            },
+            {
+              "number": "12",
+              "summary": "In deep water, break free from wrist, front and rear holds."
+            },
+            {
+              "number": "13",
+              "summary": "Rescue an unconscious subject 30 feet out and get them ready for CPR.",
+              "children": [
+                {
+                  "number": "13a",
+                  "summary": "Assist with a floating aid."
+                },
+                {
+                  "number": "13b",
+                  "summary": "Approach from the front and tow by the wrist."
+                },
+                {
+                  "number": "13c",
+                  "summary": "Approach from behind and tow by the armpit."
+                }
+              ]
+            },
+            {
+              "number": "14",
+              "summary": "Discuss what to do if a victim goes under, and dive to recover a weight.",
+              "children": [
+                {
+                  "number": "14a",
+                  "summary": "Bring up a 10-pound weight from 8 to 10 feet with a feetfirst dive."
+                },
+                {
+                  "number": "14b",
+                  "summary": "Do it again with a headfirst dive."
+                }
+              ]
+            },
+            {
+              "number": "15",
+              "summary": "Show how to handle a possible spinal injury in the water.",
+              "children": [
+                {
+                  "number": "15a",
+                  "summary": "Discuss the causes and signs of a spinal injury."
+                },
+                {
+                  "number": "15b",
+                  "summary": "Support a faceup subject in standing-depth water."
+                },
+                {
+                  "number": "15c",
+                  "summary": "Roll a facedown subject faceup while keeping them supported."
+                }
+              ]
+            },
+            {
+              "number": "16",
+              "summary": "Show you know how to resuscitate someone.",
+              "children": [
+                {
+                  "number": "16a",
+                  "summary": "Explain how to tell when someone needs rescue breathing or CPR."
+                },
+                {
+                  "number": "16b",
+                  "summary": "Show CPR and rescue breathing on a mannequin with a CPR instructor."
+                }
+              ]
+            },
+            {
+              "number": "17",
+              "summary": "Discuss how to prevent and treat other swimming and boating injuries and illnesses."
             }
           ]
         }
@@ -2336,6 +3726,428 @@
                   "summary": "Explain its costs and how you'd pay for them."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rifle-shooting",
+      "name": "Rifle Shooting",
+      "summary": "Learn gun safety, then shoot a cartridge rifle, air rifle or muzzleloader on a supervised range.",
+      "officialUrl": "https://www.scouting.org/merit-badges/rifle-shooting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn firearm safety, laws and resources.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain why anything that fires a projectile needs care and the right place."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain the basic safe gun-handling rules for every firearm."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain what you'd do if a friend at your home asked to see a gun."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain why and how to protect your eyes and ears."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Explain the key gun laws where you live."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Explain how hunting connects to managing wildlife wisely."
+                },
+                {
+                  "number": "1g",
+                  "summary": "Take a hunter education course or get your state's hunting laws, then:",
+                  "children": [
+                    {
+                      "number": "1g(1)",
+                      "summary": "Explain your state's key hunting laws and any gun or ammunition rules."
+                    },
+                    {
+                      "number": "1g(2)",
+                      "summary": "List the animals that can legally be hunted in your state."
+                    }
+                  ]
+                },
+                {
+                  "number": "1h",
+                  "summary": "Explain good hygiene while shooting."
+                },
+                {
+                  "number": "1i",
+                  "summary": "Find places near you to take part in shooting sports."
+                },
+                {
+                  "number": "1j",
+                  "summary": "Discuss sources of information about firearms."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "On a supervised range, complete one rifle option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2A",
+                  "summary": "Option A: modern cartridge rifle.",
+                  "children": [
+                    {
+                      "number": "2A(1)",
+                      "summary": "Name a rifle's three main parts and how they work."
+                    },
+                    {
+                      "number": "2A(2)",
+                      "summary": "Show how to store and handle a rifle safely."
+                    },
+                    {
+                      "number": "2A(3)",
+                      "summary": "Describe the two cartridge types and how their parts work."
+                    },
+                    {
+                      "number": "2A(4)",
+                      "summary": "Explain misfires, hangfires and squib fires, and what to do for each."
+                    },
+                    {
+                      "number": "2A(5)",
+                      "summary": "Explain and show the five fundamentals of rifle shooting."
+                    },
+                    {
+                      "number": "2A(6)",
+                      "summary": "Shoot safely on a range, following its rules and commands."
+                    },
+                    {
+                      "number": "2A(7)",
+                      "summary": "Explain rifle-cleaning safety and the supplies you need."
+                    },
+                    {
+                      "number": "2A(8)",
+                      "summary": "Clean a rifle safely and correctly."
+                    },
+                    {
+                      "number": "2A(9)",
+                      "summary": "Discuss what to look for when choosing a rifle."
+                    },
+                    {
+                      "number": "2A(10)",
+                      "summary": "Shoot five tight three-shot groups with a .22 at 50 feet, and explain zeroing."
+                    },
+                    {
+                      "number": "2A(11)",
+                      "summary": "Adjust the sights and shoot five tight five-shot groups."
+                    }
+                  ]
+                },
+                {
+                  "number": "2B",
+                  "summary": "Option B: air rifle (BB or pellet).",
+                  "children": [
+                    {
+                      "number": "2B(1)",
+                      "summary": "Name an air rifle's three main parts and how they work."
+                    },
+                    {
+                      "number": "2B(2)",
+                      "summary": "Show how to store and handle an air rifle safely."
+                    },
+                    {
+                      "number": "2B(3)",
+                      "summary": "Name the two most common kinds of air rifle ammunition."
+                    },
+                    {
+                      "number": "2B(4)",
+                      "summary": "Explain and show the five fundamentals of air rifle shooting."
+                    },
+                    {
+                      "number": "2B(5)",
+                      "summary": "Shoot safely on a range, following its rules and commands."
+                    },
+                    {
+                      "number": "2B(6)",
+                      "summary": "Explain air rifle cleaning safety and the supplies you need."
+                    },
+                    {
+                      "number": "2B(7)",
+                      "summary": "Clean an air rifle safely and correctly."
+                    },
+                    {
+                      "number": "2B(8)",
+                      "summary": "Discuss what to look for when choosing an air rifle."
+                    },
+                    {
+                      "number": "2B(9)",
+                      "summary": "Shoot five tight three-shot groups from a rest."
+                    },
+                    {
+                      "number": "2B(10)",
+                      "summary": "Adjust the sights and shoot five tight five-shot groups."
+                    }
+                  ]
+                },
+                {
+                  "number": "2C",
+                  "summary": "Option C: muzzleloading rifle.",
+                  "children": [
+                    {
+                      "number": "2C(1)",
+                      "summary": "Discuss how muzzleloading rifles developed."
+                    },
+                    {
+                      "number": "2C(2)",
+                      "summary": "Name a muzzleloader's main parts and how they work."
+                    },
+                    {
+                      "number": "2C(3)",
+                      "summary": "Show how to store and handle a muzzleloader safely."
+                    },
+                    {
+                      "number": "2C(4)",
+                      "summary": "Name the grades of black powder and how to use each safely."
+                    },
+                    {
+                      "number": "2C(5)",
+                      "summary": "Discuss how to store black powder safely."
+                    },
+                    {
+                      "number": "2C(6)",
+                      "summary": "Discuss what makes up a proper load."
+                    },
+                    {
+                      "number": "2C(7)",
+                      "summary": "Name the steps and tools for loading a muzzleloader safely."
+                    },
+                    {
+                      "number": "2C(8)",
+                      "summary": "Explain why a muzzleloader fails to fire, and how to prevent and handle it."
+                    },
+                    {
+                      "number": "2C(9)",
+                      "summary": "Shoot a muzzleloader safely on a range, following its rules and commands."
+                    },
+                    {
+                      "number": "2C(10)",
+                      "summary": "Explain muzzleloader cleaning safety and the supplies you need."
+                    },
+                    {
+                      "number": "2C(11)",
+                      "summary": "Clean a muzzleloader safely and correctly."
+                    },
+                    {
+                      "number": "2C(12)",
+                      "summary": "Discuss what to look for when choosing a muzzleloader."
+                    },
+                    {
+                      "number": "2C(13)",
+                      "summary": "Shoot three tight three-shot groups at 50 feet from a rest."
+                    },
+                    {
+                      "number": "2C(14)",
+                      "summary": "Adjust the sights and shoot three tight five-shot groups."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Research how shooting skills could lead to a career or hobby, and discuss it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sustainability",
+      "name": "Sustainability",
+      "summary": "Explore how water, food, energy and our stuff affect the planet, and how your family can help.",
+      "officialUrl": "https://www.scouting.org/merit-badges/sustainability/",
+      "eagleRequired": true,
+      "eagleGroup": "environmental-science-sustainability",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain sustainability in your own words and how you can help."
+            },
+            {
+              "number": "2",
+              "summary": "Water: do one and discuss it with your counselor.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Study your household's water use over the year and find three ways to cut it."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Diagram where your home's water comes from and goes, and how to protect it."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Look at flooding or drought near you and three ways people have responded."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Food: do one and discuss it with your counselor.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Trace four foods from their source to your table."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain four limits on food supply and three ways to grow your own."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Plan to cut your household's food waste, and track it for two weeks.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "waste",
+                        "label": "Food wasted",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
+                  }
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Community: do one and discuss it with your counselor.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Sketch a sustainable community and explain how its design matters."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Pick something wasteful in your community and write a plan to fix it."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Rate your home against five sustainable housing factors."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Energy: do one and discuss it with your counselor.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Compare energy sources and how three common U.S. sources affect sustainability."
+                },
+                {
+                  "number": "5b",
+                  "summary": "List eight ways your family uses energy and ways to cut two of them."
+                },
+                {
+                  "number": "5c",
+                  "summary": "List five ways to save energy at home, weigh each and try them."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Stuff: do one and discuss it with your counselor.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Sort 15 of your things into needs and wants, and give away extras."
+                },
+                {
+                  "number": "6b",
+                  "summary": "List five ways too much stuff affects people and how to avoid it."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Research waste, ocean garbage patches, plastic recycling codes and electronics."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore two big-picture topics and discuss them with your counselor.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Summarize one United Nations Sustainable Development Goal and its effects."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Explain how Earth's life-support systems work together and what disrupts them."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Follow one product's life cycle from design to disposal."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Discuss how population growth and three human activities affect Earth."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Explain species decline, its causes and how to help reverse it."
+                },
+                {
+                  "number": "7f",
+                  "summary": "Use a century of temperature data to discuss climate change and resources."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Practice sustainability yourself.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Note the sustainability practices you see on a Scouting outing."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Discuss how the Scout Oath, Scout Law and outdoor ethics support sustainability."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Name five changes your family can make to live more sustainably."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Research a sustainability career and discuss why it interests you."
             }
           ]
         }
