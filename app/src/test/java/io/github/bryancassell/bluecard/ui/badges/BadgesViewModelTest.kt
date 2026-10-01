@@ -238,6 +238,22 @@ class BadgesViewModelTest {
     }
 
     @Test
+    fun fractionDone_onlyWhileInProgress_updatesWhenProgressChanges() = runTest {
+        startCollecting(viewModel)
+        assertNull(item("camping").fractionDone)
+
+        progressRepository.startBadge("camping", version, started)
+        assertEquals(0f, item("camping").fractionDone)
+
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        assertEquals(0.5f, item("camping").fractionDone)
+
+        progressRepository.markRequirementCompleted("camping", "2", day, badgeStart)
+        assertEquals(BadgeStatus.Completed, status("camping"))
+        assertNull(item("camping").fractionDone)
+    }
+
+    @Test
     fun progressForBadgeNotInCatalog_isIgnored() = runTest {
         progressRepository.startBadge("retired-badge", version, started)
         startCollecting(viewModel)

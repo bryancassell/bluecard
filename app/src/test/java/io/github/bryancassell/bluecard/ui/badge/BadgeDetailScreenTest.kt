@@ -30,6 +30,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
@@ -223,6 +224,38 @@ class BadgeDetailScreenTest {
             composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
         }
         assertEquals(tops.sorted(), tops)
+    }
+
+    private val fortyPercentBar = hasProgressBarRangeInfo(ProgressBarRangeInfo(0.4f, 0f..1f))
+
+    @Test
+    fun inProgress_showsHowMuchIsDone_underTheName() {
+        show(ready.copy(fractionDone = 0.4f))
+
+        val bar = composeTestRule.onNode(fortyPercentBar).assertIsDisplayed().getBoundsInRoot()
+        val nameBottom = composeTestRule.onNodeWithText("Camping").getBoundsInRoot().bottom
+        val eagleTop = composeTestRule.onNodeWithText("Eagle-required").getBoundsInRoot().top
+        // Material makes the bar's bounds taller than the bar, for touch, so its middle says
+        // where it is.
+        assertTrue((bar.top + bar.bottom) / 2 in nameBottom..eagleTop)
+    }
+
+    @Test
+    fun inProgress_barReadsAsOnTheBadgesRow() {
+        show(ready.copy(fractionDone = 0.4f))
+
+        composeTestRule.onNode(fortyPercentBar)
+            .assert(hasContentDescription("In progress"))
+            .assert(hasStateDescription("40% done"))
+    }
+
+    @Test
+    fun notInProgress_hasNoBar() {
+        show(ready)
+
+        composeTestRule
+            .onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+            .assertDoesNotExist()
     }
 
     @Test

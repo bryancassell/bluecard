@@ -3,9 +3,13 @@ package io.github.bryancassell.bluecard.ui.badges
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.progress.BadgeProgress
+import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ListedBadgeTest {
@@ -22,7 +26,10 @@ class ListedBadgeTest {
         eagleRequired = eagleRequired,
         eagleGroup = eagleGroup,
         requirementVersions = listOf(
-            RequirementsVersion(LocalDate.of(2026, 1, 1), listOf(Requirement("1", "First.")))
+            RequirementsVersion(
+                VERSION,
+                listOf(Requirement("1", "First."), Requirement("2", "Second."))
+            )
         )
     )
 
@@ -49,18 +56,46 @@ class ListedBadgeTest {
         )
     }
 
-    @Test
-    fun toListItem_showsTheBadgeWithTheGivenStatus() {
-        val listed = ListedBadge(cycling, EagleRequirement.OneOf(listOf("Cycling", "Hiking")))
+    private fun started(vararg completed: String) = BadgeProgressDetails(
+        BadgeProgress("cycling", VERSION, VERSION),
+        completed.map { RequirementProgress("cycling", it, completed = true) },
+        trackerEntries = emptyList()
+    )
 
+    private val listedCycling =
+        ListedBadge(cycling, EagleRequirement.OneOf(listOf("Cycling", "Hiking")))
+
+    @Test
+    fun toListItem_notStarted_hasNoBar() {
         assertEquals(
             BadgeListItem(
                 id = "cycling",
                 name = "Cycling",
                 eagle = EagleRequirement.OneOf(listOf("Cycling", "Hiking")),
-                status = BadgeStatus.Completed
+                status = BadgeStatus.NotStarted,
+                fractionDone = null
             ),
-            listed.toListItem(BadgeStatus.Completed)
+            listedCycling.toListItem(progress = null)
         )
+    }
+
+    @Test
+    fun toListItem_inProgress_saysHowMuchIsDone() {
+        val item = listedCycling.toListItem(started("2"))
+
+        assertEquals(BadgeStatus.InProgress, item.status)
+        assertEquals(0.5f, item.fractionDone)
+    }
+
+    @Test
+    fun toListItem_completed_hasNoBar() {
+        val item = listedCycling.toListItem(started("1", "2"))
+
+        assertEquals(BadgeStatus.Completed, item.status)
+        assertNull(item.fractionDone)
+    }
+
+    private companion object {
+        val VERSION: LocalDate = LocalDate.of(2026, 1, 1)
     }
 }

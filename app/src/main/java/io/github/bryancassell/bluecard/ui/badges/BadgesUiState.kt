@@ -25,5 +25,10 @@ data class BadgeListItem(
     val id: String,
     val name: String,
     val eagle: EagleRequirement?,
-    val status: BadgeStatus
+    val status: BadgeStatus,
+    /**
+     * How much of the badge is done, from 0 to 1, while it's in progress. Null otherwise, and
+     * for a badge on a requirements version missing from the catalog, which can't be measured.
+     */
+    val fractionDone: Float? = null
 )

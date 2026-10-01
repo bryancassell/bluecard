@@ -11,6 +11,8 @@ import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -54,8 +56,13 @@ class HomeScreenTest {
         eagle = ProgressCounts(completed = 4, inProgress = 2)
     )
 
-    private fun inProgress(id: String, name: String, eagle: EagleRequirement?) =
-        BadgeListItem(id = id, name = name, eagle = eagle, status = BadgeStatus.InProgress)
+    private fun inProgress(id: String, name: String, eagle: EagleRequirement?) = BadgeListItem(
+        id = id,
+        name = name,
+        eagle = eagle,
+        status = BadgeStatus.InProgress,
+        fractionDone = 0.25f
+    )
 
     private val withBadgesInProgress = withProgress.copy(
         badgesInProgress = listOf(
@@ -240,6 +247,22 @@ class HomeScreenTest {
         row("Hiking")
             .assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
             .assert(hasText("In progress"))
+    }
+
+    @Test
+    fun badgesInProgress_showHowMuchIsDoneAsOnBadges() {
+        show(withBadgesInProgress)
+
+        // Each row has a bar, and reads it as its state.
+        composeTestRule
+            .onAllNodes(
+                hasProgressBarRangeInfo(ProgressBarRangeInfo(0.25f, 0f..1f)),
+                useUnmergedTree = true
+            )
+            .assertCountEquals(3)
+        for (name in listOf("Camping", "Chess", "Hiking")) {
+            row(name).assert(hasStateDescription("25% done"))
+        }
     }
 
     @Test
