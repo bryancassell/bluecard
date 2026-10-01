@@ -56,12 +56,8 @@ class ListedBadgeTest {
         )
     }
 
-    private fun started(
-        vararg completed: String,
-        version: LocalDate = VERSION,
-        completedOnPriorDate: LocalDate? = null
-    ) = BadgeProgressDetails(
-        BadgeProgress("cycling", version, version, completedOnPriorDate = completedOnPriorDate),
+    private fun started(vararg completed: String) = BadgeProgressDetails(
+        BadgeProgress("cycling", VERSION, VERSION),
         completed.map { RequirementProgress("cycling", it, completed = true) },
         trackerEntries = emptyList()
     )
@@ -92,32 +88,10 @@ class ListedBadgeTest {
     }
 
     @Test
-    fun toListItem_startedWithNothingDone_isNothingDone() {
-        assertEquals(0f, listedCycling.toListItem(started()).fractionDone)
-    }
-
-    @Test
     fun toListItem_completed_hasNoBar() {
         val item = listedCycling.toListItem(started("1", "2"))
 
         assertEquals(BadgeStatus.Completed, item.status)
-        assertNull(item.fractionDone)
-    }
-
-    @Test
-    fun toListItem_completedOnPriorDate_hasNoBar() {
-        val priorDate = LocalDate.of(2026, 3, 1)
-        val item = listedCycling.toListItem(started(completedOnPriorDate = priorDate))
-
-        assertEquals(BadgeStatus.Completed, item.status)
-        assertNull(item.fractionDone)
-    }
-
-    @Test
-    fun toListItem_onAVersionMissingFromTheCatalog_isInProgressWithNoBar() {
-        val item = listedCycling.toListItem(started("1", version = LocalDate.of(2020, 1, 1)))
-
-        assertEquals(BadgeStatus.InProgress, item.status)
         assertNull(item.fractionDone)
     }
 

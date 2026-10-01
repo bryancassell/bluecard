@@ -10,7 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.completion
-import io.github.bryancassell.bluecard.data.progress.fractionDone
+import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveRunner
@@ -65,7 +65,6 @@ class BadgeDetailViewModel @AssistedInject constructor(
         val found = catalog.badgeRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.badge
-        val completed = progress?.completion(found.version) != null
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,
@@ -73,8 +72,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
-            completed = completed,
-            fractionDone = progress?.takeIf { !completed }?.fractionDone(found.version),
+            completed = progress?.completion(found.version) != null,
+            fractionDone = badge.fractionDoneWhileInProgress(progress),
             canClear = progress != null,
             reportToShare = reportToShare,
             reportFailure = reportFailure,

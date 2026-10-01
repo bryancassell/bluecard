@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -7,6 +8,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -161,21 +163,57 @@ class FractionDoneTest {
         )
     }
 
+    // Requirement 7 has a sub-requirement with sub-requirements of its own, and requirement 8 has
+    // both children and a fixed-row tracker.
+    private val nestedTwice = Requirement(
+        number = "7",
+        summary = "Do both.",
+        children = listOf(
+            allOf.copy(number = "7a", children = listOf(leaf("7a(1)"), leaf("7a(2)"))),
+            leaf("7b")
+        )
+    )
+    private val childrenAndTracker = allOf.copy(
+        number = "8",
+        children = listOf(leaf("8a"), leaf("8b")),
+        tracker = weeks.tracker
+    )
+
     @Test
     fun isOneExactlyWhenComplete() {
-        val requirements = listOf(leaf("1"), allOf, twoOf, ownWorkAndTwoOf.copy(number = "4"))
-        val progressSets = listOf(
-            progressOf(),
-            progressOf(done("1"), done("2a"), done("3a")),
-            progressOf(done("2a"), done("2b"), done("3b"), done("3c")),
-            progressOf(done("4"), done("3a"), done("3b"))
+        val requirements = listOf(
+            leaf("1"),
+            allOf,
+            twoOf,
+            ownWorkAndTwoOf.copy(number = "4"),
+            weeks,
+            log,
+            nestedTwice,
+            childrenAndTracker
+        )
+        val partOfEach = listOf(row("5", 1), row("5", 2), row("6", null)) +
+            (1..4).map { row("8", it) }
+        val recorded = listOf(
+            progressOf() to entriesOf(),
+            // Part of each, and requirement 8's tracker full while its children aren't.
+            progressOf(done("1"), done("2a"), done("3a"), done("7a(1)"), done("8a")) to
+                partOfEach.groupBy { it.requirementNumber },
+            // Enough children for requirement 4, but not its own work.
+            progressOf(done("3a"), done("3b"), done("7a(1)"), done("7a(2)"), done("7b")) to
+                entriesOf(),
+            // Everything.
+            progressOf(
+                done("1"), done("2a"), done("2b"), done("3b"), done("3c"), done("4"), done("6"),
+                done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b")
+            ) to (1..4).map { row("5", it) }.groupBy { it.requirementNumber }
         )
         for (requirement in requirements) {
-            for (progress in progressSets) {
-                val complete = requirement.completion(progress, emptyMap()) != null
-                val fraction = requirement.fractionDone(progress, emptyMap())
-                assertEquals("${requirement.number} with $progress", complete, fraction == 1f)
-                assertTrue(fraction in 0f..1f)
+            for ((progress, entries) in recorded) {
+                val complete = requirement.completion(progress, entries) != null
+                val fraction = requirement.fractionDone(progress, entries)
+                val case = "${requirement.number} with ${progress.keys} and ${entries.keys}"
+                assertEquals(case, complete, fraction == 1f)
+                assertTrue(case, fraction in 0f..1f)
             }
         }
     }
@@ -234,6 +272,58 @@ class FractionDoneTest {
     fun badge_completedOnPriorDate_isAllDone() {
         val priorDate = badge(completedOnPriorDate = LocalDate.of(2026, 3, 1))
         assertEquals(1f, priorDate.fractionDone(version))
+    }
+
+    private val personalFitness = MeritBadge(
+        id = BADGE,
+        name = "Personal Fitness",
+        summary = "Our summary of Personal Fitness.",
+        officialUrl = "https://www.scouting.org/merit-badges/personal-fitness/",
+        requirementVersions = listOf(version)
+    )
+
+    @Test
+    fun whileInProgress_notStarted_isNull() {
+        assertNull(personalFitness.fractionDoneWhileInProgress(progress = null))
+    }
+
+    @Test
+    fun whileInProgress_isHowMuchIsDone_includingNothing() {
+        assertEquals(0f, personalFitness.fractionDoneWhileInProgress(badge()))
+        // Half of requirement 2, out of four top-level requirements.
+        assertEquals(0.125f, personalFitness.fractionDoneWhileInProgress(badge(done("2a"))))
+    }
+
+    @Test
+    fun whileInProgress_complete_isNull() {
+        val all = badge(
+            done("1"),
+            done("2a"),
+            done("2b"),
+            done("3a"),
+            done("3c"),
+            trackerEntries = (1..4).map { row("5", it) }
+        )
+        assertNull(personalFitness.fractionDoneWhileInProgress(all))
+    }
+
+    @Test
+    fun whileInProgress_completedOnPriorDate_isNull() {
+        val priorDate = badge(completedOnPriorDate = LocalDate.of(2026, 3, 1))
+        assertNull(personalFitness.fractionDoneWhileInProgress(priorDate))
+    }
+
+    @Test
+    fun whileInProgress_onAVersionMissingFromTheCatalog_isNull() {
+        // The badge is in progress, but there are no requirements to measure it against.
+        val missing = LocalDate.of(2020, 1, 1)
+        val onMissingVersion = BadgeProgressDetails(
+            BadgeProgress(BADGE, missing, missing),
+            listOf(done("1")),
+            trackerEntries = emptyList()
+        )
+        assertEquals(BadgeStatus.InProgress, personalFitness.status(onMissingVersion))
+        assertNull(personalFitness.fractionDoneWhileInProgress(onMissingVersion))
     }
 
     private companion object {
