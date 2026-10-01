@@ -292,3 +292,9 @@ GitHub Actions used by CI. Minor and patch updates arrive together in one pull
 request per ecosystem (Gradle, GitHub Actions); each major update gets its own
 pull request, since it may need code changes. CI runs on those pull requests
 like any other.
+
+Dependabot proposes a release only after it has been out for 3 days, so a
+broken or compromised release has time to be pulled first. AndroidX libraries
+are excluded from that wait: Dependabot can't read their release dates from
+Google Maven and would otherwise skip most of their stable releases
+([dependabot-core#16055](https://github.com/dependabot/dependabot-core/issues/16055)).

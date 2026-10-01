@@ -8,6 +8,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Dependabot waits 3 days after a release by default, but it can't read
+    # release dates from Google Maven, so the wait would hide most AndroidX
+    # updates (dependabot-core#16055). Remove this once that is fixed.
+    cooldown:
+      exclude: ["androidx.*"]
     groups:
       gradle-minor-and-patch:
         patterns: ["*"]
