@@ -9,8 +9,10 @@ updates:
     schedule:
       interval: weekly
     # Why AndroidX skips the 3-day wait: "Continuous integration" in
-    # docs/toolchain.md. Remove this when #154 is done.
+    # docs/toolchain.md. Remove this block when #154 is done. default-days must
+    # stay: a cooldown block without it turns the wait off for everything.
     cooldown:
+      default-days: 3
       exclude: ["androidx.*"]
     groups:
       gradle-minor-and-patch:
