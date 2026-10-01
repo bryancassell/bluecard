@@ -8,9 +8,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    # Dependabot waits 3 days after a release by default, but it can't read
-    # release dates from Google Maven, so the wait would hide most AndroidX
-    # updates (dependabot-core#16055). Remove this once that is fixed.
+    # Dependabot waits 3 days after a release by default and skips versions it
+    # can't date. Google Maven only dates an artifact's newest version, so when
+    # that is a pre-release, every stable AndroidX release would be skipped.
+    # Libraries from other Google Maven groups would need adding here too.
+    # Remove this when #154 is done.
     cooldown:
       exclude: ["androidx.*"]
     groups:
