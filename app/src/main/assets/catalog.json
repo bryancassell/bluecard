@@ -350,6 +350,435 @@
       ]
     },
     {
+      "id": "astronomy",
+      "name": "Astronomy",
+      "summary": "Learn to use telescopes and read the night sky, from constellations and planets to the Moon and Sun.",
+      "officialUrl": "https://www.scouting.org/merit-badges/astronomy/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe while doing astronomy.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain astronomy hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain first aid for heat, cold, dehydration, bites, stings and eye damage."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe what to wear and how to observe safely at night and in the cold."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain how to look at the Sun, things near it and solar eclipses without harm."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Define light pollution, and describe what it and air pollution do to stargazing."
+            },
+            {
+              "number": "3",
+              "summary": "Learn about telescopes and binoculars, using diagrams or real ones.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain what binoculars and telescopes are good for, and show or explain their use."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Compare kinds of telescopes, including one that sees beyond visible light."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Pick three instruments that work with telescopes, and explain what each does."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Describe caring for and storing telescopes and binoculars, at home and outdoors."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Find stars and constellations in the real night sky.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Find 10 constellations in the sky, including four in the zodiac."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Find eight bright stars in the sky, five of magnitude 1 or brighter."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Sketch the Big Dipper or Cassiopeia twice, hours apart, with the North Star."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain what the Milky Way is."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about the planets.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Name the five most visible planets, and explain which show phases and why."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Make a table of when each of those planets is visible this coming year.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "planet",
+                        "label": "Planet",
+                        "type": "text"
+                      },
+                      {
+                        "id": "when-visible",
+                        "label": "When it's in the evening sky",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "planet",
+                    "rowLabelPlural": "planets",
+                    "rowCount": 5
+                  }
+                },
+                {
+                  "number": "5c",
+                  "summary": "Describe how planets move across the sky."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Look at a planet and tell what you observed."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn about the Moon.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Draw the Moon and label five of its seas and five craters."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Sketch the Moon four nights in a week, same spot and hour, and explain the changes."
+                },
+                {
+                  "number": "6c",
+                  "summary": "List what keeps the Moon circling Earth."
+                },
+                {
+                  "number": "6d",
+                  "summary": "With diagrams, show where the Sun, Earth and Moon are during eclipses and phases."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn about the Sun and other stars.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Describe the Sun's makeup, its place among stars, and its radiation's effects on Earth."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Define sunspots and explain how they can change the Sun's radiation."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Find red, blue and yellow stars other than the Sun, and explain the colors."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Do one observing or sharing project, with your counselor's approval.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Visit a planetarium or observatory, then report on it."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Plan and observe 10 objects not seen in requirement 4, and keep a log.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "object",
+                        "label": "Object",
+                        "type": "text"
+                      },
+                      {
+                        "id": "what-you-saw",
+                        "label": "What you saw",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "object",
+                    "rowLabelPlural": "objects"
+                  }
+                },
+                {
+                  "number": "8c",
+                  "summary": "For your troop or class, host a star party with binoculars or a telescope."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Help a local astronomy club put on a public star party."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Photograph the Moon, a planet or a comet moving, then label, chart and share it."
+                },
+                {
+                  "number": "8f",
+                  "summary": "Use an online telescope service, such as SkyNet, and describe the experience."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore a career or hobby connected to astronomy.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Explore three astronomy careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research astronomy as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aviation",
+      "name": "Aviation",
+      "summary": "Learn how aircraft fly and are flown, build and fly a model, visit an aviation site, and explore pilot certificates and careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/aviation/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn aviation basics and how flight works.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Define an aircraft, and describe three kinds in use today and what they do."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Give a short history of flight, including three key moments."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Compare fixed-wing and rotary-wing aircraft and what each does best."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain how piston, turbine and jet engines work."
+                },
+                {
+                  "number": "1e",
+                  "summary": "With a model, explain the four forces of flight."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Explain how a wing's shape creates lift, using Bernoulli's principle."
+                },
+                {
+                  "number": "1g",
+                  "summary": "Pick an aircraft, point out its control surfaces, and explain how they steer it."
+                },
+                {
+                  "number": "1h",
+                  "summary": "Explain what the instruments in a typical single-engine plane tell the pilot."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Build and fly a model aircraft.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Build an FPG-9 model and hold a flying contest with your troop or patrol."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Build a rubber-band balsa plane and fly it 25 feet straight to a smooth landing."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Get a powered model aircraft or drone, earn TRUST certification, and fly it."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Take part in flight operations.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Plan a course on a flight simulator and fly it, from takeoff to landing."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Do a supervised preflight inspection of an aircraft."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Watch or help with aircraft maintenance, and describe an aircraft's maintenance schedule."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Read an aeronautical chart, and turn a true course into a heading."
+                },
+                {
+                  "number": "3e",
+                  "summary": "With permission, take a discovery flight, record it and report on it."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Visit an aviation site and report on it.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Visit an airport, then report on its facilities and runways."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Visit an FAA facility, such as a control tower, and report on it."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Visit a military aviation facility and report on its work."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Visit an aviation museum or air show, then share what you learned."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore flying as a hobby or career.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain the student, recreational, remote and private pilot certificates."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Describe what an instrument rating lets a pilot do."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Explain commercial and airline transport pilot certificates, and flight instructors."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Find a nearby Aviation Exploring post or Civil Air Patrol unit and how to join."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Explore three aviation careers, research one, and discuss whether it interests you."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "basketry",
+      "name": "Basketry",
+      "summary": "Learn the main kinds of baskets and weaves, then weave a square basket, a round basket and a stool seat.",
+      "officialUrl": "https://www.scouting.org/merit-badges/basketry/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2015-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe while making baskets.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain basketry hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating cuts, scratches and scrapes from basketry."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about kinds of baskets and weaves.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Identify plaited, coiled, ribbed and wicker baskets."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe three kinds of weaves."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Plan and weave three projects.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Square basket."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Round basket."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Campstool seat."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "camping",
       "name": "Camping",
       "summary": "Plan, pack and cook for campouts, and camp at least 20 nights.",
@@ -764,6 +1193,127 @@
                 {
                   "number": "9h",
                   "summary": "Paddle a figure 8 around markers three to four boat lengths apart."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chemistry",
+      "name": "Chemistry",
+      "summary": "Handle chemicals safely, then do experiments in first aid, cooking and camping, and explore how chemistry shapes daily life.",
+      "officialUrl": "https://www.scouting.org/merit-badges/chemistry/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to handle chemicals safely, and discuss it with your counselor.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Compare safety data sheets for sugar, rubbing alcohol and a waterproofing spray."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss the protective gear each needs, and how toxicity and exposure change it."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain the hazard pictograms on each sheet and where you see them."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Discuss storing chemicals safely, at home, at school, in your community and for the environment."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Use chemistry to understand first aid, after finishing requirement 1.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss why soap and alcohol clean wounds, and how to test your ideas."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Wash oily, powdered hands with water, then with soap, and compare."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Use baker's yeast to show what rubbing alcohol does to microbes."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Use chemistry in cooking, after finishing requirement 1.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Brown some food, and discuss what changed in its molecules."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Make red cabbage indicator and test the pH of five household liquids."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Use chemistry for camping, after finishing requirement 1.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Test two kinds of waterproofing, and pick one for a tent and one for boots."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain fire and extinguisher classes, and how extinguishers, sand and baking soda put out fires."
+                },
+                {
+                  "number": "4c",
+                  "summary": "With supervision, do flame tests on five or more elements."
+                },
+                {
+                  "number": "4d",
+                  "summary": "With supervision, make nylon, from a kit if you like."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain how chemistry can make throwaway items like straws and bottles less harmful."
+            },
+            {
+              "number": "6",
+              "summary": "Describe five chemistry fields, where each shows up in your life, and how they connect."
+            },
+            {
+              "number": "7",
+              "summary": "Discuss three government agencies that regulate chemicals: what they do and how they began."
+            },
+            {
+              "number": "8",
+              "summary": "Learn about working in chemistry.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Visit a research lab and talk with a chemist about their work and training."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Visit a chemical plant or company and interview a worker about their job and training."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Explore three chemistry careers, research one, and discuss whether it interests you."
                 }
               ]
             }
@@ -1343,6 +1893,226 @@
                   "summary": "Attend an international festival or cultural event."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "climbing",
+      "name": "Climbing",
+      "summary": "Learn to climb, belay and rappel safely, from gear, knots and signals to rope care, then climb and rappel real routes.",
+      "officialUrl": "https://www.scouting.org/merit-badges/climbing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe while climbing.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain climbing and rappelling hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for climbing injuries and illnesses, and how to prevent them."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain when someone needs CPR."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn and explain the seven Leave No Trace principles and the Outdoor Code."
+            },
+            {
+              "number": "3",
+              "summary": "Show up dressed to climb, belay and rappel, and explain how each item helps."
+            },
+            {
+              "number": "4",
+              "summary": "Learn about climbing sites.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain how climbs are rated, and rate the faces or walls you'll climb."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain top-rope climbing, lead climbing and bouldering."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Judge how safe a climbing area is, from weather to the rock or wall itself."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Plan how to get help in an emergency, and the medical training remote climbs need."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain and show the verbal signals for climbing, rappelling and bouldering.",
+              "ownWork": "Explain why climbers, rappellers and boulderers should always use verbal signals.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Climbers."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Rappellers."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Belayers."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Boulderers and their spotters."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Know your rope.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Describe which kinds of rope are safe for climbing and rappelling."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Show how to check a rope for wear or damage."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Discuss how to keep a rope from getting damaged."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain when a rope is worn out and what to do with it."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Coil a rope properly."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Tie climbing knots, and give a use for each.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Figure eight on a bight."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Figure eight follow-through."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Water knot."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Double fisherman's knot (grapevine knot)."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Prusik hitch on a rope."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explain what each piece of climbing gear is for, and put it on correctly.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Commercially made climbing harness."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Climbing helmet."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Climbing or rappelling gloves."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explain each part of the CHECK system to your counselor."
+            },
+            {
+              "number": "10",
+              "summary": "Learn and practice belaying.",
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Explain why and when climbers and rappellers need a belay."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Belay three climbers, each on a different route."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Be the backup belayer on three different climbs."
+                },
+                {
+                  "number": "10d",
+                  "summary": "Belay three rappellers, each on a different route."
+                },
+                {
+                  "number": "10e",
+                  "summary": "Be the backup belayer on three different rappels."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Tie in and climb three routes.",
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Show how to tie a belay rope straight to your harness."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Climb three or more routes with good technique, using verbal signals."
+                }
+              ]
+            },
+            {
+              "number": "12",
+              "summary": "Tie in, rig a rappel, and rappel three routes.",
+              "children": [
+                {
+                  "number": "12a",
+                  "summary": "Show how to tie a belay rope straight to your harness."
+                },
+                {
+                  "number": "12b",
+                  "summary": "Clip in to a rappel rope with a carabiner and rappel device."
+                },
+                {
+                  "number": "12c",
+                  "summary": "Rappel three different faces or wall routes with good technique and signals."
+                }
+              ]
+            },
+            {
+              "number": "13",
+              "summary": "Show how to store climbing ropes, hardware and other gear."
             }
           ]
         }
@@ -2216,6 +2986,125 @@
                   "summary": "Research how emergency skills could become a hobby or healthy habit."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engineering",
+      "name": "Engineering",
+      "summary": "Find out how engineers design things, meet one at work, and design and test ideas of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/engineering/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Investigate how a manufactured item at home works, and the engineering that made it."
+            },
+            {
+              "number": "2",
+              "summary": "Research a major engineering achievement and the engineers who made it happen."
+            },
+            {
+              "number": "3",
+              "summary": "Describe what six kinds of engineers do, then look closer at two."
+            },
+            {
+              "number": "4",
+              "summary": "Visit an engineer to learn about their work.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Discuss the engineer's work and tools."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Learn about a project the engineer is working on and their role."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Learn the engineer's methods and how they get results."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Ask to see the engineer's project reports."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Tell your counselor what the visit taught you about engineering."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Use systems engineering to design patrol gear, a toy or a household device."
+            },
+            {
+              "number": "6",
+              "summary": "Do two engineering projects.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Build a model that shows motion with simple machines, and give a real use."
+                },
+                {
+                  "number": "6b",
+                  "summary": "List 10 home appliances and their monthly electricity use, and five ways to save.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "appliance",
+                        "label": "Appliance",
+                        "type": "text"
+                      },
+                      {
+                        "id": "monthly-kwh",
+                        "label": "kWh per month",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "appliance",
+                    "rowLabelPlural": "appliances",
+                    "rowCount": 10
+                  }
+                },
+                {
+                  "number": "6c",
+                  "summary": "Find out how a phone or tablet sends sound and images, and explain its design."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Experiment to compare how strong wood, metal and plastic are, and how they conduct heat."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Experiment with turning one kind of energy into another, and explain it."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Study how people get to work and how traffic flows, and suggest improvements."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Show a project at a science fair or engineering competition, then discuss it."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explain what a registered Professional Engineer is and where it matters most."
+            },
+            {
+              "number": "8",
+              "summary": "Compare the Engineer's Code of Ethics with the Scout Oath and Law."
+            },
+            {
+              "number": "9",
+              "summary": "Research an engineering career and discuss what makes it interesting."
             }
           ]
         }
@@ -4017,6 +4906,419 @@
       ]
     },
     {
+      "id": "mammal-study",
+      "name": "Mammal Study",
+      "summary": "Learn what makes a mammal and how mammals are classified, study them in the wild, and help a local population.",
+      "officialUrl": "https://www.scouting.org/merit-badges/mammal-study/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Define animal, invertebrate, vertebrate and mammal, and name three traits only mammals have."
+            },
+            {
+              "number": "2",
+              "summary": "Explain animal classification and where mammals fit, and classify three from phylum to species."
+            },
+            {
+              "number": "3",
+              "summary": "Observe mammals in the field, or write up one's life history.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Search two habitats for 3 hours each, count the mammals, and explain the differences.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "habitat",
+                        "label": "Habitat or elevation",
+                        "type": "text"
+                      },
+                      {
+                        "id": "species",
+                        "label": "Species",
+                        "type": "text"
+                      },
+                      {
+                        "id": "count",
+                        "label": "How many",
+                        "type": "number"
+                      },
+                      {
+                        "id": "how",
+                        "label": "How identified",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "sighting",
+                    "rowLabelPlural": "sightings"
+                  }
+                },
+                {
+                  "number": "3b",
+                  "summary": "Survey one 4-acre area for 3 hours on five days, and list the mammals.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "species",
+                        "label": "Species",
+                        "type": "text"
+                      },
+                      {
+                        "id": "how",
+                        "label": "How identified",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "sighting",
+                    "rowLabelPlural": "sightings"
+                  }
+                },
+                {
+                  "number": "3c",
+                  "summary": "Research a local nongame mammal and write up its life history and ties to people."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Do one more mammal project.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Make two rat or mouse study skins, and explain what skins and mounts are for."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Photograph two kinds of wild mammals, and record the conditions for each.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "mammal",
+                        "label": "Mammal",
+                        "type": "text"
+                      },
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "time",
+                        "label": "Time of day",
+                        "type": "text"
+                      },
+                      {
+                        "id": "weather",
+                        "label": "Weather",
+                        "type": "text"
+                      },
+                      {
+                        "id": "distance",
+                        "label": "Distance from the animal",
+                        "type": "text"
+                      },
+                      {
+                        "id": "habitat",
+                        "label": "Habitat",
+                        "type": "text"
+                      },
+                      {
+                        "id": "other",
+                        "label": "Other factors",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "mammal",
+                    "rowLabelPlural": "mammals",
+                    "rowCount": 2
+                  }
+                },
+                {
+                  "number": "4c",
+                  "summary": "Do the 3c write-up for a local game mammal, and list your sources."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Set up a baited tracking pit and report which animals come."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Visit a natural history museum, learn how it prepares and catalogs specimens, and explain its role."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Read a book about one kind of mammal and write a 500-word report on it."
+                },
+                {
+                  "number": "4g",
+                  "summary": "Map two four-step food chains that lead from the soil up to a carnivorous mammal."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Do a project, chosen with your counselor, that affects a mammal population."
+            },
+            {
+              "number": "6",
+              "summary": "Discuss why Leave No Trace and the Outdoor Code matter, and how you followed them."
+            },
+            {
+              "number": "7",
+              "summary": "Explore a career or hobby connected to mammals.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Research a career related to mammals and discuss what makes it interesting."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research a hobby or healthy lifestyle that involves mammals, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "metalwork",
+      "name": "Metalwork",
+      "summary": "Learn how metals behave, harden and soften metal yourself, and make projects as a tinsmith, silversmith, founder or blacksmith.",
+      "officialUrl": "https://www.scouting.org/merit-badges/metalwork/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn metalworking safety, including the extra rules for the option you choose."
+            },
+            {
+              "number": "2",
+              "summary": "Learn metalworking terms, alloys, and how to harden and soften metal.",
+              "ownWork": "Explain native metal, malleable, metallurgy, alloy, nonferrous and ferrous.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Name two nonferrous alloys from before the Iron Age and the metals in each."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Name three ferrous alloys in use today."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain how metal is work-hardened."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Explain how annealing works for nonferrous and ferrous metals."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Change how metal behaves, and make a tool.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Work-harden 26- or 28-gauge brass or copper by bending and peening, noting the effort."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Anneal that piece, then try to unbend it and compare the effort."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Make a temper color index, then make and temper a steel center punch."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explore a career or hobby connected to metalworking.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explore three metalworking careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Research metalworking as a hobby, and set goals for it."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Complete one metalworking option, after finishing requirements 1 to 4.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5A",
+                  "summary": "Option A: sheet metal mechanic or tinsmith.",
+                  "children": [
+                    {
+                      "number": "5A(1)",
+                      "summary": "Name the basic sheet metal tools and explain what each is for."
+                    },
+                    {
+                      "number": "5A(2)",
+                      "summary": "Sketch two sheet metal objects, with each part's measurements."
+                    },
+                    {
+                      "number": "5A(3)",
+                      "summary": "Make your two objects from 24- or 26-gauge sheet metal, using approved patterns.",
+                      "ownWork": "Make the two objects by cutting, bending, edging, and soldering or brazing.",
+                      "children": [
+                        {
+                          "number": "5A(3)(a)",
+                          "summary": "Include at least one riveted part in one object."
+                        },
+                        {
+                          "number": "5A(3)(b)",
+                          "summary": "Unless you used zinc- or tin-plated steel, finish your work so it won't oxidize."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "5B",
+                  "summary": "Option B: silversmith.",
+                  "children": [
+                    {
+                      "number": "5B(1)",
+                      "summary": "Name a silversmith's basic tools and explain what each is for."
+                    },
+                    {
+                      "number": "5B(2)",
+                      "summary": "Sketch two sheet silver objects, with each part's measurements."
+                    },
+                    {
+                      "number": "5B(3)",
+                      "summary": "Make your two objects from 18- or 20-gauge sheet copper, using approved patterns.",
+                      "ownWork": "Make the two objects, each with a soldered joint.",
+                      "children": [
+                        {
+                          "number": "5B(3)(a)",
+                          "summary": "Saw a part yourself for at least one object."
+                        },
+                        {
+                          "number": "5B(3)(b)",
+                          "summary": "Make a sunken part yourself for at least one object."
+                        },
+                        {
+                          "number": "5B(3)(c)",
+                          "summary": "Clean and polish both objects."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "5C",
+                  "summary": "Option C: founder.",
+                  "children": [
+                    {
+                      "number": "5C(1)",
+                      "summary": "Explain the parts of a two-piece mold, and name three kinds of molds."
+                    },
+                    {
+                      "number": "5C(2)",
+                      "summary": "Sketch two objects you'll cast, with each part's measurements."
+                    },
+                    {
+                      "number": "5C(3)",
+                      "summary": "Make two molds, one from your counselor's pattern and one from your own.",
+                      "ownWork": "Make the two molds, placing the pouring gate and vents yourself.",
+                      "children": [
+                        {
+                          "number": "5C(3)(a)",
+                          "summary": "Make a lead-free pewter casting in your counselor's mold."
+                        },
+                        {
+                          "number": "5C(3)(b)",
+                          "summary": "Make a lead-free pewter casting in the mold you made."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "5D",
+                  "summary": "Option D: blacksmith.",
+                  "children": [
+                    {
+                      "number": "5D(1)",
+                      "summary": "Name a blacksmith's basic tools and explain what each is for."
+                    },
+                    {
+                      "number": "5D(2)",
+                      "summary": "Sketch two objects you'll forge, with each part's measurements."
+                    },
+                    {
+                      "number": "5D(3)",
+                      "summary": "Practice forging with low-carbon steel at least 1/4 inch thick.",
+                      "children": [
+                        {
+                          "number": "5D(3)(a)",
+                          "summary": "Forge a taper by drawing out the steel."
+                        },
+                        {
+                          "number": "5D(3)(b)",
+                          "summary": "Forge a U-shaped bend over the anvil's horn."
+                        },
+                        {
+                          "number": "5D(3)(c)",
+                          "summary": "Give a piece of square steel a decorative twist."
+                        },
+                        {
+                          "number": "5D(3)(d)",
+                          "summary": "Forge an L-shaped bend over the anvil's edge."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "5D(4)",
+                      "summary": "Forge the two objects you sketched, with your counselor's approval.",
+                      "ownWork": "Forge your two sketched objects from low-carbon steel at least 1/4 inch thick.",
+                      "children": [
+                        {
+                          "number": "5D(4)(a)",
+                          "summary": "Give one object a decorative twist."
+                        },
+                        {
+                          "number": "5D(4)(b)",
+                          "summary": "Give one object a hammer-riveted joint."
+                        },
+                        {
+                          "number": "5D(4)(c)",
+                          "summary": "Finish your work so it won't oxidize."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "personal-fitness",
       "name": "Personal Fitness",
       "summary": "Build healthy habits and follow a 12-week fitness program.",
@@ -5185,6 +6487,151 @@
       ]
     },
     {
+      "id": "small-boat-sailing",
+      "name": "Small-Boat Sailing",
+      "summary": "Learn to sail a small boat safely with a buddy, from rigging and points of sail to tacking, jibing, capsizes and knots.",
+      "officialUrl": "https://www.scouting.org/merit-badges/small-boat-sailing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to sail safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain sailing hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Review preventing and treating common sailing injuries and illnesses."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how Safety Afloat applies to small-boat sailing."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Pass the Scouting America swimmer test before doing requirements 3 to 9."
+            },
+            {
+              "number": "3",
+              "summary": "Name the main parts of the boat you'll sail, and explain what each one does."
+            },
+            {
+              "number": "4",
+              "summary": "Prepare before going afloat.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Go over Safety Afloat's nine points."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain the rules of the road, and any local or state boating rules."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain how water, weather and strong wind affect safety and sailing."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Discuss spotting bad weather early, and handling strong wind or a storm."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Write a float plan."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Discuss what to wear and bring sailing in warm and cool weather, and why."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Discuss how to tell wind direction, and why to check it before setting sail."
+            },
+            {
+              "number": "6",
+              "summary": "Sail a boat with a buddy, following Safety Afloat.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Rig the boat and inspect it for safety."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Set off from a dock, mooring or beach."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Sail a counselor-approved round trip, running, beating and reaching, with good steering."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Tack and jibe to change direction."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Show how to get out of irons."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Show the safety position."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Show what to do after a capsize, and rescue a person overboard."
+                },
+                {
+                  "number": "6h",
+                  "summary": "Show what to do after running aground."
+                },
+                {
+                  "number": "6i",
+                  "summary": "Take a tow, and steer the towed boat safely for 20 boat lengths."
+                },
+                {
+                  "number": "6j",
+                  "summary": "Back ashore, secure the gear and sails, and make the boat ready to leave overnight."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Show your marlinespike seamanship.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Tie and show uses for a square knot, clove hitch, two half hitches, bowline, cleat hitch and figure eight."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Show how to heave, coil and fake down a line."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Compare kinds of sailboat line and their fibers, with pros and cons."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explain the year-round care and upkeep a sailboat and its gear need."
+            },
+            {
+              "number": "9",
+              "summary": "Go over sailing terms and the points of sail, and compare today's sailboats."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "space-exploration",
       "name": "Space Exploration",
       "summary": "Learn why people explore space and how they do it, fly a model rocket, and design a mission and a space base.",
@@ -5659,6 +7106,117 @@
             {
               "number": "9",
               "summary": "Explain how swimming benefits fitness and health."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "welding",
+      "name": "Welding",
+      "summary": "Learn to weld safely, set up your own welding process, and make basic welds and joints.",
+      "officialUrl": "https://www.scouting.org/merit-badges/welding/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2019-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe while welding.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain welding hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show how to prevent and treat welding injuries, like shocks, burns and fume inhalation."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Prepare to weld safely.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss welding safety and why safety data sheets matter."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe welding safety gear, then show up dressed in it."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show how to care for and store welding tools and protective gear."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Define welding, electrode, slag and oxidation, and explain how a weld is made and shielded."
+            },
+            {
+              "number": "4",
+              "summary": "Name cutting methods, then explain how to use one and its pros and cons."
+            },
+            {
+              "number": "5",
+              "summary": "Get ready to weld.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "List the equipment for two welding processes, and a pro and con of each."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Set up one process, and have your counselor approve the area."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Practice welding with your setup, after finishing requirements 1 to 5.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Draw your initial on a plate and weld a bead along it."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Cover a small plate with side-by-side beads."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Tack-weld two plates into a square groove butt joint."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Weld the butt joint from 6c on both sides."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Tack a T joint, have it checked, then fillet weld both sides."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Tack a lap joint, have it checked, then fillet weld both sides."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore the welding profession.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explore three welding careers and study one closely."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Discuss what the American Welding Society does for welders."
+                }
+              ]
             }
           ]
         }
