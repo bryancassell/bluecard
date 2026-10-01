@@ -13,7 +13,7 @@ I want to build an Android mobile app that will allow Scouting America scouts to
   - This page should be easy to navigate on a mobile device, and the user should be able to understand the full set of requirements without extensive scrolling. If any part of the merit badge requires large trackers or detailed information the user should have the option to click into a sub-page for those requirements.
   - Where possible, the brief descriptions of requirements should link to the full, official, Scouting America documentation for the relevant requirement.
   - When recording progress on a merit badge requirement the user should have the option to include a date on which the requirement was completed.
-  - When recording progress on a merit badge the user should have the option to add additional comments about that requirement.
+  - When recording progress on a merit badge the user should have the option to add notes about that requirement.
   - When a merit badge is completed the user should have the ability to generate a report in PDF format that reflects the entirety of the data they have recorded for that merit badge, and to save and/or share that report with standard Android save and share features.
   - This page should allow the user to mark a merit badge as completed on a prior date without entering specific data for each requirement.
   - Scouting America updates merit badge requirements over time, usually each January 1. By default, a merit badge should use the newest version of its requirements.
