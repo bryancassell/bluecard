@@ -135,11 +135,12 @@ private fun RequirementRow(
 
 /**
  * A requirement's number in a box, like the boxes on the blue card: outlined until part of the
- * requirement is complete, then tinted light blue and outlined in Scouting America Blue, then
- * filled in Scouting America Blue with a check on its top end corner once all of it is complete,
- * or filled in grey once it's no longer needed. It's [minWidth] wide, room for the widest number
- * in its list, but still widens to fit its own number if that measures wider. It grows taller
- * with the font size. The check is drawn only: its row reads the state.
+ * requirement is complete, then tinted light blue and outlined in Scouting America Blue with a
+ * half-filled circle on its top end corner, then filled in Scouting America Blue with a check
+ * there once all of it is complete, or filled in grey once it's no longer needed. The mark on the
+ * corner tells the states apart by more than color. It's [minWidth] wide, room for the widest
+ * number in its list, but still widens to fit its own number if that measures wider. It grows
+ * taller with the font size. The marks are drawn only: its row reads the state.
  */
 @Composable
 private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
@@ -165,7 +166,7 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
                     }
                 )
                 // On every side: once the text outgrows the box, it stays clear of the edge and
-                // below the check.
+                // below the mark on its corner.
                 .padding(NumberBoxPadding)
         ) {
             Text(
@@ -178,9 +179,14 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
                 }
             )
         }
-        if (item.completed) {
+        val mark = when {
+            item.completed -> R.drawable.ic_check
+            item.partlyCompleted -> R.drawable.ic_half_circle
+            else -> null
+        }
+        mark?.let {
             Icon(
-                painterResource(R.drawable.ic_check),
+                painterResource(it),
                 contentDescription = null,
                 tint = colors.primary,
                 modifier = Modifier
