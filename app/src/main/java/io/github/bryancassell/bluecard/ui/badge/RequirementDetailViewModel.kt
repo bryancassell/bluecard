@@ -61,11 +61,16 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val found = catalog.badgeRequirements(badgeId, progress)
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
+            val item = found.item(requirement, found.partOfCompleted(number))
             RecordedRequirement(
                 badgeName = found.badge.name,
-                requirement = found.item(requirement),
+                requirement = item,
                 completedDate = recorded?.completedDate,
-                children = requirement.children.map(found::item),
+                // Once this requirement, or one it's part of, is complete, the sub-requirements
+                // that aren't are no longer needed.
+                children = requirement.children.map {
+                    found.item(it, partOfCompleted = item.completed || item.notNeeded)
+                },
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 comment = recorded?.comment
             )

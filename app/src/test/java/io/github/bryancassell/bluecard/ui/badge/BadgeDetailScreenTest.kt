@@ -12,6 +12,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
@@ -23,7 +24,6 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
-import io.github.bryancassell.bluecard.testing.hasStateDescription
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals

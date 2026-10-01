@@ -6,6 +6,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 
 /** A badge, the requirements the scout works on, and what they've recorded against them. */
@@ -18,8 +19,16 @@ data class BadgeRequirements(
     /** The scout's tracker entries, keyed by requirement number. */
     val trackerEntries: Map<String, List<TrackerEntry>>
 ) {
-    /** [requirement] of this badge as a row. */
-    fun item(requirement: Requirement) = requirement.toItem(recorded, trackerEntries)
+    /**
+     * [requirement] of this badge as a row. [partOfCompleted] is whether a requirement it's part
+     * of is complete.
+     */
+    fun item(requirement: Requirement, partOfCompleted: Boolean = false) =
+        requirement.toItem(recorded, trackerEntries, partOfCompleted)
+
+    /** Whether a requirement that the one numbered [number] is part of, at any depth, is complete. */
+    fun partOfCompleted(number: String): Boolean =
+        version.ancestorsOf(number).any { it.completion(recorded, trackerEntries) != null }
 }
 
 /**
@@ -49,3 +58,17 @@ fun RequirementsVersion.find(number: String): Requirement? = requirements.firstN
 
 private fun Requirement.find(number: String): Requirement? =
     if (this.number == number) this else children.firstNotNullOfOrNull { it.find(number) }
+
+/**
+ * The requirements that the one numbered [number] is part of, outermost first: none for a
+ * top-level requirement or one not in this version.
+ */
+private fun RequirementsVersion.ancestorsOf(number: String): List<Requirement> =
+    requirements.firstNotNullOfOrNull { it.pathTo(number) }?.dropLast(1).orEmpty()
+
+/** This requirement down to the one numbered [number], or null if that isn't in it. */
+private fun Requirement.pathTo(number: String): List<Requirement>? = if (this.number == number) {
+    listOf(this)
+} else {
+    children.firstNotNullOfOrNull { it.pathTo(number) }?.let { listOf(this) + it }
+}

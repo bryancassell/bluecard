@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
@@ -24,7 +25,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
-import io.github.bryancassell.bluecard.testing.hasStateDescription
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -259,6 +259,19 @@ class RequirementDetailScreenTest {
         row(
             "Lead one hike."
         ).assert(hasText("Do 1 of 2")).assert(hasStateDescription("Not completed"))
+    }
+
+    @Test
+    fun subRequirementNoLongerNeeded_saysSoOnce() {
+        val children = ready.children.map {
+            if (it.number == "2c") it.copy(notNeeded = true) else it
+        }
+        show(ready.copy(children = children))
+
+        // It shows "Not needed" too, but screen readers read it only as its state.
+        row("Keep a camping log.")
+            .assert(hasStateDescription("Not needed"))
+            .assert(!hasText("Not needed"))
     }
 
     @Test

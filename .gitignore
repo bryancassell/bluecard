@@ -1,6 +1,10 @@
 # Gradle
 .gradle/
 build/
+
+# Roborazzi's images from a failed screenshot test, written next to the reference images.
+app/src/test/screenshots/*_actual.png
+app/src/test/screenshots/*_compare.png
 !gradle/wrapper/gradle-wrapper.jar
 
 # Local configuration (SDK path, secrets)

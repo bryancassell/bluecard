@@ -14,6 +14,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isHeading
@@ -58,7 +59,6 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.di.ClockModule
 import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
-import io.github.bryancassell.bluecard.testing.hasStateDescription
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -607,6 +607,8 @@ class MainActivityTest {
         completeOnItsPage("Choice A.")
 
         composeTestRule.onNode(hasText("Choice A.") and hasStateDescription("Completed"))
+            .assertIsDisplayed()
+        composeTestRule.onNode(hasText("Choice B.") and hasStateDescription("Not needed"))
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.waitForIdle()

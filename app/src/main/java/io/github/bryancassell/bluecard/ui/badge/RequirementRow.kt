@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -31,9 +32,10 @@ import io.github.bryancassell.bluecard.R
 
 /**
  * A requirement's row, which opens its page: its number, in a box that's filled in once it's
- * complete, its summary, "Do N of M" when only some sub-requirements are needed, and how much of
- * its tracker is filled in. Screen readers read "Completed" or "Not completed" as its state. The
- * scout marks a requirement complete on its page.
+ * complete, its summary, "Do N of M" when only some sub-requirements are needed, how much of its
+ * tracker is filled in, and "Not needed" when it no longer is. Screen readers read "Completed",
+ * "Not completed" or "Not needed" as its state. The scout marks a requirement complete on its
+ * page.
  */
 @Composable
 fun RequirementRow(
@@ -42,18 +44,29 @@ fun RequirementRow(
     modifier: Modifier = Modifier
 ) {
     val state = stringResource(
-        if (item.completed) R.string.requirement_completed else R.string.requirement_not_completed
+        when {
+            item.completed -> R.string.requirement_completed
+            item.notNeeded -> R.string.requirement_not_needed
+            else -> R.string.requirement_not_completed
+        }
     )
     ListItem(
-        leadingContent = { RequirementNumber(item.number, item.completed) },
+        leadingContent = { RequirementNumber(item) },
         headlineContent = { Text(item.summary) },
-        supportingContent = if (item.choice == null && item.tracker == null) {
+        supportingContent = if (item.choice == null && item.tracker == null && !item.notNeeded) {
             null
         } else {
             {
                 Column {
                     item.choice?.let { Text(choiceLabel(it)) }
                     item.tracker?.let { Text(trackerCountLabel(it)) }
+                    if (item.notNeeded) {
+                        Text(
+                            stringResource(R.string.requirement_not_needed),
+                            // Screen readers read it once, first, as the row's state.
+                            modifier = Modifier.clearAndSetSemantics {}
+                        )
+                    }
                 }
             }
         },
@@ -75,11 +88,11 @@ fun RequirementRow(
 /**
  * A requirement's number in a box, like the boxes on the blue card: outlined until the
  * requirement is complete, then filled in Scouting America Blue with a check on its top end
- * corner. It grows with a long number, such as "8a(1)", and with the font size. The check is
- * drawn only: its row reads the state.
+ * corner, or filled in grey once it's no longer needed. It grows with a long number, such as
+ * "8a(1)", and with the font size. The check is drawn only: its row reads the state.
  */
 @Composable
-private fun RequirementNumber(number: String, completed: Boolean) {
+private fun RequirementNumber(item: RequirementItem) {
     val colors = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.medium
     Box {
@@ -88,21 +101,23 @@ private fun RequirementNumber(number: String, completed: Boolean) {
             modifier = Modifier
                 .defaultMinSize(minWidth = 40.dp, minHeight = 40.dp)
                 .then(
-                    if (completed) {
-                        Modifier.background(colors.primary, shape)
-                    } else {
-                        Modifier.border(2.dp, colors.outline, shape)
+                    when {
+                        item.completed -> Modifier.background(colors.primary, shape)
+                        item.notNeeded -> Modifier.background(colors.surfaceContainerHighest, shape)
+                        else -> Modifier.border(2.dp, colors.outline, shape)
                     }
                 )
-                .padding(horizontal = 8.dp)
+                // On every side: once the text outgrows the box, it stays clear of the edge and
+                // below the check.
+                .padding(8.dp)
         ) {
             Text(
-                text = number,
+                text = item.number,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (completed) colors.onPrimary else colors.onSurfaceVariant
+                color = if (item.completed) colors.onPrimary else colors.onSurfaceVariant
             )
         }
-        if (completed) {
+        if (item.completed) {
             Icon(
                 painterResource(R.drawable.ic_check),
                 contentDescription = null,
@@ -112,9 +127,12 @@ private fun RequirementNumber(number: String, completed: Boolean) {
                     // Over the corner. offset, unlike absoluteOffset, mirrors right-to-left.
                     .offset(x = 7.dp, y = (-7).dp)
                     .size(20.dp)
+                    // A blue circle under a smaller white one, rather than a border over a
+                    // white one, so no white shows at its edge over the blue box.
+                    .background(colors.primary, CircleShape)
+                    .padding(2.dp)
                     .background(colors.onPrimary, CircleShape)
-                    .border(2.dp, colors.primary, CircleShape)
-                    .padding(3.dp)
+                    .padding(1.dp)
             )
         }
     }
