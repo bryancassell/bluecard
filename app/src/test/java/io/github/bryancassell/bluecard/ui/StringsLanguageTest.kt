@@ -242,4 +242,22 @@ class StringsLanguageTest {
 
         assertEquals(Locale.forLanguageTag("en"), locale)
     }
+
+    // For code outside Compose, such as the PDF report.
+    @Config(qualifiers = "fa")
+    @Test
+    fun stringsLanguageResources_onPersianDevice_areInStringsLanguage_leftToRight() {
+        val resources = stringsLanguageResources(ApplicationProvider.getApplicationContext())
+
+        assertEquals("Do 2 of 3", resources.getString(R.string.requirement_choice, 2, 3))
+        assertEquals(Locale.forLanguageTag("en"), resources.configuration.locales[0])
+        assertEquals(View.LAYOUT_DIRECTION_LTR, resources.configuration.layoutDirection)
+    }
+
+    @Test
+    fun stringsLanguageResources_onDeviceInStringsLanguage_areTheDevices() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        assertSame(context.resources, stringsLanguageResources(context))
+    }
 }

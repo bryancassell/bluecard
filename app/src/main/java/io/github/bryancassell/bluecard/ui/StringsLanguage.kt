@@ -71,6 +71,22 @@ fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
 }
 
 /**
+ * [context]'s resources in the strings' language ([stringsLocales]), for code outside Compose
+ * that formats the app's strings, such as the PDF report. The first locale of their
+ * configuration is [stringsLocale], and their layout direction is its direction.
+ */
+// Lint's warning is the same as for ProvideStringsLanguageResources.
+@SuppressLint("AppBundleLocaleChanges")
+fun stringsLanguageResources(context: Context): Resources {
+    val configuration = context.resources.configuration
+    val locales = stringsLocales(configuration.locales, stringsLanguage(context.resources))
+    if (locales == configuration.locales) return context.resources
+    // setLocales also sets the layout direction from the first locale.
+    val stringsConfiguration = Configuration(configuration).apply { setLocales(locales) }
+    return context.createConfigurationContext(stringsConfiguration).resources
+}
+
+/**
  * The locales to load and format the app's strings in. First, the device's first locale in the
  * strings' language and script, which keeps the device's region and settings such as a chosen
  * digit style, or else the strings' language itself. Then the device's other locales, so

@@ -68,7 +68,7 @@ part of the app.
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
 | A new tracker needs only catalog data (req. 7) | Tests render and store trackers defined only in test catalog data (`TrackerEntryViewModelTest`, `MainActivityTest`) **(CI)**. |
-| The code stays testable as it grows (req. 8) | Every class, except generated code and `@Preview` functions, has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
+| The code stays testable as it grows (req. 8) | Every class, except generated code, `@Preview` functions and `PdfDocumentWriter` (which only runs on a device), has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
 
 ## Architecture approach
@@ -355,13 +355,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     ignores opening one of them: tapping the row that opened the closing
     screen does nothing until its slide ends.
 - **A double tap starts another app once.** Badge detail's "Official
-  requirements" link and the counselor's phone and email start other apps with
-  one function from `rememberStartOtherApp` (`ui/`), which the screen shares
-  among them. The other app takes a moment to cover BlueCard, so both taps of a
-  double tap can reach the control, and a browser could open two tabs, or an
-  email app two drafts
-  ([#97](https://github.com/bryancassell/bluecard/issues/97)).
-  - **After a tap, all three ignore taps for the double-tap timeout** (300 ms),
+  requirements" link, the counselor's phone and email, and the report's share
+  sheet and file picker start other apps with one `OtherAppStarter` from
+  `rememberStartOtherApp` (`ui/`), which the screen shares among them. The
+  other app takes a moment to cover BlueCard, so both taps of a double tap can
+  reach the control, and a browser could open two tabs, or an email app two
+  drafts ([#97](https://github.com/bryancassell/bluecard/issues/97)).
+  - **After a tap, all of them ignore taps for the double-tap timeout** (300 ms),
     as a screen animating in does. A tap that finds no app counts too, so a
     double tap shows its message once, and the next tap tries again.
   - **It doesn't wait for the scout to come back from the other app.** Some
@@ -565,7 +565,7 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, opening its Badge detail. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, "mark completed on a prior date", and "generate report" once complete. |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". |
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's comment. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
@@ -846,18 +846,44 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     changed while it saved, so the change isn't lost. A save that fails keeps the page open with its
     fields and the snackbar, so the scout can try again. Leaving the page
     without saving discards the edits, as with a comment.
-- **PDF report.** `ReportRepository` draws the profile, badge, counselor,
-  requirement summaries, dates, comments and tracker data onto `PdfDocument`
-  pages and writes the file to the app's cache directory. The scout can:
+- **PDF report.** Once a badge is complete, from its requirements or a prior
+  date, Badge detail offers "Share report" and "Save report" under the official
+  link. `PdfReportRepository` reads the profile, the catalog and the badge's
+  progress (`data/report/BadgeReport.kt`), and lays out everything recorded
+  (`ReportLayout.kt`): the scout's name and unit, the badge, when it was
+  completed, its requirements version, the day the report was created, the
+  counselor, and every requirement of the version at every level. Each
+  requirement shows "Do N of M" if it's a choice, whether it's complete and
+  when, its comment, and its tracker's filled-in rows, each value with its
+  column's label. A requirement with nothing recorded is listed as "Not
+  completed", so a counselor sees the whole badge.
+  - **Pages.** US Letter, with 0.75-inch margins and "Page 1 of 3" at the foot
+    of each. `StaticLayout` lays the text out in the strings' language and
+    direction (`stringsLanguageResources`), with typed text wrapped as on
+    screen. A paragraph that doesn't fit continues on the next page, laid out
+    again from the line where it broke, so each line is in the PDF once.
+    Headings, requirement titles and tracker row titles move to the next page
+    with the first line after them.
+  - **`PdfDocumentWriter`** draws the pages onto framework `PdfDocument` pages
+    and writes the PDF.
   - **Share** it through the
     [Android Sharesheet](https://developer.android.com/training/sharing/send)
     (`ACTION_SEND` with a
     [`FileProvider`](https://developer.android.com/training/secure-file-sharing/setup-sharing)
-    content URI and a read permission grant), or
+    content URI, a read permission grant, and the URI as clip data for the
+    sheet's preview). The file is in the cache directory's `reports/` folder,
+    named "Camping merit badge report.pdf", so the app it's shared with shows
+    that name, and the badge's next report replaces it. Or
   - **Save** it to a location they choose with the
     [system file picker](https://developer.android.com/training/data-storage/shared/documents-files)
-    (`ActivityResultContracts.CreateDocument`). Neither needs storage
-    permissions.
+    (`ActivityResultContracts.CreateDocument`), which suggests the same name.
+    The report is written straight into the document they create. Neither
+    needs storage permissions.
+
+  A report that can't be created or saved shows "Couldn't create the report.
+  Try again." in a snackbar, as a failed save does (`SaveRunner`). Share
+  ignores taps while a report is being created, so a double tap opens one
+  share sheet.
 
   `androidx.pdf` is not used: it is for viewing PDFs, is still in beta, and
   requires API 28 (BlueCard's minimum is 26).
@@ -950,10 +976,24 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
   interaction, fed by fake repositories or fixed UI state.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
-- **Report and backup tests** check the generated PDF's content (page count,
-  text) and that export followed by import restores the same data.
+- **Report tests are split, because `PdfDocument` doesn't run under
+  Robolectric.** Its native code isn't there, so it throws "document is
+  closed!" (checked with Robolectric 4.17).
+  - **Local tests** check the layout and drawing with Robolectric's native
+    graphics (`@GraphicsMode(NATIVE)`), which lays text out with real fonts:
+    each page's text, the page count, page breaks and margins
+    (`ReportLayoutTest`). `PdfReportRepositoryTest` uses a fake PDF writer.
+  - **An instrumented test** (`androidTest/.../PdfDocumentWriterTest`) writes a
+    real PDF with `PdfDocumentWriter` and reads it back with `PdfRenderer`: its
+    page count and size, and, on Android 15 and higher, where
+    `PdfRenderer.Page.getTextContents` was added, each page's text. Run it on
+    an emulator with `./gradlew connectedAndroidTest`. CI has no
+    emulator, so it doesn't run there.
+- **Backup tests** check that export followed by import restores the same
+  data.
 - **Coverage.** Classes that Hilt and Room generate (for example `Hilt_*`,
-  `*_Factory`, `*_Impl`) are excluded from the per-class 80% coverage rule.
+  `*_Factory`, `*_Impl`) are excluded from the per-class 80% coverage rule, and
+  so is `PdfDocumentWriter`, which only runs on a device.
 
 ## Decisions
 
@@ -969,6 +1009,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Requirement versions | Newest by default; the scout can pick the previous version when the catalog has one; a badge stays on its version until the scout switches it | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
 | Versions in the first release | Current requirements only; versions are kept from the first release on | Project decision for the initial app; keeping every version from then on protects existing users' recorded progress |
 | PDF | Framework `PdfDocument` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
+| PDF report | Offered on Badge detail once the badge is complete, under the official link. US Letter pages, laid out with `StaticLayout`, with every requirement of the version, page numbers and the day it was created | Scouting America is in the US. A counselor reading it sees the whole badge, including what wasn't done. Page numbers keep printed pages in order, and the date tells an old copy from a new one |
+| PDF report tests | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
 | Save, share, export, import | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | Backup | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | Text fields | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |

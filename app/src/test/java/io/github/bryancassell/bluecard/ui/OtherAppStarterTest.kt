@@ -1,9 +1,19 @@
 package io.github.bryancassell.bluecard.ui
 
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,7 +31,7 @@ import org.robolectric.shadows.ShadowToast
  * itself.
  */
 @RunWith(AndroidJUnit4::class)
-class StartOtherAppTest {
+class OtherAppStarterTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -29,18 +39,49 @@ class StartOtherAppTest {
     private val link = Intent(Intent.ACTION_VIEW, "https://www.scouting.org/".toUri())
     private val noApp = "No app on this phone can open the link."
 
-    private lateinit var startOtherApp: (Intent, String) -> Unit
+    private lateinit var startOtherApp: OtherAppStarter
+    private lateinit var picker: ActivityResultLauncher<String>
     private var doubleTapTimeoutMillis = 0L
+
+    /** The inputs the file picker was launched with. */
+    private val launched = mutableListOf<String>()
+
+    /** Whether no app can handle the file picker's intent. */
+    private var noPicker = false
+
+    // Launches nothing, so the launches can be counted.
+    private val resultRegistryOwner = object : ActivityResultRegistryOwner {
+        override val activityResultRegistry = object : ActivityResultRegistry() {
+            override fun <I, O> onLaunch(
+                requestCode: Int,
+                contract: ActivityResultContract<I, O>,
+                input: I,
+                options: ActivityOptionsCompat?
+            ) {
+                if (noPicker) throw ActivityNotFoundException()
+                launched += input as String
+            }
+        }
+    }
 
     private fun show() {
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.setContent {
             doubleTapTimeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
             startOtherApp = rememberStartOtherApp()
+            CompositionLocalProvider(
+                LocalActivityResultRegistryOwner provides resultRegistryOwner
+            ) {
+                picker = rememberLauncherForActivityResult(CreateDocument("application/pdf")) {}
+            }
         }
     }
 
     private fun start() = composeTestRule.runOnIdle { startOtherApp(link, noApp) }
+
+    private fun launchPicker() = composeTestRule.runOnIdle {
+        startOtherApp.launch(picker, "report.pdf", noApp)
+    }
 
     private fun assertStartedOnce() {
         assertEquals(link.dataString, shadowOf(application).nextStartedActivity?.dataString)
@@ -99,5 +140,40 @@ class StartOtherAppTest {
         start()
 
         assertStartedOnce()
+    }
+
+    @Test
+    fun launch_launchesIt() {
+        show()
+
+        launchPicker()
+
+        assertEquals(listOf("report.pdf"), launched)
+    }
+
+    // A screen's controls share one starter, so a quick tap on a second control is ignored.
+    @Test
+    fun launch_withinTheDoubleTapTimeoutOfAStart_isIgnored() {
+        show()
+
+        start()
+        launchPicker()
+
+        assertStartedOnce()
+        assertEquals(emptyList<String>(), launched)
+
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeoutMillis)
+        launchPicker()
+        assertEquals(listOf("report.pdf"), launched)
+    }
+
+    @Test
+    fun launch_withNoApp_showsMessage() {
+        show()
+        noPicker = true
+
+        launchPicker()
+
+        assertEquals(noApp, ShadowToast.getTextOfLatestToast())
     }
 }

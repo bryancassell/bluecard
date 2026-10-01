@@ -7,6 +7,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 // What the scout records, stored in Room. Badges and requirements are identified by
 // catalog IDs: a badge's ID and a requirement's official number within the badge's
@@ -120,6 +121,17 @@ fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntr
  */
 fun normalizedTrackerValues(values: Map<String, String>): Map<String, String> =
     values.mapValues { it.value.trim() }.filterValues { it.isNotEmpty() }
+
+/**
+ * A date column's stored value as a date, or null if it isn't one. The app stores dates as
+ * YYYY-MM-DD, but a value from elsewhere may not be, such as one stored while a catalog edited
+ * during development had the column as text. It's shown as it is instead.
+ */
+fun storedDate(text: String): LocalDate? = try {
+    LocalDate.parse(text)
+} catch (e: DateTimeParseException) {
+    null
+}
 
 /** A started badge with everything recorded for it. */
 data class BadgeProgressDetails(

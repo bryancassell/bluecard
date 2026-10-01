@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
 import io.github.bryancassell.bluecard.ui.typedText
 
@@ -34,7 +35,7 @@ import io.github.bryancassell.bluecard.ui.typedText
 fun CounselorSection(
     counselor: Counselor?,
     onEdit: () -> Unit,
-    startOtherApp: (intent: Intent, noApp: String) -> Unit,
+    startOtherApp: OtherAppStarter,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {

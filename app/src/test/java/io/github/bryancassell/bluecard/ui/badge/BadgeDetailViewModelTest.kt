@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -12,15 +13,20 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import java.time.LocalDate
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -96,11 +102,12 @@ class BadgeDetailViewModelTest {
 
     private val catalogRepository = FakeCatalogRepository(listOf(chess, camping))
     private val progressRepository = FakeProgressRepository()
+    private val reportRepository = FakeReportRepository()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private fun viewModel(badgeId: String = "camping") =
-        BadgeDetailViewModel(badgeId, catalogRepository, progressRepository)
+        BadgeDetailViewModel(badgeId, catalogRepository, progressRepository, reportRepository)
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -120,7 +127,8 @@ class BadgeDetailViewModelTest {
         val loading = object : CatalogRepository {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
         }
-        val viewModel = BadgeDetailViewModel("camping", loading, progressRepository)
+        val viewModel =
+            BadgeDetailViewModel("camping", loading, progressRepository, reportRepository)
         startCollecting(viewModel)
 
         assertEquals(BadgeDetailUiState.Loading, viewModel.uiState.value)
@@ -329,5 +337,137 @@ class BadgeDetailViewModelTest {
         progressRepository.clearBadge("camping")
 
         assertEquals("Plan a campout.", viewModel.ready().requirements[0].summary)
+    }
+
+    /** Completes every requirement of Chess, a badge with one. */
+    private suspend fun completeChess() {
+        progressRepository.markRequirementCompleted("chess", "1", day, BadgeStart(newest, started))
+    }
+
+    @Test
+    fun badgeNotStarted_isNotCompleted() = runTest {
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().completed)
+    }
+
+    @Test
+    fun badgeWithEveryRequirementComplete_isCompleted() = runTest {
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+
+        completeChess()
+
+        assertTrue(viewModel.ready().completed)
+    }
+
+    @Test
+    fun badgeWithSomeRequirementsComplete_isNotCompleted() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().completed)
+    }
+
+    @Test
+    fun badgeMarkedCompletedOnPriorDate_isCompleted() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertTrue(viewModel.ready().completed)
+    }
+
+    @Test
+    fun shareReport_createsTheReport_forTheScreenToShare() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        assertNull(viewModel.ready().reportToShare)
+
+        viewModel.shareReport()
+
+        assertEquals(listOf("chess"), reportRepository.shared)
+        assertEquals(FakeReportRepository.reportUri("chess"), viewModel.ready().reportToShare)
+    }
+
+    @Test
+    fun onReportShared_clearsTheReportToShare() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        viewModel.shareReport()
+
+        viewModel.onReportShared()
+
+        assertNull(viewModel.ready().reportToShare)
+    }
+
+    // A double tap on Share report would otherwise open the share sheet twice.
+    @Test
+    fun shareReport_whileTheReportIsBeingCreated_createsItOnce() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        val writing = CompletableDeferred<Unit>()
+        reportRepository.writing = writing
+
+        viewModel.shareReport()
+        viewModel.shareReport()
+        assertNull(viewModel.ready().reportToShare)
+        writing.complete(Unit)
+
+        assertEquals(listOf("chess"), reportRepository.shared)
+        assertEquals(FakeReportRepository.reportUri("chess"), viewModel.ready().reportToShare)
+
+        // Once it's ready, it can be shared again.
+        viewModel.onReportShared()
+        viewModel.shareReport()
+        assertEquals(listOf("chess", "chess"), reportRepository.shared)
+    }
+
+    @Test
+    fun shareReport_whenTheReportCantBeCreated_showsFailureUntilItsShown() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        reportRepository.failSaves = true
+
+        viewModel.shareReport()
+
+        val failure = viewModel.ready().reportFailure
+        assertNotNull(failure)
+        assertNull(viewModel.ready().reportToShare)
+
+        viewModel.onReportFailureShown(failure!!)
+        assertNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun saveReport_savesItWhereTheScoutChose() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        val destination = Uri.parse("content://documents/chess-report.pdf")
+
+        viewModel.saveReport(destination)
+
+        assertEquals(listOf("chess" to destination), reportRepository.saved)
+        assertNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun saveReport_whenItCantBeSaved_showsFailure() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        reportRepository.failSaves = true
+
+        viewModel.saveReport(Uri.parse("content://documents/chess-report.pdf"))
+
+        assertNotNull(viewModel.ready().reportFailure)
     }
 }

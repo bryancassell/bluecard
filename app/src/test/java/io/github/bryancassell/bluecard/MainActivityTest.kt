@@ -1,7 +1,9 @@
 package io.github.bryancassell.bluecard
 
+import android.app.Activity
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
+import androidx.core.content.IntentCompat
 import androidx.core.graphics.Insets
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
@@ -66,9 +69,12 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.report.FakeReportRepository
+import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.di.ClockModule
 import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
+import io.github.bryancassell.bluecard.di.ReportModule
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -92,7 +98,12 @@ import org.robolectric.shadows.ShadowToast
  * saved profile, as on a fresh install, a one-badge catalog and no progress.
  */
 @HiltAndroidTest
-@UninstallModules(ProfileModule::class, DataModule::class, ClockModule::class)
+@UninstallModules(
+    ProfileModule::class,
+    DataModule::class,
+    ReportModule::class,
+    ClockModule::class
+)
 @Config(application = HiltTestApplication::class)
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
@@ -159,6 +170,13 @@ class MainActivityTest {
     @BindValue
     @JvmField
     val progressRepository: ProgressRepository = FakeProgressRepository()
+
+    // PdfDocument only runs on a device.
+    private val fakeReportRepository = FakeReportRepository()
+
+    @BindValue
+    @JvmField
+    val reportRepository: ReportRepository = fakeReportRepository
 
     private val today = LocalDate.of(2026, 5, 20)
 
@@ -557,6 +575,50 @@ class MainActivityTest {
         assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
     }
 
+    private fun openCampingCompleted() {
+        runBlocking {
+            progressRepository.startBadge("camping", LocalDate.of(2026, 1, 1), today)
+            progressRepository.setCompletedOnPriorDate("camping", LocalDate.of(2025, 8, 1))
+        }
+        openCamping()
+    }
+
+    @Test
+    fun shareReport_opensShareSheetWithTheBadgesReport() {
+        openCampingCompleted()
+
+        composeTestRule.onNodeWithText("Share report").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(listOf("camping"), fakeReportRepository.shared)
+        var started: Intent? = null
+        scenario.onActivity { started = shadowOf(it).nextStartedActivity }
+        assertEquals(Intent.ACTION_CHOOSER, started?.action)
+        val send =
+            IntentCompat.getParcelableExtra(started!!, Intent.EXTRA_INTENT, Intent::class.java)!!
+        assertEquals(
+            FakeReportRepository.reportUri("camping"),
+            IntentCompat.getParcelableExtra(send, Intent.EXTRA_STREAM, Uri::class.java)
+        )
+    }
+
+    @Test
+    fun saveReport_savesTheBadgesReportWhereTheScoutChose() {
+        openCampingCompleted()
+
+        composeTestRule.onNodeWithText("Save report").performClick()
+        val destination = Uri.parse("content://documents/camping-report.pdf")
+        scenario.onActivity {
+            val picker = shadowOf(it).nextStartedActivityForResult
+            assertEquals(Intent.ACTION_CREATE_DOCUMENT, picker.intent.action)
+            val result = Intent().setData(destination)
+            shadowOf(it).receiveResult(picker.intent, Activity.RESULT_OK, result)
+        }
+        composeTestRule.waitForIdle()
+
+        assertEquals(listOf("camping" to destination), fakeReportRepository.saved)
+    }
+
     @Test
     fun officialLink_withNoAppForLinks_showsMessage() {
         openCamping()
@@ -621,7 +683,9 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
+        // The completed badge's report buttons push its requirements down the page.
         composeTestRule.onNode(hasText("Second.") and hasContentDescription("Completed"))
+            .performScrollTo()
             .assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
