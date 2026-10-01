@@ -327,6 +327,36 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun choiceLeftOnceEnoughAreComplete_isNotNeeded() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("2b")
+        startCollecting(viewModel)
+        assertEquals(listOf(false, false), viewModel.ready().children.map { it.notNeeded })
+
+        // 2b needs one of its two choices.
+        progressRepository.markRequirementCompleted("camping", "2b(2)", day, badgeStart)
+
+        assertEquals(listOf(true, false), viewModel.ready().children.map { it.notNeeded })
+    }
+
+    @Test
+    fun requirementPartOfCompletedOne_isNotNeeded_andSoAreItsSubRequirements() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("2b")
+        startCollecting(viewModel)
+
+        // 2a and 2c are two of 2's three, so 2 is complete without 2b.
+        progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
+        progressRepository.markRequirementCompleted("camping", "2c", day, badgeStart)
+        assertTrue(viewModel.ready().requirement.notNeeded)
+        assertEquals(listOf(true, true), viewModel.ready().children.map { it.notNeeded })
+
+        progressRepository.markRequirementNotCompleted("camping", "2a")
+        assertFalse(viewModel.ready().requirement.notNeeded)
+        assertEquals(listOf(false, false), viewModel.ready().children.map { it.notNeeded })
+    }
+
+    @Test
     fun requirementWithTracker_showsItsEntries() = runTest {
         progressRepository.addTrackerEntry(
             "camping",

@@ -23,6 +23,8 @@ junit = "4.13.2"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
 robolectric = "4.17"
+# Screenshot tests under Robolectric; see ARCHITECTURE.md (Testing).
+roborazzi = "1.76.0"
 spotless = "8.10.2"
 # ktlint is run by Spotless; this pins the ktlint engine version.
 ktlint = "1.8.0"
@@ -64,6 +66,8 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 [plugins]
@@ -74,3 +78,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

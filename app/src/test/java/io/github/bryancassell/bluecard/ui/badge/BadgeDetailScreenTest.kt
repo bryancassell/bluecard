@@ -20,6 +20,7 @@ import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
@@ -465,13 +466,24 @@ class BadgeDetailScreenTest {
     }
 
     @Test
-    fun requirement_hasCheckOnlyWhenComplete() {
+    fun requirement_saysWhetherItsComplete() {
         show(ready)
 
-        row("Plan a campout.").assert(hasContentDescription("Completed"))
-        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
-        row("Do all of these.").assert(hasContentDescription("Completed"))
-        row("Do two of these.").assert(!hasContentDescription("Completed"))
+        row("Plan a campout.").assert(hasStateDescription("Completed"))
+        row("Keep a camping log.").assert(hasStateDescription("Not completed"))
+        row("Do all of these.").assert(hasStateDescription("Completed"))
+        row("Do two of these.").assert(hasStateDescription("Not completed"))
+    }
+
+    // The check on its number is drawn only: screen readers read "Completed" once, as its state.
+    @Test
+    fun completeRequirement_saysCompletedOnce() {
+        show(ready)
+
+        row("Plan a campout.")
+            .assert(hasStateDescription("Completed"))
+            .assert(!hasContentDescription("Completed"))
+            .assert(!hasText("Completed"))
     }
 
     // The scout marks a requirement complete on its own page.

@@ -12,8 +12,8 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
@@ -233,6 +233,20 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun requirementNoLongerNeeded_isLabeledNotNeeded() {
+        show(ready.copy(requirement = ready.requirement.copy(notNeeded = true)))
+
+        composeTestRule.onNodeWithText("Not needed").assertIsDisplayed()
+    }
+
+    @Test
+    fun neededRequirement_isNotLabeledNotNeeded() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Not needed").assertDoesNotExist()
+    }
+
+    @Test
     fun completedRequirement_isLabeledCompleted() {
         show(ready.copy(requirement = ready.requirement.copy(completed = true)))
 
@@ -253,11 +267,24 @@ class RequirementDetailScreenTest {
     fun subRequirements_showNeededCountAndCompletion() {
         show(ready)
 
-        row("Cook a meal.").assert(hasContentDescription("Completed"))
-        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
+        row("Cook a meal.").assert(hasStateDescription("Completed"))
+        row("Keep a camping log.").assert(hasStateDescription("Not completed"))
         row(
             "Lead one hike."
-        ).assert(hasText("Do 1 of 2")).assert(!hasContentDescription("Completed"))
+        ).assert(hasText("Do 1 of 2")).assert(hasStateDescription("Not completed"))
+    }
+
+    @Test
+    fun subRequirementNoLongerNeeded_saysSoOnce() {
+        val children = ready.children.map {
+            if (it.number == "2c") it.copy(notNeeded = true) else it
+        }
+        show(ready.copy(children = children))
+
+        // It shows "Not needed" too, but screen readers read it only as its state.
+        row("Keep a camping log.")
+            .assert(hasStateDescription("Not needed"))
+            .assert(!hasText("Not needed"))
     }
 
     @Test
@@ -273,7 +300,7 @@ class RequirementDetailScreenTest {
         }
         show(ready.copy(children = children))
 
-        row("Lead one hike.").assert(hasContentDescription("Completed"))
+        row("Lead one hike.").assert(hasStateDescription("Completed"))
     }
 
     @Test

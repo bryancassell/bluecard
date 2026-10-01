@@ -9,7 +9,7 @@ import org.junit.Test
 /**
  * Checks BlueCardColorScheme against WCAG AA. Every text color needs 4.5:1 on each background it
  * can be drawn on, enough for body text and so also for large text and icons. Outlines, which
- * show where a text field is, need 3:1.
+ * show where a text field is and which requirements aren't complete yet, need 3:1.
  */
 class BlueCardColorSchemeTest {
     private val scheme = BlueCardColorScheme

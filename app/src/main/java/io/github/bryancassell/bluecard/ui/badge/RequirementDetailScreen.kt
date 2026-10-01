@@ -162,6 +162,15 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
+        // As on its row. One the scout marks by hand keeps its checkbox, for when they did it
+        // anyway.
+        if (requirement.notNeeded) {
+            Text(
+                text = stringResource(R.string.requirement_not_needed),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

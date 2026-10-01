@@ -573,8 +573,14 @@ io.github.bryancassell.bluecard
 
 The PRD asks that requirements be understandable "without extensive
 scrolling", so the badge detail page lists only the top-level requirements. Each
-is one row: its official number, our one-line summary, "Do N of M" when only
-some of its sub-requirements are needed, and a check once it's complete. A
+is one row: its official number, our one-line summary, and "Do N of M" when only
+some of its sub-requirements are needed. The number sits in a box, outlined
+until the requirement is complete, then filled in Scouting America Blue with a
+check on its corner, so what's done and what's left stand apart at a glance.
+Once a requirement is complete, those under it that aren't, such as the choices
+the scout didn't pick, are no longer needed: their box is filled in grey, with
+"Not needed" under the summary, and their pages say "Not needed" too. Screen
+readers read "Completed", "Not completed" or "Not needed" as the row's state. A
 requirement with a tracker says how much of it is filled in, such as "8 of 12
 weeks". Every row opens the requirement's own page, with its completion date and
 notes. The scout marks a requirement complete there by hand, unless it has
@@ -955,6 +961,17 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   on how text is measured, such as whether a long label wraps, uses
   Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
   graphics measure every character as 1px wide.
+- **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi)) check
+  looks that semantics can't tell apart, such as a requirement row's number box
+  in each state (`RequirementRowScreenshotTest`). They run locally with
+  Robolectric's native graphics on a fixed screen (`w360dp-h640dp-xhdpi`) and on
+  SDK 36, because on SDK 37 Robolectric 4.17 draws only a class's first
+  screenshot. Their reference images are committed in `app/src/test/screenshots/`,
+  and every test run, `./gradlew check` and CI included, compares against them
+  (`roborazzi.test.verify` in `gradle.properties`). After an intended change,
+  `./gradlew recordRoborazziDebug` records them again, and the new images are
+  reviewed in the diff. A failed comparison writes the new image and one
+  comparing the two to `app/build/outputs/roborazzi/`, which CI uploads.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.
@@ -980,8 +997,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Text fields | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
 | Badge search | Every word of the search must start a word in the badge's name or summary, in any order, ignoring case | Finds a badge from the start of any word ("fit" finds Personal Fitness) without matching inside words, so a short search like "art" isn't flooded with summaries that say "part" or "start" |
 | Search result announcements | A visible count of the matches. Screen readers hear it from a polite live region that stays composed and is laid out apart from the shown count. It changes once typing pauses for a second, or straight away after Clear search | Android 16 deprecates announcements in favor of live regions. Compose announces only a node that already exists. TalkBack speaks a changed count ahead of the key the scout just typed, doesn't let it be cut off, and announces a live region on any change, even of its size |
+| Screenshot tests | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | Badge completion | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
-| Marking requirements complete | A "Completed" checkbox on the requirement's page, dated today, with the date and notes beside it. Rows only open the requirement's page, with a check once it's complete | Chosen after using the app, in place of a checkbox on each row ([#103](https://github.com/bryancassell/bluecard/issues/103)). Each part takes a trip to its page, so marking many (Personal Fitness 3 has seven) is slower; the PRD's date and notes are optional |
+| Marking requirements complete | A "Completed" checkbox on the requirement's page, dated today, with the date and notes beside it. Rows only open the requirement's page | Chosen after using the app, in place of a checkbox on each row ([#103](https://github.com/bryancassell/bluecard/issues/103)). Each part takes a trip to its page, so marking many (Personal Fitness 3 has seven) is slower; the PRD's date and notes are optional |
+| Showing whether a requirement is complete | The row's number sits in a box: outlined until it's complete, then filled in Scouting America Blue with a check on its corner. Filled in grey, with "Not needed", once a requirement it's part of is complete. Screen readers read "Completed", "Not completed" or "Not needed" as the row's state | A small check beside the chevron was easy to miss ([#123](https://github.com/bryancassell/bluecard/issues/123)). Filled versus outlined stands out without a new color or more width, and a choice the scout didn't pick no longer looks like work left |
 | Completing a fixed-row tracker's requirement | Always inferred once every row is filled in, with no checkbox. Its date is when the last row was first saved. A log keeps the checkbox | A fixed-row tracker is a list of parts, like sub-requirements ([#105](https://github.com/bryancassell/bluecard/issues/105)). The tracker's date column isn't used, because Personal Management 2a and 2c have none. A log has no target in the catalog, such as Camping 9a's 20 nights |
 | Unchecking a requirement | Removes its date, but the page remembers the date until it closes, and checking the requirement again there brings it back | A mistaken tap loses nothing, while stored progress stays simple: a requirement that isn't complete has no date |
 | Starting a badge | Recording anything starts it; it stays started after everything is undone | No extra step before recording; clearing a badge is its own action ([#45](https://github.com/bryancassell/bluecard/issues/45)) |
