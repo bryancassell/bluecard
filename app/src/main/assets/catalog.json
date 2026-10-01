@@ -477,7 +477,7 @@
                 },
                 {
                   "number": "6b",
-                  "summary": "Sketch the Moon four nights in a week, same spot and hour, and explain the changes."
+                  "summary": "Sketch the Moon four times in a week, same spot and hour, and explain the changes."
                 },
                 {
                   "number": "6c",
@@ -546,11 +546,11 @@
                 },
                 {
                   "number": "8e",
-                  "summary": "Photograph the Moon, a planet or a comet moving, then label, chart and share it."
+                  "summary": "Photograph the Moon, a planet, asteroid, meteor or comet moving, then label, chart and share it."
                 },
                 {
                   "number": "8f",
-                  "summary": "Use an online telescope service, such as SkyNet, and describe the experience."
+                  "summary": "With approval, use an online telescope service, such as SkyNet, and describe the experience."
                 }
               ]
             },
@@ -677,7 +677,7 @@
                 },
                 {
                   "number": "4b",
-                  "summary": "Visit an FAA facility, such as a control tower, and report on it."
+                  "summary": "Visit an FAA control tower, TRACON, ARTCC or FSDO, and report on it."
                 },
                 {
                   "number": "4c",
@@ -1988,7 +1988,7 @@
                 },
                 {
                   "number": "6b",
-                  "summary": "Show how to check a rope for wear or damage."
+                  "summary": "Inspect a rope and point out any wear or damage."
                 },
                 {
                   "number": "6c",
@@ -2066,7 +2066,7 @@
                 },
                 {
                   "number": "10c",
-                  "summary": "Be the backup belayer on three different climbs."
+                  "summary": "Back up the belayer on three different climbs."
                 },
                 {
                   "number": "10d",
@@ -2074,7 +2074,7 @@
                 },
                 {
                   "number": "10e",
-                  "summary": "Be the backup belayer on three different rappels."
+                  "summary": "Back up the belayer on three different rappels."
                 }
               ]
             },
@@ -2084,11 +2084,11 @@
               "children": [
                 {
                   "number": "11a",
-                  "summary": "Show how to tie a belay rope straight to your harness."
+                  "summary": "Show how to tie in directly to a belay rope."
                 },
                 {
                   "number": "11b",
-                  "summary": "Climb three or more routes with good technique, using verbal signals."
+                  "summary": "Climb three or more different routes with good technique, using verbal signals."
                 }
               ]
             },
@@ -2098,7 +2098,7 @@
               "children": [
                 {
                   "number": "12a",
-                  "summary": "Show how to tie a belay rope straight to your harness."
+                  "summary": "Show how to tie in directly to a belay rope."
                 },
                 {
                   "number": "12b",
@@ -3053,7 +3053,7 @@
                 },
                 {
                   "number": "6b",
-                  "summary": "List 10 home appliances and their monthly electricity use, and five ways to save.",
+                  "summary": "Find 10 appliances' monthly electricity use and your home's costs, and list five ways to save.",
                   "tracker": {
                     "columns": [
                       {
@@ -3068,8 +3068,7 @@
                       }
                     ],
                     "rowLabel": "appliance",
-                    "rowLabelPlural": "appliances",
-                    "rowCount": 10
+                    "rowLabelPlural": "appliances"
                   }
                 },
                 {
@@ -4953,8 +4952,8 @@
                         "type": "text"
                       }
                     ],
-                    "rowLabel": "sighting",
-                    "rowLabelPlural": "sightings"
+                    "rowLabel": "species",
+                    "rowLabelPlural": "species"
                   }
                 },
                 {
@@ -4995,7 +4994,7 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Make two rat or mouse study skins, and explain what skins and mounts are for."
+                  "summary": "Guided by a museum or nature center, make two rat or mouse study skins and explain their uses."
                 },
                 {
                   "number": "4b",
@@ -7210,7 +7209,7 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Explore three welding careers and study one closely."
+                  "summary": "Explore three welding careers, research one, and discuss why it might interest you."
                 },
                 {
                   "number": "7b",
