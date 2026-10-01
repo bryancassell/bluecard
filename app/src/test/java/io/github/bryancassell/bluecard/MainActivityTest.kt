@@ -857,7 +857,7 @@ class MainActivityTest {
 
         // Let the list finish animating in. Badge detail's heading also says "Camping", so
         // match the list's row.
-        val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
+        val camping = campingRow()
             .assertIsDisplayed()
 
         // Tap a second time while the list is still sliding out, as a quick double tap
@@ -881,7 +881,7 @@ class MainActivityTest {
     fun doubleTap_onBadge_doesNotPressOfficialLink() {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
-        val camping = composeTestRule.onNode(hasText("Camping") and hasClickAction())
+        val camping = campingRow()
             .assertIsDisplayed()
 
         // The second tap of a quick double tap lands on Badge detail, which is sliding in,
@@ -1072,11 +1072,7 @@ class MainActivityTest {
         return gesture
     }
 
-    // Badges' title says "Merit badges" too.
-    private fun meritBadgesButton() =
-        composeTestRule.onNode(hasText("Merit badges") and hasClickAction())
-
-    /** Checks that a back swipe held halfway hasn't moved Badges, or started drawing Home. */
+    /** Checks that a back swipe hasn't moved Badges, or started drawing Home. */
     private fun assertPagesNotMoved(badgesAtRest: DpRect) {
         assertEquals(badgesAtRest, campingRow().getBoundsInRoot())
         home().assertDoesNotExist()
@@ -1085,7 +1081,7 @@ class MainActivityTest {
     @Test
     fun backGesture_doesNotMoveThePages() {
         launchWithProfile()
-        meritBadgesButton().performClick()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
         swipeHalfwayBack()
@@ -1096,7 +1092,7 @@ class MainActivityTest {
     @Test
     fun backGesture_fromTheRightEdge_doesNotMoveThePagesEither() {
         launchWithProfile()
-        meritBadgesButton().performClick()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
         swipeHalfwayBack(NavigationEvent.EDGE_RIGHT)
@@ -1113,15 +1109,14 @@ class MainActivityTest {
         val gesture = swipeHalfwayBack()
         scenario.onActivity { gesture.backCancelled() }
 
-        assertEquals(badgesAtRest, campingRow().getBoundsInRoot())
-        home().assertDoesNotExist()
+        assertPagesNotMoved(badgesAtRest)
     }
 
     @Test
     fun backGesture_released_slidesToThePreviousPageAsBackDoes() {
         launchWithProfile()
         val homeAtRest = home().getBoundsInRoot()
-        meritBadgesButton().performClick()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
         val badgesAtRest = campingRow().getBoundsInRoot()
 
         val gesture = swipeHalfwayBack()
@@ -1138,6 +1133,57 @@ class MainActivityTest {
         assertTrue(homeMoving.left < homeAtRest.left)
         assertEquals(homeAtRest, home().getBoundsInRoot())
         campingRow().assertDoesNotExist()
+    }
+
+    @Test
+    fun twoBacksBeforeTheNextFrame_stopAtHome() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        campingRow().assertIsDisplayed()
+
+        // The second Back arrives before a frame updates whether the app handles Back.
+        scenario.onActivity {
+            it.onBackPressedDispatcher.onBackPressed()
+            it.onBackPressedDispatcher.onBackPressed()
+        }
+
+        home().assertIsDisplayed()
+    }
+
+    private fun welcome() = composeTestRule.onNodeWithText("Welcome to BlueCard")
+
+    // Onboarding and the back stack replace each other whole, so neither slides in as a page
+    // opened from the other.
+    @Test
+    fun profileRemoved_fadesToOnboarding_withoutSliding() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        val badgesAtRest = campingRow().getBoundsInRoot()
+
+        composeTestRule.mainClock.autoAdvance = false
+        fakeProfileRepository.removeProfile()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        val badgesFading = campingRow().getBoundsInRoot()
+        val welcomeFading = welcome().getBoundsInRoot()
+        composeTestRule.mainClock.autoAdvance = true
+
+        assertEquals(badgesAtRest, badgesFading)
+        assertEquals(welcome().getBoundsInRoot(), welcomeFading)
+    }
+
+    @Test
+    fun profileSaved_fadesFromOnboarding_withoutSliding() {
+        launch()
+        val welcomeAtRest = welcome().assertIsDisplayed().getBoundsInRoot()
+
+        composeTestRule.mainClock.autoAdvance = false
+        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        composeTestRule.mainClock.advanceTimeBy(100)
+        val welcomeFading = welcome().getBoundsInRoot()
+        composeTestRule.mainClock.autoAdvance = true
+
+        assertEquals(welcomeAtRest, welcomeFading)
+        home().assertIsDisplayed()
     }
 
     // Pages are laid out inside the system bars' insets, so a page sliding past the side of

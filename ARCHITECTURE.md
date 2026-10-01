@@ -265,7 +265,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     slides out toward the start.
   - **Back, and a released back swipe from either edge:** the closing page
     slides out toward the end, and the page returned to follows it in from the
-    start. The pages never overlap, so neither fades.
+    start. The pages never overlap, so neither fades. Back while a page is
+    still sliding in plays its opening slide backwards from where it is, as
+    `NavDisplay` does for a cancelled back swipe, so the pages stay side by
+    side.
   - **Slides take 375 ms with `FastOutSlowInEasing`,** the easing `tween`
     uses by default, and what Material's first
     [duration guidance](https://m1.material.io/motion/duration-easing.html)
@@ -279,14 +282,24 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     showed as a jump. BlueCard's slide gets 90% of the way in 237 ms, and
     peaks at about 3dp per millisecond.
   - **A back swipe doesn't move the pages; releasing it plays Back's slide.**
-    A `BackHandler` after `NavDisplay` takes the gesture: the navigationevent
-    library gives a gesture to the enabled handler registered last, so
-    `NavDisplay`'s never gets its progress. The handler is off whenever
-    `NavDisplay`'s is, on Home and Onboarding, so the system's back-to-home
-    animation still plays there. This gives up the peek at the page underneath
-    that predictive back offers. When the pages followed the finger,
-    `NavDisplay` finished a released swipe with a tween from rest, ignoring the
-    finger's speed, and on a Pixel 9 that felt slow beside opening a page.
+    The navigation root calls the `NavDisplay` overload that takes a
+    `SceneState` and a `NavigationEventState`, which registers no back handler,
+    and nothing reports a back swipe to that state. The root's own
+    `BackHandler` handles Back instead:
+    - **It's the only back handler at the root,** added before the screens.
+      The navigationevent library gives Back to the enabled handler added
+      last, so a handler a screen adds goes first, even when the screen is
+      composed along with the root, as after rotation.
+    - **It's off on Home and Onboarding,** so the system's back-to-home
+      animation plays there.
+    - **It checks the back stack as it is,** because its enabled state only
+      updates in the next frame. Two Backs before then would otherwise empty the
+      back stack and crash `NavDisplay`.
+
+    This gives up the peek at the page underneath that predictive back offers.
+    When the pages followed the finger, `NavDisplay` finished a released swipe
+    with a tween from rest, ignoring the finger's speed, and on a Pixel 9 that
+    felt slow beside opening a page.
   - **The slides mirror in a right-to-left layout** (`SlideDirection.Start`
     and `End`).
   - **Pages are clipped to their area** (`clipToBounds` on `NavDisplay`).
@@ -309,9 +322,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     from, in the same frame as the first or as a screen reader's click, can't
     open a screen twice.
   - **Screens ignore touches while they animate**
-    (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens,
-    side by side, during their 375 ms slide. A cover over each animating screen
-    takes touches:
+    (`rememberIgnoreTouchesNavEntryDecorator`). `NavDisplay` draws both screens
+    during a transition: side by side during their 375 ms slide, or one over
+    the other during a crossfade. A cover over each animating screen takes
+    touches:
     - **on a screen animating out, until it's gone.** Otherwise a tap on the
       part still on screen could press its controls. After Back, the screen
       returned to takes taps where the closing screen has slid away once its
@@ -344,6 +358,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
   say one-time setup screens "should not be considered start destinations".
+  When a profile is saved, or goes missing, Onboarding and the back stack
+  crossfade, as `NavDisplay` does by default (700 ms), rather than slide:
+  neither is a page of the other. The navigation root tells this apart from
+  opening a page by the bottom of the back stack changing.
   The splash screen stays up until the saved profile loads, using
   [core-splashscreen](https://developer.android.com/develop/ui/views/launch/splash-screen/migrate)'s
   `setKeepOnScreenCondition`, so the wrong screen never flashes first. The
@@ -874,7 +892,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Architecture | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | Modules | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | Navigation | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
-| Page transitions | Full-width slides, side by side, as Navigation 3's animation guide shows, with `FastOutSlowInEasing` over 375 ms, as Material's first duration guidance gives for full-screen transitions; mirrored right-to-left; clipped to the pages' area; a back swipe from either edge doesn't move the pages, and plays Back's slide once released | Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) looked strange. Material 3 advises the platform's 96dp slides, but on a Pixel 9 they felt too short, and a back swipe that faded or didn't slide looked bad. Emphasized easing made a full-width slide too fast, and a finished swipe too slow beside it |
+| Page transitions | Full-width slides, side by side, as Navigation 3's animation guide shows, with `FastOutSlowInEasing` over 375 ms, as Material's first duration guidance gives for full-screen transitions; mirrored right-to-left; clipped to the pages' area; a back swipe from either edge doesn't move the pages, and plays Back's slide once released; Onboarding and the back stack crossfade when they replace each other | Navigation 3's defaults (a crossfade, and a 70% shrink on the gesture) looked strange. Material 3 advises the platform's 96dp slides, but on a Pixel 9 they felt too short, and a back swipe that faded or didn't slide looked bad. Emphasized easing made a full-width slide too fast, and a finished swipe too slow beside it |
 | Persistence | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | Dependency injection | Hilt | Recommended once there are multiple screens with ViewModels |
 | Catalog | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |
