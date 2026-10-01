@@ -339,7 +339,7 @@
             },
             {
               "number": "6",
-              "summary": "Visit a museum, gallery, exhibit or artist's studio and discuss what you learned."
+              "summary": "Visit a museum, gallery, exhibit, artists' co-op or workshop, and discuss what you learned."
             },
             {
               "number": "7",
@@ -3176,7 +3176,7 @@
                     },
                     {
                       "number": "4B(2)",
-                      "summary": "Discuss source rock, trap and reservoir rock, which oil and gas need."
+                      "summary": "Explain why oil and gas need a source rock, a reservoir rock and a trap."
                     },
                     {
                       "number": "4B(3)",
@@ -3227,7 +3227,7 @@
                             "columns": [
                               {
                                 "id": "name",
-                                "label": "Rock or mineral",
+                                "label": "Specimen",
                                 "type": "text"
                               },
                               {
@@ -3556,7 +3556,7 @@
             },
             {
               "number": "2",
-              "summary": "Pass the Scouting America swimmer test before doing requirements 3–8."
+              "summary": "Pass the Scouting America swimmer test before doing requirements 3 to 8."
             },
             {
               "number": "3",
@@ -5195,7 +5195,7 @@
             },
             {
               "number": "3",
-              "summary": "Build a model rocket, fly it twice (once for a goal), and explain its parts.",
+              "summary": "Build and fly a model rocket twice (or model a NASA rocket); explain its parts.",
               "children": [
                 {
                   "number": "3a",
@@ -5749,7 +5749,7 @@
                     },
                     {
                       "number": "5a(5)",
-                      "summary": "On or near water."
+                      "summary": "On the water or at its edge."
                     }
                   ]
                 },
@@ -5903,7 +5903,7 @@
             },
             {
               "number": "7",
-              "summary": "Carve a simple low-relief or chip-carving project."
+              "summary": "Make a simple chip carving or low-relief carving."
             }
           ]
         }
