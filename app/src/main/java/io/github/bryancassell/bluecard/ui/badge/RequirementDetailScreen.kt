@@ -180,7 +180,8 @@ private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
             modifier = Modifier.semantics { heading() }
         )
         Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
-        // One the scout marks by hand has a checkbox instead.
+        // One the scout marks by hand has a "Completed" checkbox instead. One with own work
+        // shows it here, as its checkbox is only for that work.
         if (!requirement.markedByHand && requirement.completed) {
             Text(
                 text = stringResource(R.string.requirement_completed),

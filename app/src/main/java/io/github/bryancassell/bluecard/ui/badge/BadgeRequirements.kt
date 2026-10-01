@@ -6,7 +6,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
-import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 
 /** A badge, the requirements the scout works on, and what they've recorded against them. */
@@ -21,7 +21,7 @@ data class BadgeRequirements(
 ) {
     /** [requirement] of this badge as a row. */
     fun item(requirement: Requirement) =
-        requirement.toItem(recorded, trackerEntries, partOfCompleted(requirement.number))
+        requirement.toItem(recorded, trackerEntries, partOfHasEnough(requirement.number))
 
     /**
      * Whether the scout has recorded anything that shows for a requirement numbered in
@@ -32,10 +32,13 @@ data class BadgeRequirements(
             number in trackerEntries
     }
 
-    /** Whether a requirement that the one numbered [number] is part of, at any depth, is complete. */
-    private fun partOfCompleted(number: String): Boolean = version.pathTo(number).orEmpty()
+    /**
+     * Whether a requirement that the one numbered [number] is part of, at any depth, has enough
+     * complete sub-requirements ([hasEnoughChildren]).
+     */
+    private fun partOfHasEnough(number: String): Boolean = version.pathTo(number).orEmpty()
         .dropLast(1)
-        .any { it.completion(recorded, trackerEntries) != null }
+        .any { it.hasEnoughChildren(recorded, trackerEntries) }
 }
 
 /**

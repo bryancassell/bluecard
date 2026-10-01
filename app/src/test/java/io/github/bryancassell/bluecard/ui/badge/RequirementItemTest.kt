@@ -43,12 +43,12 @@ class RequirementItemTest {
 
     @Test
     fun partOfCompletedRequirement_whenNotComplete_isNotNeeded() {
-        assertTrue(leaf.toItem(emptyMap(), emptyMap(), partOfCompleted = true).notNeeded)
+        assertTrue(leaf.toItem(emptyMap(), emptyMap(), partOfHasEnough = true).notNeeded)
     }
 
     @Test
     fun partOfCompletedRequirement_whenComplete_isCompletedRatherThanNotNeeded() {
-        val item = leaf.toItem(done("1"), emptyMap(), partOfCompleted = true)
+        val item = leaf.toItem(done("1"), emptyMap(), partOfHasEnough = true)
 
         assertTrue(item.completed)
         assertFalse(item.notNeeded)

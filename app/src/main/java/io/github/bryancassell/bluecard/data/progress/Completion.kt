@@ -35,20 +35,30 @@ fun Requirement.completion(
 ): Completion? {
     val rowCount = tracker?.rowCount
     return when {
-        children.isNotEmpty() && ownWork != null -> latestOf(
-            listOf(
-                childrenCompletion(progress, trackerEntries) ?: return null,
-                markedCompletion(progress) ?: return null
-            )
-        )
-
-        children.isNotEmpty() -> childrenCompletion(progress, trackerEntries)
+        children.isNotEmpty() -> {
+            val byChildren = childrenCompletion(progress, trackerEntries) ?: return null
+            if (ownWork == null) {
+                byChildren
+            } else {
+                latestOf(listOf(byChildren, markedCompletion(progress) ?: return null))
+            }
+        }
 
         rowCount != null -> rowsCompletion(trackerEntries[number].orEmpty(), rowCount)
 
         else -> markedCompletion(progress)
     }
 }
+
+/**
+ * Whether enough of this requirement's children are complete that it needs no more of them,
+ * even if its [own work][Requirement.ownWork] isn't done yet. Its other children are then not
+ * needed.
+ */
+fun Requirement.hasEnoughChildren(
+    progress: Map<String, RequirementProgress>,
+    trackerEntries: Map<String, List<TrackerEntry>>
+): Boolean = children.isNotEmpty() && childrenCompletion(progress, trackerEntries) != null
 
 /** Complete once the scout marked it complete, on the date they gave. */
 private fun Requirement.markedCompletion(progress: Map<String, RequirementProgress>): Completion? =
@@ -71,8 +81,7 @@ private fun Requirement.childrenCompletion(
 private fun rowsCompletion(entries: List<TrackerEntry>, rowCount: Int): Completion? {
     val filled = filledRows(entries, rowCount).values
     if (filled.size < rowCount) return null
-    val dates = filled.map { it.addedDate ?: return Completion(null) }
-    return Completion(dates.maxOrNull())
+    return latestOf(filled.map { Completion(it.addedDate) })
 }
 
 /**

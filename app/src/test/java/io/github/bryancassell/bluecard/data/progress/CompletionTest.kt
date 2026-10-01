@@ -92,7 +92,7 @@ class CompletionTest {
         )
     }
 
-    // Like Photography 6: explain something, then do two of 3a-3c.
+    // Like Photography 4: do two of 3a-3c, then something of its own (share the photos).
     private val ownWorkAndTwoOf = twoOf.copy(ownWork = "Explain it.")
 
     @Test
@@ -126,6 +126,16 @@ class CompletionTest {
                 progressOf(done("3", day(2)), done("3a", day(1)), done("3c"))
             )
         )
+    }
+
+    @Test
+    fun hasEnoughChildren_onceEnoughAreDone_evenWithoutItsOwnWork() {
+        assertFalse(ownWorkAndTwoOf.hasEnoughChildren(progressOf(done("3a")), emptyMap()))
+        assertTrue(
+            ownWorkAndTwoOf.hasEnoughChildren(progressOf(done("3a"), done("3c")), emptyMap())
+        )
+        assertTrue(twoOf.hasEnoughChildren(progressOf(done("3a"), done("3c")), emptyMap()))
+        assertFalse(leaf("1").hasEnoughChildren(progressOf(done("1")), emptyMap()))
     }
 
     @Test
