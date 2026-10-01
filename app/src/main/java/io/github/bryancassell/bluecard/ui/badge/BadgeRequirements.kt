@@ -23,6 +23,15 @@ data class BadgeRequirements(
     fun item(requirement: Requirement) =
         requirement.toItem(recorded, trackerEntries, partOfCompleted(requirement.number))
 
+    /**
+     * Whether the scout has recorded anything that shows for a requirement numbered in
+     * [numbers]: its completion, comment or tracker entries.
+     */
+    fun hasRecorded(numbers: Collection<String>): Boolean = numbers.any { number ->
+        recorded[number]?.let { it.completed || it.comment != null } == true ||
+            number in trackerEntries
+    }
+
     /** Whether a requirement that the one numbered [number] is part of, at any depth, is complete. */
     private fun partOfCompleted(number: String): Boolean = version.pathTo(number).orEmpty()
         .dropLast(1)
@@ -51,6 +60,10 @@ fun List<MeritBadge>.badgeRequirements(
 
 /** The requirement numbered [number], at any depth, or null if there is none. */
 fun RequirementsVersion.find(number: String): Requirement? = pathTo(number)?.last()
+
+/** The numbers of this requirement and of every one under it, at any depth. */
+fun Requirement.numbersWithin(): List<String> =
+    listOf(number) + children.flatMap { it.numbersWithin() }
 
 /**
  * The requirements from the top level down to the one numbered [number], or null if there is

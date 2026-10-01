@@ -23,9 +23,11 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -123,29 +125,31 @@ class RequirementDetailViewModelTest {
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private fun viewModel(number: String) = RequirementDetailViewModel(
-        "camping",
-        number,
-        catalogRepository,
-        progressRepository,
-        clock,
-        savedStateHandle
-    )
+    private fun viewModel(number: String, catalog: CatalogRepository = catalogRepository) =
+        RequirementDetailViewModel(
+            "camping",
+            number,
+            catalog,
+            progressRepository,
+            clock,
+            savedStateHandle
+        )
 
     /**
      * Can save the ViewModel's state and restore it into a new one, as when the system stops
      * the app.
      */
-    private fun scenario(number: String) = viewModelScenario {
-        RequirementDetailViewModel(
-            "camping",
-            number,
-            catalogRepository,
-            progressRepository,
-            clock,
-            createSavedStateHandle()
-        )
-    }
+    private fun scenario(number: String, catalog: CatalogRepository = catalogRepository) =
+        viewModelScenario {
+            RequirementDetailViewModel(
+                "camping",
+                number,
+                catalog,
+                progressRepository,
+                clock,
+                createSavedStateHandle()
+            )
+        }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -229,6 +233,7 @@ class RequirementDetailViewModelTest {
                 ),
                 tracker = null,
                 commentChanged = false,
+                canClear = false,
                 today = today,
                 saveFailure = null
             ),
@@ -759,5 +764,155 @@ class RequirementDetailViewModelTest {
         assertNotNull(viewModel.ready().saveFailure)
         assertEquals("Not saved yet.", viewModel.comment.text.toString())
         assertTrue(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun canClear_onlyWhileSomethingShowsAsRecorded() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().canClear)
+
+        viewModel.setCompleted(true)
+        assertTrue(viewModel.ready().canClear)
+
+        // Unchecked, it has nothing left that shows.
+        viewModel.setCompleted(false)
+        assertFalse(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun canClear_whenARequirementUnderItHasProgress() = runTest {
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        progressRepository.markRequirementCompleted("camping", "2b(1)", day, badgeStart)
+
+        assertTrue(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun clear_removesWhatsRecordedForItAndThoseUnderIt_andNothingElse() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        progressRepository.setRequirementComment("camping", "2", "Chose 2a and 2c.", badgeStart)
+        progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
+        progressRepository.markRequirementCompleted("camping", "2b(1)", day, badgeStart)
+        progressRepository.addTrackerEntry(
+            "camping",
+            "2c",
+            null,
+            mapOf("night" to "2026-04-11"),
+            day,
+            badgeStart
+        )
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        viewModel.clear()
+
+        val progress = progressRepository.observeProgress("camping").first()!!
+        assertEquals(listOf("1"), progress.requirements.map { it.requirementNumber })
+        assertEquals(emptyList<Any>(), progress.trackerEntries)
+        // The badge stays started.
+        assertEquals(BadgeProgress("camping", newest, started), progress.badge)
+        assertFalse(viewModel.ready().canClear)
+        assertTrue(viewModel.ready().children.none { it.completed })
+    }
+
+    /**
+     * A catalog that takes a moment to read, as the real one can, so a clear that read anything
+     * first would wait for it.
+     */
+    private val slowCatalog = object : CatalogRepository {
+        override suspend fun getBadges(): List<MeritBadge> {
+            delay(100)
+            return listOf(camping)
+        }
+    }
+
+    @Test
+    fun clear_thenCheckingStraightAway_keepsTheCheck() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val viewModel = viewModel("1", slowCatalog)
+        startCollecting(viewModel)
+        advanceUntilIdle()
+
+        // As when the scout confirms Clear, then checks the box before the page redraws: the
+        // clear is made first, as it was asked for first.
+        viewModel.clear()
+        viewModel.setCompleted(true)
+        advanceUntilIdle()
+
+        assertEquals(RequirementProgress("camping", "1", true, today), recorded("1"))
+    }
+
+    @Test
+    fun clear_thenLeavingThePage_stillClears() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        scenario("1", slowCatalog).use { scenario ->
+            startCollecting(scenario.viewModel)
+            advanceUntilIdle()
+
+            scenario.viewModel.clear()
+            // The page closes straight away, which cancels the ViewModel's coroutines.
+        }
+        advanceUntilIdle()
+
+        assertNull(recorded("1"))
+    }
+
+    @Test
+    fun clear_emptiesTheCommentField() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        viewModel.clear()
+
+        assertNull(recorded("1"))
+        assertEquals("", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun clear_keepsAnUnsavedEdit_forTheScoutToSaveOrNot() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeComment("Saved, then edited.")
+
+        viewModel.clear()
+
+        assertNull(recorded("1"))
+        assertEquals("Saved, then edited.", viewModel.comment.text.toString())
+        assertTrue(viewModel.ready().commentChanged)
+    }
+
+    @Test
+    fun clear_whenSaveFails_reportsIt_andKeepsEverything() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+
+        viewModel.clear()
+
+        assertNotNull(viewModel.ready().saveFailure)
+        assertEquals("Saved.", recorded("1")?.comment)
+        assertEquals("Saved.", viewModel.comment.text.toString())
+        assertTrue(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun setCompleted_false_afterTheBadgeIsCleared_doesNothing() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.setCompleted(true)
+
+        // As when the badge is cleared while the page still shows the requirement checked.
+        progressRepository.clearBadge("camping")
+        viewModel.setCompleted(false)
+
+        assertNull(progressRepository.observeProgress("camping").first())
+        assertNull(viewModel.ready().saveFailure)
     }
 }

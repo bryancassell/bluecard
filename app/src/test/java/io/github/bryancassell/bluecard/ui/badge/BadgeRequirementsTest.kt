@@ -128,6 +128,33 @@ class BadgeRequirementsTest {
     }
 
     @Test
+    fun hasRecorded_completionCommentOrTrackerEntry_ofAnyOfTheNumbers() {
+        val progress = startedOn(newest.effectiveDate, "2a").copy(
+            requirements = listOf(
+                RequirementProgress("camping", "2a", completed = true),
+                RequirementProgress("camping", "2b", comment = "Picked the lake trail."),
+                // Unchecked, so nothing shows.
+                RequirementProgress("camping", "1")
+            ),
+            trackerEntries = listOf(
+                TrackerEntry(1, "camping", "2b(1)", values = mapOf("miles" to "5"))
+            )
+        )
+        val found = catalog.badgeRequirements("camping", progress)!!
+
+        assertTrue(found.hasRecorded(listOf("1", "2a")))
+        assertTrue(found.hasRecorded(listOf("2b")))
+        assertTrue(found.hasRecorded(listOf("2b(1)")))
+        assertFalse(found.hasRecorded(listOf("1", "2")))
+    }
+
+    @Test
+    fun numbersWithin_isTheRequirementAndEveryOneUnderIt() {
+        assertEquals(listOf("2", "2a", "2b", "2b(1)"), newest.find("2")!!.numbersWithin())
+        assertEquals(listOf("1"), newest.find("1")!!.numbersWithin())
+    }
+
+    @Test
     fun find_topLevelRequirement() {
         assertEquals("Plan a campout.", newest.find("1")?.summary)
     }

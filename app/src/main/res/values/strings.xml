@@ -94,6 +94,9 @@
     <!-- Label of the field for the scout's notes about a requirement. -->
     <string name="requirement_comment">Notes</string>
     <string name="requirement_save_comment">Save notes</string>
+    <!-- Button that closes a dialog asking to confirm removing something, such as a tracker
+         row, without removing it. -->
+    <string name="confirm_dialog_cancel">Cancel</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>
@@ -102,6 +105,16 @@
     <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
          it, such as after the badge moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
+    <!-- Button at the bottom of a requirement's page, which asks before clearing what the
+         scout recorded for it. -->
+    <string name="requirement_clear">Clear progress</string>
+    <!-- Asks before a requirement's progress is cleared, with its official number, such as
+         "Clear progress on requirement 4b?" -->
+    <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>
+    <string name="requirement_clear_message">What you recorded for it will be removed.</string>
+    <!-- For a requirement with sub-requirements, such as 4a and 4b under 4. -->
+    <string name="requirement_clear_message_with_children">What you recorded for it and the requirements under it will be removed.</string>
+    <string name="requirement_clear_confirm">Clear</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
          rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
     <string name="tracker_count">%1$d %2$s</string>
@@ -125,7 +138,6 @@
          session?" -->
     <string name="tracker_entry_delete_title">Delete this %1$s?</string>
     <string name="tracker_entry_delete_message">What you entered in it will be removed.</string>
-    <string name="tracker_entry_cancel">Cancel</string>
     <!-- Shown in place of a tracker row's page when the requirements the badge uses don't have
          the tracker or the row, such as after the row was deleted. -->
     <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>

@@ -83,6 +83,7 @@ class FakeProgressRepository : ProgressRepository {
         number: String
     ): RequirementProgress? {
         checkCanSave()
+        if (badgeId !in badges.value) return null
         return updateRequirement(badgeId, number) {
             it.copy(completed = false, completedDate = null)
         }
@@ -171,13 +172,14 @@ class FakeProgressRepository : ProgressRepository {
         }
     }
 
-    override suspend fun clearRequirement(badgeId: String, number: String) {
+    override suspend fun clearRequirements(badgeId: String, numbers: Collection<String>) {
         checkCanSave()
         if (badgeId !in badges.value) return
         updateBadge(badgeId) { details ->
             details.copy(
-                requirements = details.requirements.filterNot { it.requirementNumber == number },
-                trackerEntries = details.trackerEntries.filterNot { it.requirementNumber == number }
+                requirements = details.requirements.filterNot { it.requirementNumber in numbers },
+                trackerEntries =
+                    details.trackerEntries.filterNot { it.requirementNumber in numbers }
             )
         }
     }
