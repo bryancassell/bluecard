@@ -130,7 +130,7 @@ class MainActivityTest {
                                 tracker = TrackerDefinition(
                                     listOf(
                                         TrackerColumn("night", "Night", TrackerColumnType.DATE),
-                                        TrackerColumn("notes", "Notes", TrackerColumnType.TEXT)
+                                        TrackerColumn("weather", "Weather", TrackerColumnType.TEXT)
                                     ),
                                     "night",
                                     "nights"
@@ -392,7 +392,7 @@ class MainActivityTest {
         assertFieldEmpty("Search merit badges")
         composeTestRule.onNodeWithText("Camping").performClick()
         composeTestRule.onNodeWithText("First.").performClick()
-        assertFieldEmpty("Comment")
+        assertFieldEmpty("Notes")
     }
 
     @Test
@@ -635,9 +635,9 @@ class MainActivityTest {
 
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Completed on May 20, 2026").assertIsDisplayed()
-        composeTestRule.onNode(hasSetTextAction() and hasText("Comment"))
+        composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
             .performTextInput("Planned it with my patrol.")
-        composeTestRule.onNodeWithText("Save comment").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Save notes").performScrollTo().performClick()
 
         assertEquals(
             RequirementProgress("camping", "1", true, today, "Planned it with my patrol."),
@@ -650,7 +650,7 @@ class MainActivityTest {
             .assertIsDisplayed()
     }
 
-    private fun notesField() = composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
+    private fun weatherField() = composeTestRule.onNode(hasSetTextAction() and hasText("Weather"))
 
     // The acceptance test of trackers: a row the scout adds is listed on the requirement's
     // page, counted on the badge's, and saved.
@@ -661,7 +661,7 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Night 1").assertIsDisplayed()
-        notesField().performTextInput("Rained all night.")
+        weatherField().performTextInput("Rained all night.")
         composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
 
         // Saving closes the row's page.
@@ -670,7 +670,7 @@ class MainActivityTest {
             .performScrollTo()
             .assertIsDisplayed()
         assertEquals(
-            listOf(mapOf("notes" to "Rained all night.")),
+            listOf(mapOf("weather" to "Rained all night.")),
             runBlocking { trackerValues("1") }
         )
         composeTestRule.waitForIdle()
@@ -685,7 +685,7 @@ class MainActivityTest {
                 "camping",
                 "1",
                 null,
-                mapOf("notes" to "Clear skies."),
+                mapOf("weather" to "Clear skies."),
                 today,
                 BadgeStart(LocalDate.of(2026, 1, 1), today)
             )
@@ -694,7 +694,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("First.").performClick()
 
         composeTestRule.onNodeWithText("Night 1").performScrollTo().performClick()
-        notesField().performTextInput(" Saw a meteor.")
+        weatherField().performTextInput(" Saw a meteor.")
         composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
         composeTestRule.onNode(hasText("Night 1") and hasText("Clear skies. Saw a meteor."))
             .performScrollTo()
@@ -713,7 +713,7 @@ class MainActivityTest {
         openCamping()
         composeTestRule.onNodeWithText("First.").performClick()
         composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
-        notesField().performTextInput("Rained all night.")
+        weatherField().performTextInput("Rained all night.")
         composeTestRule.waitForIdle()
 
         // Saving closes the row's page, which slides away beside the requirement's page and
@@ -723,12 +723,12 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
         composeTestRule.waitForIdle()
         composeTestRule.mainClock.advanceTimeBy(100)
-        notesField().assertExists()
+        weatherField().assertExists()
         composeTestRule.onNodeWithText("Add night").performSemanticsAction(SemanticsActions.OnClick)
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitForIdle()
 
-        notesField().assertDoesNotExist()
+        weatherField().assertDoesNotExist()
         composeTestRule.onNodeWithText("1 night").performScrollTo().assertIsDisplayed()
     }
 
