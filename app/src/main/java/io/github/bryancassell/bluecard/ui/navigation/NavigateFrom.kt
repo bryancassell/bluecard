@@ -15,8 +15,9 @@ import androidx.navigation3.runtime.NavKey
  * A screen ignores touches while it animates out ([rememberIgnoreTouchesNavEntryDecorator]),
  * but a second tap before its animation starts, such as in the same frame as the first, or a
  * screen reader's click can still reach it. It's no longer on top by then, so that doesn't
- * open another screen. After Back, the closing screen's cover takes touches for the screen
- * under it too, but a screen reader's click on that screen can still open the one closing.
+ * open another screen. After Back, the screen returned to takes taps where the closing screen
+ * has slid away once its double-tap timeout ends, and a screen reader's clicks straight away,
+ * while the closing screen is still drawn. Either could open the one closing.
  */
 @Composable
 fun rememberNavigateFrom(
