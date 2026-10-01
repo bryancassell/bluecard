@@ -106,6 +106,7 @@ class RemovalButtonScreenshotTest {
                 DataManagementScreen(
                     uiState = DataManagementUiState(canClear = true),
                     today = { today },
+                    onEditProfile = {},
                     onExport = {},
                     onImport = {},
                     onConfirmImport = {},

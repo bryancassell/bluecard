@@ -30,6 +30,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -230,11 +231,13 @@ class MainActivityTest {
 
     private fun field(label: String) = composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
-    private fun assertFieldEmpty(label: String) {
+    private fun assertFieldText(label: String, text: String) {
         field(label).assert(
-            SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(""))
+            SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString(text))
         )
     }
+
+    private fun assertFieldEmpty(label: String) = assertFieldText(label, "")
 
     private fun completeOnboarding() {
         field("Name").performTextInput("Alex Scout")
@@ -429,6 +432,17 @@ class MainActivityTest {
         assertFieldEmpty("Name")
         assertFieldEmpty("Phone")
         assertFieldEmpty("Email")
+    }
+
+    @Test
+    fun launchExtras_doNotFillNameAndUnitFields() {
+        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        launchWithExtrasNamedLikeTextFields()
+
+        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Edit").performClick()
+        assertFieldText("Name", "Alex Scout")
+        assertFieldText("Unit number", "123")
     }
 
     // Covers every ViewModel, including those scoped to the activity, whatever keys the
@@ -969,6 +983,51 @@ class MainActivityTest {
         home().assertIsDisplayed()
     }
 
+    private fun openEditNameAndUnit() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Edit").performClick()
+    }
+
+    private suspend fun profile() = profileRepository.observeProfile().first()
+
+    @Test
+    fun nameAndUnit_savedOnTheirPage_showOnHome() {
+        openEditNameAndUnit()
+
+        // Editing starts from what's saved.
+        assertFieldText("Name", "Alex Scout")
+        assertFieldText("Unit number", "123")
+        field("Name").performTextReplacement("Sam Scout")
+        field("Unit number").performTextReplacement("Crew 7")
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        assertEquals(Profile("Sam Scout", "Crew 7"), runBlocking { profile() })
+        // Saving closes the page, back to Data management.
+        field("Name").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
+
+        pressBack()
+
+        composeTestRule.onNode(isHeading() and hasText("Sam Scout")).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Unit: Crew 7").assertIsDisplayed()
+    }
+
+    @Test
+    fun back_fromEditNameAndUnit_discardsChanges() {
+        openEditNameAndUnit()
+        field("Name").performTextReplacement("Sam Scout")
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
+        assertEquals(Profile("Alex Scout", "123"), runBlocking { profile() })
+        // Opening it again starts from what's saved, not the discarded edit.
+        composeTestRule.onNodeWithText("Edit").performClick()
+        assertFieldText("Name", "Alex Scout")
+    }
+
     @Test
     fun doubleTap_onMeritBadges_opensBadgesOnce() {
         launchWithProfile()
@@ -987,6 +1046,17 @@ class MainActivityTest {
         pressBack()
 
         home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onEditNameAndUnit_opensItOnce() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Manage data").performClick()
+
+        tapTwiceInOneFrame("Edit")
+        pressBack()
+
+        composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
     }
 
     @Test

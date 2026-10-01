@@ -291,8 +291,9 @@ both taps of a double tap can reach it.
   another app. After a tap, it ignores taps for the double-tap timeout, so a
   browser doesn't open two tabs, or an email app two drafts
   ([#97](https://github.com/bryancassell/bluecard/issues/97)). Data
-  management's Clear all goes through it too (`OtherAppStarter.tap`), so a tap
-  just after Export or Import doesn't open its dialog under the file picker.
+  management's Edit and Clear all go through it too (`OtherAppStarter.tap`), so
+  a tap just after Export or Import doesn't open a page or dialog under the file
+  picker.
 
 ### Language and layout direction
 
@@ -364,8 +365,8 @@ both taps of a double tap can reach it.
 
 - **Writes outlive the screen.** `RoomProgressRepository` runs each write in an
   app-lifetime scope and waits for it (`runOutlivingCaller`), so leaving a
-  screen cancels only the wait, not the write. Saving a PDF report, exporting
-  and importing do too.
+  screen cancels only the wait, not the write. Saving the profile, saving a PDF
+  report, exporting and importing do too.
   That's the pattern in the data layer guide's
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
   A storage failure after the scout has left the screen goes unreported, but a
@@ -417,6 +418,7 @@ io.github.bryancassell.bluecard
 │   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
 │   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
 │   ├── data/           Clear, export, import
+│   ├── profile/        Edit name and unit, and the name and unit fields Onboarding shares
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
 │   └── theme/
 ├── data/
@@ -441,7 +443,8 @@ io.github.bryancassell.bluecard
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
-| **Data management** | Export, import, and last, a button that clears all progress. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
+| **Data management** | A button that opens Edit name and unit, export, import, and last, a button that clears all progress. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
+| **Edit name and unit** | The scout's name and unit number, both required. Opened from Data management; closes once saved. |
 
 Badge detail and each requirement's page show one level of the requirement
 tree (see [`PRD.md`](PRD.md#design-decisions)'s Requirement list). Both show
@@ -632,8 +635,8 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
   (`saved` or `done` in its UI state), following the UI layer guide's
   [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
   of navigating from UI state, so a save that fails keeps the page open with the
-  scout's edit. Edit counselor and Tracker entry work this way; Requirement
-  detail stays open after its notes are saved.
+  scout's edit. Edit counselor, Tracker entry and Edit name and unit work this
+  way; Requirement detail stays open after its notes are saved.
 
 ### PDF report
 

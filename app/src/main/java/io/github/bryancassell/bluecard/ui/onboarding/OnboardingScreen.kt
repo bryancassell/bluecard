@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,16 +18,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.data.profile.PROFILE_NAME_MAX_LENGTH
-import io.github.bryancassell.bluecard.data.profile.UNIT_NUMBER_MAX_LENGTH
-import io.github.bryancassell.bluecard.ui.singleLineInput
-import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
+import io.github.bryancassell.bluecard.ui.profile.ProfileFields
 
 /**
  * Connects the Onboarding screen to its ViewModel. Once the profile is saved, the
@@ -50,9 +42,6 @@ fun OnboardingRoute(
         modifier = modifier
     )
 }
-
-private val NameInput = singleLineInput(maxLength = PROFILE_NAME_MAX_LENGTH)
-private val UnitNumberInput = singleLineInput(maxLength = UNIT_NUMBER_MAX_LENGTH)
 
 /** First launch: asks for the scout's [name] and [unitNumber]. */
 @Composable
@@ -77,36 +66,13 @@ fun OnboardingScreen(
             style = MaterialTheme.typography.headlineMedium
         )
         Text(text = stringResource(R.string.onboarding_message))
-        OutlinedTextField(
-            state = name,
+        ProfileFields(
+            name = name,
+            unitNumber = unitNumber,
             enabled = uiState.canEdit,
-            textStyle = typedTextFieldStyle(),
-            label = { Text(stringResource(R.string.onboarding_name)) },
-            supportingText = { Text(stringResource(R.string.onboarding_required)) },
-            inputTransformation = NameInput,
-            lineLimits = TextFieldLineLimits.SingleLine,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
-                imeAction = ImeAction.Next
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            state = unitNumber,
-            enabled = uiState.canEdit,
-            textStyle = typedTextFieldStyle(),
-            label = { Text(stringResource(R.string.onboarding_unit_number)) },
-            supportingText = { Text(stringResource(R.string.onboarding_required)) },
-            inputTransformation = UnitNumberInput,
-            lineLimits = TextFieldLineLimits.SingleLine,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            // Do what Done normally does, which closes the keyboard, and save; the ViewModel
-            // ignores the save if the form is incomplete.
-            onKeyboardAction = { performDefaultAction ->
-                performDefaultAction()
-                onSave()
-            },
-            modifier = Modifier.fillMaxWidth()
+            // Saves after Done closes the keyboard; the ViewModel ignores the save if the form is
+            // incomplete.
+            onDone = onSave
         )
         Button(onClick = onSave, enabled = uiState.canSave, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.onboarding_save))

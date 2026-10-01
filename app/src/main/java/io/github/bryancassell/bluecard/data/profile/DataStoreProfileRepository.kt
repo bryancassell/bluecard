@@ -7,15 +7,21 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import io.github.bryancassell.bluecard.data.runOutlivingCaller
+import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-/** [ProfileRepository] backed by Preferences DataStore. */
+/**
+ * [ProfileRepository] backed by Preferences DataStore. Saving runs in [externalScope], so the
+ * profile finishes saving even if the scout leaves the screen ([runOutlivingCaller]).
+ */
 class DataStoreProfileRepository @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ProfileRepository {
     override fun observeProfile(): Flow<Profile?> = dataStore.data.map { preferences ->
         val name = preferences[NAME] ?: return@map null
@@ -24,9 +30,11 @@ class DataStoreProfileRepository @Inject constructor(
     }
 
     override suspend fun saveProfile(profile: Profile) {
-        dataStore.edit {
-            it[NAME] = profile.name
-            it[UNIT_NUMBER] = profile.unitNumber
+        externalScope.runOutlivingCaller {
+            dataStore.edit {
+                it[NAME] = profile.name
+                it[UNIT_NUMBER] = profile.unitNumber
+            }
         }
     }
 

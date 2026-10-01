@@ -11,9 +11,9 @@
     <string name="save_failed">Couldn\'t save. Try again.</string>
     <string name="onboarding_title">Welcome to BlueCard</string>
     <string name="onboarding_message">Enter your name and unit number to get started.</string>
-    <string name="onboarding_name">Name</string>
-    <string name="onboarding_unit_number">Unit number</string>
-    <string name="onboarding_required">Required</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_unit_number">Unit number</string>
+    <string name="profile_required">Required</string>
     <string name="onboarding_save">Get started</string>
     <string name="onboarding_save_failed">Couldn\'t save. Try again.</string>
     <string name="home_unit">Unit: %1$s</string>
@@ -67,6 +67,8 @@
     <string name="edit_counselor_phone">Phone</string>
     <string name="edit_counselor_email">Email</string>
     <string name="edit_counselor_save">Save</string>
+    <string name="edit_profile_title">Name and unit</string>
+    <string name="edit_profile_save">Save</string>
     <!-- Shown in place of a badge's page when the catalog doesn't have the badge or its
          requirements version. Only a catalog edited during development can cause this. -->
     <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>
@@ -158,6 +160,9 @@
          the tracker or the row, such as after the row was deleted. -->
     <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
     <string name="data_management_title">Data management</string>
+    <string name="data_management_profile_heading">Name and unit</string>
+    <string name="data_management_profile_description">Change your name or unit number.</string>
+    <string name="data_management_profile_edit">Edit</string>
     <!-- Export saves the scout's name, unit number and all their progress to a file they
          choose; import replaces all of it with what's in a file they exported. -->
     <string name="data_management_export_heading">Export data</string>

@@ -29,6 +29,7 @@ import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
 import io.github.bryancassell.bluecard.ui.data.DataManagementRoute
 import io.github.bryancassell.bluecard.ui.home.HomeRoute
 import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
+import io.github.bryancassell.bluecard.ui.profile.EditProfileRoute
 
 /**
  * The app's navigation root: shows the screen on top of the back stack.
@@ -126,7 +127,15 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     onClose = { backStack.closeIfOnTop(key) }
                 )
             }
-            entry<DataManagement> { DataManagementRoute() }
+            entry<DataManagement> { key ->
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
+                DataManagementRoute(onEditProfile = { navigate(EditProfile) })
+            }
+            entry<EditProfile> { key ->
+                // Once saved, the page closes, unless the scout has already gone back.
+                EditProfileRoute(onSaved = { backStack.closeIfOnTop(key) })
+            }
         }.also { entries = it }
     )
     val sceneState = rememberSceneState(
