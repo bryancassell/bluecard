@@ -794,7 +794,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     the saved notes. The repository trims spaces around them
     (`normalizedText`), and empty notes remove them. The field takes up
     to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
-    stopping the app, but leaving the page discards it.
+    stopping the app, but leaving the page discards it, and so does clearing
+    the requirement's progress (see Clearing data).
   - **Trackers.** The catalog defines each tracker's columns (date, number or
     text), what a row is called ("week", "weeks"), and optionally a fixed
     number of rows. A log, a tracker without a fixed number, lists its entries
@@ -885,13 +886,14 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     confirms, in order with the page's other changes, and finishes even if
     the page closes straight away. The page forgets a date it remembered
     from an uncheck as the clear starts, so checking the requirement again
-    dates it today, even while the clear is being saved. Confirming also
-    discards an unsaved edit of the notes at once: the field shows the saved
-    notes again. It follows the saved notes whenever it has no unsaved edit,
-    in the same update that shows they changed, so it's empty once the clear
-    is saved, and Save notes stays disabled throughout. Notes typed while the
-    clear is being saved stay, as they came after it. A clear that fails
-    shows the save-failed snackbar, with the notes still saved in the field.
+    dates it today, even while the clear is being saved. The notes field
+    follows the saved notes whenever it has no unsaved edit, in the same
+    update that shows they changed, so once the clear is saved it's empty,
+    with no frame where Save notes looks enabled. An unsaved edit is
+    discarded too, once the clear is saved, and the dialog warns about it
+    first. An edit changed while the clear is being saved stays, as the
+    change came after it. A clear that fails shows the save-failed snackbar
+    and keeps the edit.
   - **Pages shown while their badge is cleared.** A page can show a badge
     for a moment after its progress is cleared, before it redraws. Unchecking
     a requirement of a badge that isn't started does nothing

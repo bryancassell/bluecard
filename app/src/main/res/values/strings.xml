@@ -114,6 +114,10 @@
     <string name="requirement_clear_message">What you recorded for it will be removed.</string>
     <!-- For a requirement with sub-requirements, such as 4a and 4b under 4. -->
     <string name="requirement_clear_message_with_children">What you recorded for it and the requirements under it will be removed.</string>
+    <!-- In place of the two above when the scout has changed the requirement's notes without
+         saving them. -->
+    <string name="requirement_clear_message_with_unsaved_notes">What you recorded for it will be removed, along with unsaved changes to its notes.</string>
+    <string name="requirement_clear_message_with_children_and_unsaved_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its notes.</string>
     <string name="requirement_clear_confirm">Clear</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
          rows to it, such as "5 sessions". What a row is called comes from the catalog. -->

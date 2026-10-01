@@ -149,25 +149,31 @@ class RequirementDetailViewModel @AssistedInject constructor(
      */
     private fun followSavedComment(before: String?, saved: String?) {
         if (saved == before || normalizedText(comment.text.toString()) != before) return
-        // In a snapshot of its own, so the field has changed before uiState reads it.
-        Snapshot.withMutableSnapshot { comment.setTextAndPlaceCursorAtEnd(saved.orEmpty()) }
+        showComment(saved)
     }
 
     /**
-     * Clears everything recorded for this requirement and every one under it, discarding an
-     * unsaved edit of the comment straight away: the field shows the saved comment again, which
-     * it then follows as the clear removes it ([followSavedComment]). Save stays disabled
-     * throughout, and a clear that fails leaves the field showing what's still saved. An edit
-     * typed while the clear is being saved stays, as it came after.
+     * Puts [text] in the comment field, in a snapshot of its own, so the field has changed
+     * before uiState next reads it.
+     */
+    private fun showComment(text: String?) {
+        Snapshot.withMutableSnapshot { comment.setTextAndPlaceCursorAtEnd(text.orEmpty()) }
+    }
+
+    /**
+     * Clears everything recorded for this requirement and every one under it. Without an
+     * unsaved edit, the comment field follows the comment as it's cleared ([followSavedComment]).
+     * An unsaved edit is discarded once the clear is saved, unless the scout changed it while it
+     * was being saved, as that came after. A clear that fails keeps it.
      */
     fun clear() {
         // The button shows only once the page has.
         val shown = shown ?: return
-        // In a snapshot of its own, so uiState sees the change straight away.
-        Snapshot.withMutableSnapshot {
-            comment.setTextAndPlaceCursorAtEnd(shown.comment.orEmpty())
+        val edit = comment.text.toString().takeIf { normalizedText(it) != shown.comment }
+        saves.launch {
+            recorder.clear(shown.numbersWithin)
+            if (edit != null && comment.text.toString() == edit) showComment(null)
         }
-        saves.launch { recorder.clear(shown.numbersWithin) }
     }
 
     /** The scout has been told about [failure]. */

@@ -629,6 +629,34 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun clear_withUnsavedNotes_saysTheyAreDiscarded() {
+        show(completedLeaf.copy(commentChanged = true, canClear = true))
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it will be removed, along with unsaved changes to its " +
+                    "notes."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun clear_onRequirementWithSubRequirements_withUnsavedNotes_saysBoth() {
+        show(ready.copy(commentChanged = true, canClear = true))
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it and the requirements under it will be removed, " +
+                    "along with unsaved changes to its notes."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun clear_cancel_clearsNothing() {
         show(completedLeaf.copy(canClear = true))
 
