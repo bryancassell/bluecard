@@ -15,7 +15,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -275,35 +275,21 @@ private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> U
         Text(stringResource(R.string.requirement_clear))
     }
     if (confirming) {
-        AlertDialog(
-            onDismissRequest = { confirming = false },
-            title = { Text(stringResource(R.string.requirement_clear_title, number)) },
-            text = {
-                Text(
-                    stringResource(
-                        if (hasChildren) {
-                            R.string.requirement_clear_message_with_children
-                        } else {
-                            R.string.requirement_clear_message
-                        }
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirming = false
-                        onClear()
-                    }
-                ) {
-                    Text(stringResource(R.string.requirement_clear_confirm))
+        ConfirmDialog(
+            title = stringResource(R.string.requirement_clear_title, number),
+            message = stringResource(
+                if (hasChildren) {
+                    R.string.requirement_clear_message_with_children
+                } else {
+                    R.string.requirement_clear_message
                 }
+            ),
+            confirmLabel = stringResource(R.string.requirement_clear_confirm),
+            onConfirm = {
+                confirming = false
+                onClear()
             },
-            dismissButton = {
-                TextButton(onClick = { confirming = false }) {
-                    Text(stringResource(R.string.requirement_clear_cancel))
-                }
-            }
+            onDismiss = { confirming = false }
         )
     }
 }

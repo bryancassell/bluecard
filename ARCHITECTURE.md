@@ -979,7 +979,8 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   graphics measure every character as 1px wide.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi)) check
   looks that semantics can't tell apart, such as a requirement row's number box
-  in each state (`RequirementRowScreenshotTest`). They run locally with
+  in each state (`RequirementRowScreenshotTest`) and the red confirm button of
+  the dialog that confirms a removal (`ConfirmDialogScreenshotTest`). They run locally with
   Robolectric's native graphics on a fixed screen (`w360dp-h640dp-xhdpi`) and on
   SDK 36, because on SDK 37 Robolectric 4.17 draws only a class's first
   screenshot. Their reference images are committed in `app/src/test/screenshots/`,
@@ -1024,6 +1025,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Tracker row names | The catalog gives the singular and plural in lowercase ("week", "weeks"), and the app capitalizes the singular for titles | Counts read naturally ("8 of 12 weeks", "1 session") without the app pluralizing catalog text |
 | Counselor details | Shown on Badge detail; edited on a page of their own with a Save button, which closes it once the save succeeds; the phone and email open the phone and email apps | Entered once and read often, so Badge detail stays short; closing only after a successful save shows a failure while the scout can still try again; `ACTION_DIAL` and `ACTION_SENDTO` need no permissions |
 | Requirement notes | On every requirement, saved with a Save button | The scout decides when notes are saved, and a save that fails is reported right then, not while they're still typing |
+| Confirming a removal | Deleting a tracker row and clearing progress ask first, in one shared dialog (`ui/ConfirmDialog.kt`) with Cancel and a red confirm button, the theme's error color | Red marks the button that removes what the scout recorded, which can't be undone, so it stands apart from Cancel. Sharing the dialog keeps every removal alike |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |

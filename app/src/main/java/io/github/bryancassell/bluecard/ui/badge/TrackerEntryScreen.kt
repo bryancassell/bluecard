@@ -15,7 +15,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -42,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.NumberInput
@@ -253,25 +253,15 @@ private fun TrackerEntryButtons(
         }
     }
     if (confirmingDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmingDelete = false },
-            title = { Text(stringResource(R.string.tracker_entry_delete_title, uiState.rowLabel)) },
-            text = { Text(stringResource(R.string.tracker_entry_delete_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmingDelete = false
-                        onDelete()
-                    }
-                ) {
-                    Text(stringResource(R.string.tracker_entry_delete))
-                }
+        ConfirmDialog(
+            title = stringResource(R.string.tracker_entry_delete_title, uiState.rowLabel),
+            message = stringResource(R.string.tracker_entry_delete_message),
+            confirmLabel = stringResource(R.string.tracker_entry_delete),
+            onConfirm = {
+                confirmingDelete = false
+                onDelete()
             },
-            dismissButton = {
-                TextButton(onClick = { confirmingDelete = false }) {
-                    Text(stringResource(R.string.tracker_entry_cancel))
-                }
-            }
+            onDismiss = { confirmingDelete = false }
         )
     }
 }
