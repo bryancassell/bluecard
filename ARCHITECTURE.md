@@ -883,7 +883,10 @@ How the architecture supports the testing rules in `CLAUDE.md`:
   The progress fake also has a `failSaves` switch for save failures, and the
   contract tests check that Room's writes throw an `IOException` the same way.
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
-  interaction, fed by fake repositories or fixed UI state.
+  interaction, fed by fake repositories or fixed UI state. A test that depends
+  on how text is measured, such as whether a long label wraps, uses
+  Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
+  graphics measure every character as 1px wide.
 - **Catalog tests** parse the bundled JSON file and validate its structure.
 - **Report and backup tests** check the generated PDF's content (page count,
   text) and that export followed by import restores the same data.

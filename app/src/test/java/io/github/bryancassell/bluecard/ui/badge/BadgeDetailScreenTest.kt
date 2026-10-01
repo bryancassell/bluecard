@@ -19,19 +19,23 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowToast
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -140,6 +144,30 @@ class BadgeDetailScreenTest {
 
         composeTestRule.onNodeWithText("Eagle-required (one of Cycling, Hiking, and Swimming)")
             .assertIsDisplayed()
+    }
+
+    // The label only gives information, so it shouldn't be announced as something to tap.
+    @Test
+    fun eagleLabel_isNotAButton() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Eagle-required")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
+    }
+
+    // Robolectric's default graphics measure every character as 1px wide, so nothing wraps.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Test
+    fun longEagleLabel_wrapsWithoutBeingCutOff() {
+        show(ready.copy(eagle = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))))
+
+        val layouts = mutableListOf<TextLayoutResult>()
+        composeTestRule.onNodeWithText("Eagle-required", substring = true)
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        assertTrue("Expected it to wrap", layout.lineCount > 1)
+        assertFalse("Expected nothing cut off", layout.hasVisualOverflow)
     }
 
     @Test

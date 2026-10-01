@@ -3,16 +3,22 @@ package io.github.bryancassell.bluecard.ui.badge
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -91,11 +97,7 @@ private fun BadgeDetails(
                 modifier = Modifier.semantics { heading() }
             )
             uiState.eagle?.let {
-                Text(
-                    text = eagleRequirementLabel(it, rememberBadgeNameListFormatter()),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter()))
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
         }
@@ -122,6 +124,31 @@ private fun BadgeDetails(
         )
         uiState.requirements.forEach {
             RequirementRow(item = it, onOpen = onOpenRequirement)
+        }
+    }
+}
+
+/**
+ * Says the badge is Eagle-required, as a filled tag. It's the only filled shape on the page, so it
+ * doesn't look like the buttons near it, which are plain blue text. A long label wraps inside it.
+ */
+@Composable
+private fun EagleTag(label: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryFixedDim,
+        contentColor = MaterialTheme.colorScheme.onPrimaryFixed,
+        shape = RoundedCornerShape(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 6.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                painterResource(R.drawable.ic_workspace_premium),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(text = label, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
