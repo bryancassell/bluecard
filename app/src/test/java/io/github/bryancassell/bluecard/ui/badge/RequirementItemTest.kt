@@ -231,10 +231,39 @@ class RequirementItemTest {
         assertFalse(weeks.toItem(done("5"), emptyMap()).completed)
     }
 
-    // Its tracker's count shows how much is filled in instead.
     @Test
-    fun fixedRowTrackerPartlyFilled_isNotPartlyCompleted() {
-        assertFalse(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).partlyCompleted)
+    fun fixedRowTrackerPartlyFilled_isPartlyCompleted() {
+        assertFalse(weeks.toItem(emptyMap(), emptyMap()).partlyCompleted)
+        assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).partlyCompleted)
+        assertFalse(
+            weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).partlyCompleted
+        )
+    }
+
+    private fun night(id: Long, requirement: String = "4") =
+        TrackerEntry(id, "camping", requirement, values = mapOf("night" to "2026-05-01"))
+
+    @Test
+    fun logWithEntries_isPartlyCompleted_untilMarkedComplete() {
+        assertFalse(log.toItem(emptyMap(), emptyMap()).partlyCompleted)
+        assertTrue(log.toItem(emptyMap(), mapOf("4" to listOf(night(1)))).partlyCompleted)
+        assertFalse(log.toItem(done("4"), mapOf("4" to listOf(night(1)))).partlyCompleted)
+    }
+
+    @Test
+    fun trackerFurtherDownWithEntries_isPartlyCompleted_withNoCount() {
+        val withLog = Requirement("6", "Do these.", children = listOf(log, leaf))
+
+        val item = withLog.toItem(emptyMap(), mapOf("4" to listOf(night(1))))
+
+        assertTrue(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    // An entry left from another requirement doesn't count.
+    @Test
+    fun entriesOnlyForOtherRequirements_isNotPartlyCompleted() {
+        assertFalse(log.toItem(emptyMap(), mapOf("5" to listOf(night(1, "5")))).partlyCompleted)
     }
 
     @Test

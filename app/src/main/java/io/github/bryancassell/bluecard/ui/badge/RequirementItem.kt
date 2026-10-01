@@ -36,8 +36,8 @@ data class RequirementItem(
     /** The work it asks for besides its sub-requirements, or null if it asks for none. */
     val ownWork: OwnWork? = null,
     /**
-     * Whether part of it is complete, though it isn't and is still needed: its own work, or a
-     * requirement under it at any depth.
+     * Whether part of it is done, though it isn't complete and is still needed: its own work, a
+     * row of its tracker, or a requirement under it at any depth that's complete or partly done.
      */
     val partlyCompleted: Boolean = false,
     /**
@@ -83,7 +83,7 @@ fun Requirement.toItem(
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
         notNeeded = notNeeded,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
-        partlyCompleted = stillNeeded && hasCompletePart(progress, trackerEntries),
+        partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries),
         // More than the number needed are complete only while its own work isn't.
         completeCount = if (stillNeeded && completeChildren > 0) {
             CompleteCount(minOf(completeChildren, needed), needed)
@@ -93,12 +93,15 @@ fun Requirement.toItem(
     )
 }
 
-/** Whether its own work, or any requirement under it at any depth, is complete. */
-private fun Requirement.hasCompletePart(
+/**
+ * Whether its own work is complete, a row of its tracker is filled in, or a requirement under it
+ * at any depth is complete or has part done.
+ */
+private fun Requirement.hasPartDone(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>
 ): Boolean = (ownWork != null && progress[number]?.completed == true) ||
+    (tracker?.count(trackerEntries[number].orEmpty())?.recorded ?: 0) > 0 ||
     children.any {
-        it.completion(progress, trackerEntries) != null ||
-            it.hasCompletePart(progress, trackerEntries)
+        it.completion(progress, trackerEntries) != null || it.hasPartDone(progress, trackerEntries)
     }
