@@ -558,7 +558,7 @@
                   "children": [
                     {
                       "number": "9b(1)",
-                      "summary": "Climb at least 1,000 feet on a mountain hike."
+                      "summary": "Gain at least 1,000 feet of elevation on a mountain hike."
                     },
                     {
                       "number": "9b(2)",
@@ -2842,7 +2842,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Describe signs of and first aid for strains, tears and ruptures."
+                  "summary": "Describe how to spot and treat strains, tears and ruptures."
                 },
                 {
                   "number": "8c",

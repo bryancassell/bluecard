@@ -445,10 +445,12 @@ way.
 ### Content and links
 
 - **Our own words only.** For each badge, the catalog has our own short
-  summary, and for each requirement our own one-line summary. No text is copied
-  from Scouting America, and no badge images or logos are included, because
-  Scouting America's [trademarks](https://licensingbsa.org/trademarks/) and
-  terms of use require written permission.
+  summary, and for each requirement our own one-line summary. Official wording
+  is kept only where it's the plain, obvious way to say something, such as
+  names and lists ([what counts as copying](docs/catalog.md#what-counts-as-copying)).
+  No badge images or logos are included. Both are because Scouting America's
+  [trademarks](https://licensingbsa.org/trademarks/) and terms of use require
+  written permission.
 - **The official page URL is stored per badge** rather than built from the
   name, because the URLs don't always match (American Indian Culture lives at
   `/merit-badges/indian-lore/`). Official pages have no per-requirement
@@ -798,7 +800,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
-| [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official text or images | Scouting America's terms of use and trademarks |
+| [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
