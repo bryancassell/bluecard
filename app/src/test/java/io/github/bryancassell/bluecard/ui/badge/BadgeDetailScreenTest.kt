@@ -806,7 +806,7 @@ class BadgeDetailScreenTest {
     fun clearButton_isLastOnThePage() {
         show(started.copy(counselor = counselor))
 
-        val tops = listOf("Counselor", "Keep a camping log.", "Clear progress").map {
+        val tops = listOf("Counselor", "Do all of these.", "Clear progress").map {
             composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
         }
         assertEquals(tops.sorted(), tops)
@@ -818,14 +818,24 @@ class BadgeDetailScreenTest {
 
         clearButton().performClick()
         composeTestRule.onNodeWithText(clearTitle).assertIsDisplayed()
-        composeTestRule
-            .onNodeWithText("What you recorded for it will be removed, including its counselor.")
+        composeTestRule.onNodeWithText("What you recorded for it will be removed.")
             .assertIsDisplayed()
         assertEquals(0, clears)
         confirmClear()
 
         assertEquals(1, clears)
         composeTestRule.onNodeWithText(clearTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_withCounselor_saysTheyAreRemovedToo() {
+        show(started.copy(counselor = counselor))
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText("What you recorded for it will be removed, including its counselor.")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -873,20 +883,33 @@ class BadgeDetailScreenTest {
         assertEquals(emptyList<SaveFailure>(), reportFailuresShown)
     }
 
+    // Material shows one snackbar at a time.
     @Test
-    fun saveAndReportFailures_atOnce_showOneAboveTheOther() {
+    fun saveAndReportFailures_atOnce_showOneAfterTheOther() {
+        val reportFailure = SaveFailure()
+        val saveFailure = SaveFailure()
         show(
             completed.copy(
                 canClear = true,
-                reportFailure = SaveFailure(),
-                saveFailure = SaveFailure()
+                reportFailure = reportFailure,
+                saveFailure = saveFailure
             )
         )
 
-        val report = composeTestRule.onNodeWithText("Couldn't create the report. Try again.")
-            .assertIsDisplayed().getBoundsInRoot()
-        val save = composeTestRule.onNodeWithText("Couldn't save. Try again.")
-            .assertIsDisplayed().getBoundsInRoot()
-        assertTrue(report.bottom <= save.top)
+        val report = "Couldn't create the report. Try again."
+        val save = "Couldn't save. Try again."
+        composeTestRule.onNodeWithText(report).assertIsDisplayed()
+        composeTestRule.onNodeWithText(save).assertDoesNotExist()
+
+        composeTestRule.mainClock.advanceTimeBy(5_000)
+
+        composeTestRule.onNodeWithText(report).assertDoesNotExist()
+        composeTestRule.onNodeWithText(save).assertIsDisplayed()
+        assertEquals(listOf(reportFailure), reportFailuresShown)
+
+        composeTestRule.mainClock.advanceTimeBy(5_000)
+
+        composeTestRule.onNodeWithText(save).assertDoesNotExist()
+        assertEquals(listOf(saveFailure), saveFailuresShown)
     }
 }

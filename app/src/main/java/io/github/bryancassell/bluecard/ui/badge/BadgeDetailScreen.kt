@@ -26,11 +26,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,8 +56,8 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
-import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.SaveFailureSnackbar
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -127,15 +130,16 @@ fun BadgeDetailScreen(
                 onSaveReport,
                 onClear
             )
-            // One above the other, if both show at once.
-            Column(modifier = Modifier.align(Alignment.BottomCenter)) {
-                SaveFailedSnackbarHost(
-                    failure = uiState.reportFailure,
-                    onShown = onReportFailureShown,
-                    message = stringResource(R.string.report_failed)
-                )
-                SaveFailedSnackbarHost(failure = uiState.saveFailure, onShown = onSaveFailureShown)
-            }
+            // One host for both kinds of failure, so they show one at a time.
+            val snackbarHostState = remember { SnackbarHostState() }
+            SaveFailureSnackbar(
+                failure = uiState.reportFailure,
+                onShown = onReportFailureShown,
+                hostState = snackbarHostState,
+                message = stringResource(R.string.report_failed)
+            )
+            SaveFailureSnackbar(uiState.saveFailure, onSaveFailureShown, snackbarHostState)
+            SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
     }
 }
@@ -228,7 +232,13 @@ private fun BadgeDetails(
         if (uiState.canClear) {
             ClearProgress(
                 title = stringResource(R.string.badge_detail_clear_title, uiState.name),
-                message = stringResource(R.string.badge_detail_clear_message),
+                message = stringResource(
+                    if (uiState.counselor == null) {
+                        R.string.badge_detail_clear_message
+                    } else {
+                        R.string.badge_detail_clear_message_with_counselor
+                    }
+                ),
                 onClear = onClear
             )
         }

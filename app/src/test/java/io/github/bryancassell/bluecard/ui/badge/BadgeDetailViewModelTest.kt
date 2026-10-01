@@ -523,6 +523,24 @@ class BadgeDetailViewModelTest {
         assertNull(ready.saveFailure)
     }
 
+    // Otherwise the share sheet would open with a report of what the scout just cleared.
+    @Test
+    fun clear_whileAReportIsBeingCreatedToShare_dropsIt() = runTest {
+        completeChess()
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+        val writing = CompletableDeferred<Unit>()
+        reportRepository.writing = writing
+        viewModel.shareReport()
+
+        viewModel.clear()
+        writing.complete(Unit)
+
+        assertNull(viewModel.ready().reportToShare)
+        assertNull(viewModel.ready().reportFailure)
+        assertNull(progressRepository.observeProgress("chess").first())
+    }
+
     @Test
     fun clear_whenItCantBeSaved_showsFailureUntilItsShown() = runTest {
         progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)

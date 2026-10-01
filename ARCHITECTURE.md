@@ -634,7 +634,10 @@ opened by a button with `removalButtonColors`. Badge detail and Requirement
 detail share their Clear progress button and its dialog
 (`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
-its `BadgeProgress`, so it's no longer started.
+its `BadgeProgress`, so it's no longer started. A page can show a badge for a
+moment after it's cleared, so a function a page calls then does nothing for a
+badge that isn't started, rather than throw: `markRequirementNotCompleted` and
+the report functions.
 
 ### Export and import
 

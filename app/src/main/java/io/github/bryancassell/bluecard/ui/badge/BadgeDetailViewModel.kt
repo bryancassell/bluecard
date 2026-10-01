@@ -103,9 +103,12 @@ class BadgeDetailViewModel @AssistedInject constructor(
 
     /**
      * Clears everything recorded for the badge, including its counselor, so it isn't started
-     * anymore. The page then shows the requirements of the newest version.
+     * anymore. The page then shows the requirements of the newest version. A report still being
+     * created to share is dropped, so the share sheet doesn't open with what was cleared.
      */
     fun clear() {
+        creatingReport?.cancel()
+        reportToShare.value = null
         saves.launch { progressRepository.clearBadge(badgeId) }
     }
 

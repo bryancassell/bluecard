@@ -20,13 +20,18 @@ import io.github.bryancassell.bluecard.ui.removalButtonColors
  * [message]. Red, and last on its page, so it isn't tapped by mistake.
  */
 @Composable
-fun ClearProgress(title: String, message: String, onClear: () -> Unit) {
+fun ClearProgress(
+    title: String,
+    message: String,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var confirming by rememberSaveable { mutableStateOf(false) }
     TextButton(
         onClick = { confirming = true },
         colors = removalButtonColors(),
         // Lines the button's text up with the page's, as for Add counselor.
-        modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
+        modifier = modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
     ) {
         Text(stringResource(R.string.clear_progress))
     }
