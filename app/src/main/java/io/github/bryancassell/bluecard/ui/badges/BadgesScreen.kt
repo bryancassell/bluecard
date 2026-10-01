@@ -225,9 +225,11 @@ internal val TypingPause = 1.seconds
  * announced straight away instead, before TalkBack reads the search field the scout is about to
  * type in, and [onClearAnnounced] is called.
  *
- * Compose announces a live region only when a node that's already shown changes (see
- * ARCHITECTURE.md, UI layer), so the live region stays composed as the matches change, and only
- * its text changes.
+ * Compose announces a live region only when a node that's already shown changes
+ * (`sendSemanticsPropertyChangeEvents` in `AndroidComposeViewAccessibilityDelegateCompat`,
+ * Compose UI 1.12.1), not when a new one appears, so the live region stays composed as the
+ * matches change, and only its text changes. That's also why the count isn't read out when the
+ * screen first shows it.
  */
 @Composable
 private fun MatchCount(

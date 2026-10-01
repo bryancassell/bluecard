@@ -25,7 +25,17 @@ fun <T> Flow<T>.catchLoadFailure(failed: T): Flow<T> = catch {
     emit(failed)
 }
 
-/** Shown in place of a screen's content when its data couldn't be loaded. */
+/**
+ * Shown in place of a screen's content when its data couldn't be loaded.
+ *
+ * To keep it simple, it has no "Try again" button: it asks the scout to close and reopen the
+ * app. A screen loads again only when its ViewModel is created, or when it's shown after being
+ * hidden for more than 5 seconds (`WhileSubscribed(5_000)`). Home and the navigation root keep
+ * their ViewModels for as long as the activity lives, and on Android 12 and higher Back on Home
+ * moves the app to the background instead of finishing the activity, so reopening the app within
+ * 5 seconds shows the message again. A failure after a screen has loaded also stays until the
+ * screen loads again. A "Try again" button would fix both.
+ */
 @Composable
 fun LoadFailedMessage(modifier: Modifier = Modifier) {
     ScreenMessage(stringResource(R.string.load_failed), modifier)

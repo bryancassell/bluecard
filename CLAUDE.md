@@ -1,6 +1,6 @@
 The product requirements document for this project is in PRD.md
 
-The architecture design for this project is in ARCHITECTURE.md. Follow it for new features, and update it in the same PR when a design decision changes.
+The architecture design for this project is in ARCHITECTURE.md. Read its table of contents first, then only the sections you need. Follow it for new features, and update it in the same PR when a design decision changes. Keep it to technical decisions, the conventions new code must follow, and why: explain how code works in its comments, and record choices about how the app looks and behaves in PRD.md's Design decisions.
 
 # Claude Code Workflow
 
