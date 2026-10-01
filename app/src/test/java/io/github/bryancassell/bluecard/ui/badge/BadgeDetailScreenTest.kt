@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.ComponentDialog
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
@@ -27,9 +28,11 @@ import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -64,6 +67,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowDialog
 import org.robolectric.shadows.ShadowToast
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -78,6 +82,8 @@ class BadgeDetailScreenTest {
     private var reportsShared = 0
     private val reportsSaved = mutableListOf<Uri>()
     private val reportFailuresShown = mutableListOf<SaveFailure>()
+    private var clears = 0
+    private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     /** The intents of the activities launched for a result, such as the file picker's. */
     private val launchedForResult = mutableListOf<Intent>()
@@ -147,7 +153,9 @@ class BadgeDetailScreenTest {
                     onShareReport = { reportShareRequests++ },
                     onReportShared = { reportsShared++ },
                     onSaveReport = { reportsSaved += it },
-                    onReportFailureShown = { reportFailuresShown += it }
+                    onReportFailureShown = { reportFailuresShown += it },
+                    onClear = { clears++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
                 )
             }
         }
@@ -163,7 +171,9 @@ class BadgeDetailScreenTest {
             onShareReport = {},
             onReportShared = {},
             onSaveReport = {},
-            onReportFailureShown = {}
+            onReportFailureShown = {},
+            onClear = {},
+            onSaveFailureShown = {}
         )
     }
 
@@ -774,5 +784,109 @@ class BadgeDetailScreenTest {
 
         composeTestRule.onNodeWithText(message).assertDoesNotExist()
         assertEquals(listOf(failure), reportFailuresShown)
+    }
+
+    private val started = ready.copy(canClear = true)
+
+    private fun clearButton() = composeTestRule.onNodeWithText("Clear progress").performScrollTo()
+
+    private fun confirmClear() =
+        composeTestRule.onNode(hasText("Clear") and hasAnyAncestor(isDialog())).performClick()
+
+    private val clearTitle = "Clear progress on Camping?"
+
+    @Test
+    fun badgeNotStarted_hasNoClearButton() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Clear progress").assertDoesNotExist()
+    }
+
+    @Test
+    fun clearButton_isLastOnThePage() {
+        show(started.copy(counselor = counselor))
+
+        val tops = listOf("Counselor", "Keep a camping log.", "Clear progress").map {
+            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
+        }
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun clear_asksFirst_thenClears() {
+        show(started)
+
+        clearButton().performClick()
+        composeTestRule.onNodeWithText(clearTitle).assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("What you recorded for it will be removed, including its counselor.")
+            .assertIsDisplayed()
+        assertEquals(0, clears)
+        confirmClear()
+
+        assertEquals(1, clears)
+        composeTestRule.onNodeWithText(clearTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_cancel_clearsNothing() {
+        show(started)
+
+        clearButton().performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText(clearTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_back_closesTheDialog_andClearsNothing() {
+        show(started)
+
+        clearButton().performClick()
+        // Espresso's pressBack doesn't reach the dialog's window under Robolectric, so Back is
+        // sent to the dialog itself.
+        composeTestRule.runOnIdle {
+            (ShadowDialog.getLatestDialog() as ComponentDialog).onBackPressedDispatcher
+                .onBackPressed()
+        }
+
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText(clearTitle).assertDoesNotExist()
+        composeTestRule.onNodeWithText("Clear progress").assertExists()
+    }
+
+    @Test
+    fun saveFailed_showsMessage_thenReportsItShown() {
+        val failure = SaveFailure()
+        show(started.copy(saveFailure = failure))
+
+        val message = "Couldn't save. Try again."
+        composeTestRule.onNodeWithText(message).assertIsDisplayed()
+        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
+
+        // A short snackbar shows for 4 seconds.
+        composeTestRule.mainClock.advanceTimeBy(5_000)
+
+        composeTestRule.onNodeWithText(message).assertDoesNotExist()
+        assertEquals(listOf(failure), saveFailuresShown)
+        assertEquals(emptyList<SaveFailure>(), reportFailuresShown)
+    }
+
+    @Test
+    fun saveAndReportFailures_atOnce_showOneAboveTheOther() {
+        show(
+            completed.copy(
+                canClear = true,
+                reportFailure = SaveFailure(),
+                saveFailure = SaveFailure()
+            )
+        )
+
+        val report = composeTestRule.onNodeWithText("Couldn't create the report. Try again.")
+            .assertIsDisplayed().getBoundsInRoot()
+        val save = composeTestRule.onNodeWithText("Couldn't save. Try again.")
+            .assertIsDisplayed().getBoundsInRoot()
+        assertTrue(report.bottom <= save.top)
     }
 }

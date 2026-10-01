@@ -26,17 +26,19 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * One badge from the catalog, with the scout's progress on its requirements, and its report
- * once it's complete.
+ * once it's complete. Once it's started, its progress can be cleared.
  */
 @HiltViewModel(assistedFactory = BadgeDetailViewModel.Factory::class)
 class BadgeDetailViewModel @AssistedInject constructor(
     @Assisted private val badgeId: String,
     catalogRepository: CatalogRepository,
-    progressRepository: ProgressRepository,
+    private val progressRepository: ProgressRepository,
     private val reportRepository: ReportRepository
 ) : ViewModel() {
-    // Reports are written like saves: a failure is logged and shown in a snackbar.
+    // Reports are written like saves: a failure is logged and shown in a snackbar, with a
+    // message of its own.
     private val reports = SaveRunner(viewModelScope)
+    private val saves = SaveRunner(viewModelScope)
     private val reportToShare = MutableStateFlow<Uri?>(null)
 
     /** The report being created to share, if there is one. */
@@ -50,8 +52,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
         },
         progressRepository.observeProgress(badgeId),
         reportToShare,
-        reports.failure
-    ) { (catalog, eagleGroups), progress, reportToShare, reportFailure ->
+        reports.failure,
+        saves.failure
+    ) { (catalog, eagleGroups), progress, reportToShare, reportFailure, saveFailure ->
         val found = catalog.badgeRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.badge
@@ -63,8 +66,10 @@ class BadgeDetailViewModel @AssistedInject constructor(
             requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
             completed = progress?.completion(found.version) != null,
+            canClear = progress != null,
             reportToShare = reportToShare,
-            reportFailure = reportFailure
+            reportFailure = reportFailure,
+            saveFailure = saveFailure
         )
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
@@ -94,6 +99,19 @@ class BadgeDetailViewModel @AssistedInject constructor(
     /** The scout has been told about [failure]. */
     fun onReportFailureShown(failure: SaveFailure) {
         reports.onShown(failure)
+    }
+
+    /**
+     * Clears everything recorded for the badge, including its counselor, so it isn't started
+     * anymore. The page then shows the requirements of the newest version.
+     */
+    fun clear() {
+        saves.launch { progressRepository.clearBadge(badgeId) }
+    }
+
+    /** The scout has been told that a clear failed ([failure]). */
+    fun onSaveFailureShown(failure: SaveFailure) {
+        saves.onShown(failure)
     }
 
     @AssistedFactory

@@ -79,6 +79,8 @@ fun BadgeDetailRoute(
         onReportShared = viewModel::onReportShared,
         onSaveReport = viewModel::saveReport,
         onReportFailureShown = viewModel::onReportFailureShown,
+        onClear = viewModel::clear,
+        onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
 }
@@ -91,7 +93,8 @@ fun BadgeDetailRoute(
  *
  * Once the badge is complete, its report can be shared, which asks for it to be created
  * ([onShareReport]) and opens the share sheet once it's ready ([onReportShared]), or saved,
- * which asks the scout where with the system file picker ([onSaveReport]).
+ * which asks the scout where with the system file picker ([onSaveReport]). At the bottom, once
+ * the badge is started, the scout can clear its progress ([onClear]).
  */
 @Composable
 fun BadgeDetailScreen(
@@ -102,6 +105,8 @@ fun BadgeDetailScreen(
     onReportShared: () -> Unit,
     onSaveReport: (destination: Uri) -> Unit,
     onReportFailureShown: (SaveFailure) -> Unit,
+    onClear: () -> Unit,
+    onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -119,14 +124,18 @@ fun BadgeDetailScreen(
                 onEditCounselor,
                 onShareReport,
                 onReportShared,
-                onSaveReport
+                onSaveReport,
+                onClear
             )
-            SaveFailedSnackbarHost(
-                failure = uiState.reportFailure,
-                onShown = onReportFailureShown,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                message = stringResource(R.string.report_failed)
-            )
+            // One above the other, if both show at once.
+            Column(modifier = Modifier.align(Alignment.BottomCenter)) {
+                SaveFailedSnackbarHost(
+                    failure = uiState.reportFailure,
+                    onShown = onReportFailureShown,
+                    message = stringResource(R.string.report_failed)
+                )
+                SaveFailedSnackbarHost(failure = uiState.saveFailure, onShown = onSaveFailureShown)
+            }
         }
     }
 }
@@ -142,6 +151,7 @@ private fun BadgeDetails(
     onShareReport: () -> Unit,
     onReportShared: () -> Unit,
     onSaveReport: (destination: Uri) -> Unit,
+    onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Opens the official page in the browser. The counselor's phone and email and the report
@@ -215,6 +225,13 @@ private fun BadgeDetails(
                 .semantics { heading() }
         )
         RequirementRows(items = uiState.requirements, onOpen = onOpenRequirement)
+        if (uiState.canClear) {
+            ClearProgress(
+                title = stringResource(R.string.badge_detail_clear_title, uiState.name),
+                message = stringResource(R.string.badge_detail_clear_message),
+                onClear = onClear
+            )
+        }
     }
 }
 

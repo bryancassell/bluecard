@@ -420,7 +420,7 @@ io.github.bryancassell.bluecard
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, opening its Badge detail. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description. One screen: the list filters as the scout types. |
-| **Badge detail** | Summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". |
+| **Badge detail** | Summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
@@ -630,8 +630,11 @@ shows a snackbar, as a failed save does (`SaveRunner`).
 of a requirement and every one under it (`clearRequirements`), each in one
 transaction, after a confirmation dialog. Every removal of what the scout
 recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
-opened by a button with `removalButtonColors`. Clearing progress does not clear the
-profile, and clearing a requirement leaves its badge started.
+opened by a button with `removalButtonColors`. Badge detail and Requirement
+detail share their Clear progress button and its dialog
+(`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
+Clearing a requirement leaves its badge started, and clearing a badge deletes
+its `BadgeProgress`, so it's no longer started.
 
 ### Export and import
 

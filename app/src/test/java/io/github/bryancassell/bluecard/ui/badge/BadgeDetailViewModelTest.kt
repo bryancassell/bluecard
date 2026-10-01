@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -469,5 +470,76 @@ class BadgeDetailViewModelTest {
         viewModel.saveReport(Uri.parse("content://documents/chess-report.pdf"))
 
         assertNotNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun badgeNotStarted_cantBeCleared() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().canClear)
+    }
+
+    // A badge stays started, and in progress, after everything recorded for it is undone.
+    @Test
+    fun badgeStarted_withNothingRecorded_canBeCleared() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertTrue(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun clear_removesEverythingRecordedForTheBadge_andNothingElse() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        progressRepository.setRequirementComment("camping", "2a", "Made chili.", badgeStart)
+        progressRepository.addTrackerEntry(
+            "camping",
+            "3",
+            null,
+            mapOf("night" to "2026-04-10"),
+            started,
+            badgeStart
+        )
+        progressRepository.setCounselor("camping", Counselor("Pat Lee", null, null), badgeStart)
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        completeChess()
+        val chessBefore = progressRepository.observeProgress("chess").first()
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertTrue(viewModel.ready().completed)
+
+        viewModel.clear()
+
+        assertNull(progressRepository.observeProgress("camping").first())
+        assertEquals(chessBefore, progressRepository.observeProgress("chess").first())
+        val ready = viewModel.ready()
+        assertFalse(ready.canClear)
+        assertFalse(ready.completed)
+        assertNull(ready.counselor)
+        assertTrue(ready.requirements.none { it.completed })
+        assertEquals(TrackerCount(0, null, "nights"), ready.requirements[2].tracker)
+        assertNull(ready.saveFailure)
+    }
+
+    @Test
+    fun clear_whenItCantBeSaved_showsFailureUntilItsShown() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+
+        viewModel.clear()
+
+        val failure = viewModel.ready().saveFailure
+        assertNotNull(failure)
+        // Told as a save that failed, not as a report.
+        assertNull(viewModel.ready().reportFailure)
+        assertTrue(viewModel.ready().canClear)
+        assertEquals(true, viewModel.completed()["1"])
+
+        viewModel.onSaveFailureShown(failure!!)
+        assertNull(viewModel.ready().saveFailure)
     }
 }
