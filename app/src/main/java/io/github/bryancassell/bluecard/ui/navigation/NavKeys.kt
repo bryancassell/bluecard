@@ -41,3 +41,7 @@ data class TrackerEntryDetail(
 /** The page for entering a badge's merit badge counselor. */
 @Serializable
 data class EditCounselor(val badgeId: String) : NavKey
+
+/** The page for changing the scout's name and unit number. */
+@Serializable
+data object EditProfile : NavKey

@@ -45,6 +45,7 @@ import java.time.LocalDate
 /** Connects the Data management screen to its ViewModel. */
 @Composable
 fun DataManagementRoute(
+    onEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DataManagementViewModel = hiltViewModel()
 ) {
@@ -52,6 +53,7 @@ fun DataManagementRoute(
     DataManagementScreen(
         uiState = uiState,
         today = viewModel::today,
+        onEditProfile = onEditProfile,
         onExport = viewModel::export,
         onImport = viewModel::read,
         onConfirmImport = viewModel::confirmImport,
@@ -63,16 +65,18 @@ fun DataManagementRoute(
 }
 
 /**
- * Export and import of the scout's data, and clearing all their progress. Export saves it to a
- * file the scout creates with the system file picker ([onExport]), suggesting a name with
- * [today]'s date, read as it opens. Import reads a file they pick ([onImport]) and, once it's
- * checked, asks before replacing everything with it ([onConfirmImport]). Clear all asks before
- * clearing every badge's progress ([onClearAll]).
+ * Changing the scout's name and unit number, export and import of the scout's data, and
+ * clearing all their progress. Edit opens a page to change the name and unit number
+ * ([onEditProfile]). Export saves the data to a file the scout creates with the system file
+ * picker ([onExport]), suggesting a name with [today]'s date, read as it opens. Import reads a
+ * file they pick ([onImport]) and, once it's checked, asks before replacing everything with it
+ * ([onConfirmImport]). Clear all asks before clearing every badge's progress ([onClearAll]).
  */
 @Composable
 fun DataManagementScreen(
     uiState: DataManagementUiState,
     today: () -> LocalDate,
+    onEditProfile: () -> Unit,
     onExport: (destination: Uri) -> Unit,
     onImport: (source: Uri) -> Unit,
     onConfirmImport: () -> Unit,
@@ -106,6 +110,15 @@ fun DataManagementScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 // Lets screen reader users jump to it.
                 modifier = Modifier.semantics { heading() }
+            )
+            Section(
+                heading = R.string.data_management_profile_heading,
+                description = R.string.data_management_profile_description,
+                button = R.string.data_management_profile_edit,
+                enabled = !uiState.working,
+                // Through the screen's OtherAppStarter, so a tap just after Export or Import
+                // doesn't open the page under the file picker.
+                onClick = { startOtherApp.tap(onEditProfile) }
             )
             Section(
                 heading = R.string.data_management_export_heading,

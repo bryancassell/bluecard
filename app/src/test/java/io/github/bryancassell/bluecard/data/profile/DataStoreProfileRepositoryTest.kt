@@ -1,11 +1,18 @@
 package io.github.bryancassell.bluecard.data.profile
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import java.io.File
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -23,15 +30,20 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     private val file get() = File(folder.root, "profile.preferences_pb")
     private val jobs = mutableListOf<Job>()
 
+    // As the app's scope, which outlives the screens.
+    private val externalScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     /** A new DataStore on [file], as a new app process would create. */
-    private fun newRepository(produceFile: () -> File = { file }): DataStoreProfileRepository {
+    private fun newDataStore(produceFile: () -> File = { file }): DataStore<Preferences> {
         val job = Job().also { jobs += it }
-        val dataStore = DataStoreProfileRepository.createDataStore(
+        return DataStoreProfileRepository.createDataStore(
             scope = CoroutineScope(Dispatchers.IO + job),
             produceFile = produceFile
         )
-        return DataStoreProfileRepository(dataStore)
     }
+
+    private fun newRepository(produceFile: () -> File = { file }) =
+        DataStoreProfileRepository(newDataStore(produceFile), externalScope)
 
     override val repository = newRepository()
 
@@ -68,5 +80,33 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
         // Saving works again, so the scout can redo Onboarding.
         reopened.saveProfile(Profile("Alex Scout", "123"))
         assertEquals(Profile("Alex Scout", "123"), reopened.observeProfile().first())
+    }
+
+    @Test
+    fun saveProfile_finishesEvenIfItsCallerIsCancelled() = runTest(timeout = 10.seconds) {
+        // A file of its own: DataStore allows one active instance per file, and repository has one.
+        val dataStore = newDataStore { File(folder.root, "held.preferences_pb") }
+        val saving = CompletableDeferred<Unit>()
+        // Holds the save until the caller is gone, as when the scout saves and leaves the page.
+        val held = object : DataStore<Preferences> by dataStore {
+            override suspend fun updateData(
+                transform: suspend (Preferences) -> Preferences
+            ): Preferences {
+                saving.await()
+                return dataStore.updateData(transform)
+            }
+        }
+        val repository = DataStoreProfileRepository(held, externalScope)
+
+        val caller = launch(start = CoroutineStart.UNDISPATCHED) {
+            repository.saveProfile(Profile("Alex Scout", "123"))
+        }
+        caller.cancel()
+        saving.complete(Unit)
+
+        assertEquals(
+            Profile("Alex Scout", "123"),
+            repository.observeProfile().first { it != null }
+        )
     }
 }

@@ -44,6 +44,7 @@ class DataManagementScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private var profileEdits = 0
     private val exported = mutableListOf<Uri>()
     private val read = mutableListOf<Uri>()
     private var importsConfirmed = 0
@@ -99,6 +100,7 @@ class DataManagementScreenTest {
                 DataManagementScreen(
                     uiState = uiState,
                     today = { today },
+                    onEditProfile = { profileEdits++ },
                     onExport = { exported += it },
                     onImport = { read += it },
                     onConfirmImport = { importsConfirmed++ },
@@ -109,6 +111,8 @@ class DataManagementScreenTest {
             }
         }
     }
+
+    private fun editProfileButton() = composeTestRule.onNodeWithText("Edit")
 
     private fun exportButton() = composeTestRule.onNodeWithText("Export")
 
@@ -122,17 +126,24 @@ class DataManagementScreenTest {
 
         for (heading in listOf(
             "Data management",
+            "Name and unit",
             "Export data",
             "Import data",
             "Clear all progress"
         )) {
-            composeTestRule.onNode(hasTextAndHeading(heading)).assertIsDisplayed()
+            composeTestRule.onNode(hasTextAndHeading(heading)).performScrollTo().assertIsDisplayed()
         }
         composeTestRule
+            .onNodeWithText("Change your name or unit number.")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule
             .onNodeWithText("Save your name, unit number and all your progress to a file.")
+            .performScrollTo()
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithText("Replace everything on this phone with a file you exported.")
+            .performScrollTo()
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithText(
@@ -141,12 +152,41 @@ class DataManagementScreenTest {
             )
             .performScrollTo()
             .assertIsDisplayed()
+        editProfileButton().assertIsEnabled()
         exportButton().assertIsEnabled()
         importButton().assertIsEnabled()
         clearButton().assertIsEnabled()
     }
 
     private fun hasTextAndHeading(text: String) = hasText(text) and isHeading()
+
+    @Test
+    fun edit_opensThePageForNameAndUnit() {
+        show()
+
+        editProfileButton().performClick()
+
+        assertEquals(1, profileEdits)
+    }
+
+    // The file picker takes a moment to cover BlueCard. A tap on Edit that reached it then would
+    // open the page under the picker.
+    @Test
+    fun edit_rightAfterExport_isIgnored() {
+        show()
+        composeTestRule.mainClock.autoAdvance = false
+        val doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
+
+        exportButton().performClick()
+        editProfileButton().performClick()
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout / 2)
+        assertEquals(0, profileEdits)
+
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout)
+        editProfileButton().performClick()
+        assertEquals(1, profileEdits)
+        assertEquals(listOf(file), exported)
+    }
 
     @Test
     fun export_asksWhereToSaveIt_andExportsThere() {
@@ -211,7 +251,7 @@ class DataManagementScreenTest {
     fun import_asksForAnyFile_andReadsIt() {
         show()
 
-        importButton().performClick()
+        importButton().performScrollTo().performClick()
 
         val picker = launchedForResult.single()
         assertEquals(Intent.ACTION_OPEN_DOCUMENT, picker.action)
@@ -227,7 +267,7 @@ class DataManagementScreenTest {
         pickFile = { null }
         show()
 
-        importButton().performClick()
+        importButton().performScrollTo().performClick()
 
         assertEquals(1, launchedForResult.size)
         assertEquals(emptyList<Uri>(), read)
@@ -238,7 +278,7 @@ class DataManagementScreenTest {
         pickFile = { throw ActivityNotFoundException() }
         show()
 
-        importButton().performClick()
+        importButton().performScrollTo().performClick()
 
         assertEquals("No app on this phone can open files.", ShadowToast.getTextOfLatestToast())
         assertEquals(emptyList<Uri>(), read)
@@ -248,6 +288,7 @@ class DataManagementScreenTest {
     fun whileWorking_theButtonsWait() {
         show(started.copy(working = true))
 
+        editProfileButton().assertIsNotEnabled()
         exportButton().assertIsNotEnabled()
         importButton().assertIsNotEnabled()
         clearButton().assertIsNotEnabled()
