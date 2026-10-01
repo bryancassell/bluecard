@@ -258,6 +258,46 @@ class CompletionTest {
     )
 
     @Test
+    fun hasPartDone_onceARequirementUnderItAtAnyDepthIsMarkedComplete() {
+        val parent = Requirement(number = "9", summary = "Do these.", children = listOf(allOf))
+
+        assertFalse(parent.hasPartDone(progressOf(), entriesOf()))
+        assertTrue(parent.hasPartDone(progressOf(done("2a")), entriesOf()))
+    }
+
+    @Test
+    fun hasPartDone_onceItsOwnWorkIsMarkedComplete() {
+        assertTrue(ownWorkAndTwoOf.hasPartDone(progressOf(done("3")), entriesOf()))
+    }
+
+    // Left from an older catalog, a mark on a requirement the scout can't mark by hand isn't
+    // progress, as it isn't for completion.
+    @Test
+    fun hasPartDone_ignoresAStoredMarkThatDoesntCount() {
+        assertFalse(allOf.hasPartDone(progressOf(done("2")), entriesOf()))
+        assertFalse(weeks.hasPartDone(progressOf(done("5")), entriesOf()))
+    }
+
+    @Test
+    fun hasPartDone_onceATrackerRowIsFilledIn_onItOrUnderIt() {
+        assertTrue(weeks.hasPartDone(progressOf(), entriesOf(row("5", 2))))
+        assertTrue(log.hasPartDone(progressOf(), entriesOf(row("6", null))))
+
+        val parent = Requirement(
+            number = "8",
+            summary = "Do both.",
+            children = listOf(leaf("8a"), weeks.copy(number = "8b"))
+        )
+        assertTrue(parent.hasPartDone(progressOf(), entriesOf(row("8b", 1))))
+    }
+
+    @Test
+    fun hasPartDone_countsOnlyATrackersOwnRows() {
+        // A row outside the tracker, and another requirement's row, fill in none of its rows.
+        assertFalse(weeks.hasPartDone(progressOf(), entriesOf(row("5", 4), row("7", 1))))
+    }
+
+    @Test
     fun badge_incompleteUntilEveryTopLevelRequirementIs() {
         assertNull(badge().completion(version))
         assertNull(

@@ -57,6 +57,9 @@ data class Requirement(
      */
     val ownWork: String? = null
 ) {
+    /** How many of its children must be done. */
+    val neededCount: Int get() = requiredCount ?: children.size
+
     /** How many of its children must be done when that's fewer than all of them, or null. */
     val choiceCount: Int? get() = requiredCount?.takeIf { it < children.size }
 }

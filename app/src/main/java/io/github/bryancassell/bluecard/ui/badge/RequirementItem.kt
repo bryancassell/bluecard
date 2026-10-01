@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
+import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
 
 /**
@@ -72,8 +73,6 @@ fun Requirement.toItem(
     val completed = completion(progress, trackerEntries) != null
     val notNeeded = partOfHasEnough && !completed
     val stillNeeded = !completed && !notNeeded
-    val needed = requiredCount ?: children.size
-    val completeChildren = children.count { it.completion(progress, trackerEntries) != null }
     return RequirementItem(
         number = number,
         summary = summary,
@@ -84,24 +83,16 @@ fun Requirement.toItem(
         notNeeded = notNeeded,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries),
-        // More than the number needed are complete only while its own work isn't.
-        completeCount = if (stillNeeded && completeChildren > 0) {
-            CompleteCount(minOf(completeChildren, needed), needed)
-        } else {
-            null
-        }
+        completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null
     )
 }
 
-/**
- * Whether its own work is complete, a row of its tracker is filled in, or a requirement under it
- * at any depth is complete or has part done.
- */
-private fun Requirement.hasPartDone(
+/** How many of the children it needs are complete, or null if none are. */
+private fun Requirement.completeCount(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>
-): Boolean = (ownWork != null && progress[number]?.completed == true) ||
-    (tracker?.count(trackerEntries[number].orEmpty())?.recorded ?: 0) > 0 ||
-    children.any {
-        it.completion(progress, trackerEntries) != null || it.hasPartDone(progress, trackerEntries)
-    }
+): CompleteCount? {
+    val complete = children.count { it.completion(progress, trackerEntries) != null }
+    // More than it needs are complete only while its own work isn't.
+    return if (complete == 0) null else CompleteCount(minOf(complete, neededCount), neededCount)
+}

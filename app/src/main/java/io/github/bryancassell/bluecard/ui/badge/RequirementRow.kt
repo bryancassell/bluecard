@@ -201,11 +201,13 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
 
 /** "Do 2 of 3". */
 @Composable
+@ReadOnlyComposable
 fun choiceLabel(choice: Choice): String =
     stringResource(R.string.requirement_choice, choice.required, choice.of)
 
 /** "Do 2 of 3 (1 of 2 complete)", "Do 2 of 3", "(1 of 3 complete)", or null for neither. */
 @Composable
+@ReadOnlyComposable
 private fun choiceAndCountLabel(choice: Choice?, count: CompleteCount?): String? = when {
     choice != null && count != null -> pluralStringResource(
         R.plurals.requirement_choice_and_complete_count,
