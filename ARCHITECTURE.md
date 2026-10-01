@@ -803,7 +803,8 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     the saved notes. The repository trims spaces around them
     (`normalizedText`), and empty notes remove them. The field takes up
     to 2,000 characters; the repository doesn't limit the length. An unsaved edit survives the system
-    stopping the app, but leaving the page discards it.
+    stopping the app, but leaving the page discards it, and so does clearing
+    the requirement's progress (see Clearing data).
   - **Trackers.** The catalog defines each tracker's columns (date, number or
     text), what a row is called ("week", "weeks"), and optionally a fixed
     number of rows. A log, a tracker without a fixed number, lists its entries
@@ -944,11 +945,13 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     the page closes straight away. The page forgets a date it remembered
     from an uncheck as the clear starts, so checking the requirement again
     dates it today, even while the clear is being saved. The notes field
-    shows the saved notes whenever it has no unsaved edit, in the same update
-    that shows they changed, so once the clear is saved it's empty, with no
-    frame where Save notes looks enabled. An unsaved edit stays, for the
-    scout to save or not, since the dialog clears only what's recorded. A
-    clear that fails shows the save-failed snackbar.
+    follows the saved notes whenever it has no unsaved edit, in the same
+    update that shows they changed, so once the clear is saved it's empty,
+    with no frame where Save notes looks enabled. An unsaved edit is
+    discarded too, once the clear is saved, and the dialog warns about it
+    first. An edit changed while the clear is being saved stays, as the
+    change came after it. A clear that fails shows the save-failed snackbar
+    and keeps the edit.
   - **Pages shown while their badge is cleared.** A page can show a badge
     for a moment after its progress is cleared, before it redraws. Unchecking
     a requirement of a badge that isn't started does nothing
@@ -1106,7 +1109,7 @@ How the architecture supports the testing rules in `CLAUDE.md`:
 | Tracker row names | The catalog gives the singular and plural in lowercase ("week", "weeks"), and the app capitalizes the singular for titles | Counts read naturally ("8 of 12 weeks", "1 session") without the app pluralizing catalog text |
 | Counselor details | Shown on Badge detail; edited on a page of their own with a Save button, which closes it once the save succeeds; the phone and email open the phone and email apps | Entered once and read often, so Badge detail stays short; closing only after a successful save shows a failure while the scout can still try again; `ACTION_DIAL` and `ACTION_SENDTO` need no permissions |
 | Requirement notes | On every requirement, saved with a Save button | The scout decides when notes are saved, and a save that fails is reported right then, not while they're still typing |
-| Confirming a removal | Deleting a tracker row and clearing progress ask first, in one shared dialog (`ui/ConfirmDialog.kt`) with Cancel and a red confirm button, the theme's error color | Red marks the button that removes what the scout recorded, which can't be undone, so it stands apart from Cancel. Sharing the dialog keeps every removal alike |
+| Confirming a removal | Deleting a tracker row and clearing progress ask first, in one shared dialog (`ui/ConfirmDialog.kt`) with Cancel and a red confirm button, the theme's error color. The button that opens the dialog is red too (`removalButtonColors`) | Red marks the button that removes what the scout recorded, which can't be undone, so it stands apart from Cancel. Sharing the dialog keeps every removal alike |
 | Save failures | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | Load failures | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
 | Requirement IDs | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |

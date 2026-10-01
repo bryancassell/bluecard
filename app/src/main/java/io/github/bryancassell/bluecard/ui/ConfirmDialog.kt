@@ -42,8 +42,8 @@ fun ConfirmDialog(
 }
 
 /**
- * Colors of a text button that removes what the scout recorded, or asks to: red, the theme's
- * error color.
+ * Colors of a text button that removes what the scout recorded, or opens the dialog that asks
+ * to: red, the theme's error color.
  */
 @Composable
 fun removalButtonColors(): ButtonColors =
