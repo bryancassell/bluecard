@@ -17,6 +17,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,11 @@ private val NumberBoxMinSize = 40.dp
 /** Between a number and its box's edge. */
 private val NumberBoxPadding = 8.dp
 
+/** A number's text, in its box and when measuring the widest one. */
+private val numberStyle: TextStyle
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.typography.titleMedium
+
 /**
  * A list of requirements' rows. Every number's box is as wide as the widest number needs at the
  * current font size, so the summaries after them line up.
@@ -50,12 +57,13 @@ fun RequirementRows(
     onOpen: (number: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val numberStyle = MaterialTheme.typography.titleMedium
+    val style = numberStyle
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    val numberWidth = remember(items, numberStyle, textMeasurer, density) {
-        val widestNumber =
-            items.maxOfOrNull { textMeasurer.measure(it.number, numberStyle).size.width } ?: 0
+    // Keyed on the numbers alone, so a change in progress doesn't measure them again.
+    val numbers = items.map { it.number }
+    val numberWidth = remember(numbers, style, textMeasurer, density) {
+        val widestNumber = numbers.maxOfOrNull { textMeasurer.measure(it, style).size.width } ?: 0
         with(density) {
             maxOf(NumberBoxMinSize.roundToPx(), widestNumber + NumberBoxPadding.roundToPx() * 2)
                 .toDp()
@@ -77,8 +85,7 @@ fun RequirementRows(
 private fun RequirementRow(
     item: RequirementItem,
     numberWidth: Dp,
-    onOpen: (number: String) -> Unit,
-    modifier: Modifier = Modifier
+    onOpen: (number: String) -> Unit
 ) {
     val state = stringResource(
         when {
@@ -112,7 +119,7 @@ private fun RequirementRow(
         },
         // ListItem already reads as one item to screen readers, announced as a button that
         // opens the requirement.
-        modifier = modifier
+        modifier = Modifier
             .clickable(
                 onClickLabel = stringResource(R.string.requirement_open),
                 role = Role.Button,
@@ -125,9 +132,9 @@ private fun RequirementRow(
 /**
  * A requirement's number in a box, like the boxes on the blue card: outlined until the
  * requirement is complete, then filled in Scouting America Blue with a check on its top end
- * corner, or filled in grey once it's no longer needed. It's at least [minWidth] wide, room for the
- * widest number in its list, and grows taller with the font size. The check is drawn only: its
- * row reads the state.
+ * corner, or filled in grey once it's no longer needed. It's [minWidth] wide, room for the widest
+ * number in its list, but still widens to fit its own number if that measures wider. It grows
+ * taller with the font size. The check is drawn only: its row reads the state.
  */
 @Composable
 private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
@@ -151,7 +158,7 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
         ) {
             Text(
                 text = item.number,
-                style = MaterialTheme.typography.titleMedium,
+                style = numberStyle,
                 color = if (item.completed) colors.onPrimary else colors.onSurfaceVariant
             )
         }

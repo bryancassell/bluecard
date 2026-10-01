@@ -532,7 +532,7 @@ class BadgeDetailScreenTest {
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(fontScale = 2f)
     @Test
-    fun requirementNumbersOfDifferentWidths_atLargeFontSize_summariesLineUp() {
+    fun requirementNumbersOfDifferentWidths_atLargestFontSize_summariesLineUp() {
         val requirements = (9..10).map {
             RequirementItem("$it", "Requirement $it.", null, false, markedByHand = false)
         }
