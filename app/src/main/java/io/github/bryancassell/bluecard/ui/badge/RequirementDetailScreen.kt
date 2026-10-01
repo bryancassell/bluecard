@@ -269,7 +269,8 @@ private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> U
     TextButton(
         onClick = { confirming = true },
         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+        // Lines the button's text up with the page's, as for Add counselor.
+        modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
     ) {
         Text(stringResource(R.string.requirement_clear))
     }
