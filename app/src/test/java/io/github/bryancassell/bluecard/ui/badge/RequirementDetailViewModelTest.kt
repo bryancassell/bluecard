@@ -23,9 +23,11 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -123,29 +125,31 @@ class RequirementDetailViewModelTest {
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private fun viewModel(number: String) = RequirementDetailViewModel(
-        "camping",
-        number,
-        catalogRepository,
-        progressRepository,
-        clock,
-        savedStateHandle
-    )
+    private fun viewModel(number: String, catalog: CatalogRepository = catalogRepository) =
+        RequirementDetailViewModel(
+            "camping",
+            number,
+            catalog,
+            progressRepository,
+            clock,
+            savedStateHandle
+        )
 
     /**
      * Can save the ViewModel's state and restore it into a new one, as when the system stops
      * the app.
      */
-    private fun scenario(number: String) = viewModelScenario {
-        RequirementDetailViewModel(
-            "camping",
-            number,
-            catalogRepository,
-            progressRepository,
-            clock,
-            createSavedStateHandle()
-        )
-    }
+    private fun scenario(number: String, catalog: CatalogRepository = catalogRepository) =
+        viewModelScenario {
+            RequirementDetailViewModel(
+                "camping",
+                number,
+                catalog,
+                progressRepository,
+                clock,
+                createSavedStateHandle()
+            )
+        }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -812,6 +816,48 @@ class RequirementDetailViewModelTest {
         assertEquals(BadgeProgress("camping", newest, started), progress.badge)
         assertFalse(viewModel.ready().canClear)
         assertTrue(viewModel.ready().children.none { it.completed })
+    }
+
+    /**
+     * A catalog that takes a moment to read, as the real one can, so a clear that read anything
+     * first would wait for it.
+     */
+    private val slowCatalog = object : CatalogRepository {
+        override suspend fun getBadges(): List<MeritBadge> {
+            delay(100)
+            return listOf(camping)
+        }
+    }
+
+    @Test
+    fun clear_thenCheckingStraightAway_keepsTheCheck() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        val viewModel = viewModel("1", slowCatalog)
+        startCollecting(viewModel)
+        advanceUntilIdle()
+
+        // As when the scout confirms Clear, then checks the box before the page redraws: the
+        // clear is made first, as it was asked for first.
+        viewModel.clear()
+        viewModel.setCompleted(true)
+        advanceUntilIdle()
+
+        assertEquals(RequirementProgress("camping", "1", true, today), recorded("1"))
+    }
+
+    @Test
+    fun clear_thenLeavingThePage_stillClears() = runTest {
+        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        scenario("1", slowCatalog).use { scenario ->
+            startCollecting(scenario.viewModel)
+            advanceUntilIdle()
+
+            scenario.viewModel.clear()
+            // The page closes straight away, which cancels the ViewModel's coroutines.
+        }
+        advanceUntilIdle()
+
+        assertNull(recorded("1"))
     }
 
     @Test

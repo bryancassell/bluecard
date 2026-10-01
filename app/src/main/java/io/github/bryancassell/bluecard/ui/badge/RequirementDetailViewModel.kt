@@ -22,8 +22,8 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -92,8 +92,14 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val hasRecorded: Boolean
     )
 
+    /**
+     * The numbers of this requirement and of every one under it, once the page has shown it, so
+     * [clear] queues its write as soon as it's called, in order with the page's other changes.
+     */
+    private var numbersWithin: List<String>? = null
+
     val uiState: StateFlow<RequirementDetailUiState> = combine(
-        recorded,
+        recorded.onEach { numbersWithin = it?.numbersWithin },
         // Works the state out again as the scout types.
         snapshotFlow { comment.text.toString() },
         saves.failure
@@ -141,8 +147,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
      * fails, as the comment does.
      */
     fun clear() {
+        // The button shows only once the page has.
+        val numbers = numbersWithin ?: return
         saves.launch {
-            val numbers = recorded.first()?.numbersWithin ?: return@launch
             recorder.clear(numbers)
             // In a snapshot of its own, so uiState sees the change straight away.
             Snapshot.withMutableSnapshot { comment.clearText() }

@@ -880,7 +880,10 @@ the newest for a badge not started yet) comes from `data/progress/BadgeVersion.k
     them all, for the requirement and every one under it at any depth
     (`clearRequirements`, one transaction), because the scout reads a
     requirement as including its sub-requirements. The badge stays started,
-    as when everything is undone by hand. Once the clear succeeds, the page
+    as when everything is undone by hand. The page knows which requirements
+    to clear from what it shows, so the clear is queued as soon as the scout
+    confirms, in order with the page's other changes, and finishes even if
+    the page closes straight away. Once the clear succeeds, the page
     empties its notes field, discarding an unsaved edit, and forgets a date it
     remembered from an uncheck, so checking the requirement again dates it
     today. A clear that fails keeps both and shows the save-failed snackbar.

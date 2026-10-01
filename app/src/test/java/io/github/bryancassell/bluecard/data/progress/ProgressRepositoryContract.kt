@@ -453,17 +453,12 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun recordingOnAnUnstartedBadge_failsAndRecordsNothing() = test {
-        val writes: List<Pair<String, suspend () -> Unit>> = listOf(
-            "setCompletedOnPriorDate" to { repository.setCompletedOnPriorDate(UNSTARTED, day) }
-        )
-        for ((name, write) in writes) {
-            try {
-                write()
-                fail("$name should fail for a badge that hasn't been started")
-            } catch (e: IllegalStateException) {
-                assertEquals(notStartedError(UNSTARTED).message, e.message)
-            }
+    fun setCompletedOnPriorDate_onAnUnstartedBadge_failsAndRecordsNothing() = test {
+        try {
+            repository.setCompletedOnPriorDate(UNSTARTED, day)
+            fail("setCompletedOnPriorDate should fail for a badge that hasn't been started")
+        } catch (e: IllegalStateException) {
+            assertEquals(notStartedError(UNSTARTED).message, e.message)
         }
         assertNull(progress(UNSTARTED))
     }

@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.activity.ComponentDialog
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -34,6 +35,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.shadows.ShadowDialog
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -635,5 +637,22 @@ class RequirementDetailScreenTest {
 
         assertEquals(0, clears)
         composeTestRule.onNodeWithText("Clear progress on requirement 1?").assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_back_closesTheDialog_andClearsNothing() {
+        show(completedLeaf.copy(canClear = true))
+
+        clearButton().performClick()
+        // Espresso's pressBack doesn't reach the dialog's window under Robolectric, so Back is
+        // sent to the dialog itself.
+        composeTestRule.runOnIdle {
+            (ShadowDialog.getLatestDialog() as ComponentDialog).onBackPressedDispatcher
+                .onBackPressed()
+        }
+
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText("Clear progress on requirement 1?").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Clear progress").assertExists()
     }
 }

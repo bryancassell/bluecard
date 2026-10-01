@@ -68,17 +68,12 @@ class RoomProgressRepository @Inject constructor(
         }
     }
 
-    override suspend fun markRequirementNotCompleted(badgeId: String, number: String) = writing {
-        database.withTransaction {
-            if (dao.isStarted(badgeId)) {
-                dao.updateRequirement(badgeId, number) {
-                    it.copy(completed = false, completedDate = null)
-                }
-            } else {
-                null
+    override suspend fun markRequirementNotCompleted(badgeId: String, number: String) =
+        ifStarted(badgeId, notStarted = { null }) {
+            dao.updateRequirement(badgeId, number) {
+                it.copy(completed = false, completedDate = null)
             }
         }
-    }
 
     override suspend fun setRequirementCompletedDate(
         badgeId: String,
@@ -179,16 +174,18 @@ class RoomProgressRepository @Inject constructor(
 
     /**
      * Runs [action] if the badge is started, or once [start] has started it, checking and
-     * writing in one transaction.
+     * writing in one transaction. Without [start], a badge that isn't started gets [notStarted]
+     * instead, which throws [notStartedError] unless the caller gives another.
      */
     private suspend fun <T> ifStarted(
         badgeId: String,
         start: BadgeStart? = null,
+        notStarted: () -> T = { throw notStartedError(badgeId) },
         action: suspend () -> T
     ): T = writing {
         database.withTransaction {
             if (!dao.isStarted(badgeId)) {
-                if (start == null) throw notStartedError(badgeId)
+                if (start == null) return@withTransaction notStarted()
                 dao.insertBadge(start.progress(badgeId))
             }
             action()

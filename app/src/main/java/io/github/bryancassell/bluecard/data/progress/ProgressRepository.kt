@@ -8,8 +8,9 @@ import kotlinx.coroutines.flow.Flow
  *
  * A badge must be started before anything is recorded for it, with [startBadge] or with the
  * [BadgeStart] that some functions take and start it with: the other functions that record
- * progress throw [IllegalStateException] for a badge that hasn't been started. Clearing, and changing or
- * deleting a tracker entry that doesn't exist, do nothing.
+ * progress throw [IllegalStateException] for a badge that hasn't been started. Clearing,
+ * unchecking a requirement ([markRequirementNotCompleted]), and changing or deleting a tracker
+ * entry that doesn't exist, do nothing.
  *
  * Its flows throw an `IOException` when stored progress can't be read, such as when the
  * database can't be opened, and its other functions throw one when progress can't be saved.
