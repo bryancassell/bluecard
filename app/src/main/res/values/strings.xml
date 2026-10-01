@@ -106,7 +106,8 @@
          it, such as after the badge moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
     <!-- Button at the bottom of a badge's or a requirement's page, which asks before clearing
-         what the scout recorded for it, and the dialog's button that clears it. -->
+         what the scout recorded for it, and the dialog's button that clears it, which Clear
+         all's dialog on Data management uses too. -->
     <string name="clear_progress">Clear progress</string>
     <string name="clear_progress_confirm">Clear</string>
     <!-- Asks before a badge's progress is cleared, with its name, such as "Clear progress on
@@ -176,6 +177,15 @@
     <string name="import_newer_format">This file is from a newer version of BlueCard. Update the app to import it.</string>
     <string name="import_failed">Couldn\'t import. Try again.</string>
     <string name="import_done">Data imported.</string>
+    <!-- Clears the progress on every badge, including counselors, once the scout confirms.
+         Their name and unit number stay. -->
+    <string name="data_management_clear_heading">Clear all progress</string>
+    <string name="data_management_clear_description">Remove the progress on every badge, including counselors. Your name and unit number stay.</string>
+    <string name="data_management_clear">Clear all</string>
+    <string name="clear_all_confirm_title">Clear all progress?</string>
+    <string name="clear_all_confirm_message">The progress on every badge will be removed, including counselors. Your name and unit number stay.</string>
+    <!-- Shown briefly after clearing all progress. -->
+    <string name="clear_all_done">Progress cleared.</string>
     <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
          recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
     <string name="badge_detail_share_report">Share report</string>

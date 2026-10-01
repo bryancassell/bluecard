@@ -6,12 +6,22 @@ import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.backup.BackupReadResult
 import io.github.bryancassell.bluecard.data.backup.FakeBackupRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -31,31 +41,41 @@ class DataManagementViewModelTest {
     private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
     private val backupRepository = FakeBackupRepository()
+    private val progressRepository = FakeProgressRepository()
 
     private val destination = Uri.parse("content://documents/document/new-export")
     private val export = Uri.parse("content://documents/document/export")
     private val backup = Backup(Profile("Sam Scout", "Crew 7"), emptyList())
 
-    // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
-    // viewModelScope uses.
-    private fun viewModel() = DataManagementViewModel(backupRepository, clock)
+    /**
+     * Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
+     * viewModelScope uses. Its uiState is collected, as the screen does, so WhileSubscribed
+     * starts it. From the coroutines testing guide:
+     * https://developer.android.com/kotlin/coroutines/test#statein
+     */
+    private fun TestScope.viewModel(progress: ProgressRepository = progressRepository) =
+        DataManagementViewModel(backupRepository, progress, clock).also { viewModel ->
+            backgroundScope.launch(mainDispatcherRule.testDispatcher) {
+                viewModel.uiState.collect {}
+            }
+        }
 
     private fun DataManagementViewModel.messageKind() = uiState.value.message?.kind
 
     /** A view model that has read [export], an export the scout chose to import. */
-    private fun viewModelWithFileToImport() = viewModel().apply {
+    private fun TestScope.viewModelWithFileToImport() = viewModel().apply {
         backupRepository.files[export] = BackupReadResult.Valid(backup)
         read(export)
     }
 
     @Test
-    fun uiState_startsWithNothingUnderWay() {
+    fun uiState_startsWithNothingUnderWay() = runTest {
         assertEquals(DataManagementUiState(), viewModel().uiState.value)
     }
 
     // So the name suggested for an export has the day it's made, even past midnight.
     @Test
-    fun today_isFromTheClock_whenAsked() {
+    fun today_isFromTheClock_whenAsked() = runTest {
         val viewModel = viewModel()
         assertEquals(today, viewModel.today())
 
@@ -65,7 +85,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun export_savesTheExportWhereTheScoutChose() {
+    fun export_savesTheExportWhereTheScoutChose() = runTest {
         val viewModel = viewModel()
 
         viewModel.export(destination)
@@ -75,7 +95,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun export_isWorkingUntilItsDone() {
+    fun export_isWorkingUntilItsDone() = runTest {
         val viewModel = viewModel()
         val exporting = CompletableDeferred<Unit>()
         backupRepository.working = exporting
@@ -89,7 +109,7 @@ class DataManagementViewModelTest {
 
     // As when a second tap opens a second file picker before the first covers BlueCard.
     @Test
-    fun working_whileTwoOverlap_lastsUntilBothAreDone() {
+    fun working_whileTwoOverlap_lastsUntilBothAreDone() = runTest {
         val viewModel = viewModel()
         val exporting = CompletableDeferred<Unit>()
         val reading = CompletableDeferred<Unit>()
@@ -106,7 +126,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun export_whenItCantBeSaved_saysSo_untilItsShown() {
+    fun export_whenItCantBeSaved_saysSo_untilItsShown() = runTest {
         val viewModel = viewModel()
         backupRepository.failSaves = true
 
@@ -119,7 +139,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun read_ofAnExport_asksTheScoutToConfirmImportingIt() {
+    fun read_ofAnExport_asksTheScoutToConfirmImportingIt() = runTest {
         val viewModel = viewModelWithFileToImport()
 
         assertEquals(backup, viewModel.uiState.value.backupToImport)
@@ -127,7 +147,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun read_isWorkingUntilTheFileIsRead() {
+    fun read_isWorkingUntilTheFileIsRead() = runTest {
         val viewModel = viewModel()
         val reading = CompletableDeferred<Unit>()
         backupRepository.working = reading
@@ -143,7 +163,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun read_ofAFileThatIsntAnExport_saysSo() {
+    fun read_ofAFileThatIsntAnExport_saysSo() = runTest {
         val viewModel = viewModel()
 
         viewModel.read(Uri.parse("content://documents/document/photo"))
@@ -153,7 +173,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun read_ofANewerExport_saysTheAppNeedsUpdating() {
+    fun read_ofANewerExport_saysTheAppNeedsUpdating() = runTest {
         val viewModel = viewModel()
         backupRepository.files[export] = BackupReadResult.NewerFormat
 
@@ -164,7 +184,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun read_whenTheFileCantBeRead_saysSo() {
+    fun read_whenTheFileCantBeRead_saysSo() = runTest {
         val viewModel = viewModel()
         backupRepository.failReads = true
 
@@ -175,7 +195,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun confirmImport_importsTheFile_andSaysSo() {
+    fun confirmImport_importsTheFile_andSaysSo() = runTest {
         val viewModel = viewModelWithFileToImport()
 
         viewModel.confirmImport()
@@ -186,7 +206,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun confirmImport_isWorkingUntilItsDone() {
+    fun confirmImport_isWorkingUntilItsDone() = runTest {
         val viewModel = viewModelWithFileToImport()
         val importing = CompletableDeferred<Unit>()
         backupRepository.working = importing
@@ -202,7 +222,7 @@ class DataManagementViewModelTest {
 
     // A double tap on Replace.
     @Test
-    fun confirmImport_twice_importsOnce() {
+    fun confirmImport_twice_importsOnce() = runTest {
         val viewModel = viewModelWithFileToImport()
 
         viewModel.confirmImport()
@@ -212,7 +232,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun confirmImport_whenItCantBeSaved_saysSo() {
+    fun confirmImport_whenItCantBeSaved_saysSo() = runTest {
         val viewModel = viewModelWithFileToImport()
         backupRepository.failSaves = true
 
@@ -223,7 +243,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun cancelImport_importsNothing() {
+    fun cancelImport_importsNothing() = runTest {
         val viewModel = viewModelWithFileToImport()
 
         viewModel.cancelImport()
@@ -234,7 +254,74 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun onMessageShown_ofAnEarlierMessage_keepsTheOneSinceThen() {
+    fun uiState_withNoBadgeStarted_cantClear() = runTest {
+        assertFalse(viewModel().uiState.value.canClear)
+    }
+
+    @Test
+    fun uiState_withABadgeStarted_canClear() = runTest {
+        progressRepository.startBadge("camping", today, today)
+
+        assertTrue(viewModel().uiState.value.canClear)
+    }
+
+    @Test
+    fun uiState_whenProgressCantBeRead_cantClear() = runTest {
+        progressRepository.startBadge("camping", today, today)
+        progressRepository.failLoads = true
+
+        assertFalse(viewModel().uiState.value.canClear)
+    }
+
+    // As each time the screen comes back after more than 5 seconds, such as from the file picker.
+    @Test
+    fun uiState_whileProgressIsRead_showsWhatsUnderWay() = runTest {
+        val reading = object : ProgressRepository by progressRepository {
+            override fun observeAllProgress(): Flow<List<BadgeProgressDetails>> =
+                flow { awaitCancellation() }
+        }
+        val viewModel = viewModel(reading)
+        backupRepository.working = CompletableDeferred()
+
+        viewModel.export(destination)
+
+        assertTrue(viewModel.uiState.value.working)
+        assertFalse(viewModel.uiState.value.canClear)
+    }
+
+    @Test
+    fun clearAll_clearsEveryBadgesProgress_andSaysSo() = runTest {
+        progressRepository.startBadge("camping", today, today)
+        progressRepository.startBadge("archery", today, today)
+        val viewModel = viewModel()
+
+        viewModel.clearAll()
+
+        assertEquals(
+            emptyList<BadgeProgressDetails>(),
+            progressRepository.observeAllProgress().first()
+        )
+        assertEquals(Kind.Cleared, viewModel.messageKind())
+        assertFalse(viewModel.uiState.value.canClear)
+        assertFalse(viewModel.uiState.value.working)
+    }
+
+    @Test
+    fun clearAll_whenItCantBeSaved_saysSo_andKeepsTheProgress() = runTest {
+        progressRepository.startBadge("camping", today, today)
+        val viewModel = viewModel()
+        progressRepository.failSaves = true
+
+        viewModel.clearAll()
+
+        assertEquals(Kind.ClearFailed, viewModel.messageKind())
+        assertEquals(1, progressRepository.observeAllProgress().first().size)
+        assertTrue(viewModel.uiState.value.canClear)
+        assertFalse(viewModel.uiState.value.working)
+    }
+
+    @Test
+    fun onMessageShown_ofAnEarlierMessage_keepsTheOneSinceThen() = runTest {
         val viewModel = viewModel()
         backupRepository.failSaves = true
         viewModel.export(destination)

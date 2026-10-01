@@ -8,6 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
+import io.github.bryancassell.bluecard.ui.data.DataManagementUiState
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import java.time.LocalDate
 import org.junit.Rule
@@ -95,5 +97,24 @@ class RemovalButtonScreenshotTest {
             }
         }
         composeTestRule.onNodeWithText("Delete").performScrollTo().captureRoboImage()
+    }
+
+    @Test
+    fun clearAllIsRed() {
+        composeTestRule.setContent {
+            BlueCardTheme {
+                DataManagementScreen(
+                    uiState = DataManagementUiState(canClear = true),
+                    today = { today },
+                    onExport = {},
+                    onImport = {},
+                    onConfirmImport = {},
+                    onCancelImport = {},
+                    onClearAll = {},
+                    onMessageShown = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Clear all").performScrollTo().captureRoboImage()
     }
 }

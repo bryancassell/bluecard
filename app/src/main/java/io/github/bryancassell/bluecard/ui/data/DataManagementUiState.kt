@@ -2,10 +2,15 @@ package io.github.bryancassell.bluecard.ui.data
 
 import io.github.bryancassell.bluecard.data.backup.Backup
 
-/** What the Data management screen shows: export and import. */
+/** What the Data management screen shows: export, import and clearing all progress. */
 data class DataManagementUiState(
-    /** Whether an export, a file being read or an import is under way. The buttons wait. */
+    /**
+     * Whether an export, a file being read, an import or a clear is under way. The buttons
+     * wait.
+     */
     val working: Boolean = false,
+    /** Whether there's progress to clear: a badge is started. */
+    val canClear: Boolean = false,
     /**
      * A file the scout chose that can be imported, until they confirm or cancel replacing
      * their data with it. It can be too large for saved state, so if the system stops the app
@@ -17,8 +22,8 @@ data class DataManagementUiState(
 )
 
 /**
- * A message for the scout about an export or import. Each is its own object, as a SaveFailure
- * is, so one that repeats the last is shown again.
+ * A message for the scout about an export, import or clear. Each is its own object, as a
+ * SaveFailure is, so one that repeats the last is shown again.
  */
 class DataManagementMessage(val kind: Kind) {
     enum class Kind {
@@ -34,6 +39,8 @@ class DataManagementMessage(val kind: Kind) {
         NewerFormat,
 
         ImportFailed,
-        Imported
+        Imported,
+        ClearFailed,
+        Cleared
     }
 }

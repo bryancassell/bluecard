@@ -70,8 +70,9 @@ class OtherAppStarter internal constructor(
 
     /**
      * Runs [action] for a tap that opens another app once something is ready, such as Share
-     * report, which opens the share sheet once the report is created. It's ignored, and ignores
-     * other taps, as a start is.
+     * report, which opens the share sheet once the report is created, or for a tap on a control
+     * beside ones that open another app, such as Clear all, whose dialog shouldn't open under
+     * the other app. It's ignored, and ignores other taps, as a start is.
      */
     fun tap(action: () -> Unit) {
         if (ignoring) return

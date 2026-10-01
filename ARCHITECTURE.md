@@ -191,7 +191,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   shows the message in place of the whole app. This follows "Show errors on the
   screen" in the UI layer guide, which keeps errors in UI state. The message has
   no "Try again" button, which limits when a screen loads again
-  (`LoadFailedMessage`).
+  (`LoadFailedMessage`). Data management shows no such message: it loads only
+  whether a badge is started, for its Clear all button, which its export and
+  import don't need.
 - **Save failures are a UI state too.** When something can't be saved, a
   repository throws an `IOException`. ViewModels that save progress launch each
   write with a `SaveRunner` (`ui/SaveFailure.kt`), which puts a `SaveFailure` in
@@ -201,6 +203,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which says ViewModel events "should always result in a UI state update". The
   screen keeps showing what's stored, so a change that failed visibly didn't
   happen. Onboarding predates this and shows its own message under its button.
+  Data management runs its import and clear as it runs its export, with its own
+  messages in one snackbar, rather than with a `SaveRunner`.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
   developer without a scout reporting it: Google Play's
@@ -286,7 +290,9 @@ both taps of a double tap can reach it.
   `rememberStartOtherApp` (`ui/`), shared among the screen's controls that open
   another app. After a tap, it ignores taps for the double-tap timeout, so a
   browser doesn't open two tabs, or an email app two drafts
-  ([#97](https://github.com/bryancassell/bluecard/issues/97)).
+  ([#97](https://github.com/bryancassell/bluecard/issues/97)). Data
+  management's Clear all goes through it too (`OtherAppStarter.tap`), so a tap
+  just after Export or Import doesn't open its dialog under the file picker.
 
 ### Language and layout direction
 
@@ -435,7 +441,7 @@ io.github.bryancassell.bluecard
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
-| **Data management** | Clear all progress, export, import. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
+| **Data management** | Export, import, and last, a button that clears all progress. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
 
 Badge detail and each requirement's page show one level of the requirement
 tree (see [`PRD.md`](PRD.md#design-decisions)'s Requirement list). Both show
@@ -652,7 +658,8 @@ shows a snackbar, as a failed save does (`SaveRunner`).
 of a requirement and every one under it (`clearRequirements`), each in one
 transaction, after a confirmation dialog. Every removal of what the scout
 recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
-opened by a button with `removalButtonColors`. Badge detail and Requirement
+opened by a button with `removalButtonColors` (`removalOutlinedButtonColors`
+for Data management's outlined Clear all). Badge detail and Requirement
 detail share their Clear progress button and its dialog
 (`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
