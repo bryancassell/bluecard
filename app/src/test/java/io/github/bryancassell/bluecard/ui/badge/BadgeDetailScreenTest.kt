@@ -26,6 +26,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -582,6 +583,25 @@ class BadgeDetailScreenTest {
         }
 
         assertEquals(listOf("1", "2", "3"), openedRequirements)
+    }
+
+    // At twice the font size, "10" outgrows the box's minimum width, while "9" doesn't.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(fontScale = 2f)
+    @Test
+    fun requirementNumbersOfDifferentWidths_atLargestFontSize_summariesLineUp() {
+        val requirements = (9..10).map {
+            RequirementItem("$it", "Requirement $it.", null, false, markedByHand = false)
+        }
+        show(ready.copy(requirements = requirements))
+
+        // In the unmerged tree, each summary is a node of its own.
+        val starts = requirements.map {
+            composeTestRule.onNodeWithText(it.summary, useUnmergedTree = true)
+                .getUnclippedBoundsInRoot()
+                .left
+        }
+        assertEquals(starts.first(), starts.last())
     }
 
     @Test

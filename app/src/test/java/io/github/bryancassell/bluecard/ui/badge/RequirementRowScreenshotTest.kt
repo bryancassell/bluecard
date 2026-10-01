@@ -27,7 +27,7 @@ class RequirementRowScreenshotTest {
 
     private fun capture(item: RequirementItem) {
         composeTestRule.setContent {
-            BlueCardTheme { RequirementRow(item = item, onOpen = {}) }
+            BlueCardTheme { RequirementRows(items = listOf(item), onOpen = {}) }
         }
         composeTestRule.onRoot().captureRoboImage()
     }

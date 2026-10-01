@@ -214,9 +214,7 @@ private fun BadgeDetails(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .semantics { heading() }
         )
-        uiState.requirements.forEach {
-            RequirementRow(item = it, onOpen = onOpenRequirement)
-        }
+        RequirementRows(items = uiState.requirements, onOpen = onOpenRequirement)
     }
 }
 

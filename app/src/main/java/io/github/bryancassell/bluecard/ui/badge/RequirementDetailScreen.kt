@@ -116,9 +116,7 @@ fun RequirementDetailScreen(
                         CompletionDate(uiState.completedDate, uiState.today, onCompletedDateChange)
                     }
                 }
-                uiState.children.forEach {
-                    RequirementRow(item = it, onOpen = onOpenRequirement)
-                }
+                RequirementRows(items = uiState.children, onOpen = onOpenRequirement)
                 uiState.tracker?.let { tracker ->
                     TrackerSection(
                         tracker = tracker,
@@ -129,7 +127,12 @@ fun RequirementDetailScreen(
                 }
                 CommentField(comment, uiState.commentChanged, onSaveComment)
                 if (uiState.canClear) {
-                    ClearProgress(requirement.number, uiState.children.isNotEmpty(), onClear)
+                    ClearProgress(
+                        number = requirement.number,
+                        hasChildren = uiState.children.isNotEmpty(),
+                        unsavedNotes = uiState.commentChanged,
+                        onClear = onClear
+                    )
                 }
             }
             SaveFailedSnackbarHost(
@@ -261,10 +264,16 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
 
 /**
  * Clears what the scout recorded for the requirement, and for those under it if it
- * [hasChildren], once they confirm. Red, and last on the page, so it isn't tapped by mistake.
+ * [hasChildren], once they confirm. The dialog warns that [unsavedNotes], changes to the notes
+ * not saved yet, go too. Red, and last on the page, so it isn't tapped by mistake.
  */
 @Composable
-private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> Unit) {
+private fun ClearProgress(
+    number: String,
+    hasChildren: Boolean,
+    unsavedNotes: Boolean,
+    onClear: () -> Unit
+) {
     var confirming by rememberSaveable { mutableStateOf(false) }
     TextButton(
         onClick = { confirming = true },
@@ -278,10 +287,15 @@ private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> U
         ConfirmDialog(
             title = stringResource(R.string.requirement_clear_title, number),
             message = stringResource(
-                if (hasChildren) {
-                    R.string.requirement_clear_message_with_children
-                } else {
-                    R.string.requirement_clear_message
+                when {
+                    hasChildren && unsavedNotes ->
+                        R.string.requirement_clear_message_with_children_and_unsaved_notes
+
+                    hasChildren -> R.string.requirement_clear_message_with_children
+
+                    unsavedNotes -> R.string.requirement_clear_message_with_unsaved_notes
+
+                    else -> R.string.requirement_clear_message
                 }
             ),
             confirmLabel = stringResource(R.string.requirement_clear_confirm),

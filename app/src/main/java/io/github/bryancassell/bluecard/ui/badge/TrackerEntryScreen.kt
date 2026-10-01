@@ -49,6 +49,7 @@ import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -236,7 +237,11 @@ private fun TrackerEntryButtons(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (uiState.hasSavedEntry) {
-            TextButton(onClick = { confirmingDelete = true }, enabled = uiState.canDelete) {
+            TextButton(
+                onClick = { confirmingDelete = true },
+                enabled = uiState.canDelete,
+                colors = removalButtonColors()
+            ) {
                 Text(stringResource(R.string.tracker_entry_delete))
             }
         }

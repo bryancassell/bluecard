@@ -308,9 +308,7 @@ both taps of a double tap can reach it.
 - **Material 3** components, themed by `BlueCardTheme` with the blue card's
   colors (`BlueCardColorScheme` in `ui/theme/Color.kt`). There's no dynamic
   color, and the one light scheme is used in dark mode too, until the app has a
-  dark scheme ([#108](https://github.com/bryancassell/bluecard/issues/108)). In
-  dark mode the window theme isn't declared light, which opts out of Android's
-  force dark, so the system doesn't darken the colors either.
+  dark scheme ([#108](https://github.com/bryancassell/bluecard/issues/108)).
 - **Don't follow dark mode elsewhere.** `isSystemInDarkTheme()` still reports
   the system's dark mode, and `-night` resources still apply in it. Until #108,
   nothing but the window theme should use either: it would put dark-mode
@@ -561,8 +559,7 @@ the Eagle-required badges in the catalog. Each Eagle "one of" group (such as
 Cycling, Hiking and Swimming) counts once, with the status of its
 furthest-along badge, because earning any of them meets the requirement. It
 also lists every badge in progress, in the row Badges uses
-(`ui/badges/BadgeRow.kt`). Progress on a badge that isn't in the catalog isn't
-counted or listed.
+(`ui/badges/BadgeRow.kt`).
 
 ### Browse and search
 
