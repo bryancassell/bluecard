@@ -29,8 +29,6 @@ sealed interface RequirementDetailUiState {
          * clear.
          */
         val canClear: Boolean,
-        /** The latest date the scout can give as a completion date. */
-        val today: LocalDate,
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
         val saveFailure: SaveFailure? = null
     ) : RequirementDetailUiState

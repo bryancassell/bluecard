@@ -72,6 +72,7 @@ fun TrackerEntryRoute(
         uiState = uiState,
         fields = viewModel.fields,
         onDateChange = viewModel::setDate,
+        today = viewModel::today,
         onSave = viewModel::save,
         onDelete = viewModel::delete,
         onClose = onClose,
@@ -90,6 +91,7 @@ fun TrackerEntryScreen(
     uiState: TrackerEntryUiState,
     fields: Map<String, TextFieldState>,
     onDateChange: (columnId: String, date: LocalDate?) -> Unit,
+    today: () -> LocalDate,
     onSave: () -> Unit,
     onDelete: () -> Unit,
     onClose: () -> Unit,
@@ -123,7 +125,7 @@ fun TrackerEntryScreen(
                                 column = column,
                                 field = fields.getValue(column.id),
                                 date = uiState.dates[column.id],
-                                today = uiState.today,
+                                today = today,
                                 onDateChange = { onDateChange(column.id, it) }
                             )
                         }
@@ -181,7 +183,7 @@ private fun TrackerField(
     column: TrackerColumn,
     field: TextFieldState,
     date: LocalDate?,
-    today: LocalDate,
+    today: () -> LocalDate,
     onDateChange: (LocalDate?) -> Unit
 ) {
     when (column.type) {

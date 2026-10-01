@@ -147,7 +147,6 @@ class TrackerEntryViewModel @AssistedInject constructor(
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,
-            today = LocalDate.now(clock),
             done = done,
             saveFailure = saveFailure
         )
@@ -236,6 +235,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
             _fields.getValue(columnId).setTextAndPlaceCursorAtEnd(date?.toString().orEmpty())
         }
     }
+
+    /** The latest date the scout can pick, read from the clock each time. */
+    fun today(): LocalDate = LocalDate.now(clock)
 
     /**
      * Saves the fields as the row, then closes the page. Does nothing if they can't be saved
