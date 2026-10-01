@@ -53,7 +53,7 @@ class EditProfileViewModel @Inject constructor(
         fields.loadOnce { mapOf(NAME to stored?.name, UNIT_NUMBER to stored?.unitNumber) }
         val typed = typed()
         EditProfileUiState.Ready(
-            canSave = typed.isComplete() && typed != stored,
+            canSave = isComplete(typed) && typed != stored,
             saved = isSaved,
             saveFailure = saveFailure
         )
@@ -66,7 +66,9 @@ class EditProfileViewModel @Inject constructor(
     /** What the fields hold, trimmed, as Onboarding saves them. */
     private fun typed() = Profile(name.text.trim().toString(), unitNumber.text.trim().toString())
 
-    private fun Profile.isComplete() = name.isNotEmpty() && unitNumber.isNotEmpty()
+    /** Whether [profile], which [typed] trims, has both values: a blank field is empty. */
+    private fun isComplete(profile: Profile) =
+        profile.name.isNotEmpty() && profile.unitNumber.isNotEmpty()
 
     /**
      * Saves the fields as the scout's name and unit number, then closes the page. Does nothing if
@@ -75,7 +77,7 @@ class EditProfileViewModel @Inject constructor(
      */
     fun save() {
         val profile = typed()
-        if (!profile.isComplete()) return
+        if (!isComplete(profile)) return
         saves.launch {
             profileRepository.saveProfile(profile)
             // A field changed while it saved stays open to be saved too, rather than being lost.

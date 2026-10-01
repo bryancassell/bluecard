@@ -627,8 +627,8 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
   (`saved` or `done` in its UI state), following the UI layer guide's
   [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
   of navigating from UI state, so a save that fails keeps the page open with the
-  scout's edit. Edit counselor and Tracker entry work this way; Requirement
-  detail stays open after its notes are saved.
+  scout's edit. Edit counselor, Tracker entry and Edit name and unit work this
+  way; Requirement detail stays open after its notes are saved.
 
 ### PDF report
 

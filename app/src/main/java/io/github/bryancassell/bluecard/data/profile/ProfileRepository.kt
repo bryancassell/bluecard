@@ -10,6 +10,10 @@ interface ProfileRepository {
      */
     fun observeProfile(): Flow<Profile?>
 
-    /** Saves the profile, replacing any saved before. */
+    /**
+     * Saves the profile, replacing any saved before. It finishes even if the caller is
+     * cancelled, such as when the scout leaves the screen. Throws an `IOException` if the
+     * profile can't be saved.
+     */
     suspend fun saveProfile(profile: Profile)
 }

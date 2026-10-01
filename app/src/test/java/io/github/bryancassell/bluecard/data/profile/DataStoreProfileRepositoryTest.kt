@@ -3,8 +3,10 @@ package io.github.bryancassell.bluecard.data.profile
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import java.io.File
+import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -30,8 +33,13 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     private val file get() = File(folder.root, "profile.preferences_pb")
     private val jobs = mutableListOf<Job>()
 
+    /** What escaped [externalScope]'s coroutines, which crashes the app outside tests. */
+    private val uncaught = mutableListOf<Throwable>()
+
     // As the app's scope, which outlives the screens.
-    private val externalScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val externalScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> uncaught += e }
+    )
 
     /** A new DataStore on [file], as a new app process would create. */
     private fun newDataStore(produceFile: () -> File = { file }): DataStore<Preferences> {
@@ -108,5 +116,24 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
             Profile("Alex Scout", "123"),
             repository.observeProfile().first { it != null }
         )
+    }
+
+    @Test
+    fun saveProfile_whenItCantBeSaved_throwsIOException_withoutCrashing() = runTest {
+        val dataStore = newDataStore { File(folder.root, "full.preferences_pb") }
+        // As when the disk is full.
+        val full = object : DataStore<Preferences> by dataStore {
+            override suspend fun updateData(
+                transform: suspend (Preferences) -> Preferences
+            ): Preferences = throw IOException("Disk full")
+        }
+        val repository = DataStoreProfileRepository(full, externalScope)
+
+        val error = runCatching {
+            repository.saveProfile(Profile("Alex Scout", "123"))
+        }.exceptionOrNull()
+
+        assertTrue("Expected an IOException, got $error", error is IOException)
+        assertEquals(emptyList<Throwable>(), uncaught)
     }
 }

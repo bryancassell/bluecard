@@ -1022,6 +1022,9 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
         assertEquals(Profile("Alex Scout", "123"), runBlocking { profile() })
+        // Opening it again starts from what's saved, not the discarded edit.
+        composeTestRule.onNodeWithText("Edit").performClick()
+        assertFieldText("Name", "Alex Scout")
     }
 
     @Test
