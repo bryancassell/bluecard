@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,18 +14,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -80,6 +85,9 @@ fun BadgeDetailScreen(
     }
 }
 
+/** Test tag of the official requirements link's icon, which has no semantics of its own. */
+internal const val OFFICIAL_LINK_ICON_TAG = "officialLinkIcon"
+
 @Composable
 private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
@@ -87,6 +95,9 @@ private fun BadgeDetails(
     onEditCounselor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Opens the official page in the browser. The counselor's phone and email share the
+    // function, so quick taps on any of them open one app, once.
+    val startOtherApp = rememberStartOtherApp()
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -106,32 +117,42 @@ private fun BadgeDetails(
                 )
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
-        }
-        // Opens the official page in the browser. The counselor's phone and email share the
-        // function, so quick taps on any of them open one app, once.
-        val startOtherApp = rememberStartOtherApp()
-        // Shown when no app can open web links, as when parental controls block the browser.
-        val noBrowser = stringResource(R.string.badge_detail_no_browser)
-        val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
-        // A tonal button with an "open in new" icon, so it stands out and says it leaves the app.
-        FilledTonalButton(
-            onClick = {
-                startOtherApp(Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri()), noBrowser)
-            },
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
+            val officialPage = Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri())
+            // Shown when no app can open web links, as when parental controls block the browser.
+            val noBrowser = stringResource(R.string.badge_detail_no_browser)
+            val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
+            // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
+            // The theme's outline color, rather than Material's lighter default, keeps the outline
+            // visible on the tinted background, and the label is primary blue, like a link.
+            OutlinedButton(
+                onClick = { startOtherApp(officialPage, noBrowser) },
                 // The button keeps its own click action, with this label.
-                .semantics { onClick(label = openInBrowser, action = null) },
-            // ButtonDefaults.ButtonWithIconContentPadding, mirrored for an icon after the label.
-            contentPadding = PaddingValues(start = 24.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
-        ) {
-            Text(text = stringResource(R.string.badge_detail_official_page))
-            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-            Icon(
-                painterResource(R.drawable.ic_open_in_new),
-                contentDescription = null,
-                modifier = Modifier.size(ButtonDefaults.IconSize)
-            )
+                modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = ButtonDefaults.outlinedButtonBorder()
+                    .copy(brush = SolidColor(MaterialTheme.colorScheme.outline)),
+                // Material's padding for an icon before the label, flipped for one after it.
+                contentPadding = with(ButtonDefaults.ButtonWithIconContentPadding) {
+                    PaddingValues(
+                        start = calculateEndPadding(LayoutDirection.Ltr),
+                        top = calculateTopPadding(),
+                        end = calculateStartPadding(LayoutDirection.Ltr),
+                        bottom = calculateBottomPadding()
+                    )
+                }
+            ) {
+                Text(text = stringResource(R.string.badge_detail_official_page))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Icon(
+                    painterResource(R.drawable.ic_open_in_new),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(ButtonDefaults.IconSize)
+                        .testTag(OFFICIAL_LINK_ICON_TAG)
+                )
+            }
         }
         CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
         Text(

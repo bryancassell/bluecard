@@ -2,6 +2,8 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.app.Application
 import android.content.Intent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -11,16 +13,19 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
@@ -70,13 +75,18 @@ class BadgeDetailScreenTest {
         )
     )
 
-    private fun show(uiState: BadgeDetailUiState) {
+    private fun show(
+        uiState: BadgeDetailUiState,
+        layoutDirection: LayoutDirection = LayoutDirection.Ltr
+    ) {
         composeTestRule.setContent {
-            BadgeDetailScreen(
-                uiState = uiState,
-                onOpenRequirement = { openedRequirements += it },
-                onEditCounselor = { counselorEdits++ }
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                BadgeDetailScreen(
+                    uiState = uiState,
+                    onOpenRequirement = { openedRequirements += it },
+                    onEditCounselor = { counselorEdits++ }
+                )
+            }
         }
     }
 
@@ -184,6 +194,29 @@ class BadgeDetailScreenTest {
         val started = startedActivity()
         assertEquals(Intent.ACTION_VIEW, started?.action)
         assertEquals("https://www.scouting.org/merit-badges/camping/", started?.dataString)
+    }
+
+    // The button merges its label and icon, so these look inside it.
+    private fun officialLinkLabel() = composeTestRule
+        .onNodeWithText("Official requirements", useUnmergedTree = true)
+        .getBoundsInRoot()
+
+    private fun officialLinkIcon() = composeTestRule
+        .onNodeWithTag(OFFICIAL_LINK_ICON_TAG, useUnmergedTree = true)
+        .getBoundsInRoot()
+
+    @Test
+    fun officialLink_iconFollowsLabel() {
+        show(ready)
+
+        assertTrue(officialLinkIcon().left >= officialLinkLabel().right)
+    }
+
+    @Test
+    fun officialLink_rightToLeft_iconFollowsLabel() {
+        show(ready, LayoutDirection.Rtl)
+
+        assertTrue(officialLinkIcon().right <= officialLinkLabel().left)
     }
 
     // The browser takes a moment to cover BlueCard, so the second tap reaches the link too.
