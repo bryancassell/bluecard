@@ -1,4 +1,4 @@
-package io.github.bryancassell.bluecard.data.report
+package io.github.bryancassell.bluecard.testing
 
 import android.database.Cursor
 import android.database.MatrixCursor

@@ -62,9 +62,7 @@ class SaveRunner(private val scope: CoroutineScope) {
 
 /**
  * Shows a snackbar with [message], which says progress couldn't be saved unless it's given,
- * for each [failure], then calls [onShown] once it's gone, or the screen is, so the ViewModel
- * can clear it. That's how the UI layer guide has the UI show a message from UI state:
- * https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events
+ * for each [failure], as [MessageSnackbarHost] does.
  */
 @Composable
 fun SaveFailedSnackbarHost(
@@ -73,9 +71,7 @@ fun SaveFailedSnackbarHost(
     modifier: Modifier = Modifier,
     message: String = stringResource(R.string.save_failed)
 ) {
-    val hostState = remember { SnackbarHostState() }
-    SaveFailureSnackbar(failure, onShown, hostState, message)
-    SnackbarHost(hostState, modifier)
+    MessageSnackbarHost(failure, message, onShown, modifier)
 }
 
 /**
@@ -91,16 +87,48 @@ fun SaveFailureSnackbar(
     hostState: SnackbarHostState,
     message: String = stringResource(R.string.save_failed)
 ) {
-    if (failure != null) {
+    MessageSnackbar(failure, message, onShown, hostState)
+}
+
+/**
+ * Shows a snackbar with [text] for each [message] from UI state, then calls [onShown] once it's
+ * gone, or the screen is, so the ViewModel can clear it. That's how the UI layer guide has the
+ * UI show a message from UI state:
+ * https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events
+ *
+ * Each message must be its own object, as a [SaveFailure] is, so one that follows another is
+ * shown too, even if it's the same kind.
+ */
+@Composable
+fun <T : Any> MessageSnackbarHost(
+    message: T?,
+    text: String,
+    onShown: (T) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val hostState = remember { SnackbarHostState() }
+    MessageSnackbar(message, text, onShown, hostState)
+    SnackbarHost(hostState, modifier)
+}
+
+/** Shows [message] in [hostState] as [MessageSnackbarHost] does. */
+@Composable
+private fun <T : Any> MessageSnackbar(
+    message: T?,
+    text: String,
+    onShown: (T) -> Unit,
+    hostState: SnackbarHostState
+) {
+    if (message != null) {
         val currentOnShown by rememberUpdatedState(onShown)
-        // Keyed by the failure, so one that replaces another is shown too.
-        LaunchedEffect(failure) {
+        // Keyed by the message, so one that replaces another is shown too.
+        LaunchedEffect(message) {
             try {
-                hostState.showSnackbar(message)
+                hostState.showSnackbar(text)
             } finally {
                 // Also once the screen is gone, such as when the scout leaves it while the
                 // message shows, so the old message doesn't come back when they return.
-                currentOnShown(failure)
+                currentOnShown(message)
             }
         }
     }

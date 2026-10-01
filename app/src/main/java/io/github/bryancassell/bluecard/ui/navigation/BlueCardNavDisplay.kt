@@ -26,7 +26,7 @@ import io.github.bryancassell.bluecard.ui.badge.EditCounselorRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
 import io.github.bryancassell.bluecard.ui.badge.TrackerEntryRoute
 import io.github.bryancassell.bluecard.ui.badges.BadgesRoute
-import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
+import io.github.bryancassell.bluecard.ui.data.DataManagementRoute
 import io.github.bryancassell.bluecard.ui.home.HomeRoute
 import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 
@@ -126,7 +126,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     onClose = { backStack.closeIfOnTop(key) }
                 )
             }
-            entry<DataManagement> { DataManagementScreen() }
+            entry<DataManagement> { DataManagementRoute() }
         }.also { entries = it }
     )
     val sceneState = rememberSceneState(

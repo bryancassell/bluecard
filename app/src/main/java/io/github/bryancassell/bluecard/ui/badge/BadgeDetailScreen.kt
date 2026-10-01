@@ -297,7 +297,7 @@ private fun ReportButtons(
         destination?.let(onSave)
     }
     val fileName = reportFileName(LocalResources.current, badgeName)
-    val noFilePicker = stringResource(R.string.badge_detail_no_file_picker)
+    val noFilePicker = stringResource(R.string.no_file_saver)
     // Wraps the buttons onto two lines when they don't fit on one, as with large text.
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),

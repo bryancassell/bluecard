@@ -145,4 +145,26 @@ interface ProgressDao {
 
     @Query("DELETE FROM badge_progress")
     suspend fun deleteAll()
+
+    /**
+     * Deletes all progress and inserts [progress] in its place, in a single transaction.
+     * Tracker entries are inserted with new IDs, in the order they're listed.
+     */
+    @Transaction
+    suspend fun replaceAll(progress: List<BadgeProgressDetails>) {
+        deleteAll()
+        insertBadges(progress.map { it.badge })
+        insertRequirements(progress.flatMap { it.requirements })
+        // An ID of 0 has Room generate one.
+        insertTrackerEntries(progress.flatMap { it.trackerEntries }.map { it.copy(id = 0) })
+    }
+
+    @Insert
+    suspend fun insertBadges(badges: List<BadgeProgress>)
+
+    @Insert
+    suspend fun insertRequirements(requirements: List<RequirementProgress>)
+
+    @Insert
+    suspend fun insertTrackerEntries(entries: List<TrackerEntry>)
 }

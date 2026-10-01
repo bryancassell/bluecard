@@ -165,6 +165,24 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     }
 
     @Test
+    fun replaceAllThatFailsPartWay_leavesProgressAsItWas() = runTest {
+        repository.startBadge("archery", start.requirementsVersion, start.startedDate)
+        repository.setRequirementComment("archery", "1", "Bows", start)
+        val before = repository.observeAllProgress().first()
+        failRequirementWrites()
+        val camping = BadgeProgressDetails(
+            start.progress("camping"),
+            listOf(RequirementProgress("camping", "1", comment = "Tents")),
+            emptyList()
+        )
+
+        runCatching { repository.replaceAll(listOf(camping)) }
+
+        // Deleting the old progress and adding the badge were rolled back with it.
+        assertEquals(before, repository.observeAllProgress().first())
+    }
+
+    @Test
     fun writing_thatBreaksAConstraint_throwsTheBugUnwrapped() = runTest {
         val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1))
         repository.startBadge("archery", start.requirementsVersion, start.startedDate)

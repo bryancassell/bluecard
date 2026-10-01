@@ -17,6 +17,7 @@ import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream

@@ -113,6 +113,16 @@ interface ProgressRepository {
 
     /** Clears all progress. The scout's profile is stored elsewhere and stays. */
     suspend fun clearAll()
+
+    /**
+     * Replaces all progress with [progress], in one transaction, as an import does. It must be
+     * shaped as [observeAllProgress] gives it: each badge once, each with only its own
+     * requirements, once each, and its own tracker entries, at most one for each row of a
+     * fixed-row tracker. It's stored as it is, without the cleanup the other functions do.
+     * Tracker entries get new IDs, ignoring theirs, in the order they're listed, so each log
+     * keeps its order, and each is higher than any entry's before.
+     */
+    suspend fun replaceAll(progress: List<BadgeProgressDetails>)
 }
 
 /** What [ProgressRepository] implementations throw when a badge hasn't been started. */

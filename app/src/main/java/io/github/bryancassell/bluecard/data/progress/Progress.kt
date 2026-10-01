@@ -51,6 +51,26 @@ data class Counselor(
             .takeIf { it != Counselor() }
 }
 
+// The longest text each field takes, for the reasons given beside PROFILE_NAME_MAX_LENGTH.
+
+/** Plenty for a counselor's name. */
+const val COUNSELOR_NAME_MAX_LENGTH = 100
+
+/** Plenty for a phone number. */
+const val COUNSELOR_PHONE_MAX_LENGTH = 50
+
+/** No email address is longer than 254 characters. */
+const val COUNSELOR_EMAIL_MAX_LENGTH = 254
+
+/** Plenty for notes on a requirement ([RequirementProgress.comment]). */
+const val NOTES_MAX_LENGTH = 2_000
+
+/** Plenty for a note in a tracker row's text column. */
+const val TRACKER_TEXT_MAX_LENGTH = 500
+
+/** Longer than any number a scout would log in a tracker row's number column. */
+const val TRACKER_NUMBER_MAX_LENGTH = 20
+
 /**
  * Text the scout typed, such as a requirement's comment, as repositories store it: without
  * spaces around it, and null if nothing is left.

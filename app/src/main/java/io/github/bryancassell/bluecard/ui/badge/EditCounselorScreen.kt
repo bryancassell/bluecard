@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.LineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
@@ -110,11 +113,9 @@ fun EditCounselorScreen(
     }
 }
 
-// Plenty for each field; no email address is longer than 254 characters. The fields' text is
-// saved with the screen's state, which has a size limit, so a huge paste mustn't reach it.
-private val NameLengthLimit = TextLengthLimit(maxLength = 100)
-private val PhoneLengthLimit = TextLengthLimit(maxLength = 50)
-private val EmailLengthLimit = TextLengthLimit(maxLength = 254)
+private val NameLengthLimit = TextLengthLimit(maxLength = COUNSELOR_NAME_MAX_LENGTH)
+private val PhoneLengthLimit = TextLengthLimit(maxLength = COUNSELOR_PHONE_MAX_LENGTH)
+private val EmailLengthLimit = TextLengthLimit(maxLength = COUNSELOR_EMAIL_MAX_LENGTH)
 
 @Composable
 private fun CounselorFields(

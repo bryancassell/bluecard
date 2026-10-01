@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -240,11 +241,7 @@ private fun CompletionDate(
     )
 }
 
-/**
- * Plenty for notes on a requirement. The field's text is saved with the screen's state, which
- * has a size limit, so a huge paste mustn't reach it.
- */
-private val CommentLengthLimit = TextLengthLimit(maxLength = 2_000)
+private val CommentLengthLimit = TextLengthLimit(maxLength = NOTES_MAX_LENGTH)
 
 /** The scout's comment on the requirement, saved when they choose. */
 @Composable
