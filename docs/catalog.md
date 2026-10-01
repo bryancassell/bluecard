@@ -7,8 +7,10 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 
 ## Ground rules
 
-- **Our own words only.** Never copy text from Scouting America. Each badge gets a
-  short summary and each requirement a one-line summary, written for this project.
+- **Our own words only.** Each badge gets a short summary and each requirement a
+  one-line summary, written for this project rather than copied from Scouting
+  America. A summary keeps the official wording only where that's the plain,
+  obvious way to say it: see [What counts as copying](#what-counts-as-copying).
   The app links to the official page for the full wording.
 - **Match the official structure.** Requirement numbers, nesting and "do N of the
   following" counts must match the official page exactly, because scouts and
@@ -26,6 +28,34 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
   `id`, so once a version ships, never remove a column or change its `id` or
   `type`, and never change the tracker's `rowCount`. You can change a column's
   label or add a column.
+
+## What counts as copying
+
+Write each summary from what the requirement asks, not by editing the official
+sentence. Then read it next to the official text. If the summary keeps the
+official wording of a sentence or clause, and a clearly different wording would
+read at least as naturally, reword it. Swapping or dropping a word or two
+doesn't make the wording different.
+
+Keep the official wording where it's the plain, obvious way to say it. These
+are fine, even word for word:
+
+- Names of things, such as conditions, places, items and concepts.
+- Lists of names. Don't reorder a list just to make it differ.
+- Numbers, and common phrases such as "with your counselor" or "in your own
+  words".
+- Plain instructions that would read worse any other way, such as "Tour a
+  federal facility."
+
+Examples from the catalog (compare them with the official pages):
+
+| Requirement | Summary | Verdict |
+|---|---|---|
+| Canoeing 3a | Identify the main parts of a canoe. | Reworded: the first draft was the official sentence with one word changed, and this says it just as naturally. |
+| Citizenship in the Community 1 | Discuss what good citizenship looks like in your community. | Reworded: the first draft carried over an 11-word official clause that's easy to say other ways. |
+| Citizenship in the Nation 7c | Tour a federal facility. | Fine, though it's the official sentence: any other wording reads worse. |
+| First Aid 3g | Immersion foot, frostnip, frostbite and ice burns. | Fine: the official list of names. |
+| Environmental Science 1 | Explain environmental science in your own words and how it helps. | Fine: a name and a common phrase from the official text, in a sentence of our own. |
 
 ## Format
 
@@ -141,4 +171,10 @@ It checks that:
   that start with a lowercase letter, and a `rowCount` of at least 1 when set.
 
 It can't check that the structure matches the official page or that summaries
-are in our own words; reviewers check those.
+are in our own words; reviewers check those. To check the wording, read each
+summary next to its requirement on the official page, using
+[What counts as copying](#what-counts-as-copying). Counting the words a summary
+shares with the official text can help find summaries to look at, but decide
+each one with that section, not by the count: lists and common phrases make
+long matches in summaries that are fine, and rewording to avoid them makes
+summaries read awkwardly.

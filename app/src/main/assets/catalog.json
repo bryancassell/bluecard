@@ -24,7 +24,7 @@
                 },
                 {
                   "number": "1c",
-                  "summary": "Explain the four whistle signals used on a range."
+                  "summary": "Explain what the four range whistle signals mean."
                 },
                 {
                   "number": "1d",
@@ -42,7 +42,7 @@
               "children": [
                 {
                   "number": "2a",
-                  "summary": "Name and point out the parts of an arrow."
+                  "summary": "Identify the parts of an arrow."
                 },
                 {
                   "number": "2b",
@@ -120,7 +120,7 @@
                   "children": [
                     {
                       "number": "5A(1)",
-                      "summary": "Name and point out the parts of your bow."
+                      "summary": "Identify the parts of your bow."
                     },
                     {
                       "number": "5A(2)",
@@ -180,7 +180,7 @@
                   "children": [
                     {
                       "number": "5B(1)",
-                      "summary": "Name and point out the parts of your bow."
+                      "summary": "Identify the parts of your bow."
                     },
                     {
                       "number": "5B(2)",
@@ -558,7 +558,7 @@
                   "children": [
                     {
                       "number": "9b(1)",
-                      "summary": "Hike up a mountain, climbing at least 1,000 feet."
+                      "summary": "Gain at least 1,000 feet of elevation on a mountain hike."
                     },
                     {
                       "number": "9b(2)",
@@ -633,7 +633,7 @@
               "children": [
                 {
                   "number": "3a",
-                  "summary": "Name and point out the main parts of a canoe."
+                  "summary": "Identify the main parts of a canoe."
                 },
                 {
                   "number": "3b",
@@ -946,7 +946,7 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "Discuss what it takes to be a good citizen in your community."
+              "summary": "Discuss what good citizenship looks like in your community."
             },
             {
               "number": "2",
@@ -2842,7 +2842,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Describe signs of and first aid for strains, tears and ruptures."
+                  "summary": "Describe how to spot and treat strains, tears and ruptures."
                 },
                 {
                   "number": "8c",
@@ -3592,7 +3592,7 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Name and point out the main parts of a kayak."
+                  "summary": "Identify the main parts of a kayak."
                 },
                 {
                   "number": "4b",
@@ -4036,11 +4036,11 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Describe a person who is mentally, emotionally and socially healthy."
+                  "summary": "Describe a person in good mental, emotional and social health."
                 },
                 {
                   "number": "1c",
-                  "summary": "Describe a person who is spiritually healthy."
+                  "summary": "Describe a person in good spiritual health."
                 },
                 {
                   "number": "1d",
@@ -5187,7 +5187,7 @@
     {
       "id": "space-exploration",
       "name": "Space Exploration",
-      "summary": "Learn why and how we explore space, fly a model rocket, and design a mission and a space base.",
+      "summary": "Learn why people explore space and how they do it, fly a model rocket, and design a mission and a space base.",
       "officialUrl": "https://www.scouting.org/merit-badges/space-exploration/",
       "requirementVersions": [
         {
