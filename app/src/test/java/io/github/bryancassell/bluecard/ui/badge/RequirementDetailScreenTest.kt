@@ -11,10 +11,12 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -46,6 +48,7 @@ class RequirementDetailScreenTest {
     private val completedChanges = mutableListOf<Boolean>()
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
+    private var clears = 0
     private val saveFailuresShown = mutableListOf<SaveFailure>()
     private val comment = TextFieldState()
 
@@ -80,6 +83,7 @@ class RequirementDetailScreenTest {
         ),
         tracker = null,
         commentChanged = false,
+        canClear = false,
         today = today
     )
 
@@ -91,6 +95,7 @@ class RequirementDetailScreenTest {
         children = emptyList(),
         tracker = null,
         commentChanged = false,
+        canClear = false,
         today = today
     )
 
@@ -158,6 +163,7 @@ class RequirementDetailScreenTest {
                 onCompletedChange = { completedChanges += it },
                 onCompletedDateChange = { dateChanges += it },
                 onSaveComment = { commentsSaved++ },
+                onClear = { clears++ },
                 onSaveFailureShown = { saveFailuresShown += it }
             )
         }
@@ -175,6 +181,11 @@ class RequirementDetailScreenTest {
         composeTestRule.onNode(hasSetTextAction() and hasText("Notes")).performScrollTo()
 
     private fun saveCommentButton() = composeTestRule.onNodeWithText("Save notes").performScrollTo()
+
+    private fun clearButton() = composeTestRule.onNodeWithText("Clear progress").performScrollTo()
+
+    private fun confirmClear() =
+        composeTestRule.onNode(hasText("Clear") and hasAnyAncestor(isDialog())).performClick()
 
     // A day in the date picker, which reads each day as its full date.
     private fun pickerDay(date: String) =
@@ -577,5 +588,52 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
         assertEquals(listOf(failure), saveFailuresShown)
+    }
+
+    @Test
+    fun nothingRecorded_hasNoClearButton() {
+        show(leaf)
+
+        composeTestRule.onNodeWithText("Clear progress").assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_asksFirst_thenClears() {
+        show(completedLeaf.copy(canClear = true))
+
+        clearButton().performClick()
+        composeTestRule.onNodeWithText("Clear progress on requirement 1?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("What you recorded for it will be removed.")
+            .assertIsDisplayed()
+        assertEquals(0, clears)
+        confirmClear()
+
+        assertEquals(1, clears)
+        composeTestRule.onNodeWithText("Clear progress on requirement 1?").assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_onRequirementWithSubRequirements_saysTheyAreClearedToo() {
+        show(ready.copy(canClear = true))
+
+        clearButton().performClick()
+
+        composeTestRule.onNodeWithText("Clear progress on requirement 2?").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it and the requirements under it will be removed."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun clear_cancel_clearsNothing() {
+        show(completedLeaf.copy(canClear = true))
+
+        clearButton().performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        assertEquals(0, clears)
+        composeTestRule.onNodeWithText("Clear progress on requirement 1?").assertDoesNotExist()
     }
 }

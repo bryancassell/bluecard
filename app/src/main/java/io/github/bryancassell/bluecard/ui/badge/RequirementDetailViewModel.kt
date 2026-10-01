@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +22,7 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
@@ -61,13 +64,16 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val found = catalog.badgeRequirements(badgeId, progress)
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
+            val numbersWithin = requirement.numbersWithin()
             RecordedRequirement(
                 badgeName = found.badge.name,
                 requirement = found.item(requirement),
                 completedDate = recorded?.completedDate,
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
-                comment = recorded?.comment
+                comment = recorded?.comment,
+                numbersWithin = numbersWithin,
+                hasRecorded = found.hasRecorded(numbersWithin)
             )
         }
     }
@@ -79,7 +85,11 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val children: List<RequirementItem>,
         val tracker: TrackerItem?,
         /** The saved comment. */
-        val comment: String?
+        val comment: String?,
+        /** The numbers of this requirement and of every one under it. */
+        val numbersWithin: List<String>,
+        /** Whether anything is recorded for them, for the scout to clear. */
+        val hasRecorded: Boolean
     )
 
     val uiState: StateFlow<RequirementDetailUiState> = combine(
@@ -97,6 +107,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             children = recorded.children,
             tracker = recorded.tracker,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
+            canClear = recorded.hasRecorded,
             today = today(),
             saveFailure = saveFailure
         )
@@ -121,6 +132,20 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val text = comment.text.toString()
         saves.launch {
             progressRepository.setRequirementComment(badgeId, number, text, recorder.badgeStart())
+        }
+    }
+
+    /**
+     * Clears everything recorded for this requirement and every one under it, then empties the
+     * comment field, discarding an unsaved edit too. The field keeps its text if the clear
+     * fails, as the comment does.
+     */
+    fun clear() {
+        saves.launch {
+            val numbers = recorded.first()?.numbersWithin ?: return@launch
+            recorder.clear(numbers)
+            // In a snapshot of its own, so uiState sees the change straight away.
+            Snapshot.withMutableSnapshot { comment.clearText() }
         }
     }
 

@@ -14,6 +14,7 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ProgressRecorderTest {
@@ -145,5 +146,31 @@ class ProgressRecorderTest {
         recorder.setCompleted("1", true)
 
         assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
+    }
+
+    @Test
+    fun clear_removesWhatWasRecorded_andCheckingAgainDatesItToday() = runTest {
+        val recorder = recorder()
+        recorder.setCompleted("1", true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+        recorder.setCompleted("1", false)
+
+        recorder.clear(listOf("1"))
+        assertNull(requirement("1"))
+        recorder.setCompleted("1", true)
+
+        assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun unchecking_afterTheBadgeIsCleared_doesNothing() = runTest {
+        val recorder = recorder()
+        recorder.setCompleted("1", true)
+        progressRepository.clearBadge("camping")
+
+        // As when the page still shows the requirement checked.
+        recorder.setCompleted("1", false)
+
+        assertNull(progress())
     }
 }

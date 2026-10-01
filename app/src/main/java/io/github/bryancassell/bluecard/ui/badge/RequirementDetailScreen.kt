@@ -15,13 +15,19 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -64,6 +70,7 @@ fun RequirementDetailRoute(
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
         onSaveComment = viewModel::saveComment,
+        onClear = viewModel::clear,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
@@ -74,7 +81,8 @@ fun RequirementDetailRoute(
  * its sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
  * its own page in turn, and a tracker row opens the Tracker entry page
  * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
- * log opens it with neither.
+ * log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
+ * ([onClear]), with what's recorded for the requirements under it.
  */
 @Composable
 fun RequirementDetailScreen(
@@ -85,6 +93,7 @@ fun RequirementDetailScreen(
     onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     onSaveComment: () -> Unit,
+    onClear: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -119,6 +128,9 @@ fun RequirementDetailScreen(
                     )
                 }
                 CommentField(comment, uiState.commentChanged, onSaveComment)
+                if (uiState.canClear) {
+                    ClearProgress(requirement.number, uiState.children.isNotEmpty(), onClear)
+                }
             }
             SaveFailedSnackbarHost(
                 failure = uiState.saveFailure,
@@ -244,5 +256,53 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
         ) {
             Text(stringResource(R.string.requirement_save_comment))
         }
+    }
+}
+
+/**
+ * Clears what the scout recorded for the requirement, and for those under it if it
+ * [hasChildren], once they confirm. Red, and last on the page, so it isn't tapped by mistake.
+ */
+@Composable
+private fun ClearProgress(number: String, hasChildren: Boolean, onClear: () -> Unit) {
+    var confirming by rememberSaveable { mutableStateOf(false) }
+    TextButton(
+        onClick = { confirming = true },
+        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+    ) {
+        Text(stringResource(R.string.requirement_clear))
+    }
+    if (confirming) {
+        AlertDialog(
+            onDismissRequest = { confirming = false },
+            title = { Text(stringResource(R.string.requirement_clear_title, number)) },
+            text = {
+                Text(
+                    stringResource(
+                        if (hasChildren) {
+                            R.string.requirement_clear_message_with_children
+                        } else {
+                            R.string.requirement_clear_message
+                        }
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirming = false
+                        onClear()
+                    }
+                ) {
+                    Text(stringResource(R.string.requirement_clear_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirming = false }) {
+                    Text(stringResource(R.string.requirement_clear_cancel))
+                }
+            }
+        )
     }
 }

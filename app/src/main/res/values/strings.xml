@@ -102,6 +102,17 @@
     <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
          it, such as after the badge moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
+    <!-- Button at the bottom of a requirement's page, which asks before clearing what the
+         scout recorded for it. -->
+    <string name="requirement_clear">Clear progress</string>
+    <!-- Asks before a requirement's progress is cleared, with its official number, such as
+         "Clear progress on requirement 4b?" -->
+    <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>
+    <string name="requirement_clear_message">What you recorded for it will be removed.</string>
+    <!-- For a requirement with sub-requirements, such as 4a and 4b under 4. -->
+    <string name="requirement_clear_message_with_children">What you recorded for it and the requirements under it will be removed.</string>
+    <string name="requirement_clear_confirm">Clear</string>
+    <string name="requirement_clear_cancel">Cancel</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
          rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
     <string name="tracker_count">%1$d %2$s</string>

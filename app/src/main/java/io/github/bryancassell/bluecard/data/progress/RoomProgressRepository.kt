@@ -68,12 +68,17 @@ class RoomProgressRepository @Inject constructor(
         }
     }
 
-    override suspend fun markRequirementNotCompleted(badgeId: String, number: String) =
-        ifStarted(badgeId) {
-            dao.updateRequirement(badgeId, number) {
-                it.copy(completed = false, completedDate = null)
+    override suspend fun markRequirementNotCompleted(badgeId: String, number: String) = writing {
+        database.withTransaction {
+            if (dao.isStarted(badgeId)) {
+                dao.updateRequirement(badgeId, number) {
+                    it.copy(completed = false, completedDate = null)
+                }
+            } else {
+                null
             }
         }
+    }
 
     override suspend fun setRequirementCompletedDate(
         badgeId: String,
@@ -113,8 +118,8 @@ class RoomProgressRepository @Inject constructor(
 
     override suspend fun deleteTrackerEntry(id: Long) = writing { dao.deleteTrackerEntry(id) }
 
-    override suspend fun clearRequirement(badgeId: String, number: String) =
-        writing { dao.deleteRequirement(badgeId, number) }
+    override suspend fun clearRequirements(badgeId: String, numbers: Collection<String>) =
+        writing { dao.deleteRequirements(badgeId, numbers) }
 
     override suspend fun clearBadge(badgeId: String) = writing { dao.deleteBadge(badgeId) }
 
