@@ -8,7 +8,10 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -17,20 +20,28 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.IntentCompat
@@ -40,13 +51,18 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
+import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowToast
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -136,6 +152,20 @@ class BadgeDetailScreenTest {
         }
     }
 
+    /** The screen showing [uiState], for tests that only look at it. */
+    @Composable
+    private fun NoActionsBadgeDetailScreen(uiState: BadgeDetailUiState) {
+        BadgeDetailScreen(
+            uiState,
+            onOpenRequirement = {},
+            onEditCounselor = {},
+            onShareReport = {},
+            onReportShared = {},
+            onSaveReport = {},
+            onReportFailureShown = {}
+        )
+    }
+
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
@@ -197,6 +227,63 @@ class BadgeDetailScreenTest {
 
         composeTestRule.onNodeWithText("Eagle-required (one of Cycling, Hiking, and Swimming)")
             .assertIsDisplayed()
+    }
+
+    // The label only gives information, so it shouldn't be announced as something to tap.
+    @Test
+    fun eagleLabel_isNotAButton() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Eagle-required")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnClick))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Role))
+    }
+
+    // The icon is decorative, so screen readers read only the text.
+    @Test
+    fun eagleLabel_isReadOnce() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Eagle-required", useUnmergedTree = true)
+            .onParent()
+            .onChildren()
+            .filter(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription))
+            .assertCountEquals(0)
+    }
+
+    // The tag's fill is what sets the label apart from the blue text buttons below it. Only
+    // Robolectric's native graphics draw real pixels and measure real text.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Test
+    fun eagleLabel_isOnTheTagsFill() {
+        composeTestRule.setContent {
+            BlueCardTheme { NoActionsBadgeDetailScreen(ready) }
+        }
+
+        // The text's top-left corner is clear of its letters, so it shows what's behind them.
+        val pixels = composeTestRule.onNodeWithText("Eagle-required").captureToImage().toPixelMap()
+        assertEquals(BlueCardColorScheme.primaryFixedDim, pixels[0, 0])
+    }
+
+    // At twice the font size on a narrow phone, a group's label needs several lines.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "w320dp")
+    @Test
+    fun longEagleLabel_atLargeFontSize_wrapsWithoutBeingCutOff() {
+        val group = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))
+        composeTestRule.setContent {
+            val density = Density(LocalDensity.current.density, fontScale = 2f)
+            CompositionLocalProvider(LocalDensity provides density) {
+                NoActionsBadgeDetailScreen(ready.copy(eagle = group))
+            }
+        }
+
+        val layouts = mutableListOf<TextLayoutResult>()
+        composeTestRule.onNodeWithText("Eagle-required", substring = true)
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        assertTrue("Expected 3+ lines, was ${layout.lineCount}", layout.lineCount >= 3)
+        assertFalse("Expected nothing cut off", layout.hasVisualOverflow)
     }
 
     @Test
@@ -436,13 +523,24 @@ class BadgeDetailScreenTest {
     }
 
     @Test
-    fun requirement_hasCheckOnlyWhenComplete() {
+    fun requirement_saysWhetherItsComplete() {
         show(ready)
 
-        row("Plan a campout.").assert(hasContentDescription("Completed"))
-        row("Keep a camping log.").assert(!hasContentDescription("Completed"))
-        row("Do all of these.").assert(hasContentDescription("Completed"))
-        row("Do two of these.").assert(!hasContentDescription("Completed"))
+        row("Plan a campout.").assert(hasStateDescription("Completed"))
+        row("Keep a camping log.").assert(hasStateDescription("Not completed"))
+        row("Do all of these.").assert(hasStateDescription("Completed"))
+        row("Do two of these.").assert(hasStateDescription("Not completed"))
+    }
+
+    // The check on its number is drawn only: screen readers read "Completed" once, as its state.
+    @Test
+    fun completeRequirement_saysCompletedOnce() {
+        show(ready)
+
+        row("Plan a campout.")
+            .assert(hasStateDescription("Completed"))
+            .assert(!hasContentDescription("Completed"))
+            .assert(!hasText("Completed"))
     }
 
     // The scout marks a requirement complete on its own page.

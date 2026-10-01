@@ -9,7 +9,9 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BadgeRequirementsTest {
@@ -93,6 +95,26 @@ class BadgeRequirementsTest {
             RequirementItem("2", "Do one of these.", Choice(1, 2), true, markedByHand = false),
             found.item(newest.requirements[1])
         )
+    }
+
+    @Test
+    fun item_partOfCompletedRequirement_isNotNeeded() {
+        // 2a completes 2, which needs one of its two choices.
+        val found = catalog.badgeRequirements("camping", startedOn(newest.effectiveDate, "2a"))!!
+
+        assertTrue(found.item(newest.find("2b")!!).notNeeded)
+        assertTrue(found.item(newest.find("2b(1)")!!).notNeeded)
+        // Complete itself.
+        assertFalse(found.item(newest.find("2a")!!).notNeeded)
+        // Top-level: part of no requirement.
+        assertFalse(found.item(newest.find("1")!!).notNeeded)
+    }
+
+    @Test
+    fun item_beforeARequirementItsPartOfIsComplete_isNeeded() {
+        val found = catalog.badgeRequirements("camping", null)!!
+
+        assertFalse(found.item(newest.find("2b(1)")!!).notNeeded)
     }
 
     @Test

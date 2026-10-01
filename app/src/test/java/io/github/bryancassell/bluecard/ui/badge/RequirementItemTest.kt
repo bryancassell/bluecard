@@ -42,6 +42,19 @@ class RequirementItemTest {
     }
 
     @Test
+    fun partOfCompletedRequirement_whenNotComplete_isNotNeeded() {
+        assertTrue(leaf.toItem(emptyMap(), emptyMap(), partOfCompleted = true).notNeeded)
+    }
+
+    @Test
+    fun partOfCompletedRequirement_whenComplete_isCompletedRatherThanNotNeeded() {
+        val item = leaf.toItem(done("1"), emptyMap(), partOfCompleted = true)
+
+        assertTrue(item.completed)
+        assertFalse(item.notNeeded)
+    }
+
+    @Test
     fun someOfItsSubRequirements_isChoiceWithSubRequirements() {
         assertEquals(
             RequirementItem(

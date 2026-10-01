@@ -71,6 +71,13 @@
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
+    <!-- Screen readers read it as the state of a requirement's row until it's complete, then
+         read "Completed". -->
+    <string name="requirement_not_completed">Not completed</string>
+    <!-- On the row and page of a requirement that isn't complete but no longer needs to be,
+         because a requirement it's part of is complete, such as a choice the scout didn't pick.
+         Screen readers read it as the row's state. -->
+    <string name="requirement_not_needed">Not needed</string>
     <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
          open requirement". -->
     <string name="requirement_open">open requirement</string>
@@ -85,8 +92,8 @@
          button's text, such as "Start: Add date" in a tracker row. -->
     <string name="labeled_date_button">%1$s: %2$s</string>
     <!-- Label of the field for the scout's notes about a requirement. -->
-    <string name="requirement_comment">Comment</string>
-    <string name="requirement_save_comment">Save comment</string>
+    <string name="requirement_comment">Notes</string>
+    <string name="requirement_save_comment">Save notes</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>
@@ -158,8 +165,8 @@
     <string name="report_requirements">Requirements</string>
     <!-- A requirement's official number and our summary of it, such as "4b. Cook a meal." -->
     <string name="report_requirement">%1$s. %2$s</string>
-    <!-- Label of the scout's notes about a requirement. -->
-    <string name="report_comment">Comment</string>
+    <!-- Label of the scout's notes about a requirement, as on its page. -->
+    <string name="report_comment">Notes</string>
     <!-- A label and its value, such as "Phone: 555-0100" or, in a tracker row,
          "Minutes: 30". -->
     <string name="report_labeled_value">%1$s: %2$s</string>

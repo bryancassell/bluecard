@@ -5,25 +5,28 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -156,11 +160,7 @@ private fun BadgeDetails(
                 modifier = Modifier.semantics { heading() }
             )
             uiState.eagle?.let {
-                Text(
-                    text = eagleRequirementLabel(it, rememberBadgeNameListFormatter()),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter()))
             }
             Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
             val officialPage = Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri())
@@ -217,6 +217,40 @@ private fun BadgeDetails(
     }
 }
 
+/**
+ * Says the badge is Eagle-required, as a filled tag. It's the only filled shape on the page, with
+ * small corners, so it doesn't look like the buttons near it, which are outlined or plain text and
+ * fully rounded. A long label wraps inside it.
+ */
+@Composable
+private fun EagleTag(label: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryFixedDim,
+        contentColor = MaterialTheme.colorScheme.onPrimaryFixed,
+        shape = MaterialTheme.shapes.extraSmall
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 6.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            val style = MaterialTheme.typography.labelLarge
+            // A box one line tall keeps the icon centered on the first line at any font size.
+            // Where Android scales large text up less, Compose keeps a line's height in proportion
+            // to its font size rather than scaling it on its own, so the box does too.
+            val lineHeight = with(LocalDensity.current) { style.fontSize.toDp() } *
+                (style.lineHeight.value / style.fontSize.value)
+            Box(modifier = Modifier.height(lineHeight), contentAlignment = Alignment.Center) {
+                Icon(
+                    painterResource(R.drawable.ic_workspace_premium),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Text(text = label, style = style)
+        }
+    }
+}
+
 private const val PDF = "application/pdf"
 
 /**
@@ -241,20 +275,29 @@ private fun ReportButtons(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Button(onClick = { startOtherApp.tap(onShare) }) {
-            Text(stringResource(R.string.badge_detail_share_report))
-        }
-        // Outlined as the official link is.
-        OutlinedButton(
-            onClick = { startOtherApp.launch(createDocument, fileName, noFilePicker) },
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            ),
-            border = ButtonDefaults.outlinedButtonBorder()
-                .copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
-        ) {
-            Text(stringResource(R.string.badge_detail_save_report))
-        }
+        ReportButton(R.string.badge_detail_share_report, onClick = { startOtherApp.tap(onShare) })
+        ReportButton(
+            R.string.badge_detail_save_report,
+            onClick = { startOtherApp.launch(createDocument, fileName, noFilePicker) }
+        )
+    }
+}
+
+/**
+ * A button for the report, outlined as the official link is, so the Eagle-required tag stays
+ * the only filled shape on the page.
+ */
+@Composable
+private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
+        border = ButtonDefaults.outlinedButtonBorder()
+            .copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
+    ) {
+        Text(stringResource(text))
     }
 }
 

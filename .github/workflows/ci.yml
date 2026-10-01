@@ -40,8 +40,9 @@ jobs:
       # Compile, unit tests, coverage, test rules, lint and formatting.
       - run: ./gradlew build
 
-      # On failure, keep the HTML reports (lint, tests) and raw test results so
-      # they can be downloaded from the run's summary page.
+      # On failure, keep the HTML reports (lint, tests), raw test results and
+      # failed screenshot tests' images so they can be downloaded from the run's
+      # summary page.
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -49,3 +50,4 @@ jobs:
           path: |
             app/build/reports/
             app/build/test-results/
+            app/build/outputs/roborazzi/

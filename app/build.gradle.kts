@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.room)
+    alias(libs.plugins.roborazzi)
     jacoco
 }
 
@@ -86,6 +87,13 @@ room {
 
 jacoco {
     toolVersion = libs.versions.jacoco.get()
+}
+
+// Screenshot tests' reference images, committed. Every test run checks against them
+// (roborazzi.test.verify in gradle.properties); `./gradlew recordRoborazziDebug` records
+// them again after an intended change.
+roborazzi {
+    outputDir.set(file("src/test/screenshots"))
 }
 
 // Coverage gate for the testing rules in CLAUDE.md, measured from local tests.
@@ -215,6 +223,8 @@ dependencies {
     testImplementation(libs.androidx.espresso.core)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

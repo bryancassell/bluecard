@@ -156,7 +156,7 @@ class PdfReportRepositoryTest {
         )
         assertTrue("Completed on Apr 2, 2026" in lines)
         assertTrue("Created on Sep 30, 2026" in lines)
-        assertTrue("Comment: Next week." in lines)
+        assertTrue("Notes: Next week." in lines)
     }
 
     // The app the scout shares it with shows its name, as an email attachment does.
@@ -183,7 +183,7 @@ class PdfReportRepositoryTest {
 
         val report = repository.createReportToShare("chess")
 
-        assertTrue("Comment: Taught my brother." in report.read())
+        assertTrue("Notes: Taught my brother." in report.read())
         val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
     }

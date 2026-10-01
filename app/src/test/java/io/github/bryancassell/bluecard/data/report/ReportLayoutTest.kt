@@ -135,7 +135,7 @@ class ReportLayoutTest {
                 "Requirements",
                 "1. Plan a campout.",
                 "Completed on Apr 1, 2026",
-                "Comment: Planned with my patrol.",
+                "Notes: Planned with my patrol.",
                 "2. Do two of these.",
                 "Do 2 of 3",
                 "Completed",
