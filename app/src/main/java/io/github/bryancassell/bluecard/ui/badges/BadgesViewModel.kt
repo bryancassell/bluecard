@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.textFieldState
 import javax.inject.Inject
@@ -42,7 +41,7 @@ class BadgesViewModel @Inject constructor(
             BadgesUiState.NoMatches
         } else {
             BadgesUiState.Ready(
-                matches.map { it.toListItem(it.badge.status(progressById[it.badge.id])) }
+                matches.map { it.toListItem(progressById[it.badge.id]) }
             )
         }
     }.catchLoadFailure(BadgesUiState.LoadFailed)

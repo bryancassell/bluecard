@@ -386,6 +386,49 @@ class BadgeDetailViewModelTest {
     }
 
     @Test
+    fun fractionDone_badgeNotStarted_isNull() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().fractionDone)
+    }
+
+    @Test
+    fun fractionDone_badgeInProgress_givesPartialCredit_andUpdates() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertEquals(0f, viewModel.ready().fractionDone)
+
+        // Half of requirement 2's two choices, out of four top-level requirements.
+        progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
+        assertEquals(0.125f, viewModel.ready().fractionDone)
+
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        assertEquals(0.375f, viewModel.ready().fractionDone)
+    }
+
+    @Test
+    fun fractionDone_badgeComplete_isNull() = runTest {
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+
+        completeChess()
+
+        assertNull(viewModel.ready().fractionDone)
+    }
+
+    @Test
+    fun fractionDone_badgeMarkedCompletedOnPriorDate_isNull() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        progressRepository.setCompletedOnPriorDate("camping", day)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().fractionDone)
+    }
+
+    @Test
     fun shareReport_createsTheReport_forTheScreenToShare() = runTest {
         completeChess()
         val viewModel = viewModel("chess")

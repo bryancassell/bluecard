@@ -281,7 +281,7 @@ class HomeViewModelTest {
     @Test
     fun badgesInProgress_showEachAsOnBadges() = runTest {
         start("camping")
-        start("chess")
+        progressRepository.markRequirementCompleted("chess", "1", day, badgeStart)
         start("hiking")
         startCollecting(viewModel)
 
@@ -291,19 +291,22 @@ class HomeViewModelTest {
                     id = "camping",
                     name = "Camping",
                     eagle = EagleRequirement.Required,
-                    status = BadgeStatus.InProgress
+                    status = BadgeStatus.InProgress,
+                    fractionDone = 0f
                 ),
                 BadgeListItem(
                     id = "chess",
                     name = "Chess",
                     eagle = null,
-                    status = BadgeStatus.InProgress
+                    status = BadgeStatus.InProgress,
+                    fractionDone = 0.5f
                 ),
                 BadgeListItem(
                     id = "hiking",
                     name = "Hiking",
                     eagle = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming")),
-                    status = BadgeStatus.InProgress
+                    status = BadgeStatus.InProgress,
+                    fractionDone = 0f
                 )
             ),
             ready().badgesInProgress
@@ -327,6 +330,7 @@ class HomeViewModelTest {
         // The first progress on a badge starts it.
         progressRepository.markRequirementCompleted("chess", "1", day, badgeStart)
         assertEquals(listOf("chess"), idsInProgress())
+        assertEquals(0.5f, ready().badgesInProgress.single().fractionDone)
 
         progressRepository.markRequirementCompleted("chess", "2", day, badgeStart)
         assertEquals(emptyList<String>(), idsInProgress())

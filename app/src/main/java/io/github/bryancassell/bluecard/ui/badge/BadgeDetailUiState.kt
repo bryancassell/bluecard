@@ -25,6 +25,8 @@ sealed interface BadgeDetailUiState {
         val counselor: Counselor? = null,
         /** Whether the badge is complete, so its report can be shared or saved. */
         val completed: Boolean = false,
+        /** How much of the badge is done, from 0 to 1, while it's in progress, or null. */
+        val fractionDone: Float? = null,
         /** Whether the badge is started, so its progress can be cleared. */
         val canClear: Boolean = false,
         /**

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.status
@@ -49,7 +50,7 @@ class HomeViewModel @Inject constructor(
             badges = statusById.values.counts(),
             eagle = eagle.counts(),
             eagleTotal = eagle.size,
-            badgesInProgress = badgesInProgress(catalog, statusById)
+            badgesInProgress = badgesInProgress(catalog, statusById, progressById)
         )
     }.catchLoadFailure(HomeUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
@@ -74,10 +75,11 @@ private fun eagleStatuses(
 /** The badges in progress, listed as on Badges, in [catalog]'s order. */
 private fun badgesInProgress(
     catalog: List<ListedBadge>,
-    statusById: Map<String, BadgeStatus>
+    statusById: Map<String, BadgeStatus>,
+    progressById: Map<String, BadgeProgressDetails>
 ): List<BadgeListItem> = catalog
     .filter { (badge) -> statusById.getValue(badge.id) == BadgeStatus.InProgress }
-    .map { it.toListItem(BadgeStatus.InProgress) }
+    .map { it.toListItem(progressById[it.badge.id]) }
 
 private fun Collection<BadgeStatus>.counts() = ProgressCounts(
     completed = count { it == BadgeStatus.Completed },

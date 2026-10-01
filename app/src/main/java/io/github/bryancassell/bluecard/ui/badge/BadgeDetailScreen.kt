@@ -44,9 +44,11 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -59,7 +61,9 @@ import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveFailureSnackbar
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.badges.BadgeProgressBar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
+import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
 
@@ -89,10 +93,10 @@ fun BadgeDetailRoute(
 }
 
 /**
- * A badge's summary, whether it's Eagle-required, a link to its official page, the scout's
- * merit badge counselor, and its top-level requirements. Each requirement opens its own page,
- * where the scout marks it complete, and the counselor is entered on a page of its own, which
- * keeps this one short.
+ * A badge's summary, how much of it is done while it's in progress, whether it's
+ * Eagle-required, a link to its official page, the scout's merit badge counselor, and its
+ * top-level requirements. Each requirement opens its own page, where the scout marks it
+ * complete, and the counselor is entered on a page of its own, which keeps this one short.
  *
  * Once the badge is complete, its report can be shared, which asks for it to be created
  * ([onShareReport]) and opens the share sheet once it's ready ([onReportShared]), or saved,
@@ -173,6 +177,18 @@ private fun BadgeDetails(
                 // Lets screen reader users jump to it.
                 modifier = Modifier.semantics { heading() }
             )
+            uiState.fractionDone?.let {
+                val inProgress = stringResource(R.string.badges_in_progress)
+                val percentDone = percentDoneDescription(it)
+                // Read as on the badge's row: TalkBack says "40% done. In progress".
+                BadgeProgressBar(
+                    fractionDone = it,
+                    modifier = Modifier.semantics {
+                        contentDescription = inProgress
+                        stateDescription = percentDone
+                    }
+                )
+            }
             uiState.eagle?.let {
                 EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter()))
             }

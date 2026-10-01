@@ -19,8 +19,11 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -38,6 +41,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,7 +57,7 @@ class BadgesScreenTest {
 
     private val badges = listOf(
         BadgeListItem("camping", "Camping", EagleRequirement.Required, BadgeStatus.Completed),
-        BadgeListItem("chess", "Chess", eagle = null, BadgeStatus.InProgress),
+        BadgeListItem("chess", "Chess", eagle = null, BadgeStatus.InProgress, fractionDone = 0.4f),
         BadgeListItem("cooking", "Cooking", EagleRequirement.Required, BadgeStatus.NotStarted),
         BadgeListItem(
             "hiking",
@@ -253,6 +257,58 @@ class BadgesScreenTest {
 
         row("Cooking").assert(!hasText("In progress"))
         row("Cooking").assert(!hasText("Completed"))
+    }
+
+    private val anyProgressBar =
+        SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo)
+
+    @Test
+    fun inProgressBadge_showsHowMuchIsDone_asABar() {
+        show(BadgesUiState.Ready(badges))
+
+        // Only Chess is in progress. The bar is in the row, under its name.
+        composeTestRule.onAllNodes(anyProgressBar, useUnmergedTree = true).assertCountEquals(1)
+        val fortyPercent = hasProgressBarRangeInfo(ProgressBarRangeInfo(0.4f, 0f..1f))
+        val bar = composeTestRule.onNode(fortyPercent, useUnmergedTree = true)
+            .assertIsDisplayed()
+            .getBoundsInRoot()
+        val name = composeTestRule.onNodeWithText("Chess", useUnmergedTree = true).getBoundsInRoot()
+        val row = row("Chess").getBoundsInRoot()
+        // Material makes the bar's bounds taller than the bar, for touch, so its middle says
+        // where it is.
+        assertTrue((bar.top + bar.bottom) / 2 in name.bottom..row.bottom)
+    }
+
+    @Test
+    fun inProgressBadge_readsHowMuchIsDone_asTheRowsState() {
+        show(BadgesUiState.Ready(badges))
+
+        row("Chess").assert(
+            SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "40% done")
+        )
+        // Screen readers hear it from the row, so they skip the bar.
+        composeTestRule.onNode(anyProgressBar, useUnmergedTree = true)
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility))
+    }
+
+    @Test
+    fun badgesNotInProgress_haveNoState() {
+        show(BadgesUiState.Ready(badges))
+
+        for (name in listOf("Camping", "Cooking", "Hiking")) {
+            row(name).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+        }
+    }
+
+    @Test
+    fun inProgressBadge_withEagleLabel_showsBarUnderIt() {
+        val camping = badges.first().copy(status = BadgeStatus.InProgress, fractionDone = 0.25f)
+        show(BadgesUiState.Ready(listOf(camping)))
+
+        val bar = composeTestRule.onNode(anyProgressBar, useUnmergedTree = true).getBoundsInRoot()
+        val eagle = composeTestRule.onNodeWithText("Eagle-required", useUnmergedTree = true)
+            .getBoundsInRoot()
+        assertTrue((bar.top + bar.bottom) / 2 > eagle.bottom)
     }
 
     @Test

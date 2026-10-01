@@ -29,6 +29,8 @@
     <string name="badges_eagle_required_one_of">Eagle-required (one of %1$s)</string>
     <string name="badges_in_progress">In progress</string>
     <string name="badges_completed">Completed</string>
+    <!-- What screen readers say about a badge in progress's progress bar: "40% done". -->
+    <string name="badges_percent_done">%1$d%% done</string>
     <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
     <string name="badges_open_badge">open badge</string>
     <string name="badges_search">Search merit badges</string>

@@ -678,7 +678,8 @@ class MainActivityTest {
     fun completingEnoughRequirements_completesTheBadge() {
         openCamping()
         completeOnItsPage("First.")
-        composeTestRule.onNodeWithText("Second.").performClick()
+        // The badge in progress's bar pushes its requirements down the page.
+        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
 
         // Requirement 2 needs one of its two choices.
         completeOnItsPage("Choice A.")

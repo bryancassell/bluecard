@@ -1,20 +1,34 @@
 package io.github.bryancassell.bluecard.ui.badges
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.data.progress.fractionDone
+import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
+import io.github.bryancassell.bluecard.data.progress.status
 
 /**
  * A badge in the catalog as lists show it, on Badges and on Home: with how it counts toward
  * Eagle Scout, which depends on the rest of the catalog.
  */
 data class ListedBadge(val badge: MeritBadge, val eagle: EagleRequirement?) {
-    /** This badge's row, with the scout's [status] on it. */
-    fun toListItem(status: BadgeStatus) = BadgeListItem(
-        id = badge.id,
-        name = badge.name,
-        eagle = eagle,
-        status = status
-    )
+    /**
+     * This badge's row, with the scout's status on it and, while it's in progress, how much of
+     * it is done, from their [progress] on it (null if it hasn't been started).
+     */
+    fun toListItem(progress: BadgeProgressDetails?): BadgeListItem {
+        val status = badge.status(progress)
+        val inProgress = progress?.takeIf { status == BadgeStatus.InProgress }
+        return BadgeListItem(
+            id = badge.id,
+            name = badge.name,
+            eagle = eagle,
+            status = status,
+            fractionDone = inProgress?.let { started ->
+                badge.requirementsVersionFor(started)?.let { started.fractionDone(it) }
+            }
+        )
+    }
 }
 
 /**
