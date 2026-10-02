@@ -25,8 +25,8 @@ data class BadgeRequirements(
     fun item(requirement: Requirement) = requirement.toItem(
         recorded,
         trackerEntries,
-        partOfHasEnough(requirement.number),
-        completedOnPriorDate
+        partOfHasEnough = partOfHasEnough(requirement.number),
+        badgeCompletedOnPriorDate = completedOnPriorDate
     )
 
     /**

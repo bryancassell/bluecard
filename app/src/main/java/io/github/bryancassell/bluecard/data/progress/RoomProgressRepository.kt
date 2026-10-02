@@ -58,8 +58,9 @@ class RoomProgressRepository @Inject constructor(
         start: BadgeStart
     ) = afterStarting(badgeId, start) { dao.updateCompletedOnPriorDate(badgeId, date) }
 
+    // Updates nothing for a badge that isn't started.
     override suspend fun removeCompletedOnPriorDate(badgeId: String) =
-        ifStarted(badgeId, notStarted = Unit) { dao.updateCompletedOnPriorDate(badgeId, null) }
+        writing { dao.updateCompletedOnPriorDate(badgeId, null) }
 
     override suspend fun markRequirementCompleted(
         badgeId: String,

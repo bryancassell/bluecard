@@ -51,10 +51,18 @@ class BadgeDetailViewModel @AssistedInject constructor(
     private var creatingReport: Job? = null
 
     /**
-     * The latest clear. A report asked for after it waits for it, so it doesn't read the badge
-     * from before, as it could in the moment before the page redraws without its report buttons.
+     * The latest save. A report asked for after it waits for it, so it reads what the scout last
+     * did: not the badge from before a clear, as it could in the moment before the page redraws
+     * without its report buttons, or from before its date was changed.
      */
-    private var clearing: Job? = null
+    private var lastSave: Job? = null
+
+    /**
+     * The date the badge was marked completed on before the scout unmarked it on this page, or
+     * null. Mark completed's picker opens at it, so a mistaken Unmark loses nothing. Forgotten
+     * once the badge is marked again or cleared, or when the page closes.
+     */
+    private val unmarkedDate = MutableStateFlow<LocalDate?>(null)
 
     val uiState: StateFlow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
@@ -85,6 +93,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
             reportFailure = reportFailure,
             saveFailure = saveFailure
         )
+    }.combine(unmarkedDate) { state, unmarkedDate ->
+        if (state is BadgeDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 
@@ -95,9 +105,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
      */
     fun shareReport() {
         if (creatingReport?.isActive == true) return
-        val clear = clearing
+        val save = lastSave
         creatingReport = reports.launch {
-            clear?.join()
+            save?.join()
             reportToShare.value = reportRepository.createReportToShare(badgeId)
         }
     }
@@ -109,9 +119,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
 
     /** Saves the badge's report to [destination], a document the scout chose to create. */
     fun saveReport(destination: Uri) {
-        val clear = clearing
+        val save = lastSave
         reports.launch {
-            clear?.join()
+            save?.join()
             reportRepository.saveReport(badgeId, destination)
         }
     }
@@ -129,7 +139,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
     fun clear() {
         creatingReport?.cancel()
         reportToShare.value = null
-        clearing = saves.launch { progressRepository.clearBadge(badgeId) }
+        // Forgotten even if the clear fails, as the scout meant it to be.
+        unmarkedDate.value = null
+        lastSave = saves.launch { progressRepository.clearBadge(badgeId) }
     }
 
     /**
@@ -138,14 +150,20 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * isn't started is started, as when anything is recorded.
      */
     fun markCompleted(date: LocalDate) {
-        saves.launch {
+        lastSave = saves.launch {
             progressRepository.setCompletedOnPriorDate(badgeId, date, recorder.badgeStart())
+            unmarkedDate.value = null
         }
     }
 
-    /** Undoes [markCompleted]. What's recorded for the badge stays. */
+    /**
+     * Undoes [markCompleted]. What's recorded for the badge stays. The page remembers the date it
+     * showed ([BadgeDetailUiState.Ready.unmarkedDate]).
+     */
     fun unmarkCompleted() {
-        saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) }
+        val shown = (uiState.value as? BadgeDetailUiState.Ready)?.completedOnPriorDate
+        if (shown != null) unmarkedDate.value = shown
+        lastSave = saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) }
     }
 
     /** The scout has been told that a save failed ([failure]). */

@@ -65,7 +65,6 @@ fun EditableDate(
     label: String? = null,
     @StringRes removeText: Int = R.string.requirement_remove_date
 ) {
-    var picking by rememberSaveable { mutableStateOf(false) }
     Column(modifier) {
         Text(
             text = text,
@@ -80,14 +79,15 @@ fun EditableDate(
                 R.string.requirement_change_date
             }
             val pick = stringResource(pickText)
-            TextButton(
-                onClick = { picking = true },
+            PickDateButton(
+                text = pick,
+                initial = date,
+                today = today,
+                onPick = onDateChange,
                 modifier = Modifier.readAs(
                     label?.let { stringResource(R.string.labeled_date_button, it, pick) }
                 )
-            ) {
-                Text(pick)
-            }
+            )
             if (date != null) {
                 val remove = stringResource(removeText)
                 TextButton(
@@ -101,14 +101,33 @@ fun EditableDate(
             }
         }
     }
+}
+
+/**
+ * A text button labeled [text] that asks for a date something was done on, starting at [initial],
+ * or at [today] without one, and gives [onPick] the date picked. Dates after [today] can't be
+ * picked. It's read as the picker opens, so a page left open past midnight offers the new day.
+ */
+@Composable
+fun PickDateButton(
+    text: String,
+    initial: LocalDate?,
+    today: () -> LocalDate,
+    onPick: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var picking by rememberSaveable { mutableStateOf(false) }
+    TextButton(onClick = { picking = true }, modifier = modifier) {
+        Text(text)
+    }
     if (picking) {
         val latest = remember { today() }
         CompletionDatePickerDialog(
-            initial = date ?: latest,
+            initial = initial ?: latest,
             today = latest,
             onConfirm = {
                 picking = false
-                onDateChange(it)
+                onPick(it)
             },
             onDismiss = { picking = false }
         )

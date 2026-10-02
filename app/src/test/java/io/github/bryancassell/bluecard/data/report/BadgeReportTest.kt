@@ -246,6 +246,19 @@ class BadgeReportTest {
         assertEquals(emptyList<String>(), report(progress(done)).notRecorded())
     }
 
+    // Its recorded parts are listed under it, so "Not recorded" would contradict them.
+    @Test
+    fun requirementPartlyDone_onABadgeMarkedCompletedOnPriorDate_isNotNotRecorded() {
+        val trip = TrackerEntry(1, "camping", "3", values = mapOf("nights" to "2"))
+        val progress = progress(
+            listOf(completed("4b", null)),
+            listOf(trip),
+            completedOnPriorDate = LocalDate.of(2025, 8, 1)
+        )
+
+        assertEquals(listOf("1", "2", "2a", "2b", "2c", "4a"), report(progress).notRecorded())
+    }
+
     /** The numbers of the requirements that are [ReportRequirement.notRecorded], at any depth. */
     private fun BadgeReport.notRecorded(): List<String> {
         fun List<ReportRequirement>.all(): List<ReportRequirement> =

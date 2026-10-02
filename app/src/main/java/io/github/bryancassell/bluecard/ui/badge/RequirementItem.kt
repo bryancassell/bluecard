@@ -35,8 +35,8 @@ data class RequirementItem(
      */
     val notNeeded: Boolean = false,
     /**
-     * Whether its completion wasn't recorded: it isn't complete and is still needed, but the
-     * scout marked the badge completed on a prior date, without recording its requirements.
+     * Whether nothing toward it was recorded: it's still needed and no part of it is done, but
+     * the scout marked the badge completed on a prior date, without recording its requirements.
      */
     val notRecorded: Boolean = false,
     /** The work it asks for besides its sub-requirements, or null if it asks for none. */
@@ -80,6 +80,7 @@ fun Requirement.toItem(
     val completed = completion(progress, trackerEntries) != null
     val notNeeded = partOfHasEnough && !completed
     val stillNeeded = !completed && !notNeeded
+    val partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries)
     return RequirementItem(
         number = number,
         summary = summary,
@@ -88,9 +89,9 @@ fun Requirement.toItem(
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
         notNeeded = notNeeded,
-        notRecorded = stillNeeded && badgeCompletedOnPriorDate,
+        notRecorded = badgeCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
-        partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries),
+        partlyCompleted = partlyCompleted,
         completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null
     )
 }

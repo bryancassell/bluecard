@@ -772,6 +772,18 @@ class BadgeDetailScreenTest {
         assertEquals(tops.sorted(), tops)
     }
 
+    // So a mistaken Unmark loses nothing.
+    @Test
+    fun markCompleted_afterUnmarking_opensAtTheDateUnmarked() {
+        show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
+
+        composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
+        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
+    }
+
     @Test
     fun markCompleted_cancelled_marksNothing() {
         show(ready)

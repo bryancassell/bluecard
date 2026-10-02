@@ -30,15 +30,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -300,7 +296,8 @@ private fun BadgeDetails(
 
 /**
  * While the badge isn't complete, a button to mark it completed on a date the scout picks, up to
- * [today], without recording its requirements ([onMark]). Once it's marked, the date, with
+ * [today], without recording its requirements ([onMark]). Its picker opens at the date the scout
+ * just unmarked, if any, or at today. Once it's marked, the date, with
  * buttons to change it ([onMark]) or unmark the badge ([onUnmark]). Nothing for a badge complete
  * from its requirements alone.
  *
@@ -327,24 +324,15 @@ private fun CompletedOnPriorDate(
             removeText = R.string.badge_detail_unmark_completed
         )
     } else if (!uiState.completed) {
-        var picking by rememberSaveable { mutableStateOf(false) }
-        // Lines the button's text up with the page's, as for Add counselor.
-        TextButton(onClick = { picking = true }, modifier = Modifier.padding(horizontal = 4.dp)) {
-            Text(stringResource(R.string.badge_detail_mark_completed))
-        }
-        if (picking) {
-            // Read as the picker opens, so a page left open past midnight offers the new day.
-            val latest = remember { today() }
-            CompletionDatePickerDialog(
-                initial = latest,
-                today = latest,
-                onConfirm = {
-                    picking = false
-                    onMark(it)
-                },
-                onDismiss = { picking = false }
-            )
-        }
+        PickDateButton(
+            text = stringResource(R.string.badge_detail_mark_completed),
+            // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
+            initial = uiState.unmarkedDate,
+            today = today,
+            onPick = onMark,
+            // Lines the button's text up with the page's, as for Add counselor.
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
     }
 }
 

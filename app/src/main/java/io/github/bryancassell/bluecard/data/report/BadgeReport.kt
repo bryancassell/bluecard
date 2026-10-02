@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
+import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import java.time.LocalDate
@@ -46,9 +47,9 @@ data class ReportRequirement(
      */
     val notNeeded: Boolean,
     /**
-     * Whether its completion wasn't recorded: it isn't complete and is still needed, but the
-     * scout marked the badge completed on a prior date, without recording its requirements. The
-     * screens say so too.
+     * Whether nothing toward it was recorded: it's still needed and no part of it is done, but
+     * the scout marked the badge completed on a prior date, without recording its requirements.
+     * The screens say so too.
      */
     val notRecorded: Boolean,
     val comment: String?,
@@ -93,37 +94,47 @@ fun MeritBadge.report(
         completion = progress.completion(version),
         counselor = progress.badge.counselor,
         requirements = version.requirements.map {
-            it.toReport(recorded, entries, completedOnPriorDate)
+            it.toReport(
+                recorded,
+                entries,
+                partOfHasEnough = false,
+                badgeCompletedOnPriorDate = completedOnPriorDate
+            )
         },
         createdDate = createdDate
     )
 }
 
 /**
- * [badgeCompletedOnPriorDate] is whether the scout marked the badge completed on a prior date.
  * [partOfHasEnough] is whether a requirement this one is part of, at any depth, has enough
- * complete sub-requirements ([hasEnoughChildren]).
+ * complete sub-requirements ([hasEnoughChildren]). [badgeCompletedOnPriorDate] is whether the
+ * scout marked the badge completed on a prior date. They're in the same order as in the
+ * screens' `toItem`, which works out the same states.
  */
 private fun Requirement.toReport(
     recorded: Map<String, RequirementProgress>,
     entries: Map<String, List<TrackerEntry>>,
-    badgeCompletedOnPriorDate: Boolean,
-    partOfHasEnough: Boolean = false
+    partOfHasEnough: Boolean,
+    badgeCompletedOnPriorDate: Boolean
 ): ReportRequirement {
     val completion = completion(recorded, entries)
     val stillNeeded = !partOfHasEnough && completion == null
-    val childrenPartOfHasEnough = partOfHasEnough || hasEnoughChildren(recorded, entries)
     return ReportRequirement(
         number = number,
         summary = summary,
         requiredCount = choiceCount,
         completion = completion,
         notNeeded = partOfHasEnough && completion == null,
-        notRecorded = stillNeeded && badgeCompletedOnPriorDate,
+        notRecorded = badgeCompletedOnPriorDate && stillNeeded && !hasPartDone(recorded, entries),
         comment = recorded[number]?.comment,
         tracker = tracker?.toReport(entries[number].orEmpty()),
         children = children.map {
-            it.toReport(recorded, entries, badgeCompletedOnPriorDate, childrenPartOfHasEnough)
+            it.toReport(
+                recorded,
+                entries,
+                partOfHasEnough = partOfHasEnough || hasEnoughChildren(recorded, entries),
+                badgeCompletedOnPriorDate = badgeCompletedOnPriorDate
+            )
         }
     )
 }

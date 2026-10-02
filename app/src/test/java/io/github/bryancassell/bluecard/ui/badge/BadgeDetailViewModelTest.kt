@@ -450,6 +450,32 @@ class BadgeDetailViewModelTest {
     }
 
     @Test
+    fun unmarkCompleted_remembersTheDate_untilTheBadgeIsMarkedAgain() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertNull(viewModel.ready().unmarkedDate)
+
+        viewModel.unmarkCompleted()
+        assertEquals(day, viewModel.ready().unmarkedDate)
+
+        viewModel.markCompleted(older)
+        assertNull(viewModel.ready().unmarkedDate)
+    }
+
+    @Test
+    fun clear_forgetsTheUnmarkedDate() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        viewModel.unmarkCompleted()
+
+        viewModel.clear()
+
+        assertNull(viewModel.ready().unmarkedDate)
+    }
+
+    @Test
     fun badgeCompleteFromItsRequirements_isntMarkedCompletedOnPriorDate() = runTest {
         val viewModel = viewModel("chess")
         startCollecting(viewModel)
@@ -705,6 +731,37 @@ class BadgeDetailViewModelTest {
             clearSaved.await()
             progressRepository.clearBadge(badgeId)
         }
+    }
+
+    private val markSaved = CompletableDeferred<Unit>()
+
+    /** Saves a prior date only once [markSaved] lets it through, as Room takes a moment to. */
+    private val slowMarks = object : ProgressRepository by progressRepository {
+        override suspend fun setCompletedOnPriorDate(
+            badgeId: String,
+            date: LocalDate,
+            start: BadgeStart
+        ) {
+            markSaved.await()
+            progressRepository.setCompletedOnPriorDate(badgeId, date, start)
+        }
+    }
+
+    // As when the scout changes the date, then taps Share report straight away, so the report
+    // has the new date.
+    @Test
+    fun shareReport_rightAfterChangingTheDate_waitsForIt() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel(progress = slowMarks)
+        startCollecting(viewModel)
+
+        viewModel.markCompleted(older)
+        viewModel.shareReport()
+        assertEquals(emptyList<String>(), reportRepository.shared)
+        markSaved.complete(Unit)
+
+        assertEquals(listOf("camping"), reportRepository.shared)
+        assertEquals(older, viewModel.ready().completedOnPriorDate)
     }
 
     // As when the scout confirms Clear, then taps Share report before the page redraws.

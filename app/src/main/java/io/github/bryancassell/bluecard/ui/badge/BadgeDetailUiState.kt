@@ -31,6 +31,11 @@ sealed interface BadgeDetailUiState {
          * or null if they haven't.
          */
         val completedOnPriorDate: LocalDate? = null,
+        /**
+         * The date the badge was marked completed on before the scout unmarked it on this page,
+         * which Mark completed's picker opens at, or null.
+         */
+        val unmarkedDate: LocalDate? = null,
         /** How much of the badge is done, from 0 to 1, while it's in progress, or null. */
         val fractionDone: Float? = null,
         /** Whether the badge is started, so its progress can be cleared. */

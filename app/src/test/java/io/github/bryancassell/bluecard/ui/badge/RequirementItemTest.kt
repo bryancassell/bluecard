@@ -173,9 +173,10 @@ class RequirementItemTest {
         ) = toItem(progress, emptyMap(), partOfHasEnough, badgeCompletedOnPriorDate).notRecorded
 
         assertTrue(leaf.notRecorded())
-        // Partly complete is still not complete.
-        assertTrue(twoOfThree.notRecorded(done("2a")))
+        assertTrue(twoOfThree.notRecorded())
 
+        // Part of it was recorded.
+        assertFalse(twoOfThree.notRecorded(done("2a")))
         assertFalse(leaf.notRecorded(done("1")))
         assertFalse(leaf.notRecorded(partOfHasEnough = true))
         assertFalse(leaf.notRecorded(badgeCompletedOnPriorDate = false))
