@@ -14726,7 +14726,7 @@
             },
             {
               "number": "5b",
-              "summary": "Pass the Scouting America beginner test: jump feetfirst into water over your head, swim 25 feet, turn sharply and swim back."
+              "summary": "Pass the Scouting America beginner test: a feetfirst jump into water too deep to stand in, 25 feet of swimming, a sharp turn and a swim back."
             },
             {
               "number": "5c",
@@ -14853,7 +14853,7 @@
     {
       "id": "first-class",
       "name": "First Class",
-      "summary": "Cook for your patrol, lash a camp gadget, navigate with orienteering and GPS, pass the swimmer test, prepare for emergencies, and invite someone to join.",
+      "summary": "Cook for your patrol, lash a camp gadget, navigate with orienteering and GPS, pass the swimmer test, prepare for emergencies, and tell someone about Scouting.",
       "officialUrl": "https://www.scouting.org/wp-content/uploads/2025/12/First-Class.pdf",
       "requirementVersions": [
         {
@@ -15173,7 +15173,7 @@
       "officialUrl": "https://www.scouting.org/wp-content/uploads/2025/12/Life-Rank.pdf",
       "requirementVersions": [
         {
-          "effectiveDate": "2022-06-01",
+          "effectiveDate": "2021-01-01",
           "requirements": [
             {
               "number": "1",
@@ -15204,7 +15204,7 @@
                   },
                   {
                     "id": "conservation-hours",
-                    "label": "Conservation hours",
+                    "label": "Conservation hours (included in Hours)",
                     "type": "number"
                   },
                   {

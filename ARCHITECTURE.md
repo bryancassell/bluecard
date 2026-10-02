@@ -601,8 +601,10 @@ requirement progress fresh, numbers only need to be unique within one version.
 ### Ranks
 
 The catalog also has a list of the seven ranks, Scout through Eagle, in the
-order they're earned, written by the same rules as badges
-([#193](https://github.com/bryancassell/bluecard/issues/193)). Most of what a
+order they're earned, written by the same rules as badges, plus a few of their
+own for linking, numbering and out-of-date official text
+([`docs/catalog.md`](docs/catalog.md#rank),
+[#193](https://github.com/bryancassell/bluecard/issues/193)). Most of what a
 badge has carries over: numbered requirements with sub-requirements, trackers,
 requirement versions and completion. So a `Rank` uses the same
 `RequirementsVersion`, `Requirement` and `TrackerDefinition` types as a

@@ -120,12 +120,18 @@ format as a badge's.
 - **Numbering:** most rank requirements are numbered `1a`, `1b` and so on with
   no requirement `1` above them, under unnumbered headings such as "Camping and
   Outdoor Ethics". Keep them at the top level, as the PDF has them, and leave
-  the headings out.
-- **Out-of-date PDFs:** where Scouting America has changed a requirement but
-  not yet its PDF, summarize the current rule from the announcement, and give
-  the version the date it took effect. Eagle 3 counts 13 Eagle-required badges,
-  not the PDF's 14, because Citizenship in Society was dropped on February 27,
-  2026.
+  the headings out. Unnumbered bullets, and letters inside a requirement's
+  sentence, such as Eagle 3's "(a) First Aid, (b) Citizenship in the
+  Community…", aren't requirements of their own: summarize them in the
+  requirement's summary.
+- **Where the PDF is out of date:** summarize the current rule and give the
+  version the date it took effect.
+  - **Eagle 3** counts 13 Eagle-required badges, not the PDF's 14, because
+    Citizenship in Society was dropped on February 27, 2026.
+  - **Life 3** asks for seven Eagle-required badges in all, as the
+    [Scouts BSA Requirements book](https://www.scouting.org/wp-content/uploads/2026/02/3321625-Scouts-BSA-Requirements.pdf)
+    and the Life PDF in effect from 2021 do. The December 2025 Life PDF asks
+    for "three additional" instead.
 
 ### Requirements version
 
@@ -184,6 +190,8 @@ It checks that:
 - the file is valid JSON with only the fields above, spelled correctly, and
   dates written as `YYYY-MM-DD`;
 - `formatVersion` is `1`;
+- `ranks` lists Scout, Tenderfoot, Second Class, First Class, Star, Life and
+  Eagle Scout, in that order;
 - badge and rank IDs are unique across both and in the right form, and every
   badge and rank has a name, a summary, a `https://www.scouting.org/` URL and
   at least one version;
