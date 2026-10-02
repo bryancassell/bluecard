@@ -945,17 +945,16 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   [`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build).
 - **Code reached only through reflection needs a keep rule** in
   `app/proguard-rules.pro`, as narrow as possible, with a comment saying what
-  needs it. None is needed yet: the libraries ship rules for what they reach
-  by reflection or by name. Hilt finds each `@HiltViewModel` by its class
-  name, and Dagger's rule has R8 update those names when it renames the
-  classes. Room, DataStore and kotlinx.serialization ship their own rules too.
-  Those cover Navigation 3's back stack, which `rememberNavBackStack`
-  saves by each key's class name and restores with `Class.forName` and
-  kotlinx.serialization's reflective `serializer()`. The keys' names don't need
-  keeping, though R8 renames them and may rename them differently in the next
-  version: Android drops an app's saved state when the app is updated (logcat:
-  `killDueToPackageUpdate`, then "no saved state"; checked on Android 37), so a
-  name saved by one version is never read by another.
+  needs it. None is needed yet: Hilt, Room, DataStore and
+  kotlinx.serialization ship rules for what they reach by reflection or by
+  name, and kotlinx.serialization's rules also cover Navigation 3's back stack
+  (see `NavKeys.kt`).
+- **Navigation keys' class names aren't kept.** The saved back stack records
+  them, and R8 may rename them differently in the next version, but Android
+  drops an app's saved state when the app is updated (checked on Android 37),
+  so names saved by one version are never read by another. Saving the back
+  stack without reflection is tracked in
+  [#203](https://github.com/bryancassell/bluecard/issues/203).
 - **Crash reports in Android vitals are deobfuscated by Play,** from the R8
   mapping file that AGP puts in the app bundle
   ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
@@ -987,4 +986,4 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
-| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. The app has one instrumented test and CI has no emulator, so automated tests of the shrunk app would be new work of their own |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
