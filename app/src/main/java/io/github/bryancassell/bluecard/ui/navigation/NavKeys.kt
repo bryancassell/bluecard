@@ -1,31 +1,30 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSerializable
+import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
-import androidx.savedstate.serialization.SavedStateConfiguration
-import kotlinx.serialization.ExperimentalSerializationApi
+import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclassesOfSealed
 
 /**
  * A Navigation 3 destination. Keys are @Serializable so the back stack survives configuration
- * changes and process death, and sealed so [BackStackSavedStateConfiguration] registers every one.
+ * changes and process death, and sealed so the compiler writes a serializer that knows them all.
  */
 @Serializable
 sealed interface BlueCardNavKey : NavKey
 
 /**
- * Saves and restores the back stack without reflection: each key's serializer is found from its
- * class in this module, and on restore from its serial name, which the compiler writes in as a
- * string, so R8 renaming the class doesn't change it.
+ * The back stack, starting on Home, remembered across configuration changes and process death.
+ * It's saved with [BlueCardNavKey]'s serializer, so no reflection is used: each key is saved by
+ * its serial name, which the compiler writes in as a string, so R8 renaming the class doesn't
+ * change it.
  */
-@OptIn(ExperimentalSerializationApi::class) // subclassesOfSealed, in kotlinx.serialization 1.11
-val BackStackSavedStateConfiguration = SavedStateConfiguration {
-    serializersModule = SerializersModule {
-        polymorphic(NavKey::class) { subclassesOfSealed<BlueCardNavKey>() }
+@Composable
+fun rememberBackStack(): NavBackStack<BlueCardNavKey> =
+    rememberSerializable(serializer = NavBackStackSerializer(BlueCardNavKey.serializer())) {
+        NavBackStack(Home)
     }
-}
 
 @Serializable
 data object Onboarding : BlueCardNavKey

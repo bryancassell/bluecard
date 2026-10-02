@@ -3,8 +3,6 @@ package io.github.bryancassell.bluecard.ui.navigation
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -32,21 +30,18 @@ class NavKeysTest {
 
     @Test
     fun everyKey_isInTheTest() {
-        // The sealed serializer lists every key's serial name, so a new key fails here until
-        // it's added to everyKey.
-        val keys = BlueCardNavKey.serializer().descriptor.getElementDescriptor(1)
-        val keyNames = (0 until keys.elementsCount).map { keys.getElementName(it) }
+        // From the compiled sealed interface, not its serializer, which leaves out a key that
+        // isn't @Serializable. A new key fails here until it's added to everyKey.
+        val keyClasses = BlueCardNavKey::class.java.permittedSubclasses.toSet()
 
-        assertEquals(keyNames.toSet(), everyKey.map { it::class.qualifiedName }.toSet())
+        assertEquals(keyClasses, everyKey.map { it.javaClass }.toSet())
     }
 
     @Test
     fun backStack_holdingEveryKey_isRestored() {
         val tester = StateRestorationTester(composeTestRule)
-        lateinit var backStack: NavBackStack<NavKey>
-        tester.setContent {
-            backStack = rememberNavBackStack(BackStackSavedStateConfiguration, Home)
-        }
+        lateinit var backStack: NavBackStack<BlueCardNavKey>
+        tester.setContent { backStack = rememberBackStack() }
         // Changed after it's remembered, so only the saved state can bring these keys back.
         composeTestRule.runOnIdle { backStack.addAll(everyKey) }
 
