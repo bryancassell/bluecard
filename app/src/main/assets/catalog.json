@@ -56,7 +56,7 @@
             },
             {
               "number": "5",
-              "summary": "See American Indian culture firsthand.",
+              "summary": "Visit American Indian museum exhibits, in person or online, or a present-day gathering.",
               "requiredCount": 1,
               "children": [
                 {
@@ -2961,7 +2961,7 @@
       "officialUrl": "https://www.scouting.org/merit-badges/crime-prevention/",
       "requirementVersions": [
         {
-          "effectiveDate": "2025-01-01",
+          "effectiveDate": "2026-01-01",
           "requirements": [
             {
               "number": "1",
@@ -3033,12 +3033,17 @@
                 },
                 {
                   "number": "3b",
-                  "summary": "Note which agencies and courts handled each case, why you think it happened and how to prevent similar crimes, then review your research with your counselor.",
+                  "summary": "Note each case's agencies and courts, why you think it happened and how to prevent it, then review your research with your counselor.",
                   "tracker": {
                     "columns": [
                       {
                         "id": "crime",
                         "label": "Crime",
+                        "type": "text"
+                      },
+                      {
+                        "id": "type",
+                        "label": "Type of crime",
                         "type": "text"
                       },
                       {
@@ -3203,7 +3208,7 @@
             },
             {
               "number": "10",
-              "summary": "With permission and approval, interview a law enforcement officer or civil servant about their crime prevention work, why they chose it and their duties, then discuss it with your counselor."
+              "summary": "With permission and approval, interview a law enforcement officer or civil servant on their crime prevention duties and career choice, then discuss it with your counselor."
             },
             {
               "number": "11",
@@ -3588,7 +3593,7 @@
             },
             {
               "number": "10",
-              "summary": "Do two hands-on electricity projects.",
+              "summary": "Do two of the listed circuit activities.",
               "requiredCount": 2,
               "children": [
                 {
@@ -6329,8 +6334,8 @@
                     },
                     {
                       "number": "2A(6)",
-                      "summary": "Play two nine-hole rounds or one 18-hole round with a golfer about your age and your counselor or an adult your counselor approves.",
-                      "ownWork": "Play two nine-hole rounds or one 18-hole round with a golfer about your age and your counselor or an adult your counselor approves.",
+                      "summary": "With a golfer near your age plus your counselor or an adult your counselor approves, play 18 holes, in one round or two of nine.",
+                      "ownWork": "With a golfer near your age plus your counselor or an adult your counselor approves, play 18 holes, in one round or two of nine.",
                       "children": [
                         {
                           "number": "2A(6)(a)",
@@ -6348,7 +6353,7 @@
                     },
                     {
                       "number": "2A(7)",
-                      "summary": "Research three traditional golf careers, look closely at one's education, training and experience, and discuss with your counselor why it interests you."
+                      "summary": "Explore three traditional golf careers, research one's education, training and experience, and tell your counselor why it interests you."
                     }
                   ]
                 },
@@ -6372,7 +6377,7 @@
                     },
                     {
                       "number": "2B(2)",
-                      "summary": "Tell about disc golf's history and why it's a game everyone can play."
+                      "summary": "Explain the PDGA Disc Golfer's Code."
                     },
                     {
                       "number": "2B(3)",
@@ -6462,8 +6467,8 @@
                     },
                     {
                       "number": "2B(6)",
-                      "summary": "Play 18 or more holes of disc golf with a disc golfer about your age and your counselor or an adult your counselor approves.",
-                      "ownWork": "Play 18 or more holes with a disc golfer about your age and your counselor or an adult your counselor approves.",
+                      "summary": "With a disc golfer near your age plus your counselor or an adult your counselor approves, play 18 or more holes.",
+                      "ownWork": "With a disc golfer near your age plus your counselor or an adult your counselor approves, play 18 or more holes.",
                       "children": [
                         {
                           "number": "2B(6)(a)",
@@ -6481,7 +6486,7 @@
                     },
                     {
                       "number": "2B(7)",
-                      "summary": "Research three disc golf careers, look closely at one's education, training and experience, and discuss with your counselor why it interests you."
+                      "summary": "Explore three disc golf careers, research one's education, training and experience, and tell your counselor why it interests you."
                     }
                   ]
                 }
@@ -8380,7 +8385,7 @@
                 },
                 {
                   "number": "7c",
-                  "summary": "For five days in a row, four times daily, log water temperatures at three depths, turbidity with a homemade Secchi disk, air temperature, clouds and waves; graph them and relate water to air temperature.",
+                  "summary": "Make a Secchi disk; for five days in a row, four times daily, log water temperatures at three depths, turbidity, air temperature, clouds and waves; graph and compare temperatures.",
                   "tracker": {
                     "columns": [
                       {
@@ -8421,7 +8426,7 @@
                       {
                         "id": "conditions",
                         "label": "Clouds and waves",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "reading",
@@ -8606,8 +8611,7 @@
                       }
                     ],
                     "rowLabel": "event",
-                    "rowLabelPlural": "events",
-                    "rowCount": 3
+                    "rowLabelPlural": "events"
                   }
                 },
                 {
@@ -8627,7 +8631,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Set up a score course with 12 or more controls, a point value for each and a time limit of 60 minutes or more, and make its master map and control description sheet."
+                  "summary": "Set up a score course with 12 or more point-valued controls and a time limit of at least 60 minutes, plus its master map and control description sheet."
                 }
               ]
             },
@@ -11162,7 +11166,7 @@
                     },
                     {
                       "number": "7D(9)",
-                      "summary": "On a 2-mile snowshoe hike, handle the usual range of snow conditions."
+                      "summary": "On a 2-mile snowshoe hike, handle the usual range of snow conditions; adaptive snowshoers may do 1 mile with their counselor's OK in advance."
                     },
                     {
                       "number": "7D(10)",
@@ -11324,9 +11328,9 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Visit two of the listed places, then write a report of more than 500 words on the soil, water and energy conservation you saw.",
+                  "summary": "Visit two of the listed places and write up the soil, water and energy conservation you saw, in more than 500 words.",
                   "requiredCount": 2,
-                  "ownWork": "Write a report of more than 500 words on the soil, water and energy conservation practices you saw.",
+                  "ownWork": "Write up the soil, water and energy conservation you saw, in more than 500 words.",
                   "children": [
                     {
                       "number": "7a(1)",
@@ -11376,7 +11380,7 @@
                 },
                 {
                   "number": "7d",
-                  "summary": "Study a soil survey report and describe what's in it, trace an area of three or more soil kinds from one of its maps, and list each by full name and map symbol."
+                  "summary": "Study a soil survey report, describe its contents, trace a map area with three or more soil kinds, and list each by full name and map symbol."
                 },
                 {
                   "number": "7e",
