@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -59,6 +60,8 @@ class RequirementDetailScreenTest {
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
     private var clears = 0
+    private var discards = 0
+    private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<SaveFailure>()
     private val comment = TextFieldState()
 
@@ -172,20 +175,23 @@ class RequirementDetailScreenTest {
 
     private fun show(uiState: RequirementDetailUiState) {
         composeTestRule.setContent {
-            RequirementDetailScreen(
-                uiState = uiState,
-                comment = comment,
-                onOpenRequirement = { openedRequirements += it },
-                onOpenTrackerEntry = { entryId, rowNumber ->
-                    openedTrackerEntries += entryId to rowNumber
-                },
-                onCompletedChange = { completedChanges += it },
-                onCompletedDateChange = { dateChanges += it },
-                today = { today },
-                onSaveComment = { commentsSaved++ },
-                onClear = { clears++ },
-                onSaveFailureShown = { saveFailuresShown += it }
-            )
+            back.Content {
+                RequirementDetailScreen(
+                    uiState = uiState,
+                    comment = comment,
+                    onOpenRequirement = { openedRequirements += it },
+                    onOpenTrackerEntry = { entryId, rowNumber ->
+                        openedTrackerEntries += entryId to rowNumber
+                    },
+                    onCompletedChange = { completedChanges += it },
+                    onCompletedDateChange = { dateChanges += it },
+                    today = { today },
+                    onSaveComment = { commentsSaved++ },
+                    onClear = { clears++ },
+                    onDiscard = { discards++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
+                )
+            }
         }
     }
 
@@ -773,6 +779,30 @@ class RequirementDetailScreenTest {
         saveCommentButton().assertIsEnabled().performClick()
 
         assertEquals(1, commentsSaved)
+    }
+
+    @Test
+    fun back_withChangedComment_asksBeforeDiscardingIt() {
+        show(completedLeaf.copy(commentChanged = true))
+
+        back.press(composeTestRule)
+        // Only the notes: the checkbox and date are saved already.
+        composeTestRule.onNodeWithText("Your changes to the notes haven't been saved.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, discards)
+        assertEquals(0, back.closes)
+    }
+
+    @Test
+    fun back_withUnchangedComment_closesThePage() {
+        show(completedLeaf)
+
+        back.press(composeTestRule)
+
+        assertEquals(1, back.closes)
+        composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
     }
 
     @Test

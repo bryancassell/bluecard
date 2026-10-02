@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -55,6 +56,7 @@ class TrackerEntryScreenTest {
     private var saves = 0
     private var deletes = 0
     private var closes = 0
+    private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     /** A new entry, with nothing in it yet. */
@@ -67,6 +69,7 @@ class TrackerEntryScreenTest {
         columns = columns,
         dates = emptyMap(),
         canSave = false,
+        changed = false,
         hasSavedEntry = false,
         canDelete = false
     )
@@ -84,16 +87,18 @@ class TrackerEntryScreenTest {
         fields: Map<String, TextFieldState> = this.fields
     ) {
         composeTestRule.setContent {
-            TrackerEntryScreen(
-                uiState = uiState,
-                fields = fields,
-                onDateChange = { columnId, date -> dateChanges += columnId to date },
-                today = { today },
-                onSave = { saves++ },
-                onDelete = { deletes++ },
-                onClose = { closes++ },
-                onSaveFailureShown = { saveFailuresShown += it }
-            )
+            back.Content {
+                TrackerEntryScreen(
+                    uiState = uiState,
+                    fields = fields,
+                    onDateChange = { columnId, date -> dateChanges += columnId to date },
+                    today = { today },
+                    onSave = { saves++ },
+                    onDelete = { deletes++ },
+                    onClose = { closes++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
+                )
+            }
         }
     }
 
@@ -357,6 +362,31 @@ class TrackerEntryScreenTest {
 
         assertEquals(0, deletes)
         composeTestRule.onNodeWithText("Delete this session?").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_withChangesThatCantBeSaved_asksBeforeDiscardingThem() {
+        // As with every field of a saved entry emptied, which Delete removes instead.
+        show(savedEntry.copy(canSave = false, changed = true))
+
+        back.press(composeTestRule)
+        composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, closes)
+        assertEquals(0, deletes)
+        assertEquals(0, back.closes)
+    }
+
+    @Test
+    fun back_withoutChanges_closesThePage() {
+        show(savedEntry)
+
+        back.press(composeTestRule)
+
+        assertEquals(1, back.closes)
+        assertEquals(0, closes)
+        composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
     }
 
     @Test

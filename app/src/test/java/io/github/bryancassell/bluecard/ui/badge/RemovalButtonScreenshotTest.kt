@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
@@ -8,6 +9,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.ui.LocalUnsavedChanges
+import io.github.bryancassell.bluecard.ui.UnsavedChanges
 import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
 import io.github.bryancassell.bluecard.ui.data.DataManagementUiState
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
@@ -37,32 +40,35 @@ class RemovalButtonScreenshotTest {
     fun clearProgressIsRed() {
         composeTestRule.setContent {
             BlueCardTheme {
-                RequirementDetailScreen(
-                    uiState = RequirementDetailUiState.Ready(
-                        badgeName = "Camping",
-                        requirement = RequirementItem(
-                            "1",
-                            "Plan a campout.",
-                            null,
-                            completed = true,
-                            markedByHand = true
+                CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
+                    RequirementDetailScreen(
+                        uiState = RequirementDetailUiState.Ready(
+                            badgeName = "Camping",
+                            requirement = RequirementItem(
+                                "1",
+                                "Plan a campout.",
+                                null,
+                                completed = true,
+                                markedByHand = true
+                            ),
+                            completedDate = today,
+                            children = emptyList(),
+                            tracker = null,
+                            commentChanged = false,
+                            canClear = true
                         ),
-                        completedDate = today,
-                        children = emptyList(),
-                        tracker = null,
-                        commentChanged = false,
-                        canClear = true
-                    ),
-                    comment = TextFieldState(),
-                    onOpenRequirement = {},
-                    onOpenTrackerEntry = { _, _ -> },
-                    onCompletedChange = {},
-                    onCompletedDateChange = {},
-                    today = { today },
-                    onSaveComment = {},
-                    onClear = {},
-                    onSaveFailureShown = {}
-                )
+                        comment = TextFieldState(),
+                        onOpenRequirement = {},
+                        onOpenTrackerEntry = { _, _ -> },
+                        onCompletedChange = {},
+                        onCompletedDateChange = {},
+                        today = { today },
+                        onSaveComment = {},
+                        onClear = {},
+                        onDiscard = {},
+                        onSaveFailureShown = {}
+                    )
+                }
             }
         }
         composeTestRule.onNodeWithText("Clear progress").performScrollTo().captureRoboImage()
@@ -73,27 +79,30 @@ class RemovalButtonScreenshotTest {
         val columns = listOf(TrackerColumn("activity", "Activity", TrackerColumnType.TEXT))
         composeTestRule.setContent {
             BlueCardTheme {
-                TrackerEntryScreen(
-                    uiState = TrackerEntryUiState.Ready(
-                        badgeName = "Personal Fitness",
-                        requirementNumber = "7a",
-                        rowTitle = "Session",
-                        rowNumber = 2,
-                        rowLabel = "session",
-                        columns = columns,
-                        dates = emptyMap(),
-                        canSave = false,
-                        hasSavedEntry = true,
-                        canDelete = true
-                    ),
-                    fields = columns.associate { it.id to TextFieldState("Ran 2 miles") },
-                    onDateChange = { _, _ -> },
-                    today = { today },
-                    onSave = {},
-                    onDelete = {},
-                    onClose = {},
-                    onSaveFailureShown = {}
-                )
+                CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
+                    TrackerEntryScreen(
+                        uiState = TrackerEntryUiState.Ready(
+                            badgeName = "Personal Fitness",
+                            requirementNumber = "7a",
+                            rowTitle = "Session",
+                            rowNumber = 2,
+                            rowLabel = "session",
+                            columns = columns,
+                            dates = emptyMap(),
+                            canSave = false,
+                            changed = false,
+                            hasSavedEntry = true,
+                            canDelete = true
+                        ),
+                        fields = columns.associate { it.id to TextFieldState("Ran 2 miles") },
+                        onDateChange = { _, _ -> },
+                        today = { today },
+                        onSave = {},
+                        onDelete = {},
+                        onClose = {},
+                        onSaveFailureShown = {}
+                    )
+                }
             }
         }
         composeTestRule.onNodeWithText("Delete").performScrollTo().captureRoboImage()

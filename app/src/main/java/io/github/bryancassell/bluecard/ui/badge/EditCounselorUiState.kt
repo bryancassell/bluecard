@@ -12,7 +12,10 @@ sealed interface EditCounselorUiState {
 
     data class Ready(
         val badgeName: String,
-        /** Whether the fields differ from the saved counselor, so they can be saved. */
+        /**
+         * Whether the fields differ from the saved counselor, until they're saved, so they can
+         * be saved, and Back asks before discarding them.
+         */
         val changed: Boolean,
         /** The fields have been saved, so the page can close. */
         val saved: Boolean = false,

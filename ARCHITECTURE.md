@@ -283,6 +283,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen adds goes first (`BlueCardNavDisplay.kt`). Why the pages move this
   way, against Material 3's advice, is in
   [`PRD.md`](PRD.md#design-decisions).
+- **The navigation root decides whether Back asks before discarding unsaved
+  changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
+  arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no
+  back handler of their own: one is added and turned on only as its page is
+  drawn, a frame or more behind the back stack, so a quick Back would ask on a
+  page sliding away, or close one with unsaved changes before it's drawn again.
 
 ### Double taps
 
@@ -709,8 +715,9 @@ of a requirement and every one under it (`clearRequirements`), each in one
 transaction, after a confirmation dialog. Every removal of what the scout
 recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
 opened by a button with `removalButtonColors` (`removalOutlinedButtonColors`
-for Data management's outlined Clear all). Badge detail and Requirement
-detail share their Clear progress button and its dialog
+for Data management's outlined Clear all). Discarding unsaved changes asks with
+it too, opened by Back (see [Navigation](#navigation)). Badge detail and
+Requirement detail share their Clear progress button and its dialog
 (`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a

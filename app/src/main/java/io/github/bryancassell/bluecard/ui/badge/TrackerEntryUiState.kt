@@ -31,6 +31,11 @@ sealed interface TrackerEntryUiState {
         val dates: Map<String, LocalDate>,
         /** Whether the fields have something in them that differs from what's saved. */
         val canSave: Boolean,
+        /**
+         * Whether the fields differ from what's saved, even if they're all empty, and aren't
+         * being saved, so Back asks before discarding them.
+         */
+        val changed: Boolean,
         /** Whether the row has a saved entry, which Delete deletes. */
         val hasSavedEntry: Boolean,
         /** Whether Delete can be used now: not while a save is under way. */

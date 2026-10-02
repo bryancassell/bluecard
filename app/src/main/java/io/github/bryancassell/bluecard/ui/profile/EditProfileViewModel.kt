@@ -52,8 +52,11 @@ class EditProfileViewModel @Inject constructor(
     ) { stored, _, isSaved, saveFailure ->
         fields.loadOnce { mapOf(NAME to stored?.name, UNIT_NUMBER to stored?.unitNumber) }
         val typed = typed()
+        // Not once saved: the page is closing, though the saved profile may not be read yet.
+        val changed = !isSaved && typed != stored
         EditProfileUiState.Ready(
-            canSave = isComplete(typed) && typed != stored,
+            canSave = isComplete(typed) && changed,
+            changed = changed,
             saved = isSaved,
             saveFailure = saveFailure
         )
