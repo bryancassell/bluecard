@@ -22,6 +22,12 @@ data object Badges : NavKey
 data class BadgeDetail(val badgeId: String) : NavKey
 
 @Serializable
+data object Ranks : NavKey
+
+@Serializable
+data class RankDetail(val rankId: String) : NavKey
+
+@Serializable
 data object DataManagement : NavKey
 
 /** A requirement of a badge or rank, by its official number, such as "4c". */

@@ -62,11 +62,15 @@ class RequirementDetailViewModel @AssistedInject constructor(
      */
     private val recorded = combine(
         flow { emit(catalogRepository.getAdvancements()) },
-        progressRepository.observeProgress(advancementId)
+        // Every badge's and rank's, because a rank above this one can count it as earned.
+        progressRepository.observeAllProgress()
     ) { catalog, progress ->
         // Checked on every change, not only when the page opens, because which version
         // the badge or rank uses depends on its progress.
-        val found = catalog.advancementRequirements(advancementId, progress)
+        val found = catalog.advancementRequirementsAmong(
+            advancementId,
+            progress.associateBy { it.badge.badgeId }
+        )
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
             val numbersWithin = requirement.numbersWithin()

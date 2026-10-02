@@ -58,6 +58,7 @@ import dagger.hilt.android.testing.UninstallModules
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -170,7 +171,21 @@ class MainActivityTest {
                     )
                 )
             )
-        )
+        ),
+        listOf("Scout", "Tenderfoot").map { name ->
+            Rank(
+                id = name.lowercase(),
+                name = name,
+                summary = "Our summary of $name.",
+                officialUrl = "https://www.scouting.org/$name.pdf",
+                requirementVersions = listOf(
+                    RequirementsVersion(
+                        LocalDate.of(2026, 1, 1),
+                        listOf(Requirement("1", "$name's first."))
+                    )
+                )
+            )
+        }
     )
 
     @BindValue
@@ -1187,6 +1202,96 @@ class MainActivityTest {
         // Opening it again starts from what's saved, not the discarded edit.
         composeTestRule.onNodeWithText("Edit").performClick()
         assertFieldText("Name", "Alex Scout")
+    }
+
+    private fun openScout() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Scout").performClick()
+    }
+
+    @Test
+    fun openRanks_showsRanks() {
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
+
+        home().assertDoesNotExist()
+        composeTestRule.onNode(isHeading() and hasText("Ranks")).assertIsDisplayed()
+        composeTestRule.onNode(hasText("Scout") and hasText("In progress")).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Camping").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromRanks_returnsHome() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
+        // pressBack() doesn't wait for Compose, so let the Ranks entry settle first.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun openRank_showsRankDetail_andItsRequirementsPage() {
+        openScout()
+
+        composeTestRule.onNodeWithText("Our summary of Scout.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Scout's first.").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithText("Requirement 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Scout.").assertDoesNotExist()
+    }
+
+    @Test
+    fun back_fromRankDetail_returnsToRanks() {
+        openScout()
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Scout.").assertDoesNotExist()
+    }
+
+    @Test
+    fun markingRankEarned_showsOnRanks_andMovesInProgressUp() {
+        openScout()
+
+        composeTestRule.onNodeWithText("Mark earned").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+        composeTestRule.onNodeWithText("Earned on May 20, 2026").assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        pressBack()
+
+        composeTestRule.onNode(hasText("Scout") and hasText("Earned")).assertIsDisplayed()
+        composeTestRule.onNode(hasText("Tenderfoot") and hasText("In progress"))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onRanks_opensRanksOnce() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Ranks").performScrollTo()
+
+        tapTwiceInOneFrame("Ranks")
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onRank_opensItOnce() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
+
+        tapTwiceInOneFrame("Scout")
+        pressBack()
+
+        composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
     }
 
     @Test

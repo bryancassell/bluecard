@@ -37,9 +37,9 @@ class DataManagementViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DataManagementUiState())
 
     /**
-     * Whether a badge is started. A StateFlow of its own, so the rest of [uiState] doesn't wait
-     * for progress to be read again each time the screen comes back, such as from the file
-     * picker. If progress can't be read, there's nothing known to clear. Home shows the
+     * Whether a badge or rank is started. A StateFlow of its own, so the rest of [uiState]
+     * doesn't wait for progress to be read again each time the screen comes back, such as from
+     * the file picker. If progress can't be read, there's nothing known to clear. Home shows the
      * load-failed message then, so the scout reaches this screen that way only if the failure
      * comes after it opens.
      */

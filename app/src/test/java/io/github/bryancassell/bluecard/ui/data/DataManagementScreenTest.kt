@@ -147,8 +147,8 @@ class DataManagementScreenTest {
             .assertIsDisplayed()
         composeTestRule
             .onNodeWithText(
-                "Remove the progress on every badge, including counselors. Your name and unit " +
-                    "number stay."
+                "Remove the progress on every badge and rank, including counselors. Your name " +
+                    "and unit number stay."
             )
             .performScrollTo()
             .assertIsDisplayed()
@@ -358,8 +358,8 @@ class DataManagementScreenTest {
         composeTestRule.onNodeWithText("Clear all progress?").assertIsDisplayed()
         composeTestRule
             .onNodeWithText(
-                "The progress on every badge will be removed, including counselors. Your name " +
-                    "and unit number stay."
+                "The progress on every badge and rank will be removed, including " +
+                    "counselors. Your name and unit number stay."
             )
             .assertIsDisplayed()
         assertEquals(0, clears)

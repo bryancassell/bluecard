@@ -29,22 +29,46 @@ fun BadgeRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val eagle = badge.eagle?.let { eagleRequirementLabel(it, listFormatter) }
-    val status = when (badge.status) {
-        BadgeStatus.NotStarted -> null
-        BadgeStatus.InProgress -> stringResource(R.string.badges_in_progress)
-        BadgeStatus.Completed -> stringResource(R.string.badges_completed)
-    }
-    val fractionDone = badge.fractionDone
+    AdvancementRow(
+        name = badge.name,
+        detail = badge.eagle?.let { eagleRequirementLabel(it, listFormatter) },
+        status = when (badge.status) {
+            BadgeStatus.NotStarted -> null
+            BadgeStatus.InProgress -> stringResource(R.string.badges_in_progress)
+            BadgeStatus.Completed -> stringResource(R.string.badges_completed)
+        },
+        fractionDone = badge.fractionDone,
+        onClickLabel = stringResource(R.string.badges_open_badge),
+        onClick = onClick,
+        modifier = modifier
+    )
+}
+
+/**
+ * One badge or rank in a list: its [name], a line of [detail] under it, if any, the scout's
+ * [status] on it at the row's end, if any, and a bar for how much is done, [fractionDone] from 0
+ * to 1, if it shows one. Tapping it calls [onClick], which screen readers announce with
+ * [onClickLabel].
+ */
+@Composable
+fun AdvancementRow(
+    name: String,
+    detail: String?,
+    status: String?,
+    fractionDone: Float?,
+    onClickLabel: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val percentDone = fractionDone?.let { percentDoneDescription(it) }
     ListItem(
-        headlineContent = { Text(badge.name) },
-        supportingContent = if (eagle == null && fractionDone == null) {
+        headlineContent = { Text(name) },
+        supportingContent = if (detail == null && fractionDone == null) {
             null
         } else {
             {
                 Column {
-                    eagle?.let { Text(it) }
+                    detail?.let { Text(it) }
                     fractionDone?.let {
                         BadgeProgressBar(
                             fractionDone = it,
@@ -58,15 +82,11 @@ fun BadgeRow(
             }
         },
         trailingContent = status?.let { { Text(it) } },
-        // Screen readers announce the row as a button that opens the badge. Compose reports a
-        // progress bar's percentage only from the bar's own node, not from the row it's merged
-        // into, so the row says how much is done as its state.
+        // Screen readers announce the row as a button that opens the badge or rank. Compose
+        // reports a progress bar's percentage only from the bar's own node, not from the row it's
+        // merged into, so the row says how much is done as its state.
         modifier = modifier
-            .clickable(
-                onClickLabel = stringResource(R.string.badges_open_badge),
-                role = Role.Button,
-                onClick = onClick
-            )
+            .clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick)
             .semantics { percentDone?.let { stateDescription = it } }
     )
 }

@@ -30,6 +30,8 @@ import io.github.bryancassell.bluecard.ui.data.DataManagementRoute
 import io.github.bryancassell.bluecard.ui.home.HomeRoute
 import io.github.bryancassell.bluecard.ui.onboarding.OnboardingRoute
 import io.github.bryancassell.bluecard.ui.profile.EditProfileRoute
+import io.github.bryancassell.bluecard.ui.rank.RankDetailRoute
+import io.github.bryancassell.bluecard.ui.ranks.RanksRoute
 
 /**
  * The app's navigation root: shows the screen on top of the back stack.
@@ -89,6 +91,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 HomeRoute(
                     onOpenBadge = { navigate(BadgeDetail(it)) },
                     onOpenBadges = { navigate(Badges) },
+                    onOpenRanks = { navigate(Ranks) },
                     onOpenDataManagement = { navigate(DataManagement) }
                 )
             }
@@ -104,6 +107,19 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     badgeId = key.badgeId,
                     onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
                     onEditCounselor = { navigate(EditCounselor(key.badgeId)) }
+                )
+            }
+            entry<Ranks> { key ->
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
+                RanksRoute(onOpenRank = { navigate(RankDetail(it)) })
+            }
+            entry<RankDetail> { key ->
+                val navigate =
+                    rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
+                RankDetailRoute(
+                    rankId = key.rankId,
+                    onOpenRequirement = { navigate(RequirementDetail(key.rankId, it)) }
                 )
             }
             entry<EditCounselor> { key ->

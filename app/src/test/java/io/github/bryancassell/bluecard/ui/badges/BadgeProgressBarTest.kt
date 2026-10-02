@@ -36,4 +36,10 @@ class BadgeProgressBarTest {
     fun percentDoneDescription_isNeverAHundred_whileSomethingIsLeft() {
         assertEquals(listOf("99% done"), descriptionsOf(0.999f))
     }
+
+    // As for a rank whose requirements are complete, waiting on the rank below it.
+    @Test
+    fun percentDoneDescription_isAHundred_whenEverythingIsDone() {
+        assertEquals(listOf("100% done"), descriptionsOf(1f))
+    }
 }

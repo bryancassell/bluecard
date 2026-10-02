@@ -194,8 +194,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen" in the UI layer guide, which keeps errors in UI state. The message has
   no "Try again" button, which limits when a screen loads again
   (`LoadFailedMessage`). Data management shows no such message: it loads only
-  whether a badge is started, for its Clear all button, which its export and
-  import don't need.
+  whether a badge or rank is started, for its Clear all button, which its
+  export and import don't need.
 - **Save failures are a UI state too.** When something can't be saved, a
   repository throws an `IOException`. ViewModels that save progress launch each
   write with a `TaskRunner` (`ui/TaskFailure.kt`), which puts a `TaskFailure` in
@@ -480,8 +480,10 @@ io.github.bryancassell.bluecard
 │   ├── onboarding/
 │   ├── home/
 │   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
-│   ├── badge/          Badge detail, Edit counselor, and the requirement pages badges and
-│   │                   ranks share
+│   ├── badge/          Badge detail, Edit counselor, and the top of the page and requirement
+│   │                   pages badges and ranks share
+│   ├── ranks/          Ranks
+│   ├── rank/           Rank detail
 │   ├── data/           Clear, export, import
 │   ├── profile/        Edit name and unit, and the name and unit fields Onboarding shares
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
@@ -502,9 +504,11 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges and Data management. |
+| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges, Ranks and Data management. |
 | **Badges** | Browse all current badges and search by name or description, with a progress bar on each badge in progress. One screen: the list filters as the scout types. |
 | **Badge detail** | A progress bar while the badge is in progress, summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
+| **Ranks** | The seven ranks, Scout through Eagle Scout, in the order they're earned, in the same rows as Badges, each with its status and progress bar ([Ranks](#ranks)). |
+| **Rank detail** | Like Badge detail without the counselor or Eagle-required label: summary, official link, progress bar, "mark earned on a prior date", or the rank above that counts it as earned, the requirement list, and Clear progress. No report yet ([#193](https://github.com/bryancassell/bluecard/issues/193)). |
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, a completion date for one completed by its fixed-row tracker, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
@@ -515,7 +519,9 @@ Badge detail and each requirement's page show one level of the requirement
 tree (see [`PRD.md`](PRD.md#design-decisions)'s Requirement list). Both show
 the requirements version the badge was started on, or the newest version for a
 badge the scout hasn't started (`data/progress/BadgeVersion.kt`). Requirement
-detail and Tracker entry serve ranks' requirements too ([Ranks](#ranks)).
+detail and Tracker entry serve ranks' requirements too, and Rank detail shares
+Badge detail's top of the page (`ui/badge/AdvancementHeader.kt`) and rows
+([Ranks](#ranks)).
 
 ## Merit badge catalog
 
@@ -627,8 +633,17 @@ works on.
   rank with the badges, under the file's `badges` key, and import checks each
   one against the badges and ranks in the catalog, so ranks needed no new
   export format version ([Export and import](#export-and-import)). Clear all
-  clears rank progress too, but its wording, and when it's enabled, still speak
-  only of badges until ranks can be recorded.
+  clears rank progress too, and a started rank turns it on.
+- **A rank's status depends on the other ranks** (`data/progress/RankStatus.kt`),
+  because ranks are earned in order. A rank is earned once it's complete
+  ([Completion](#completion)) and the rank below it is earned, or once it or a
+  rank above it is marked earned on a prior date, so the earned ranks are
+  always the lowest ones. The lowest rank not earned is in progress, even
+  before it's started. Like completion, nothing about it is stored, so
+  unmarking a rank undoes what its mark counted as earned. Every screen asks
+  `standings` for a rank's status and bar, as they ask `BadgeStatus.kt` for a
+  badge's, so they agree. A page that shows a rank reads every rank's progress
+  (`observeAllProgress`), not only its own.
 
 ## Data model
 
@@ -696,7 +711,9 @@ Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
 
 A badge's status (not started, in progress or completed) is derived the same
-way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees.
+way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees. A
+rank's status is too, from the ranks below and above it as well
+(`data/progress/RankStatus.kt`, [Ranks](#ranks)).
 So is how much of a badge is done, for its progress bar
 (`data/progress/FractionDone.kt`), with partial credit for each part of a
 requirement that's done (see [`PRD.md`](PRD.md#design-decisions)'s Badge
@@ -790,7 +807,8 @@ opened by a button with `removalButtonColors` (`removalOutlinedButtonColors`
 for Data management's outlined Clear all). Discarding unsaved changes asks with
 it too, opened by Back (see [Navigation](#navigation)). Badge detail and
 Requirement detail share their Clear progress button and its dialog
-(`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
+(`ui/badge/ClearProgress.kt`) with Rank detail, which clears a rank as Badge
+detail clears a badge. Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a
@@ -1020,6 +1038,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
+| [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
 | [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own |
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
