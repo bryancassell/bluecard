@@ -791,7 +791,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Explain what an engine's firing order is."
+                  "summary": "Explain the firing order of the engine you're working on."
                 },
                 {
                   "number": "8c",
@@ -817,11 +817,11 @@
               "children": [
                 {
                   "number": "9a",
-                  "summary": "Draw the drive train and explain each part."
+                  "summary": "Sketch a drive train and explain what each part does."
                 },
                 {
                   "number": "9b",
-                  "summary": "Explain how automatic and standard transmissions differ."
+                  "summary": "Compare automatic and standard transmissions."
                 },
                 {
                   "number": "9c",
@@ -3820,7 +3820,7 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Demonstrate using a fire extinguisher and a fire blanket."
+                  "summary": "Show you can handle a fire extinguisher and a fire blanket."
                 }
               ]
             },
@@ -3898,7 +3898,7 @@
                       {
                         "id": "expires",
                         "label": "Expiration date",
-                        "type": "date"
+                        "type": "text"
                       }
                     ],
                     "rowLabel": "alarm",
@@ -3965,7 +3965,7 @@
               "children": [
                 {
                   "number": "8a",
-                  "summary": "Explain how Leave No Trace and the Outdoor Code apply to campfires."
+                  "summary": "Explain how Leave No Trace and the Outdoor Code guide campfire use."
                 },
                 {
                   "number": "8b",
@@ -4748,7 +4748,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Meet a game development teacher and discuss the skills they stress."
+                  "summary": "Talk with a game development educator about the skills they teach."
                 }
               ]
             }
@@ -6204,7 +6204,7 @@
                 },
                 {
                   "number": "3d",
-                  "summary": "Explain why five American music figures still matter: at least a composer, performer, innovator and someone born 100+ years ago."
+                  "summary": "Explain why five American music figures still matter: at least a composer, performer, innovator and someone born over a century ago."
                 }
               ]
             },
@@ -6300,8 +6300,8 @@
                             "type": "text"
                           }
                         ],
-                        "rowLabel": "bird",
-                        "rowLabelPlural": "birds"
+                        "rowLabel": "sighting",
+                        "rowLabelPlural": "sightings"
                       }
                     }
                   ]
@@ -6326,7 +6326,7 @@
                   "children": [
                     {
                       "number": "4c(1)",
-                      "summary": "Show you can spot your area's venomous snakes."
+                      "summary": "Show you can tell which local snakes are venomous."
                     },
                     {
                       "number": "4c(2)",
@@ -7280,7 +7280,7 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Visit a school's kiln yard and learn how different kinds of kilns work."
+                  "summary": "Visit a craft school's kiln yard and see how each kind of kiln works."
                 },
                 {
                   "number": "7b",
@@ -7594,7 +7594,7 @@
                 },
                 {
                   "number": "4b",
-                  "summary": "Design a robot with sensors, programming and 2+ degrees of freedom; draw and describe it in your notebook."
+                  "summary": "Design a robot with sensors, programming and at least two degrees of freedom, documented in your notebook."
                 },
                 {
                   "number": "4c",
@@ -8789,7 +8789,7 @@
             },
             {
               "number": "5",
-              "summary": "Explain what causes wind and rain, and how lightning and hail form."
+              "summary": "Explain the causes of wind, rain, lightning and hail."
             },
             {
               "number": "6",
@@ -8821,6 +8821,11 @@
                         "id": "date",
                         "label": "Date",
                         "type": "date"
+                      },
+                      {
+                        "id": "time",
+                        "label": "Time",
+                        "type": "text"
                       },
                       {
                         "id": "wind",
@@ -8870,7 +8875,7 @@
             },
             {
               "number": "11",
-              "summary": "Give a counselor-approved talk of 5+ minutes to a group on lightning, flash flood and tornado safety."
+              "summary": "Give a counselor-approved talk of at least five minutes to a group on lightning, flash flood and tornado safety."
             },
             {
               "number": "12",
