@@ -12,11 +12,11 @@ import java.time.LocalDate
  * Marks requirement [number] of badge or rank [advancementId] completed or not, for the page that
  * shows it, starting the badge or rank if it isn't ([badgeStart]).
  *
- * The page keeps one for as long as it's open, because it remembers the date the requirement had
- * when the scout unchecks it: checking it again brings that date back, rather than today's, so a
- * mistaken tap loses nothing. The date is kept in the page's [savedStateHandle], so it survives
- * the system stopping the app in the background, and is forgotten when the page closes. Its
- * functions must be called from one thread, such as a ViewModel's main thread.
+ * It remembers the date the requirement had when the scout unchecks it on the page: checking it
+ * again there brings that date back, rather than today's, so a mistaken tap loses nothing. The
+ * date is kept in the page's [savedStateHandle], not in the recorder, so it survives the system
+ * stopping the app in the background, and is forgotten when the page closes. Its functions must be
+ * called from the main thread, as [SavedStateHandle]'s are.
  */
 class CompletionRecorder(
     private val advancementId: String,
@@ -33,7 +33,15 @@ class CompletionRecorder(
     suspend fun setCompleted(completed: Boolean) {
         if (completed) {
             val today = LocalDate.now(clock)
-            val date = if (UNCHECKED_DATE in savedStateHandle) uncheckedDate() else today
+            val date = when (val unchecked = savedStateHandle.get<Any?>(UNCHECKED_DATE)) {
+                is Long -> LocalDate.ofEpochDay(unchecked)
+
+                // One that had no date, kept as null, or none unchecked on this page.
+                null -> if (UNCHECKED_DATE in savedStateHandle) null else today
+
+                // A value of another kind under the key is ignored, as in restoredText.
+                else -> today
+            }
             progressRepository.markRequirementCompleted(
                 advancementId,
                 number,
@@ -50,14 +58,6 @@ class CompletionRecorder(
             }
         }
     }
-
-    /**
-     * The date the requirement had before the scout unchecked it on this page, which may be null,
-     * to bring back. Read it only while [savedStateHandle] has a value under [UNCHECKED_DATE]: a
-     * null value there, which it keeps like any other, is a requirement that had no date.
-     */
-    private fun uncheckedDate(): LocalDate? =
-        savedStateHandle.get<Long>(UNCHECKED_DATE)?.let(LocalDate::ofEpochDay)
 
     /**
      * Clears everything recorded for the requirements numbered in [numbers]. If this one is among

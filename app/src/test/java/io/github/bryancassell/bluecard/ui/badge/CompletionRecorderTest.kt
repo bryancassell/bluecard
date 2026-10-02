@@ -50,15 +50,25 @@ class CompletionRecorderTest {
     private val catalogRepository = FakeCatalogRepository(listOf(camping))
     private val progressRepository = FakeProgressRepository()
 
-    /** A recorder for the page of requirement [number], such as one the scout opens. */
-    private fun recorder(number: String = "1") = CompletionRecorder(
+    /**
+     * A recorder for the page of requirement [number], such as one the scout opens, with the
+     * page's [savedStateHandle].
+     */
+    private fun recorder(
+        number: String = "1",
+        savedStateHandle: SavedStateHandle = SavedStateHandle()
+    ) = CompletionRecorder(
         "camping",
         number,
         catalogRepository,
         progressRepository,
         clock,
-        SavedStateHandle()
+        savedStateHandle
     )
+
+    /** A copy of [handle]'s values, as the system restores a page's saved state. */
+    private fun restored(handle: SavedStateHandle) =
+        SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
 
     private suspend fun progress() = progressRepository.observeProgress("camping").first()
 
@@ -204,6 +214,29 @@ class CompletionRecorderTest {
         closedPage.setCompleted(false)
 
         recorder().setCompleted(true)
+
+        assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun checkingAgainOnThePageRestoredFromItsSavedState_bringsBackTheDateItHad() = runTest {
+        val savedState = SavedStateHandle()
+        val stoppedPage = recorder(savedStateHandle = savedState)
+        stoppedPage.setCompleted(true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+        stoppedPage.setCompleted(false)
+
+        recorder(savedStateHandle = restored(savedState)).setCompleted(true)
+
+        assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
+    }
+
+    @Test
+    fun anotherValueUnderTheUncheckedDateKey_isIgnored_andCheckingDatesItToday() = runTest {
+        // A value the recorder didn't keep.
+        val savedState = SavedStateHandle(mapOf("uncheckedDate" to "From an intent."))
+
+        recorder(savedStateHandle = savedState).setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
     }
