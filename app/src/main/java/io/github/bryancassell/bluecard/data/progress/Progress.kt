@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -164,6 +165,14 @@ fun TrackerDefinition.numberedRows(entries: List<TrackerEntry>): List<Pair<Int, 
     val filled = filledRows(entries, count)
     return (1..count).map { it to filled[it] }
 }
+
+/**
+ * The values of this tracker's [entry] as stored, each with its column, in column order and
+ * without the columns it has none for. Both the requirement's page and the PDF report show a
+ * row's values this way.
+ */
+fun TrackerDefinition.values(entry: TrackerEntry): List<Pair<TrackerColumn, String>> =
+    columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }
 
 /**
  * Tracker values as repositories store them: without spaces around each value, and without

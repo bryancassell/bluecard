@@ -21,8 +21,8 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
-import io.github.bryancassell.bluecard.ui.SaveFailure
-import io.github.bryancassell.bluecard.ui.SaveRunner
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.keepText
 import io.github.bryancassell.bluecard.ui.restoredText
@@ -67,7 +67,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
      */
     val fields: Map<String, TextFieldState> = _fields
 
-    private val saves = SaveRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope)
     private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     /** Whether a save or delete is under way. */
@@ -127,7 +127,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
         values: Map<String, String>,
         saving: Boolean,
         done: Boolean,
-        saveFailure: SaveFailure?
+        saveFailure: TaskFailure?
     ): TrackerEntryUiState.Ready {
         val columns = row.tracker.columns
         val stored = valuesToSave(row, values)
@@ -296,7 +296,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
     }
 
     /** The scout has been told about [failure]. */
-    fun onSaveFailureShown(failure: SaveFailure) {
+    fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
     }
 

@@ -106,7 +106,7 @@ class DataManagementViewModel @Inject constructor(
      * done, since one can start before another ends, as when two taps open two file pickers. If
      * it throws an [IOException], which repositories throw when a file or the scout's data can't
      * be read or saved, logs it and shows [failure]. Any other exception is a bug, so it still
-     * crashes the app, as in SaveRunner.
+     * crashes the app, as in TaskRunner.
      */
     private fun work(failure: Kind, action: suspend () -> Unit) {
         running++

@@ -38,7 +38,7 @@ import io.github.bryancassell.bluecard.data.backup.exportFileName
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
-import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
+import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
 import java.time.LocalDate
 
@@ -85,7 +85,7 @@ fun DataManagementScreen(
     onMessageShown: (DataManagementMessage) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val startOtherApp = rememberStartOtherApp()
+    val startOtherApp = rememberOtherAppStarter()
     // Each is null when the scout leaves the file picker without choosing a file.
     val createDocument = rememberLauncherForActivityResult(CreateDocument(JSON)) { destination ->
         destination?.let(onExport)

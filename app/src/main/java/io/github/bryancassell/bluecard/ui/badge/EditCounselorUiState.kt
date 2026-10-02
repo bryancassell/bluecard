@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 
 /** What the Edit counselor screen shows. */
 sealed interface EditCounselorUiState {
@@ -20,7 +20,7 @@ sealed interface EditCounselorUiState {
         /** The fields have been saved, so the page can close. */
         val saved: Boolean = false,
         /** The fields couldn't be saved, and the scout hasn't been told yet. */
-        val saveFailure: SaveFailure? = null
+        val saveFailure: TaskFailure? = null
     ) : EditCounselorUiState
 
     /**

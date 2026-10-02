@@ -34,7 +34,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -62,7 +62,7 @@ class RequirementDetailScreenTest {
     private var clears = 0
     private var discards = 0
     private val back = BackPresses()
-    private val saveFailuresShown = mutableListOf<SaveFailure>()
+    private val saveFailuresShown = mutableListOf<TaskFailure>()
     private val comment = TextFieldState()
 
     /** A requirement with sub-requirements. */
@@ -807,11 +807,11 @@ class RequirementDetailScreenTest {
 
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
+        val failure = TaskFailure()
         show(leaf.copy(saveFailure = failure))
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
+        assertEquals(emptyList<TaskFailure>(), saveFailuresShown)
 
         // A short snackbar shows for 4 seconds.
         composeTestRule.mainClock.advanceTimeBy(5_000)

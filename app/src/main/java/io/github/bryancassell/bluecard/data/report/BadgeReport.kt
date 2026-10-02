@@ -15,6 +15,7 @@ import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
+import io.github.bryancassell.bluecard.data.progress.values
 import java.time.LocalDate
 
 /** Everything a badge's report shows: the scout, the badge, and all they recorded for it. */
@@ -146,6 +147,3 @@ private fun TrackerDefinition.toReport(entries: List<TrackerEntry>): ReportTrack
     }
     return ReportTracker(this, rows)
 }
-
-private fun TrackerDefinition.values(entry: TrackerEntry): List<Pair<TrackerColumn, String>> =
-    columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }

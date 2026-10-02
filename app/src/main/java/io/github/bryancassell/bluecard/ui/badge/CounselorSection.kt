@@ -23,13 +23,13 @@ import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
-import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
+import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.typedText
 
 /**
  * The badge's merit badge [counselor], with a button to enter one or edit it. Tapping the phone
  * number opens the phone app to call it, and tapping the email address opens an email app, each
- * with [startOtherApp] ([rememberStartOtherApp]).
+ * with [startOtherApp] ([rememberOtherAppStarter]).
  */
 @Composable
 fun CounselorSection(

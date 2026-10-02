@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 
 /** What the Requirement detail screen shows. */
@@ -31,7 +31,7 @@ sealed interface RequirementDetailUiState {
          */
         val canClear: Boolean,
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
-        val saveFailure: SaveFailure? = null
+        val saveFailure: TaskFailure? = null
     ) : RequirementDetailUiState
 
     /**

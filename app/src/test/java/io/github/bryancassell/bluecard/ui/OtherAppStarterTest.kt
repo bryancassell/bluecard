@@ -26,7 +26,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowToast
 
 /**
- * [rememberStartOtherApp], with Robolectric, which records the activities started and the
+ * [rememberOtherAppStarter], with Robolectric, which records the activities started and the
  * toasts shown. The test clock is stopped, so each test moves it past the double-tap timeout
  * itself.
  */
@@ -68,7 +68,7 @@ class OtherAppStarterTest {
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.setContent {
             doubleTapTimeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
-            startOtherApp = rememberStartOtherApp()
+            startOtherApp = rememberOtherAppStarter()
             CompositionLocalProvider(
                 LocalActivityResultRegistryOwner provides resultRegistryOwner
             ) {

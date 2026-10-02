@@ -13,9 +13,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.normalizedText
-import io.github.bryancassell.bluecard.ui.SaveFailure
-import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.StoredTextFields
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
 import java.time.LocalDate
@@ -47,7 +47,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
      */
     val comment = fields[COMMENT]
 
-    private val saves = SaveRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope)
     private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     /**
@@ -182,7 +182,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     }
 
     /** The scout has been told about [failure]. */
-    fun onSaveFailureShown(failure: SaveFailure) {
+    fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
     }
 

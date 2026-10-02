@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.Counselor
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import java.time.LocalDate
 
@@ -46,9 +46,9 @@ sealed interface BadgeDetailUiState {
          */
         val reportToShare: Uri? = null,
         /** The report couldn't be created or saved, and the scout hasn't been told yet. */
-        val reportFailure: SaveFailure? = null,
+        val reportFailure: TaskFailure? = null,
         /** The badge's progress couldn't be cleared, and the scout hasn't been told yet. */
-        val saveFailure: SaveFailure? = null
+        val saveFailure: TaskFailure? = null
     ) : BadgeDetailUiState
 
     /**

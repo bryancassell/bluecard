@@ -39,7 +39,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -71,7 +71,7 @@ class TrackerEntryScreenTest {
     private var deletes = 0
     private var closes = 0
     private val back = BackPresses()
-    private val saveFailuresShown = mutableListOf<SaveFailure>()
+    private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     /** The page's view, which the keyboard's insets are sent to. */
     private lateinit var view: View
@@ -582,11 +582,11 @@ class TrackerEntryScreenTest {
 
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
+        val failure = TaskFailure()
         show(newEntry.copy(saveFailure = failure))
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
+        assertEquals(emptyList<TaskFailure>(), saveFailuresShown)
 
         // A short snackbar shows for 4 seconds.
         composeTestRule.mainClock.advanceTimeBy(5_000)
