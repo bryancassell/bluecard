@@ -165,6 +165,23 @@ class RequirementItemTest {
     }
 
     @Test
+    fun onBadgeCompletedOnPriorDate_whenStillNeeded_isNotRecorded() {
+        fun Requirement.notRecorded(
+            progress: Map<String, RequirementProgress> = emptyMap(),
+            partOfHasEnough: Boolean = false,
+            badgeCompletedOnPriorDate: Boolean = true
+        ) = toItem(progress, emptyMap(), partOfHasEnough, badgeCompletedOnPriorDate).notRecorded
+
+        assertTrue(leaf.notRecorded())
+        // Partly complete is still not complete.
+        assertTrue(twoOfThree.notRecorded(done("2a")))
+
+        assertFalse(leaf.notRecorded(done("1")))
+        assertFalse(leaf.notRecorded(partOfHasEnough = true))
+        assertFalse(leaf.notRecorded(badgeCompletedOnPriorDate = false))
+    }
+
+    @Test
     fun notNeeded_isNotPartlyCompleted() {
         val item = twoOfThree.toItem(done("2a"), emptyMap(), partOfHasEnough = true)
 

@@ -231,6 +231,28 @@ class BadgeReportTest {
         assertEquals(Completion(LocalDate.of(2025, 8, 1)), report.completion)
     }
 
+    // As the screens show it, so the counselor doesn't read the badge as complete with nothing
+    // done.
+    @Test
+    fun requirementStillNeeded_onABadgeMarkedCompletedOnPriorDate_isNotRecorded() {
+        // 2 is complete, so 2b isn't needed.
+        val done = listOf(completed("1", null), completed("2a", null), completed("2c", null))
+        val marked = LocalDate.of(2025, 8, 1)
+
+        val report = report(progress(done, completedOnPriorDate = marked))
+
+        assertEquals(listOf("3", "4", "4a", "4b"), report.notRecorded())
+        // Not on a badge that isn't marked.
+        assertEquals(emptyList<String>(), report(progress(done)).notRecorded())
+    }
+
+    /** The numbers of the requirements that are [ReportRequirement.notRecorded], at any depth. */
+    private fun BadgeReport.notRecorded(): List<String> {
+        fun List<ReportRequirement>.all(): List<ReportRequirement> =
+            flatMap { listOf(it) + it.children.all() }
+        return requirements.all().filter { it.notRecorded }.map { it.number }
+    }
+
     @Test
     fun incompleteBadge_isNotCompleted() {
         assertNull(report(progress()).completion)

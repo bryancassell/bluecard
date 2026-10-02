@@ -85,6 +85,10 @@
          because a requirement it's part of is complete, such as a choice the scout didn't pick.
          Screen readers read it as the row's state. -->
     <string name="requirement_not_needed">Not needed</string>
+    <!-- On a badge the scout marked completed on a prior date, without recording its
+         requirements: in its report, and read by screen readers as the state of a requirement's
+         row, in place of "Not completed". -->
+    <string name="requirement_not_recorded">Not recorded</string>
     <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
          open requirement". -->
     <string name="requirement_open">open requirement</string>
@@ -196,6 +200,14 @@
     <string name="clear_all_confirm_message">The progress on every badge will be removed, including counselors. Your name and unit number stay.</string>
     <!-- Shown briefly after clearing all progress. -->
     <string name="clear_all_done">Progress cleared.</string>
+    <!-- Button on a badge's page, while it isn't complete, that asks for a date and marks the
+         badge completed on it without recording its requirements, as for a badge earned before
+         using BlueCard. -->
+    <string name="badge_detail_mark_completed">Mark completed</string>
+    <!-- The date a badge was marked completed on, such as "Completed on Apr 15, 2025". -->
+    <string name="badge_detail_completed_on">Completed on %1$s</string>
+    <!-- Button under the date a badge was marked completed on, which undoes the mark. -->
+    <string name="badge_detail_unmark_completed">Unmark</string>
     <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
          recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
     <string name="badge_detail_share_report">Share report</string>

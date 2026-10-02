@@ -4,6 +4,7 @@ import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import java.time.LocalDate
 
 /** What the Badge detail screen shows. */
 sealed interface BadgeDetailUiState {
@@ -25,6 +26,11 @@ sealed interface BadgeDetailUiState {
         val counselor: Counselor? = null,
         /** Whether the badge is complete, so its report can be shared or saved. */
         val completed: Boolean = false,
+        /**
+         * The date the scout marked the badge completed on, without recording its requirements,
+         * or null if they haven't.
+         */
+        val completedOnPriorDate: LocalDate? = null,
         /** How much of the badge is done, from 0 to 1, while it's in progress, or null. */
         val fractionDone: Float? = null,
         /** Whether the badge is started, so its progress can be cleared. */

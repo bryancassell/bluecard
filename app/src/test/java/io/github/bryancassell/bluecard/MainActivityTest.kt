@@ -532,7 +532,7 @@ class MainActivityTest {
     fun onDeviceWithOtherDigits_numbersUseStringsLanguageDigits() {
         openCamping()
 
-        composeTestRule.onNodeWithText("Do 1 of 2").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Do 1 of 2").performScrollTo().assertIsDisplayed()
     }
 
     // The activity takes the strings' language's direction, so on a right-to-left device its
@@ -596,8 +596,11 @@ class MainActivityTest {
 
     private fun openCampingCompleted() {
         runBlocking {
-            progressRepository.startBadge("camping", LocalDate.of(2026, 1, 1), today)
-            progressRepository.setCompletedOnPriorDate("camping", LocalDate.of(2025, 8, 1))
+            progressRepository.setCompletedOnPriorDate(
+                "camping",
+                LocalDate.of(2025, 8, 1),
+                BadgeStart(LocalDate.of(2026, 1, 1), today)
+            )
         }
         openCamping()
     }
@@ -654,7 +657,7 @@ class MainActivityTest {
     fun openRequirement_showsRequirementDetail() {
         openCamping()
 
-        composeTestRule.onNodeWithText("Second.").performClick()
+        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
         composeTestRule.onNodeWithText("Choice A.").assertIsDisplayed()
@@ -664,7 +667,7 @@ class MainActivityTest {
     @Test
     fun openSubRequirement_showsItsOwnPage() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performClick()
+        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Choice B.").performClick()
 
@@ -676,7 +679,7 @@ class MainActivityTest {
     @Test
     fun back_fromRequirementDetail_returnsToBadgeDetail() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performClick()
+        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
         composeTestRule.waitForIdle()
 
         pressBack()
@@ -1178,6 +1181,7 @@ class MainActivityTest {
     @Test
     fun doubleTap_onRequirement_opensItOnce() {
         openCamping()
+        composeTestRule.onNodeWithText("Second.").performScrollTo()
 
         tapTwiceInOneFrame("Second.")
         pressBack()
@@ -1188,7 +1192,7 @@ class MainActivityTest {
     @Test
     fun doubleTap_onSubRequirement_opensItOnce() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performClick()
+        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
 
         tapTwiceInOneFrame("Choice B.")
         pressBack()

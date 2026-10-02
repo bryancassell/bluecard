@@ -17,6 +17,8 @@ import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,19 +29,22 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * One badge from the catalog, with the scout's progress on its requirements, and its report
- * once it's complete. Once it's started, its progress can be cleared.
+ * once it's complete. While it isn't complete, the scout can mark it completed on a prior date.
+ * Once it's started, its progress can be cleared.
  */
 @HiltViewModel(assistedFactory = BadgeDetailViewModel.Factory::class)
 class BadgeDetailViewModel @AssistedInject constructor(
     @Assisted private val badgeId: String,
     catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val reportRepository: ReportRepository
+    private val reportRepository: ReportRepository,
+    private val clock: Clock
 ) : ViewModel() {
     // Reports are written like saves: a failure is logged and shown in a snackbar, with a
     // message of its own.
     private val reports = SaveRunner(viewModelScope)
     private val saves = SaveRunner(viewModelScope)
+    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
     private val reportToShare = MutableStateFlow<Uri?>(null)
 
     /** The report being created to share, if there is one. */
@@ -73,6 +78,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
             requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
             completed = progress?.completion(found.version) != null,
+            completedOnPriorDate = progress?.badge?.completedOnPriorDate,
             fractionDone = badge.fractionDoneWhileInProgress(progress),
             canClear = progress != null,
             reportToShare = reportToShare,
@@ -126,10 +132,29 @@ class BadgeDetailViewModel @AssistedInject constructor(
         clearing = saves.launch { progressRepository.clearBadge(badgeId) }
     }
 
-    /** The scout has been told that a clear failed ([failure]). */
+    /**
+     * Marks the badge completed on [date] without recording its requirements, as for a badge
+     * earned before the scout used the app, or changes the date it's marked with. A badge that
+     * isn't started is started, as when anything is recorded.
+     */
+    fun markCompleted(date: LocalDate) {
+        saves.launch {
+            progressRepository.setCompletedOnPriorDate(badgeId, date, recorder.badgeStart())
+        }
+    }
+
+    /** Undoes [markCompleted]. What's recorded for the badge stays. */
+    fun unmarkCompleted() {
+        saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) }
+    }
+
+    /** The scout has been told that a save failed ([failure]). */
     fun onSaveFailureShown(failure: SaveFailure) {
         saves.onShown(failure)
     }
+
+    /** The latest date the badge can be marked completed on, read from the clock each time. */
+    fun today(): LocalDate = LocalDate.now(clock)
 
     @AssistedFactory
     interface Factory {

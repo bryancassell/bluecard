@@ -10,14 +10,17 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
+import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
@@ -46,6 +49,8 @@ class BadgeDetailViewModelTest {
     private val started = LocalDate.of(2026, 3, 1)
     private val day = LocalDate.of(2026, 4, 15)
     private val badgeStart = BadgeStart(newest, started)
+    private val today = LocalDate.of(2026, 5, 20)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
     private val camping = MeritBadge(
         id = "camping",
@@ -111,7 +116,7 @@ class BadgeDetailViewModelTest {
     private fun viewModel(
         badgeId: String = "camping",
         progress: ProgressRepository = progressRepository
-    ) = BadgeDetailViewModel(badgeId, catalogRepository, progress, reportRepository)
+    ) = BadgeDetailViewModel(badgeId, catalogRepository, progress, reportRepository, clock)
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -132,7 +137,7 @@ class BadgeDetailViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
         }
         val viewModel =
-            BadgeDetailViewModel("camping", loading, progressRepository, reportRepository)
+            BadgeDetailViewModel("camping", loading, progressRepository, reportRepository, clock)
         startCollecting(viewModel)
 
         assertEquals(BadgeDetailUiState.Loading, viewModel.uiState.value)
@@ -377,12 +382,118 @@ class BadgeDetailViewModelTest {
 
     @Test
     fun badgeMarkedCompletedOnPriorDate_isCompleted() = runTest {
-        progressRepository.startBadge("camping", newest, started)
-        progressRepository.setCompletedOnPriorDate("camping", day)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
         val viewModel = viewModel()
         startCollecting(viewModel)
 
         assertTrue(viewModel.ready().completed)
+    }
+
+    @Test
+    fun markCompleted_onABadgeNotStarted_startsItAndCompletesIt() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().canClear)
+
+        viewModel.markCompleted(day)
+
+        // Started as when anything is recorded: on the newest requirements, today.
+        assertEquals(
+            BadgeProgress("camping", newest, today, completedOnPriorDate = day),
+            progressRepository.observeProgress("camping").first()!!.badge
+        )
+        assertTrue(viewModel.ready().completed)
+        assertEquals(day, viewModel.ready().completedOnPriorDate)
+        assertNull(viewModel.ready().fractionDone)
+        assertTrue(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun markCompleted_keepsWhatsRecorded_andTheRestReadsAsNotRecorded() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertTrue(viewModel.ready().requirements.none { it.notRecorded })
+
+        viewModel.markCompleted(day)
+
+        val notRecorded = viewModel.ready().requirements.filter { it.notRecorded }
+        assertEquals(true, viewModel.completed()["1"])
+        assertEquals(listOf("2", "3", "4"), notRecorded.map { it.number })
+    }
+
+    @Test
+    fun markCompleted_onAMarkedBadge_changesTheDate() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.markCompleted(older)
+
+        assertEquals(older, viewModel.ready().completedOnPriorDate)
+    }
+
+    @Test
+    fun unmarkCompleted_keepsTheBadgeStarted_withWhatsRecorded() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.unmarkCompleted()
+
+        assertNull(viewModel.ready().completedOnPriorDate)
+        assertFalse(viewModel.ready().completed)
+        assertTrue(viewModel.ready().canClear)
+        assertEquals(true, viewModel.completed()["1"])
+        assertTrue(viewModel.ready().requirements.none { it.notRecorded })
+    }
+
+    @Test
+    fun badgeCompleteFromItsRequirements_isntMarkedCompletedOnPriorDate() = runTest {
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+
+        completeChess()
+
+        assertTrue(viewModel.ready().completed)
+        assertNull(viewModel.ready().completedOnPriorDate)
+    }
+
+    @Test
+    fun markCompleted_whenItCantBeSaved_showsFailure_andMarksNothing() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+
+        viewModel.markCompleted(day)
+
+        assertNotNull(viewModel.ready().saveFailure)
+        assertFalse(viewModel.ready().completed)
+        assertFalse(viewModel.ready().canClear)
+    }
+
+    @Test
+    fun unmarkCompleted_whenItCantBeSaved_showsFailure_andKeepsTheMark() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        progressRepository.failSaves = true
+
+        viewModel.unmarkCompleted()
+
+        assertNotNull(viewModel.ready().saveFailure)
+        assertEquals(day, viewModel.ready().completedOnPriorDate)
+    }
+
+    @Test
+    fun today_readsTheClockEachTime() = runTest {
+        val viewModel = viewModel()
+        assertEquals(today, viewModel.today())
+
+        clock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+        assertEquals(today.plusDays(1), viewModel.today())
     }
 
     @Test
@@ -420,8 +531,7 @@ class BadgeDetailViewModelTest {
 
     @Test
     fun fractionDone_badgeMarkedCompletedOnPriorDate_isNull() = runTest {
-        progressRepository.startBadge("camping", newest, started)
-        progressRepository.setCompletedOnPriorDate("camping", day)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
         val viewModel = viewModel()
         startCollecting(viewModel)
 
@@ -549,7 +659,7 @@ class BadgeDetailViewModelTest {
             badgeStart
         )
         progressRepository.setCounselor("camping", Counselor("Pat Lee", null, null), badgeStart)
-        progressRepository.setCompletedOnPriorDate("camping", day)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
         completeChess()
         val chessBefore = progressRepository.observeProgress("chess").first()
         val viewModel = viewModel()

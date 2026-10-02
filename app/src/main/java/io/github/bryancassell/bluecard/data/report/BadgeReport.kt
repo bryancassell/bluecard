@@ -45,6 +45,12 @@ data class ReportRequirement(
      * complete. The screens say so too.
      */
     val notNeeded: Boolean,
+    /**
+     * Whether its completion wasn't recorded: it isn't complete and is still needed, but the
+     * scout marked the badge completed on a prior date, without recording its requirements. The
+     * screens say so too.
+     */
+    val notRecorded: Boolean,
     val comment: String?,
     /** Its tracker, or null if it has none. */
     val tracker: ReportTracker?,
@@ -79,37 +85,45 @@ fun MeritBadge.report(
     val version = requirementsVersionFor(progress) ?: return null
     val recorded = progress.requirements.associateBy { it.requirementNumber }
     val entries = progress.trackerEntries.groupBy { it.requirementNumber }
+    val completedOnPriorDate = progress.badge.completedOnPriorDate != null
     return BadgeReport(
         profile = profile,
         badgeName = name,
         requirementsVersion = version.effectiveDate,
         completion = progress.completion(version),
         counselor = progress.badge.counselor,
-        requirements = version.requirements.map { it.toReport(recorded, entries) },
+        requirements = version.requirements.map {
+            it.toReport(recorded, entries, completedOnPriorDate)
+        },
         createdDate = createdDate
     )
 }
 
 /**
+ * [badgeCompletedOnPriorDate] is whether the scout marked the badge completed on a prior date.
  * [partOfHasEnough] is whether a requirement this one is part of, at any depth, has enough
  * complete sub-requirements ([hasEnoughChildren]).
  */
 private fun Requirement.toReport(
     recorded: Map<String, RequirementProgress>,
     entries: Map<String, List<TrackerEntry>>,
+    badgeCompletedOnPriorDate: Boolean,
     partOfHasEnough: Boolean = false
 ): ReportRequirement {
     val completion = completion(recorded, entries)
+    val stillNeeded = !partOfHasEnough && completion == null
+    val childrenPartOfHasEnough = partOfHasEnough || hasEnoughChildren(recorded, entries)
     return ReportRequirement(
         number = number,
         summary = summary,
         requiredCount = choiceCount,
         completion = completion,
         notNeeded = partOfHasEnough && completion == null,
+        notRecorded = stillNeeded && badgeCompletedOnPriorDate,
         comment = recorded[number]?.comment,
         tracker = tracker?.toReport(entries[number].orEmpty()),
         children = children.map {
-            it.toReport(recorded, entries, partOfHasEnough || hasEnoughChildren(recorded, entries))
+            it.toReport(recorded, entries, badgeCompletedOnPriorDate, childrenPartOfHasEnough)
         }
     )
 }

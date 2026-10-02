@@ -80,8 +80,8 @@ fun RequirementRows(
  * is complete and filled in once all of it is, its summary, "Do N of M" when only some
  * sub-requirements are needed, how many of those it needs are complete, how much of its tracker is
  * filled in, and "Not needed" when it no longer is. Screen readers read "Completed",
- * "In progress", "Not completed" or "Not needed" as its state. The scout marks a requirement
- * complete on its page.
+ * "In progress", "Not completed", "Not recorded" or "Not needed" as its state. The scout marks
+ * a requirement complete on its page.
  */
 @Composable
 private fun RequirementRow(
@@ -94,6 +94,7 @@ private fun RequirementRow(
             item.completed -> R.string.requirement_completed
             item.notNeeded -> R.string.requirement_not_needed
             item.partlyCompleted -> R.string.requirement_in_progress
+            item.notRecorded -> R.string.requirement_not_recorded
             else -> R.string.requirement_not_completed
         }
     )

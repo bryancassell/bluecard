@@ -147,10 +147,10 @@ private class ReportComposer(private val resources: Resources) {
             val choice = string(R.string.requirement_choice, it, requirement.children.size)
             add(Style.Body, choice, indent)
         }
-        val status = if (requirement.notNeeded) {
-            string(R.string.requirement_not_needed)
-        } else {
-            completionText(requirement.completion)
+        val status = when {
+            requirement.notNeeded -> string(R.string.requirement_not_needed)
+            requirement.notRecorded -> string(R.string.requirement_not_recorded)
+            else -> completionText(requirement.completion)
         }
         add(Style.Body, status, indent)
         requirement.comment?.let { addLabeled(R.string.report_comment, typed(it), indent) }
