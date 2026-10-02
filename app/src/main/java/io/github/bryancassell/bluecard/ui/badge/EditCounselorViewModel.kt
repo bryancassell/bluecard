@@ -11,11 +11,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -98,7 +100,7 @@ class EditCounselorViewModel @AssistedInject constructor(
             progressRepository.setCounselor(
                 badgeId,
                 counselor,
-                catalogRepository.badgeStart(badgeId, clock)
+                catalogRepository.badgeStart(badgeId, LocalDate.now(clock))
             )
             // A field changed while it saved stays open to be saved too, rather than being lost.
             if (typed().normalized() == counselor.normalized()) saved.value = true

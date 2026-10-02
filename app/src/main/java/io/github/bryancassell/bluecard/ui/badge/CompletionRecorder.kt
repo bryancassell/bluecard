@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import java.time.Clock
 import java.time.LocalDate
 
@@ -34,13 +35,14 @@ class CompletionRecorder(
      */
     suspend fun setCompleted(completed: Boolean) {
         if (completed) {
+            val today = LocalDate.now(clock)
             val before = unchecked
-            val date = if (before != null) before.completedDate else LocalDate.now(clock)
+            val date = if (before != null) before.completedDate else today
             progressRepository.markRequirementCompleted(
                 badgeId,
                 number,
                 date,
-                catalogRepository.badgeStart(badgeId, clock)
+                catalogRepository.badgeStart(badgeId, today)
             )
             unchecked = null
         } else {

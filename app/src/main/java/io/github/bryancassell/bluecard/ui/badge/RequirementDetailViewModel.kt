@@ -12,6 +12,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.SaveRunner
@@ -148,7 +149,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 badgeId,
                 number,
                 text,
-                catalogRepository.badgeStart(badgeId, clock)
+                catalogRepository.badgeStart(badgeId, today())
             )
         }
     }

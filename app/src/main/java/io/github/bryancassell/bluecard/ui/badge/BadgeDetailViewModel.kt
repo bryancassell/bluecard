@@ -9,6 +9,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.report.ReportRepository
@@ -153,7 +154,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
             progressRepository.setCompletedOnPriorDate(
                 badgeId,
                 date,
-                catalogRepository.badgeStart(badgeId, clock)
+                catalogRepository.badgeStart(badgeId, today())
             )
             unmarkedDate.value = null
         }

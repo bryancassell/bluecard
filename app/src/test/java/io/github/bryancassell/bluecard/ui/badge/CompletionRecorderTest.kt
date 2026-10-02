@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
@@ -8,6 +9,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.testing.FakeClock
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -36,16 +38,19 @@ class CompletionRecorderTest {
         // The newest version isn't the first one listed.
         requirementVersions = listOf(
             RequirementsVersion(older, listOf(Requirement("1", "An older first requirement."))),
-            RequirementsVersion(newest, listOf(Requirement("1", "Plan a campout.")))
+            RequirementsVersion(
+                newest,
+                listOf(Requirement("1", "Plan a campout."), Requirement("2", "Pitch a tent."))
+            )
         )
     )
 
     private val catalogRepository = FakeCatalogRepository(listOf(camping))
     private val progressRepository = FakeProgressRepository()
 
-    /** A recorder for requirement 1's page, such as one the scout opens. */
-    private fun recorder() =
-        CompletionRecorder("camping", "1", catalogRepository, progressRepository, clock)
+    /** A recorder for the page of requirement [number], such as one the scout opens. */
+    private fun recorder(number: String = "1") =
+        CompletionRecorder("camping", number, catalogRepository, progressRepository, clock)
 
     private suspend fun progress() = progressRepository.observeProgress("camping").first()
 
@@ -68,6 +73,38 @@ class CompletionRecorderTest {
 
         assertEquals(BadgeProgress("camping", older, started), progress()?.badge)
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun checkingAsMidnightPasses_startsTheBadgeTheDayItsDated() = runTest {
+        val fakeClock = FakeClock(today.atTime(23, 59, 59).toInstant(ZoneOffset.UTC))
+        // Midnight passes while the catalog loads, after the check reads the clock.
+        val slowCatalog = object : CatalogRepository by catalogRepository {
+            override suspend fun getBadges(): List<MeritBadge> {
+                fakeClock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+                return catalogRepository.getBadges()
+            }
+        }
+        val recorder =
+            CompletionRecorder("camping", "1", slowCatalog, progressRepository, fakeClock)
+
+        recorder.setCompleted(true)
+
+        assertEquals(BadgeProgress("camping", newest, today), progress()?.badge)
+        assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun eachPage_recordsItsOwnRequirement() = runTest {
+        val firstPage = recorder("1")
+        firstPage.setCompleted(true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+        firstPage.setCompleted(false)
+
+        recorder("2").setCompleted(true)
+
+        assertEquals(RequirementProgress("camping", "1"), requirement("1"))
+        assertEquals(RequirementProgress("camping", "2", true, today), requirement("2"))
     }
 
     @Test

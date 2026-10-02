@@ -679,8 +679,8 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
   notes, add tracker row, set counselor, mark badge completed on a date) and
   observe progress as a `Flow`, so they update as soon as data is saved.
 - **Recording anything starts the badge**, on the requirements version its
-  pages show until then (the newest), dated today
-  (`ui/badge/BadgeStart.kt`). There's no separate "start" step.
+  pages show until then (the newest), dated today (`badgeStart` in
+  `data/progress/BadgeVersion.kt`). There's no separate "start" step.
   `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry`,
   `setCounselor` and `setCompletedOnPriorDate` take a `BadgeStart`, and
   `ProgressRepository` starts the badge in the same transaction as the write,
