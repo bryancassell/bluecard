@@ -808,7 +808,9 @@ for Data management's outlined Clear all). Discarding unsaved changes asks with
 it too, opened by Back (see [Navigation](#navigation)). Badge detail and
 Requirement detail share their Clear progress button and its dialog
 (`ui/badge/ClearProgress.kt`) with Rank detail, which clears a rank as Badge
-detail clears a badge. Clearing progress does not clear the profile.
+detail clears a badge. Its dialog names the other ranks the clear would stop
+counting as earned, worked out from the standings with and without the rank's
+progress. Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a

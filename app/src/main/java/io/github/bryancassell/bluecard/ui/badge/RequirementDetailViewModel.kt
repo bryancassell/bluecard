@@ -11,6 +11,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
@@ -27,7 +28,9 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -60,17 +63,20 @@ class RequirementDetailViewModel @AssistedInject constructor(
      * The requirement as recorded, or null if the badge's or rank's requirements don't have it.
      * It's built when the catalog or progress changes, not on each keystroke in the comment.
      */
-    private val recorded = combine(
-        flow { emit(catalogRepository.getAdvancements()) },
-        // Every badge's and rank's, because a rank above this one can count it as earned.
-        progressRepository.observeAllProgress()
-    ) { catalog, progress ->
+    private val recorded = flow {
+        val catalog = catalogRepository.getAdvancements()
+        // A rank's page reads every rank's progress, because a rank above it can count it as
+        // earned. A badge's reads only its own.
+        val progress = if (catalog.find { it.id == advancementId } is Rank) {
+            progressRepository.observeAllProgress()
+        } else {
+            progressRepository.observeProgress(advancementId).map { listOfNotNull(it) }
+        }
+        emitAll(progress.map { all -> catalog to all.associateBy { it.badge.badgeId } })
+    }.map { (catalog, progress) ->
         // Checked on every change, not only when the page opens, because which version
         // the badge or rank uses depends on its progress.
-        val found = catalog.advancementRequirementsAmong(
-            advancementId,
-            progress.associateBy { it.badge.badgeId }
-        )
+        val found = catalog.advancementRequirementsAmong(advancementId, progress)
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
             val numbersWithin = requirement.numbersWithin()

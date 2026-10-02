@@ -44,17 +44,17 @@ internal const val OFFICIAL_LINK_ICON_TAG = "officialLinkIcon"
  * from 0 to 1, if it shows one, a [tag] such as whether it's Eagle-required, its [summary], and a
  * link to its official page, [officialUrl], which opens in the browser with [startOtherApp].
  * Screen readers hear the bar with "In progress" when it's [inProgress], as on the item's row in
- * a list.
+ * a list, and with only how much is done otherwise.
  */
 @Composable
 fun AdvancementHeader(
     name: String,
     fractionDone: Float?,
+    inProgress: Boolean,
     summary: String,
     officialUrl: String,
     startOtherApp: OtherAppStarter,
     modifier: Modifier = Modifier,
-    inProgress: Boolean = true,
     tag: (@Composable () -> Unit)? = null
 ) {
     Column(

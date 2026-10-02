@@ -8,11 +8,12 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
-import io.github.bryancassell.bluecard.ui.badge.advancementRequirementsAmong
+import io.github.bryancassell.bluecard.ui.badge.advancementRequirements
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
 import java.time.LocalDate
@@ -49,13 +50,14 @@ class RankDetailViewModel @AssistedInject constructor(
         flow { emit(catalogRepository.getRanks()) },
         // Every rank's, because the ranks below and above this one decide whether it's earned.
         progressRepository.observeAllProgress(),
-        unmarkedDate,
         saves.failure
-    ) { ranks, allProgress, unmarkedDate, saveFailure ->
+    ) { ranks, allProgress, saveFailure ->
         val progressById = allProgress.associateBy { it.badge.badgeId }
-        val found = ranks.advancementRequirementsAmong(rankId, progressById)
+        val standings = ranks.standings(progressById)
+        val standing = standings.find { it.rank.id == rankId }
             ?: return@combine RankDetailUiState.Unavailable
-        val standing = ranks.standings(progressById).first { it.rank.id == rankId }
+        val found = ranks.advancementRequirements(rankId, progressById[rankId])?.readAs(standing)
+            ?: return@combine RankDetailUiState.Unavailable
         val progress = progressById[rankId]
         RankDetailUiState.Ready(
             name = found.advancement.name,
@@ -66,10 +68,24 @@ class RankDetailViewModel @AssistedInject constructor(
             fractionDone = standing.fractionDone,
             earnedOnPriorDate = progress?.badge?.completedOnPriorDate,
             earnedWith = standing.earnedWith?.name,
-            unmarkedDate = unmarkedDate,
             canClear = progress != null,
+            unearnedByClear = if (progress == null) {
+                emptyList()
+            } else {
+                // The other ranks earned now that wouldn't be once this one is cleared.
+                standings.zip(ranks.standings(progressById - rankId))
+                    .filter { (now, cleared) ->
+                        now.rank.id != rankId &&
+                            now.status == RankStatus.Earned &&
+                            cleared.status != RankStatus.Earned
+                    }
+                    .map { (now) -> now.rank.name }
+            },
             saveFailure = saveFailure
         )
+    }.combine(unmarkedDate) { state, unmarkedDate ->
+        // Combined after, so remembering a date doesn't work the rank's standing out again.
+        if (state is RankDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
     }.catchLoadFailure(RankDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RankDetailUiState.Loading)
 

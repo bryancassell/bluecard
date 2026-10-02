@@ -42,6 +42,12 @@ sealed interface RankDetailUiState {
         val unmarkedDate: LocalDate? = null,
         /** Whether the rank is started, so its progress can be cleared. */
         val canClear: Boolean = false,
+        /**
+         * The other ranks, in the order they're earned, that count as earned now but wouldn't
+         * once this rank's progress is cleared, so the scout is told before clearing: those its
+         * mark counts as earned, and those above it earned in order after it.
+         */
+        val unearnedByClear: List<String> = emptyList(),
         /** A save couldn't be made, and the scout hasn't been told yet. */
         val saveFailure: TaskFailure? = null
     ) : RankDetailUiState

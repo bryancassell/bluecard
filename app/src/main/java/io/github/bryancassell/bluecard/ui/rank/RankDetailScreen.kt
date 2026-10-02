@@ -2,7 +2,9 @@ package io.github.bryancassell.bluecard.ui.rank
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -34,6 +36,7 @@ import io.github.bryancassell.bluecard.ui.badge.LoadingIndicator
 import io.github.bryancassell.bluecard.ui.badge.PickDateButton
 import io.github.bryancassell.bluecard.ui.badge.RequirementRows
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
+import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
 
@@ -120,9 +123,9 @@ private fun RankDetails(
             fractionDone = uiState.fractionDone,
             summary = uiState.summary,
             officialUrl = uiState.officialUrl,
-            startOtherApp = startOtherApp,
             // Only the lowest rank not earned is in progress, as on Ranks.
-            inProgress = uiState.status == RankStatus.InProgress
+            inProgress = uiState.status == RankStatus.InProgress,
+            startOtherApp = startOtherApp
         )
         // Outside the header's column, so its text buttons line up with the page's text.
         EarnedOnPriorDate(uiState, today, onMarkEarned, onUnmarkEarned)
@@ -137,7 +140,14 @@ private fun RankDetails(
         if (uiState.canClear) {
             ClearProgress(
                 title = stringResource(R.string.badge_detail_clear_title, uiState.name),
-                message = stringResource(R.string.badge_detail_clear_message),
+                message = if (uiState.unearnedByClear.isEmpty()) {
+                    stringResource(R.string.badge_detail_clear_message)
+                } else {
+                    stringResource(
+                        R.string.rank_detail_clear_message_unearns,
+                        rememberBadgeNameListFormatter().format(uiState.unearnedByClear)
+                    )
+                },
                 onClear = onClear
             )
         }
@@ -150,7 +160,7 @@ private fun RankDetails(
  * buttons to change it ([onMark]) or unmark the rank ([onUnmark]). For a rank that counts as
  * earned only with a rank above it, says so, with a button to give it a date of its own
  * ([onMark]). Each picker opens at the date the scout just unmarked, if any, or at today.
- * Nothing for a rank earned from its requirements.
+ * For a rank earned from its requirements, only the room the others leave below the header.
  *
  * Its text buttons' touch areas are taller than they look, so they need no padding of their own
  * to keep it apart from what's above and below.
@@ -197,5 +207,8 @@ private fun EarnedOnPriorDate(
             // Lines the button's text up with the page's.
             modifier = Modifier.padding(horizontal = 4.dp)
         )
+
+        // So the Requirements heading isn't right under the official link.
+        else -> Spacer(Modifier.height(16.dp))
     }
 }

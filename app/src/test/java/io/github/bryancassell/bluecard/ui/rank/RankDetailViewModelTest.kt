@@ -388,6 +388,44 @@ class RankDetailViewModelTest {
     }
 
     @Test
+    fun rankNotStarted_clearUnearnsNothing() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByClear)
+    }
+
+    @Test
+    fun markedRank_clearUnearnsTheRanksItsMarkCounts() = runTest {
+        progressRepository.setCompletedOnPriorDate("second-class", day, rankStart)
+        val viewModel = viewModel("second-class")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Scout", "Tenderfoot"), viewModel.ready().unearnedByClear)
+    }
+
+    @Test
+    fun rankEarnedInOrder_clearUnearnsTheRanksEarnedAfterIt() = runTest {
+        complete("scout", "1", "2")
+        complete("tenderfoot", "1", "2")
+        val viewModel = viewModel("scout")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Tenderfoot"), viewModel.ready().unearnedByClear)
+    }
+
+    // A rank above it marked earned counts them as earned either way.
+    @Test
+    fun markedRank_underAnotherMarkedRank_clearUnearnsNothing() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        progressRepository.setCompletedOnPriorDate("second-class", day, rankStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByClear)
+    }
+
+    @Test
     fun clearingRankStartedOnOlderVersion_showsNewestRequirements() = runTest {
         progressRepository.startBadge("tenderfoot", older, started)
         val viewModel = viewModel()

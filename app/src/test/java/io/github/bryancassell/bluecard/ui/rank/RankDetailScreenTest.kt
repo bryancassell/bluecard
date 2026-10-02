@@ -10,6 +10,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
@@ -22,6 +23,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
@@ -29,6 +31,7 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -304,6 +307,16 @@ class RankDetailScreenTest {
         text("Unmark").assertDoesNotExist()
     }
 
+    // With nothing between them, as there is for every other rank and on Badge detail.
+    @Test
+    fun rankEarnedFromItsRequirements_leavesRoomUnderTheOfficialLink() {
+        show(earned)
+
+        val link = text("Official requirements").getUnclippedBoundsInRoot()
+        val heading = text("Requirements").getUnclippedBoundsInRoot()
+        assertTrue(heading.top - link.bottom >= 16.dp)
+    }
+
     @Test
     fun rankNotStarted_hasNoClearButton() {
         show(ready)
@@ -325,6 +338,18 @@ class RankDetailScreenTest {
 
         assertEquals(1, clears)
         text("Clear progress on Tenderfoot?").assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_ofARankOthersCountOn_namesTheRanksThatWontCountAsEarned() {
+        show(marked.copy(unearnedByClear = listOf("Scout", "Tenderfoot", "Second Class")))
+
+        text("Clear progress").performScrollTo().performClick()
+
+        text(
+            "What you recorded for it will be removed, and Scout, Tenderfoot, and Second Class " +
+                "will no longer count as earned."
+        ).assertIsDisplayed()
     }
 
     @Test
