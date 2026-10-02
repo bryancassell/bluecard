@@ -122,4 +122,4 @@ private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFor
             TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
                 typedText(value.text)
         }
-    }?.joinToString(" · ")?.let(::lineBreaksAsSpaces)
+    }?.joinToString(stringResource(R.string.tracker_value_separator))?.let(::lineBreaksAsSpaces)

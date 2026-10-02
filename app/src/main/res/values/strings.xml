@@ -159,6 +159,9 @@
     <!-- Title of a row of a tracker, with what a row is called and its number, such as
          "Week 3" or "Session 12". -->
     <string name="tracker_row_title">%1$s %2$d</string>
+    <!-- Between the values of a tracker row on one line, such as "Sep 12, 2026 · Running · 30"
+         or, in the report, "Nights: 2 · Place: Bear Mountain". The quotes keep its spaces. -->
+    <string name="tracker_value_separator">" · "</string>
     <!-- Button that adds a row to a tracker, with what a row is called, such as
          "Add session". -->
     <string name="tracker_add_row">Add %1$s</string>

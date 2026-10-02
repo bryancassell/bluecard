@@ -180,14 +180,15 @@ private class ReportComposer(private val resources: Resources) {
     }
 
     /**
-     * A row's values, each after its column's label, separated by " · ". A value after multi-line
-     * text starts a new line, so it doesn't read as the text's last line.
+     * A row's values, each after its column's label, separated as on screen, such as by " · ". A
+     * value after multi-line text starts a new line, so it doesn't read as the text's last line.
      */
     private fun valuesText(values: List<Pair<TrackerColumn, String>>): String = buildString {
+        val separator = string(R.string.tracker_value_separator)
         values.forEachIndexed { index, (column, value) ->
             if (index > 0) {
                 val previous = values[index - 1].first.type
-                append(if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else " · ")
+                append(if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else separator)
             }
             append(string(R.string.report_labeled_value, column.label, valueText(column, value)))
         }
