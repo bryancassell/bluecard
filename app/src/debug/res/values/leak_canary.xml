@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- LeakCanary's "Leaks" launcher icon would give the app a second launcher activity, which
+         adb's monkey and getLaunchIntentForPackage() can open in place of MainActivity. Its
+         leak list stays reachable from its notification and the app icon's "Leaks" shortcut.
+         https://square.github.io/leakcanary/recipes/#packagemanagergetlaunchintentforpackage-returns-leaklauncheractivity
+         Only LeakCanary's own manifest reads it, which lint's unused resource check doesn't
+         look at. -->
+    <bool name="leak_canary_add_launcher_icon" tools:ignore="UnusedResources">false</bool>
+</resources>

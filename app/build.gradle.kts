@@ -236,4 +236,7 @@ dependencies {
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // Reports leaked activities and windows in debug builds. It starts itself; its launcher
+    // icon is turned off in src/debug/res/values/leak_canary.xml.
+    debugImplementation(libs.leakcanary.android)
 }

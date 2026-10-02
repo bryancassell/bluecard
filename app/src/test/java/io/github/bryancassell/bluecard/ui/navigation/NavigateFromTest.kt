@@ -13,7 +13,7 @@ class NavigateFromTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val backStack = mutableListOf<NavKey>(Home, Badges)
+    private val backStack = mutableListOf<BlueCardNavKey>(Home, Badges)
 
     // What NavDisplay shows: the back stack, or Onboarding in its place.
     private var shownBackStack: List<NavKey> = backStack
@@ -22,8 +22,8 @@ class NavigateFromTest {
     private val drawn = mutableSetOf<NavKey>()
 
     /** Navigation from the Badges screen. */
-    private fun navigateFromBadges(): (NavKey) -> Unit {
-        lateinit var navigate: (NavKey) -> Unit
+    private fun navigateFromBadges(): (BlueCardNavKey) -> Unit {
+        lateinit var navigate: (BlueCardNavKey) -> Unit
         composeTestRule.setContent {
             navigate = rememberNavigateFrom(backStack, from = Badges, { it in drawn }) {
                 shownBackStack

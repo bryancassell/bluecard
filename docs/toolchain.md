@@ -274,12 +274,11 @@ R8 shrinks and obfuscates the release build (see
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)), but not the debug app
 or local tests. CI builds the release app, so R8's build errors fail it, but
 code that R8 breaks at runtime only fails when a release build runs. Check one
-on an emulator before each release, and after adding a library, a keep rule, a
-navigation key, or other code that uses reflection. Also check after updating
-AGP (which brings R8), or a library that uses reflection or ships keep rules
-the app relies on: kotlinx.serialization, Navigation 3, Hilt, Room or
-DataStore. As with backup, use an emulator, and point `adb` at it if a phone is
-also connected.
+on an emulator before each release, and after adding a library, a keep rule,
+or other code that uses reflection. Also check after updating AGP (which brings
+R8), or a library that uses reflection or ships keep rules the app relies on:
+kotlinx.serialization, Hilt, Room or DataStore. As with backup, use an
+emulator, and point `adb` at it if a phone is also connected.
 
 1. Build the release APK and sign it with the debug key, since the release
    build has no signing config yet. A debug install has the same application
@@ -309,8 +308,7 @@ also connected.
    - Restore after process death: open a requirement page, press Home, run
      `adb shell am kill io.github.bryancassell.bluecard`, then reopen the app
      from Recents. It should come back on the same page, and Back should go
-     through the pages under it. Navigation 3 saves and restores the back
-     stack with reflection, so this is the flow most likely to break.
+     through the pages under it.
 
 A crash's stack trace shows R8's short names. `retrace` turns them back into
 the source names, with the mapping file that the build wrote:
@@ -350,6 +348,35 @@ out of date, retake all three the same way, so they still match each other.
    so it stays sharp on high-density screens. Reduce it to 256 colors (for
    example with [pngquant](https://pngquant.org/)), which keeps each file under
    about 60 KB with no visible difference.
+
+## Debug tools
+
+Debug builds run two tools that point out mistakes while you use the app;
+[`ARCHITECTURE.md`](../ARCHITECTURE.md#debug-builds) says why. Release builds
+have neither.
+
+**StrictMode** reports disk access on the main thread, streams and cursors that
+are never closed, and more. It logs each violation, with the stack trace of the
+call that caused it, under the Logcat tag `StrictMode`. A main-thread violation
+also flashes the screen. Filter Android Studio's Logcat with `tag:StrictMode`,
+or run:
+
+```sh
+adb logcat -s StrictMode
+```
+
+**LeakCanary** reports activities and windows that stay in memory after they're
+destroyed. To look for a leak, open a screen, rotate the phone, then leave the
+screen. Objects still in memory show as a LeakCanary notification. LeakCanary
+dumps and analyzes the heap when you tap the notification, or by itself once 5
+objects are held or the app goes to the background. The app pauses while the
+heap is dumped. Open the results from the notification, or long-press the app
+icon and choose **Leaks**. On Android 13 and higher, LeakCanary asks for
+permission to show notifications the first time it has something to report.
+Android Studio's Profiler can also run it
+([Capture a heap dump](https://developer.android.com/studio/profile/capture-heap-dump)).
+A heap dump holds whatever is in memory, so look for leaks with made-up
+records, not a real scout's.
 
 ## Continuous integration
 

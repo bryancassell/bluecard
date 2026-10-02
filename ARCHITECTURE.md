@@ -59,6 +59,7 @@ own documentation says so, and each such claim links to the page.
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
   - [Coverage](#coverage)
 - [Release build](#release-build)
+- [Debug builds](#debug-builds)
 - [Decisions](#decisions)
 
 ## Overview
@@ -269,6 +270,19 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+- **The back stack is saved without reflection.** Every key implements the
+  sealed `BlueCardNavKey`, and the back stack is a `NavBackStack<BlueCardNavKey>`
+  saved with that interface's compiler-written serializer (`rememberBackStack`
+  in `NavKeys.kt`). Navigation 3's `rememberNavBackStack` was not used: without
+  a `SavedStateConfiguration` it finds keys by class name with reflection, which
+  R8's renaming could break in the release build alone, where local tests can't
+  see it ([#203](https://github.com/bryancassell/bluecard/issues/203)). With
+  one, it registers keys in a `SerializersModule` (`subclassesOfSealed` is
+  experimental) and accepts any `NavKey`. Navigation adds keys only as
+  `BlueCardNavKey`s (`rememberNavigateFrom`), so the compiler rejects a key
+  that the back stack couldn't save. A key missing `@Serializable` still
+  compiles, but the sealed serializer leaves it out, so `NavKeysTest` checks
+  every subclass is saved and restored.
 - **Home is the fixed start destination.** Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -1010,18 +1024,68 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   `app/proguard-rules.pro`, as narrow as possible, with a comment saying what
   needs it. None is needed yet: Hilt, Room, DataStore and
   kotlinx.serialization ship rules for what they reach by reflection or by
-  name, and kotlinx.serialization's rules also cover Navigation 3's back stack
-  (see `NavKeys.kt`).
-- **Navigation keys' class names aren't kept.** The saved back stack records
-  them, and R8 may rename them differently in the next version, but Android
-  drops an app's saved state when the app is updated (checked on Android 37),
-  so names saved by one version are never read by another. Saving the back
-  stack without reflection is tracked in
-  [#203](https://github.com/bryancassell/bluecard/issues/203).
+  name.
+- **Navigation keys' class names aren't kept.** The back stack is saved without
+  reflection (see [Navigation](#navigation)), so R8's renaming doesn't affect
+  it. Renaming a key in the source changes what is saved, but Android drops an
+  app's saved state when the app is updated (checked on Android 37), so state
+  saved by one version is never read by another.
 - **Crash reports in Android vitals are deobfuscated by Play,** from the R8
   mapping file that AGP puts in the app bundle
   ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
   so it needs no separate upload.
+
+## Debug builds
+
+Debug builds point out mistakes while the app is in use. Release builds have
+neither of these tools. [`docs/toolchain.md`](docs/toolchain.md#debug-tools)
+says where to see what they report.
+
+- **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)**
+  is turned on in `BlueCardApplication` when the app is debuggable, as in
+  [Now in Android](https://github.com/android/nowinandroid/blob/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/NiaApplication.kt).
+  It checks `ApplicationInfo.FLAG_DEBUGGABLE`, since AGP no longer generates
+  `BuildConfig` by default.
+  - The thread policy reports disk and network access on the main thread. It
+    logs each violation and flashes the screen, as in the
+    [core app quality](https://developer.android.com/develop/adaptive-apps/quality-guidelines/core-app-quality#strictmode)
+    StrictMode test.
+  - The VM policy reports streams and cursors that are never closed, leaked
+    activities, and a `content://` URI sent to another app without a
+    permission grant. It logs each one.
+  - Both use `detectAll()`, which turns on new checks as `targetSdk` rises.
+    So neither crashes the app (`penaltyDeath()`). Now in Android
+    [removed it](https://github.com/android/nowinandroid/pull/1857) after
+    crashes from code it doesn't own, and under Robolectric a VM policy's
+    `penaltyDeath()` ends the whole test run.
+  - Fix a violation, or permit it as narrowly as possible, such as
+    `StrictMode.allowThreadDiskReads()` around one call, with a comment saying
+    why. The reference says not to "feel compelled to fix everything that
+    StrictMode finds."
+  - Local tests can't rely on StrictMode being on or off. Under Robolectric,
+    its policies outlive the test that set them. Main-thread violations stop
+    being logged once a test ends before StrictMode has logged one. So
+    `BlueCardApplicationTest` turns StrictMode off and starts the app again
+    before each check.
+- **[LeakCanary](https://square.github.io/leakcanary/)** is a
+  `debugImplementation` dependency and starts itself. It reports activities and
+  windows that are still in memory after they're destroyed. It
+  [doesn't watch ViewModels](https://github.com/square/leakcanary/blob/v2.14/leakcanary-object-watcher-android-androidx/src/main/java/leakcanary/internal/AndroidXFragmentDestroyWatcher.kt#L62-L67)
+  in an app without fragments.
+  - Its launcher icon is off (`src/debug/res/values/leak_canary.xml`), so
+    `adb shell monkey` and `getLaunchIntentForPackage()` open `MainActivity`.
+  - Its heap dumps hold whatever is in memory, and it may save them in the
+    phone's public Download folder, so test with made-up records.
+  - It brings in [Plumber](https://square.github.io/leakcanary/changelog/#plumber-android-is-a-new-artifact-that-fixes-known-android-leaks),
+    which works around known leaks in Android itself, in debug builds only.
+    So LeakCanary doesn't report those leaks, though release builds still have
+    them.
+  - It keeps its results in `leaks.db` in the databases directory, so a debug
+    build's backup includes them along with the scout's data.
+  - It stays on 2.x until 3.0 is stable.
+  - Instrumented tests don't fail on leaks (`DetectLeaksAfterTestSuccess`).
+    They run only locally, and each check dumps the heap. LeakCanary still
+    runs in them, but doesn't dump the heap while JUnit is loaded.
 
 ## Decisions
 
@@ -1033,6 +1097,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
+| [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>`, saved with the sealed interface's serializer, not `rememberNavBackStack` | No reflection, so R8 can't break saving the back stack and local tests cover it. The compiler rejects a key outside `BlueCardNavKey`, and `NavKeysTest` one missing `@Serializable`. Needs no experimental API, unlike registering keys in a `SavedStateConfiguration` with `subclassesOfSealed` |
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
@@ -1052,3 +1117,4 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
+| [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |
