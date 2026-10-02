@@ -71,6 +71,24 @@ interface ProgressDao {
     )
     suspend fun updateCompletedDate(badgeId: String, number: String, date: LocalDate?)
 
+    @Query("SELECT * FROM tracker_entry WHERE badgeId = :badgeId AND requirementNumber = :number")
+    suspend fun getTrackerEntries(badgeId: String, number: String): List<TrackerEntry>
+
+    /**
+     * Marks requirement [number] completed on [date], or with no date, in a single transaction,
+     * if each of its tracker's [rowCount] rows has an entry. Its comment stays.
+     */
+    @Transaction
+    suspend fun updateCompletedFromRowsDate(
+        badgeId: String,
+        number: String,
+        rowCount: Int,
+        date: LocalDate?
+    ) {
+        if (filledRows(getTrackerEntries(badgeId, number), rowCount).size < rowCount) return
+        updateRequirement(badgeId, number) { it.copy(completed = true, completedDate = date) }
+    }
+
     @Insert
     suspend fun insertTrackerEntry(entry: TrackerEntry): Long
 

@@ -144,7 +144,14 @@ class RequirementDetailScreenTest {
      * it's complete.
      */
     private val withWeeks = leaf.copy(
-        requirement = RequirementItem("2", "Keep a budget.", null, false, markedByHand = false),
+        requirement = RequirementItem(
+            "2",
+            "Keep a budget.",
+            null,
+            false,
+            markedByHand = false,
+            completesFromRows = true
+        ),
         tracker = TrackerItem(
             count = TrackerCount(1, 3, "weeks"),
             rowTitle = "Week",
@@ -535,21 +542,84 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
     }
 
-    // Its date field would only show once it's complete (the next test).
+    // Its date field only shows once it's complete (the next tests).
     @Test
-    fun fixedRows_haveNoCheckbox() {
+    fun fixedRows_haveNoCheckboxOrDate() {
         show(withWeeks)
 
         composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
     }
 
+    private val weeksFilledIn = withWeeks.copy(
+        requirement = withWeeks.requirement.copy(completed = true),
+        completedDate = LocalDate.of(2026, 4, 15),
+        rowsCompletedDate = LocalDate.of(2026, 4, 12),
+        tracker = withWeeks.tracker?.copy(
+            count = TrackerCount(3, 3, "weeks"),
+            rows = (1..3).map {
+                TrackerRow(it, it.toLong(), listOf(TrackerValue(TrackerColumnType.NUMBER, "20")))
+            }
+        )
+    )
+
     @Test
-    fun fixedRowsAllFilledIn_areLabeledCompleted_withNoCheckboxOrDate() {
-        show(withWeeks.copy(requirement = withWeeks.requirement.copy(completed = true)))
+    fun fixedRowsAllFilledIn_areLabeledCompleted_withTheirDateButNoCheckbox() {
+        show(weeksFilledIn)
 
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
-        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText("Completed on Apr 15, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Remove date").assertIsDisplayed()
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_changeDate_picksAnotherDay() {
+        show(weeksFilledIn)
+
+        composeTestRule.onNodeWithText("Change date").performClick()
+        // It opens at the date shown, not the rows' date.
+        pickerDay(
+            "April 15, 2026"
+        ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        pickerDay("April 10, 2026").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 10)), dateChanges)
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_removeDate_removesIt() {
+        show(weeksFilledIn)
+
+        composeTestRule.onNodeWithText("Remove date").performClick()
+
+        assertEquals(listOf<LocalDate?>(null), dateChanges)
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_withoutDate_offerToAddOne_openingAtTheRowsDate() {
+        show(weeksFilledIn.copy(completedDate = null))
+
+        composeTestRule.onNodeWithText("No completion date").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add date").performClick()
+        pickerDay(
+            "April 12, 2026"
+        ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 12)), dateChanges)
+    }
+
+    // As when a row was saved before database version 3, which recorded no date.
+    @Test
+    fun fixedRowsAllFilledIn_withoutDateOrRowsDate_addDateOpensAtToday() {
+        show(weeksFilledIn.copy(completedDate = null, rowsCompletedDate = null))
+
+        composeTestRule.onNodeWithText("Add date").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
     @Test

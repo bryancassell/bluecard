@@ -102,7 +102,8 @@ data class RequirementProgress(
     /**
      * Whether the scout marked it complete. For a requirement with own work, it's that work they
      * marked complete, and the requirement is only complete once enough of its sub-requirements
-     * are too ([completion]).
+     * are too ([completion]). For one that [completesFromRows], it's that the scout gave the
+     * date it was completed on, which doesn't complete it.
      */
     val completed: Boolean = false,
     /** Optional date the scout gave when they marked it [completed]; only set when it is. */

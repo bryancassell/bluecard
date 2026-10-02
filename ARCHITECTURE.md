@@ -498,7 +498,7 @@ io.github.bryancassell.bluecard
 | **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges and Data management. |
 | **Badges** | Browse all current badges and search by name or description, with a progress bar on each badge in progress. One screen: the list filters as the scout types. |
 | **Badge detail** | A progress bar while the badge is in progress, summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
-| **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
+| **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, a completion date for one completed by its fixed-row tracker, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
 | **Data management** | A button that opens Edit name and unit, export, import, and last, a button that clears all progress. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
@@ -601,8 +601,10 @@ At a high level. The exact fields are in the code.
   - `BadgeProgress`: badge ID, requirements version (its effective date, recorded
     when the badge is started), started date, counselor (name, phone, email, all
     optional), and the date it was marked completed on a prior date, if any.
-  - `RequirementProgress`: badge ID, requirement number, whether it is complete,
-    completion date (optional), notes (`comment`, optional).
+  - `RequirementProgress`: badge ID, requirement number, whether it is complete
+    (or, for a requirement completed by its fixed-row tracker, whether the scout
+    gave its completion date), completion date (optional), notes (`comment`,
+    optional).
   - `TrackerEntry`: an ID that only grows, badge ID, requirement number, the row
     it fills in a tracker with a fixed number of rows (null in a log), the date
     it was first saved, and the row's values keyed by the catalog's column IDs,
@@ -622,7 +624,9 @@ requirement progress, tracker entries and the catalog:
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
 - The completion date is when the last requirement or own work it needed was
-  completed, or the prior date for a badge marked that way.
+  completed, or the prior date for a badge marked that way. A requirement with a
+  fixed-row tracker is completed on the date the scout gave it, if they gave
+  one, or else on the date its last row was first saved.
 - A requirement has part done (`hasPartDone`) once anything in it that the scout
   records is: its own work, a requirement under it at any depth, or a row of a
   tracker on it or under it. Its row shows this until it's complete.
@@ -634,6 +638,16 @@ requirement with children needing a check, because most only group their
 children. The work can't be a child of its own, because the catalog's numbers
 and nesting must match the official page
 ([#143](https://github.com/bryancassell/bluecard/issues/143)).
+
+The date the scout gives a requirement completed by its fixed-row tracker is
+stored the same way: `completed` with the date, or with none once they remove
+it. For that requirement, `completed` only means they gave a date, and doesn't
+complete it, so the date isn't tied to the rows
+(`ProgressRepository.setCompletedFromRowsDate`). This needed no migration or new
+export format. A mark left from before
+[#105](https://github.com/bryancassell/bluecard/issues/105), when these
+requirements had a checkbox, becomes the date the scout gave
+([#116](https://github.com/bryancassell/bluecard/issues/116)).
 
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.

@@ -76,12 +76,12 @@ fun RequirementDetailRoute(
 }
 
 /**
- * A requirement's own page: whether it's complete, and when for one the scout marks complete,
- * the same for its own work if it asks for some besides its sub-requirements, its
- * sub-requirements, its tracker, and the scout's [comment] on it. A sub-requirement opens
- * its own page in turn, and a tracker row opens the Tracker entry page
- * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
- * log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
+ * A requirement's own page: whether it's complete, and when for one the scout marks complete or
+ * one complete once its tracker's rows are, the same for its own work if it asks for some
+ * besides its sub-requirements, its sub-requirements, its tracker, and the scout's [comment] on
+ * it. A sub-requirement opens its own page in turn, and a tracker row opens the Tracker entry
+ * page ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to
+ * a log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
  * ([onClear]), with what's recorded for the requirements under it. Back with unsaved changes to
  * the comment asks first, then [onDiscard] closes the page without saving them.
  */
@@ -131,6 +131,14 @@ fun RequirementDetailScreen(
                     if (checked) {
                         CompletionDate(uiState.completedDate, today, onCompletedDateChange)
                     }
+                } else if (requirement.completesFromRows && requirement.completed) {
+                    // Under the header's "Completed", where a checkbox's date would be.
+                    CompletionDate(
+                        uiState.completedDate,
+                        today,
+                        onCompletedDateChange,
+                        suggested = uiState.rowsCompletedDate
+                    )
                 }
                 // Right above the sub-requirements it counts, below the checkbox for its own work.
                 requirement.choice?.let {
@@ -232,12 +240,16 @@ private fun CompletedCheckbox(label: String, checked: Boolean, onCheckedChange: 
     }
 }
 
-/** The date a completed requirement was completed on, which the scout can change or remove. */
+/**
+ * The date a completed requirement was completed on, which the scout can change or remove.
+ * Without one, Add date opens the picker at [suggested], if given, or else at today.
+ */
 @Composable
 private fun CompletionDate(
     date: LocalDate?,
     today: () -> LocalDate,
-    onDateChange: (LocalDate?) -> Unit
+    onDateChange: (LocalDate?) -> Unit,
+    suggested: LocalDate? = null
 ) {
     val formatter = rememberCompletionDateFormatter()
     EditableDate(
@@ -248,7 +260,8 @@ private fun CompletionDate(
         },
         date = date,
         today = today,
-        onDateChange = onDateChange
+        onDateChange = onDateChange,
+        suggested = suggested
     )
 }
 

@@ -216,6 +216,7 @@ class RequirementItemTest {
     @Test
     fun log_isMarkedByHand() {
         assertTrue(log.toItem(emptyMap(), emptyMap()).markedByHand)
+        assertFalse(log.toItem(emptyMap(), emptyMap()).completesFromRows)
         assertTrue(log.toItem(done("4"), emptyMap()).completed)
     }
 
@@ -236,6 +237,7 @@ class RequirementItemTest {
     @Test
     fun fixedRowTracker_isCompletedOnceEveryRowIsFilled() {
         assertFalse(weeks.toItem(emptyMap(), emptyMap()).markedByHand)
+        assertTrue(weeks.toItem(emptyMap(), emptyMap()).completesFromRows)
         assertFalse(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).completed)
         assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).completed)
         // Marking it complete by hand doesn't count.

@@ -223,6 +223,37 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun setCompletedFromRowsDate_marksItOnTheDateOrNone_andKeepsTheComment() = test {
+        repository.setRequirementComment(BADGE, "2a", "Weekly.", badgeStart)
+        saveRow("2a", 1, mapOf("income" to "10"))
+        saveRow("2a", 2, mapOf("income" to "20"))
+
+        repository.setCompletedFromRowsDate(BADGE, "2a", rowCount = 2, started)
+        assertEquals(RequirementProgress(BADGE, "2a", true, started, "Weekly."), requirement("2a"))
+
+        repository.setCompletedFromRowsDate(BADGE, "2a", rowCount = 2, null)
+        assertEquals(
+            RequirementProgress(BADGE, "2a", completed = true, comment = "Weekly."),
+            requirement("2a")
+        )
+    }
+
+    @Test
+    fun setCompletedFromRowsDate_doesNothingUnlessEveryRowIsFilledIn() = test {
+        // Another requirement's row, and a row outside the tracker, fill none of its rows.
+        saveRow("2a", 1, mapOf("income" to "10"))
+        saveRow("2a", 3, mapOf("income" to "30"))
+        saveRow("2c", 2, mapOf("income" to "20"))
+        val before = progress()
+
+        repository.setCompletedFromRowsDate(BADGE, "2a", rowCount = 2, day)
+        repository.setCompletedFromRowsDate(UNSTARTED, "2a", rowCount = 2, day)
+
+        assertEquals(before, progress())
+        assertNull(progress(UNSTARTED))
+    }
+
+    @Test
     fun setRequirementComment_trimsSpacesAroundIt() = test {
         repository.setRequirementComment(BADGE, "1", "  Done at camp.\n", badgeStart)
 
@@ -577,6 +608,9 @@ abstract class ProgressRepositoryContract {
             "markRequirementNotCompleted" to { unwritable.markRequirementNotCompleted(BADGE, "1") },
             "setRequirementCompletedDate" to {
                 unwritable.setRequirementCompletedDate(BADGE, "1", day)
+            },
+            "setCompletedFromRowsDate" to {
+                unwritable.setCompletedFromRowsDate(BADGE, "2a", rowCount = 2, day)
             },
             "setRequirementComment" to
                 { unwritable.setRequirementComment(BADGE, "1", "Hi", badgeStart) },

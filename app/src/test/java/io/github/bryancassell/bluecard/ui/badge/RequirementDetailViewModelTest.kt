@@ -421,6 +421,72 @@ class RequirementDetailViewModelTest {
         assertFalse(viewModel.ready().requirement.completed)
     }
 
+    @Test
+    fun fixedRows_dateIsWhenTheLastRowWasSaved_untilTheScoutChangesOrRemovesIt() = runTest {
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+        assertTrue(viewModel.ready().requirement.completesFromRows)
+        saveWeek(1, day)
+        assertNull(viewModel.ready().rowsCompletedDate)
+        saveWeek(2, today)
+        assertEquals(today, viewModel.ready().completedDate)
+
+        viewModel.setCompletedDate(started)
+        assertEquals(started, viewModel.ready().completedDate)
+
+        viewModel.setCompletedDate(null)
+        assertNull(viewModel.ready().completedDate)
+        assertTrue(viewModel.ready().requirement.completed)
+        // For Add date to open at.
+        assertEquals(today, viewModel.ready().rowsCompletedDate)
+    }
+
+    @Test
+    fun fixedRows_theScoutsDateIsKeptWhileARowIsDeleted() = runTest {
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+        val week1 = saveWeek(1, day)
+        saveWeek(2, day)
+        viewModel.setCompletedDate(started)
+
+        progressRepository.deleteTrackerEntry(week1)
+        assertNull(viewModel.ready().completedDate)
+
+        saveWeek(1, today)
+        assertEquals(started, viewModel.ready().completedDate)
+    }
+
+    @Test
+    fun fixedRows_setCompletedDate_afterClearing_doesNotKeepTheDate() = runTest {
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+        saveWeek(1, day)
+        saveWeek(2, day)
+
+        // As when the scout taps Remove date just after clearing, before the page redraws.
+        viewModel.clear()
+        viewModel.setCompletedDate(null)
+        saveWeek(1, today)
+        saveWeek(2, today)
+
+        assertEquals(today, viewModel.ready().completedDate)
+    }
+
+    @Test
+    fun fixedRows_clearRemovesTheScoutsDate() = runTest {
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+        saveWeek(1, day)
+        saveWeek(2, day)
+        viewModel.setCompletedDate(started)
+
+        viewModel.clear()
+        saveWeek(1, today)
+        saveWeek(2, today)
+
+        assertEquals(today, viewModel.ready().completedDate)
+    }
+
     private suspend fun saveWeek(rowNumber: Int, addedDate: LocalDate) =
         progressRepository.addTrackerEntry(
             "camping",

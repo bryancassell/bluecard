@@ -13,7 +13,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.data.progress.completesFromRows
+import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.normalizedText
+import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -69,7 +72,12 @@ class RequirementDetailViewModel @AssistedInject constructor(
             RecordedRequirement(
                 badgeName = found.badge.name,
                 requirement = found.item(requirement),
-                completedDate = recorded?.completedDate,
+                completedDate = if (requirement.completesFromRows) {
+                    requirement.completion(found.recorded, found.trackerEntries)?.date
+                } else {
+                    recorded?.completedDate
+                },
+                rowsCompletedDate = requirement.rowsCompletedDate(found.trackerEntries),
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 comment = recorded?.comment,
@@ -83,6 +91,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val badgeName: String,
         val requirement: RequirementItem,
         val completedDate: LocalDate?,
+        val rowsCompletedDate: LocalDate?,
         val children: List<RequirementItem>,
         val tracker: TrackerItem?,
         /** The saved comment. */
@@ -113,6 +122,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             badgeName = recorded.badgeName,
             requirement = recorded.requirement,
             completedDate = recorded.completedDate,
+            rowsCompletedDate = recorded.rowsCompletedDate,
             children = recorded.children,
             tracker = recorded.tracker,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
@@ -135,10 +145,19 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     /**
      * Changes the date this requirement, or its own work, was completed on, once marked complete;
-     * null removes it.
+     * null removes it. For one that [completesFromRows], the date is kept while a row is deleted
+     * ([ProgressRepository.setCompletedFromRowsDate]).
      */
     fun setCompletedDate(date: LocalDate?) {
-        saves.launch { progressRepository.setRequirementCompletedDate(badgeId, number, date) }
+        // The date shows only once the page has.
+        val rowCount = shown?.requirement?.takeIf { it.completesFromRows }?.tracker?.rowCount
+        saves.launch {
+            if (rowCount != null) {
+                progressRepository.setCompletedFromRowsDate(badgeId, number, rowCount, date)
+            } else {
+                progressRepository.setRequirementCompletedDate(badgeId, number, date)
+            }
+        }
     }
 
     /** Saves the comment field as this requirement's comment. An empty one removes it. */

@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
@@ -50,7 +51,12 @@ data class RequirementItem(
      * How many of the sub-requirements it needs are complete, while it's [partlyCompleted] and
      * at least one is, or null.
      */
-    val completeCount: CompleteCount? = null
+    val completeCount: CompleteCount? = null,
+    /**
+     * Whether it's complete once every row of its tracker is filled in ([completesFromRows]).
+     * Its page then has the date it was completed on, which the scout can change.
+     */
+    val completesFromRows: Boolean = false
 )
 
 /**
@@ -92,7 +98,8 @@ fun Requirement.toItem(
         notRecorded = badgeCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = partlyCompleted,
-        completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null
+        completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null,
+        completesFromRows = completesFromRows
     )
 }
 
