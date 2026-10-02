@@ -202,10 +202,31 @@ class CompletionTest {
     }
 
     @Test
-    fun fixedRows_ignoreAStoredMark() {
+    fun isCompleteFromRows_onlyWithoutChildrenAndWithFixedRows() {
+        assertTrue(weeks.completesFromRows)
+        assertFalse(leaf("1").completesFromRows)
+        assertFalse(log.completesFromRows)
+        assertFalse(allOf.copy(tracker = weeks.tracker).completesFromRows)
+    }
+
+    @Test
+    fun fixedRows_aStoredMarkDoesNotCompleteThem() {
         assertNull(weeks.completion(progressOf(done("5", day(3))), entriesOf()))
+        val twoRows = entriesOf(row("5", 1, day(1)), row("5", 3, day(2)))
+        assertNull(weeks.completion(progressOf(done("5", day(3))), twoRows))
+    }
+
+    @Test
+    fun fixedRows_onceFilledIn_areCompleteOnTheDateTheScoutGave() {
         val allRows = entriesOf(row("5", 1, day(1)), row("5", 2, day(4)), row("5", 3, day(2)))
-        assertEquals(Completion(day(4)), weeks.completion(progressOf(done("5", day(9))), allRows))
+        // Earlier or later than the rows' dates.
+        assertEquals(Completion(day(3)), weeks.completion(progressOf(done("5", day(3))), allRows))
+        assertEquals(Completion(day(9)), weeks.completion(progressOf(done("5", day(9))), allRows))
+        // The scout removed the date.
+        assertEquals(Completion(null), weeks.completion(progressOf(done("5")), allRows))
+        // A comment alone gives no date.
+        val comment = RequirementProgress(BADGE, "5", comment = "Weekly.")
+        assertEquals(Completion(day(4)), weeks.completion(progressOf(comment), allRows))
     }
 
     @Test

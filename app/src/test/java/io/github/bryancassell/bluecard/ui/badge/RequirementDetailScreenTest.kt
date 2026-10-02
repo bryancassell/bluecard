@@ -144,7 +144,14 @@ class RequirementDetailScreenTest {
      * it's complete.
      */
     private val withWeeks = leaf.copy(
-        requirement = RequirementItem("2", "Keep a budget.", null, false, markedByHand = false),
+        requirement = RequirementItem(
+            "2",
+            "Keep a budget.",
+            null,
+            false,
+            markedByHand = false,
+            completesFromRows = true
+        ),
         tracker = TrackerItem(
             count = TrackerCount(1, 3, "weeks"),
             rowTitle = "Week",
@@ -535,21 +542,50 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
     }
 
-    // Its date field would only show once it's complete (the next test).
+    // Its date field only shows once it's complete (the next tests).
     @Test
-    fun fixedRows_haveNoCheckbox() {
+    fun fixedRows_haveNoCheckboxOrDate() {
         show(withWeeks)
 
         composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
     }
 
+    private val weeksFilledIn = withWeeks.copy(
+        requirement = withWeeks.requirement.copy(completed = true),
+        completedDate = LocalDate.of(2026, 4, 15)
+    )
+
     @Test
-    fun fixedRowsAllFilledIn_areLabeledCompleted_withNoCheckboxOrDate() {
-        show(withWeeks.copy(requirement = withWeeks.requirement.copy(completed = true)))
+    fun fixedRowsAllFilledIn_areLabeledCompleted_withTheirDateButNoCheckbox() {
+        show(weeksFilledIn)
 
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.onNode(hasText("Completed") and isToggleable()).assertDoesNotExist()
-        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText("Completed on Apr 15, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Remove date").assertIsDisplayed()
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_changeDate_picksAnotherDay() {
+        show(weeksFilledIn)
+
+        composeTestRule.onNodeWithText("Change date").performClick()
+        pickerDay("April 10, 2026").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 10)), dateChanges)
+    }
+
+    @Test
+    fun fixedRowsAllFilledIn_withoutDate_offerToAddOne() {
+        show(weeksFilledIn.copy(completedDate = null))
+
+        composeTestRule.onNodeWithText("No completion date").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add date").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
     @Test

@@ -16,8 +16,9 @@ sealed interface RequirementDetailUiState {
         val requirement: RequirementItem,
         /**
          * When the scout completed it, for a requirement they marked complete, or its own work,
-         * for one with own work they marked complete ([RequirementItem.ownWork]). Null if they
-         * gave no date or it isn't marked complete.
+         * for one with own work they marked complete ([RequirementItem.ownWork]). For one that's
+         * complete once its tracker's rows are ([RequirementItem.completesFromRows]), it's when
+         * it was completed. Null if there's no date or it isn't complete.
          */
         val completedDate: LocalDate?,
         val children: List<RequirementItem>,

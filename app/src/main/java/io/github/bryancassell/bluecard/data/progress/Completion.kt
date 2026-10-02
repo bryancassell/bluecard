@@ -19,6 +19,13 @@ data class Completion(val date: LocalDate?)
 val Requirement.isMarkedByHand: Boolean get() = children.isEmpty() && tracker?.rowCount == null
 
 /**
+ * Whether this requirement is complete once every row of its tracker is filled in: it has no
+ * children, and its tracker has a fixed number of rows. The scout can give the date it was
+ * completed on, as for one they mark by hand ([completion]).
+ */
+val Requirement.completesFromRows: Boolean get() = children.isEmpty() && tracker?.rowCount != null
+
+/**
  * Whether a requirement is complete, from the scout's recorded progress and tracker entries
  * (each keyed by requirement number), or null if it isn't.
  *
@@ -26,8 +33,9 @@ val Requirement.isMarkedByHand: Boolean get() = children.isEmpty() && tracker?.r
  * `requiredCount`, even if it also has a tracker. Its date is when the last child it needed was
  * completed. One with [own work][Requirement.ownWork] also needs the scout to mark that complete,
  * and its date is the later of the two. One without children but with a tracker with a fixed
- * number of rows is complete when every row is filled in, on the date the last of them was first
- * saved. Any other requirement is complete when the scout marked it complete ([isMarkedByHand]).
+ * number of rows ([completesFromRows]) is complete when every row is filled in. Its date is the one
+ * the scout gave, if they gave one, or else the date the last of its rows was first saved. Any
+ * other requirement is complete when the scout marked it complete ([isMarkedByHand]).
  */
 fun Requirement.completion(
     progress: Map<String, RequirementProgress>,
@@ -44,7 +52,12 @@ fun Requirement.completion(
             }
         }
 
-        rowCount != null -> rowsCompletion(trackerEntries[number].orEmpty(), rowCount)
+        rowCount != null -> {
+            val byRows = rowsCompletion(trackerEntries[number].orEmpty(), rowCount) ?: return null
+            // The scout gives the date as they mark a requirement by hand, but it doesn't
+            // complete this one.
+            markedCompletion(progress) ?: byRows
+        }
 
         else -> markedCompletion(progress)
     }
