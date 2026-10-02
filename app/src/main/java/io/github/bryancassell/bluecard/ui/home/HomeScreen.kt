@@ -44,6 +44,7 @@ import io.github.bryancassell.bluecard.ui.typedText
 fun HomeRoute(
     onOpenBadge: (badgeId: String) -> Unit,
     onOpenBadges: () -> Unit,
+    onOpenRanks: () -> Unit,
     onOpenDataManagement: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
@@ -53,6 +54,7 @@ fun HomeRoute(
         uiState = uiState,
         onOpenBadge = onOpenBadge,
         onOpenBadges = onOpenBadges,
+        onOpenRanks = onOpenRanks,
         onOpenDataManagement = onOpenDataManagement,
         modifier = modifier
     )
@@ -60,13 +62,14 @@ fun HomeRoute(
 
 /**
  * The scout's name and unit, a summary of their merit badge progress, and the badges they have
- * in progress.
+ * in progress, with buttons that open Badges, Ranks and Data management.
  */
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
     onOpenBadge: (badgeId: String) -> Unit,
     onOpenBadges: () -> Unit,
+    onOpenRanks: () -> Unit,
     onOpenDataManagement: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -110,6 +113,9 @@ fun HomeScreen(
             }
             Button(onClick = onOpenBadges, modifier = inset.fillMaxWidth()) {
                 Text(stringResource(R.string.home_open_badges))
+            }
+            Button(onClick = onOpenRanks, modifier = inset.fillMaxWidth()) {
+                Text(stringResource(R.string.home_open_ranks))
             }
             OutlinedButton(onClick = onOpenDataManagement, modifier = inset.fillMaxWidth()) {
                 Text(stringResource(R.string.home_open_data_management))

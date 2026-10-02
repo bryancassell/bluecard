@@ -743,6 +743,20 @@ class RequirementDetailViewModelTest {
         )
     }
 
+    // As on the page of a badge marked completed on a prior date.
+    @Test
+    fun rankRequirement_ofARankEarnedWithARankAbove_readsAsNotRecorded_untilUnmarked() = runTest {
+        catalogRepository.ranks = listOf(tenderfoot, tenderfoot.copy(id = "second-class"))
+        progressRepository.setCompletedOnPriorDate("second-class", day, badgeStart)
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+        assertTrue(viewModel.ready().requirement.notRecorded)
+
+        progressRepository.removeCompletedOnPriorDate("second-class")
+
+        assertFalse(viewModel.ready().requirement.notRecorded)
+    }
+
     @Test
     fun saveComment_onUnstartedRank_startsIt() = runTest {
         val viewModel = viewModel("1a", advancementId = "tenderfoot")

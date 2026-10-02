@@ -323,6 +323,28 @@ class HomeViewModelTest {
         assertEquals(listOf("chess"), idsInProgress())
     }
 
+    // Ranks share the badges' progress tables, but aren't badges.
+    @Test
+    fun rankProgress_isntCountedOrListedAsABadge() = runTest {
+        catalogRepository.ranks = listOf("scout", "tenderfoot").map { id ->
+            Rank(
+                id = id,
+                name = id.replaceFirstChar(Char::uppercase),
+                summary = "Our summary of $id.",
+                officialUrl = "https://www.scouting.org/$id.pdf",
+                requirementVersions = listOf(
+                    RequirementsVersion(version, listOf(Requirement("1", "First.")))
+                )
+            )
+        }
+        complete("scout")
+        start("tenderfoot")
+        startCollecting(viewModel)
+
+        assertTrue(ready().hasNoProgress)
+        assertEquals(emptyList<String>(), idsInProgress())
+    }
+
     @Test
     fun badgesInProgress_updateWhenProgressChanges() = runTest {
         startCollecting(viewModel)

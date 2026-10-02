@@ -40,6 +40,7 @@ class HomeScreenTest {
 
     private val openedBadges = mutableListOf<String>()
     private var badgesOpened = 0
+    private var ranksOpened = 0
     private var dataManagementOpened = 0
 
     private val noProgress = HomeUiState.Ready(
@@ -82,6 +83,7 @@ class HomeScreenTest {
                 uiState = uiState,
                 onOpenBadge = { openedBadges += it },
                 onOpenBadges = { badgesOpened++ },
+                onOpenRanks = { ranksOpened++ },
                 onOpenDataManagement = { dataManagementOpened++ }
             )
         }
@@ -115,6 +117,7 @@ class HomeScreenTest {
 
         composeTestRule.onNode(loadingIndicator).assertIsDisplayed()
         text("Merit badges").assertDoesNotExist()
+        text("Ranks").assertDoesNotExist()
     }
 
     @Test
@@ -124,6 +127,7 @@ class HomeScreenTest {
         text("Couldn't load your data. Try closing and reopening BlueCard.").assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         text("Merit badges").assertDoesNotExist()
+        text("Ranks").assertDoesNotExist()
     }
 
     @Test
@@ -312,7 +316,27 @@ class HomeScreenTest {
         text("Merit badges").performScrollTo().performClick()
 
         assertEquals(1, badgesOpened)
+        assertEquals(0, ranksOpened)
         assertEquals(0, dataManagementOpened)
+    }
+
+    @Test
+    fun ranksButton_opensRanks() {
+        show(withProgress)
+
+        text("Ranks").performScrollTo().performClick()
+
+        assertEquals(1, ranksOpened)
+        assertEquals(0, badgesOpened)
+        assertEquals(0, dataManagementOpened)
+    }
+
+    // It's shown before the scout has started anything, as Merit badges is.
+    @Test
+    fun noProgress_offersRanks() {
+        show(noProgress)
+
+        text("Ranks").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -323,5 +347,6 @@ class HomeScreenTest {
 
         assertEquals(1, dataManagementOpened)
         assertEquals(0, badgesOpened)
+        assertEquals(0, ranksOpened)
     }
 }

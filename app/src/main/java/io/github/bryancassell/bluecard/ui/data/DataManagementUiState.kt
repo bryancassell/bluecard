@@ -9,7 +9,7 @@ data class DataManagementUiState(
      * wait.
      */
     val working: Boolean = false,
-    /** Whether there's progress to clear: a badge is started. */
+    /** Whether there's progress to clear: a badge or rank is started. */
     val canClear: Boolean = false,
     /**
      * A file the scout chose that can be imported, until they confirm or cancel replacing

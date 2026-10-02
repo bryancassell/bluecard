@@ -1,13 +1,16 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import io.github.bryancassell.bluecard.data.catalog.Advancement
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.RankStanding
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
+import io.github.bryancassell.bluecard.data.progress.standings
 
 /**
  * A badge or rank, the requirements the scout works on, and what they've recorded against them.
@@ -20,7 +23,10 @@ data class AdvancementRequirements<out A : Advancement>(
     val recorded: Map<String, RequirementProgress>,
     /** The scout's tracker entries, keyed by requirement number. */
     val trackerEntries: Map<String, List<TrackerEntry>>,
-    /** Whether the scout marked it completed on a prior date. */
+    /**
+     * Whether the scout marked it completed on a prior date, or, for a rank, marked a rank above
+     * it earned, which counts it as earned ([advancementRequirementsAmong]).
+     */
     val completedOnPriorDate: Boolean = false
 ) {
     /** [requirement] of this badge or rank as a row. */
@@ -69,6 +75,26 @@ fun <A : Advancement> List<A>.advancementRequirements(
         progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber },
         progress?.badge?.completedOnPriorDate != null
     )
+}
+
+/**
+ * As [advancementRequirements], from the scout's [progress] keyed by ID, which for a rank must
+ * have every rank's. A rank that counts as earned because the scout marked a rank above it earned
+ * on a prior date ([RankStanding.earnedWith]) reads as marked itself, so a requirement not
+ * recorded for it reads "Not recorded", as on the rank they marked. Every page that shows a
+ * rank's requirements reads them through this, so they agree. A caller that has already worked
+ * out the ranks' [standings] from [progress] passes them, so they aren't worked out again.
+ */
+fun <A : Advancement> List<A>.advancementRequirementsAmong(
+    id: String,
+    progress: Map<String, BadgeProgressDetails>,
+    standings: List<RankStanding>? = null
+): AdvancementRequirements<A>? {
+    val found = advancementRequirements(id, progress[id]) ?: return null
+    if (found.advancement !is Rank) return found
+    val standing = (standings ?: filterIsInstance<Rank>().standings(progress))
+        .first { it.rank.id == id }
+    return if (standing.earnedWith == null) found else found.copy(completedOnPriorDate = true)
 }
 
 /** The requirement numbered [number], at any depth, or null if there is none. */

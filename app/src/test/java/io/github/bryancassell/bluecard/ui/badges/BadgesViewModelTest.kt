@@ -264,6 +264,28 @@ class BadgesViewModelTest {
         assertEquals(listOf("camping", "chess"), state.badges.map { it.id })
     }
 
+    // Ranks share the badges' progress tables, but aren't badges.
+    @Test
+    fun ranks_arentListed_evenWhenStarted() = runTest {
+        catalogRepository.ranks = listOf(
+            Rank(
+                id = "scout",
+                name = "Scout",
+                summary = "Our summary of Scout.",
+                officialUrl = "https://www.scouting.org/scout.pdf",
+                requirementVersions = listOf(
+                    RequirementsVersion(version, listOf(Requirement("1", "First.")))
+                )
+            )
+        )
+        progressRepository.startBadge("scout", version, started)
+        startCollecting(viewModel)
+
+        assertEquals(listOf("camping", "chess"), listedIds())
+        search("scout")
+        assertEquals(BadgesUiState.NoMatches, viewModel.uiState.value)
+    }
+
     @Test
     fun query_startsEmpty_andListsEveryBadge() = runTest {
         startCollecting(viewModel)

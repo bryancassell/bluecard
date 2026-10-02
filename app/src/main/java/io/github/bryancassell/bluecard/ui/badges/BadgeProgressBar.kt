@@ -10,8 +10,8 @@ import io.github.bryancassell.bluecard.R
 import kotlin.math.roundToInt
 
 /**
- * How much of a badge in progress is done, [fractionDone] from 0 to 1, as a bar as wide as its
- * space: on the badge's row on Badges and Home, and on Badge detail.
+ * How much of a badge or rank is done, [fractionDone] from 0 to 1, as a bar as wide as its
+ * space: on the row of a badge or rank in a list, and on Badge detail and Rank detail.
  */
 @Composable
 fun BadgeProgressBar(fractionDone: Float, modifier: Modifier = Modifier) {
@@ -25,13 +25,17 @@ fun BadgeProgressBar(fractionDone: Float, modifier: Modifier = Modifier) {
 }
 
 /**
- * How much of a badge in progress is done, [fractionDone] from 0 to 1, as screen readers hear
- * it: "40% done". As for Compose's own progress bars, it's 0% only when nothing is done, so a
- * little progress isn't heard as none, and never 100%, since a badge in progress has something
- * left.
+ * How much of a badge or rank is done, [fractionDone] from 0 to 1, as screen readers hear it:
+ * "40% done". As for Compose's own progress bars, it's 0% only when nothing is done, so a little
+ * progress isn't heard as none, and 100% only when everything is, as for a rank waiting on the
+ * rank below it. A badge in progress has something left.
  */
 @Composable
 fun percentDoneDescription(fractionDone: Float): String {
-    val percent = if (fractionDone == 0f) 0 else (fractionDone * 100).roundToInt().coerceIn(1, 99)
+    val percent = when (fractionDone) {
+        0f -> 0
+        1f -> 100
+        else -> (fractionDone * 100).roundToInt().coerceIn(1, 99)
+    }
     return stringResource(R.string.badges_percent_done, percent)
 }

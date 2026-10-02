@@ -26,6 +26,7 @@
     <string name="home_badges_title">Your merit badges</string>
     <string name="home_eagle_title">Eagle-required</string>
     <string name="home_open_badges">Merit badges</string>
+    <string name="home_open_ranks">Ranks</string>
     <string name="home_open_data_management">Manage data</string>
     <string name="badges_title">Merit badges</string>
     <string name="badges_eagle_required">Eagle-required</string>
@@ -42,6 +43,11 @@
     <!-- Screen reader label for the button that empties the search field. -->
     <string name="badges_clear_search">Clear search</string>
     <string name="badges_no_matches">No merit badges match your search.</string>
+    <string name="ranks_title">Ranks</string>
+    <!-- A rank's status in the list, where badges say "Completed". -->
+    <string name="ranks_earned">Earned</string>
+    <!-- Screen reader action on a rank in the list: "Double tap to open rank". -->
+    <string name="ranks_open_rank">open rank</string>
     <string name="badge_detail_official_page">Official requirements</string>
     <string name="badge_detail_requirements">Requirements</string>
     <!-- Shown when tapping the official requirements link, if no app on the phone can open
@@ -77,6 +83,8 @@
     <!-- Shown in place of a badge's page when the catalog doesn't have the badge or its
          requirements version. Only a catalog edited during development can cause this. -->
     <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>
+    <!-- The same, in place of a rank's page. -->
+    <string name="rank_requirements_unavailable">This rank\'s requirements aren\'t in this version of BlueCard.</string>
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
@@ -129,17 +137,21 @@
     <!-- Shown in place of a requirement's page when the requirements the badge or rank uses
          don't have it, such as after the badge or rank moves to another version. -->
     <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge or rank uses.</string>
-    <!-- Button at the bottom of a badge's or a requirement's page, which asks before clearing
-         what the scout recorded for it, and the dialog's button that clears it, which Clear
-         all's dialog on Data management uses too. -->
+    <!-- Button at the bottom of a badge's, a rank's or a requirement's page, which asks before
+         clearing what the scout recorded for it, and the dialog's button that clears it, which
+         Clear all's dialog on Data management uses too. -->
     <string name="clear_progress">Clear progress</string>
     <string name="clear_progress_confirm">Clear</string>
-    <!-- Asks before a badge's progress is cleared, with its name, such as "Clear progress on
-         Camping?" -->
+    <!-- Asks before a badge's or rank's progress is cleared, with its name, such as "Clear
+         progress on Camping?" -->
     <string name="badge_detail_clear_title">Clear progress on %1$s?</string>
     <string name="badge_detail_clear_message">What you recorded for it will be removed.</string>
     <!-- In place of the one above when the scout has entered the badge's counselor. -->
     <string name="badge_detail_clear_message_with_counselor">What you recorded for it will be removed, including its counselor.</string>
+    <!-- In place of badge_detail_clear_message on a rank's page, when clearing it means other
+         ranks no longer count as earned, since ranks are earned in order. %1$s lists them in the
+         strings_language, such as "Scout, Tenderfoot, and Second Class". -->
+    <string name="rank_detail_clear_message_unearns">What you recorded for it will be removed, and %1$s will no longer count as earned.</string>
     <!-- Asks before a requirement's progress is cleared, with its official number, such as
          "Clear progress on requirement 4b?" -->
     <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>
@@ -210,10 +222,10 @@
     <!-- Clears the progress on every badge, including counselors, once the scout confirms.
          Their name and unit number stay. -->
     <string name="data_management_clear_heading">Clear all progress</string>
-    <string name="data_management_clear_description">Remove the progress on every badge, including counselors. Your name and unit number stay.</string>
+    <string name="data_management_clear_description">Remove the progress on every badge and rank, including counselors. Your name and unit number stay.</string>
     <string name="data_management_clear">Clear all</string>
     <string name="clear_all_confirm_title">Clear all progress?</string>
-    <string name="clear_all_confirm_message">The progress on every badge will be removed, including counselors. Your name and unit number stay.</string>
+    <string name="clear_all_confirm_message">The progress on every badge and rank will be removed, including counselors. Your name and unit number stay.</string>
     <!-- Shown briefly after clearing all progress. -->
     <string name="clear_all_done">Progress cleared.</string>
     <!-- Button on a badge's page, while it isn't complete, that asks for a date and marks the
@@ -222,8 +234,27 @@
     <string name="badge_detail_mark_completed">Mark completed</string>
     <!-- The date a badge was marked completed on, such as "Completed on Apr 15, 2025". -->
     <string name="badge_detail_completed_on">Completed on %1$s</string>
-    <!-- Button under the date a badge was marked completed on, which undoes the mark. -->
+    <!-- Button under the date a badge was marked completed on, or a rank earned on, which
+         undoes the mark. -->
     <string name="badge_detail_unmark_completed">Unmark</string>
+    <!-- Button on a rank's page, while it isn't earned, that asks for a date and marks the rank
+         earned on it without recording its requirements, as for a rank earned before using
+         BlueCard. Every rank below it then counts as earned too. -->
+    <string name="rank_detail_mark_earned">Mark earned</string>
+    <!-- The date a rank was marked earned on, or for one earned from its requirements, the date
+         they were completed on, such as "Earned on Apr 15, 2025". -->
+    <string name="rank_detail_earned_on">Earned on %1$s</string>
+    <!-- On the page of a rank that counts as earned because the scout marked a rank above it
+         earned, with that rank's name, such as "Counted as earned with Life". An Add date
+         button under it gives this rank a date of its own. -->
+    <string name="rank_detail_earned_with">Counted as earned with %1$s</string>
+    <!-- On the page of a rank earned from its requirements, in place of "Earned on <date>" when
+         a requirement it needed was completed with no date. -->
+    <string name="rank_detail_earned">Earned</string>
+    <!-- Above Mark earned on the page of a rank whose requirements are all complete, with the
+         name of the rank below it, which has to be earned first, such as "Earned once
+         Tenderfoot is earned". -->
+    <string name="rank_detail_waiting_on">Earned once %1$s is earned</string>
     <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
          recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
     <string name="badge_detail_share_report">Share report</string>

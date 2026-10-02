@@ -265,6 +265,14 @@ class DataManagementViewModelTest {
         assertTrue(viewModel().uiState.value.canClear)
     }
 
+    // Rank progress is stored with the badges', and Clear all clears it too.
+    @Test
+    fun uiState_withOnlyARankStarted_canClear() = runTest {
+        progressRepository.startBadge("scout", today, today)
+
+        assertTrue(viewModel().uiState.value.canClear)
+    }
+
     @Test
     fun uiState_whenProgressCantBeRead_cantClear() = runTest {
         progressRepository.startBadge("camping", today, today)

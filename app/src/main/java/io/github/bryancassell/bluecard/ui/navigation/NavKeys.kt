@@ -39,6 +39,12 @@ data object Badges : BlueCardNavKey
 data class BadgeDetail(val badgeId: String) : BlueCardNavKey
 
 @Serializable
+data object Ranks : BlueCardNavKey
+
+@Serializable
+data class RankDetail(val rankId: String) : BlueCardNavKey
+
+@Serializable
 data object DataManagement : BlueCardNavKey
 
 /** A requirement of a badge or rank, by its official number, such as "4c". */

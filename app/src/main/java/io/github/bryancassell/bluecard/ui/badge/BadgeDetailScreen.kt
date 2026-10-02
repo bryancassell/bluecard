@@ -6,25 +6,17 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.annotation.StringRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -39,21 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
@@ -63,9 +48,7 @@ import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
-import io.github.bryancassell.bluecard.ui.badges.BadgeProgressBar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
-import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
@@ -170,9 +153,6 @@ fun BadgeDetailScreen(
     }
 }
 
-/** Test tag of the official requirements link's icon, which has no semantics of its own. */
-internal const val OFFICIAL_LINK_ICON_TAG = "officialLinkIcon"
-
 @Composable
 private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
@@ -192,68 +172,19 @@ private fun BadgeDetails(
     val startOtherApp = rememberOtherAppStarter()
     uiState.reportToShare?.let { ShareReport(it, onReportShared) }
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Column(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = uiState.name,
-                style = MaterialTheme.typography.headlineMedium,
-                // Lets screen reader users jump to it.
-                modifier = Modifier.semantics { heading() }
-            )
-            uiState.fractionDone?.let {
-                val inProgress = stringResource(R.string.badges_in_progress)
-                val percentDone = percentDoneDescription(it)
-                // Read as on the badge's row: TalkBack says "40% done. In progress".
-                BadgeProgressBar(
-                    fractionDone = it,
-                    modifier = Modifier.semantics {
-                        contentDescription = inProgress
-                        stateDescription = percentDone
-                    }
-                )
+        AdvancementHeader(
+            name = uiState.name,
+            fractionDone = uiState.fractionDone,
+            // A badge shows its bar only while it's in progress.
+            inProgress = true,
+            summary = uiState.summary,
+            officialUrl = uiState.officialUrl,
+            startOtherApp = startOtherApp,
+            tag = uiState.eagle?.let {
+                { EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter())) }
             }
-            uiState.eagle?.let {
-                EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter()))
-            }
-            Text(text = uiState.summary, style = MaterialTheme.typography.bodyLarge)
-            // ACTION_VIEW, as Compose's UriHandler uses, but started by the screen's
-            // OtherAppStarter, so it handles a double tap and "no app" as the counselor's
-            // phone and email do.
-            val officialPage = Intent(Intent.ACTION_VIEW, uiState.officialUrl.toUri())
-            // Shown when no app can open web links, as when parental controls block the browser.
-            val noBrowser = stringResource(R.string.badge_detail_no_browser)
-            val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
-            // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
-            OutlinedButton(
-                onClick = { startOtherApp(officialPage, noBrowser) },
-                // The button keeps its own click action, with this label.
-                modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
-                colors = badgeDetailOutlinedButtonColors(),
-                border = badgeDetailOutlinedButtonBorder(),
-                // Material's padding for an icon before the label, flipped for one after it.
-                contentPadding = with(ButtonDefaults.ButtonWithIconContentPadding) {
-                    PaddingValues(
-                        start = calculateEndPadding(LayoutDirection.Ltr),
-                        top = calculateTopPadding(),
-                        end = calculateStartPadding(LayoutDirection.Ltr),
-                        bottom = calculateBottomPadding()
-                    )
-                }
-            ) {
-                Text(text = stringResource(R.string.badge_detail_official_page))
-                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-                Icon(
-                    painterResource(R.drawable.ic_open_in_new),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(ButtonDefaults.IconSize)
-                        .testTag(OFFICIAL_LINK_ICON_TAG)
-                )
-            }
-        }
-        // Outside the column above, so its text buttons line up with the page's text, as Add
+        )
+        // Outside the header's column, so its text buttons line up with the page's text, as Add
         // counselor's does.
         CompletedOnPriorDate(uiState, today, onMarkCompleted, onUnmarkCompleted)
         if (uiState.completed) {
@@ -414,28 +345,12 @@ private fun ReportButtons(
 private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
-        colors = badgeDetailOutlinedButtonColors(),
-        border = badgeDetailOutlinedButtonBorder()
+        colors = detailOutlinedButtonColors(),
+        border = detailOutlinedButtonBorder()
     ) {
         Text(stringResource(text))
     }
 }
-
-/**
- * Colors of Badge detail's outlined buttons, the official link and the report buttons: the
- * label is primary blue, like a link.
- */
-@Composable
-private fun badgeDetailOutlinedButtonColors(): ButtonColors =
-    ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
-
-/**
- * Border of Badge detail's outlined buttons, in the theme's outline color rather than
- * Material's lighter default, which keeps it visible on the tinted background.
- */
-@Composable
-private fun badgeDetailOutlinedButtonBorder(): BorderStroke = ButtonDefaults.outlinedButtonBorder()
-    .copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
 
 /**
  * Opens the share sheet with the badge's [report], once, then calls [onShared]. The Share
