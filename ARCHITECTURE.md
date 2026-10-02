@@ -478,8 +478,8 @@ way.
   written permission.
 - **The official page URL is stored per badge** rather than built from the
   name, because the URLs don't always match (Fish and Wildlife Management lives
-  at `/merit-badges/fish-wildlife-management/`). Official pages have no per-requirement
-  anchors, so requirement links go to the badge page.
+  at `/merit-badges/fish-wildlife-management/`). Official pages have no
+  per-requirement anchors, so requirement links go to the badge page.
 
 ### Trackers
 

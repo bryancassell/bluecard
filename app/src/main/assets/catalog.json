@@ -4,7 +4,7 @@
     {
       "id": "american-indian-culture",
       "name": "American Indian Culture",
-      "summary": "Study American Indian cultural areas and one tribe or nation in depth, learn about languages, leaders and games, then visit a museum collection or a gathering.",
+      "summary": "Study American Indian cultural areas and one tribe or nation in depth, learn about languages, leaders and games, then visit a museum collection or a gathering. Formerly Indian Lore.",
       "officialUrl": "https://www.scouting.org/merit-badges/american-indian-culture/",
       "requirementVersions": [
         {
@@ -3078,11 +3078,11 @@
                   "children": [
                     {
                       "number": "4a(1)",
-                      "summary": "How taking part in family, church, team and club activities prevents crime."
+                      "summary": "How joining in family, church, sports team and club activities keeps crime down."
                     },
                     {
                       "number": "4a(2)",
-                      "summary": "How the design of houses, neighborhoods, public buildings, stores, streets and parks prevents crime."
+                      "summary": "How the way houses, neighborhoods, public buildings, stores, streets and parks are designed can deter crime."
                     }
                   ]
                 },
@@ -3587,7 +3587,7 @@
                 },
                 {
                   "number": "9d",
-                  "summary": "Equipment and its use: the listed items, from circuits and GFCIs to transformers and wind turbines."
+                  "summary": "Equipment and its use: circuit, conductor, GFCI, insulator, inverter, rectifier, rheostat, substation, surge protection, solar panel, transformer, transmission and distribution systems, and wind turbine."
                 }
               ]
             },
@@ -6334,7 +6334,7 @@
                     },
                     {
                       "number": "2A(6)",
-                      "summary": "With a golfer near your age plus your counselor or an adult your counselor approves, play 18 holes, in one round or two of nine.",
+                      "summary": "Play 18 holes with a golfer near your age and your counselor or an approved adult, following the rules with good etiquette and respect.",
                       "ownWork": "With a golfer near your age plus your counselor or an adult your counselor approves, play 18 holes, in one round or two of nine.",
                       "children": [
                         {
@@ -6467,7 +6467,7 @@
                     },
                     {
                       "number": "2B(6)",
-                      "summary": "With a disc golfer near your age plus your counselor or an adult your counselor approves, play 18 or more holes.",
+                      "summary": "Play 18 or more holes of disc golf with a player near your age and your counselor or an approved adult, following the rules with good etiquette and respect.",
                       "ownWork": "With a disc golfer near your age plus your counselor or an adult your counselor approves, play 18 or more holes.",
                       "children": [
                         {
@@ -7730,7 +7730,7 @@
                 },
                 {
                   "number": "5b",
-                  "summary": "Fuel the boat and do a safety check."
+                  "summary": "Refuel the boat and run through a safety check."
                 },
                 {
                   "number": "5c",
@@ -8400,28 +8400,28 @@
                       },
                       {
                         "id": "surface",
-                        "label": "Surface water",
+                        "label": "Surface water temperature",
                         "type": "text"
                       },
                       {
                         "id": "midwater",
-                        "label": "Midwater",
+                        "label": "Midwater temperature",
                         "type": "text"
                       },
                       {
                         "id": "bottom",
-                        "label": "Bottom water",
+                        "label": "Bottom water temperature",
                         "type": "text"
                       },
                       {
                         "id": "air",
-                        "label": "Air",
+                        "label": "Air temperature",
                         "type": "text"
                       },
                       {
                         "id": "turbidity",
                         "label": "Secchi disk depth",
-                        "type": "text"
+                        "type": "number"
                       },
                       {
                         "id": "conditions",
@@ -8551,7 +8551,7 @@
                 },
                 {
                   "number": "4d",
-                  "summary": "Show a topographic map marked with magnetic north-south lines."
+                  "summary": "Show magnetic north-south lines on a topographic map."
                 },
                 {
                   "number": "4e",
@@ -11112,7 +11112,7 @@
                     },
                     {
                       "number": "7C(8)",
-                      "summary": "On a moderate slope, do an ollie, a nose-end grab and a wheelie."
+                      "summary": "Perform an ollie, a nose-end grab and a wheelie on moderate terrain."
                     },
                     {
                       "number": "7C(9)",
