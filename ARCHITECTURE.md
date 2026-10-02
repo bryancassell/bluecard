@@ -349,6 +349,7 @@ both taps of a double tap can reach it.
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
 | `ReportRepository` | Building a badge's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
 | `BackupRepository` | Export and import of all user data | JSON written to or read from a user-chosen file |
+| `DamagedProgressRepository` | Progress set aside because SQLite found the database damaged, and whether the scout has been told | Files in the app's no-backup directory |
 
 - **Storage choice:** the DataStore guide says it is "ideal for small datasets"
   and to "consider using Room" for larger or relational data. The profile is two
@@ -390,11 +391,35 @@ both taps of a double tap can reach it.
 - **Errors that can only come from a mistake in the app's code aren't
   wrapped,** so they still crash as bugs. `RoomProgressRepository` says which
   SQLite errors count.
-- **A corrupted database is lost.** The SQLite library deletes it. If a read
-  finds the corruption, the scout sees the load-failed message, and the app
-  reopens with no progress. If opening the database finds it, the progress is
-  gone without any message
-  ([#70](https://github.com/bryancassell/bluecard/issues/70)).
+- **A damaged database is set aside, and the scout is told**
+  ([#70](https://github.com/bryancassell/bluecard/issues/70)). When SQLite
+  finds the database file damaged (corrupt), Android's default handler, which
+  Room 2.8 keeps, deletes it. `SetAsideDamagedDatabaseFactory` gives Room a
+  handler that moves it instead, with the files SQLite keeps beside it, such as
+  the write-ahead log that holds the latest saves, to `damaged-progress/` in
+  the no-backup directory (`FileDamagedProgressRepository`). It replaces any
+  copy from before, and if the files can't be moved, they're deleted as before.
+  Either way the scout sees a notice until they dismiss it (see
+  [`PRD.md`](PRD.md#design-decisions)), which a file in that folder keeps
+  across launches.
+  - **Damage found while opening:** SQLite then creates a new, empty database,
+    and the notice shows straight away.
+  - **Damage found while reading or writing:** that read or write fails with an
+    `IOException`, as other storage failures do, so the screen shows its
+    load-failed message, and the notice shows straight away. The handler
+    closes the database first, as Android's does, but Room keeps using its one
+    closed connection (checked with Room 2.8.5). So the next read or write,
+    such as when the scout reopens the app while its process is still running,
+    throws an exception the repository treats as a bug, and the app crashes.
+    It opens a new database when it starts again. Damage is rare, so this was
+    chosen over reporting those exceptions as storage failures until the app
+    restarts, or moving every read to a new database.
+    SQLite's [How To Corrupt](https://www.sqlite.org/howtocorrupt.html) page
+    lists causes such as failing storage; neither it nor Android publishes how
+    often it happens.
+  - **The damaged copy isn't backed up,** so a phone restored from a backup
+    gets neither it nor a notice about it. Nothing reads it yet; it's kept so
+    its progress could be recovered later.
 
 ### Dependency injection
 
@@ -786,10 +811,10 @@ application, and `@TestInstallIn` modules replace production bindings such as
 the coroutine dispatcher. A test class that needs fakes removes the modules
 that bind those repositories with `@UninstallModules` and supplies the fakes
 with `@BindValue`, as `MainActivityTest` does. `ProfileModule` binds only the
-profile repository. `DataModule` binds the catalog and progress repositories
-together, so a test that fakes one of them supplies both. `BackupModule` binds
-only the backup repository, so such a test still exports and imports through
-the real one.
+profile repository. `DataModule` binds the catalog, progress and
+damaged-progress repositories together, so a test that fakes one of them
+supplies all three. `BackupModule` binds only the backup repository, so such a
+test still exports and imports through the real one.
 
 ### Room and migration tests
 
@@ -803,6 +828,10 @@ the real one.
 - **Migration tests** (`MigrationTest`) run locally too, with Room's
   `MigrationTestHelper`. Debug builds carry the schemas as assets for them
   (`app/build.gradle.kts`); release builds don't.
+- **Damaged database tests** (`SetAsideDamagedDatabaseFactoryTest`) run
+  locally too. Robolectric runs Android's SQLite code, which calls the
+  corruption handler for a file that isn't a database, or one whose pages are
+  overwritten, as on a phone.
 
 ### Compose UI and screenshot tests
 
@@ -864,6 +893,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
 | [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
+| [Damaged database](#storage-errors) | Set aside in the no-backup directory rather than deleted, with a notice until the scout dismisses it. Damage found while the app is open shows the notice, then crashes the app at its next read or write, and it starts fresh after | Progress is never lost without the scout knowing. Damage is rare, so closing the app once is simpler than recovering while it's open |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |

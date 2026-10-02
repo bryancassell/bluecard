@@ -9,6 +9,11 @@
     <string name="load_failed">Couldn\'t load your data. Try closing and reopening BlueCard.</string>
     <!-- Shown briefly when something the scout recorded couldn't be saved on the phone. -->
     <string name="save_failed">Couldn\'t save. Try again.</string>
+    <!-- A dialog shown once, when the progress stored on the phone was damaged and BlueCard
+         started over without it. The name and unit number are stored apart, so they're kept. -->
+    <string name="damaged_progress_title">Your progress couldn\'t be read</string>
+    <string name="damaged_progress_message">The progress saved on this phone was damaged, so BlueCard started over without it. Your name and unit number are kept. If you exported your progress, you can import it from Data management.</string>
+    <string name="damaged_progress_ok">OK</string>
     <string name="onboarding_title">Welcome to BlueCard</string>
     <string name="onboarding_message">Enter your name and unit number to get started.</string>
     <string name="profile_name">Name</string>

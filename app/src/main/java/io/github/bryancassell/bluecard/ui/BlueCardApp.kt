@@ -10,9 +10,13 @@ import io.github.bryancassell.bluecard.MainActivityUiState
 import io.github.bryancassell.bluecard.ui.navigation.BlueCardNavDisplay
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 
-/** The app's content. Shows nothing while loading; the splash screen covers it. */
+/**
+ * The app's content. Shows nothing while loading; the splash screen covers it. Tells the scout
+ * when their progress was damaged, over whichever screen is open, until they tap OK
+ * ([onDismissDamagedProgressNotice]).
+ */
 @Composable
-fun BlueCardApp(uiState: MainActivityUiState) {
+fun BlueCardApp(uiState: MainActivityUiState, onDismissDamagedProgressNotice: () -> Unit) {
     ProvideStringsLanguageResources {
         BlueCardTheme {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -22,14 +26,19 @@ fun BlueCardApp(uiState: MainActivityUiState) {
                     MainActivityUiState.LoadFailed ->
                         LoadFailedMessage(Modifier.padding(innerPadding))
 
-                    is MainActivityUiState.Ready -> BlueCardNavDisplay(
-                        isSetUp = uiState.isSetUp,
-                        // Consuming the system bar insets that innerPadding already covers
-                        // keeps screens' imePadding() from adding them a second time.
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .consumeWindowInsets(innerPadding)
-                    )
+                    is MainActivityUiState.Ready -> {
+                        BlueCardNavDisplay(
+                            isSetUp = uiState.isSetUp,
+                            // Consuming the system bar insets that innerPadding already covers
+                            // keeps screens' imePadding() from adding them a second time.
+                            modifier = Modifier
+                                .padding(innerPadding)
+                                .consumeWindowInsets(innerPadding)
+                        )
+                        if (uiState.showDamagedProgressNotice) {
+                            DamagedProgressNotice(onDismiss = onDismissDamagedProgressNotice)
+                        }
+                    }
                 }
             }
         }
