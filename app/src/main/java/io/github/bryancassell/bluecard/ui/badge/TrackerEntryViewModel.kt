@@ -52,7 +52,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
     @Assisted("number") private val number: String,
     @Assisted private val entryId: Long?,
     @Assisted private val rowNumber: Int?,
-    catalogRepository: CatalogRepository,
+    private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps unsaved values if the system stops the app in the background.
@@ -68,7 +68,6 @@ class TrackerEntryViewModel @AssistedInject constructor(
     val fields: Map<String, TextFieldState> = _fields
 
     private val saves = SaveRunner(viewModelScope)
-    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     /** Whether a save or delete is under way. */
     private val saving = MutableStateFlow(false)
@@ -266,7 +265,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
                 row.rowNumber,
                 values,
                 addedDate = today(),
-                recorder.badgeStart(),
+                catalogRepository.badgeStart(badgeId, clock),
                 id = row.entryId
             )
         }

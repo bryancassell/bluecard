@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel(assistedFactory = BadgeDetailViewModel.Factory::class)
 class BadgeDetailViewModel @AssistedInject constructor(
     @Assisted private val badgeId: String,
-    catalogRepository: CatalogRepository,
+    private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val reportRepository: ReportRepository,
     private val clock: Clock
@@ -44,7 +44,6 @@ class BadgeDetailViewModel @AssistedInject constructor(
     // message of its own.
     private val reports = SaveRunner(viewModelScope)
     private val saves = SaveRunner(viewModelScope)
-    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
     private val reportToShare = MutableStateFlow<Uri?>(null)
 
     /** The report being created to share, if there is one. */
@@ -151,7 +150,11 @@ class BadgeDetailViewModel @AssistedInject constructor(
      */
     fun markCompleted(date: LocalDate) {
         lastSave = saves.launch {
-            progressRepository.setCompletedOnPriorDate(badgeId, date, recorder.badgeStart())
+            progressRepository.setCompletedOnPriorDate(
+                badgeId,
+                date,
+                catalogRepository.badgeStart(badgeId, clock)
+            )
             unmarkedDate.value = null
         }
     }
