@@ -209,14 +209,14 @@ class TrackerEntryScreenTest {
     }
 
     @Test
-    fun multilineTextField_trimsTextPast500Characters() {
+    fun multilineTextField_trimsTextPast2000Characters() {
         show(newEntry)
-        field("Notes").performTextInput("a".repeat(495))
+        field("Notes").performTextInput("a".repeat(1995))
 
         // As when pasting.
         field("Notes").performTextInput("b\n".repeat(5))
 
-        assertEquals("a".repeat(495) + "b\nb\nb", fields.getValue("notes").text.toString())
+        assertEquals("a".repeat(1995) + "b\nb\nb", fields.getValue("notes").text.toString())
     }
 
     // Drawn like the requirement notes field, three lines tall before the scout types.

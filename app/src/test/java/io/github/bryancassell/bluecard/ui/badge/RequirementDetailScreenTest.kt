@@ -485,16 +485,17 @@ class RequirementDetailScreenTest {
     }
 
     @Test
-    fun logEntry_showsALineBreakInMultilineTextAsASpace() {
+    fun logEntry_showsALineBreakInAValueAsASpace() {
         val values = listOf(
-            TrackerValue(TrackerColumnType.TEXT, "Push-ups"),
+            // Only an import can store a line break in single-line text (#156).
+            TrackerValue(TrackerColumnType.TEXT, "Push-ups\nand sit-ups"),
             TrackerValue(TrackerColumnType.MULTILINE_TEXT, "3 sets of 10\nFelt good")
         )
         show(
             withLog.copy(tracker = withLog.tracker?.copy(rows = listOf(TrackerRow(1, 11, values))))
         )
 
-        row("Session 1").assert(hasText("Push-ups · 3 sets of 10 Felt good"))
+        row("Session 1").assert(hasText("Push-ups and sit-ups · 3 sets of 10 Felt good"))
     }
 
     @Test

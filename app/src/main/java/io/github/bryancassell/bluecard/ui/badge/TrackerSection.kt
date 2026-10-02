@@ -109,7 +109,7 @@ private fun TrackerRowItem(
 
 /**
  * A row's values on one line, such as "Sep 12, 2026 · Running · 30", or null if it has none. A
- * line break in multi-line text is a space.
+ * line break in a value, as in multi-line text, is a space.
  */
 @Composable
 private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFormatter): String? =
@@ -119,8 +119,7 @@ private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFor
                 storedDate(value.text)?.let { formatter.format(it) } ?: typedText(value.text)
 
             // The scout typed it.
-            TrackerColumnType.NUMBER, TrackerColumnType.TEXT -> typedText(value.text)
-
-            TrackerColumnType.MULTILINE_TEXT -> typedText(lineBreaksAsSpaces(value.text))
+            TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
+                typedText(value.text)
         }
-    }?.joinToString(" · ")
+    }?.joinToString(" · ")?.let(::lineBreaksAsSpaces)

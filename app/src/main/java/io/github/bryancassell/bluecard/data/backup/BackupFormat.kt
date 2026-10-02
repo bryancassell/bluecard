@@ -18,6 +18,7 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
@@ -257,8 +258,9 @@ private fun TrackerEntryJson.toEntry(
 
 /** Whether a column of this type can hold [value], as the scout enters it. */
 private fun TrackerColumnType.takes(value: String) = when (this) {
-    TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
-        value.length <= TRACKER_TEXT_MAX_LENGTH
+    TrackerColumnType.TEXT -> value.length <= TRACKER_TEXT_MAX_LENGTH
+
+    TrackerColumnType.MULTILINE_TEXT -> value.length <= TRACKER_MULTILINE_TEXT_MAX_LENGTH
 
     TrackerColumnType.NUMBER -> value.length <= TRACKER_NUMBER_MAX_LENGTH
 

@@ -198,17 +198,33 @@ class ReportLayoutTest {
     }
 
     @Test
-    fun multilineTrackerValue_keepsItsLineBreaks() {
+    fun multilineTrackerValue_keepsItsLineBreaks_andTheNextValueStartsANewLine() {
         val details = TrackerColumn("details", "Details", TrackerColumnType.MULTILINE_TEXT)
+        val values = listOf(nights to "2", details to "Pitched a tent\nCooked", place to "Lake")
         val tracker = ReportTracker(
-            TrackerDefinition(listOf(nights, details), "trip", "trips"),
-            listOf(ReportTrackerRow(1, listOf(nights to "2", details to "Pitched a tent\nCooked")))
+            TrackerDefinition(listOf(nights, details, place), "trip", "trips"),
+            listOf(ReportTrackerRow(1, values))
         )
         val lines = layOut(report(listOf(requirement("1", "Log.", tracker = tracker))))
             .single().lines
 
-        assertTrue("Nights: 2 · Details: Pitched a tent" in lines)
-        assertTrue("Cooked" in lines)
+        val row = lines.indexOf("Nights: 2 · Details: Pitched a tent")
+        assertEquals(listOf("Cooked", "Place: Lake"), lines.subList(row + 1, row + 3))
+    }
+
+    // A line break ends the wrapping that keeps typed text's direction, so each line has its own.
+    @Test
+    fun typedTextOnSeveralLines_keepsItsDirectionOnEachLine() {
+        val first = "چادر زدم."
+        val second = "شام پختم."
+        val lines = layOut(
+            report(listOf(requirement("1", "Camp.", comment = "$first\n$second")))
+        ).single().lines
+
+        fun wrap(text: String) = BidiFormatter.getInstance(Locale.US).unicodeWrap(text)
+        assertTrue(wrap(second) != second)
+        assertTrue("Notes: ${wrap(first)}" in lines)
+        assertTrue(wrap(second) in lines)
     }
 
     // A Persian name keeps its own direction, so its period stays at its end

@@ -68,6 +68,12 @@ const val NOTES_MAX_LENGTH = 2_000
 /** Plenty for a note in a tracker row's text column. */
 const val TRACKER_TEXT_MAX_LENGTH = 500
 
+/**
+ * As much as requirement notes ([NOTES_MAX_LENGTH]) for a tracker row's multi-line text column,
+ * which can hold a diary entry or a list.
+ */
+const val TRACKER_MULTILINE_TEXT_MAX_LENGTH = NOTES_MAX_LENGTH
+
 /** Longer than any number a scout would log in a tracker row's number column. */
 const val TRACKER_NUMBER_MAX_LENGTH = 20
 

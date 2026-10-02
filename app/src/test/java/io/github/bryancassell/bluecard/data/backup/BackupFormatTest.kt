@@ -17,6 +17,7 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
@@ -333,7 +334,11 @@ class BackupFormatTest {
             "a long tracker note" to
                 withEntry("9a", null, mapOf("note" to tooLong(TRACKER_TEXT_MAX_LENGTH))),
             "a long multi-line tracker note" to
-                withEntry("9a", null, mapOf("details" to tooLong(TRACKER_TEXT_MAX_LENGTH))),
+                withEntry(
+                    "9a",
+                    null,
+                    mapOf("details" to tooLong(TRACKER_MULTILINE_TEXT_MAX_LENGTH))
+                ),
             "a long tracker number" to
                 withEntry("9a", null, mapOf("nights" to tooLong(TRACKER_NUMBER_MAX_LENGTH)))
         )
@@ -358,7 +363,7 @@ class BackupFormatTest {
         )
         val values = mapOf(
             "note" to longest(TRACKER_TEXT_MAX_LENGTH),
-            "details" to longest(TRACKER_TEXT_MAX_LENGTH),
+            "details" to longest(TRACKER_MULTILINE_TEXT_MAX_LENGTH),
             "nights" to longest(TRACKER_NUMBER_MAX_LENGTH)
         )
         val longestBackup = Backup(
