@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.profile
 
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 
 /**
  * What the Edit name and unit screen shows, apart from the fields' text, which the fields edit
@@ -24,6 +24,6 @@ sealed interface EditProfileUiState {
         /** The fields have been saved, so the page can close. */
         val saved: Boolean = false,
         /** The fields couldn't be saved, and the scout hasn't been told yet. */
-        val saveFailure: SaveFailure? = null
+        val saveFailure: TaskFailure? = null
     ) : EditProfileUiState
 }

@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,14 +60,14 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
-import io.github.bryancassell.bluecard.ui.SaveFailure
-import io.github.bryancassell.bluecard.ui.SaveFailureSnackbar
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badges.BadgeProgressBar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
-import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
+import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
 
 /** Connects the Badge detail screen to its ViewModel. */
@@ -123,9 +125,9 @@ fun BadgeDetailScreen(
     onShareReport: () -> Unit,
     onReportShared: () -> Unit,
     onSaveReport: (destination: Uri) -> Unit,
-    onReportFailureShown: (SaveFailure) -> Unit,
+    onReportFailureShown: (TaskFailure) -> Unit,
     onClear: () -> Unit,
-    onSaveFailureShown: (SaveFailure) -> Unit,
+    onSaveFailureShown: (TaskFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
@@ -151,13 +153,18 @@ fun BadgeDetailScreen(
             )
             // One host for both kinds of failure, so they show one at a time.
             val snackbarHostState = remember { SnackbarHostState() }
-            SaveFailureSnackbar(
+            TaskFailureSnackbar(
                 failure = uiState.reportFailure,
+                message = stringResource(R.string.report_failed),
                 onShown = onReportFailureShown,
-                hostState = snackbarHostState,
-                message = stringResource(R.string.report_failed)
+                hostState = snackbarHostState
             )
-            SaveFailureSnackbar(uiState.saveFailure, onSaveFailureShown, snackbarHostState)
+            TaskFailureSnackbar(
+                failure = uiState.saveFailure,
+                message = stringResource(R.string.save_failed),
+                onShown = onSaveFailureShown,
+                hostState = snackbarHostState
+            )
             SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
     }
@@ -182,7 +189,7 @@ private fun BadgeDetails(
 ) {
     // Opens the official page in the browser. The counselor's phone and email and the report
     // share it, so quick taps on any of them open one app, once.
-    val startOtherApp = rememberStartOtherApp()
+    val startOtherApp = rememberOtherAppStarter()
     uiState.reportToShare?.let { ShareReport(it, onReportShared) }
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
@@ -219,17 +226,12 @@ private fun BadgeDetails(
             val noBrowser = stringResource(R.string.badge_detail_no_browser)
             val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
             // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
-            // The theme's outline color, rather than Material's lighter default, keeps the outline
-            // visible on the tinted background, and the label is primary blue, like a link.
             OutlinedButton(
                 onClick = { startOtherApp(officialPage, noBrowser) },
                 // The button keeps its own click action, with this label.
                 modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                ),
-                border = ButtonDefaults.outlinedButtonBorder()
-                    .copy(brush = SolidColor(MaterialTheme.colorScheme.outline)),
+                colors = badgeDetailOutlinedButtonColors(),
+                border = badgeDetailOutlinedButtonBorder(),
                 // Material's padding for an icon before the label, flipped for one after it.
                 contentPadding = with(ButtonDefaults.ButtonWithIconContentPadding) {
                     PaddingValues(
@@ -412,15 +414,28 @@ private fun ReportButtons(
 private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        border = ButtonDefaults.outlinedButtonBorder()
-            .copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
+        colors = badgeDetailOutlinedButtonColors(),
+        border = badgeDetailOutlinedButtonBorder()
     ) {
         Text(stringResource(text))
     }
 }
+
+/**
+ * Colors of Badge detail's outlined buttons, the official link and the report buttons: the
+ * label is primary blue, like a link.
+ */
+@Composable
+private fun badgeDetailOutlinedButtonColors(): ButtonColors =
+    ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+
+/**
+ * Border of Badge detail's outlined buttons, in the theme's outline color rather than
+ * Material's lighter default, which keeps it visible on the tinted background.
+ */
+@Composable
+private fun badgeDetailOutlinedButtonBorder(): BorderStroke = ButtonDefaults.outlinedButtonBorder()
+    .copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
 
 /**
  * Opens the share sheet with the badge's [report], once, then calls [onShared]. The Share

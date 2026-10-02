@@ -15,11 +15,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Returns an [OtherAppStarter] for a screen, which starts other apps, such as the browser to
- * open a link, and ignores taps that follow too quickly.
+ * Returns the [OtherAppStarter] a screen shares among its controls that open another app, such
+ * as a link, or Save report and Share report, which open the file picker and the share sheet.
+ * It ignores taps that follow too quickly.
  */
 @Composable
-fun rememberStartOtherApp(): OtherAppStarter {
+fun rememberOtherAppStarter(): OtherAppStarter {
     val context = LocalContext.current
     val timeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
     val scope = rememberCoroutineScope()
@@ -30,7 +31,7 @@ fun rememberStartOtherApp(): OtherAppStarter {
 
 /**
  * Starts another app, such as the browser to open a link, or shows a message if no app on the
- * phone can handle it. Made with [rememberStartOtherApp].
+ * phone can handle it. Made with [rememberOtherAppStarter].
  *
  * After each start, it ignores further starts for the double-tap timeout
  * (`ViewConfiguration.doubleTapTimeoutMillis`). The other app takes a moment to cover

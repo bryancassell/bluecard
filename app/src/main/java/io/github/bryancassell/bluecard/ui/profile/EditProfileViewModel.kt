@@ -7,9 +7,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
-import io.github.bryancassell.bluecard.ui.SaveFailure
-import io.github.bryancassell.bluecard.ui.SaveRunner
 import io.github.bryancassell.bluecard.ui.StoredTextFields
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,7 @@ class EditProfileViewModel @Inject constructor(
     /** The unit number field's text. */
     val unitNumber = fields[UNIT_NUMBER]
 
-    private val saves = SaveRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope)
 
     /** Whether the fields have been saved and the page hasn't closed yet. */
     private val saved = MutableStateFlow(false)
@@ -97,7 +97,7 @@ class EditProfileViewModel @Inject constructor(
     }
 
     /** The scout has been told about [failure]. */
-    fun onSaveFailureShown(failure: SaveFailure) {
+    fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
     }
 

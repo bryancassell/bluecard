@@ -196,7 +196,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   import don't need.
 - **Save failures are a UI state too.** When something can't be saved, a
   repository throws an `IOException`. ViewModels that save progress launch each
-  write with a `SaveRunner` (`ui/SaveFailure.kt`), which puts a `SaveFailure` in
+  write with a `TaskRunner` (`ui/TaskFailure.kt`), which puts a `TaskFailure` in
   the screen's state, and the screen shows "Couldn't save. Try again." in a
   snackbar. That's the pattern in the UI layer guide's
   [Handle ViewModel events](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
@@ -204,7 +204,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen keeps showing what's stored, so a change that failed visibly didn't
   happen. Onboarding predates this and shows its own message under its button.
   Data management runs its import and clear as it runs its export, with its own
-  messages in one snackbar, rather than with a `SaveRunner`.
+  messages in one snackbar, rather than with a `TaskRunner`.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
   developer without a scout reporting it: BlueCard is published on Google Play,
@@ -316,9 +316,9 @@ both taps of a double tap can reach it.
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)).
 - **Screens start other apps with one `OtherAppStarter`** from
-  `rememberStartOtherApp` (`ui/`), shared among the screen's controls that open
-  another app. After a tap, it ignores taps for the double-tap timeout, so a
-  browser doesn't open two tabs, or an email app two drafts
+  `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
+  open another app. After a tap, it ignores taps for the double-tap timeout,
+  so a browser doesn't open two tabs, or an email app two drafts
   ([#97](https://github.com/bryancassell/bluecard/issues/97)). Data
   management's Edit and Clear all go through it too (`OtherAppStarter.tap`), so
   a tap just after Export or Import doesn't open a page or dialog under the file
@@ -336,7 +336,9 @@ both taps of a double tap can reach it.
   (`rememberCompletionDateFormatter`) are formatted in it too, so a sentence
   never mixes two languages: on a Persian phone, English strings read "Do 2 of
   3", not "Do ۲ of ۳". Code outside Compose, such as the PDF report, uses
-  `stringsLanguageResources` and `completionDateFormatter` (`text/`).
+  `stringsLanguageResources` and `completionDateFormatter` (`text/`). The
+  screens' resources come from the same function, so the PDF and the screens
+  can't format a string differently.
   `StringsLanguageTagTest` checks that each `strings.xml` names its own
   language: a wrong tag, such as "en" left in a translation, would replace the
   whole translation with English.
@@ -719,7 +721,7 @@ requires API 28 (BlueCard's minimum is 26).
   leaves Badge detail.
 
 Neither needs storage permissions. A report that can't be created or saved
-shows a snackbar, as a failed save does (`SaveRunner`).
+shows a snackbar, as a failed save does (`TaskRunner`).
 
 ### Clearing data
 

@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -47,7 +47,7 @@ class EditCounselorScreenTest {
     private var closes = 0
     private var discards = 0
     private val back = BackPresses()
-    private val saveFailuresShown = mutableListOf<SaveFailure>()
+    private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     private val ready = EditCounselorUiState.Ready(badgeName = "Camping", changed = false)
 
@@ -302,11 +302,11 @@ class EditCounselorScreenTest {
 
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
+        val failure = TaskFailure()
         show(ready.copy(changed = true, saveFailure = failure))
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
+        assertEquals(emptyList<TaskFailure>(), saveFailuresShown)
         assertEquals(0, closes)
 
         // A short snackbar shows for 4 seconds.

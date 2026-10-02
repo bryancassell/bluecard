@@ -13,8 +13,8 @@ import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.report.ReportRepository
-import io.github.bryancassell.bluecard.ui.SaveFailure
-import io.github.bryancassell.bluecard.ui.SaveRunner
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
@@ -41,10 +41,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
     private val reportRepository: ReportRepository,
     private val clock: Clock
 ) : ViewModel() {
-    // Reports are written like saves: a failure is logged and shown in a snackbar, with a
-    // message of its own.
-    private val reports = SaveRunner(viewModelScope)
-    private val saves = SaveRunner(viewModelScope)
+    // Separate runners, so a report that fails shows its own message, not a save's.
+    private val reports = TaskRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope)
     private val reportToShare = MutableStateFlow<Uri?>(null)
 
     /** The report being created to share, if there is one. */
@@ -127,7 +126,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     }
 
     /** The scout has been told about [failure]. */
-    fun onReportFailureShown(failure: SaveFailure) {
+    fun onReportFailureShown(failure: TaskFailure) {
         reports.onShown(failure)
     }
 
@@ -171,7 +170,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     }
 
     /** The scout has been told that a save failed ([failure]). */
-    fun onSaveFailureShown(failure: SaveFailure) {
+    fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
     }
 

@@ -23,7 +23,7 @@ data class DataManagementUiState(
 
 /**
  * A message for the scout about an export, import or clear. Each is its own object, as a
- * SaveFailure is, so one that repeats the last is shown again.
+ * TaskFailure is, so one that repeats the last is shown again.
  */
 class DataManagementMessage(val kind: Kind) {
     enum class Kind {

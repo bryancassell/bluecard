@@ -9,8 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.R
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -19,73 +17,74 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-private const val TAG = "SaveFailure"
+private const val TAG = "TaskFailure"
 
 /**
- * A save that failed, for the screen to tell the scout about. Each failure is its own object,
- * not a data class, so one that follows another is told apart from it even if the screen
- * never saw the first one cleared.
+ * A task that failed, such as saving progress or creating a report, for the screen to tell the
+ * scout about. Each failure is its own object, not a data class, so one that follows another is
+ * told apart from it even if the screen never saw the first one cleared.
  */
-class SaveFailure
+class TaskFailure
 
 /**
- * Runs a ViewModel's saves in [scope], and keeps the latest one that failed until its screen
- * has shown it with [SaveFailedSnackbarHost].
+ * Runs a ViewModel's tasks that can fail, such as saving progress or creating a report to
+ * share or save, in [scope]. Keeps the latest one that failed until its screen has shown it
+ * with [TaskFailureSnackbarHost] or [TaskFailureSnackbar].
  */
-class SaveRunner(private val scope: CoroutineScope) {
-    private val _failure = MutableStateFlow<SaveFailure?>(null)
+class TaskRunner(private val scope: CoroutineScope) {
+    private val _failure = MutableStateFlow<TaskFailure?>(null)
 
-    /** The latest save that failed, or null once the screen has shown it. */
-    val failure: StateFlow<SaveFailure?> = _failure.asStateFlow()
+    /** The latest task that failed, or null once the screen has shown it. */
+    val failure: StateFlow<TaskFailure?> = _failure.asStateFlow()
 
     /**
-     * Launches [save]. If it throws an [IOException], which repositories throw when data can't
-     * be saved, logs it and reports it in [failure]. Any other exception is a bug, so it still
-     * crashes the app, as in [catchLoadFailure].
+     * Launches [task]. If it throws an [IOException], which repositories throw when they can't
+     * read or save the scout's data or write a report, logs it and reports it in [failure]. Any
+     * other exception is a bug, so it still crashes the app, as in [catchLoadFailure].
      */
-    fun launch(save: suspend () -> Unit): Job = scope.launch {
+    fun launch(task: suspend () -> Unit): Job = scope.launch {
         try {
-            save()
+            task()
         } catch (e: IOException) {
             // The app reports caught exceptions nowhere else, so logcat and bug reports are
             // the only way to tell what failed and why.
-            Log.w(TAG, "Couldn't save", e)
-            _failure.value = SaveFailure()
+            Log.w(TAG, "Task failed", e)
+            _failure.value = TaskFailure()
         }
     }
 
     /** The screen has shown [shown]. A failure since then stays, to be shown next. */
-    fun onShown(shown: SaveFailure) {
+    fun onShown(shown: TaskFailure) {
         _failure.compareAndSet(shown, null)
     }
 }
 
 /**
- * Shows a snackbar with [message], which says progress couldn't be saved unless it's given,
- * for each [failure], as [MessageSnackbarHost] does.
+ * Shows a snackbar with [message], such as that progress couldn't be saved, for each [failure],
+ * as [MessageSnackbarHost] does.
  */
 @Composable
-fun SaveFailedSnackbarHost(
-    failure: SaveFailure?,
-    onShown: (SaveFailure) -> Unit,
-    modifier: Modifier = Modifier,
-    message: String = stringResource(R.string.save_failed)
+fun TaskFailureSnackbarHost(
+    failure: TaskFailure?,
+    message: String,
+    onShown: (TaskFailure) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     MessageSnackbarHost(failure, message, onShown, modifier)
 }
 
 /**
- * Shows [failure] in [hostState] as [SaveFailedSnackbarHost] does, for a screen that has more
+ * Shows [failure] in [hostState] as [TaskFailureSnackbarHost] does, for a screen that has more
  * than one kind of failure, each with its own [message], to show in one host: [hostState]
  * shows one snackbar at a time, as Material asks, and queues the rest. One still waiting its
  * turn when the screen goes is dropped, as one showing is.
  */
 @Composable
-fun SaveFailureSnackbar(
-    failure: SaveFailure?,
-    onShown: (SaveFailure) -> Unit,
-    hostState: SnackbarHostState,
-    message: String = stringResource(R.string.save_failed)
+fun TaskFailureSnackbar(
+    failure: TaskFailure?,
+    message: String,
+    onShown: (TaskFailure) -> Unit,
+    hostState: SnackbarHostState
 ) {
     MessageSnackbar(failure, message, onShown, hostState)
 }
@@ -96,7 +95,7 @@ fun SaveFailureSnackbar(
  * UI show a message from UI state:
  * https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events
  *
- * Each message must be its own object, as a [SaveFailure] is, so one that follows another is
+ * Each message must be its own object, as a [TaskFailure] is, so one that follows another is
  * shown too, even if it's the same kind.
  */
 @Composable

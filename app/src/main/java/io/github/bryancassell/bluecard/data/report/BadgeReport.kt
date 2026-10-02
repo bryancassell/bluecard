@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.columnValues
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
@@ -142,10 +143,7 @@ private fun Requirement.toReport(
 private fun TrackerDefinition.toReport(entries: List<TrackerEntry>): ReportTracker {
     // The rows filled in, without the empty rows of a tracker with a fixed number of them.
     val rows = numberedRows(entries).mapNotNull { (number, entry) ->
-        entry?.let { ReportTrackerRow(number, values(it)) }
+        entry?.let { ReportTrackerRow(number, columnValues(it)) }
     }
     return ReportTracker(this, rows)
 }
-
-private fun TrackerDefinition.values(entry: TrackerEntry): List<Pair<TrackerColumn, String>> =
-    columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }

@@ -56,7 +56,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.visualText
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
@@ -90,9 +90,9 @@ class BadgeDetailScreenTest {
     private var reportShareRequests = 0
     private var reportsShared = 0
     private val reportsSaved = mutableListOf<Uri>()
-    private val reportFailuresShown = mutableListOf<SaveFailure>()
+    private val reportFailuresShown = mutableListOf<TaskFailure>()
     private var clears = 0
-    private val saveFailuresShown = mutableListOf<SaveFailure>()
+    private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     /** The intents of the activities launched for a result, such as the file picker's. */
     private val launchedForResult = mutableListOf<Intent>()
@@ -982,12 +982,12 @@ class BadgeDetailScreenTest {
 
     @Test
     fun reportFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
+        val failure = TaskFailure()
         show(completed.copy(reportFailure = failure))
 
         val message = "Couldn't create the report. Try again."
         composeTestRule.onNodeWithText(message).assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), reportFailuresShown)
+        assertEquals(emptyList<TaskFailure>(), reportFailuresShown)
 
         // A short snackbar shows for 4 seconds.
         composeTestRule.mainClock.advanceTimeBy(5_000)
@@ -1078,26 +1078,26 @@ class BadgeDetailScreenTest {
 
     @Test
     fun saveFailed_showsMessage_thenReportsItShown() {
-        val failure = SaveFailure()
+        val failure = TaskFailure()
         show(startedBadge.copy(saveFailure = failure))
 
         val message = "Couldn't save. Try again."
         composeTestRule.onNodeWithText(message).assertIsDisplayed()
-        assertEquals(emptyList<SaveFailure>(), saveFailuresShown)
+        assertEquals(emptyList<TaskFailure>(), saveFailuresShown)
 
         // A short snackbar shows for 4 seconds.
         composeTestRule.mainClock.advanceTimeBy(5_000)
 
         composeTestRule.onNodeWithText(message).assertDoesNotExist()
         assertEquals(listOf(failure), saveFailuresShown)
-        assertEquals(emptyList<SaveFailure>(), reportFailuresShown)
+        assertEquals(emptyList<TaskFailure>(), reportFailuresShown)
     }
 
     // Material shows one snackbar at a time.
     @Test
     fun saveAndReportFailures_atOnce_showOneAfterTheOther() {
-        val reportFailure = SaveFailure()
-        val saveFailure = SaveFailure()
+        val reportFailure = TaskFailure()
+        val saveFailure = TaskFailure()
         show(
             completed.copy(
                 canClear = true,

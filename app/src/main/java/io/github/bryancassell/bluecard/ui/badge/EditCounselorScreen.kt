@@ -40,9 +40,9 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
-import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 
@@ -88,7 +88,7 @@ fun EditCounselorScreen(
     onSave: () -> Unit,
     onSaved: () -> Unit,
     onDiscard: () -> Unit,
-    onSaveFailureShown: (SaveFailure) -> Unit,
+    onSaveFailureShown: (TaskFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     ConfirmDiscardOnBack(
@@ -110,8 +110,9 @@ fun EditCounselorScreen(
                 LaunchedEffect(Unit) { currentOnSaved() }
             }
             CounselorFields(uiState, name, phone, email, onSave)
-            SaveFailedSnackbarHost(
+            TaskFailureSnackbarHost(
                 failure = uiState.saveFailure,
+                message = stringResource(R.string.save_failed),
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

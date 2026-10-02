@@ -61,9 +61,9 @@ import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.NumberInput
-import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
-import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.singleLineInput
@@ -113,7 +113,7 @@ fun TrackerEntryScreen(
     onSave: () -> Unit,
     onDelete: () -> Unit,
     onClose: () -> Unit,
-    onSaveFailureShown: (SaveFailure) -> Unit,
+    onSaveFailureShown: (TaskFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
     ConfirmDiscardOnBack(
@@ -160,8 +160,9 @@ fun TrackerEntryScreen(
                         TrackerEntryButtons(uiState, onSave, onDelete)
                     }
                 }
-                SaveFailedSnackbarHost(
+                TaskFailureSnackbarHost(
                     failure = uiState.saveFailure,
+                    message = stringResource(R.string.save_failed),
                     onShown = onSaveFailureShown,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )

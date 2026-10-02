@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.progress.storedDate
-import io.github.bryancassell.bluecard.ui.SaveFailure
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 
 /** What the Tracker entry screen shows. */
@@ -43,7 +43,7 @@ sealed interface TrackerEntryUiState {
         /** The entry was saved or deleted, so the screen closes. */
         val done: Boolean = false,
         /** Something couldn't be saved, and the scout hasn't been told yet. */
-        val saveFailure: SaveFailure? = null
+        val saveFailure: TaskFailure? = null
     ) : TrackerEntryUiState
 
     /**

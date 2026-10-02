@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.text
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Configuration.SCREENLAYOUT_LAYOUTDIR_MASK
 import android.content.res.Resources
 import android.os.LocaleList
 import androidx.core.os.LocaleListCompat
@@ -25,16 +26,40 @@ fun stringsLocale(context: Context): Locale =
  * that formats the app's strings, such as the PDF report. The first locale of their
  * configuration is [stringsLocale]'s, and their layout direction is its direction.
  */
+fun stringsLanguageResources(context: Context): Resources = stringsLanguageResourcesOrNull(
+    context,
+    context.resources.configuration,
+    stringsLanguage(context.resources),
+    keepLayoutDirection = false
+) ?: context.resources
+
+/**
+ * [context]'s resources for [configuration] with its locales set to [stringsLocales] for
+ * [stringsLanguage], or null if it already has them, as on an English phone. Their layout
+ * direction is the first locale's, or with [keepLayoutDirection], [configuration]'s. The
+ * screens (`ProvideStringsLanguageResources`) and code outside Compose, such as the PDF report,
+ * both make them here, so they format the app's strings the same way.
+ */
 // Lint warns that an app bundle may not install the resources for a locale set at runtime.
 // These are the language of the strings already shown and the device's own locales, so their
 // resources are installed.
 @SuppressLint("AppBundleLocaleChanges")
-fun stringsLanguageResources(context: Context): Resources {
-    val configuration = context.resources.configuration
-    val locales = stringsLocales(configuration.locales, stringsLanguage(context.resources))
-    if (locales == configuration.locales) return context.resources
-    // setLocales also sets the layout direction from the first locale.
-    val stringsConfiguration = Configuration(configuration).apply { setLocales(locales) }
+internal fun stringsLanguageResourcesOrNull(
+    context: Context,
+    configuration: Configuration,
+    stringsLanguage: Locale,
+    keepLayoutDirection: Boolean
+): Resources? {
+    val locales = stringsLocales(configuration.locales, stringsLanguage)
+    if (locales == configuration.locales) return null
+    val stringsConfiguration = Configuration(configuration).apply {
+        // setLocales also sets the layout direction from the first locale.
+        setLocales(locales)
+        if (keepLayoutDirection) {
+            screenLayout = screenLayout and SCREENLAYOUT_LAYOUTDIR_MASK.inv() or
+                (configuration.screenLayout and SCREENLAYOUT_LAYOUTDIR_MASK)
+        }
+    }
     return context.createConfigurationContext(stringsConfiguration).resources
 }
 
