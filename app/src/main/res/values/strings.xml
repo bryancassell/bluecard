@@ -126,9 +126,9 @@
     <string name="date_picker_cancel">Cancel</string>
     <!-- Heading of a requirement's page, with its official number, such as "Requirement 4b". -->
     <string name="requirement_detail_title">Requirement %1$s</string>
-    <!-- Shown in place of a requirement's page when the requirements the badge uses don't have
-         it, such as after the badge moves to another version. -->
-    <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge uses.</string>
+    <!-- Shown in place of a requirement's page when the requirements the badge or rank uses
+         don't have it, such as after the badge or rank moves to another version. -->
+    <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge or rank uses.</string>
     <!-- Button at the bottom of a badge's or a requirement's page, which asks before clearing
          what the scout recorded for it, and the dialog's button that clears it, which Clear
          all's dialog on Data management uses too. -->
@@ -173,8 +173,8 @@
          session?" -->
     <string name="tracker_entry_delete_title">Delete this %1$s?</string>
     <string name="tracker_entry_delete_message">What you entered in it will be removed.</string>
-    <!-- Shown in place of a tracker row's page when the requirements the badge uses don't have
-         the tracker or the row, such as after the row was deleted. -->
+    <!-- Shown in place of a tracker row's page when the requirements the badge or rank uses
+         don't have the tracker or the row, such as after the row was deleted. -->
     <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
     <string name="data_management_title">Data management</string>
     <string name="data_management_profile_heading">Name and unit</string>

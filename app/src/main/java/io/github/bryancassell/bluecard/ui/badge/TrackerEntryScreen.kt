@@ -73,7 +73,7 @@ import java.time.LocalDate
 /** Connects the Tracker entry screen to its ViewModel. */
 @Composable
 fun TrackerEntryRoute(
-    badgeId: String,
+    advancementId: String,
     number: String,
     entryId: Long?,
     rowNumber: Int?,
@@ -81,7 +81,7 @@ fun TrackerEntryRoute(
     modifier: Modifier = Modifier,
     viewModel: TrackerEntryViewModel =
         hiltViewModel<TrackerEntryViewModel, TrackerEntryViewModel.Factory> {
-            it.create(badgeId, number, entryId, rowNumber)
+            it.create(advancementId, number, entryId, rowNumber)
         }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -178,7 +178,7 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = uiState.badgeName,
+            text = uiState.advancementName,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

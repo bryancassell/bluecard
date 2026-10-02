@@ -169,8 +169,13 @@ class RequirementItemTest {
         fun Requirement.notRecorded(
             progress: Map<String, RequirementProgress> = emptyMap(),
             partOfHasEnough: Boolean = false,
-            badgeCompletedOnPriorDate: Boolean = true
-        ) = toItem(progress, emptyMap(), partOfHasEnough, badgeCompletedOnPriorDate).notRecorded
+            advancementCompletedOnPriorDate: Boolean = true
+        ) = toItem(
+            progress,
+            emptyMap(),
+            partOfHasEnough,
+            advancementCompletedOnPriorDate
+        ).notRecorded
 
         assertTrue(leaf.notRecorded())
         assertTrue(twoOfThree.notRecorded())
@@ -179,7 +184,7 @@ class RequirementItemTest {
         assertFalse(twoOfThree.notRecorded(done("2a")))
         assertFalse(leaf.notRecorded(done("1")))
         assertFalse(leaf.notRecorded(partOfHasEnough = true))
-        assertFalse(leaf.notRecorded(badgeCompletedOnPriorDate = false))
+        assertFalse(leaf.notRecorded(advancementCompletedOnPriorDate = false))
     }
 
     @Test

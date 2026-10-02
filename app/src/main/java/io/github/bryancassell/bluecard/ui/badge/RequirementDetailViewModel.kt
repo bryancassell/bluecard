@@ -11,6 +11,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
@@ -30,12 +31,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * One requirement of a badge and its sub-requirements, with the scout's progress: whether
- * it's complete and when, their comment on it, and its tracker.
+ * One requirement of a badge or rank and its sub-requirements, with the scout's progress:
+ * whether it's complete and when, their comment on it, and its tracker.
  */
 @HiltViewModel(assistedFactory = RequirementDetailViewModel.Factory::class)
 class RequirementDetailViewModel @AssistedInject constructor(
-    @Assisted("badgeId") private val badgeId: String,
+    @Assisted("advancementId") private val advancementId: String,
     @Assisted("number") private val number: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
@@ -53,24 +54,24 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     private val saves = TaskRunner(viewModelScope)
     private val recorder =
-        CompletionRecorder(badgeId, number, catalogRepository, progressRepository, clock)
+        CompletionRecorder(advancementId, number, catalogRepository, progressRepository, clock)
 
     /**
-     * The requirement as recorded, or null if the badge's requirements don't have it. It's
-     * built when the catalog or progress changes, not on each keystroke in the comment.
+     * The requirement as recorded, or null if the badge's or rank's requirements don't have it.
+     * It's built when the catalog or progress changes, not on each keystroke in the comment.
      */
     private val recorded = combine(
-        flow { emit(catalogRepository.getBadges()) },
-        progressRepository.observeProgress(badgeId)
+        flow { emit(catalogRepository.getAdvancements()) },
+        progressRepository.observeProgress(advancementId)
     ) { catalog, progress ->
         // Checked on every change, not only when the page opens, because which version
-        // the badge uses depends on its progress.
-        val found = catalog.badgeRequirements(badgeId, progress)
+        // the badge or rank uses depends on its progress.
+        val found = catalog.advancementRequirements(advancementId, progress)
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
             val numbersWithin = requirement.numbersWithin()
             RecordedRequirement(
-                badgeName = found.badge.name,
+                advancementName = found.advancement.name,
                 requirement = found.item(requirement),
                 completedDate = if (requirement.completesFromRows) {
                     requirement.completion(found.recorded, found.trackerEntries)?.date
@@ -88,7 +89,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     }
 
     private class RecordedRequirement(
-        val badgeName: String,
+        val advancementName: String,
         val requirement: RequirementItem,
         val completedDate: LocalDate?,
         val rowsCompletedDate: LocalDate?,
@@ -119,7 +120,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         shown?.let { followSavedComment(before = it.comment, saved = recorded.comment) }
         shown = recorded
         RequirementDetailUiState.Ready(
-            badgeName = recorded.badgeName,
+            advancementName = recorded.advancementName,
             requirement = recorded.requirement,
             completedDate = recorded.completedDate,
             rowsCompletedDate = recorded.rowsCompletedDate,
@@ -153,9 +154,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val rowCount = shown?.requirement?.takeIf { it.completesFromRows }?.tracker?.rowCount
         saves.launch {
             if (rowCount != null) {
-                progressRepository.setCompletedFromRowsDate(badgeId, number, rowCount, date)
+                progressRepository.setCompletedFromRowsDate(advancementId, number, rowCount, date)
             } else {
-                progressRepository.setRequirementCompletedDate(badgeId, number, date)
+                progressRepository.setRequirementCompletedDate(advancementId, number, date)
             }
         }
     }
@@ -165,10 +166,10 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val text = comment.text.toString()
         saves.launch {
             progressRepository.setRequirementComment(
-                badgeId,
+                advancementId,
                 number,
                 text,
-                catalogRepository.getBadges().badgeStart(badgeId, today())
+                catalogRepository.getAdvancements().badgeStart(advancementId, today())
             )
         }
     }
@@ -218,7 +219,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            @Assisted("badgeId") badgeId: String,
+            @Assisted("advancementId") advancementId: String,
             @Assisted("number") number: String
         ): RequirementDetailViewModel
     }

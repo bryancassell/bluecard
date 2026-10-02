@@ -12,26 +12,57 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
-// The bundled merit badge catalog (assets/catalog.json). The format is documented for
-// authors in docs/catalog.md.
+// The bundled catalog of merit badges and ranks (assets/catalog.json). The format is documented
+// for authors in docs/catalog.md.
 
 @Serializable
-data class Catalog(val formatVersion: Int, val badges: List<MeritBadge>)
+data class Catalog(
+    val formatVersion: Int,
+    val badges: List<MeritBadge>,
+    /** The ranks, Scout through Eagle, in the order they're earned. */
+    val ranks: List<Rank>
+)
+
+/**
+ * A merit badge or a rank: the scout earns it by completing its requirements, which the
+ * requirement pages, completion and trackers handle the same way for both.
+ */
+sealed interface Advancement {
+    /**
+     * Stable ID that progress is stored against, such as "personal-fitness". Unique across
+     * badges and ranks, because their progress is stored in the same tables.
+     */
+    val id: String
+    val name: String
+
+    /** Our own short description. */
+    val summary: String
+
+    /** Its official Scouting America page. */
+    val officialUrl: String
+    val requirementVersions: List<RequirementsVersion>
+}
 
 @Serializable
 data class MeritBadge(
-    /** Stable ID that progress is stored against, such as "personal-fitness". */
-    val id: String,
-    val name: String,
-    /** Our own short description of the badge. */
-    val summary: String,
-    /** The badge's official Scouting America page. */
-    val officialUrl: String,
+    override val id: String,
+    override val name: String,
+    override val summary: String,
+    override val officialUrl: String,
     val eagleRequired: Boolean = false,
     /** Eagle-required badges that are alternatives to each other share a group. */
     val eagleGroup: String? = null,
-    val requirementVersions: List<RequirementsVersion>
-)
+    override val requirementVersions: List<RequirementsVersion>
+) : Advancement
+
+@Serializable
+data class Rank(
+    override val id: String,
+    override val name: String,
+    override val summary: String,
+    override val officialUrl: String,
+    override val requirementVersions: List<RequirementsVersion>
+) : Advancement
 
 @Serializable
 data class RequirementsVersion(

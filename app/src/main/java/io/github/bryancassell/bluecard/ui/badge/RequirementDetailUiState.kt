@@ -12,7 +12,8 @@ sealed interface RequirementDetailUiState {
     data object LoadFailed : RequirementDetailUiState
 
     data class Ready(
-        val badgeName: String,
+        /** The name of the badge or rank the requirement is part of. */
+        val advancementName: String,
         val requirement: RequirementItem,
         /**
          * When the scout completed it, for a requirement they marked complete, or its own work,
@@ -42,9 +43,10 @@ sealed interface RequirementDetailUiState {
     ) : RequirementDetailUiState
 
     /**
-     * The catalog doesn't have the badge or its requirements version ([badgeRequirements]),
-     * or that version doesn't have this requirement. The last can also happen with a released
-     * catalog, when the badge moves to another version, such as when its progress is cleared.
+     * The catalog doesn't have the badge or rank or its requirements version
+     * ([advancementRequirements]), or that version doesn't have this requirement. The last can
+     * also happen with a released catalog, when the badge or rank moves to another version, such
+     * as when its progress is cleared.
      */
     data object Unavailable : RequirementDetailUiState
 }

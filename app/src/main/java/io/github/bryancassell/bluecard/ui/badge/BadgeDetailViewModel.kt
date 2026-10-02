@@ -74,9 +74,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
         reports.failure,
         saves.failure
     ) { (catalog, eagleGroups), progress, reportToShare, reportFailure, saveFailure ->
-        val found = catalog.badgeRequirements(badgeId, progress)
+        val found = catalog.advancementRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
-        val badge = found.badge
+        val badge = found.advancement
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,

@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
@@ -9,24 +9,26 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 
-/** A badge, the requirements the scout works on, and what they've recorded against them. */
-data class BadgeRequirements(
-    val badge: MeritBadge,
-    /** The version the badge is worked on ([requirementsVersionFor]). */
+/**
+ * A badge or rank, the requirements the scout works on, and what they've recorded against them.
+ */
+data class AdvancementRequirements<out A : Advancement>(
+    val advancement: A,
+    /** The version it's worked on ([requirementsVersionFor]). */
     val version: RequirementsVersion,
     /** The scout's recorded requirement progress, keyed by requirement number. */
     val recorded: Map<String, RequirementProgress>,
     /** The scout's tracker entries, keyed by requirement number. */
     val trackerEntries: Map<String, List<TrackerEntry>>,
-    /** Whether the scout marked the badge completed on a prior date. */
+    /** Whether the scout marked it completed on a prior date. */
     val completedOnPriorDate: Boolean = false
 ) {
-    /** [requirement] of this badge as a row. */
+    /** [requirement] of this badge or rank as a row. */
     fun item(requirement: Requirement) = requirement.toItem(
         recorded,
         trackerEntries,
         partOfHasEnough = partOfHasEnough(requirement.number),
-        badgeCompletedOnPriorDate = completedOnPriorDate
+        advancementCompletedOnPriorDate = completedOnPriorDate
     )
 
     /**
@@ -49,19 +51,19 @@ data class BadgeRequirements(
 }
 
 /**
- * Badge [badgeId] from this catalog with the scout's [progress] on it, or null if the
- * catalog doesn't have the badge or the version it was started on. Only a catalog edited
- * during development can cause that: released catalogs keep every badge and version they
- * shipped (ARCHITECTURE.md, Requirement versions).
+ * Badge or rank [id] from this catalog with the scout's [progress] on it, or null if the
+ * catalog doesn't have it or the version it was started on. Only a catalog edited during
+ * development can cause that: released catalogs keep every badge, rank and version they shipped
+ * (ARCHITECTURE.md, Requirement versions).
  */
-fun List<MeritBadge>.badgeRequirements(
-    badgeId: String,
+fun <A : Advancement> List<A>.advancementRequirements(
+    id: String,
     progress: BadgeProgressDetails?
-): BadgeRequirements? {
-    val badge = find { it.id == badgeId } ?: return null
-    val version = badge.requirementsVersionFor(progress) ?: return null
-    return BadgeRequirements(
-        badge,
+): AdvancementRequirements<A>? {
+    val advancement = find { it.id == id } ?: return null
+    val version = advancement.requirementsVersionFor(progress) ?: return null
+    return AdvancementRequirements(
+        advancement,
         version,
         progress?.requirements.orEmpty().associateBy { it.requirementNumber },
         progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber },

@@ -78,7 +78,7 @@ class TrackerEntryScreenTest {
 
     /** A new entry, with nothing in it yet. */
     private val newEntry = TrackerEntryUiState.Ready(
-        badgeName = "Personal Fitness",
+        advancementName = "Personal Fitness",
         requirementNumber = "7a",
         rowTitle = "Session",
         rowNumber = 3,

@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -14,7 +16,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class BadgeRequirementsTest {
+class AdvancementRequirementsTest {
     private val older = RequirementsVersion(
         LocalDate.of(2025, 1, 1),
         listOf(Requirement("1", "An older first requirement."))
@@ -59,20 +61,20 @@ class BadgeRequirementsTest {
     @Test
     fun notStarted_isBadgeOnNewestVersion_withNothingRecorded() {
         assertEquals(
-            BadgeRequirements(camping, newest, emptyMap(), emptyMap()),
-            catalog.badgeRequirements("camping", null)
+            AdvancementRequirements(camping, newest, emptyMap(), emptyMap()),
+            catalog.advancementRequirements("camping", null)
         )
     }
 
     @Test
     fun completedOnPriorDate_isTold_andItsRequirementsAreNotRecorded() {
         val started = startedOn(newest.effectiveDate)
-        assertFalse(catalog.badgeRequirements("camping", started)!!.completedOnPriorDate)
+        assertFalse(catalog.advancementRequirements("camping", started)!!.completedOnPriorDate)
 
         val marked = started.copy(
             badge = started.badge.copy(completedOnPriorDate = LocalDate.of(2025, 8, 1))
         )
-        val found = catalog.badgeRequirements("camping", marked)!!
+        val found = catalog.advancementRequirements("camping", marked)!!
 
         assertTrue(found.completedOnPriorDate)
         assertTrue(found.item(newest.requirements.first()).notRecorded)
@@ -80,7 +82,7 @@ class BadgeRequirementsTest {
 
     @Test
     fun started_isVersionItWasStartedOn_withProgressByNumber() {
-        val found = catalog.badgeRequirements("camping", startedOn(older.effectiveDate, "1"))
+        val found = catalog.advancementRequirements("camping", startedOn(older.effectiveDate, "1"))
 
         assertEquals(older, found?.version)
         assertEquals(setOf("1"), found?.recorded?.keys)
@@ -97,13 +99,16 @@ class BadgeRequirementsTest {
 
         assertEquals(
             mapOf("2a" to listOf(first, second), "1" to listOf(other)),
-            catalog.badgeRequirements("camping", progress)?.trackerEntries
+            catalog.advancementRequirements("camping", progress)?.trackerEntries
         )
     }
 
     @Test
     fun item_isRequirementWithWhatWasRecorded() {
-        val found = catalog.badgeRequirements("camping", startedOn(newest.effectiveDate, "2a"))!!
+        val found = catalog.advancementRequirements(
+            "camping",
+            startedOn(newest.effectiveDate, "2a")
+        )!!
 
         assertEquals(
             RequirementItem("2", "Do one of these.", Choice(1, 2), true, markedByHand = false),
@@ -114,7 +119,10 @@ class BadgeRequirementsTest {
     @Test
     fun item_partOfCompletedRequirement_isNotNeeded() {
         // 2a completes 2, which needs one of its two choices.
-        val found = catalog.badgeRequirements("camping", startedOn(newest.effectiveDate, "2a"))!!
+        val found = catalog.advancementRequirements(
+            "camping",
+            startedOn(newest.effectiveDate, "2a")
+        )!!
 
         assertTrue(found.item(newest.find("2b")!!).notNeeded)
         assertTrue(found.item(newest.find("2b(1)")!!).notNeeded)
@@ -132,7 +140,7 @@ class BadgeRequirementsTest {
             }
         )
         val found = listOf(badge("camping", withOwnWork))
-            .badgeRequirements("camping", startedOn(withOwnWork.effectiveDate, "2a"))!!
+            .advancementRequirements("camping", startedOn(withOwnWork.effectiveDate, "2a"))!!
 
         assertFalse(found.item(withOwnWork.find("2")!!).completed)
         assertTrue(found.item(withOwnWork.find("2b")!!).notNeeded)
@@ -141,19 +149,36 @@ class BadgeRequirementsTest {
 
     @Test
     fun item_beforeARequirementItsPartOfIsComplete_isNeeded() {
-        val found = catalog.badgeRequirements("camping", null)!!
+        val found = catalog.advancementRequirements("camping", null)!!
 
         assertFalse(found.item(newest.find("2b(1)")!!).notNeeded)
     }
 
     @Test
+    fun rank_isFoundAmongTheBadges() {
+        val tenderfoot = Rank(
+            id = "tenderfoot",
+            name = "Tenderfoot",
+            summary = "Our summary.",
+            officialUrl = "https://www.scouting.org/tenderfoot/",
+            requirementVersions = listOf(newest)
+        )
+        val advancements: List<Advancement> = catalog + tenderfoot
+
+        assertEquals(
+            AdvancementRequirements(tenderfoot, newest, emptyMap(), emptyMap()),
+            advancements.advancementRequirements("tenderfoot", null)
+        )
+    }
+
+    @Test
     fun badgeMissingFromCatalog_isNull() {
-        assertNull(catalog.badgeRequirements("retired-badge", null))
+        assertNull(catalog.advancementRequirements("retired-badge", null))
     }
 
     @Test
     fun versionMissingFromCatalog_isNull() {
-        assertNull(catalog.badgeRequirements("camping", startedOn(LocalDate.of(2024, 1, 1))))
+        assertNull(catalog.advancementRequirements("camping", startedOn(LocalDate.of(2024, 1, 1))))
     }
 
     @Test
@@ -169,7 +194,7 @@ class BadgeRequirementsTest {
                 TrackerEntry(1, "camping", "2b(1)", values = mapOf("miles" to "5"))
             )
         )
-        val found = catalog.badgeRequirements("camping", progress)!!
+        val found = catalog.advancementRequirements("camping", progress)!!
 
         assertTrue(found.hasRecorded(listOf("1", "2a")))
         assertTrue(found.hasRecorded(listOf("2b")))

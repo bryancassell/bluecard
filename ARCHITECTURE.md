@@ -38,6 +38,7 @@ own documentation says so, and each such claim links to the page.
   - [Requirement versions](#requirement-versions)
   - [Requirement IDs](#requirement-ids)
   - [Shipping and authoring](#shipping-and-authoring)
+  - [Ranks](#ranks)
 - [Data model](#data-model)
   - [Completion](#completion)
 - [Key flows](#key-flows)
@@ -474,7 +475,8 @@ io.github.bryancassell.bluecard
 │   ├── onboarding/
 │   ├── home/
 │   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
-│   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
+│   ├── badge/          Badge detail, Edit counselor, and the requirement pages badges and
+│   │                   ranks share
 │   ├── data/           Clear, export, import
 │   ├── profile/        Edit name and unit, and the name and unit fields Onboarding shares
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
@@ -507,7 +509,8 @@ io.github.bryancassell.bluecard
 Badge detail and each requirement's page show one level of the requirement
 tree (see [`PRD.md`](PRD.md#design-decisions)'s Requirement list). Both show
 the requirements version the badge was started on, or the newest version for a
-badge the scout hasn't started (`data/progress/BadgeVersion.kt`).
+badge the scout hasn't started (`data/progress/BadgeVersion.kt`). Requirement
+detail and Tracker entry serve ranks' requirements too ([Ranks](#ranks)).
 
 ## Merit badge catalog
 
@@ -588,13 +591,35 @@ requirement progress fresh, numbers only need to be unique within one version.
   started them is tracked in
   [#55](https://github.com/bryancassell/bluecard/issues/55).
 
+### Ranks
+
+The catalog also lists the seven ranks, Scout through Eagle, in the order
+they're earned. Most of what a badge has carries over: numbered requirements
+with sub-requirements, trackers, requirement versions and completion. So a
+`Rank` uses the same `RequirementsVersion`, `Requirement` and
+`TrackerDefinition` types as a `MeritBadge`, and both are an `Advancement`,
+which the code that serves both works on.
+
+- **Rank progress shares the badge progress tables** (`badge_progress`,
+  `requirement_progress`, `tracker_entry`), keyed by the rank's ID, so ranks
+  needed no schema change. Badge and rank IDs must therefore be unique across
+  both, which the catalog test checks. Revisit this if it gets in the way.
+- **"Badge" in the progress layer means a badge or a rank** (`BadgeProgress`,
+  `badgeId`, `badgeStart`), matching its tables. Code above it says
+  `advancement` where it means either, such as the `advancementId` of
+  Requirement detail and Tracker entry, which find it among both
+  (`getAdvancements` in `data/catalog/CatalogRepository.kt`). A screen or count
+  for one kind reads only that kind (`getBadges` or `getRanks`), so a rank never
+  shows up as a badge.
+
 ## Data model
 
 At a high level. The exact fields are in the code.
 
 - **Profile** (DataStore): name, unit number.
-- **Catalog** (JSON, read-only): `MeritBadge` → `RequirementsVersion` →
-  `Requirement` (a tree) → optional `TrackerDefinition`.
+- **Catalog** (JSON, read-only): `MeritBadge` or `Rank` (each an `Advancement`)
+  → `RequirementsVersion` → `Requirement` (a tree) → optional
+  `TrackerDefinition`.
 - **Progress** (Room, database file `bluecard.db`), keyed by catalog IDs
   (strings), so progress survives catalog updates. Only a started badge has
   progress; its requirement progress and tracker entries are deleted with it.
@@ -694,8 +719,8 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 - **Screens call `ProgressRepository` functions** (set completed date, set
   notes, add tracker row, set counselor, mark badge completed on a date) and
   observe progress as a `Flow`, so they update as soon as data is saved.
-- **Recording anything starts the badge**, on the requirements version its
-  pages show until then (the newest), dated today (`badgeStart` in
+- **Recording anything starts the badge or rank**, on the requirements version
+  its pages show until then (the newest), dated today (`badgeStart` in
   `data/progress/BadgeVersion.kt`). There's no separate "start" step.
   `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry`,
   `setCounselor` and `setCompletedOnPriorDate` take a `BadgeStart`, and
@@ -943,6 +968,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
+| [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |

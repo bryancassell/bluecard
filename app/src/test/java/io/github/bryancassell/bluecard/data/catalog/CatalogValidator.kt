@@ -12,30 +12,39 @@ object CatalogValidator {
             add("formatVersion is ${catalog.formatVersion}; this app reads $CATALOG_FORMAT_VERSION")
         }
         if (catalog.badges.isEmpty()) add("the catalog has no badges")
-        catalog.badges.groupBy { it.id }.filterValues { it.size > 1 }.keys.forEach {
-            add("badge id \"$it\" is used more than once")
-        }
+        // Badge and rank progress is stored in the same tables, keyed by ID.
+        (catalog.badges + catalog.ranks).groupBy { it.id }.filterValues { it.size > 1 }.keys
+            .forEach { add("id \"$it\" is used more than once") }
         catalog.badges.forEach { addAll(validateBadge(it)) }
+        catalog.ranks.forEach { addAll(validateAdvancement("rank \"${it.id}\"", it)) }
     }
 
     private fun validateBadge(badge: MeritBadge): List<String> = buildList {
         val where = "badge \"${badge.id}\""
-        if (!idPattern.matches(badge.id)) add("$where: id must be lowercase words joined by '-'")
-        if (badge.name.isBlank()) add("$where: name is blank")
-        if (badge.summary.isBlank()) add("$where: summary is blank")
-        if (!badge.officialUrl.startsWith(OFFICIAL_URL_PREFIX)) {
-            add("$where: officialUrl must start with $OFFICIAL_URL_PREFIX")
-        }
+        addAll(validateAdvancement(where, badge))
         if (badge.eagleGroup != null && !badge.eagleRequired) {
             add("$where: has an eagleGroup but is not eagleRequired")
         }
-        if (badge.requirementVersions.isEmpty()) add("$where: has no requirement versions")
-        badge.requirementVersions.groupBy { it.effectiveDate }.filterValues { it.size > 1 }.keys
-            .forEach { add("$where: more than one version effective $it") }
-        badge.requirementVersions.forEach { version ->
-            addAll(validateVersion("$where, version ${version.effectiveDate}", version))
-        }
     }
+
+    private fun validateAdvancement(where: String, advancement: Advancement): List<String> =
+        buildList {
+            if (!idPattern.matches(advancement.id)) {
+                add("$where: id must be lowercase words joined by '-'")
+            }
+            if (advancement.name.isBlank()) add("$where: name is blank")
+            if (advancement.summary.isBlank()) add("$where: summary is blank")
+            if (!advancement.officialUrl.startsWith(OFFICIAL_URL_PREFIX)) {
+                add("$where: officialUrl must start with $OFFICIAL_URL_PREFIX")
+            }
+            val versions = advancement.requirementVersions
+            if (versions.isEmpty()) add("$where: has no requirement versions")
+            versions.groupBy { it.effectiveDate }.filterValues { it.size > 1 }.keys
+                .forEach { add("$where: more than one version effective $it") }
+            versions.forEach { version ->
+                addAll(validateVersion("$where, version ${version.effectiveDate}", version))
+            }
+        }
 
     private fun validateVersion(where: String, version: RequirementsVersion): List<String> =
         buildList {

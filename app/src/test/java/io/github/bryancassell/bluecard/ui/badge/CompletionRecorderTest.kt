@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -63,6 +64,31 @@ class CompletionRecorderTest {
 
         assertEquals(BadgeProgress("camping", newest, today), progress()?.badge)
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun checking_onUnstartedRank_startsItAndDatesItToday() = runTest {
+        catalogRepository.ranks = listOf(
+            Rank(
+                id = "tenderfoot",
+                name = "Tenderfoot",
+                summary = "Our summary of Tenderfoot.",
+                officialUrl = "https://www.scouting.org/tenderfoot/",
+                requirementVersions = listOf(
+                    RequirementsVersion(newest, listOf(Requirement("1a", "Pack for a campout.")))
+                )
+            )
+        )
+
+        CompletionRecorder("tenderfoot", "1a", catalogRepository, progressRepository, clock)
+            .setCompleted(true)
+
+        val progress = progressRepository.observeProgress("tenderfoot").first()
+        assertEquals(BadgeProgress("tenderfoot", newest, today), progress?.badge)
+        assertEquals(
+            listOf(RequirementProgress("tenderfoot", "1a", true, today)),
+            progress?.requirements
+        )
     }
 
     @Test

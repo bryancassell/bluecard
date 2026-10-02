@@ -118,11 +118,13 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate =
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 RequirementDetailRoute(
-                    badgeId = key.badgeId,
+                    advancementId = key.advancementId,
                     number = key.number,
-                    onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
+                    onOpenRequirement = { navigate(RequirementDetail(key.advancementId, it)) },
                     onOpenTrackerEntry = { entryId, rowNumber ->
-                        navigate(TrackerEntryDetail(key.badgeId, key.number, entryId, rowNumber))
+                        navigate(
+                            TrackerEntryDetail(key.advancementId, key.number, entryId, rowNumber)
+                        )
                     },
                     // Once the scout discards an unsaved comment.
                     onClose = { backStack.closeIfOnTop(key) }
@@ -130,7 +132,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             }
             entry<TrackerEntryDetail> { key ->
                 TrackerEntryRoute(
-                    badgeId = key.badgeId,
+                    advancementId = key.advancementId,
                     number = key.number,
                     entryId = key.entryId,
                     rowNumber = key.rowNumber,

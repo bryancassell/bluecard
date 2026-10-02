@@ -66,14 +66,14 @@ class EditCounselorViewModel @AssistedInject constructor(
     ) { catalog, progress, _, isSaved, saveFailure ->
         // Unavailable when Badge detail is, which then doesn't open this page. Starting the badge
         // on a save (badgeStart) needs the badge in the catalog too.
-        val found = catalog.badgeRequirements(badgeId, progress)
+        val found = catalog.advancementRequirements(badgeId, progress)
             ?: return@combine EditCounselorUiState.Unavailable
         val stored = progress?.badge?.counselor
         fields.loadOnce {
             mapOf(NAME to stored?.name, PHONE to stored?.phone, EMAIL to stored?.email)
         }
         EditCounselorUiState.Ready(
-            badgeName = found.badge.name,
+            badgeName = found.advancement.name,
             // Not once saved: the page is closing, though the saved counselor may not be read
             // yet.
             changed = !isSaved && typed().normalized() != stored,
