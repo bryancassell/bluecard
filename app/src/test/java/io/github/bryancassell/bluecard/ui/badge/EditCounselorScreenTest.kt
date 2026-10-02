@@ -247,16 +247,18 @@ class EditCounselorScreenTest {
     fun saved_closesThePageOnce() {
         var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(changed = true))
         composeTestRule.setContent {
-            EditCounselorScreen(
-                uiState = uiState,
-                name = name,
-                phone = phone,
-                email = email,
-                onSave = {},
-                onSaved = { closes++ },
-                onDiscard = {},
-                onSaveFailureShown = {}
-            )
+            back.Content {
+                EditCounselorScreen(
+                    uiState = uiState,
+                    name = name,
+                    phone = phone,
+                    email = email,
+                    onSave = {},
+                    onSaved = { closes++ },
+                    onDiscard = {},
+                    onSaveFailureShown = {}
+                )
+            }
         }
         assertEquals(0, closes)
 
@@ -275,16 +277,18 @@ class EditCounselorScreenTest {
         // As when the page is opened again before its ViewModel is cleared.
         var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(saved = true))
         composeTestRule.setContent {
-            EditCounselorScreen(
-                uiState = uiState,
-                name = name,
-                phone = phone,
-                email = email,
-                onSave = {},
-                onSaved = { closes++ },
-                onDiscard = {},
-                onSaveFailureShown = {}
-            )
+            back.Content {
+                EditCounselorScreen(
+                    uiState = uiState,
+                    name = name,
+                    phone = phone,
+                    email = email,
+                    onSave = {},
+                    onSaved = { closes++ },
+                    onDiscard = {},
+                    onSaveFailureShown = {}
+                )
+            }
         }
         composeTestRule.waitForIdle()
 

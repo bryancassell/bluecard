@@ -73,7 +73,9 @@ class EditCounselorViewModel @AssistedInject constructor(
         }
         EditCounselorUiState.Ready(
             badgeName = found.badge.name,
-            changed = typed().normalized() != stored,
+            // Not once saved: the page is closing, though the saved counselor may not be read
+            // yet.
+            changed = !isSaved && typed().normalized() != stored,
             saved = isSaved,
             saveFailure = saveFailure
         )

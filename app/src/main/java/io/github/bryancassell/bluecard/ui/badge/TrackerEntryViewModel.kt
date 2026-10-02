@@ -144,7 +144,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
                 }
                 .toMap(),
             canSave = !saving && !done && isSavable(row, stored),
-            changed = stored != row.saved,
+            // Not while they're saved: Back then leaves them to be saved.
+            changed = !saving && !done && differsFromSaved(row, stored),
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,
@@ -207,7 +208,15 @@ class TrackerEntryViewModel @AssistedInject constructor(
      * is deleted instead.
      */
     private fun isSavable(row: LoadedRow, stored: Map<String, String>): Boolean =
-        row.tracker.columns.any { it.id in stored } && stored != row.saved
+        row.tracker.columns.any { it.id in stored } && differsFromSaved(row, stored)
+
+    /**
+     * Whether [stored], the values to save ([valuesToSave]), differ from [row]'s saved values
+     * as the fields would save them. So a saved value they'd leave out, such as a number
+     * without a digit from an import, isn't a change until the scout edits the row.
+     */
+    private fun differsFromSaved(row: LoadedRow, stored: Map<String, String>): Boolean =
+        stored != valuesToSave(row, row.saved)
 
     /**
      * Fills in the fields when the page loads: with the values the system stopped the app with,

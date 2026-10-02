@@ -4,15 +4,21 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import io.github.bryancassell.bluecard.ui.LocalUnsavedChanges
+import io.github.bryancassell.bluecard.ui.UnsavedChanges
 
 /**
- * Back for a screen under test, as the app gives it. [Content] puts a handler under the screen,
- * as the navigation root's, which counts each Back the screen doesn't take ([closes]), and
- * [press] presses Back.
+ * Back for a screen under test, as the navigation root gives it. [Content] provides the
+ * screen's [unsavedChanges] and puts a handler under the screen that asks to discard them,
+ * if it has any, or else counts a Back that would close the page ([closes]). [press] presses
+ * Back.
  */
 class BackPresses {
-    /** How many times Back reached the handler under the screen, which would close the page. */
+    val unsavedChanges = UnsavedChanges()
+
+    /** How many times Back would have closed the page. */
     var closes = 0
         private set
 
@@ -21,8 +27,8 @@ class BackPresses {
     @Composable
     fun Content(content: @Composable () -> Unit) {
         dispatcher = LocalOnBackPressedDispatcherOwner.current!!.onBackPressedDispatcher
-        BackHandler { closes++ }
-        content()
+        BackHandler { if (!unsavedChanges.askToDiscard()) closes++ }
+        CompositionLocalProvider(LocalUnsavedChanges provides unsavedChanges, content = content)
     }
 
     fun press(rule: ComposeContentTestRule) {

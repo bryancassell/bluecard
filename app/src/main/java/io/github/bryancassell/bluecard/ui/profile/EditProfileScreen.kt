@@ -71,6 +71,10 @@ fun EditProfileScreen(
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ConfirmDiscardOnBack(
+        changed = (uiState as? EditProfileUiState.Ready)?.changed == true,
+        onDiscard = onDiscard
+    )
     when (uiState) {
         EditProfileUiState.Loading -> LoadingIndicator(modifier)
 
@@ -82,7 +86,6 @@ fun EditProfileScreen(
                 val currentOnSaved by rememberUpdatedState(onSaved)
                 LaunchedEffect(Unit) { currentOnSaved() }
             }
-            ConfirmDiscardOnBack(changed = uiState.changed, onDiscard = onDiscard)
             Fields(uiState, name, unitNumber, onSave)
             SaveFailedSnackbarHost(
                 failure = uiState.saveFailure,

@@ -328,6 +328,32 @@ class EditCounselorViewModelTest {
         )
 
     @Test
+    fun saved_isNoLongerAChange_beforeTheSavedCounselorIsRead() = runTest {
+        // Saves, but the saved counselor is read only later.
+        val viewModel = EditCounselorViewModel(
+            "camping",
+            catalogRepository,
+            object : ProgressRepository by progressRepository {
+                override suspend fun setCounselor(
+                    badgeId: String,
+                    counselor: Counselor?,
+                    start: BadgeStart
+                ) {}
+            },
+            clock,
+            SavedStateHandle()
+        )
+        startCollecting(viewModel)
+        viewModel.typeAll(patLee)
+
+        viewModel.save()
+
+        assertTrue(viewModel.ready().saved)
+        // Back doesn't ask about what's saved while the page closes.
+        assertFalse(viewModel.ready().changed)
+    }
+
+    @Test
     fun fieldChangedWhileSaving_staysOpen_toBeSavedToo() = runTest {
         val allowSave = CompletableDeferred<Unit>()
         val viewModel = viewModelSavingOnlyAfter(allowSave)

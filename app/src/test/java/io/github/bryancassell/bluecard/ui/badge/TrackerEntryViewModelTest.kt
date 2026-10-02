@@ -308,6 +308,38 @@ class TrackerEntryViewModelTest {
     }
 
     @Test
+    fun changed_isOff_whileSaving_andOnceDone() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        val slowUpdates = SlowUpdates(progressRepository)
+        val viewModel = viewModel(entryId = id, progress = slowUpdates)
+        startCollecting(viewModel)
+        viewModel.type("activity", "Swim")
+
+        // Back leaves them to be saved.
+        viewModel.save()
+        assertFalse(viewModel.ready().changed)
+
+        slowUpdates.release.complete(Unit)
+        assertTrue(viewModel.ready().done)
+        assertFalse(viewModel.ready().changed)
+    }
+
+    @Test
+    fun savedNumberWithoutADigit_isNoChange_untilTheRowIsEdited() = runTest {
+        // As an import can bring.
+        val id = addSession(mapOf("activity" to "Run", "minutes" to "."))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().changed)
+        assertFalse(viewModel.ready().canSave)
+
+        viewModel.type("activity", "Swim")
+
+        assertTrue(viewModel.ready().changed)
+        assertTrue(viewModel.ready().canSave)
+    }
+
+    @Test
     fun valuesOfColumnsTheTrackerNoLongerHas_areKept_andArentAChange() = runTest {
         // As when a catalog edited during development drops a column.
         val id = addSession(mapOf("activity" to "Run", "heart-rate" to "140"))

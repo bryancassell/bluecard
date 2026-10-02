@@ -121,6 +121,25 @@ class ConfirmDiscardOnBackTest {
     }
 
     @Test
+    fun changesSaved_whileAsking_closeTheDialogForGood() {
+        changed = true
+        show()
+        pressBack()
+
+        // As when a save finishes while the dialog is open.
+        changed = false
+        composeTestRule.waitForIdle()
+        dialogTitle().assertDoesNotExist()
+
+        // New changes don't bring it back until Back.
+        changed = true
+        composeTestRule.waitForIdle()
+        dialogTitle().assertDoesNotExist()
+        pressBack()
+        dialogTitle().assertIsDisplayed()
+    }
+
+    @Test
     fun back_onceChangesAreSaved_closesThePage() {
         changed = true
         show()

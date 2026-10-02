@@ -91,6 +91,10 @@ fun EditCounselorScreen(
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ConfirmDiscardOnBack(
+        changed = (uiState as? EditCounselorUiState.Ready)?.changed == true,
+        onDiscard = onDiscard
+    )
     when (uiState) {
         EditCounselorUiState.Loading -> LoadingIndicator(modifier)
 
@@ -105,7 +109,6 @@ fun EditCounselorScreen(
                 val currentOnSaved by rememberUpdatedState(onSaved)
                 LaunchedEffect(Unit) { currentOnSaved() }
             }
-            ConfirmDiscardOnBack(changed = uiState.changed, onDiscard = onDiscard)
             CounselorFields(uiState, name, phone, email, onSave)
             SaveFailedSnackbarHost(
                 failure = uiState.saveFailure,

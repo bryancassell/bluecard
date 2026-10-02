@@ -129,6 +129,24 @@ class EditProfileViewModelTest {
     }
 
     @Test
+    fun saved_isNoLongerAChange_beforeTheSavedProfileIsRead() = runTest {
+        // Saves, but the saved profile is read only later.
+        val slowReads = object : ProfileRepository by profileRepository {
+            override suspend fun saveProfile(profile: Profile) {}
+        }
+        val viewModel = viewModel(slowReads)
+        startCollecting(viewModel)
+        viewModel.typeAll(Profile("Sam Scout", "Crew 7"))
+
+        viewModel.save()
+
+        assertTrue(viewModel.ready().saved)
+        // Back doesn't ask about what's saved while the page closes.
+        assertFalse(viewModel.ready().changed)
+        assertFalse(viewModel.ready().canSave)
+    }
+
+    @Test
     fun oneFieldEdited_savesItWithTheOther() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)

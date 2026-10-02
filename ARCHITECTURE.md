@@ -283,17 +283,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen adds goes first (`BlueCardNavDisplay.kt`). Why the pages move this
   way, against Material 3's advice, is in
   [`PRD.md`](PRD.md#design-decisions).
-- **A page with unsaved changes asks before Back discards them**
-  (`ui/ConfirmDiscardOnBack.kt`). Its UI state says whether the fields differ
-  from what's saved (`changed`), apart from whether they can be saved, and its
-  `BackHandler` is enabled only while they do, as the
-  [predictive back guide](https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture)
-  says: "Determine the UI state that enables and disables each callback."
-  Discard closes the page with its route's `onClose`. A screen's handlers are
-  turned off while it animates out (`rememberIgnoreBackWhileLeavingNavEntryDecorator`),
-  so a Back just after a page opens another closes the new one. A screen that
-  has left the back stack needs no such help: Navigation 3 stops it, which
-  turns its handlers off.
+- **The navigation root decides whether Back asks before discarding unsaved
+  changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
+  arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no
+  back handler of their own: one is added and turned on only as its page is
+  drawn, a frame or more behind the back stack, so a quick Back would ask on a
+  page sliding away, or close one with unsaved changes before it's drawn again.
 
 ### Double taps
 

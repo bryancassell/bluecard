@@ -103,6 +103,10 @@ fun TrackerEntryScreen(
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ConfirmDiscardOnBack(
+        changed = (uiState as? TrackerEntryUiState.Ready)?.changed == true,
+        onDiscard = onClose
+    )
     when (uiState) {
         TrackerEntryUiState.Loading -> LoadingIndicator(modifier)
 
@@ -116,7 +120,6 @@ fun TrackerEntryScreen(
                 val currentOnClose by rememberUpdatedState(onClose)
                 LaunchedEffect(Unit) { currentOnClose() }
             }
-            ConfirmDiscardOnBack(changed = uiState.changed, onDiscard = onClose)
             // Ends the page above the keyboard, so every field can be scrolled into view.
             Box(modifier = modifier.imePadding()) {
                 Column(

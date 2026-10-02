@@ -100,6 +100,11 @@ fun RequirementDetailScreen(
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ConfirmDiscardOnBack(
+        changed = (uiState as? RequirementDetailUiState.Ready)?.commentChanged == true,
+        onDiscard = onDiscard,
+        message = stringResource(R.string.discard_changes_message_notes)
+    )
     when (uiState) {
         RequirementDetailUiState.Loading -> LoadingIndicator(modifier)
 
@@ -110,11 +115,6 @@ fun RequirementDetailScreen(
 
         // Ends the page above the keyboard, so the comment field can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
-            ConfirmDiscardOnBack(
-                changed = uiState.commentChanged,
-                onDiscard = onDiscard,
-                message = stringResource(R.string.discard_changes_message_notes)
-            )
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 RequirementHeader(uiState.badgeName, uiState.requirement)
                 val requirement = uiState.requirement

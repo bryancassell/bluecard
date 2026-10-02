@@ -151,9 +151,6 @@ class EditProfileScreenTest {
         assertEquals(0, closes)
     }
 
-    // The tests' view isn't in touch mode, as a phone's is while the scout taps it, so Android
-    // gives focus to the first field once it's cleared. The field the scout typed in last
-    // shows that Save cleared it.
     @Test
     fun back_withChangesThatCantBeSaved_asksBeforeDiscardingThem() {
         // As with a field left blank.
@@ -177,6 +174,9 @@ class EditProfileScreenTest {
         composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
     }
 
+    // The tests' view isn't in touch mode, as a phone's is while the scout taps it, so Android
+    // gives focus to the first field once it's cleared. The field the scout typed in last
+    // shows that Save cleared it.
     @Test
     fun save_closesTheKeyboard() {
         show(ready.copy(canSave = true))

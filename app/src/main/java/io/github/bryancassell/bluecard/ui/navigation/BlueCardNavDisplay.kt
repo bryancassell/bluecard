@@ -50,12 +50,19 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // after isSetUp changes navigates against what is shown now.
     val currentShownBackStack by rememberUpdatedState(shownBackStack)
     val drawnScreens = remember { DrawnScreens() }
+    val unsavedChanges = remember { UnsavedChangesByPage() }
     // Screens look up the entry of one they'd open, to check it isn't still drawn.
     lateinit var entries: (NavKey) -> NavEntry<NavKey>
     val isDrawn = { key: NavKey -> entries(key) in drawnScreens }
     // Checks the back stack as it is now: two Backs can arrive before a frame turns Back
-    // handling off, and the second mustn't empty the back stack.
-    val goBack: () -> Unit = { if (currentShownBackStack.size > 1) backStack.removeLastOrNull() }
+    // handling off, and the second mustn't empty the back stack. A page with unsaved changes
+    // asks before Back discards them, rather than closing.
+    val goBack: () -> Unit = {
+        val shown = currentShownBackStack
+        if (shown.size > 1 && !unsavedChanges.askToDiscard(entries(shown.last()))) {
+            backStack.removeLastOrNull()
+        }
+    }
     // The only back handler here, added before the screens, so any a screen adds goes first.
     // NavDisplay is given no handler of its own, so a back swipe doesn't move the pages;
     // releasing it plays Back's slide.
@@ -63,15 +70,14 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val decoratedEntries = rememberDecoratedNavEntries(
         backStack = shownBackStack,
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
-        // cleared when the entry leaves the back stack, ignore touches on screens that are
-        // animating, so a double tap can't press a control on the screen it opened, and ignore
-        // Back on screens animating out, so it reaches the one shown in their place.
+        // cleared when the entry leaves the back stack, and ignore touches on screens that
+        // are animating, so a double tap can't press a control on the screen it opened.
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
             rememberIgnoreTouchesNavEntryDecorator(),
-            rememberIgnoreBackWhileLeavingNavEntryDecorator(),
-            drawnScreens.decorator
+            drawnScreens.decorator,
+            unsavedChanges.decorator
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.

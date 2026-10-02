@@ -949,20 +949,36 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Choice B.").performScrollTo()
         composeTestRule.waitForIdle()
 
-        // Back while Requirement 2 slides away.
+        // Back before the next frame, while Requirement 2 is still the page drawn.
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.onNodeWithText("Choice B.").performClick()
-        // Hand the back stack change to Compose; see tap_onClosingScreenAfterBack_doesNothing.
-        composeTestRule.waitForIdle()
-        composeTestRule.mainClock.advanceTimeBy(100)
-        composeTestRule.onNodeWithText("Requirement 2b").assertExists()
-        pressBack()
+        scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         composeTestRule.mainClock.autoAdvance = true
 
         composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2b").assertDoesNotExist()
         discardDialog().assertDoesNotExist()
         assertFieldText("Notes", "Chose B.")
+    }
+
+    @Test
+    fun twoBacksBeforeTheNextFrame_fromAPageOverUnsavedNotes_askAboutThem() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+        field("Notes").performScrollTo().performTextInput("Planned it with my patrol.")
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        weatherField().assertIsDisplayed()
+
+        // The second Back arrives before Requirement 1 is drawn again.
+        scenario.onActivity {
+            it.onBackPressedDispatcher.onBackPressed()
+            it.onBackPressedDispatcher.onBackPressed()
+        }
+
+        composeTestRule.onNodeWithText("Your changes to the notes haven't been saved.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+        assertFieldText("Notes", "Planned it with my patrol.")
     }
 
     // Dates, like numbers, follow the strings' language, so on a Persian device the English
