@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.openDocument
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -23,7 +24,7 @@ import kotlinx.coroutines.withContext
 /**
  * [BackupRepository] that writes and reads exports as JSON ([encodeBackup], [decodeBackup]),
  * through the content resolver, so it reaches any document the scout picks. A file is checked
- * against the catalog of badges in this version of the app.
+ * against the catalog of badges and ranks in this version of the app.
  *
  * Exporting and importing run in [externalScope], so each finishes even if the scout leaves
  * the screen ([runOutlivingCaller]).
@@ -62,7 +63,7 @@ class JsonBackupRepository @Inject constructor(
             return@withContext BackupReadResult.Invalid
         }
         // An editor can add a byte order mark when it saves the file, which JSON doesn't allow.
-        decodeBackup(json.removePrefix("\uFEFF"), catalogRepository.getBadges())
+        decodeBackup(json.removePrefix("\uFEFF"), catalogRepository.getAdvancements())
     }
 
     // Progress first: it's replaced in one transaction, so if that fails, nothing has changed.

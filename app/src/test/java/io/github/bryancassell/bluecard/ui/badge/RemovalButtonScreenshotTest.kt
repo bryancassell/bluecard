@@ -43,7 +43,7 @@ class RemovalButtonScreenshotTest {
                 CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
                     RequirementDetailScreen(
                         uiState = RequirementDetailUiState.Ready(
-                            badgeName = "Camping",
+                            advancementName = "Camping",
                             requirement = RequirementItem(
                                 "1",
                                 "Plan a campout.",
@@ -82,7 +82,7 @@ class RemovalButtonScreenshotTest {
                 CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
                     TrackerEntryScreen(
                         uiState = TrackerEntryUiState.Ready(
-                            badgeName = "Personal Fitness",
+                            advancementName = "Personal Fitness",
                             requirementNumber = "7a",
                             rowTitle = "Session",
                             rowNumber = 2,

@@ -37,7 +37,8 @@ data class RequirementItem(
     val notNeeded: Boolean = false,
     /**
      * Whether nothing toward it was recorded: it's still needed and no part of it is done, but
-     * the scout marked the badge completed on a prior date, without recording its requirements.
+     * the scout marked the badge or rank completed on a prior date, without recording its
+     * requirements.
      */
     val notRecorded: Boolean = false,
     /** The work it asks for besides its sub-requirements, or null if it asks for none. */
@@ -72,16 +73,17 @@ data class Choice(val required: Int, val of: Int)
 data class CompleteCount(val complete: Int, val needed: Int)
 
 /**
- * [progress] and [trackerEntries] are what the scout recorded on the badge, keyed by
+ * [progress] and [trackerEntries] are what the scout recorded on the badge or rank, keyed by
  * requirement number. [partOfHasEnough] is whether a requirement this one is part of, at any
- * depth, has enough complete sub-requirements ([hasEnoughChildren]). [badgeCompletedOnPriorDate]
- * is whether the scout marked the badge completed on a prior date.
+ * depth, has enough complete sub-requirements ([hasEnoughChildren]).
+ * [advancementCompletedOnPriorDate] is whether the scout marked the badge or rank completed on a
+ * prior date.
  */
 fun Requirement.toItem(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,
     partOfHasEnough: Boolean = false,
-    badgeCompletedOnPriorDate: Boolean = false
+    advancementCompletedOnPriorDate: Boolean = false
 ): RequirementItem {
     val completed = completion(progress, trackerEntries) != null
     val notNeeded = partOfHasEnough && !completed
@@ -95,7 +97,7 @@ fun Requirement.toItem(
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
         notNeeded = notNeeded,
-        notRecorded = badgeCompletedOnPriorDate && stillNeeded && !partlyCompleted,
+        notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = partlyCompleted,
         completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null,

@@ -50,6 +50,16 @@ class CatalogTest {
                     ]
                   }]
                 }]
+              }],
+              "ranks": [{
+                "id": "tenderfoot",
+                "name": "Tenderfoot",
+                "summary": "Learn the basics of camping.",
+                "officialUrl": "https://www.scouting.org/tenderfoot/",
+                "requirementVersions": [{
+                  "effectiveDate": "2026-01-01",
+                  "requirements": [{ "number": "1a", "summary": "Pack for a campout." }]
+                }]
               }]
             }
         """.trimIndent()
@@ -113,6 +123,22 @@ class CatalogTest {
                         )
                     )
                 )
+            ),
+            ranks = listOf(
+                Rank(
+                    id = "tenderfoot",
+                    name = "Tenderfoot",
+                    summary = "Learn the basics of camping.",
+                    officialUrl = "https://www.scouting.org/tenderfoot/",
+                    requirementVersions = listOf(
+                        RequirementsVersion(
+                            effectiveDate = LocalDate.of(2026, 1, 1),
+                            requirements = listOf(
+                                Requirement(number = "1a", summary = "Pack for a campout.")
+                            )
+                        )
+                    )
+                )
             )
         )
         assertEquals(expected, parseCatalog(json))
@@ -124,7 +150,8 @@ class CatalogTest {
             """
             {"formatVersion": 1, "badges": [{"id": "a", "name": "A", "summary": "S",
               "officialUrl": "https://www.scouting.org/a/", "requirementVersions": [
-              {"effectiveDate": "2025-01-01", "requirements": [{"number": "1", "summary": "R"}]}]}]}
+              {"effectiveDate": "2025-01-01", "requirements": [{"number": "1", "summary": "R"}]}]}],
+              "ranks": []}
             """.trimIndent()
         ).badges.single()
 
@@ -137,14 +164,17 @@ class CatalogTest {
     @Test
     fun parseCatalog_rejectsUnknownField() {
         assertThrows(SerializationException::class.java) {
-            parseCatalog("""{"formatVersion": 1, "badges": [], "badgez": []}""")
+            parseCatalog("""{"formatVersion": 1, "badges": [], "ranks": [], "badgez": []}""")
         }
     }
 
     @Test
     fun parseCatalog_rejectsMissingRequiredField() {
         assertThrows(SerializationException::class.java) {
-            parseCatalog("""{"formatVersion": 1}""")
+            parseCatalog("""{"formatVersion": 1, "ranks": []}""")
+        }
+        assertThrows(SerializationException::class.java) {
+            parseCatalog("""{"formatVersion": 1, "badges": []}""")
         }
     }
 

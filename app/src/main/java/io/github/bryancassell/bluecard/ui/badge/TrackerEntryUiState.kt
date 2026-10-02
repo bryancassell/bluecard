@@ -14,7 +14,8 @@ sealed interface TrackerEntryUiState {
     data object LoadFailed : TrackerEntryUiState
 
     data class Ready(
-        val badgeName: String,
+        /** The name of the badge or rank the requirement is part of. */
+        val advancementName: String,
         val requirementNumber: String,
         /** What one row is called, capitalized, for the title with [rowNumber]: "Week 3". */
         val rowTitle: String,
@@ -47,8 +48,8 @@ sealed interface TrackerEntryUiState {
     ) : TrackerEntryUiState
 
     /**
-     * The requirements the badge uses don't have the tracker, or the row isn't in it, such as
-     * when it was deleted.
+     * The requirements the badge or rank uses don't have the tracker, or the row isn't in it, such
+     * as when it was deleted.
      */
     data object Unavailable : TrackerEntryUiState
 }

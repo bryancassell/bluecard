@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.report
 import android.Manifest
 import android.content.Context
 import android.content.pm.ProviderInfo
+import android.content.res.Resources
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -167,6 +168,13 @@ class PdfReportRepositoryTest {
     private fun Uri.read(): String =
         context.contentResolver.openInputStream(this)!!.use { it.reader().readText() }
 
+    /** The file name that an app this is shared with shows, as an email attachment does. */
+    private fun Uri.displayName(): String =
+        context.contentResolver.query(this, null, null, null, null)!!.use {
+            it.moveToFirst()
+            it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+        }
+
     @Test
     fun createReportToShare_writesTheBadgesReport_whereOtherAppsCanReadIt() = runTest {
         val report = repository.createReportToShare("chess")!!
@@ -184,16 +192,42 @@ class PdfReportRepositoryTest {
         assertTrue("Notes: Next week." in lines)
     }
 
-    // The app the scout shares it with shows its name, as an email attachment does.
     @Test
     fun createReportToShare_namesTheFileAfterTheBadge() = runTest {
         val report = repository.createReportToShare("chess")!!
 
-        val name = context.contentResolver.query(report, null, null, null, null)!!.use {
-            it.moveToFirst()
-            it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+        assertEquals("Chess merit badge report.pdf", report.displayName())
+    }
+
+    // In the file's name, a "/" would name a folder that doesn't exist.
+    @Test
+    fun createReportToShare_forBadgeNameWithSlash_sharesIt() = runTest {
+        catalogRepository.badges = listOf(chess.copy(name = "Search/Rescue"))
+
+        val report = repository.createReportToShare("chess")!!
+
+        assertEquals(pdfWriter.lastWritten, report.read())
+        assertTrue("Search/Rescue" in pdfWriter.pages.single().flatMap { it.lines })
+        assertEquals("Search_Rescue merit badge report.pdf", report.displayName())
+    }
+
+    // In a translation as well as in the badge's name, as the file picker replaces them, so the
+    // file can be kept on an SD card or computer too.
+    @Test
+    fun reportFileName_replacesEachCharacterAFileNameCantHold() {
+        val app = context.resources
+
+        // Resources has no other way to give a string that isn't in the app.
+        @Suppress("DEPRECATION")
+        val translation = object : Resources(app.assets, app.displayMetrics, app.configuration) {
+            override fun getString(id: Int, vararg formatArgs: Any?): String =
+                "a\"b*c/d:e<f>g?h\\i|j\tk\u007Fl %1\$s".format(*formatArgs)
         }
-        assertEquals("Chess merit badge report.pdf", name)
+
+        assertEquals(
+            "a_b_c_d_e_f_g_h_i_j_k_l Search_Rescue.pdf",
+            reportFileName(translation, "Search/Rescue")
+        )
     }
 
     @Test

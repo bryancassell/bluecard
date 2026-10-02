@@ -14,14 +14,24 @@ class CatalogValidatorTest {
         officialUrl = "https://www.scouting.org/merit-badges/first-aid/",
         requirementVersions = listOf(version)
     )
+    private val rank = Rank(
+        id = "tenderfoot",
+        name = "Tenderfoot",
+        summary = "Learn the basics of camping and first aid.",
+        officialUrl = "https://www.scouting.org/tenderfoot/",
+        requirementVersions = listOf(version)
+    )
     private val tracker = TrackerDefinition(
         columns = listOf(TrackerColumn("date", "Date", TrackerColumnType.DATE)),
         rowLabel = "night",
         rowLabelPlural = "nights"
     )
 
-    private fun errorsFor(vararg badges: MeritBadge, formatVersion: Int = 1) =
-        CatalogValidator.validate(Catalog(formatVersion, badges.toList()))
+    private fun errorsFor(
+        vararg badges: MeritBadge,
+        ranks: List<Rank> = emptyList(),
+        formatVersion: Int = 1
+    ) = CatalogValidator.validate(Catalog(formatVersion, badges.toList(), ranks))
 
     private fun errorsForRequirements(vararg requirements: Requirement) = errorsFor(
         badge.copy(
@@ -50,7 +60,11 @@ class CatalogValidatorTest {
                 version.copy(effectiveDate = LocalDate.of(2025, 1, 1))
             )
         )
-        assertEquals(emptyList<String>(), errorsFor(badge, eagleBadge))
+        val secondClass = rank.copy(id = "second-class", name = "Second Class")
+        assertEquals(
+            emptyList<String>(),
+            errorsFor(badge, eagleBadge, ranks = listOf(rank, secondClass))
+        )
     }
 
     @Test
@@ -75,6 +89,22 @@ class CatalogValidatorTest {
     }
 
     @Test
+    fun duplicateRankId() {
+        assertEquals(
+            listOf("rank id \"tenderfoot\" is used more than once"),
+            errorsFor(badge, ranks = listOf(rank, rank))
+        )
+    }
+
+    @Test
+    fun rankIdUsedByABadge() {
+        assertEquals(
+            listOf("id \"first-aid\" is used by both a badge and a rank"),
+            errorsFor(badge, ranks = listOf(rank.copy(id = "first-aid")))
+        )
+    }
+
+    @Test
     fun badgeFieldProblems() {
         val bad = badge.copy(
             id = "First Aid",
@@ -93,6 +123,37 @@ class CatalogValidatorTest {
                 "$where: has an eagleGroup but is not eagleRequired"
             ),
             errorsFor(bad)
+        )
+    }
+
+    @Test
+    fun rankFieldProblems() {
+        val bad = rank.copy(
+            id = "Second Class",
+            name = " ",
+            summary = "",
+            officialUrl = "http://example.com/second-class",
+            requirementVersions = listOf(version, version.copy(requirements = emptyList()))
+        )
+        val where = "rank \"Second Class\""
+        assertEquals(
+            listOf(
+                "$where: id must be lowercase words joined by '-'",
+                "$where: name is blank",
+                "$where: summary is blank",
+                "$where: officialUrl must start with https://www.scouting.org/",
+                "$where: more than one version effective 2026-01-01",
+                "$where, version 2026-01-01: has no requirements"
+            ),
+            errorsFor(badge, ranks = listOf(bad))
+        )
+    }
+
+    @Test
+    fun rankWithoutRequirementVersions() {
+        assertEquals(
+            listOf("rank \"tenderfoot\": has no requirement versions"),
+            errorsFor(badge, ranks = listOf(rank.copy(requirementVersions = emptyList())))
         )
     }
 

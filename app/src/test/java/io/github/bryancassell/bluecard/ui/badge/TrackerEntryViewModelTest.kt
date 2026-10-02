@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -91,7 +92,26 @@ class TrackerEntryViewModelTest {
         )
     )
 
-    private val catalogRepository = FakeCatalogRepository(listOf(fitness))
+    private val tenderfoot = Rank(
+        id = "tenderfoot",
+        name = "Tenderfoot",
+        summary = "Our summary of Tenderfoot.",
+        officialUrl = "https://www.scouting.org/tenderfoot/",
+        requirementVersions = listOf(
+            RequirementsVersion(
+                newest,
+                listOf(
+                    Requirement(
+                        "6c",
+                        "Log your exercise for 30 days.",
+                        tracker = TrackerDefinition(sessionColumns, "session", "sessions")
+                    )
+                )
+            )
+        )
+    )
+
+    private val catalogRepository = FakeCatalogRepository(listOf(fitness), listOf(tenderfoot))
     private val progressRepository = FakeProgressRepository()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
@@ -102,9 +122,10 @@ class TrackerEntryViewModelTest {
         rowNumber: Int? = null,
         savedStateHandle: SavedStateHandle = SavedStateHandle(),
         catalog: CatalogRepository = catalogRepository,
-        progress: ProgressRepository = progressRepository
+        progress: ProgressRepository = progressRepository,
+        advancementId: String = "personal-fitness"
     ) = TrackerEntryViewModel(
-        "personal-fitness",
+        advancementId,
         number,
         entryId,
         rowNumber,
@@ -160,6 +181,7 @@ class TrackerEntryViewModelTest {
     fun uiState_whileCatalogLoads_isLoading() = runTest {
         val loading = object : CatalogRepository {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
+            override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
         val viewModel = viewModel(catalog = loading)
         startCollecting(viewModel)
@@ -194,7 +216,7 @@ class TrackerEntryViewModelTest {
 
         assertEquals(
             TrackerEntryUiState.Ready(
-                badgeName = "Personal Fitness",
+                advancementName = "Personal Fitness",
                 requirementNumber = "7a",
                 rowTitle = "Session",
                 rowNumber = 3,
@@ -419,6 +441,43 @@ class TrackerEntryViewModelTest {
         )
         assertTrue(viewModel.ready().done)
         assertFalse(viewModel.ready().canSave)
+    }
+
+    @Test
+    fun rankLogEntry_isShownWithTheRanksName() = runTest {
+        val viewModel = viewModel(number = "6c", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+
+        assertEquals("Tenderfoot", viewModel.ready().advancementName)
+        assertEquals("6c", viewModel.ready().requirementNumber)
+        assertEquals(sessionColumns, viewModel.ready().columns)
+    }
+
+    @Test
+    fun save_newRankLogEntry_startsTheRankAndAddsIt() = runTest {
+        val viewModel = viewModel(number = "6c", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+        viewModel.type("activity", "Run")
+        viewModel.type("minutes", "30")
+        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+
+        viewModel.save()
+
+        val progress = progressRepository.observeProgress("tenderfoot").first()!!
+        assertEquals(BadgeProgress("tenderfoot", newest, today), progress.badge)
+        assertEquals(
+            listOf(
+                TrackerEntry(
+                    1,
+                    "tenderfoot",
+                    "6c",
+                    null,
+                    mapOf("date" to "2026-05-01", "activity" to "Run", "minutes" to "30"),
+                    addedDate = today
+                )
+            ),
+            progress.trackerEntries
+        )
     }
 
     @Test

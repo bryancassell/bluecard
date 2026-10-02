@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import java.time.LocalDate
@@ -58,6 +59,21 @@ class BadgeVersionTest {
         assertEquals(
             BadgeStart(newest.effectiveDate, today),
             listOf(badge).badgeStart(BADGE, today)
+        )
+    }
+
+    @Test
+    fun badgeStart_ofRank_isItsNewestVersionOnTheDayGiven() {
+        val tenderfoot = Rank(
+            id = "tenderfoot",
+            name = "Tenderfoot",
+            summary = "Our summary of Tenderfoot.",
+            officialUrl = "https://www.scouting.org/tenderfoot/",
+            requirementVersions = listOf(newest, older)
+        )
+        assertEquals(
+            BadgeStart(newest.effectiveDate, today),
+            listOf(badge, tenderfoot).badgeStart("tenderfoot", today)
         )
     }
 

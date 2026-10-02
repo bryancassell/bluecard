@@ -11,11 +11,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
-import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
@@ -49,7 +50,7 @@ import kotlinx.coroutines.flow.stateIn
  */
 @HiltViewModel(assistedFactory = TrackerEntryViewModel.Factory::class)
 class TrackerEntryViewModel @AssistedInject constructor(
-    @Assisted("badgeId") private val badgeId: String,
+    @Assisted("advancementId") private val advancementId: String,
     @Assisted("number") private val number: String,
     @Assisted private val entryId: Long?,
     @Assisted private val rowNumber: Int?,
@@ -85,8 +86,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
 
     val uiState: StateFlow<TrackerEntryUiState> = flow {
         val row = loaded ?: load(
-            catalogRepository.getBadges(),
-            progressRepository.observeProgress(badgeId).first()
+            catalogRepository.getAdvancements(),
+            progressRepository.observeProgress(advancementId).first()
         )?.also { loaded = it }
         if (row == null) {
             emit(TrackerEntryUiState.Unavailable)
@@ -110,7 +111,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
 
     /** The row as the page loaded it: which one it is, and what it has saved. */
     private class LoadedRow(
-        val badgeName: String,
+        val advancementName: String,
         val tracker: TrackerDefinition,
         /** The row it is, from 1: the one it fills, or its place in a log. */
         val shownNumber: Int,
@@ -132,7 +133,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
         val columns = row.tracker.columns
         val stored = valuesToSave(row, values)
         return TrackerEntryUiState.Ready(
-            badgeName = row.badgeName,
+            advancementName = row.advancementName,
             requirementNumber = number,
             rowTitle = row.tracker.rowTitle,
             rowNumber = row.shownNumber,
@@ -155,11 +156,11 @@ class TrackerEntryViewModel @AssistedInject constructor(
     }
 
     /**
-     * Finds the row, and fills in the fields. Null if the requirements the badge uses don't have
-     * the tracker, or the tracker doesn't have the row.
+     * Finds the row, and fills in the fields. Null if the requirements the badge or rank uses
+     * don't have the tracker, or the tracker doesn't have the row.
      */
-    private fun load(catalog: List<MeritBadge>, progress: BadgeProgressDetails?): LoadedRow? {
-        val found = catalog.badgeRequirements(badgeId, progress) ?: return null
+    private fun load(catalog: List<Advancement>, progress: BadgeProgressDetails?): LoadedRow? {
+        val found = catalog.advancementRequirements(advancementId, progress) ?: return null
         val tracker = found.version.find(number)?.tracker ?: return null
         val entries = found.trackerEntries[number].orEmpty()
         val rows = tracker.toItem(entries).rows
@@ -170,7 +171,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
         } ?: return null
         val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
         loadFields(tracker.columns, saved)
-        return LoadedRow(found.badge.name, tracker, row.number, row.entryId, saved)
+        return LoadedRow(found.advancement.name, tracker, row.number, row.entryId, saved)
     }
 
     /**
@@ -262,12 +263,12 @@ class TrackerEntryViewModel @AssistedInject constructor(
             // An entry deleted since the page loaded is added again, keeping the scout's edit.
             // That happens if they delete it and reopen it before the delete is saved.
             progressRepository.addTrackerEntry(
-                badgeId,
+                advancementId,
                 number,
                 row.rowNumber,
                 values,
                 addedDate = today,
-                catalogRepository.getBadges().badgeStart(badgeId, today),
+                catalogRepository.getAdvancements().badgeStart(advancementId, today),
                 id = row.entryId
             )
         }
@@ -304,7 +305,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(
-            @Assisted("badgeId") badgeId: String,
+            @Assisted("advancementId") advancementId: String,
             @Assisted("number") number: String,
             entryId: Long?,
             rowNumber: Int?
