@@ -1,14 +1,18 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -24,12 +28,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -114,14 +122,15 @@ fun TrackerEntryScreen(
                 val currentOnClose by rememberUpdatedState(onClose)
                 LaunchedEffect(Unit) { currentOnClose() }
             }
+            val scrollState = rememberScrollState()
             // Ends the page above the keyboard, so every field can be scrolled into view.
             Box(modifier = modifier.imePadding()) {
                 Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TrackerEntryHeader(uiState)
-                    uiState.columns.forEach { column ->
+                    val trackerField: @Composable (TrackerColumn) -> Unit = { column ->
                         // Keeps each date field's picker with its column.
                         key(column.id) {
                             TrackerField(
@@ -133,7 +142,12 @@ fun TrackerEntryScreen(
                             )
                         }
                     }
-                    TrackerEntryButtons(uiState, onSave, onDelete)
+                    uiState.columns.dropLast(1).forEach { trackerField(it) }
+                    // Keeps Save above the keyboard while the scout types in the last field.
+                    KeepInViewWhileFocused(scrollState) {
+                        trackerField(uiState.columns.last())
+                        TrackerEntryButtons(uiState, onSave, onDelete)
+                    }
                 }
                 SaveFailedSnackbarHost(
                     failure = uiState.saveFailure,
@@ -235,6 +249,35 @@ private fun TrackerField(
             )
         }
     }
+}
+
+/**
+ * Keeps all of [content] in view while something in it has focus, when it fits in the page's
+ * [scrollState] viewport: as the keyboard opens, which shrinks the viewport, and as a field in it
+ * grows. Otherwise the page keeps only a focused field's cursor in view, as it does for the
+ * fields above.
+ */
+@Composable
+private fun KeepInViewWhileFocused(
+    scrollState: ScrollState,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val requester = remember { BringIntoViewRequester() }
+    var hasFocus by remember { mutableStateOf(false) }
+    var height by remember { mutableIntStateOf(0) }
+    val viewportHeight = scrollState.viewportSize
+    // Asks again each time one changes, which cancels the request before.
+    LaunchedEffect(hasFocus, height, viewportHeight) {
+        if (hasFocus && height <= viewportHeight) requester.bringIntoView()
+    }
+    Column(
+        modifier = Modifier
+            .bringIntoViewRequester(requester)
+            .onFocusChanged { hasFocus = it.hasFocus }
+            .onSizeChanged { height = it.height },
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        content = content
+    )
 }
 
 /** Delete, for a saved row, and Save. Delete asks first. */

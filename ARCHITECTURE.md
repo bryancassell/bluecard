@@ -237,6 +237,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   replaces a pasted line break with a space (`LineBreaksAsSpaces`). Number
   fields instead chain `NumberInput`, which rejects a line break, with their
   `TextLengthLimit`.
+- **A tracker entry's last field and its Save button scroll into view
+  together.** As the keyboard opens, Compose keeps only a focused field's
+  cursor in view, which can leave the Save button under the field behind the
+  keyboard. The entry page wraps its last field and its buttons in
+  `KeepInViewWhileFocused` (`ui/badge/TrackerEntryScreen.kt`). While one of
+  them has focus, it brings them all into view with a `BringIntoViewRequester`,
+  each time the keyboard shrinks the page or the field grows, as long as they
+  fit ([#172](https://github.com/bryancassell/bluecard/issues/172)). Otherwise
+  the page follows the cursor, as before.
 
 ### Navigation
 
@@ -810,7 +819,10 @@ the real one.
   interaction, fed by fake repositories or fixed UI state. A test that depends
   on how text is measured, such as whether a long label wraps, uses
   Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
-  graphics measure every character as 1px wide.
+  graphics measure every character as 1px wide. Robolectric shows no keyboard,
+  so a test of what stays above it sends the page's view a keyboard inset once
+  the field's focus has settled, as a phone does (`openKeyboard` in
+  `TrackerEntryScreenTest`).
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

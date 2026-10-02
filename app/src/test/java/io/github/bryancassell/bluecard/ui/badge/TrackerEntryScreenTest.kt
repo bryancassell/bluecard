@@ -1,6 +1,9 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.graphics.Rect
+import android.view.View
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -9,6 +12,7 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -18,10 +22,17 @@ import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.dp
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
@@ -33,6 +44,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
@@ -56,6 +69,9 @@ class TrackerEntryScreenTest {
     private var deletes = 0
     private var closes = 0
     private val saveFailuresShown = mutableListOf<SaveFailure>()
+
+    /** The page's view, which the keyboard's insets are sent to. */
+    private lateinit var view: View
 
     /** A new entry, with nothing in it yet. */
     private val newEntry = TrackerEntryUiState.Ready(
@@ -84,6 +100,7 @@ class TrackerEntryScreenTest {
         fields: Map<String, TextFieldState> = this.fields
     ) {
         composeTestRule.setContent {
+            view = LocalView.current
             TrackerEntryScreen(
                 uiState = uiState,
                 fields = fields,
@@ -97,10 +114,51 @@ class TrackerEntryScreenTest {
         }
     }
 
-    private fun field(label: String) =
-        composeTestRule.onNode(hasSetTextAction() and hasText(label)).performScrollTo()
+    /** The field for [label], scrolled into view. */
+    private fun field(label: String) = fieldWithoutScrolling(label).performScrollTo()
+
+    /** The field for [label], wherever the page has it. */
+    private fun fieldWithoutScrolling(label: String) =
+        composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
     private fun button(text: String) = composeTestRule.onNodeWithText(text).performScrollTo()
+
+    /**
+     * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
+     * after the page has handled the focus change.
+     */
+    private fun openKeyboard() {
+        val height = with(composeTestRule.density) { KEYBOARD_HEIGHT.roundToPx() }
+        composeTestRule.runOnIdle {
+            val insets = WindowInsetsCompat.Builder()
+                .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, height))
+                .setVisible(WindowInsetsCompat.Type.ime(), true)
+                .build()
+            ViewCompat.dispatchApplyWindowInsets(view, insets)
+        }
+    }
+
+    /**
+     * Checks that [bounds] are on the page above the keyboard. Unclipped bounds are needed for
+     * this: the page clips what's behind the keyboard.
+     */
+    private fun assertAboveKeyboard(bounds: DpRect) {
+        val keyboardTop =
+            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - KEYBOARD_HEIGHT
+        assertTrue(
+            "$bounds isn't between the top of the page and the keyboard at $keyboardTop",
+            bounds.top >= 0.dp && bounds.bottom <= keyboardTop
+        )
+    }
+
+    /** Where the focused field's cursor is: the view reports it as its focused area. */
+    private fun cursorBounds(): DpRect {
+        val rect = Rect()
+        composeTestRule.runOnIdle { view.getFocusedRect(rect) }
+        return with(composeTestRule.density) {
+            DpRect(rect.left.toDp(), rect.top.toDp(), rect.right.toDp(), rect.bottom.toDp())
+        }
+    }
 
     // A day in the date picker, which reads each day as its full date.
     private fun pickerDay(date: String) =
@@ -359,6 +417,64 @@ class TrackerEntryScreenTest {
         composeTestRule.onNodeWithText("Delete this session?").assertDoesNotExist()
     }
 
+    // Seen on a phone: the page scrolled only far enough to show the cursor, leaving Save under
+    // the field behind the keyboard (#172).
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForLastField_fieldAndSaveShowAboveIt() {
+        show(newEntry)
+
+        fieldWithoutScrolling("Notes").performClick()
+        openKeyboard()
+
+        assertAboveKeyboard(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
+        assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+    }
+
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun lastFieldGrowingAsScoutTypes_saveStaysAboveKeyboard() {
+        show(newEntry)
+        fieldWithoutScrolling("Notes").performClick()
+        openKeyboard()
+
+        fieldWithoutScrolling("Notes").performTextInput("Ran 2 miles\nSwam\nStretched\nRested\n")
+
+        assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+    }
+
+    // Higher fields scroll into view as before, as far as their cursor, without pulling the page
+    // down to Save.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForHigherField_itsCursorShowsAboveIt() {
+        show(newEntry)
+
+        fieldWithoutScrolling("Activity").performClick()
+        openKeyboard()
+
+        assertAboveKeyboard(cursorBounds())
+    }
+
+    // Fits on the page with Save, but too tall to show with Save above the keyboard, so the
+    // page keeps the cursor in view as the keyboard opens, as for any other field.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForLastFieldTooTallToShowWithSave_itsCursorShowsAboveIt() {
+        // With the cursor at the end, as after typing it.
+        val notes = TextFieldState((1..20).joinToString("\n") { "Line $it" })
+        show(newEntry, fields + ("notes" to notes))
+
+        fieldWithoutScrolling("Notes").requestFocus()
+        openKeyboard()
+
+        assertAboveKeyboard(cursorBounds())
+    }
+
     @Test
     fun done_closesThePage() {
         show(savedEntry.copy(done = true))
@@ -390,5 +506,13 @@ class TrackerEntryScreenTest {
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
         assertEquals(listOf(failure), saveFailuresShown)
+    }
+
+    private companion object {
+        /** A small phone's screen, less its system bars. */
+        const val SMALL_PHONE = "w360dp-h560dp"
+
+        /** About as tall as a phone's keyboard. */
+        val KEYBOARD_HEIGHT = 300.dp
     }
 }
