@@ -6,6 +6,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
+import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
 
@@ -18,4 +20,9 @@ interface DataModule {
 
     @Binds
     fun bindProgressRepository(repository: RoomProgressRepository): ProgressRepository
+
+    @Binds
+    fun bindDamagedProgressRepository(
+        repository: FileDamagedProgressRepository
+    ): DamagedProgressRepository
 }

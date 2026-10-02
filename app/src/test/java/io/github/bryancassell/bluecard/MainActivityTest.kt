@@ -68,6 +68,8 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
+import io.github.bryancassell.bluecard.data.progress.FakeDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
@@ -174,6 +176,12 @@ class MainActivityTest {
     @BindValue
     @JvmField
     val progressRepository: ProgressRepository = FakeProgressRepository()
+
+    private val fakeDamagedProgressRepository = FakeDamagedProgressRepository()
+
+    @BindValue
+    @JvmField
+    val damagedProgressRepository: DamagedProgressRepository = fakeDamagedProgressRepository
 
     // PdfDocument only runs on a device.
     private val fakeReportRepository = FakeReportRepository(progressRepository)
@@ -385,6 +393,45 @@ class MainActivityTest {
 
         home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
+    }
+
+    @Test
+    fun damagedProgress_showsNoticeOverHome() {
+        fakeDamagedProgressRepository.setAside()
+
+        launchWithProfile()
+
+        composeTestRule.onNode(
+            hasText("Your progress couldn't be read") and hasAnyAncestor(isDialog())
+        )
+            .assertIsDisplayed()
+        home().assertExists()
+    }
+
+    @Test
+    fun progressSetAsideWhileOpen_showsNotice() {
+        launchWithProfile()
+        home().assertIsDisplayed()
+
+        // As when SQLite finds the database damaged while it opens.
+        fakeDamagedProgressRepository.setAside()
+
+        composeTestRule.onNodeWithText("Your progress couldn't be read").assertIsDisplayed()
+    }
+
+    @Test
+    fun damagedProgressNotice_ok_closesItForGood() {
+        fakeDamagedProgressRepository.setAside()
+        launchWithProfile()
+
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        composeTestRule.onNode(isDialog()).assertDoesNotExist()
+        home().assertIsDisplayed()
+        assertEquals(
+            false,
+            runBlocking { damagedProgressRepository.observeNoticePending().first() }
+        )
     }
 
     @Test
