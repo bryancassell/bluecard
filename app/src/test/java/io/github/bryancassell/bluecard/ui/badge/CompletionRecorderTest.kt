@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.lifecycle.SavedStateHandle
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -50,8 +51,14 @@ class CompletionRecorderTest {
     private val progressRepository = FakeProgressRepository()
 
     /** A recorder for the page of requirement [number], such as one the scout opens. */
-    private fun recorder(number: String = "1") =
-        CompletionRecorder("camping", number, catalogRepository, progressRepository, clock)
+    private fun recorder(number: String = "1") = CompletionRecorder(
+        "camping",
+        number,
+        catalogRepository,
+        progressRepository,
+        clock,
+        SavedStateHandle()
+    )
 
     private suspend fun progress() = progressRepository.observeProgress("camping").first()
 
@@ -80,8 +87,14 @@ class CompletionRecorderTest {
             )
         )
 
-        CompletionRecorder("tenderfoot", "1a", catalogRepository, progressRepository, clock)
-            .setCompleted(true)
+        CompletionRecorder(
+            "tenderfoot",
+            "1a",
+            catalogRepository,
+            progressRepository,
+            clock,
+            SavedStateHandle()
+        ).setCompleted(true)
 
         val progress = progressRepository.observeProgress("tenderfoot").first()
         assertEquals(BadgeProgress("tenderfoot", newest, today), progress?.badge)
@@ -111,8 +124,14 @@ class CompletionRecorderTest {
                 return catalogRepository.getBadges()
             }
         }
-        val recorder =
-            CompletionRecorder("camping", "1", slowCatalog, progressRepository, fakeClock)
+        val recorder = CompletionRecorder(
+            "camping",
+            "1",
+            slowCatalog,
+            progressRepository,
+            fakeClock,
+            SavedStateHandle()
+        )
 
         recorder.setCompleted(true)
 
@@ -241,7 +260,14 @@ class CompletionRecorderTest {
                 progressRepository.clearRequirements(badgeId, numbers)
             }
         }
-        val recorder = CompletionRecorder("camping", "1", catalogRepository, slowClears, clock)
+        val recorder = CompletionRecorder(
+            "camping",
+            "1",
+            catalogRepository,
+            slowClears,
+            clock,
+            SavedStateHandle()
+        )
         recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
         recorder.setCompleted(false)

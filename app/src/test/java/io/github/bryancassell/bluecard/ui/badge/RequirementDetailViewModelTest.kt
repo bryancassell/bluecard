@@ -638,6 +638,42 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun uncheckingThenChecking_afterTheSystemStopsTheApp_keepsTheDate() = runTest {
+        scenario("1").use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.setCompleted(true)
+            scenario.viewModel.setCompletedDate(day)
+            scenario.viewModel.setCompleted(false)
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+            restored.setCompleted(true)
+
+            assertTrue(restored.ready().requirement.completed)
+            assertEquals(day, restored.ready().completedDate)
+        }
+    }
+
+    @Test
+    fun uncheckingThenChecking_afterTheSystemStopsTheApp_keepsNoDateForOneThatHadNone() = runTest {
+        scenario("1").use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.setCompleted(true)
+            scenario.viewModel.setCompletedDate(null)
+            scenario.viewModel.setCompleted(false)
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+            restored.setCompleted(true)
+
+            assertTrue(restored.ready().requirement.completed)
+            assertNull(restored.ready().completedDate)
+        }
+    }
+
+    @Test
     fun setCompletedDate_null_removesTheDateButStaysCompleted() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)

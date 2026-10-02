@@ -41,7 +41,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
-    // Keeps an unsaved comment if the system stops the app in the background.
+    // Keeps an unsaved comment, and the date to bring back to an unchecked requirement, if the
+    // system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val fields = StoredTextFields(savedStateHandle, COMMENT)
@@ -53,8 +54,14 @@ class RequirementDetailViewModel @AssistedInject constructor(
     val comment = fields[COMMENT]
 
     private val saves = TaskRunner(viewModelScope)
-    private val recorder =
-        CompletionRecorder(advancementId, number, catalogRepository, progressRepository, clock)
+    private val recorder = CompletionRecorder(
+        advancementId,
+        number,
+        catalogRepository,
+        progressRepository,
+        clock,
+        savedStateHandle
+    )
 
     /**
      * The requirement as recorded, or null if the badge's or rank's requirements don't have it.
