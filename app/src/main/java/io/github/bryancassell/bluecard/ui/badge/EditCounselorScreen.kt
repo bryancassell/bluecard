@@ -38,6 +38,7 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
+import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -49,7 +50,7 @@ import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 @Composable
 fun EditCounselorRoute(
     badgeId: String,
-    onSaved: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditCounselorViewModel =
         hiltViewModel<EditCounselorViewModel, EditCounselorViewModel.Factory> {
@@ -64,9 +65,10 @@ fun EditCounselorRoute(
         email = viewModel.email,
         onSave = viewModel::save,
         onSaved = {
-            onSaved()
+            onClose()
             viewModel.onClosed()
         },
+        onDiscard = onClose,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
@@ -75,7 +77,7 @@ fun EditCounselorRoute(
 /**
  * A badge's merit badge counselor: their [name], [phone] number and [email] address, each
  * optional, which the scout saves when they choose. Once they're saved, [onSaved] closes the
- * page. Leaving it without saving discards the changes.
+ * page. Back with unsaved changes asks first, then [onDiscard] closes it without saving them.
  */
 @Composable
 fun EditCounselorScreen(
@@ -85,6 +87,7 @@ fun EditCounselorScreen(
     email: TextFieldState,
     onSave: () -> Unit,
     onSaved: () -> Unit,
+    onDiscard: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -102,6 +105,7 @@ fun EditCounselorScreen(
                 val currentOnSaved by rememberUpdatedState(onSaved)
                 LaunchedEffect(Unit) { currentOnSaved() }
             }
+            ConfirmDiscardOnBack(changed = uiState.changed, onDiscard = onDiscard)
             CounselorFields(uiState, name, phone, email, onSave)
             SaveFailedSnackbarHost(
                 failure = uiState.saveFailure,

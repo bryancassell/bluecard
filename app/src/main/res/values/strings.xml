@@ -108,6 +108,14 @@
     <!-- Button that closes a dialog asking to confirm removing something, such as a tracker
          row, without removing it. -->
     <string name="confirm_dialog_cancel">Cancel</string>
+    <!-- Asks before Back closes a page whose fields have changes that aren't saved, and the
+         dialog's button that discards them and closes the page. -->
+    <string name="discard_changes_title">Discard changes?</string>
+    <string name="discard_changes_message">Your changes haven\'t been saved.</string>
+    <!-- The same, on a requirement's page, where the checkbox and date save straight away and
+         only the notes wait for their Save button. -->
+    <string name="discard_changes_message_notes">Your changes to the notes haven\'t been saved.</string>
+    <string name="discard_changes_confirm">Discard</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
     <string name="date_picker_cancel">Cancel</string>

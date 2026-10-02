@@ -54,6 +54,7 @@ class EditProfileViewModel @Inject constructor(
         val typed = typed()
         EditProfileUiState.Ready(
             canSave = isComplete(typed) && typed != stored,
+            changed = typed != stored,
             saved = isSaved,
             saveFailure = saveFailure
         )

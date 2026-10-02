@@ -283,6 +283,17 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen adds goes first (`BlueCardNavDisplay.kt`). Why the pages move this
   way, against Material 3's advice, is in
   [`PRD.md`](PRD.md#design-decisions).
+- **A page with unsaved changes asks before Back discards them**
+  (`ui/ConfirmDiscardOnBack.kt`). Its UI state says whether the fields differ
+  from what's saved (`changed`), apart from whether they can be saved, and its
+  `BackHandler` is enabled only while they do, as the
+  [predictive back guide](https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture)
+  says: "Determine the UI state that enables and disables each callback."
+  Discard closes the page with its route's `onClose`. A screen's handlers are
+  turned off while it animates out (`rememberIgnoreBackWhileLeavingNavEntryDecorator`),
+  so a Back just after a page opens another closes the new one. A screen that
+  has left the back stack needs no such help: Navigation 3 stops it, which
+  turns its handlers off.
 
 ### Double taps
 
@@ -682,8 +693,9 @@ of a requirement and every one under it (`clearRequirements`), each in one
 transaction, after a confirmation dialog. Every removal of what the scout
 recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
 opened by a button with `removalButtonColors` (`removalOutlinedButtonColors`
-for Data management's outlined Clear all). Badge detail and Requirement
-detail share their Clear progress button and its dialog
+for Data management's outlined Clear all). Discarding unsaved changes asks with
+it too, opened by Back (see [Navigation](#navigation)). Badge detail and
+Requirement detail share their Clear progress button and its dialog
 (`ui/badge/ClearProgress.kt`). Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a

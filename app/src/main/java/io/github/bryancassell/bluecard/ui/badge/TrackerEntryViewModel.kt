@@ -144,6 +144,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
                 }
                 .toMap(),
             canSave = !saving && !done && isSavable(row, stored),
+            changed = stored != row.saved,
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,

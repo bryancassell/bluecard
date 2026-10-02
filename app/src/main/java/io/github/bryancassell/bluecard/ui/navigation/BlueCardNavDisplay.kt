@@ -63,12 +63,14 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val decoratedEntries = rememberDecoratedNavEntries(
         backStack = shownBackStack,
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
-        // cleared when the entry leaves the back stack, and ignore touches on screens that
-        // are animating, so a double tap can't press a control on the screen it opened.
+        // cleared when the entry leaves the back stack, ignore touches on screens that are
+        // animating, so a double tap can't press a control on the screen it opened, and ignore
+        // Back on screens animating out, so it reaches the one shown in their place.
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
             rememberIgnoreTouchesNavEntryDecorator(),
+            rememberIgnoreBackWhileLeavingNavEntryDecorator(),
             drawnScreens.decorator
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
@@ -99,10 +101,11 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 )
             }
             entry<EditCounselor> { key ->
-                // Once saved, the page closes, unless the scout has already gone back.
+                // Once saved or discarded, the page closes, unless the scout has already gone
+                // back.
                 EditCounselorRoute(
                     badgeId = key.badgeId,
-                    onSaved = { backStack.closeIfOnTop(key) }
+                    onClose = { backStack.closeIfOnTop(key) }
                 )
             }
             entry<RequirementDetail> { key ->
@@ -114,7 +117,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
                     onOpenTrackerEntry = { entryId, rowNumber ->
                         navigate(TrackerEntryDetail(key.badgeId, key.number, entryId, rowNumber))
-                    }
+                    },
+                    // Once the scout discards an unsaved comment.
+                    onClose = { backStack.closeIfOnTop(key) }
                 )
             }
             entry<TrackerEntryDetail> { key ->
@@ -133,8 +138,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 DataManagementRoute(onEditProfile = { navigate(EditProfile) })
             }
             entry<EditProfile> { key ->
-                // Once saved, the page closes, unless the scout has already gone back.
-                EditProfileRoute(onSaved = { backStack.closeIfOnTop(key) })
+                // Once saved or discarded, the page closes, unless the scout has already gone
+                // back.
+                EditProfileRoute(onClose = { backStack.closeIfOnTop(key) })
             }
         }.also { entries = it }
     )

@@ -26,6 +26,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import org.junit.Assert.assertEquals
@@ -44,21 +45,26 @@ class EditCounselorScreenTest {
     private val email = TextFieldState()
     private var saves = 0
     private var closes = 0
+    private var discards = 0
+    private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     private val ready = EditCounselorUiState.Ready(badgeName = "Camping", changed = false)
 
     private fun show(uiState: EditCounselorUiState) {
         composeTestRule.setContent {
-            EditCounselorScreen(
-                uiState = uiState,
-                name = name,
-                phone = phone,
-                email = email,
-                onSave = { saves++ },
-                onSaved = { closes++ },
-                onSaveFailureShown = { saveFailuresShown += it }
-            )
+            back.Content {
+                EditCounselorScreen(
+                    uiState = uiState,
+                    name = name,
+                    phone = phone,
+                    email = email,
+                    onSave = { saves++ },
+                    onSaved = { closes++ },
+                    onDiscard = { discards++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
+                )
+            }
         }
     }
 
@@ -206,6 +212,28 @@ class EditCounselorScreenTest {
     }
 
     @Test
+    fun back_withChanges_asksBeforeDiscardingThem() {
+        show(ready.copy(changed = true))
+
+        back.press(composeTestRule)
+        composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, discards)
+        assertEquals(0, back.closes)
+    }
+
+    @Test
+    fun back_withoutChanges_closesThePage() {
+        show(ready)
+
+        back.press(composeTestRule)
+
+        assertEquals(1, back.closes)
+        composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
+    }
+
+    @Test
     fun save_closesTheKeyboard() {
         show(ready.copy(changed = true))
         field("Email").performClick().assertIsFocused()
@@ -226,6 +254,7 @@ class EditCounselorScreenTest {
                 email = email,
                 onSave = {},
                 onSaved = { closes++ },
+                onDiscard = {},
                 onSaveFailureShown = {}
             )
         }
@@ -253,6 +282,7 @@ class EditCounselorScreenTest {
                 email = email,
                 onSave = {},
                 onSaved = { closes++ },
+                onDiscard = {},
                 onSaveFailureShown = {}
             )
         }

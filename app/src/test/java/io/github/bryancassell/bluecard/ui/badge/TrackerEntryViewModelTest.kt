@@ -202,6 +202,7 @@ class TrackerEntryViewModelTest {
                 columns = sessionColumns,
                 dates = emptyMap(),
                 canSave = false,
+                changed = false,
                 hasSavedEntry = false,
                 canDelete = false
             ),
@@ -263,6 +264,47 @@ class TrackerEntryViewModelTest {
         // Spaces around a value aren't saved, so they're no change.
         viewModel.type("activity", " Run ")
         assertFalse(viewModel.ready().canSave)
+    }
+
+    @Test
+    fun changed_followsTheFields_untilTheyMatchWhatsSaved() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().changed)
+
+        viewModel.type("activity", "Swim")
+        assertTrue(viewModel.ready().changed)
+
+        viewModel.type("activity", " Run ")
+        assertFalse(viewModel.ready().changed)
+
+        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+        assertTrue(viewModel.ready().changed)
+    }
+
+    @Test
+    fun savedEntryEmptied_isAChange_thatCantBeSaved() = runTest {
+        val id = addSession(mapOf("activity" to "Run"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+
+        // Delete removes it instead, but Back still asks before discarding the edit.
+        viewModel.type("activity", "")
+
+        assertTrue(viewModel.ready().changed)
+        assertFalse(viewModel.ready().canSave)
+    }
+
+    @Test
+    fun newEntry_withNothingThatWouldBeSaved_isNoChange() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.type("activity", "   ")
+        viewModel.type("minutes", ".")
+
+        assertFalse(viewModel.ready().changed)
     }
 
     @Test

@@ -858,18 +858,111 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("555-0100").assertDoesNotExist()
     }
 
+    private fun discardDialog() = composeTestRule.onNodeWithText("Discard changes?")
+
     @Test
-    fun back_fromEditCounselor_discardsChanges() {
+    fun back_fromEditCounselor_withChanges_asksBeforeDiscardingThem() {
         openCamping()
         composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
         field("Name").performTextInput("Pat Lee")
         composeTestRule.waitForIdle()
 
+        // Cancel keeps the page and the edit.
         pressBack()
+        discardDialog().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+        assertFieldText("Name", "Pat Lee")
+
+        pressBack()
+        composeTestRule.onNodeWithText("Discard").performClick()
 
         composeTestRule.onNodeWithText("Add counselor").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Pat Lee").assertDoesNotExist()
         assertNull(runBlocking { progressRepository.observeProgress("camping").first() })
+    }
+
+    @Test
+    fun back_fromTrackerEntry_withChanges_asksBeforeDiscardingThem() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performClick()
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        weatherField().performTextInput("Rained all night.")
+        composeTestRule.waitForIdle()
+
+        pressBack()
+        discardDialog().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        composeTestRule.onNodeWithText("0 nights").performScrollTo().assertIsDisplayed()
+        assertEquals(emptyList<Map<String, String>>(), runBlocking { trackerValues("1") })
+    }
+
+    @Test
+    fun back_fromRequirementDetail_withUnsavedNotes_asksBeforeDiscardingThem() {
+        openCamping()
+        // Saved straight away, so Back doesn't ask about it.
+        completeOnItsPage("First.")
+        composeTestRule.onNodeWithText("First.").performClick()
+        field("Notes").performScrollTo().performTextInput("Planned it with my patrol.")
+        composeTestRule.waitForIdle()
+
+        pressBack()
+        composeTestRule.onNodeWithText("Your changes to the notes haven't been saved.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+        assertEquals(
+            RequirementProgress("camping", "1", true, today, null),
+            runBlocking { recorded("1") }
+        )
+    }
+
+    @Test
+    fun back_justAfterDiscarding_goesBackAgain_withoutAsking() {
+        openCamping()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        field("Name").performTextInput("Pat Lee")
+        composeTestRule.waitForIdle()
+        pressBack()
+        discardDialog().assertIsDisplayed()
+
+        // Back again while the page slides away.
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithText("Discard").performClick()
+        // Hand the back stack change to Compose; see tap_onClosingScreenAfterBack_doesNothing.
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        field("Name").assertExists()
+        pressBack()
+        composeTestRule.mainClock.autoAdvance = true
+
+        assertBadgesShowing()
+        discardDialog().assertDoesNotExist()
+    }
+
+    @Test
+    fun back_justAfterOpeningAPage_closesIt_withoutAskingAboutUnsavedNotes() {
+        openCamping()
+        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        field("Notes").performScrollTo().performTextInput("Chose B.")
+        composeTestRule.onNodeWithText("Choice B.").performScrollTo()
+        composeTestRule.waitForIdle()
+
+        // Back while Requirement 2 slides away.
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithText("Choice B.").performClick()
+        // Hand the back stack change to Compose; see tap_onClosingScreenAfterBack_doesNothing.
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.advanceTimeBy(100)
+        composeTestRule.onNodeWithText("Requirement 2b").assertExists()
+        pressBack()
+        composeTestRule.mainClock.autoAdvance = true
+
+        composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Requirement 2b").assertDoesNotExist()
+        discardDialog().assertDoesNotExist()
+        assertFieldText("Notes", "Chose B.")
     }
 
     // Dates, like numbers, follow the strings' language, so on a Persian device the English
@@ -1017,12 +1110,14 @@ class MainActivityTest {
     }
 
     @Test
-    fun back_fromEditNameAndUnit_discardsChanges() {
+    fun back_fromEditNameAndUnit_withChanges_asksBeforeDiscardingThem() {
         openEditNameAndUnit()
         field("Name").performTextReplacement("Sam Scout")
         composeTestRule.waitForIdle()
 
         pressBack()
+        discardDialog().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
 
         composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
         assertEquals(Profile("Alex Scout", "123"), runBlocking { profile() })

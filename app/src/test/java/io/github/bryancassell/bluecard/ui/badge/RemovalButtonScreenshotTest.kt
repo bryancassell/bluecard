@@ -61,6 +61,7 @@ class RemovalButtonScreenshotTest {
                     today = { today },
                     onSaveComment = {},
                     onClear = {},
+                    onDiscard = {},
                     onSaveFailureShown = {}
                 )
             }
@@ -83,6 +84,7 @@ class RemovalButtonScreenshotTest {
                         columns = columns,
                         dates = emptyMap(),
                         canSave = false,
+                        changed = false,
                         hasSavedEntry = true,
                         canDelete = true
                     ),

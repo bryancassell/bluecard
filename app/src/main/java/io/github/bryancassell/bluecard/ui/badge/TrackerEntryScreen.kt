@@ -45,6 +45,7 @@ import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
+import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.NumberInput
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
@@ -87,7 +88,8 @@ fun TrackerEntryRoute(
 /**
  * One row of a requirement's tracker, to fill in or change: a field for each of the tracker's
  * columns, in the text [fields] or, for a date, with a date picker. Save and Delete close the
- * page ([onClose]) once they're done; Delete asks first.
+ * page ([onClose]) once they're done; Delete asks first. Back with unsaved changes asks too,
+ * then closes it without saving them.
  */
 @Composable
 fun TrackerEntryScreen(
@@ -114,6 +116,7 @@ fun TrackerEntryScreen(
                 val currentOnClose by rememberUpdatedState(onClose)
                 LaunchedEffect(Unit) { currentOnClose() }
             }
+            ConfirmDiscardOnBack(changed = uiState.changed, onDiscard = onClose)
             // Ends the page above the keyboard, so every field can be scrolled into view.
             Box(modifier = modifier.imePadding()) {
                 Column(

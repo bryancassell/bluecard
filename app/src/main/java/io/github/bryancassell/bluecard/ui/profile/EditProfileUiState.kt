@@ -16,6 +16,11 @@ sealed interface EditProfileUiState {
     data class Ready(
         /** Whether the fields differ from the saved ones and neither is blank. */
         val canSave: Boolean,
+        /**
+         * Whether the fields differ from the saved ones, even if one is blank, so Back asks
+         * before discarding them.
+         */
+        val changed: Boolean,
         /** The fields have been saved, so the page can close. */
         val saved: Boolean = false,
         /** The fields couldn't be saved, and the scout hasn't been told yet. */

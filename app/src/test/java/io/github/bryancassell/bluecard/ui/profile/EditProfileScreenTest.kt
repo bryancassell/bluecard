@@ -25,6 +25,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -44,9 +45,11 @@ class EditProfileScreenTest {
     private val unitNumber = TextFieldState()
     private var saves = 0
     private var closes = 0
+    private var discards = 0
+    private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<SaveFailure>()
 
-    private val ready = EditProfileUiState.Ready(canSave = false)
+    private val ready = EditProfileUiState.Ready(canSave = false, changed = false)
 
     /** The UI state shown, which a test can change after [show]. */
     private var uiState by mutableStateOf<EditProfileUiState>(ready)
@@ -54,14 +57,17 @@ class EditProfileScreenTest {
     private fun show(state: EditProfileUiState) {
         uiState = state
         composeTestRule.setContent {
-            EditProfileScreen(
-                uiState = uiState,
-                name = name,
-                unitNumber = unitNumber,
-                onSave = { saves++ },
-                onSaved = { closes++ },
-                onSaveFailureShown = { saveFailuresShown += it }
-            )
+            back.Content {
+                EditProfileScreen(
+                    uiState = uiState,
+                    name = name,
+                    unitNumber = unitNumber,
+                    onSave = { saves++ },
+                    onSaved = { closes++ },
+                    onDiscard = { discards++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
+                )
+            }
         }
     }
 
@@ -148,6 +154,29 @@ class EditProfileScreenTest {
     // The tests' view isn't in touch mode, as a phone's is while the scout taps it, so Android
     // gives focus to the first field once it's cleared. The field the scout typed in last
     // shows that Save cleared it.
+    @Test
+    fun back_withChangesThatCantBeSaved_asksBeforeDiscardingThem() {
+        // As with a field left blank.
+        show(ready.copy(canSave = false, changed = true))
+
+        back.press(composeTestRule)
+        composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, discards)
+        assertEquals(0, back.closes)
+    }
+
+    @Test
+    fun back_withoutChanges_closesThePage() {
+        show(ready)
+
+        back.press(composeTestRule)
+
+        assertEquals(1, back.closes)
+        composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
+    }
+
     @Test
     fun save_closesTheKeyboard() {
         show(ready.copy(canSave = true))

@@ -106,7 +106,10 @@ class EditProfileViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(alex, viewModel.fields())
-        assertEquals(EditProfileUiState.Ready(canSave = false), viewModel.uiState.value)
+        assertEquals(
+            EditProfileUiState.Ready(canSave = false, changed = false),
+            viewModel.uiState.value
+        )
     }
 
     @Test
@@ -150,6 +153,21 @@ class EditProfileViewModelTest {
             assertEquals(alex, saved())
             assertFalse(viewModel.ready().saved)
         }
+    }
+
+    @Test
+    fun changed_followsTheFields_evenWhenOneIsBlank() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        // Back asks before discarding a blank field, though it can't be saved.
+        viewModel.typeAll(Profile("", "123"))
+        assertTrue(viewModel.ready().changed)
+        assertFalse(viewModel.ready().canSave)
+
+        // Spaces around a value aren't saved, so they're no change.
+        viewModel.typeAll(Profile(" Alex Scout ", "123 "))
+        assertFalse(viewModel.ready().changed)
     }
 
     @Test
