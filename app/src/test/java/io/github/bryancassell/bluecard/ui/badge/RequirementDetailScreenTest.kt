@@ -584,6 +584,15 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun fixedRowsAllFilledIn_removeDate_removesIt() {
+        show(weeksFilledIn)
+
+        composeTestRule.onNodeWithText("Remove date").performClick()
+
+        assertEquals(listOf<LocalDate?>(null), dateChanges)
+    }
+
+    @Test
     fun fixedRowsAllFilledIn_withoutDate_offerToAddOne() {
         show(weeksFilledIn.copy(completedDate = null))
 
