@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.report
 import android.Manifest
 import android.content.Context
 import android.content.pm.ProviderInfo
+import android.content.res.Resources
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -210,12 +211,22 @@ class PdfReportRepositoryTest {
         assertEquals("Search_Rescue merit badge report.pdf", report.displayName())
     }
 
-    // As the file picker replaces them, so the file can be kept on an SD card or computer too.
+    // In a translation as well as in the badge's name, as the file picker replaces them, so the
+    // file can be kept on an SD card or computer too.
     @Test
     fun reportFileName_replacesEachCharacterAFileNameCantHold() {
+        val app = context.resources
+
+        // Resources has no other way to give a string that isn't in the app.
+        @Suppress("DEPRECATION")
+        val translation = object : Resources(app.assets, app.displayMetrics, app.configuration) {
+            override fun getString(id: Int, vararg formatArgs: Any?): String =
+                "a\"b*c/d:e<f>g?h\\i|j\tk\u007Fl %1\$s".format(*formatArgs)
+        }
+
         assertEquals(
-            "a_b_c_d_e_f_g_h_i_j_k_l merit badge report.pdf",
-            reportFileName(context.resources, "a\"b*c/d:e<f>g?h\\i|j\tk\u007Fl")
+            "a_b_c_d_e_f_g_h_i_j_k_l Search_Rescue.pdf",
+            reportFileName(translation, "Search/Rescue")
         )
     }
 

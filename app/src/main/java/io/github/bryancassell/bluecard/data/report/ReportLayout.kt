@@ -103,6 +103,9 @@ private class ReportComposer(private val resources: Resources) {
     // Dates are written as on screen.
     private val dateFormatter = completionDateFormatter(locale)
 
+    // Between a tracker row's values, as on screen.
+    private val valueSeparator = resources.getString(R.string.tracker_value_separator)
+
     private val paints = Style.entries.associateWith { style ->
         TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = style.size
@@ -184,11 +187,10 @@ private class ReportComposer(private val resources: Resources) {
      * value after multi-line text starts a new line, so it doesn't read as the text's last line.
      */
     private fun valuesText(values: List<Pair<TrackerColumn, String>>): String = buildString {
-        val separator = string(R.string.tracker_value_separator)
         values.forEachIndexed { index, (column, value) ->
             if (index > 0) {
                 val previous = values[index - 1].first.type
-                append(if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else separator)
+                append(if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else valueSeparator)
             }
             append(string(R.string.report_labeled_value, column.label, valueText(column, value)))
         }

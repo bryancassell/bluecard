@@ -233,7 +233,8 @@
     <!-- Shown briefly when a badge's report couldn't be created or saved. -->
     <string name="report_failed">Couldn\'t create the report. Try again.</string>
     <!-- The report's file name, without its ".pdf" extension, with the badge's name, such as
-         "Camping merit badge report". -->
+         "Camping merit badge report". Each of " * / : < > ? \ | becomes "_", since a file
+         name can't hold it. -->
     <string name="report_file_name">%1$s merit badge report</string>
     <!-- The rest of these are printed in the report, a PDF of everything the scout recorded
          for a badge, to give to their counselor or keep. -->
