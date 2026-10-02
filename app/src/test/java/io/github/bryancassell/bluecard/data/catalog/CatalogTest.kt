@@ -39,7 +39,8 @@ class CatalogTest {
                           "columns": [
                             { "id": "date", "label": "Date", "type": "date" },
                             { "id": "miles", "label": "Miles", "type": "number" },
-                            { "id": "notes", "label": "Notes", "type": "text" }
+                            { "id": "notes", "label": "Notes", "type": "text" },
+                            { "id": "sights", "label": "What you saw", "type": "multiline-text" }
                           ],
                           "rowLabel": "hike",
                           "rowLabelPlural": "hikes",
@@ -94,6 +95,11 @@ class CatalogTest {
                                                         "notes",
                                                         "Notes",
                                                         TrackerColumnType.TEXT
+                                                    ),
+                                                    TrackerColumn(
+                                                        "sights",
+                                                        "What you saw",
+                                                        TrackerColumnType.MULTILINE_TEXT
                                                     )
                                                 ),
                                                 rowLabel = "hike",

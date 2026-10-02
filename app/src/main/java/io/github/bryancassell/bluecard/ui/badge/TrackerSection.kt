@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.ui.lineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.typedText
 import java.time.format.DateTimeFormatter
 
@@ -106,7 +107,10 @@ private fun TrackerRowItem(
     )
 }
 
-/** A row's values on one line, such as "Sep 12, 2026 · Running · 30", or null if it has none. */
+/**
+ * A row's values on one line, such as "Sep 12, 2026 · Running · 30", or null if it has none. A
+ * line break in a value, as in multi-line text, is a space.
+ */
 @Composable
 private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFormatter): String? =
     values.takeIf { it.isNotEmpty() }?.map { value ->
@@ -115,6 +119,7 @@ private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFor
                 storedDate(value.text)?.let { formatter.format(it) } ?: typedText(value.text)
 
             // The scout typed it.
-            TrackerColumnType.NUMBER, TrackerColumnType.TEXT -> typedText(value.text)
+            TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
+                typedText(value.text)
         }
-    }?.joinToString(" · ")
+    }?.joinToString(" · ")?.let(::lineBreaksAsSpaces)

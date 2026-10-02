@@ -175,21 +175,34 @@ private class ReportComposer(private val resources: Resources) {
                 spaceBefore = 4f,
                 keepWithNext = row.values.isNotEmpty()
             )
-            if (row.values.isNotEmpty()) {
-                val values = row.values.joinToString(" · ") { (column, value) ->
-                    string(R.string.report_labeled_value, column.label, valueText(column, value))
-                }
-                add(Style.Body, values, indent)
-            }
+            if (row.values.isNotEmpty()) add(Style.Body, valuesText(row.values), indent)
         }
     }
 
-    /** A tracker value as stored, with a date written out, as on screen. */
+    /**
+     * A row's values, each after its column's label, separated by " · ". A value after multi-line
+     * text starts a new line, so it doesn't read as the text's last line.
+     */
+    private fun valuesText(values: List<Pair<TrackerColumn, String>>): String = buildString {
+        values.forEachIndexed { index, (column, value) ->
+            if (index > 0) {
+                val previous = values[index - 1].first.type
+                append(if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else " · ")
+            }
+            append(string(R.string.report_labeled_value, column.label, valueText(column, value)))
+        }
+    }
+
+    /**
+     * A tracker value as stored, with a date written out, as on screen. Multi-line text keeps
+     * its line breaks, as notes do.
+     */
     private fun valueText(column: TrackerColumn, value: String): String = when (column.type) {
         TrackerColumnType.DATE -> storedDate(value)?.let(::date) ?: typed(value)
 
         // The scout typed it.
-        TrackerColumnType.NUMBER, TrackerColumnType.TEXT -> typed(value)
+        TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
+            typed(value)
     }
 
     private fun completionText(completion: Completion?): String = when {
@@ -201,8 +214,10 @@ private class ReportComposer(private val resources: Resources) {
     private fun string(@StringRes id: Int, vararg args: Any): String =
         resources.getString(id, *args)
 
-    // Text the scout typed keeps its own direction, as on screen.
-    private fun typed(text: String): String = typedText(text, locale)
+    // Text the scout typed keeps its own direction, as on screen. A line break ends a paragraph
+    // for the bidi algorithm, and the wrapping with it, so each line is wrapped on its own.
+    private fun typed(text: String): String =
+        text.lines().joinToString("\n") { typedText(it, locale) }
 
     private fun date(date: LocalDate): String = dateFormatter.format(date)
 

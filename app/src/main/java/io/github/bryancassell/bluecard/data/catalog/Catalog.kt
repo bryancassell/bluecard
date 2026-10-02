@@ -99,7 +99,11 @@ enum class TrackerColumnType {
     NUMBER,
 
     @SerialName("text")
-    TEXT
+    TEXT,
+
+    /** Text of more than one line, such as a description or a list. */
+    @SerialName("multiline-text")
+    MULTILINE_TEXT
 }
 
 /** The format version this app reads. */

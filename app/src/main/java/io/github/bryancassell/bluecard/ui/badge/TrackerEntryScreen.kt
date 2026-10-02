@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
@@ -169,15 +170,17 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
     }
 }
 
-/**
- * A row's values are shown on one line in its requirement's tracker, so a pasted line break
- * becomes a space.
- */
+/** A text column's field is single-line, so a pasted line break becomes a space. */
 private val TextLimit = singleLineInput(maxLength = TRACKER_TEXT_MAX_LENGTH)
+
+private val MultilineTextLimit = TextLengthLimit(maxLength = TRACKER_MULTILINE_TEXT_MAX_LENGTH)
 
 private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = TRACKER_NUMBER_MAX_LENGTH))
 
-/** The field for one column: a date with a picker, or a text field for text or a number. */
+/**
+ * The field for one column: a date with a picker, or a text field for text or a number. A
+ * multi-line text field is drawn like the requirement notes field.
+ */
 @Composable
 private fun TrackerField(
     column: TrackerColumn,
@@ -213,15 +216,24 @@ private fun TrackerField(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
         )
 
-        TrackerColumnType.TEXT -> OutlinedTextField(
-            state = field,
-            textStyle = typedTextFieldStyle(),
-            label = { Text(column.label) },
-            inputTransformation = TextLimit,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            lineLimits = TextFieldLineLimits.SingleLine,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-        )
+        TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT -> {
+            val multiline = column.type == TrackerColumnType.MULTILINE_TEXT
+            OutlinedTextField(
+                state = field,
+                textStyle = typedTextFieldStyle(),
+                label = { Text(column.label) },
+                inputTransformation = if (multiline) MultilineTextLimit else TextLimit,
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
+                lineLimits = if (multiline) {
+                    TextFieldLineLimits.MultiLine(minHeightInLines = 3)
+                } else {
+                    TextFieldLineLimits.SingleLine
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            )
+        }
     }
 }
 

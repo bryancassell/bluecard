@@ -475,10 +475,12 @@ way.
 
 Requirements such as Personal Fitness's 12-week exercise log or Personal
 Management's 13-week budget need repeated entries. The catalog describes a
-tracker generically (its columns and their types, such as date, number and
-text, and optionally a number of rows or weeks), and the app renders and stores
-any tracker the same way. New trackers then need only catalog data, not new
-code (req. 7).
+tracker generically (its columns and their types: date, number, text or
+multi-line text, and optionally a number of rows or weeks), and the app renders
+and stores any tracker the same way. New trackers then need only catalog data,
+not new code (req. 7). Multi-line text is a type of its own, not a flag on
+text, so each `when` over the types (the field, the row's summary, the report
+and import) has to decide how to handle it.
 
 ### Requirement versions
 
