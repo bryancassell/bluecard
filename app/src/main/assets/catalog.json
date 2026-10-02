@@ -2,6 +2,97 @@
   "formatVersion": 1,
   "badges": [
     {
+      "id": "animation",
+      "name": "Animation",
+      "summary": "Learn what animation is, how it began and what makes it believable, then make animations with two techniques.",
+      "officialUrl": "https://www.scouting.org/merit-badges/animation/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2022-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what animation is and where it came from.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain animation in your own words."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss how animation began and developed."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain how five of the 12 listed animation principles make motion more convincing."
+            },
+            {
+              "number": "3",
+              "summary": "With your counselor's approval, pick two animation techniques and make an animation with each.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Make an animation with your first technique.",
+                  "children": [
+                    {
+                      "number": "3a(1)",
+                      "summary": "Work out your animation first in thumbnail sketches or layout drawings, on paper or in software."
+                    },
+                    {
+                      "number": "3a(2)",
+                      "summary": "Make the animation."
+                    },
+                    {
+                      "number": "3a(3)",
+                      "summary": "Present it to your counselor, walk through your process, and talk about how to improve it."
+                    }
+                  ]
+                },
+                {
+                  "number": "3b",
+                  "summary": "Make an animation with your second technique.",
+                  "children": [
+                    {
+                      "number": "3b(1)",
+                      "summary": "Work out your animation first in thumbnail sketches or layout drawings."
+                    },
+                    {
+                      "number": "3b(2)",
+                      "summary": "Make the animation."
+                    },
+                    {
+                      "number": "3b(3)",
+                      "summary": "Present it to your counselor, walk through your process, and talk about how to improve it."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "See how animation is used in the world.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Tour an animation studio or business, in person or online, and report what you learned."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Discuss how animation might someday help you have more fun and get more done."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore three animation careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "archery",
       "name": "Archery",
       "summary": "Learn range safety and arrow care, then shoot a recurve, longbow or compound bow for score.",
@@ -4504,6 +4595,180 @@
       ]
     },
     {
+      "id": "fish-wildlife-management",
+      "name": "Fish and Wildlife Management",
+      "summary": "Learn how fish and wildlife are managed and protected, and do hands-on projects with wildlife, habitats and fish.",
+      "officialUrl": "https://www.scouting.org/merit-badges/fish-wildlife-management/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain what fish and wildlife conservation and management are and why they matter."
+            },
+            {
+              "number": "2",
+              "summary": "Discuss three or more serious ongoing threats to fish and wildlife in your state."
+            },
+            {
+              "number": "3",
+              "summary": "Describe what you and others can do to protect fish and wildlife."
+            },
+            {
+              "number": "4",
+              "summary": "Describe five key practices your state's managers use for fish and wildlife."
+            },
+            {
+              "number": "5",
+              "summary": "Do one hands-on wildlife project.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Make two or more nest boxes, mount them, and log regular checks through one nesting season.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "box",
+                        "label": "Nest box",
+                        "type": "text"
+                      },
+                      {
+                        "id": "seen",
+                        "label": "What you saw",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "check",
+                    "rowLabelPlural": "checks"
+                  }
+                },
+                {
+                  "number": "5b",
+                  "summary": "Make and mount bird feeders, and each day for two weeks note which kinds of birds visit.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "birds",
+                        "label": "Birds seen",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
+                },
+                {
+                  "number": "5c",
+                  "summary": "Plan and carry out a fishery or backyard wildlife habitat improvement project, and share the results."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Build a wildlife blind where animals gather, and photograph or sketch 10 wild birds, mammals, reptiles or amphibians from it."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Do one study of wildlife species.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Spot 25 wildlife species and record when and where you saw each.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "species",
+                        "label": "Species",
+                        "type": "text"
+                      },
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "place",
+                        "label": "Where",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "species",
+                    "rowLabelPlural": "species",
+                    "rowCount": 25
+                  }
+                },
+                {
+                  "number": "6b",
+                  "summary": "List your state's wildlife in the listed categories, and discuss how three are managed."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Make a North American wildlife scrapbook with five or more articles on each of the five animal groups."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do one fish study or aquarium project.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Use scales to age five fish species, or find one species' age classes in a lake; report results."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Survey anglers' catches on a small lake (a creel census), work out catch per unit effort, and report back."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Check the stomachs of three fish and record what each ate; you don't have to catch them.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "fish",
+                        "label": "Fish",
+                        "type": "text"
+                      },
+                      {
+                        "id": "contents",
+                        "label": "Stomach contents",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "fish",
+                    "rowLabelPlural": "fish",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "7d",
+                  "summary": "Keep a freshwater aquarium of four native plant and four animal species for 60 days, discuss it, and dispose of them lawfully, as your counselor directs."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore three fish and wildlife careers, research one, and discuss whether it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "fishing",
       "name": "Fishing",
       "summary": "Learn fishing safety, tackle, knots and rules, then catch, clean and cook a fish.",
@@ -4579,6 +4844,288 @@
             {
               "number": "10",
               "summary": "If rules and health allow, clean and cook a fish, ideally one you caught."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forestry",
+      "name": "Forestry",
+      "summary": "Identify trees and shrubs, learn how forests are managed and protected, and see forestry at work.",
+      "officialUrl": "https://www.scouting.org/merit-badges/forestry/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Identify 15 local trees, shrubs or vines, and describe each in a field notebook.",
+              "ownWork": "Collect samples from 15 local trees, shrubs or vines, identify them, and start a field notebook.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Each one's leaves, twigs, cones or fruit."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Where each one grows."
+                },
+                {
+                  "number": "1c",
+                  "summary": "How people and wildlife use each one, and whether it's native, introduced or invasive."
+                }
+              ],
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "species",
+                    "label": "Species",
+                    "type": "text"
+                  },
+                  {
+                    "id": "features",
+                    "label": "Leaves, twigs, cones or fruit",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "habitat",
+                    "label": "Habitat",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "uses",
+                    "label": "Uses, and native or introduced",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "species",
+                "rowLabelPlural": "species",
+                "rowCount": 15
+              }
+            },
+            {
+              "number": "2",
+              "summary": "Do one study of wood, tree rings or tree damage.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Gather wood samples from 10 tree species, identify them, and give several uses for each wood.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "species",
+                        "label": "Tree species",
+                        "type": "text"
+                      },
+                      {
+                        "id": "uses",
+                        "label": "Uses for its wood",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "sample",
+                    "rowLabelPlural": "samples",
+                    "rowCount": 10
+                  }
+                },
+                {
+                  "number": "2b",
+                  "summary": "Find three stumps, logs or cores with uneven growth rings; describe each site and likely causes, and photograph or sketch each."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Study two kinds of animal, insect or disease damage to trees; explain causes and effects, and photograph or sketch each."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn what forests give us.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Describe what forests provide in each of these areas.",
+                  "children": [
+                    {
+                      "number": "3a(1)",
+                      "summary": "The economy, through forest products."
+                    },
+                    {
+                      "number": "3a(2)",
+                      "summary": "Social well-being and recreation."
+                    },
+                    {
+                      "number": "3a(3)",
+                      "summary": "Soil protection and fertility."
+                    },
+                    {
+                      "number": "3a(4)",
+                      "summary": "Clean water."
+                    },
+                    {
+                      "number": "3a(5)",
+                      "summary": "Clean air, including carbon cycling and sequestration."
+                    },
+                    {
+                      "number": "3a(6)",
+                      "summary": "Wildlife habitat."
+                    },
+                    {
+                      "number": "3a(7)",
+                      "summary": "Fisheries habitat."
+                    },
+                    {
+                      "number": "3a(8)",
+                      "summary": "Threatened and endangered plants and animals."
+                    }
+                  ]
+                },
+                {
+                  "number": "3b",
+                  "summary": "Name the watershed or other source of your community's water."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain the main ideas of forest management.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Multiple-use management."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Sustainable forest management."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Even-aged and uneven-aged management and their silvicultural systems."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Intermediate cuttings."
+                },
+                {
+                  "number": "4e",
+                  "summary": "How prescribed burns and similar practices are used."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "With permission and approval, see forestry at work and write a short report.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Tour a managed forest with its manager or a forester, and report on its type, goals and methods."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With an expert, visit a logging site, past or present, or a wood-using plant, and report on it.",
+                  "ownWork": "Visit a logging site, past or present, or a wood-using plant with an expert.",
+                  "children": [
+                    {
+                      "number": "5b(1)",
+                      "summary": "The species and size of the trees cut or used."
+                    },
+                    {
+                      "number": "5b(2)",
+                      "summary": "Whether the trees came from planted or natural stands."
+                    },
+                    {
+                      "number": "5b(3)",
+                      "summary": "The forest's successional stage and future, and any planted or natural regrowth after past logging."
+                    },
+                    {
+                      "number": "5b(4)",
+                      "summary": "Who owns the land the trees come from, or what kind of mill takes them."
+                    },
+                    {
+                      "number": "5b(5)",
+                      "summary": "What the trees are made into."
+                    },
+                    {
+                      "number": "5b(6)",
+                      "summary": "How those products are manufactured and used."
+                    },
+                    {
+                      "number": "5b(7)",
+                      "summary": "What happens to the site's waste materials."
+                    }
+                  ]
+                },
+                {
+                  "number": "5c",
+                  "summary": "Work on a wildfire prevention campaign with a fire warden, wildfire agency, forester or your counselor, then report on it and your role."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Check for hazardous trees at a camp, park or in your neighborhood.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Inventory hazardous trees in one area, noting species, problems and remedies, and give the list to the proper agency.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "location",
+                        "label": "Location",
+                        "type": "text"
+                      },
+                      {
+                        "id": "species",
+                        "label": "Species",
+                        "type": "text"
+                      },
+                      {
+                        "id": "hazard",
+                        "label": "Hazard",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "remedy",
+                        "label": "Remedy",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "tree",
+                    "rowLabelPlural": "trees"
+                  }
+                },
+                {
+                  "number": "6b",
+                  "summary": "Read a professional's hazard tree report for the area, then visit those trees to see the pruning or removal done."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn what threatens forests and how to respond.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Describe what five of the listed threats, such as wildfire or insects, do to forests."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Explain ways to reduce the harm you described in 7a."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Explain what to do if you find a forest fire and how crews control one, and name your wildfire agency."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Visit a local forester and write about them, or write about a forester's education, qualifications, opportunities and duties."
             }
           ]
         }
@@ -4751,6 +5298,133 @@
                   "summary": "Talk with a game development educator about the skills they teach."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "geocaching",
+      "name": "Geocaching",
+      "summary": "Learn GPS and map skills, find geocaches responsibly, and lead a geohunt for other young people.",
+      "officialUrl": "https://www.scouting.org/merit-badges/geocaching/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to stay safe while geocaching.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain geocaching hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating geocaching injuries and illnesses, such as bites, stings, poisonous plants, heat and cold."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain planning a GPS outing: buddy system, sharing plans, weather, route and clothing."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss caching responsibly with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Why caches must never be buried."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Good manners when hiding or seeking caches, and how to hide, post, maintain and remove one."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Using the Leave No Trace Seven Principles and the Outdoor Code while geocaching."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain the listed geocaching terms, plus five more of your choice."
+            },
+            {
+              "number": "4",
+              "summary": "Explain how GPS works, then use EDGE to demonstrate a GPS unit: waypoints, field functions and coordinate systems."
+            },
+            {
+              "number": "5",
+              "summary": "Use a map and compass alongside GPS.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Use a map and compass, and explain why geocachers need these skills."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Compare navigating by GPS with reading a map, including what each does best."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Walk through the four steps of a first cache find, then mark and edit a waypoint."
+            },
+            {
+              "number": "7",
+              "summary": "With permission, look up three nearby caches on geocaching.com, share their listings with your counselor, and find one."
+            },
+            {
+              "number": "8",
+              "summary": "Do one geocaching project.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "If your council has a Cache to Eagle series, visit three of its caches, describe their projects and how the series shows Scout service."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Make and release a Travel Bug promoting a Scouting value; with permission, log its moves for 30 days and share the log.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "location",
+                        "label": "Where it is",
+                        "type": "text"
+                      },
+                      {
+                        "id": "notes",
+                        "label": "Notes",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                },
+                {
+                  "number": "8c",
+                  "summary": "Share a three-month upkeep plan, hide a public cache, with permission share 30 days of its logs, and archive it when you stop maintaining it."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Explain Cache In Trash Out and how you've practiced it, then make CITO containers or host a CITO event."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Run a themed geohunt of four or more waypoints for a youth group, teaching players GPS, then share how it went and your materials."
             }
           ]
         }
@@ -5164,6 +5838,132 @@
                 "rowLabelPlural": "hikes",
                 "rowCount": 5
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "horsemanship",
+      "name": "Horsemanship",
+      "summary": "Learn to handle, care for and ride a horse safely, from grooming and feeding to tack and basic riding.",
+      "officialUrl": "https://www.scouting.org/merit-badges/horsemanship/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to stay safe around horses.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain how to handle and care for a horse safely."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain fire safety for barns and the areas around horses."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Name 15 parts of a horse and explain what each one does."
+            },
+            {
+              "number": "3",
+              "summary": "Name four horse breeds and explain what sets each apart."
+            },
+            {
+              "number": "4",
+              "summary": "Explain how to spot colic, and describe four other health problems horses can have."
+            },
+            {
+              "number": "5",
+              "summary": "Explain conformation and why it matters, and how lameness differs from unsoundness."
+            },
+            {
+              "number": "6",
+              "summary": "Explain why hooves need care and when a horse might need shoes."
+            },
+            {
+              "number": "7",
+              "summary": "Groom a horse, pick its hooves, and show how to care for it after riding."
+            },
+            {
+              "number": "8",
+              "summary": "Explain how to choose a horse's feed and amount, and why activity level and breed change them."
+            },
+            {
+              "number": "9",
+              "summary": "Learn to use tack, and to get on and off a horse.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Identify 10 parts of your saddle and bridle, and explain how to look after them."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Saddle and bridle a horse correctly."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Get on and off a horse safely."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Safely approach and lead a horse from a stall, corral or field, then tie it securely, explaining each step."
+            },
+            {
+              "number": "11",
+              "summary": "Mount safely and ride these movements in one smooth, unbroken sequence on level ground.",
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Walk straight for 60 feet."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Walk a half-circle with a radius of 16 feet or less."
+                },
+                {
+                  "number": "11c",
+                  "summary": "Trot or jog straight for 60 feet."
+                },
+                {
+                  "number": "11d",
+                  "summary": "Trot or jog a half-circle with a radius of 30 feet or less."
+                },
+                {
+                  "number": "11e",
+                  "summary": "Halt straight."
+                },
+                {
+                  "number": "11f",
+                  "summary": "Back up four paces in a straight line."
+                },
+                {
+                  "number": "11g",
+                  "summary": "Halt and dismount."
+                }
+              ]
+            },
+            {
+              "number": "12",
+              "summary": "Explore a career or hobby connected to horses.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "12a",
+                  "summary": "Research a career related to horses and discuss what makes it interesting."
+                },
+                {
+                  "number": "12b",
+                  "summary": "Research a hobby or healthy lifestyle that involves horses, and set goals for it."
+                }
+              ]
             }
           ]
         }
@@ -6459,6 +7259,146 @@
       ]
     },
     {
+      "id": "nuclear-science",
+      "name": "Nuclear Science",
+      "summary": "Learn how radiation and atoms work, do classic experiments, and see how nuclear science makes power and helps medicine and industry.",
+      "officialUrl": "https://www.scouting.org/merit-badges/nuclear-science/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about radiation and how to limit your exposure.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain what radiation is, and how ionizing radiation differs from nonionizing."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain the ALARA principle and how you'll keep your dose low while earning this badge."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain what the radiation hazard symbol looks like and where it should be posted."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain everyday radiation from space and Earth, and why four NORM items at home or in stores are radioactive."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Explain exposure versus contamination and radiation's hazards, then calculate your yearly dose and compare it with a nuclear worker's."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn the basics of atoms and nuclei.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain the listed terms, such as atom, isotope, alpha particle and radioactivity."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Model three isotopes of one element in 3-D with their isotope notation, and show how quarks form protons and neutrons."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how particle physicists study the nucleus.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how particle accelerators work."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Visit or research particle accelerators.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "3b(1)",
+                      "summary": "Visit an accelerator, lab or university, and talk with a scientist there about their research on the nucleus."
+                    },
+                    {
+                      "number": "3b(2)",
+                      "summary": "Describe several experiments at each of three particle accelerators, and the science and practical uses behind them."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Do two classic experiments.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Build an electroscope, demonstrate it, and explain how a radiation source affects it (adults handle sources)."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Build a cloud chamber and use it to show and explain radiation tracks (adults handle sources and dry ice)."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Model half-life with candy, coins or similar small items, and discuss decay chains."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Do one radiation safety activity.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "With a survey meter, show how distance and three different shields change counts (adults handle sources), and how time, distance and shielding cut dose."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain short- and long-term home radon tests and results, radon's health risks, and how to reduce it."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Visit an X-ray room, sketch its layout with the unit, operator and patient, and explain operator safety."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn about nuclear energy through one activity, then discuss how it makes electricity.",
+              "requiredCount": 1,
+              "ownWork": "Talk with your counselor about how a nuclear plant makes electricity.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Draw fission, use an adult-built mousetrap reactor to explain starting and controlling chain reactions, and explain critical mass."
+                },
+                {
+                  "number": "6b",
+                  "summary": "With permission, tour a reactor in person or online, learn how it makes power, and graph US and state electricity sources."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Give and explain an example of nuclear science in each of medicine, the environment, industry, space exploration and radiation therapy."
+            },
+            {
+              "number": "8",
+              "summary": "Research a nuclear science career and discuss what makes it interesting."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "personal-fitness",
       "name": "Personal Fitness",
       "summary": "Build healthy habits and follow a 12-week fitness program.",
@@ -7203,6 +8143,93 @@
       ]
     },
     {
+      "id": "pioneering",
+      "name": "Pioneering",
+      "summary": "Tie the knots and lashings of pioneering, make rope, and build camp gadgets and a full-size structure.",
+      "officialUrl": "https://www.scouting.org/merit-badges/pioneering/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2022-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know how to stay safe while pioneering.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain pioneering hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating pioneering injuries, such as rope burns, cuts, stings, heat, cold and falls."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn the ropework pioneering uses.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Show how to whip a rope with the West Country method."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Tie a rope tackle and the five listed knots, including the clove hitch tied two ways."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Tie square, diagonal, round, shear, tripod and floor lashings, and explain when to use each."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Build three camp gadgets with your knots and lashings.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Build a Tripod Wash Station with lashings from 2c, or your own approved gadget."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Build a 15-foot Scout Stave Flagpole with hitches and lashings from 2, or your own approved gadget."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Build a Simple Camp Table with lashings, hitches and rope tackles from 2, or your own approved gadget."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Compare synthetic and natural-fiber rope for pioneering, covering breaking strength, safe working loads, and care and storage."
+            },
+            {
+              "number": "5",
+              "summary": "Explain what back, eye and short splices are for, and watch each one being made."
+            },
+            {
+              "number": "6",
+              "summary": "Make a 6-foot or longer three-strand rope, three yarns per strand, on a rope maker; whip the ends."
+            },
+            {
+              "number": "7",
+              "summary": "Explain why pioneering projects need good anchors, and describe the 3-2-1 and log-and-stake systems."
+            },
+            {
+              "number": "8",
+              "summary": "Explain how a trestle's poles are placed and lashed, and how X braces strengthen a structure."
+            },
+            {
+              "number": "9",
+              "summary": "With a group or your counselor, plan and build a full-size structure from a listed or pre-approved design, within safe height limits."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "pottery",
       "name": "Pottery",
       "summary": "Learn about clay, potter's wheels and kilns, then make and decorate pots and sculpture by hand and on the wheel.",
@@ -7295,6 +8322,118 @@
             {
               "number": "8",
               "summary": "Explore pottery careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pulp-and-paper",
+      "name": "Pulp and Paper",
+      "summary": "Learn how paper is made and recycled and how its forests are managed, and make paper by hand.",
+      "officialUrl": "https://www.scouting.org/merit-badges/pulp-and-paper/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Trace how papermaking developed, and why paper products matter to society and the economy."
+            },
+            {
+              "number": "2",
+              "summary": "Learn how the paper industry manages its forests and reduces pollution.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain how paper companies plant, raise and harvest trees."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain how paper companies manage forests so they never run short of trees."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain how the industry puts sustainable forest management into practice."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Give two ways papermakers have cut pollution."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Name the main trees used for paper fiber, then learn about their other uses and pulping.",
+              "ownWork": "Name four or more kinds of trees that papermakers rely on for fiber.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Discuss what else the industry's trees and forestland are used for."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Compare two methods of separating wood into fibers."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain why and how some pulp is bleached."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain how paper is made and recycled, and handmake a sheet of paper."
+            },
+            {
+              "number": "5",
+              "summary": "Explain coated paper and its uses, plus one other chemical or mechanical change that gives paper new uses."
+            },
+            {
+              "number": "6",
+              "summary": "List 15 pulp or paper products at home, and show your counselor 10 of them.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "product",
+                    "label": "Product",
+                    "type": "text"
+                  }
+                ],
+                "rowLabel": "product",
+                "rowLabelPlural": "products"
+              }
+            },
+            {
+              "number": "7",
+              "summary": "With permission and approval, visit a paper-related site or research how paper products are developed.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Tour a pulp mill and explain how it turns wood into cellulose fibers."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Tour a paper mill, get a sample, and explain how that paper is made and used."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Tour a container or box plant and explain its manufacturing process."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Tour a place that collects or sorts paper for recycling, and explain its work."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Research how new paper products are developed and the role of R&D in papermaking, then share your findings."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore three papermaking careers, research one, and discuss why it might interest you."
             }
           ]
         }
@@ -7663,6 +8802,57 @@
                 {
                   "number": "7b",
                   "summary": "Research robotics as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sculpture",
+      "name": "Sculpture",
+      "summary": "Learn to work safely with a sculptor's tools, model or cast your own pieces, and explore sculpture as art, a career or a hobby.",
+      "officialUrl": "https://www.scouting.org/merit-badges/sculpture/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain how to work safely with sculpting tools, equipment and materials."
+            },
+            {
+              "number": "2",
+              "summary": "Do two of the listed sculpture activities.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Model a life-size human head in clay, then a small animal or person in clay, wood, plaster or 3D software; explain how."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Cast a fruit or vegetable in a plaster mold you make, and explain your method and tools."
+                },
+                {
+                  "number": "2c",
+                  "summary": "With permission and approval, visit an art museum, gallery or studio, and discuss what you learned and why art matters."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explore a career or hobby connected to sculpture.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Research a career related to sculpture and discuss what makes it interesting."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Research sculpture as a hobby, and set goals for it."
                 }
               ]
             }
@@ -8132,6 +9322,152 @@
             {
               "number": "3",
               "summary": "Research how shooting skills could lead to a career or hobby, and discuss it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "signs-signals-and-codes",
+      "name": "Signs, Signals, and Codes",
+      "summary": "Communicate without speaking, using Morse code, sign language, semaphore, braille, trail signs, symbols and secret codes.",
+      "officialUrl": "https://www.scouting.org/merit-badges/signs-signals-and-codes/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss why we need signs, signals and codes, and how they developed."
+            },
+            {
+              "number": "2",
+              "summary": "Explain why signals matter in emergencies, and discuss and illustrate distress signals that alert rescuers in aircraft."
+            },
+            {
+              "number": "3",
+              "summary": "Learn Morse code and American Sign Language.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain Morse code and ways to send it, spell your first name, and send or receive a 6–10 word message."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain ASL and its use today, spell your first name, and send or receive a 6–10 word message."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn semaphore and nautical flags.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Briefly explain semaphore: why, how and where it's used."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain how semaphore flags differ from nautical flags."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Once 4a and 4b are done, use semaphore and identify nautical flags.",
+                  "children": [
+                    {
+                      "number": "4c(1)",
+                      "summary": "Spell your first name in semaphore, and send or receive a 6–10 word message."
+                    },
+                    {
+                      "number": "4c(2)",
+                      "summary": "Identify 10 nautical flags from pictures or photos, and discuss why they matter."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how braille works, then read and write it.",
+              "ownWork": "Explain how braille is read and how it helps people with limited sight communicate.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "By sight or touch, read your name's braille letters and decode a message of six or more words."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Write a message of at least six words in braille and show your counselor."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn sound and silent signals.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Give six present-day signals that use only sound, and weigh sound against other ways of signaling."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Show six different silent Scout signals, and use them to lead your patrol or troop."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "On a Scout outing, mark a mile-plus trail for your patrol or troop with six or more different signs, then restore them."
+            },
+            {
+              "number": "8",
+              "summary": "Show and explain five signals each from three of these activities.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Sports officials' hand signals."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Heavy-equipment operators' hand signals."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Aircraft carrier catapult crew signals."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Cyclists' hand signals."
+                },
+                {
+                  "number": "8e",
+                  "summary": "An activity you and your counselor choose."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore symbols in daily life, on maps and in text messages, and design your own.",
+              "ownWork": "Show your counselor 10 everyday symbols, then design your own and explain what it means.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Identify 10 traffic signs and what each one tells drivers."
+                },
+                {
+                  "number": "9b",
+                  "summary": "On a topographic map, explain the legend and why it matters, and point out and explain 10 symbols."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Discuss why people use text symbols, share your 10 favorites, and see if a parent, guardian or counselor knows them."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Discuss cryptography's history, invent a code, send a friend a message of up to 25 words in it, then review it with your counselor."
             }
           ]
         }

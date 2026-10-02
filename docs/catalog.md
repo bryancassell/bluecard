@@ -123,7 +123,10 @@ Examples from the catalog (compare them with the official pages):
 
 ### Tracker
 
-A tracker is a table the scout fills in, one row per entry.
+A tracker is a table the scout fills in, one row per entry. On a requirement
+with `children`, such as Forestry 1's field notebook, it's only a record: the
+requirement is complete once enough children (and any `ownWork`) are, whatever
+its rows hold.
 
 | Field | Required | Meaning |
 |---|---|---|
