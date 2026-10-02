@@ -207,13 +207,23 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   messages in one snackbar, rather than with a `SaveRunner`.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
-  developer without a scout reporting it: Google Play's
-  [Android vitals](https://developer.android.com/topic/performance/vitals)
-  reports crashes from users who allow it, but not caught exceptions. Revisit
-  this if crash reporting is added
-  ([#63](https://github.com/bryancassell/bluecard/issues/63)). Until then, each
+  developer without a scout reporting it: BlueCard is published on Google Play,
+  whose [Android vitals](https://developer.android.com/topic/performance/vitals)
+  reports crashes from users who allow it, but not caught exceptions. Each
   caught load or save failure is logged with `Log.w`, so logcat and bug reports
   show which data failed and why.
+- **Android vitals is the only crash reporting**
+  ([#63](https://github.com/bryancassell/bluecard/issues/63)). It needs no code
+  in the app. A tool that sends reports automatically, such as Firebase
+  Crashlytics or ACRA over HTTP, needs the `INTERNET` permission, which
+  requirement 1 rules out. Scouts can be younger than 13, and Google Play's
+  [Families policy](https://support.google.com/googleplay/android-developer/answer/9893335)
+  says an app whose audience includes children "must not implement APIs or SDKs
+  that are not approved for use in child-directed services". ACRA can also email
+  a report that the scout reviews and sends from their own email app, which
+  needs no `INTERNET` permission. It was left out: it adds a library that runs
+  in its own process and a dialog after every crash, and it reports only what
+  scouts choose to send.
 
 ### Text fields
 
@@ -894,7 +904,8 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
-| [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own; revisit with [#63](https://github.com/bryancassell/bluecard/issues/63) |
+| [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own |
+| [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
 | [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
