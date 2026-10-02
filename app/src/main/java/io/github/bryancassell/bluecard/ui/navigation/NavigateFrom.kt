@@ -22,7 +22,7 @@ import androidx.navigation3.runtime.NavKey
 @Composable
 fun rememberNavigateFrom(
     backStack: MutableList<BlueCardNavKey>,
-    from: NavKey,
+    from: BlueCardNavKey,
     isDrawn: (NavKey) -> Boolean,
     shownBackStack: () -> List<NavKey>
 ): (to: BlueCardNavKey) -> Unit {

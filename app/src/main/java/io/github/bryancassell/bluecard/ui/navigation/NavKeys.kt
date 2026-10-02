@@ -22,9 +22,9 @@ sealed interface BlueCardNavKey : NavKey
  */
 @Composable
 fun rememberBackStack(): NavBackStack<BlueCardNavKey> =
-    rememberSerializable(serializer = NavBackStackSerializer(BlueCardNavKey.serializer())) {
-        NavBackStack(Home)
-    }
+    rememberSerializable(serializer = BackStackSerializer) { NavBackStack(Home) }
+
+private val BackStackSerializer = NavBackStackSerializer(BlueCardNavKey.serializer())
 
 @Serializable
 data object Onboarding : BlueCardNavKey
