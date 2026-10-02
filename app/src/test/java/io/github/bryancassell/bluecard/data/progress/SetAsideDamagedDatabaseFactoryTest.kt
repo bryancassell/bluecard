@@ -11,8 +11,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import java.io.RandomAccessFile
+import java.time.Clock
 import java.time.LocalDate
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -37,11 +40,12 @@ class SetAsideDamagedDatabaseFactoryTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val file = context.getDatabasePath(BlueCardDatabase.NAME)
-    private val setAside = File(
-        File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME),
-        BlueCardDatabase.NAME
+    private val damagedProgress = FileDamagedProgressRepository(
+        context,
+        Clock.systemUTC(),
+        CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        Dispatchers.Unconfined
     )
-    private val damagedProgress = FileDamagedProgressRepository(context, Dispatchers.Unconfined)
     private val databases = mutableListOf<BlueCardDatabase>()
 
     @After
@@ -58,6 +62,13 @@ class SetAsideDamagedDatabaseFactoryTest {
 
     private suspend fun BlueCardDatabase.readProgress() = progressDao().observeAll().first()
 
+    /** The database file set aside, the only one in its folder's only copy. */
+    private fun setAside() =
+        File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME)
+            .listFiles { file -> file.isDirectory }!!
+            .single()
+            .resolve(BlueCardDatabase.NAME)
+
     @Test
     fun databaseDamagedBeforeItOpens_isSetAside_andAnEmptyOneOpens() = runTest {
         file.parentFile!!.mkdirs()
@@ -67,7 +78,7 @@ class SetAsideDamagedDatabaseFactoryTest {
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(damaged, setAside.readBytes())
+        assertArrayEquals(damaged, setAside().readBytes())
         assertTrue(damagedProgress.observeNoticePending().first())
     }
 
@@ -82,7 +93,7 @@ class SetAsideDamagedDatabaseFactoryTest {
             "Expected the damage to be found, got $error",
             error is SQLiteDatabaseCorruptException
         )
-        assertArrayEquals(damaged, setAside.readBytes())
+        assertArrayEquals(damaged, setAside().readBytes())
         assertTrue(damagedProgress.observeNoticePending().first())
         assertEquals(emptyList<BadgeProgressDetails>(), open().readProgress())
     }

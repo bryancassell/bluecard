@@ -51,8 +51,12 @@ class SetAsideDamagedDatabaseFactory(private val damagedProgress: FileDamagedPro
          * again (see ARCHITECTURE.md, Storage errors).
          */
         override fun onCorruption(db: SupportSQLiteDatabase) {
-            if (db.isOpen) db.close()
-            damagedProgress.setAside(File(checkNotNull(db.path)))
+            // Set aside even if closing fails, as the default handler deletes in that case.
+            try {
+                if (db.isOpen) db.close()
+            } finally {
+                damagedProgress.setAside(File(checkNotNull(db.path)))
+            }
         }
     }
 }
