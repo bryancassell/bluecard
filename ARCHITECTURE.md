@@ -535,6 +535,8 @@ way.
   name, because the URLs don't always match (Fish and Wildlife Management lives
   at `/merit-badges/fish-wildlife-management/`). Official pages have no
   per-requirement anchors, so requirement links go to the badge page.
+  scouting.org has no page for each rank, so a rank's URL is its requirements
+  PDF, the official wording a scout would otherwise look up.
 
 ### Trackers
 
@@ -599,7 +601,7 @@ requirement progress fresh, numbers only need to be unique within one version.
 ### Ranks
 
 The catalog also has a list of the seven ranks, Scout through Eagle, in the
-order they're earned. It's empty until their content is written
+order they're earned, written by the same rules as badges
 ([#193](https://github.com/bryancassell/bluecard/issues/193)). Most of what a
 badge has carries over: numbered requirements with sub-requirements, trackers,
 requirement versions and completion. So a `Rank` uses the same

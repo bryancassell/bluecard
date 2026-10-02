@@ -113,6 +113,20 @@ and `eagleGroup`. Its `id` must not match any badge's ID, because a rank's
 progress is saved in the same place as a badge's. Its requirements use the same
 format as a badge's.
 
+- **`officialUrl`:** scouting.org has no web page for each rank, so a rank
+  links to its requirements PDF, which the
+  [Advancement and Awards page](https://www.scouting.org/programs/scouts-bsa/advancement-and-awards/)
+  lists. Eagle has no PDF of its own, so it links to the PDF of all the ranks.
+- **Numbering:** most rank requirements are numbered `1a`, `1b` and so on with
+  no requirement `1` above them, under unnumbered headings such as "Camping and
+  Outdoor Ethics". Keep them at the top level, as the PDF has them, and leave
+  the headings out.
+- **Out-of-date PDFs:** where Scouting America has changed a requirement but
+  not yet its PDF, summarize the current rule from the announcement, and give
+  the version the date it took effect. Eagle 3 counts 13 Eagle-required badges,
+  not the PDF's 14, because Citizenship in Society was dropped on February 27,
+  2026.
+
 ### Requirements version
 
 | Field | Required | Meaning |
