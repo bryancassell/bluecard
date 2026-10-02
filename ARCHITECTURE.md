@@ -38,6 +38,7 @@ own documentation says so, and each such claim links to the page.
   - [Requirement versions](#requirement-versions)
   - [Requirement IDs](#requirement-ids)
   - [Shipping and authoring](#shipping-and-authoring)
+  - [Ranks](#ranks)
 - [Data model](#data-model)
   - [Completion](#completion)
 - [Key flows](#key-flows)
@@ -114,8 +115,8 @@ part of the app.
 | Outcome | Checks |
 |---|---|
 | Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
-| The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
-| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge ID and requirements version shipped before is still in the file. |
+| The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge and rank **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
+| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
@@ -478,7 +479,8 @@ io.github.bryancassell.bluecard
 │   ├── onboarding/
 │   ├── home/
 │   ├── badges/         Browse and search, and the badge rows and Eagle labels other screens share
-│   ├── badge/          Badge detail, its requirement sub-pages and Edit counselor
+│   ├── badge/          Badge detail, Edit counselor, and the requirement pages badges and
+│   │                   ranks share
 │   ├── data/           Clear, export, import
 │   ├── profile/        Edit name and unit, and the name and unit fields Onboarding shares
 │   ├── navigation/     Navigation 3 keys and the NavDisplay
@@ -511,7 +513,8 @@ io.github.bryancassell.bluecard
 Badge detail and each requirement's page show one level of the requirement
 tree (see [`PRD.md`](PRD.md#design-decisions)'s Requirement list). Both show
 the requirements version the badge was started on, or the newest version for a
-badge the scout hasn't started (`data/progress/BadgeVersion.kt`).
+badge the scout hasn't started (`data/progress/BadgeVersion.kt`). Requirement
+detail and Tracker entry serve ranks' requirements too ([Ranks](#ranks)).
 
 ## Merit badge catalog
 
@@ -585,20 +588,51 @@ requirement progress fresh, numbers only need to be unique within one version.
 - **The project writes all the summaries itself.** That is about 140 badges, a
   content project of its own, so the catalog grows in stages, in no particular
   order; the app treats whatever is in the file as the full list. A unit test
-  validates the file (unique IDs, valid structure, a URL for every badge).
+  validates the file (unique IDs, valid structure, a URL for every badge and
+  rank).
 - **Discontinued badges aren't handled yet:** the Badges list shows every badge
   in the catalog. Once shipped, a badge can't be removed, because progress is
   stored against it, so hiding discontinued badges from scouts who haven't
   started them is tracked in
   [#55](https://github.com/bryancassell/bluecard/issues/55).
 
+### Ranks
+
+The catalog also has a list of the seven ranks, Scout through Eagle, in the
+order they're earned. It's empty until their content is written
+([#193](https://github.com/bryancassell/bluecard/issues/193)). Most of what a
+badge has carries over: numbered requirements with sub-requirements, trackers,
+requirement versions and completion. So a `Rank` uses the same
+`RequirementsVersion`, `Requirement` and `TrackerDefinition` types as a
+`MeritBadge`, and both are an `Advancement`, which the code that serves both
+works on.
+
+- **Rank progress shares the badge progress tables** (`badge_progress`,
+  `requirement_progress`, `tracker_entry`), keyed by the rank's ID, so ranks
+  needed no schema change. Badge and rank IDs must therefore be unique across
+  both, which the catalog test checks. Revisit this if it gets in the way.
+- **"Badge" in the progress layer means a badge or a rank** (`BadgeProgress`,
+  `badgeId`, `badgeStart`), matching its tables. Code above it says
+  `advancement` where it means either, such as the `advancementId` of
+  Requirement detail and Tracker entry, which find it among both
+  (`getAdvancements` in `data/catalog/CatalogRepository.kt`). A screen or count
+  for one kind reads only that kind (`getBadges` or `getRanks`), so a rank never
+  shows up as a badge.
+- **What reads every progress row reads ranks' too.** Export lists a started
+  rank with the badges, under the file's `badges` key, and import checks each
+  one against the badges and ranks in the catalog, so ranks needed no new
+  export format version ([Export and import](#export-and-import)). Clear all
+  clears rank progress too, but its wording, and when it's enabled, still speak
+  only of badges until ranks can be recorded.
+
 ## Data model
 
 At a high level. The exact fields are in the code.
 
 - **Profile** (DataStore): name, unit number.
-- **Catalog** (JSON, read-only): `MeritBadge` → `RequirementsVersion` →
-  `Requirement` (a tree) → optional `TrackerDefinition`.
+- **Catalog** (JSON, read-only): `MeritBadge` or `Rank` (each an `Advancement`)
+  → `RequirementsVersion` → `Requirement` (a tree) → optional
+  `TrackerDefinition`.
 - **Progress** (Room, database file `bluecard.db`), keyed by catalog IDs
   (strings), so progress survives catalog updates. Only a started badge has
   progress; its requirement progress and tracker entries are deleted with it.
@@ -698,8 +732,8 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 - **Screens call `ProgressRepository` functions** (set completed date, set
   notes, add tracker row, set counselor, mark badge completed on a date) and
   observe progress as a `Flow`, so they update as soon as data is saved.
-- **Recording anything starts the badge**, on the requirements version its
-  pages show until then (the newest), dated today (`badgeStart` in
+- **Recording anything starts the badge or rank**, on the requirements version
+  its pages show until then (the newest), dated today (`badgeStart` in
   `data/progress/BadgeVersion.kt`). There's no separate "start" step.
   `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry`,
   `setCounselor` and `setCompletedOnPriorDate` take a `BadgeStart`, and
@@ -779,11 +813,12 @@ it before changing anything, since import replaces all current data (see
   differently.
 - **Import checks the whole file before it changes anything:** that it's JSON
   in this format, and that it holds only what this version of the app could
-  have recorded. Each badge and requirements version must be in the catalog: a
-  newer app's catalog can add some without a new format version, so a file
-  with one the catalog doesn't have is reported as from a newer version too.
-  Each requirement, tracker row and column must be in that version, and no text
-  longer than its field takes, so none is cut short when the scout edits it.
+  have recorded. Each badge or rank, and its requirements version, must be in
+  the catalog: a newer app's catalog can add some without a new format version,
+  so a file with one the catalog doesn't have is reported as from a newer
+  version too. Each requirement, tracker row and column must be in that
+  version, and no text longer than its field takes, so none is cut short when
+  the scout edits it.
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.
@@ -947,6 +982,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
+| [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |

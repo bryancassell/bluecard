@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.badgeStart
@@ -8,8 +9,8 @@ import java.time.Clock
 import java.time.LocalDate
 
 /**
- * Marks requirement [number] of badge [badgeId] completed or not, for the page that shows it,
- * starting the badge if it isn't ([badgeStart]).
+ * Marks requirement [number] of badge or rank [advancementId] completed or not, for the page that
+ * shows it, starting the badge or rank if it isn't ([badgeStart]).
  *
  * The page keeps one for as long as it's open, because it remembers the date the requirement had
  * when the scout unchecks it: checking it again brings that date back, rather than today's, so a
@@ -17,7 +18,7 @@ import java.time.LocalDate
  * called from one thread, such as a ViewModel's main thread.
  */
 class CompletionRecorder(
-    private val badgeId: String,
+    private val advancementId: String,
     private val number: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
@@ -39,14 +40,14 @@ class CompletionRecorder(
             val before = unchecked
             val date = if (before != null) before.completedDate else today
             progressRepository.markRequirementCompleted(
-                badgeId,
+                advancementId,
                 number,
                 date,
-                catalogRepository.getBadges().badgeStart(badgeId, today)
+                catalogRepository.getAdvancements().badgeStart(advancementId, today)
             )
             unchecked = null
         } else {
-            val before = progressRepository.markRequirementNotCompleted(badgeId, number)
+            val before = progressRepository.markRequirementNotCompleted(advancementId, number)
             // Only one that was completed has a date to bring back. One unchecked twice, as by
             // a quick double tap, keeps the date from the first time.
             if (before?.completed == true) unchecked = before
@@ -61,6 +62,6 @@ class CompletionRecorder(
      */
     suspend fun clear(numbers: Collection<String>) {
         if (number in numbers) unchecked = null
-        progressRepository.clearRequirements(badgeId, numbers)
+        progressRepository.clearRequirements(advancementId, numbers)
     }
 }

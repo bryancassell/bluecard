@@ -52,7 +52,7 @@ sealed interface BadgeDetailUiState {
     ) : BadgeDetailUiState
 
     /**
-     * The catalog doesn't have the badge or its requirements version ([badgeRequirements]).
+     * The catalog doesn't have the badge or its requirements version ([advancementRequirements]).
      * Only a catalog edited during development can cause that.
      */
     data object Unavailable : BadgeDetailUiState

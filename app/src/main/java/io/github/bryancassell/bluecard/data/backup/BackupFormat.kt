@@ -2,8 +2,8 @@
 
 package io.github.bryancassell.bluecard.data.backup
 
+import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.LocalDateSerializer
-import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
@@ -53,7 +53,8 @@ private val formatVersionJson = Json { ignoreUnknownKeys = true }
 
 /**
  * [backup] as an export's JSON: the format version, the profile, and each started badge with
- * its requirements and tracker entries. Dates are in ISO form, such as "2026-01-01". Tracker
+ * its requirements and tracker entries. A started rank is listed with the badges, as its progress
+ * is stored with theirs (ARCHITECTURE.md, Ranks). Dates are in ISO form, such as "2026-01-01". Tracker
  * entries are listed in the order they were added, in place of their IDs.
  */
 fun encodeBackup(backup: Backup): String =
@@ -62,11 +63,11 @@ fun encodeBackup(backup: Backup): String =
 /**
  * Reads an export's JSON, checking all of it against the format and this app's [catalog]
  * first. It's [BackupReadResult.NewerFormat] if it's from a newer version of the app: in a
- * newer format, or with a badge or requirements version that [catalog] doesn't have. It's
+ * newer format, or with a badge, rank or requirements version that [catalog] doesn't have. It's
  * [BackupReadResult.Invalid] unless it holds only what the app could have recorded:
  * - Every date is a date, and only a completed requirement has one.
- * - Each badge is listed once, and each of its requirements once.
- * - Each requirement and tracker column is in the badge's requirements version.
+ * - Each badge or rank is listed once, and each of its requirements once.
+ * - Each requirement and tracker column is in its badge's or rank's requirements version.
  * - A tracker entry fills one of its tracker's rows, which no other entry fills, or none in a
  *   log, and a date column holds a date.
  * - The name and unit number aren't blank, and no text is longer than its field takes (such as
@@ -77,7 +78,7 @@ fun encodeBackup(backup: Backup): String =
  * The JSON is decoded as it's read, never into a tree of the whole file, so a large or deeply
  * nested file that isn't an export can't use up the app's memory or stack.
  */
-fun decodeBackup(json: String, catalog: List<MeritBadge>): BackupReadResult {
+fun decodeBackup(json: String, catalog: List<Advancement>): BackupReadResult {
     // Checked before the rest, which a newer format may lay out differently.
     val version = try {
         formatVersionJson.decodeFromString(FormatVersionReader, json)
@@ -91,7 +92,8 @@ fun decodeBackup(json: String, catalog: List<MeritBadge>): BackupReadResult {
     } catch (e: SerializationException) {
         return BackupReadResult.Invalid
     }
-    // A newer catalog can add badges and requirements versions without a new format version.
+    // A newer catalog can add badges, ranks and requirements versions without a new format
+    // version.
     val versions = file.badges.map { it.versionIn(catalog) ?: return BackupReadResult.NewerFormat }
     return try {
         BackupReadResult.Valid(file.toBackup(versions))
@@ -189,8 +191,10 @@ private fun requireValid(valid: Boolean) {
     if (!valid) throw InvalidBackupException()
 }
 
-/** The requirements version in [catalog] that this badge was started on, or null if none. */
-private fun BadgeJson.versionIn(catalog: List<MeritBadge>): RequirementsVersion? =
+/**
+ * The requirements version in [catalog] that this badge or rank was started on, or null if none.
+ */
+private fun BadgeJson.versionIn(catalog: List<Advancement>): RequirementsVersion? =
     catalog.find { it.id == badgeId }
         ?.requirementVersions
         ?.find { it.effectiveDate == requirementsVersion }

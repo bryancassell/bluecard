@@ -67,7 +67,7 @@ class RequirementDetailScreenTest {
 
     /** A requirement with sub-requirements. */
     private val ready = RequirementDetailUiState.Ready(
-        badgeName = "Camping",
+        advancementName = "Camping",
         requirement = RequirementItem(
             "2",
             "Do two of these.",
@@ -101,7 +101,7 @@ class RequirementDetailScreenTest {
 
     /** A requirement without sub-requirements, not completed. */
     private val leaf = RequirementDetailUiState.Ready(
-        badgeName = "Camping",
+        advancementName = "Camping",
         requirement = RequirementItem("1", "Plan a campout.", null, false, markedByHand = true),
         completedDate = null,
         children = emptyList(),
@@ -244,7 +244,7 @@ class RequirementDetailScreenTest {
         show(RequirementDetailUiState.Unavailable)
 
         composeTestRule
-            .onNodeWithText("This requirement isn't in the requirements this badge uses.")
+            .onNodeWithText("This requirement isn't in the requirements this badge or rank uses.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }

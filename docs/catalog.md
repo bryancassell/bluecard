@@ -1,9 +1,10 @@
-# Writing the merit badge catalog
+# Writing the catalog
 
-The merit badge catalog is a single JSON file bundled with the app:
-[`app/src/main/assets/catalog.json`](../app/src/main/assets/catalog.json). This
-page explains its format so badges can be added without reading code. Why the
-catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-catalog).
+The catalog of merit badges and ranks is a single JSON file bundled with the
+app: [`app/src/main/assets/catalog.json`](../app/src/main/assets/catalog.json).
+This page explains its format so badges and ranks can be added without reading
+code. Why the catalog works this way is in
+[`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-catalog).
 
 ## Ground rules
 
@@ -87,7 +88,8 @@ Examples from the catalog (compare them with the official pages):
         }
       ]
     }
-  ]
+  ],
+  "ranks": []
 }
 ```
 
@@ -95,13 +97,21 @@ Examples from the catalog (compare them with the official pages):
 
 | Field | Required | Meaning |
 |---|---|---|
-| `id` | Yes | Stable ID that progress is saved against, in lowercase words joined by `-` (usually the official page's slug). **Never change it** once released. |
+| `id` | Yes | Stable ID that progress is saved against, in lowercase words joined by `-` (usually the official page's slug). It must not match a rank's ID. **Never change it** once released. |
 | `name` | Yes | The badge's official name. |
 | `summary` | Yes | Our own one- or two-sentence description. |
 | `officialUrl` | Yes | The badge's page on `https://www.scouting.org/`. Copy it from the browser: it doesn't always match the name. |
 | `eagleRequired` | No | `true` if the badge counts toward Eagle Scout. Defaults to `false`. |
 | `eagleGroup` | No | For Eagle badges that are alternatives to each other (such as Cycling, Hiking and Swimming), the same ID on each, such as `cycling-hiking-swimming`. Leave it out for badges that are required on their own. |
 | `requirementVersions` | Yes | One entry per requirements version. |
+
+### Rank
+
+`ranks`, which is required, lists the ranks, Scout through Eagle, in the order
+they're earned. A rank has the same fields as a badge, except `eagleRequired`
+and `eagleGroup`. Its `id` must not match any badge's ID, because a rank's
+progress is saved in the same place as a badge's. Its requirements use the same
+format as a badge's.
 
 ### Requirements version
 
@@ -160,9 +170,10 @@ It checks that:
 - the file is valid JSON with only the fields above, spelled correctly, and
   dates written as `YYYY-MM-DD`;
 - `formatVersion` is `1`;
-- badge IDs are unique and in the right form, and every badge has a name, a
-  summary, a `https://www.scouting.org/` URL and at least one version;
-- a badge doesn't have two versions with the same effective date, and
+- badge and rank IDs are unique across both and in the right form, and every
+  badge and rank has a name, a summary, a `https://www.scouting.org/` URL and
+  at least one version;
+- a badge or rank doesn't have two versions with the same effective date, and
   `eagleGroup` is only set on Eagle-required badges;
 - every version has requirements, and requirement numbers are unique within it;
 - every requirement has a number and a summary, `requiredCount` is between 1

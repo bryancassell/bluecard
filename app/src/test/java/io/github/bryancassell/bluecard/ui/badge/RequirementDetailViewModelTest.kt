@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -131,7 +132,17 @@ class RequirementDetailViewModelTest {
         )
     )
 
-    private val catalogRepository = FakeCatalogRepository(listOf(camping))
+    private val tenderfoot = Rank(
+        id = "tenderfoot",
+        name = "Tenderfoot",
+        summary = "Our summary of Tenderfoot.",
+        officialUrl = "https://www.scouting.org/tenderfoot/",
+        requirementVersions = listOf(
+            RequirementsVersion(newest, listOf(Requirement("1a", "Pack for a campout.")))
+        )
+    )
+
+    private val catalogRepository = FakeCatalogRepository(listOf(camping), listOf(tenderfoot))
     private val progressRepository = FakeProgressRepository()
     private val savedStateHandle = SavedStateHandle()
 
@@ -140,8 +151,16 @@ class RequirementDetailViewModelTest {
     private fun viewModel(
         number: String,
         catalog: CatalogRepository = catalogRepository,
-        progress: ProgressRepository = progressRepository
-    ) = RequirementDetailViewModel("camping", number, catalog, progress, clock, savedStateHandle)
+        progress: ProgressRepository = progressRepository,
+        advancementId: String = "camping"
+    ) = RequirementDetailViewModel(
+        advancementId,
+        number,
+        catalog,
+        progress,
+        clock,
+        savedStateHandle
+    )
 
     /**
      * Can save the ViewModel's state and restore it into a new one, as when the system stops
@@ -173,6 +192,7 @@ class RequirementDetailViewModelTest {
     fun uiState_whileCatalogLoads_isLoading() = runTest {
         val loading = object : CatalogRepository {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
+            override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
         val viewModel = viewModel("2", loading)
         startCollecting(viewModel)
@@ -205,7 +225,7 @@ class RequirementDetailViewModelTest {
 
         assertEquals(
             RequirementDetailUiState.Ready(
-                badgeName = "Camping",
+                advancementName = "Camping",
                 requirement = RequirementItem(
                     "2",
                     "Do two of these.",
@@ -676,6 +696,34 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun rankRequirement_isShownWithTheRanksName() = runTest {
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+
+        assertEquals("Tenderfoot", viewModel.ready().advancementName)
+        assertEquals(
+            RequirementItem("1a", "Pack for a campout.", null, false, markedByHand = true),
+            viewModel.ready().requirement
+        )
+    }
+
+    @Test
+    fun saveComment_onUnstartedRank_startsIt() = runTest {
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+        viewModel.typeComment("Next week.")
+
+        viewModel.saveComment()
+
+        val progress = progressRepository.observeProgress("tenderfoot").first()!!
+        assertEquals(BadgeProgress("tenderfoot", newest, today), progress.badge)
+        assertEquals(
+            listOf(RequirementProgress("tenderfoot", "1a", comment = "Next week.")),
+            progress.requirements
+        )
+    }
+
+    @Test
     fun saveComment_trimsSpaces_andOnlySpacesAreNoChange() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
@@ -914,6 +962,8 @@ class RequirementDetailViewModelTest {
             delay(100)
             return listOf(camping)
         }
+
+        override suspend fun getRanks(): List<Rank> = emptyList()
     }
 
     @Test

@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
@@ -107,6 +108,7 @@ class BadgesViewModelTest {
     fun uiState_whileCatalogLoads_isLoading() = runTest {
         val loading = object : CatalogRepository {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
+            override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
         val viewModel = BadgesViewModel(loading, progressRepository, savedStateHandle)
         startCollecting(viewModel)

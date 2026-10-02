@@ -28,6 +28,14 @@ class AssetCatalogRepositoryTest {
     }
 
     @Test
+    fun getRanks_returnsTheBundledCatalog() = runTest(dispatcher) {
+        val expected = parseCatalog(
+            File("src/main/assets/${AssetCatalogRepository.CATALOG_ASSET}").readText()
+        ).ranks
+        assertEquals(expected, repository.getRanks())
+    }
+
+    @Test
     fun getBadges_loadsOnlyOnce() = runTest(dispatcher) {
         assertSame(repository.getBadges(), repository.getBadges())
     }

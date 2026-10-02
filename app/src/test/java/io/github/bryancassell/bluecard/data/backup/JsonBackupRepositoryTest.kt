@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -98,6 +99,20 @@ class JsonBackupRepositoryTest {
             ),
             badge("hiking"),
             badge("swimming")
+        ),
+        listOf(
+            Rank(
+                id = "tenderfoot",
+                name = "Tenderfoot",
+                summary = "Our summary.",
+                officialUrl = "https://www.scouting.org/tenderfoot/",
+                requirementVersions = listOf(
+                    RequirementsVersion(
+                        start.requirementsVersion,
+                        listOf(Requirement("1a", "Pack for a campout."))
+                    )
+                )
+            )
         )
     )
     private val profileRepository = FakeProfileRepository(profile)
@@ -428,6 +443,21 @@ class JsonBackupRepositoryTest {
         val log = importing.observeProgress("camping").first()!!.trackerEntries
             .filter { it.requirementNumber == "9a" }.sortedBy { it.id }
         assertEquals(listOf("2", "1", "3"), log.map { it.values["nights"] })
+    }
+
+    @Test
+    fun exportThenImport_withRankProgress_restoresIt() = runTest {
+        val exporting = roomProgressRepository()
+        exporting.markRequirementCompleted("tenderfoot", "1a", day, start)
+        val (export, _) = document()
+        newRepository(progressRepository = exporting).exportBackup(export)
+
+        val importing = roomProgressRepository()
+        val cleared = newRepository(FakeProfileRepository(), importing)
+        val read = cleared.readBackup(export) as BackupReadResult.Valid
+        cleared.importBackup(read.backup)
+
+        assertEquals(withoutEntryIds(exporting), withoutEntryIds(importing))
     }
 
     private fun roomProgressRepository(): RoomProgressRepository {

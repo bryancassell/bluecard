@@ -47,7 +47,7 @@ import java.time.LocalDate
 /** Connects the Requirement detail screen to its ViewModel. */
 @Composable
 fun RequirementDetailRoute(
-    badgeId: String,
+    advancementId: String,
     number: String,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
@@ -55,7 +55,7 @@ fun RequirementDetailRoute(
     modifier: Modifier = Modifier,
     viewModel: RequirementDetailViewModel =
         hiltViewModel<RequirementDetailViewModel, RequirementDetailViewModel.Factory> {
-            it.create(badgeId, number)
+            it.create(advancementId, number)
         }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -116,7 +116,7 @@ fun RequirementDetailScreen(
         // Ends the page above the keyboard, so the comment field can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                RequirementHeader(uiState.badgeName, uiState.requirement)
+                RequirementHeader(uiState.advancementName, uiState.requirement)
                 val requirement = uiState.requirement
                 // Its own work is stored as the requirement's own progress, like one marked by
                 // hand, so it has the same checkbox and date.
@@ -179,13 +179,13 @@ fun RequirementDetailScreen(
 }
 
 @Composable
-private fun RequirementHeader(badgeName: String, requirement: RequirementItem) {
+private fun RequirementHeader(advancementName: String, requirement: RequirementItem) {
     Column(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = badgeName,
+            text = advancementName,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

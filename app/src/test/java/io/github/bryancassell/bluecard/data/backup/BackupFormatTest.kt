@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.data.backup
 
+import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -41,8 +43,8 @@ class BackupFormatTest {
 
     private fun column(id: String, type: TrackerColumnType) = TrackerColumn(id, id, type)
 
-    /** The badges this app's catalog has, with the requirements the tests record. */
-    private val catalog = listOf(
+    /** The badges and rank this app's catalog has, with the requirements the tests record. */
+    private val catalog: List<Advancement> = listOf(
         badge(
             "camping",
             Requirement("4", "Do these.", children = listOf(Requirement("4b", "Pitch a tent."))),
@@ -80,7 +82,16 @@ class BackupFormatTest {
                 )
             )
         ),
-        badge("swimming", Requirement("1", "Swim."))
+        badge("swimming", Requirement("1", "Swim.")),
+        Rank(
+            id = "tenderfoot",
+            name = "Tenderfoot",
+            summary = "Our summary.",
+            officialUrl = "https://www.scouting.org/tenderfoot/",
+            requirementVersions = listOf(
+                RequirementsVersion(version, listOf(Requirement("1a", "Pack for a campout.")))
+            )
+        )
     )
 
     private fun decode(json: String) = decodeBackup(json, catalog)
@@ -196,6 +207,19 @@ class BackupFormatTest {
         """
 
         assertEquals(valid(Backup(Profile("Alex", "12"), emptyList())), decode(json))
+    }
+
+    // Rank progress is stored with the badges', so an export lists it with them.
+    @Test
+    fun decodeBackup_withRankProgress_givesItBack() {
+        val tenderfoot = BadgeProgressDetails(
+            BadgeProgress("tenderfoot", version, started),
+            listOf(RequirementProgress("tenderfoot", "1a", true, day)),
+            emptyList()
+        )
+        val withRank = backup.copy(progress = listOf(tenderfoot))
+
+        assertEquals(valid(withRank.asImported()), decode(encodeBackup(withRank)))
     }
 
     // A newer format may lay the rest out differently, so it's told apart before it's read.
