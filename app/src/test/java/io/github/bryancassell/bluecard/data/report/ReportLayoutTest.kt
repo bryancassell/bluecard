@@ -197,6 +197,20 @@ class ReportLayoutTest {
         assertTrue("Date: Last May" in lines)
     }
 
+    @Test
+    fun multilineTrackerValue_keepsItsLineBreaks() {
+        val details = TrackerColumn("details", "Details", TrackerColumnType.MULTILINE_TEXT)
+        val tracker = ReportTracker(
+            TrackerDefinition(listOf(nights, details), "trip", "trips"),
+            listOf(ReportTrackerRow(1, listOf(nights to "2", details to "Pitched a tent\nCooked")))
+        )
+        val lines = layOut(report(listOf(requirement("1", "Log.", tracker = tracker))))
+            .single().lines
+
+        assertTrue("Nights: 2 · Details: Pitched a tent" in lines)
+        assertTrue("Cooked" in lines)
+    }
+
     // A Persian name keeps its own direction, so its period stays at its end
     // (ARCHITECTURE.md, Language and layout direction).
     @Test

@@ -529,7 +529,7 @@
                       {
                         "id": "what-you-saw",
                         "label": "What you saw",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "object",
@@ -1600,7 +1600,7 @@
                       {
                         "id": "work",
                         "label": "What you did",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "session",
@@ -2176,7 +2176,7 @@
                       {
                         "id": "purpose",
                         "label": "Why you listened",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "entry",
@@ -2604,7 +2604,7 @@
                           {
                             "id": "notes",
                             "label": "Interesting things you saw",
-                            "type": "text"
+                            "type": "multiline-text"
                           }
                         ],
                         "rowLabel": "ride",
@@ -2696,7 +2696,7 @@
                           {
                             "id": "notes",
                             "label": "Interesting things you saw",
-                            "type": "text"
+                            "type": "multiline-text"
                           }
                         ],
                         "rowLabel": "ride",
@@ -3306,7 +3306,7 @@
                   {
                     "id": "chores",
                     "label": "Chores done and how often",
-                    "type": "text"
+                    "type": "multiline-text"
                   }
                 ],
                 "rowLabel": "week",
@@ -4150,7 +4150,7 @@
                               {
                                 "id": "properties",
                                 "label": "Physical properties",
-                                "type": "text"
+                                "type": "multiline-text"
                               }
                             ],
                             "rowLabel": "specimen",
@@ -4176,7 +4176,7 @@
                               {
                                 "id": "details",
                                 "label": "Rock class or mineral properties",
-                                "type": "text"
+                                "type": "multiline-text"
                               }
                             ],
                             "rowLabel": "specimen",
@@ -4254,7 +4254,7 @@
                           {
                             "id": "life",
                             "label": "How it lived and found food",
-                            "type": "text"
+                            "type": "multiline-text"
                           }
                         ],
                         "rowLabel": "fossil",
@@ -4417,7 +4417,7 @@
                   {
                     "id": "notes",
                     "label": "What you saw and any challenges",
-                    "type": "text"
+                    "type": "multiline-text"
                   }
                 ],
                 "rowLabel": "hike",
@@ -5034,7 +5034,7 @@
                       {
                         "id": "other",
                         "label": "Other factors",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "mammal",
@@ -5498,7 +5498,7 @@
                       {
                         "id": "notes",
                         "label": "Distance, reps or notes",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "session",
@@ -5838,7 +5838,7 @@
                       {
                         "id": "diary",
                         "label": "Tasks done, and when compared with your plan",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "day",
@@ -6857,7 +6857,7 @@
                       {
                         "id": "waste",
                         "label": "Food wasted",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "day",

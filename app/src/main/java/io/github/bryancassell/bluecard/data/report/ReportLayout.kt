@@ -184,12 +184,16 @@ private class ReportComposer(private val resources: Resources) {
         }
     }
 
-    /** A tracker value as stored, with a date written out, as on screen. */
+    /**
+     * A tracker value as stored, with a date written out, as on screen. Multi-line text keeps
+     * its line breaks, as notes do.
+     */
     private fun valueText(column: TrackerColumn, value: String): String = when (column.type) {
         TrackerColumnType.DATE -> storedDate(value)?.let(::date) ?: typed(value)
 
         // The scout typed it.
-        TrackerColumnType.NUMBER, TrackerColumnType.TEXT -> typed(value)
+        TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
+            typed(value)
     }
 
     private fun completionText(completion: Completion?): String = when {

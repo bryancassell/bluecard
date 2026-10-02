@@ -485,6 +485,19 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun logEntry_showsALineBreakInMultilineTextAsASpace() {
+        val values = listOf(
+            TrackerValue(TrackerColumnType.TEXT, "Push-ups"),
+            TrackerValue(TrackerColumnType.MULTILINE_TEXT, "3 sets of 10\nFelt good")
+        )
+        show(
+            withLog.copy(tracker = withLog.tracker?.copy(rows = listOf(TrackerRow(1, 11, values))))
+        )
+
+        row("Session 1").assert(hasText("Push-ups · 3 sets of 10 Felt good"))
+    }
+
+    @Test
     fun logEntry_isButtonThatOpensIt() {
         show(withLog)
 

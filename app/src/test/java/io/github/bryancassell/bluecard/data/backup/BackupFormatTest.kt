@@ -59,7 +59,8 @@ class BackupFormatTest {
                             listOf(
                                 column("date", TrackerColumnType.DATE),
                                 column("nights", TrackerColumnType.NUMBER),
-                                column("note", TrackerColumnType.TEXT)
+                                column("note", TrackerColumnType.TEXT),
+                                column("details", TrackerColumnType.MULTILINE_TEXT)
                             ),
                             "campout",
                             "campouts"
@@ -331,6 +332,8 @@ class BackupFormatTest {
             ),
             "a long tracker note" to
                 withEntry("9a", null, mapOf("note" to tooLong(TRACKER_TEXT_MAX_LENGTH))),
+            "a long multi-line tracker note" to
+                withEntry("9a", null, mapOf("details" to tooLong(TRACKER_TEXT_MAX_LENGTH))),
             "a long tracker number" to
                 withEntry("9a", null, mapOf("nights" to tooLong(TRACKER_NUMBER_MAX_LENGTH)))
         )
@@ -355,6 +358,7 @@ class BackupFormatTest {
         )
         val values = mapOf(
             "note" to longest(TRACKER_TEXT_MAX_LENGTH),
+            "details" to longest(TRACKER_TEXT_MAX_LENGTH),
             "nights" to longest(TRACKER_NUMBER_MAX_LENGTH)
         )
         val longestBackup = Backup(
@@ -371,6 +375,20 @@ class BackupFormatTest {
         )
 
         assertEquals(valid(longestBackup), decode(encodeBackup(longestBackup)))
+    }
+
+    @Test
+    fun decodeBackup_keepsLineBreaksInMultilineText() {
+        val values = mapOf("details" to "Pitched a tent.\nCooked dinner.")
+        val withLineBreaks = backup.copy(
+            progress = listOf(
+                camping.copy(
+                    trackerEntries = listOf(TrackerEntry(0, "camping", "9a", null, values))
+                )
+            )
+        )
+
+        assertEquals(valid(withLineBreaks), decode(encodeBackup(withLineBreaks)))
     }
 
     // As repositories store what the scout types, so an edited file can't store what the app

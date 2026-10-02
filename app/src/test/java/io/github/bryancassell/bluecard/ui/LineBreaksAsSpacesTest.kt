@@ -88,6 +88,15 @@ class LineBreaksAsSpacesTest {
     }
 
     @Test
+    fun lineBreaksAsSpaces_replacesThemAsTheFieldDoes() {
+        val text = "a\n\nb\r\n\r\nc\r\rd\n\re\u000Bf\u000Cg\u0085h\u2028i\u2029j"
+        field().performTextInput(text)
+
+        assertEquals("a  b  c  d  e f g h i j", lineBreaksAsSpaces(text))
+        assertEquals(state.text.toString(), lineBreaksAsSpaces(text))
+    }
+
+    @Test
     fun editInTheMiddle_keepsCursorAfterIt() {
         field().performTextInput("AlexScout")
         field().performTextInputSelection(TextRange(4))

@@ -257,7 +257,8 @@ private fun TrackerEntryJson.toEntry(
 
 /** Whether a column of this type can hold [value], as the scout enters it. */
 private fun TrackerColumnType.takes(value: String) = when (this) {
-    TrackerColumnType.TEXT -> value.length <= TRACKER_TEXT_MAX_LENGTH
+    TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
+        value.length <= TRACKER_TEXT_MAX_LENGTH
 
     TrackerColumnType.NUMBER -> value.length <= TRACKER_NUMBER_MAX_LENGTH
 

@@ -29,6 +29,7 @@ import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,7 +46,8 @@ class TrackerEntryScreenTest {
     private val columns = listOf(
         TrackerColumn("date", "Date", TrackerColumnType.DATE),
         TrackerColumn("activity", "Activity", TrackerColumnType.TEXT),
-        TrackerColumn("minutes", "Minutes", TrackerColumnType.NUMBER)
+        TrackerColumn("minutes", "Minutes", TrackerColumnType.NUMBER),
+        TrackerColumn("notes", "Notes", TrackerColumnType.MULTILINE_TEXT)
     )
     private val fields = columns.associate { it.id to TextFieldState() }
 
@@ -155,6 +157,7 @@ class TrackerEntryScreenTest {
         composeTestRule.onNodeWithText("No date").assertIsDisplayed()
         field("Activity").assertIsDisplayed()
         field("Minutes").assertIsDisplayed()
+        field("Notes").assertIsDisplayed()
     }
 
     @Test
@@ -194,6 +197,36 @@ class TrackerEntryScreenTest {
         field("Activity").performTextInput("Ran\nthen swam")
 
         assertEquals("Ran then swam", fields.getValue("activity").text.toString())
+    }
+
+    @Test
+    fun multilineTextField_keepsALineBreak() {
+        show(newEntry)
+
+        field("Notes").performTextInput("3 sets of 10\nFelt good")
+
+        assertEquals("3 sets of 10\nFelt good", fields.getValue("notes").text.toString())
+    }
+
+    @Test
+    fun multilineTextField_trimsTextPast500Characters() {
+        show(newEntry)
+        field("Notes").performTextInput("a".repeat(495))
+
+        // As when pasting.
+        field("Notes").performTextInput("b\n".repeat(5))
+
+        assertEquals("a".repeat(495) + "b\nb\nb", fields.getValue("notes").text.toString())
+    }
+
+    // Drawn like the requirement notes field, three lines tall before the scout types.
+    @Test
+    fun multilineTextField_isTallerThanATextField() {
+        show(newEntry)
+
+        val text = field("Activity").fetchSemanticsNode().size.height
+        val multiline = field("Notes").fetchSemanticsNode().size.height
+        assertTrue(multiline > text)
     }
 
     @Test
