@@ -2,6 +2,114 @@
   "formatVersion": 1,
   "badges": [
     {
+      "id": "american-heritage",
+      "name": "American Heritage",
+      "summary": "Explore the Declaration of Independence, people and groups who shaped the country, its national symbols, your family's and community's history, and how the past bears on today.",
+      "officialUrl": "https://www.scouting.org/merit-badges/american-heritage/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Rewrite the Declaration of Independence's passage from \"We hold these truths to be self-evident\" to \"new Guards for their future security\" in plain words, then share it and discuss why the Declaration matters to all Americans."
+            },
+            {
+              "number": "2",
+              "summary": "Learn about America through its people and groups in two of these ways.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Research a political leader and a private citizen from American history, and compare what each contributed to America's heritage."
+                },
+                {
+                  "number": "2b",
+                  "summary": "With your counselor's approval, pick a group that brought positive change to American society, find out why and how it worked for that change, and discuss how it ties to America's past."
+                },
+                {
+                  "number": "2c",
+                  "summary": "With your counselor's approval, interview two U.S. military veterans about their experiences and what they feel they accomplished."
+                },
+                {
+                  "number": "2d",
+                  "summary": "With your counselor's approval, interview three local people of different ages and jobs about what America means to them, what's special about it and which traditions to keep."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Connect America's past with today.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Pick a current news topic about the United States, describe what's happening, and explain how America's past events and values bear on it."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe how each of these was adopted, any changes since, and how it still influences Americans: the flag, the Pledge of Allegiance, the Great Seal of the United States, the motto and the national anthem."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Research your family's history and how events in American history touched it, including why they came to America if they immigrated, and share what you learn."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explore local history in two of these ways.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain the National Register of Historic Places and how a property qualifies, map your area's historic points of interest, tell about any listed properties nearby, and share and describe your map."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Research a historic event in or near your area, visit the site if you can, and tell how it shaped local history and how the place has changed since."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Trace your town or neighborhood's beginnings and the ethnic, national or racial groups involved, see how it has changed in the last 50 years, and explain why if you can."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Take on a role in a program about a person or event from America's past, then describe the program, what you did and what it covered."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Visit a historic trail or walk in your area, share what you learned, and discuss why the place matters and why it might qualify for the National Register."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Look at history through film, a biography or music in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "With permission and approval, watch two movies set in American history and describe how accurately each shows its events and characters."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With your counselor's approval, read a biography of someone who contributed to America's heritage, tell what you do and don't admire about them, and explain whether their contribution was positive or negative and why."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Listen to popular songs from across American history, then share five and explain what each says about how people felt in its day; bring the lyrics if you can't play a recording."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore careers in American heritage, and explain how to prepare for one that interests you, including the education and training it needs."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "american-indian-culture",
       "name": "American Indian Culture",
       "summary": "Study American Indian cultural areas and one tribe or nation in depth, learn about languages, leaders and games, then visit a museum collection or a gathering. Formerly Indian Lore.",
@@ -159,6 +267,192 @@
             {
               "number": "5",
               "summary": "Explore three animation careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "archaeology",
+      "name": "Archaeology",
+      "summary": "Learn how archaeologists find, date and interpret sites, study sites at home and abroad and people who once lived near you, help protect the past, and try fieldwork or a mock dig.",
+      "officialUrl": "https://www.scouting.org/merit-badges/archaeology/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain what archaeology is and how it compares with anthropology, geology, paleontology, history, artifact collecting and treasure hunting."
+            },
+            {
+              "number": "2",
+              "summary": "Describe each step of archaeological work: site location, background research and research design, survey and fieldwork, artifact identification and examination, interpretation, preservation and sharing information."
+            },
+            {
+              "number": "3",
+              "summary": "Describe two or more ways archaeologists date sites, structures or artifacts, and explain absolute and relative dating."
+            },
+            {
+              "number": "4",
+              "summary": "Learn about five archaeological sites in all, some in the United States and some elsewhere.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "For each site, show it on a map and explain how it was found, what it reveals and why that matters to archaeologists and people today; then compare the sites' ages.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "site",
+                        "label": "Site",
+                        "type": "text"
+                      },
+                      {
+                        "id": "location",
+                        "label": "Location",
+                        "type": "text"
+                      },
+                      {
+                        "id": "found",
+                        "label": "How it became known",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "learned",
+                        "label": "What it reveals about the past",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "matters",
+                        "label": "Why it matters today",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "age",
+                        "label": "Age",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "site",
+                    "rowLabelPlural": "sites"
+                  }
+                },
+                {
+                  "number": "4b",
+                  "summary": "Give a short talk on one of the sites to a Cub Scout pack, your troop, your class or another group."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how archaeological sites are protected.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Learn the federal laws and international agreements that protect archaeological sites, and whether your state, county or local government has rules for archaeological or historic sites."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Find a national, international or local group that works to safeguard archaeological sites."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how to help protect the past.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain why archaeological sites need protecting."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain what to do if you think you've found an artifact."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Describe ways you can help protect the past."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do one of these and discuss what you found with your counselor.",
+              "requiredCount": 1,
+              "ownWork": "Discuss your findings with your counselor.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Visit a museum and see how its artifacts help tell history."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Share a meaningful family heirloom or artifact with your counselor and talk about its history."
+                },
+                {
+                  "number": "7c",
+                  "summary": "List the trash your family throws away in a week, and discuss what archaeologists a thousand years from now might learn about your family from it."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Research a group that called your area home over a century ago: their way of life, ties to other groups, what you'd expect at one of their sites and how they shaped your community."
+            },
+            {
+              "number": "9",
+              "summary": "Research a career related to archaeology and discuss what makes it interesting."
+            },
+            {
+              "number": "10",
+              "summary": "Do archaeology hands-on in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "With permission and approval, help a qualified archaeologist on a project for at least eight hours, following their safety rules, then describe your part, what you learned and the steps of archaeological inquiry.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number"
+                      },
+                      {
+                        "id": "work",
+                        "label": "What you did",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "session",
+                    "rowLabelPlural": "sessions"
+                  }
+                },
+                {
+                  "number": "10b",
+                  "summary": "With your counselor's approval, join a mock dig set up by a qualified archaeologist: analyze and map its artifacts and features, explain how environment and time affect what they tell us, and how you'd share results."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Do one of these with a qualified archaeologist or instructor supervising.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Help set up a public archaeology display, such as at a museum, visitor center or school."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Try experimental archaeology by remaking an object or practicing a skill from the past, then write a short report on what you did and found."
+                }
+              ]
             }
           ]
         }
@@ -398,6 +692,103 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "summary": "Study the buildings around you and a landmark of architecture, learn about sustainable design, meet with an architect or a future client, and draw a room's floor plan to scale.",
+      "officialUrl": "https://www.scouting.org/merit-badges/architecture/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Look at architecture around you and in history.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Tour your community, note the kinds of buildings you see and any you can tie to a period of history or style, and sketch the one you admire most.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "kind",
+                        "label": "Kind of building",
+                        "type": "text"
+                      },
+                      {
+                        "id": "where",
+                        "label": "Where",
+                        "type": "text"
+                      },
+                      {
+                        "id": "style",
+                        "label": "Period or style",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "building",
+                    "rowLabelPlural": "buildings"
+                  }
+                },
+                {
+                  "number": "1b",
+                  "summary": "Pick a historic achievement in architecture that changed society, research how it shapes the world today (online with permission), and tell your counselor what you learned."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss these ideas about architecture and the environment, in the spirit of Leave No Trace and the Outdoor Code.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "What sustainable architecture means, and three features green buildings usually have."
+                },
+                {
+                  "number": "2b",
+                  "summary": "How renewable and recycled building materials differ, and ways to build with each."
+                },
+                {
+                  "number": "2c",
+                  "summary": "How architecture relates to its surroundings and its community."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Finding a new use for a whole building once its first use ends, instead of tearing it down."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Meet with an architect or a future client in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "With permission and approval, meet an architect, look at a building's scale model and construction drawings, and discuss why its materials were chosen and how its parts are joined."
+                },
+                {
+                  "number": "3b",
+                  "summary": "With your parent or guardian's, counselor's, architect's and site manager's permission, visit a construction site with an architect and the builder's drawings; follow its safety rules and discuss why its materials were chosen and how they're joined."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Interview a possible client, such as someone planning a home or business, about what their new building must do, and write a short program of its requirements, functions, how they relate and goals."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Measure a room and draw its floor plan at ¼ inch = 1 foot, showing walls, doors, closets, windows and built-ins, labeled with your name, the date, the room and the scale."
+            },
+            {
+              "number": "5",
+              "summary": "Explore three architecture careers, research one, and discuss why it might interest you."
             }
           ]
         }
@@ -1247,6 +1638,316 @@
                 {
                   "number": "3c",
                   "summary": "Campstool seat."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bird-study",
+      "name": "Bird Study",
+      "summary": "Learn to identify birds by sight and sound with binoculars and a field guide, keep a field notebook, attract birds with a feeder, bath, nest box or habitat, and help protect species in decline.",
+      "officialUrl": "https://www.scouting.org/merit-badges/bird-study/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain why bird study matters, why birds show how healthy the environment is, and how they fit into the ecosystem."
+            },
+            {
+              "number": "2",
+              "summary": "Show you can name a bird's parts and wing feathers.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Label 15 parts on a drawing or tracing of a perched bird."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Label six kinds of wing feathers on a drawing or tracing of an outstretched wing."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Show how to use and care for binoculars, a spotting scope or a monocular.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain what the numbers in their specifications mean."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Adjust the eyepiece and focus for a sharp view."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Show how to clean and look after the lenses."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Describe when and where each kind works best."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Show you can use a bird field guide by finding the wintering, breeding or year-round range of one species of each of these on its range maps.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Seabird."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Plover."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Falcon or hawk."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Warbler or vireo."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Heron or egret."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Sparrow."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Observe and learn to identify 20 wild bird species, keeping a field notebook entry for each that records the following.",
+              "ownWork": "Observe and learn to identify 20 wild bird species, with a field notebook entry for each.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "The date and time."
+                },
+                {
+                  "number": "5b",
+                  "summary": "The place and habitat."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Where the bird mainly feeds, and two foods it likely eats."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Whether it migrates through or lives in your area in summer, in winter or all year."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Describe how some orders of birds are adapted to their habitats, including the size and shape of each of these.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Beak."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Body."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Leg and foot."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Feathers or plumage."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explain what songs are for and how they differ from calls; identify five of your 20 species by sound alone and record each one's sound, behavior and reason for it.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "species",
+                    "label": "Species",
+                    "type": "text"
+                  },
+                  {
+                    "id": "sound",
+                    "label": "Song or call",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "behavior",
+                    "label": "What the bird was doing",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "reason",
+                    "label": "Why you think it sang or called",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "species",
+                "rowLabelPlural": "species"
+              }
+            },
+            {
+              "number": "8",
+              "summary": "Learn from organized bird watching or research in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Go birding on a field trip with a local club or experienced local birders.",
+                  "children": [
+                    {
+                      "number": "8a(1)",
+                      "summary": "List or check off all the birds your group saw.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "species",
+                            "label": "Species",
+                            "type": "text"
+                          },
+                          {
+                            "id": "count",
+                            "label": "How many",
+                            "type": "number"
+                          }
+                        ],
+                        "rowLabel": "species",
+                        "rowLabelPlural": "species"
+                      }
+                    },
+                    {
+                      "number": "8a(2)",
+                      "summary": "Tell which birds the group saw and why some were common and others scarce."
+                    },
+                    {
+                      "number": "8a(3)",
+                      "summary": "Explain why the area you visited is a good birding spot."
+                    }
+                  ]
+                },
+                {
+                  "number": "8b",
+                  "summary": "Use a library, the internet or the National Audubon Society to find your nearest Christmas Bird Count and get the results of a recent one.",
+                  "ownWork": "Find your nearest Christmas Bird Count and get a recent count's results.",
+                  "children": [
+                    {
+                      "number": "8b(1)",
+                      "summary": "Explain what information the yearly count gathers."
+                    },
+                    {
+                      "number": "8b(2)",
+                      "summary": "Name the most common species and explain why there are so many."
+                    },
+                    {
+                      "number": "8b(3)",
+                      "summary": "Name the uncommon species and why they're scarce; for any in decline, explain why and what could turn it around."
+                    }
+                  ]
+                },
+                {
+                  "number": "8c",
+                  "summary": "Take part in bird banding with an approved federal or state agency, university researcher, bird observatory or certified individual.",
+                  "ownWork": "Take part in the bird banding program.",
+                  "children": [
+                    {
+                      "number": "8c(1)",
+                      "summary": "Explain who may band birds and why."
+                    },
+                    {
+                      "number": "8c(2)",
+                      "summary": "Explain why birds are banded."
+                    },
+                    {
+                      "number": "8c(3)",
+                      "summary": "Explain which kinds of birds are banded."
+                    },
+                    {
+                      "number": "8c(4)",
+                      "summary": "Tell how the birds were caught, how many species were recorded on your visit, and what you did."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Make one of these for birds, then describe which birds you want to attract and why, and the upkeep it needs.",
+              "requiredCount": 1,
+              "ownWork": "Describe which birds you want to attract and why, and the upkeep your project needs.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Build a bird feeder and set it up in a good spot in your yard or elsewhere."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Build a birdbath and set it up in a good spot."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Plant trees and shrubs to make a backyard bird sanctuary with food and cover."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Using plans your counselor approves, build a nest box for a species you pick."
+                },
+                {
+                  "number": "9e",
+                  "summary": "Plan a backyard bird habitat for a chosen area: describe what it needs, draw it, and list the birds to attract and plants for food, cover and nesting."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Learn how to help birds at risk.",
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Explain how extinct, endangered and threatened differ."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Pick an endangered or threatened bird, explain why it declined, and discuss how to reverse that and get it off the list."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Explain how to help declining birds before they're listed: list ways to protect habitat, name threats migratory birds face, and tell how to protect birds' food supply."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Identify a bird brought to North America from another country since 1800, and describe how non-native birds can harm the ecosystem."
+            },
+            {
+              "number": "12",
+              "summary": "Discuss why the Leave No Trace Seven Principles and the Outdoor Code matter in bird study, and how you've followed them while observing, collecting and identifying in natural areas."
+            },
+            {
+              "number": "13",
+              "summary": "Explore a bird study career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "13a",
+                  "summary": "Explore three bird study careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "13b",
+                  "summary": "Research how bird study could become a hobby, and set goals for it."
                 }
               ]
             }
@@ -2589,6 +3290,179 @@
             {
               "number": "13",
               "summary": "Show how to store climbing ropes, hardware and other gear."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "coin-collecting",
+      "name": "Coin Collecting",
+      "summary": "Learn how coins and paper money are made, stored and described, collect U.S. coins from each modern design era, and collect world coins, paper money or tokens or visit a coin show, club or mint.",
+      "officialUrl": "https://www.scouting.org/merit-badges/coin-collecting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn the steps in making coins and where the U.S. Mint's current facilities are."
+            },
+            {
+              "number": "2",
+              "summary": "Explain these terms: obverse, reverse, reeding, clad, type set and date set."
+            },
+            {
+              "number": "3",
+              "summary": "Describe three ways to store a collection, with each one's pros, cons and cost."
+            },
+            {
+              "number": "4",
+              "summary": "Collect these U.S. coins, and for each, explain its design features, the designer's name and initials, and where each appears on the coin.",
+              "ownWork": "For each coin, explain its design features, the designer's name and initials, and where each appears on the coin.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Collect a one-cent coin from 1959–2008 and one from 2010 to now, and explain how and why 2009's one-cent coins were different."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Collect a five-cent coin from 1959–2003 and one from 2006 to now, and explain how and why 2004–2005's five-cent coins were different."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Collect a ten-cent coin from 1965 to now."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Collect a quarter from 1965–1998, two from the 50 State Quarters and territories program (1999–2009), two America the Beautiful designs (2010–2021) and two American Women Quarters designs (2022–2024), and explain each program's purpose."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Collect a half dollar from 1965 to now."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Collect a dollar coin of each design: Susan B. Anthony (1979–1981, 1999), Sacagawea (2000–2008) and U.S. Presidents (2007–2016, 2020)."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Discuss the Bicentennial reverse designs on the 1975–1976 quarter, half dollar and dollar."
+            },
+            {
+              "number": "6",
+              "summary": "Name the people on today's $1, $2, $5, $10, $20, $50 and $100 notes, and explain where U.S. paper money is printed."
+            },
+            {
+              "number": "7",
+              "summary": "Do one of these collecting or coin-world activities.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Collect 20 different world coins from at least seven countries, and identify each one's country, main design elements and denomination.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "country",
+                        "label": "Country",
+                        "type": "text"
+                      },
+                      {
+                        "id": "denomination",
+                        "label": "Denomination",
+                        "type": "text"
+                      },
+                      {
+                        "id": "design",
+                        "label": "Main design elements",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "coin",
+                    "rowLabelPlural": "coins",
+                    "rowCount": 20
+                  }
+                },
+                {
+                  "number": "7b",
+                  "summary": "Collect 20 different world banknotes from at least seven countries, and identify each one's country, main design elements and denomination.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "country",
+                        "label": "Country",
+                        "type": "text"
+                      },
+                      {
+                        "id": "denomination",
+                        "label": "Denomination",
+                        "type": "text"
+                      },
+                      {
+                        "id": "design",
+                        "label": "Main design elements",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "banknote",
+                    "rowLabelPlural": "banknotes",
+                    "rowCount": 20
+                  }
+                },
+                {
+                  "number": "7c",
+                  "summary": "Collect 20 different tokens or medals, and identify who issued each and what it was for.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "item",
+                        "label": "Token or medal",
+                        "type": "text"
+                      },
+                      {
+                        "id": "issuer",
+                        "label": "Issuer",
+                        "type": "text"
+                      },
+                      {
+                        "id": "use",
+                        "label": "What it was used for",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "item",
+                    "rowLabelPlural": "items",
+                    "rowCount": 20
+                  }
+                },
+                {
+                  "number": "7d",
+                  "summary": "Do one of these, then tell your counselor what you experienced.",
+                  "requiredCount": 1,
+                  "ownWork": "Tell your counselor what you experienced.",
+                  "children": [
+                    {
+                      "number": "7d(1)",
+                      "summary": "Attend a coin show."
+                    },
+                    {
+                      "number": "7d(2)",
+                      "summary": "Attend a coin club meeting."
+                    },
+                    {
+                      "number": "7d(3)",
+                      "summary": "Tour a U.S. Mint facility or museum."
+                    },
+                    {
+                      "number": "7d(4)",
+                      "summary": "With permission, tour a virtual exhibit your counselor approves."
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -7638,6 +8512,136 @@
       ]
     },
     {
+      "id": "law",
+      "name": "Law",
+      "summary": "Learn what law is and where it comes from, how civil and criminal law differ, how courts, juries and lawyers work, and how the law protects consumers and shapes society.",
+      "officialUrl": "https://www.scouting.org/merit-badges/law/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain what law is, where it comes from and what it does."
+            },
+            {
+              "number": "2",
+              "summary": "Discuss two of these topics from legal history.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Justinian's Code, the Code of Hammurabi and the Magna Carta."
+                },
+                {
+                  "number": "2b",
+                  "summary": "How the jury system developed."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Two famous trials from history."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain civil law and criminal law, how they mainly differ, and give examples of each."
+            },
+            {
+              "number": "4",
+              "summary": "Ask five people, at most one from your immediate family, what law enforcement officers do for society, talk over their answers with them, and report back."
+            },
+            {
+              "number": "5",
+              "summary": "Discuss several laws that protect consumers and sellers, and describe some organizations that help them."
+            },
+            {
+              "number": "6",
+              "summary": "See how a trial works in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Attend a civil or criminal court session and write at least 250 words about what you saw."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Organize and run a mock trial with your troop, class or another group, and talk it over with them afterward."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Visit a lawyer at a business, bank, title company or government agency, find out what their work involves, and report back."
+            },
+            {
+              "number": "8",
+              "summary": "Explain how to become a lawyer in your state and how its judges are chosen."
+            },
+            {
+              "number": "9",
+              "summary": "List 15 jobs connected with law or the legal process, and tell which you'd choose and why."
+            },
+            {
+              "number": "10",
+              "summary": "Tell where people who can't pay for a lawyer can get help, and how to find one if you can pay but don't know any nearby."
+            },
+            {
+              "number": "11",
+              "summary": "Discuss why two of these areas of law matter to society.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Administrative law."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Alternative dispute resolution."
+                },
+                {
+                  "number": "11c",
+                  "summary": "Bankruptcy law."
+                },
+                {
+                  "number": "11d",
+                  "summary": "Biotechnology law."
+                },
+                {
+                  "number": "11e",
+                  "summary": "Environmental law."
+                },
+                {
+                  "number": "11f",
+                  "summary": "Family law."
+                },
+                {
+                  "number": "11g",
+                  "summary": "Immigration law."
+                },
+                {
+                  "number": "11h",
+                  "summary": "Information technology law."
+                },
+                {
+                  "number": "11i",
+                  "summary": "Intellectual property: copyrights, patents and trademarks."
+                },
+                {
+                  "number": "11j",
+                  "summary": "International law."
+                },
+                {
+                  "number": "11k",
+                  "summary": "Privacy law."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "leatherwork",
       "name": "Leatherwork",
       "summary": "Learn where leather comes from, then cut, tool, finish and braid leather projects of your own.",
@@ -8345,6 +9349,165 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mining-in-society",
+      "name": "Mining in Society",
+      "summary": "Discover where minerals come from and what they're made into, how miners stay safe, how mined land is restored, and how mining shapes communities.",
+      "officialUrl": "https://www.scouting.org/merit-badges/mining-in-society/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what minerals are used for and where they're found.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Pick 10 different minerals and name a product made with each."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how mining supports growing crops and processing them."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Find out which countries have the minerals you picked in 1a, and discuss what you learned."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Mark five mines on a state or regional map showing major cities, highways, rivers and railroads; find what each produces and whether it's surface or underground, and discuss how those resources are used.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "mine",
+                    "label": "Mine",
+                    "type": "text"
+                  },
+                  {
+                    "id": "location",
+                    "label": "Location",
+                    "type": "text"
+                  },
+                  {
+                    "id": "resource",
+                    "label": "Resource",
+                    "type": "text"
+                  },
+                  {
+                    "id": "type",
+                    "label": "Surface or underground",
+                    "type": "text"
+                  }
+                ],
+                "rowLabel": "mine",
+                "rowLabelPlural": "mines"
+              }
+            },
+            {
+              "number": "3",
+              "summary": "Discuss the hazards miners face at an active mine and how they protect themselves.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "How to wear and use a miner's protective gear: hard hat, safety glasses, earplugs, dust mask or respirator, self-rescue device and high-visibility vest."
+                },
+                {
+                  "number": "3b",
+                  "summary": "How miners guard their hands and feet against impact, pinching, vibration, slips, trips and falls."
+                },
+                {
+                  "number": "3c",
+                  "summary": "How monitoring gear alerts miners to danger, and how robots, drones and other technology aid mine rescues."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Discuss the dangers of abandoned mines and quarries."
+            },
+            {
+              "number": "5",
+              "summary": "Learn more about mining in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "With permission and your counselor's help, tour two types of mines online, compare their exploration, planning and permitting, equipment and minerals, and discuss what you learned."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With permission and approval, visit a museum's mining or minerals exhibit, learn its history and the mining it shows, and give three ways minerals have shaped history."
+                },
+                {
+                  "number": "5c",
+                  "summary": "With permission and approval, visit an active mine, learn how its resource is explored, planned, permitted, mined and processed, and share photos (if allowed), brochures and what you learned."
+                },
+                {
+                  "number": "5d",
+                  "summary": "With permission and approval, visit a mining equipment maker or supplier, discuss what equipment it offers and where it's used in mining, and share photos (if allowed), brochures and what you learned."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Discuss two ways to break down rock, including a chemical one that extracts a mineral, and explain how smelting differs from refining."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Research a local mine's history, ask a historian, community leader or businessperson how mining has changed your community, note its social, cultural and economic effects, and share what you learned."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how mines limit harm to the land and restore it afterward.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Pick a modern mine, find out how it limits its environmental impact, and share what you learned about mining and sustainability."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain mine reclamation and how it relates to the Leave No Trace Seven Principles and the Outdoor Code."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Discuss how society values returning mined land to wildlife and people, and how a former mine became the Summit Bechtel Reserve."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore one of these mining topics.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Learn why and how NASA and private investors might mine in space and how that differs from Earth, then discuss it and the challenges of space sampling."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Name three minerals from seawater or the ocean floor and three places the ocean is mined today, and discuss why it's mined, reclamation afterward, special concerns and sustainability problems."
+                },
+                {
+                  "number": "7c",
+                  "summary": "List four metals and two nonmetals that can be recycled and how, then discuss how recycling affects resource sustainability and relates to mining."
+                },
+                {
+                  "number": "7d",
+                  "summary": "With permission, look up current prices of commodities such as gold, copper, aluminum, cement or coal, and the five-year price trend for two, then report your findings."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Research a career related to mining and discuss what makes it interesting."
             }
           ]
         }
@@ -9379,6 +10542,80 @@
       ]
     },
     {
+      "id": "painting",
+      "name": "Painting",
+      "summary": "Learn about paints and coatings and how to work with them safely, then prepare and paint two surfaces and an item in harmonizing colors, and care for your painting equipment.",
+      "officialUrl": "https://www.scouting.org/merit-badges/painting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain how to stay safe while preparing surfaces and applying coatings."
+            },
+            {
+              "number": "2",
+              "summary": "Learn about coatings and paints.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Give three ways a coating can make a surface better."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain how oil-based, acrylic-based and water-based paints differ."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain where you'd use enamel paint, flat paint, wood stain and varnish, and why sheen matters."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Tell why each of those is the best choice for its use."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "With your counselor's preapproval, prepare two different surfaces with patching or caulk, then paint them with suitable primers and topcoats."
+            },
+            {
+              "number": "4",
+              "summary": "Choose harmonizing colors with the color wheel in the Painting merit badge pamphlet, then prepare and paint an item in them."
+            },
+            {
+              "number": "5",
+              "summary": "Show how to use, clean, care for and store painting equipment."
+            },
+            {
+              "number": "6",
+              "summary": "Explain why ladder safety, personal hygiene and personal protective equipment matter when painting."
+            },
+            {
+              "number": "7",
+              "summary": "Explain how removing, applying and throwing out paint can affect health and the environment."
+            },
+            {
+              "number": "8",
+              "summary": "Explore a painting career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Research a career related to painting and discuss what makes it interesting."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Research how painting could become a hobby or part of a healthy lifestyle, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "personal-fitness",
       "name": "Personal Fitness",
       "summary": "Build healthy habits and follow a 12-week fitness program.",
@@ -10204,6 +11441,129 @@
             {
               "number": "9",
               "summary": "With a group or your counselor, plan and build a full-size structure from a listed or pre-approved design, within safe height limits."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plumbing",
+      "name": "Plumbing",
+      "summary": "Learn how a home's water supply and drains work and the tools, terms and pipes plumbers use, then do hands-on jobs such as joining pipe or replacing a faucet.",
+      "officialUrl": "https://www.scouting.org/merit-badges/plumbing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn how plumbing keeps people healthy and safe.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Describe how plumbing in good working order keeps your family healthy and safe."
+                },
+                {
+                  "number": "1b",
+                  "summary": "List five local plumbing health rules and explain how each keeps people safe and healthy."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe the precautions to take when fixing plumbing at home."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Draw and explain a home's plumbing.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Draw and explain how a home's hot and cold water supply works, and how you'd keep it from freezing."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Draw and explain a house's drainage system, showing what its drains and vents do."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Demonstrate five of a plumber's most important tools."
+            },
+            {
+              "number": "4",
+              "summary": "Identify and explain these terms: washer, retaining nut, plunger (rubber force cup), solder, flux, elbow, tee, nipple, coupling, plug, union, trap, drainpipe and water meter."
+            },
+            {
+              "number": "5",
+              "summary": "Name the kinds of pipe most used in plumbing and why they're used."
+            },
+            {
+              "number": "6",
+              "summary": "Do four of these plumbing jobs, each with a knowledgeable adult supervising.",
+              "requiredCount": 4,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "At a hardware store or home center's plumbing section, identify the following.",
+                  "ownWork": "Visit the plumbing section of a hardware store or home center.",
+                  "children": [
+                    {
+                      "number": "6a(1)",
+                      "summary": "PVC pipe and fittings."
+                    },
+                    {
+                      "number": "6a(2)",
+                      "summary": "CPVC pipe and fittings."
+                    },
+                    {
+                      "number": "6a(3)",
+                      "summary": "PEX pipe and fittings."
+                    },
+                    {
+                      "number": "6a(4)",
+                      "summary": "Copper pipe and fittings."
+                    },
+                    {
+                      "number": "6a(5)",
+                      "summary": "Steel pipe and fittings."
+                    },
+                    {
+                      "number": "6a(6)",
+                      "summary": "Specialty plumbing tools."
+                    }
+                  ]
+                },
+                {
+                  "number": "6b",
+                  "summary": "Cut and deburr PVC or CPVC pipe, and solvent-weld at least three joints, including a coupling, a tee and an elbow."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Cut PEX pipe and make at least one joint with a quick-connect or crimp fitting."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Solder a copper joint with a gas torch."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Replace a kitchen or bathroom faucet."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Take out a sink drain trap, clean or replace it, and put it back."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Wrap pipe thread tape correctly on a pipe or plumbing fitting."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore three plumbing careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -11504,6 +12864,173 @@
                 {
                   "number": "7b",
                   "summary": "Research robotics as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rowing",
+      "name": "Rowing",
+      "summary": "Learn rowing safety and boats, then launch, row, maneuver and land a rowboat or row on a racing team, handle a passenger at a pier, and practice swamping and rescue drills.",
+      "officialUrl": "https://www.scouting.org/merit-badges/rowing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to row safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the hazards you're most likely to meet while rowing, including weather and water, and how to anticipate, prevent, mitigate and respond to them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Review preventing, recognizing and treating blisters, hypothermia, heat-related illnesses, dehydration, sunburn, sprains and strains."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Review Safety Afloat and explain how it applies to rowing."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Pass the Scouting America swimmer test before doing requirements 4 to 7."
+            },
+            {
+              "number": "3",
+              "summary": "Explain which life jackets suit rowing and why to always wear one, then show how to pick and fit one."
+            },
+            {
+              "number": "4",
+              "summary": "Show your rowing skills in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Handle a fixed-seat or sliding-seat rowboat through these steps, by yourself or with a passenger.",
+                  "children": [
+                    {
+                      "number": "4a(1)",
+                      "summary": "Launch."
+                    },
+                    {
+                      "number": "4a(2)",
+                      "summary": "Row straight for 100 yards, stop, pivot and row back to the start."
+                    },
+                    {
+                      "number": "4a(3)",
+                      "summary": "Backwater straight for 25 yards, turn while moving and return to the start."
+                    },
+                    {
+                      "number": "4a(4)",
+                      "summary": "Land, then moor or rack the boat."
+                    },
+                    {
+                      "number": "4a(5)",
+                      "summary": "Tie the mooring knots: clove hitch, roundturn with two half-hitches, bowline, Wellman's knot and mooring hitch."
+                    }
+                  ]
+                },
+                {
+                  "number": "4b",
+                  "summary": "Practice at least 10 hours with a rowing team, then race in a meet against teams with different sponsors.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "practice",
+                    "rowLabelPlural": "practices"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Show how to get people in and out of a rowboat at a pier in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "In a fixed-seat rowboat, help a passenger aboard at a pier, row away, swap places and scull over the stern or side, then swap back, return and help them out."
+                },
+                {
+                  "number": "5b",
+                  "summary": "In a sliding-seat rowboat, get out onto a pier with your buddy's help, help your buddy in, then trade roles and do it again."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Do a swamped boat drill: right and steady the boat, climb back in from deep water and get it moving; tell why to stay with a swamped boat."
+            },
+            {
+              "number": "7",
+              "summary": "Alone, push off and row 20 yards to a swimmer, coach them as you pivot so they can grab the stern, and tow them to shore."
+            },
+            {
+              "number": "8",
+              "summary": "Describe kinds of rowing boats, boatbuilding materials and oarlocks.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Boats for commercial, racing and recreational rowing."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Four common boatbuilding materials, with good and bad points of each."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Oarlocks for racing and recreational rowing."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Discuss rowing technique and gear, rough-water safety, boat care and rowing's health benefits.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Why to feather your oars."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Precautions for strong winds and big waves, and how to handle a boat in rough water and storms."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Fitting out and caring for a boat during the season, and getting it ready and stored for winter."
+                },
+                {
+                  "number": "9d",
+                  "summary": "How to find the right oar length."
+                },
+                {
+                  "number": "9e",
+                  "summary": "How fixed-seat and sliding-seat rowing differ."
+                },
+                {
+                  "number": "9f",
+                  "summary": "What sculling means in fixed-seat rowing and in sliding-seat rowing."
+                },
+                {
+                  "number": "9g",
+                  "summary": "How rowing for exercise helps your health."
                 }
               ]
             }
