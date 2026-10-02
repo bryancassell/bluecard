@@ -115,8 +115,8 @@ part of the app.
 | Outcome | Checks |
 |---|---|
 | Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
-| The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
-| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge ID and requirements version shipped before is still in the file. |
+| The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge and rank **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
+| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
@@ -584,7 +584,8 @@ requirement progress fresh, numbers only need to be unique within one version.
 - **The project writes all the summaries itself.** That is about 140 badges, a
   content project of its own, so the catalog grows in stages, in no particular
   order; the app treats whatever is in the file as the full list. A unit test
-  validates the file (unique IDs, valid structure, a URL for every badge).
+  validates the file (unique IDs, valid structure, a URL for every badge and
+  rank).
 - **Discontinued badges aren't handled yet:** the Badges list shows every badge
   in the catalog. Once shipped, a badge can't be removed, because progress is
   stored against it, so hiding discontinued badges from scouts who haven't
@@ -613,6 +614,12 @@ works on.
   (`getAdvancements` in `data/catalog/CatalogRepository.kt`). A screen or count
   for one kind reads only that kind (`getBadges` or `getRanks`), so a rank never
   shows up as a badge.
+- **What reads every progress row reads ranks' too.** Export lists a started
+  rank with the badges, under the file's `badges` key, and import checks each
+  one against the badges and ranks in the catalog, so ranks needed no new
+  export format version ([Export and import](#export-and-import)). Clear all
+  clears rank progress too, but its wording, and when it's enabled, still speak
+  only of badges until ranks can be recorded.
 
 ## Data model
 
@@ -802,11 +809,12 @@ it before changing anything, since import replaces all current data (see
   differently.
 - **Import checks the whole file before it changes anything:** that it's JSON
   in this format, and that it holds only what this version of the app could
-  have recorded. Each badge and requirements version must be in the catalog: a
-  newer app's catalog can add some without a new format version, so a file
-  with one the catalog doesn't have is reported as from a newer version too.
-  Each requirement, tracker row and column must be in that version, and no text
-  longer than its field takes, so none is cut short when the scout edits it.
+  have recorded. Each badge or rank, and its requirements version, must be in
+  the catalog: a newer app's catalog can add some without a new format version,
+  so a file with one the catalog doesn't have is reported as from a newer
+  version too. Each requirement, tracker row and column must be in that
+  version, and no text longer than its field takes, so none is cut short when
+  the scout edits it.
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.

@@ -12,8 +12,12 @@ object CatalogValidator {
             add("formatVersion is ${catalog.formatVersion}; this app reads $CATALOG_FORMAT_VERSION")
         }
         if (catalog.badges.isEmpty()) add("the catalog has no badges")
-        catalog.badges.duplicateIds().forEach { add("badge id \"$it\" is used more than once") }
-        catalog.ranks.duplicateIds().forEach { add("rank id \"$it\" is used more than once") }
+        catalog.badges.duplicatesBy { it.id }.forEach {
+            add("badge id \"$it\" is used more than once")
+        }
+        catalog.ranks.duplicatesBy { it.id }.forEach {
+            add("rank id \"$it\" is used more than once")
+        }
         // Badge and rank progress is stored in the same tables, keyed by ID.
         catalog.badges.map { it.id }.intersect(catalog.ranks.map { it.id }.toSet()).forEach {
             add("id \"$it\" is used by both a badge and a rank")
@@ -42,7 +46,7 @@ object CatalogValidator {
             }
             val versions = advancement.requirementVersions
             if (versions.isEmpty()) add("$where: has no requirement versions")
-            versions.groupBy { it.effectiveDate }.filterValues { it.size > 1 }.keys
+            versions.duplicatesBy { it.effectiveDate }
                 .forEach { add("$where: more than one version effective $it") }
             versions.forEach { version ->
                 addAll(validateVersion("$where, version ${version.effectiveDate}", version))
@@ -53,7 +57,7 @@ object CatalogValidator {
         buildList {
             if (version.requirements.isEmpty()) add("$where: has no requirements")
             val all = version.requirements.flatMap { it.withDescendants() }
-            all.groupBy { it.number }.filterValues { it.size > 1 }.keys.forEach {
+            all.duplicatesBy { it.number }.forEach {
                 add("$where: requirement number \"$it\" is used more than once")
             }
             all.forEach { addAll(validateRequirement("$where, requirement \"${it.number}\"", it)) }
@@ -79,7 +83,7 @@ object CatalogValidator {
     private fun validateTracker(where: String, tracker: TrackerDefinition): List<String> =
         buildList {
             if (tracker.columns.isEmpty()) add("$where: has no columns")
-            tracker.columns.groupBy { it.id }.filterValues { it.size > 1 }.keys.forEach {
+            tracker.columns.duplicatesBy { it.id }.forEach {
                 add("$where: column id \"$it\" is used more than once")
             }
             tracker.columns.forEach { column ->
@@ -105,8 +109,9 @@ object CatalogValidator {
         else -> emptyList()
     }
 
-    private fun List<Advancement>.duplicateIds(): Set<String> =
-        groupBy { it.id }.filterValues { it.size > 1 }.keys
+    /** The keys that more than one of these items has. */
+    private fun <T, K> List<T>.duplicatesBy(key: (T) -> K): Set<K> =
+        groupBy(key).filterValues { it.size > 1 }.keys
 
     private fun Requirement.withDescendants(): List<Requirement> =
         listOf(this) + children.flatMap { it.withDescendants() }

@@ -107,10 +107,11 @@ Examples from the catalog (compare them with the official pages):
 
 ### Rank
 
-`ranks` lists the ranks, Scout through Eagle, in the order they're earned. A
-rank has the same fields as a badge, except `eagleRequired` and `eagleGroup`.
-Its `id` must not match any badge's ID, because a rank's progress is saved in
-the same place as a badge's. Its requirements use the same format as a badge's.
+`ranks`, which is required, lists the ranks, Scout through Eagle, in the order
+they're earned. A rank has the same fields as a badge, except `eagleRequired`
+and `eagleGroup`. Its `id` must not match any badge's ID, because a rank's
+progress is saved in the same place as a badge's. Its requirements use the same
+format as a badge's.
 
 ### Requirements version
 
