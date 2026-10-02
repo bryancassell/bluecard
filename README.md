@@ -14,11 +14,13 @@ With BlueCard, a scout can:
   exercise log.
 - Mark a badge completed on an earlier date, without entering each requirement.
 - Save or share a PDF report of everything recorded for a completed badge.
-- Export their progress to a file, and import it again on another phone.
+- Export their name, unit number and progress to a file, and import it later,
+  for example on a new phone.
 
-There's no account or server. Progress is stored on the phone, and the app
-itself doesn't connect to the internet: links to official pages open in the
-browser.
+There's no account or server, and the app itself doesn't connect to the
+internet: links to official pages open in the browser. Progress is stored on the
+phone. Android's own backup also copies it to the scout's Google Drive, unless
+they turn backup off in the phone's settings.
 
 <p>
   <img src="docs/images/home.png" width="250"
@@ -41,7 +43,8 @@ BlueCard runs on Android 8.0 (API 26) and newer.
 ## Building
 
 You need Android Studio and the Android SDK it installs. You don't need to
-install Gradle, Kotlin or a separate JDK. The steps are in
+install Gradle, Kotlin or a separate JDK, but command-line builds need
+`JAVA_HOME` pointed at Android Studio's bundled JDK. The steps for macOS are in
 [One-time machine setup](docs/toolchain.md#one-time-machine-setup-macos).
 
 Then, from the repository root:
@@ -61,8 +64,8 @@ The other commands are listed in
 |---|---|
 | [`PRD.md`](PRD.md) | What the app does, and the decisions about how it looks and behaves |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the app is built, and the conventions new code follows |
-| [`docs/toolchain.md`](docs/toolchain.md) | Machine setup, build commands, and the testing rules the build checks |
-| [`docs/catalog.md`](docs/catalog.md) | How to add merit badges and requirements to the catalog |
+| [`docs/toolchain.md`](docs/toolchain.md) | Machine setup, build commands, the testing rules the build checks, CI, and the backup and release-build checks done by hand |
+| [`docs/catalog.md`](docs/catalog.md) | How to write the catalog's merit badges, ranks and requirements |
 
 ## Disclaimer
 
