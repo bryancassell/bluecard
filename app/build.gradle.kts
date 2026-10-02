@@ -32,7 +32,10 @@ android {
             enableUnitTestCoverage = true
         }
         release {
-            isMinifyEnabled = false
+            // R8 shrinks, optimizes and obfuscates the code, and unused resources are removed.
+            // See ARCHITECTURE.md (Release build).
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -268,6 +268,47 @@ transport performs the restore; if it's skipped, logcat shows "Can't restore
 from D2d Transport". Its cleanup selects that transport again but leaves backup
 on, so turn backup off afterwards if it was off in step 1.
 
+## Checking a release build
+
+R8 shrinks and obfuscates the release build (see
+[`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)), but not the debug app
+or local tests. CI builds the release app, so R8's build errors fail it, but
+code that R8 breaks at runtime only fails when a release build runs. Check one
+on an emulator before each release, and after adding a library, a keep rule,
+or code that uses reflection. As with backup, use an emulator, and point `adb`
+at it if a phone is also connected.
+
+1. Build the release APK and sign it with the debug key, since the release
+   build has no signing config yet. A debug install has the same application
+   ID, so uninstall it first to start from a fresh install.
+
+   ```sh
+   ./gradlew assembleRelease
+   BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+   "$BUILD_TOOLS/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
+       --out app/build/outputs/apk/release/app-release.apk \
+       app/build/outputs/apk/release/app-release-unsigned.apk
+   adb uninstall io.github.bryancassell.bluecard
+   adb install app/build/outputs/apk/release/app-release.apk
+   ```
+
+2. Go through the key flows, and afterwards check `adb logcat -b crash -d` for
+   crashes:
+   - Onboarding, then browse and search the badges and open one.
+   - Record a counselor, a requirement's completion, and a tracker entry.
+   - Create a badge's PDF report, then save it and share it.
+   - Export, clear all data, then import the export.
+   - Restore after process death: open a requirement page, press Home, run
+     `adb shell am kill io.github.bryancassell.bluecard`, then reopen the app
+     from Recents. It should come back on the same page, and Back should go
+     through the pages under it. Navigation 3 restores the back stack with
+     reflection, so this is the flow most likely to break.
+
+A crash's stack trace shows R8's short names. `retrace`, from the Android SDK
+Command-line Tools, turns them back into the source names with the mapping
+file the build wrote:
+`retrace app/build/outputs/mapping/release/mapping.txt <stack trace file>`.
+
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on

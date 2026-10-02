@@ -57,6 +57,7 @@ own documentation says so, and each such claim links to the page.
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
   - [Coverage](#coverage)
+- [Release build](#release-build)
 - [Decisions](#decisions)
 
 ## Overview
@@ -929,6 +930,35 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
 `*_Impl`) are excluded from the per-class 80% coverage rule, and so is
 `PdfDocumentWriter`, which only runs on a device.
 
+## Release build
+
+- **R8 shrinks, optimizes and obfuscates the release build's code, and unused
+  resources are removed** (`isMinifyEnabled` and `isShrinkResources` in
+  `app/build.gradle.kts`, with `proguard-android-optimize.txt`), as Android's
+  [app optimization guide](https://developer.android.com/topic/performance/app-optimization/enable-app-optimization)
+  recommends. It took the APK from 10.1 MB to 2.1 MB
+  ([#197](https://github.com/bryancassell/bluecard/issues/197)).
+- **Only a release build runs shrunk code.** The debug app and local tests
+  don't, so they can't find what R8 breaks at runtime. CI builds the release
+  app, so it catches R8's build errors. Runtime problems need a release build
+  on an emulator, checked as described in
+  [`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build).
+- **Code reached only through reflection needs a keep rule** in
+  `app/proguard-rules.pro`, as narrow as possible, with a comment saying what
+  needs it. None is needed yet. Hilt generates code rather than using
+  reflection, and Room, DataStore and kotlinx.serialization ship their own
+  rules. Those cover Navigation 3's back stack, which `rememberNavBackStack`
+  saves by each key's class name and restores with `Class.forName` and
+  kotlinx.serialization's reflective `serializer()`. The keys' names don't need
+  keeping, though R8 renames them and may rename them differently in the next
+  version: Android drops an app's saved state when the app is updated (logcat:
+  `killDueToPackageUpdate`, then "no saved state"; checked on Android 37), so a
+  name saved by one version is never read by another.
+- **Crash reports in Android vitals are deobfuscated by Play,** from the R8
+  mapping file that AGP puts in the app bundle
+  ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
+  so it needs no separate upload.
+
 ## Decisions
 
 Technical decisions, each linked to the section that explains it. Choices about
@@ -955,3 +985,4 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. The app has one instrumented test and CI has no emulator, so automated tests of the shrunk app would be new work of their own |
