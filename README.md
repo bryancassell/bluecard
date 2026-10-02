@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/bryancassell/bluecard/actions/workflows/ci.yml/badge.svg)](https://github.com/bryancassell/bluecard/actions/workflows/ci.yml)
 
-An Android app for Scouting America scouts to track their progress on merit badges.
+An Android app for Scouting America scouts to track their progress on merit badges and ranks.
 
 With BlueCard, a scout can:
 
@@ -14,6 +14,9 @@ With BlueCard, a scout can:
   exercise log.
 - Mark a badge completed on an earlier date, without entering each requirement.
 - Save or share a PDF report of everything recorded for a completed badge.
+- Track their ranks, Scout through Eagle, the same way, with the merit badges
+  that Star, Life and Eagle need counted from their badge progress. This is
+  still being built: see [Status](#status).
 - Export their name, unit number and progress to a file, and import it later,
   for example on a new phone.
 
@@ -33,8 +36,9 @@ they turn backup off in the phone's settings.
 
 ## Status
 
-BlueCard is in development and hasn't been released yet. The catalog doesn't
-include every merit badge yet.
+BlueCard is in development and hasn't been released yet. Rank tracking is still
+being built ([#193](https://github.com/bryancassell/bluecard/issues/193)), and
+the catalog doesn't include every merit badge yet.
 
 ## Supported devices
 
