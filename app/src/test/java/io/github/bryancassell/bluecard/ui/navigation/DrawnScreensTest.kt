@@ -31,7 +31,7 @@ class DrawnScreensTest {
                 backStack = backStack,
                 onBack = { backStack.removeLastOrNull() },
                 entryDecorators = listOf(drawnScreens.decorator),
-                entryProvider = entryProvider {
+                entryProvider = entryProvider<NavKey> {
                     entry<Home> { Text("Home") }
                     entry<Badges> { Text("Badges") }
                 }.also { entries = it }

@@ -21,11 +21,11 @@ import androidx.navigation3.runtime.NavKey
  */
 @Composable
 fun rememberNavigateFrom(
-    backStack: MutableList<NavKey>,
-    from: NavKey,
+    backStack: MutableList<BlueCardNavKey>,
+    from: BlueCardNavKey,
     isDrawn: (NavKey) -> Boolean,
     shownBackStack: () -> List<NavKey>
-): (to: NavKey) -> Unit {
+): (to: BlueCardNavKey) -> Unit {
     val currentShownBackStack by rememberUpdatedState(shownBackStack)
     val currentIsDrawn by rememberUpdatedState(isDrawn)
     return remember(backStack, from) {
@@ -41,6 +41,6 @@ fun rememberNavigateFrom(
  * Closes the screen for [key] if it's on top of this back stack, as when the screen is done.
  * Does nothing otherwise, such as when the scout has already gone back from it.
  */
-fun MutableList<NavKey>.closeIfOnTop(key: NavKey) {
+fun MutableList<BlueCardNavKey>.closeIfOnTop(key: BlueCardNavKey) {
     if (lastOrNull() == key) removeAt(lastIndex)
 }

@@ -274,12 +274,11 @@ R8 shrinks and obfuscates the release build (see
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)), but not the debug app
 or local tests. CI builds the release app, so R8's build errors fail it, but
 code that R8 breaks at runtime only fails when a release build runs. Check one
-on an emulator before each release, and after adding a library, a keep rule, a
-navigation key, or other code that uses reflection. Also check after updating
-AGP (which brings R8), or a library that uses reflection or ships keep rules
-the app relies on: kotlinx.serialization, Navigation 3, Hilt, Room or
-DataStore. As with backup, use an emulator, and point `adb` at it if a phone is
-also connected.
+on an emulator before each release, and after adding a library, a keep rule,
+or other code that uses reflection. Also check after updating AGP (which brings
+R8), or a library that uses reflection or ships keep rules the app relies on:
+kotlinx.serialization, Hilt, Room or DataStore. As with backup, use an
+emulator, and point `adb` at it if a phone is also connected.
 
 1. Build the release APK and sign it with the debug key, since the release
    build has no signing config yet. A debug install has the same application
@@ -309,8 +308,7 @@ also connected.
    - Restore after process death: open a requirement page, press Home, run
      `adb shell am kill io.github.bryancassell.bluecard`, then reopen the app
      from Recents. It should come back on the same page, and Back should go
-     through the pages under it. Navigation 3 saves and restores the back
-     stack with reflection, so this is the flow most likely to break.
+     through the pages under it.
 
 A crash's stack trace shows R8's short names. `retrace` turns them back into
 the source names, with the mapping file that the build wrote:
