@@ -27,7 +27,8 @@ catalog works this way is in [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-
 - **Keep a shipped tracker's columns.** Scouts' entries are saved by column
   `id`, so once a version ships, never remove a column or change its `id` or
   `type`, and never change the tracker's `rowCount`. You can change a column's
-  label or add a column.
+  label or add a column, and change a `text` column to `multiline-text`, but
+  not back: its saved values may then hold line breaks.
 
 ## What counts as copying
 
@@ -126,7 +127,7 @@ A tracker is a table the scout fills in, one row per entry.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `columns` | Yes | The table's columns, each with an `id` (lowercase words joined by `-`, unique within the tracker), a `label` shown to the scout, and a `type`: `date`, `number` or `text`. A `date` takes only dates up to today, so use `text` for one that can be in the future, such as an alarm's expiration date. A `number` takes digits and one decimal separator but no minus sign, so use `text` for one that can be negative, such as a temperature. |
+| `columns` | Yes | The table's columns, each with an `id` (lowercase words joined by `-`, unique within the tracker), a `label` shown to the scout, and a `type`: `date`, `number`, `text` or `multiline-text`. Use `multiline-text` for a description or a list, such as "What you saw", and `text` for a name or a short value. A `date` takes only dates up to today, so use `text` for one that can be in the future, such as an alarm's expiration date. A `number` takes digits and one decimal separator but no minus sign, so use `text` for one that can be negative, such as a temperature. |
 | `rowLabel` | Yes | What one row is called, in lowercase, such as `week` or `session`. The app capitalizes it for titles, such as "Week 3". |
 | `rowLabelPlural` | Yes | `rowLabel` in the plural, in lowercase, such as `weeks`. The requirement's row shows it in a count, such as "8 of 12 weeks". |
 | `rowCount` | No | A fixed number of rows, such as `13` for a 13-week budget. The scout fills in each one ("Week 1" to "Week 13"). Leave it out for a log the scout adds rows to, any number of them. |
