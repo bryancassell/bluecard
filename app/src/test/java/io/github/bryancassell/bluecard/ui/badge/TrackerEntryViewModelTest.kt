@@ -422,6 +422,35 @@ class TrackerEntryViewModelTest {
     }
 
     @Test
+    fun save_asMidnightPasses_startsTheBadgeTheDayTheEntryIsAdded() = runTest {
+        var midnightPassesOnLoad = false
+        // Midnight passes while the save loads the catalog, after it reads the clock.
+        val slowCatalog = object : CatalogRepository by catalogRepository {
+            override suspend fun getBadges(): List<MeritBadge> {
+                if (midnightPassesOnLoad) {
+                    clock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+                }
+                return catalogRepository.getBadges()
+            }
+        }
+        clock.now = today.atTime(23, 59, 59).toInstant(ZoneOffset.UTC)
+        val viewModel = viewModel(catalog = slowCatalog)
+        startCollecting(viewModel)
+        viewModel.type("activity", "Run")
+        viewModel.type("minutes", "30")
+        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+        midnightPassesOnLoad = true
+
+        viewModel.save()
+
+        assertEquals(
+            BadgeProgress("personal-fitness", newest, today),
+            progressRepository.observeProgress("personal-fitness").first()!!.badge
+        )
+        assertEquals(listOf(today), entries().map { it.addedDate })
+    }
+
+    @Test
     fun save_savedLogEntry_changesIt() = runTest {
         val id = addSession(mapOf("activity" to "Run", "minutes" to "30"))
         val viewModel = viewModel(entryId = id)

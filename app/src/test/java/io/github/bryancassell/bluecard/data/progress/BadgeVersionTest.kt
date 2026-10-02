@@ -6,6 +6,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class BadgeVersionTest {
@@ -15,6 +16,7 @@ class BadgeVersionTest {
         RequirementsVersion(LocalDate.of(2025, 1, 1), listOf(Requirement("1", "B.")))
     private val newest =
         RequirementsVersion(LocalDate.of(2026, 1, 1), listOf(Requirement("1", "C.")))
+    private val today = LocalDate.of(2026, 5, 20)
 
     private val badge = MeritBadge(
         id = BADGE,
@@ -49,6 +51,28 @@ class BadgeVersionTest {
     @Test
     fun startedOnVersionMissingFromCatalog_isNull() {
         assertNull(badge.requirementsVersionFor(startedOn(LocalDate.of(2023, 1, 1))))
+    }
+
+    @Test
+    fun badgeStart_isNewestVersionOnTheDayGiven() {
+        assertEquals(
+            BadgeStart(newest.effectiveDate, today),
+            listOf(badge).badgeStart(BADGE, today)
+        )
+    }
+
+    @Test
+    fun badgeStart_forBadgeNotInCatalog_fails() {
+        assertThrows(IllegalStateException::class.java) {
+            listOf(badge).badgeStart("archery", today)
+        }
+    }
+
+    @Test
+    fun badgeStart_forBadgeWithNoVersionsInCatalog_fails() {
+        assertThrows(IllegalStateException::class.java) {
+            listOf(badge.copy(requirementVersions = emptyList())).badgeStart(BADGE, today)
+        }
     }
 
     private companion object {

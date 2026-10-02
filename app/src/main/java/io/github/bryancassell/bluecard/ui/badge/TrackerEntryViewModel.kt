@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -52,7 +53,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
     @Assisted("number") private val number: String,
     @Assisted private val entryId: Long?,
     @Assisted private val rowNumber: Int?,
-    catalogRepository: CatalogRepository,
+    private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps unsaved values if the system stops the app in the background.
@@ -68,7 +69,6 @@ class TrackerEntryViewModel @AssistedInject constructor(
     val fields: Map<String, TextFieldState> = _fields
 
     private val saves = SaveRunner(viewModelScope)
-    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     /** Whether a save or delete is under way. */
     private val saving = MutableStateFlow(false)
@@ -258,6 +258,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
         val values = valuesToSave(row, _fields.mapValues { it.value.text.toString() })
         if (!isSavable(row, values)) return
         finish {
+            val today = today()
             // An entry deleted since the page loaded is added again, keeping the scout's edit.
             // That happens if they delete it and reopen it before the delete is saved.
             progressRepository.addTrackerEntry(
@@ -265,8 +266,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
                 number,
                 row.rowNumber,
                 values,
-                addedDate = today(),
-                recorder.badgeStart(),
+                addedDate = today,
+                catalogRepository.getBadges().badgeStart(badgeId, today),
                 id = row.entryId
             )
         }
