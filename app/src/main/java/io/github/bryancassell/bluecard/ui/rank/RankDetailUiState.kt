@@ -36,6 +36,18 @@ sealed interface RankDetailUiState {
          */
         val earnedWith: String? = null,
         /**
+         * The date the rank was earned on: the date it was marked earned on, or the date its
+         * requirements were completed on, for one earned from them. Null for one that isn't
+         * earned, one counted as earned with a rank above it, or one with a requirement it needed
+         * completed with no date.
+         */
+        val earnedOn: LocalDate? = null,
+        /**
+         * For a rank whose requirements are complete but isn't earned, the name of the rank below
+         * it, which has to be earned first. Null otherwise.
+         */
+        val waitingOn: String? = null,
+        /**
          * The date the rank was marked earned on before the scout unmarked it on this page, which
          * the date picker opens at, or null.
          */

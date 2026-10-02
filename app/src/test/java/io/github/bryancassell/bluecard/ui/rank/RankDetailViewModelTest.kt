@@ -332,7 +332,7 @@ class RankDetailViewModelTest {
     }
 
     @Test
-    fun rankCompleteFromItsRequirements_isntMarkedEarned() = runTest {
+    fun rankCompleteFromItsRequirements_isntMarkedEarned_andIsEarnedOnTheirDate() = runTest {
         val viewModel = viewModel("scout")
         startCollecting(viewModel)
 
@@ -341,6 +341,30 @@ class RankDetailViewModelTest {
         assertEquals(RankStatus.Earned, viewModel.ready().status)
         assertNull(viewModel.ready().earnedOnPriorDate)
         assertNull(viewModel.ready().earnedWith)
+        assertEquals(day, viewModel.ready().earnedOn)
+    }
+
+    @Test
+    fun rankCompleteFromItsRequirements_waitsOnTheRankBelow_untilItsEarned() = runTest {
+        complete("tenderfoot", "1", "2")
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertEquals("Scout", viewModel.ready().waitingOn)
+        assertNull(viewModel.ready().earnedOn)
+
+        complete("scout", "1", "2")
+
+        assertNull(viewModel.ready().waitingOn)
+        assertEquals(day, viewModel.ready().earnedOn)
+    }
+
+    @Test
+    fun rankNotComplete_waitsOnNothing() = runTest {
+        complete("tenderfoot", "1")
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().waitingOn)
     }
 
     @Test

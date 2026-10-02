@@ -81,7 +81,10 @@ class RankStatusTest {
 
         assertEquals(RankStatus.InProgress, standings[0].status)
         // All done, but waiting on Scout.
-        assertEquals(RankStanding(tenderfoot, RankStatus.NotEarned, 1f), standings[1])
+        assertEquals(
+            RankStanding(tenderfoot, RankStatus.NotEarned, 1f, waitingOn = scout),
+            standings[1]
+        )
     }
 
     @Test
@@ -99,6 +102,56 @@ class RankStatusTest {
                 progress(secondClass, "1", "2"),
                 progress(firstClass, "1", "2")
             )
+        )
+    }
+
+    @Test
+    fun completeRanks_overARankNotEarned_waitOnTheRankBelowEach() {
+        val standings = ranks.standings(
+            mapOf(
+                progress(scout, "1", "2"),
+                progress(secondClass, "1", "2"),
+                progress(firstClass, "1", "2")
+            )
+        )
+
+        assertEquals(listOf(null, null, tenderfoot, secondClass), standings.map { it.waitingOn })
+    }
+
+    @Test
+    fun earnedRank_isEarnedOnTheDateItsLastRequirementWasCompleted() {
+        val later = day.plusDays(3)
+        val scoutProgress = progress(scout, "1", "2").second.let {
+            it.copy(
+                requirements = it.requirements.map { done ->
+                    if (done.requirementNumber == "2") done.copy(completedDate = later) else done
+                }
+            )
+        }
+
+        assertEquals(later, ranks.standings(mapOf("scout" to scoutProgress))[0].earnedOn)
+    }
+
+    @Test
+    fun earnedRank_withARequirementCompletedWithNoDate_hasNoDate() {
+        val scoutProgress = progress(scout, "1", "2").second.let {
+            it.copy(requirements = it.requirements.map { done -> done.copy(completedDate = null) })
+        }
+        val standing = ranks.standings(mapOf("scout" to scoutProgress))[0]
+
+        assertEquals(RankStatus.Earned, standing.status)
+        assertNull(standing.earnedOn)
+    }
+
+    // The date it was marked with, not the date its requirements were completed on.
+    @Test
+    fun markedRank_completeFromItsRequirementsToo_isEarnedOnTheDateItWasMarkedWith() {
+        val marked = LocalDate.of(2025, 6, 1)
+
+        assertEquals(
+            marked,
+            ranks.standings(mapOf(progress(scout, "1", "2", earnedOnPriorDate = marked)))[0]
+                .earnedOn
         )
     }
 
@@ -135,7 +188,7 @@ class RankStatusTest {
             listOf(
                 RankStanding(scout, RankStatus.Earned, earnedWith = secondClass),
                 RankStanding(tenderfoot, RankStatus.Earned, earnedWith = secondClass),
-                RankStanding(secondClass, RankStatus.Earned),
+                RankStanding(secondClass, RankStatus.Earned, earnedOn = day),
                 RankStanding(firstClass, RankStatus.InProgress, fractionDone = 0f)
             ),
             standings
@@ -166,7 +219,7 @@ class RankStatusTest {
         )
 
         assertEquals(secondClass, standings[0].earnedWith)
-        assertEquals(RankStanding(tenderfoot, RankStatus.Earned), standings[1])
+        assertEquals(RankStanding(tenderfoot, RankStatus.Earned, earnedOn = day), standings[1])
     }
 
     @Test
@@ -214,7 +267,7 @@ class RankStatusTest {
             mapOf(progress(tenderfoot, startedOn = missing, earnedOnPriorDate = day))
         )
 
-        assertEquals(RankStanding(tenderfoot, RankStatus.Earned), standings[1])
+        assertEquals(RankStanding(tenderfoot, RankStatus.Earned, earnedOn = day), standings[1])
         assertEquals(tenderfoot, standings[0].earnedWith)
     }
 }

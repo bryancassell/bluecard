@@ -2,9 +2,7 @@ package io.github.bryancassell.bluecard.ui.rank
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -128,7 +126,7 @@ private fun RankDetails(
             startOtherApp = startOtherApp
         )
         // Outside the header's column, so its text buttons line up with the page's text.
-        EarnedOnPriorDate(uiState, today, onMarkEarned, onUnmarkEarned)
+        EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned)
         Text(
             text = stringResource(R.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,
@@ -155,32 +153,34 @@ private fun RankDetails(
 }
 
 /**
- * While the rank isn't earned, a button to mark it earned on a date the scout picks, up to
- * [today], without recording its requirements ([onMark]). Once it's marked, the date, with
- * buttons to change it ([onMark]) or unmark the rank ([onUnmark]). For a rank that counts as
- * earned only with a rank above it, says so, with a button to give it a date of its own
- * ([onMark]). Each picker opens at the date the scout just unmarked, if any, or at today.
- * For a rank earned from its requirements, only the room the others leave below the header.
+ * How the rank is earned, under the official link:
+ * - While it isn't earned, a button to mark it earned on a date the scout picks, up to [today],
+ *   without recording its requirements ([onMark]), under the rank it's waiting on, if its
+ *   requirements are complete.
+ * - Once it's marked, the date, with buttons to change it ([onMark]) or unmark the rank
+ *   ([onUnmark]).
+ * - For a rank that counts as earned only with a rank above it, says so, with a button to give
+ *   it a date of its own ([onMark]).
+ * - For a rank earned from its requirements, the date they were completed on.
  *
- * Its text buttons' touch areas are taller than they look, so they need no padding of their own
- * to keep it apart from what's above and below.
+ * Each picker opens at the date the scout just unmarked, if any, or at today. Its text buttons'
+ * touch areas are taller than they look, so they need no padding of their own to keep it apart
+ * from what's above and below.
  */
 @Composable
-private fun EarnedOnPriorDate(
+private fun EarnedStatus(
     uiState: RankDetailUiState.Ready,
     today: () -> LocalDate,
     onMark: (date: LocalDate) -> Unit,
     onUnmark: () -> Unit
 ) {
     val date = uiState.earnedOnPriorDate
+    val formatter = rememberCompletionDateFormatter()
     // Its text, unlike a button's, sits at the top of its space.
     val dateModifier = Modifier.padding(top = 16.dp)
     when {
         date != null -> EditableDate(
-            text = stringResource(
-                R.string.rank_detail_earned_on,
-                rememberCompletionDateFormatter().format(date)
-            ),
+            text = stringResource(R.string.rank_detail_earned_on, formatter.format(date)),
             date = date,
             today = today,
             onDateChange = { if (it == null) onUnmark() else onMark(it) },
@@ -198,17 +198,37 @@ private fun EarnedOnPriorDate(
             suggested = uiState.unmarkedDate
         )
 
-        uiState.status != RankStatus.Earned -> PickDateButton(
-            text = stringResource(R.string.rank_detail_mark_earned),
-            // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
-            initial = uiState.unmarkedDate,
-            today = today,
-            onPick = onMark,
-            // Lines the button's text up with the page's.
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
+        uiState.status != RankStatus.Earned -> Column {
+            uiState.waitingOn?.let {
+                StatusText(stringResource(R.string.rank_detail_waiting_on, it))
+            }
+            PickDateButton(
+                text = stringResource(R.string.rank_detail_mark_earned),
+                // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
+                initial = uiState.unmarkedDate,
+                today = today,
+                onPick = onMark,
+                // Lines the button's text up with the page's.
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+        }
 
-        // So the Requirements heading isn't right under the official link.
-        else -> Spacer(Modifier.height(16.dp))
+        // Earned from its requirements. Room under it, as a button would leave.
+        else -> StatusText(
+            text = uiState.earnedOn?.let {
+                stringResource(R.string.rank_detail_earned_on, formatter.format(it))
+            } ?: stringResource(R.string.rank_detail_earned),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
     }
+}
+
+/** A line about how the rank is earned, styled as [EditableDate]'s. */
+@Composable
+private fun StatusText(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
+    )
 }

@@ -13,7 +13,7 @@ import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
-import io.github.bryancassell.bluecard.ui.badge.advancementRequirements
+import io.github.bryancassell.bluecard.ui.badge.advancementRequirementsAmong
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
 import java.time.LocalDate
@@ -56,7 +56,7 @@ class RankDetailViewModel @AssistedInject constructor(
         val standings = ranks.standings(progressById)
         val standing = standings.find { it.rank.id == rankId }
             ?: return@combine RankDetailUiState.Unavailable
-        val found = ranks.advancementRequirements(rankId, progressById[rankId])?.readAs(standing)
+        val found = ranks.advancementRequirementsAmong(rankId, progressById, standings)
             ?: return@combine RankDetailUiState.Unavailable
         val progress = progressById[rankId]
         RankDetailUiState.Ready(
@@ -68,6 +68,8 @@ class RankDetailViewModel @AssistedInject constructor(
             fractionDone = standing.fractionDone,
             earnedOnPriorDate = progress?.badge?.completedOnPriorDate,
             earnedWith = standing.earnedWith?.name,
+            earnedOn = standing.earnedOn,
+            waitingOn = standing.waitingOn?.name,
             canClear = progress != null,
             unearnedByClear = if (progress == null) {
                 emptyList()

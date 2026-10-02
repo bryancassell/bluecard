@@ -9,6 +9,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.standings
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -221,5 +222,76 @@ class AdvancementRequirementsTest {
     @Test
     fun find_numberNotInVersion_isNull() {
         assertNull(newest.find("3"))
+    }
+
+    private fun rank(id: String) = Rank(
+        id = id,
+        name = id.replaceFirstChar { it.uppercase() },
+        summary = "Our summary.",
+        officialUrl = "https://www.scouting.org/$id.pdf",
+        requirementVersions = listOf(newest)
+    )
+
+    private val scout = rank("scout")
+    private val tenderfoot = rank("tenderfoot")
+    private val advancements: List<Advancement> = catalog + listOf(scout, tenderfoot)
+
+    private fun marked(id: String) = id to BadgeProgressDetails(
+        BadgeProgress(
+            id,
+            newest.effectiveDate,
+            startedDate = LocalDate.of(2026, 3, 1),
+            completedOnPriorDate = LocalDate.of(2025, 8, 1)
+        ),
+        emptyList(),
+        emptyList()
+    )
+
+    @Test
+    fun among_badge_readsAsOnItsOwn() {
+        val progress =
+            mapOf("camping" to startedOn(newest.effectiveDate, "1"), marked("tenderfoot"))
+
+        assertEquals(
+            advancements.advancementRequirements("camping", progress["camping"]),
+            advancements.advancementRequirementsAmong("camping", progress)
+        )
+    }
+
+    @Test
+    fun among_notInCatalog_isNull() {
+        assertNull(advancements.advancementRequirementsAmong("eagle", mapOf(marked("eagle"))))
+    }
+
+    @Test
+    fun among_rankCountedAsEarnedWithARankAbove_readsAsMarked() {
+        val found = advancements.advancementRequirementsAmong(
+            "scout",
+            mapOf(marked("tenderfoot"))
+        )!!
+
+        assertTrue(found.completedOnPriorDate)
+        assertTrue(found.item(newest.requirements.first()).notRecorded)
+    }
+
+    @Test
+    fun among_rankNotCountedAsEarned_readsAsOnItsOwn() {
+        val found = advancements.advancementRequirementsAmong(
+            "tenderfoot",
+            mapOf(marked("scout"))
+        )!!
+
+        assertFalse(found.completedOnPriorDate)
+        assertFalse(found.item(newest.requirements.first()).notRecorded)
+    }
+
+    // So a page that has worked them out doesn't again.
+    @Test
+    fun among_givenStandings_readsTheRankAsThoseHaveIt() {
+        val standings = listOf(scout, tenderfoot).standings(mapOf(marked("tenderfoot")))
+
+        val found = advancements.advancementRequirementsAmong("scout", emptyMap(), standings)!!
+
+        assertTrue(found.completedOnPriorDate)
     }
 }

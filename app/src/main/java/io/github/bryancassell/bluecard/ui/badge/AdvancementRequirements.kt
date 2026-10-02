@@ -25,20 +25,10 @@ data class AdvancementRequirements<out A : Advancement>(
     val trackerEntries: Map<String, List<TrackerEntry>>,
     /**
      * Whether the scout marked it completed on a prior date, or, for a rank, marked a rank above
-     * it earned, which counts it as earned ([readAs]).
+     * it earned, which counts it as earned ([advancementRequirementsAmong]).
      */
     val completedOnPriorDate: Boolean = false
 ) {
-    /**
-     * This rank's requirements as the scout's [standing] on it reads them. One that counts as
-     * earned because the scout marked a rank above it earned on a prior date
-     * ([RankStanding.earnedWith]) reads as marked itself, so a requirement not recorded for it
-     * reads "Not recorded", as on the rank they marked. Every page that shows a rank's
-     * requirements reads them this way, so they agree.
-     */
-    fun readAs(standing: RankStanding): AdvancementRequirements<A> =
-        if (standing.earnedWith == null) this else copy(completedOnPriorDate = true)
-
     /** [requirement] of this badge or rank as a row. */
     fun item(requirement: Requirement) = requirement.toItem(
         recorded,
@@ -89,16 +79,22 @@ fun <A : Advancement> List<A>.advancementRequirements(
 
 /**
  * As [advancementRequirements], from the scout's [progress] keyed by ID, which for a rank must
- * have every rank's: a rank reads as its standing among them has it
- * ([AdvancementRequirements.readAs]).
+ * have every rank's. A rank that counts as earned because the scout marked a rank above it earned
+ * on a prior date ([RankStanding.earnedWith]) reads as marked itself, so a requirement not
+ * recorded for it reads "Not recorded", as on the rank they marked. Every page that shows a
+ * rank's requirements reads them through this, so they agree. A caller that has already worked
+ * out the ranks' [standings] from [progress] passes them, so they aren't worked out again.
  */
 fun <A : Advancement> List<A>.advancementRequirementsAmong(
     id: String,
-    progress: Map<String, BadgeProgressDetails>
+    progress: Map<String, BadgeProgressDetails>,
+    standings: List<RankStanding>? = null
 ): AdvancementRequirements<A>? {
     val found = advancementRequirements(id, progress[id]) ?: return null
     if (found.advancement !is Rank) return found
-    return found.readAs(filterIsInstance<Rank>().standings(progress).first { it.rank.id == id })
+    val standing = (standings ?: filterIsInstance<Rank>().standings(progress))
+        .first { it.rank.id == id }
+    return if (standing.earnedWith == null) found else found.copy(completedOnPriorDate = true)
 }
 
 /** The requirement numbered [number], at any depth, or null if there is none. */

@@ -241,12 +241,20 @@
          earned on it without recording its requirements, as for a rank earned before using
          BlueCard. Every rank below it then counts as earned too. -->
     <string name="rank_detail_mark_earned">Mark earned</string>
-    <!-- The date a rank was marked earned on, such as "Earned on Apr 15, 2025". -->
+    <!-- The date a rank was marked earned on, or for one earned from its requirements, the date
+         they were completed on, such as "Earned on Apr 15, 2025". -->
     <string name="rank_detail_earned_on">Earned on %1$s</string>
     <!-- On the page of a rank that counts as earned because the scout marked a rank above it
          earned, with that rank's name, such as "Counted as earned with Life". An Add date
          button under it gives this rank a date of its own. -->
     <string name="rank_detail_earned_with">Counted as earned with %1$s</string>
+    <!-- On the page of a rank earned from its requirements, in place of "Earned on <date>" when
+         a requirement it needed was completed with no date. -->
+    <string name="rank_detail_earned">Earned</string>
+    <!-- Above Mark earned on the page of a rank whose requirements are all complete, with the
+         name of the rank below it, which has to be earned first, such as "Earned once
+         Tenderfoot is earned". -->
+    <string name="rank_detail_waiting_on">Earned once %1$s is earned</string>
     <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
          recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
     <string name="badge_detail_share_report">Share report</string>

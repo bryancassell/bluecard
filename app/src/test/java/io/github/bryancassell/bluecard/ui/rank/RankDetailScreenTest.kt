@@ -299,6 +299,39 @@ class RankDetailScreenTest {
     }
 
     @Test
+    fun rankEarnedFromItsRequirements_saysWhen() {
+        show(earned.copy(earnedOn = LocalDate.of(2026, 4, 15)))
+
+        text("Earned on Apr 15, 2026").performScrollTo().assertIsDisplayed()
+        text("Change date").assertDoesNotExist()
+    }
+
+    @Test
+    fun rankEarnedFromItsRequirements_withoutADate_saysEarned() {
+        show(earned)
+
+        text("Earned").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun rankWaitingOnTheRankBelow_saysSo_aboveMarkEarned() {
+        show(ready.copy(fractionDone = 1f, waitingOn = "Scout"))
+
+        val tops = listOf("Earned once Scout is earned", "Mark earned").map(::topOf)
+        assertEquals(tops.sorted(), tops)
+        text("Mark earned").performScrollTo().performClick()
+        pickDay("May 10, 2026")
+        assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
+    }
+
+    @Test
+    fun rankNotWaiting_saysNothingAboveMarkEarned() {
+        show(started)
+
+        composeTestRule.onNode(hasText("Earned once", substring = true)).assertDoesNotExist()
+    }
+
+    @Test
     fun rankEarnedFromItsRequirements_cantBeMarked() {
         show(earned)
 

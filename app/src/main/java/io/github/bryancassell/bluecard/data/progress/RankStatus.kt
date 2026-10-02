@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.Rank
+import java.time.LocalDate
 
 /** How far the scout has got with a rank. Ranks are earned in order, Scout through Eagle. */
 enum class RankStatus {
@@ -28,7 +29,19 @@ data class RankStanding(
      * one as earned, when nothing else does: it isn't marked itself, and its requirements aren't
      * complete. Null otherwise. The nearest of them, if there's more than one.
      */
-    val earnedWith: Rank? = null
+    val earnedWith: Rank? = null,
+    /**
+     * The date the rank was earned on, once it's earned: the date the scout marked it earned on,
+     * or for one earned from its requirements, the date they were completed on ([completion]).
+     * Null for one that isn't earned, one [earnedWith] a rank above it, or one with a
+     * requirement it needed completed with no date.
+     */
+    val earnedOn: LocalDate? = null,
+    /**
+     * For a rank whose requirements are complete but isn't earned, the rank below it, which has
+     * to be earned first. Null otherwise.
+     */
+    val waitingOn: Rank? = null
 )
 
 /**
@@ -48,8 +61,16 @@ fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>): List<Rank
     return mapIndexed { index, rank ->
         val rankProgress = progress[rank.id]
         val version = rank.requirementsVersionFor(rankProgress)
-        // Checked first, because a rank marked earned on a prior date needs no version.
-        val complete = isMarked(rank) || version?.let { rankProgress?.completion(it) } != null
+        val markedOn = rankProgress?.badge?.completedOnPriorDate
+        // Not looked for on a marked rank, which needs no version.
+        val completion = if (markedOn ==
+            null
+        ) {
+            version?.let { rankProgress?.completion(it) }
+        } else {
+            null
+        }
+        val complete = markedOn != null || completion != null
         val earned = index <= highestMarked || (complete && belowEarned)
         val status = when {
             earned -> RankStatus.Earned
@@ -68,7 +89,16 @@ fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>): List<Rank
                 else -> null
             },
             // Not marked itself, so a rank above it is.
-            earnedWith = if (earned && !complete) subList(index + 1, size).first(isMarked) else null
+            earnedWith = if (earned &&
+                !complete
+            ) {
+                subList(index + 1, size).first(isMarked)
+            } else {
+                null
+            },
+            earnedOn = if (earned) markedOn ?: completion?.date else null,
+            // Not the lowest rank, which is earned once complete.
+            waitingOn = if (complete && !earned) this[index - 1] else null
         )
     }
 }
