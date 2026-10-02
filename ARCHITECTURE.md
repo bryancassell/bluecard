@@ -945,9 +945,11 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   [`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build).
 - **Code reached only through reflection needs a keep rule** in
   `app/proguard-rules.pro`, as narrow as possible, with a comment saying what
-  needs it. None is needed yet. Hilt generates code rather than using
-  reflection, and Room, DataStore and kotlinx.serialization ship their own
-  rules. Those cover Navigation 3's back stack, which `rememberNavBackStack`
+  needs it. None is needed yet: the libraries ship rules for what they reach
+  by reflection or by name. Hilt finds each `@HiltViewModel` by its class
+  name, and Dagger's rule has R8 update those names when it renames the
+  classes. Room, DataStore and kotlinx.serialization ship their own rules too.
+  Those cover Navigation 3's back stack, which `rememberNavBackStack`
   saves by each key's class name and restores with `Class.forName` and
   kotlinx.serialization's reflective `serializer()`. The keys' names don't need
   keeping, though R8 renames them and may rename them differently in the next

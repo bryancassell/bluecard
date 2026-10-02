@@ -160,7 +160,8 @@ Dependabot proposes those updates instead.
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
 - **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.
   Use them only for behavior that needs a real Android runtime. They are slower
-  and need a device, so `./gradlew build` does not run them. There are none yet.
+  and need a device, so `./gradlew build` does not run them. The only one so far
+  is `PdfDocumentWriterTest`.
 
 To run instrumented tests, create a virtual device once in Android Studio
 (**Device Manager → Create Virtual Device**), start it, then run
@@ -274,9 +275,11 @@ R8 shrinks and obfuscates the release build (see
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)), but not the debug app
 or local tests. CI builds the release app, so R8's build errors fail it, but
 code that R8 breaks at runtime only fails when a release build runs. Check one
-on an emulator before each release, and after adding a library, a keep rule,
-or code that uses reflection. As with backup, use an emulator, and point `adb`
-at it if a phone is also connected.
+on an emulator before each release, and after adding a library, a keep rule, a
+navigation key, or other code that uses reflection. Also check after updating
+AGP (which brings R8) or a library whose runtime relies on its own keep rules:
+kotlinx.serialization, Navigation 3, Hilt or Room. As with backup, use an
+emulator, and point `adb` at it if a phone is also connected.
 
 1. Build the release APK and sign it with the debug key, since the release
    build has no signing config yet. A debug install has the same application
@@ -284,7 +287,8 @@ at it if a phone is also connected.
 
    ```sh
    ./gradlew assembleRelease
-   BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+   # The newest stable build tools; preview versions have a "-" in their name.
+   BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -v -e - | sort -V | tail -1)"
    "$BUILD_TOOLS/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
        --out app/build/outputs/apk/release/app-release.apk \
        app/build/outputs/apk/release/app-release-unsigned.apk
@@ -292,11 +296,14 @@ at it if a phone is also connected.
    adb install app/build/outputs/apk/release/app-release.apk
    ```
 
-2. Go through the key flows, and afterwards check `adb logcat -b crash -d` for
+2. Clear the crash log, so that crashes from earlier runs of the app aren't
+   mistaken for this build's: `adb logcat -b crash -c`.
+3. Go through the key flows, and afterwards check `adb logcat -b crash -d` for
    crashes:
    - Onboarding, then browse and search the badges and open one.
    - Record a counselor, a requirement's completion, and a tracker entry.
    - Create a badge's PDF report, then save it and share it.
+   - Edit the profile from Home.
    - Export, clear all data, then import the export.
    - Restore after process death: open a requirement page, press Home, run
      `adb shell am kill io.github.bryancassell.bluecard`, then reopen the app
@@ -304,10 +311,13 @@ at it if a phone is also connected.
      through the pages under it. Navigation 3 restores the back stack with
      reflection, so this is the flow most likely to break.
 
-A crash's stack trace shows R8's short names. `retrace`, from the Android SDK
-Command-line Tools, turns them back into the source names with the mapping
-file the build wrote:
+A crash's stack trace shows R8's short names. `retrace` turns them back into
+the source names, with the mapping file that the build wrote:
 `retrace app/build/outputs/mapping/release/mapping.txt <stack trace file>`.
+Each release build writes a new mapping file, so retrace before building
+again. `retrace` comes with the Android SDK Command-line Tools, which the
+Standard setup doesn't install: add them in Android Studio's **SDK Manager →
+SDK Tools → Android SDK Command-line Tools (latest)**.
 
 ## Continuous integration
 
@@ -319,8 +329,8 @@ When the job fails, the lint and test reports are attached to the run as a
 `reports` artifact: open the failed run on GitHub and download it from the
 **Artifacts** section of the summary page.
 
-CI does not run instrumented tests yet, because there are none; an emulator job
-will be added with the first test that needs a real device.
+CI does not run instrumented tests, because it has no emulator. The only one so
+far, `PdfDocumentWriterTest`, is run by hand with `./gradlew connectedAndroidTest`.
 
 Pull requests are squash-merged: each one becomes a single commit on `main`,
 titled with the PR title and described by the PR description, so write both as
