@@ -23,7 +23,9 @@ class BlueCardAppTest {
 
     @Test
     fun loading_showsNeitherOnboardingNorHome() {
-        composeTestRule.setContent { BlueCardApp(MainActivityUiState.Loading) }
+        composeTestRule.setContent {
+            BlueCardApp(MainActivityUiState.Loading, onDismissDamagedProgressNotice = {})
+        }
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         // Home's button that opens the badge list, and its loading indicator.
@@ -38,7 +40,9 @@ class BlueCardAppTest {
 
     @Test
     fun loadFailed_showsMessageOnly() {
-        composeTestRule.setContent { BlueCardApp(MainActivityUiState.LoadFailed) }
+        composeTestRule.setContent {
+            BlueCardApp(MainActivityUiState.LoadFailed, onDismissDamagedProgressNotice = {})
+        }
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -69,6 +70,7 @@ class TrackerEntryScreenTest {
     private var saves = 0
     private var deletes = 0
     private var closes = 0
+    private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<SaveFailure>()
 
     /** The page's view, which the keyboard's insets are sent to. */
@@ -84,6 +86,7 @@ class TrackerEntryScreenTest {
         columns = columns,
         dates = emptyMap(),
         canSave = false,
+        changed = false,
         hasSavedEntry = false,
         canDelete = false
     )
@@ -102,16 +105,18 @@ class TrackerEntryScreenTest {
     ) {
         composeTestRule.setContent {
             view = LocalView.current
-            TrackerEntryScreen(
-                uiState = uiState,
-                fields = fields,
-                onDateChange = { columnId, date -> dateChanges += columnId to date },
-                today = { today },
-                onSave = { saves++ },
-                onDelete = { deletes++ },
-                onClose = { closes++ },
-                onSaveFailureShown = { saveFailuresShown += it }
-            )
+            back.Content {
+                TrackerEntryScreen(
+                    uiState = uiState,
+                    fields = fields,
+                    onDateChange = { columnId, date -> dateChanges += columnId to date },
+                    today = { today },
+                    onSave = { saves++ },
+                    onDelete = { deletes++ },
+                    onClose = { closes++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
+                )
+            }
         }
     }
 
@@ -530,6 +535,31 @@ class TrackerEntryScreenTest {
         closeKeyboard()
 
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
+    }
+
+    @Test
+    fun back_withChangesThatCantBeSaved_asksBeforeDiscardingThem() {
+        // As with every field of a saved entry emptied, which Delete removes instead.
+        show(savedEntry.copy(canSave = false, changed = true))
+
+        back.press(composeTestRule)
+        composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, closes)
+        assertEquals(0, deletes)
+        assertEquals(0, back.closes)
+    }
+
+    @Test
+    fun back_withoutChanges_closesThePage() {
+        show(savedEntry)
+
+        back.press(composeTestRule)
+
+        assertEquals(1, back.closes)
+        assertEquals(0, closes)
+        composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
     }
 
     @Test

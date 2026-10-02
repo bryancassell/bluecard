@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -34,7 +35,7 @@ import io.github.bryancassell.bluecard.ui.badge.LoadingIndicator
 /** Connects the Edit name and unit screen to its ViewModel. */
 @Composable
 fun EditProfileRoute(
-    onSaved: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditProfileViewModel = hiltViewModel()
 ) {
@@ -45,9 +46,10 @@ fun EditProfileRoute(
         unitNumber = viewModel.unitNumber,
         onSave = viewModel::save,
         onSaved = {
-            onSaved()
+            onClose()
             viewModel.onClosed()
         },
+        onDiscard = onClose,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
@@ -55,7 +57,8 @@ fun EditProfileRoute(
 
 /**
  * The scout's [name] and [unitNumber], both required, which the scout saves when they choose.
- * Once they're saved, [onSaved] closes the page. Leaving it without saving discards the changes.
+ * Once they're saved, [onSaved] closes the page. Back with unsaved changes asks first, then
+ * [onDiscard] closes it without saving them.
  */
 @Composable
 fun EditProfileScreen(
@@ -64,9 +67,14 @@ fun EditProfileScreen(
     unitNumber: TextFieldState,
     onSave: () -> Unit,
     onSaved: () -> Unit,
+    onDiscard: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ConfirmDiscardOnBack(
+        changed = (uiState as? EditProfileUiState.Ready)?.changed == true,
+        onDiscard = onDiscard
+    )
     when (uiState) {
         EditProfileUiState.Loading -> LoadingIndicator(modifier)
 

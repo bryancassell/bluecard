@@ -35,6 +35,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
+import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.SaveFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.SaveFailure
@@ -50,6 +51,7 @@ fun RequirementDetailRoute(
     number: String,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RequirementDetailViewModel =
         hiltViewModel<RequirementDetailViewModel, RequirementDetailViewModel.Factory> {
@@ -67,6 +69,7 @@ fun RequirementDetailRoute(
         today = viewModel::today,
         onSaveComment = viewModel::saveComment,
         onClear = viewModel::clear,
+        onDiscard = onClose,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
     )
@@ -79,7 +82,8 @@ fun RequirementDetailRoute(
  * its own page in turn, and a tracker row opens the Tracker entry page
  * ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to a
  * log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
- * ([onClear]), with what's recorded for the requirements under it.
+ * ([onClear]), with what's recorded for the requirements under it. Back with unsaved changes to
+ * the comment asks first, then [onDiscard] closes the page without saving them.
  */
 @Composable
 fun RequirementDetailScreen(
@@ -92,9 +96,15 @@ fun RequirementDetailScreen(
     today: () -> LocalDate,
     onSaveComment: () -> Unit,
     onClear: () -> Unit,
+    onDiscard: () -> Unit,
     onSaveFailureShown: (SaveFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    ConfirmDiscardOnBack(
+        changed = (uiState as? RequirementDetailUiState.Ready)?.commentChanged == true,
+        onDiscard = onDiscard,
+        message = stringResource(R.string.discard_changes_message_notes)
+    )
     when (uiState) {
         RequirementDetailUiState.Loading -> LoadingIndicator(modifier)
 

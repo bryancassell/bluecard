@@ -106,7 +106,10 @@ class EditProfileViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(alex, viewModel.fields())
-        assertEquals(EditProfileUiState.Ready(canSave = false), viewModel.uiState.value)
+        assertEquals(
+            EditProfileUiState.Ready(canSave = false, changed = false),
+            viewModel.uiState.value
+        )
     }
 
     @Test
@@ -123,6 +126,24 @@ class EditProfileViewModelTest {
         assertEquals(Profile("Sam Scout", "Crew 7"), saved())
         assertFalse(viewModel.ready().canSave)
         assertTrue(viewModel.ready().saved)
+    }
+
+    @Test
+    fun saved_isNoLongerAChange_beforeTheSavedProfileIsRead() = runTest {
+        // Saves, but the saved profile is read only later.
+        val slowReads = object : ProfileRepository by profileRepository {
+            override suspend fun saveProfile(profile: Profile) {}
+        }
+        val viewModel = viewModel(slowReads)
+        startCollecting(viewModel)
+        viewModel.typeAll(Profile("Sam Scout", "Crew 7"))
+
+        viewModel.save()
+
+        assertTrue(viewModel.ready().saved)
+        // Back doesn't ask about what's saved while the page closes.
+        assertFalse(viewModel.ready().changed)
+        assertFalse(viewModel.ready().canSave)
     }
 
     @Test
@@ -150,6 +171,21 @@ class EditProfileViewModelTest {
             assertEquals(alex, saved())
             assertFalse(viewModel.ready().saved)
         }
+    }
+
+    @Test
+    fun changed_followsTheFields_evenWhenOneIsBlank() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        // Back asks before discarding a blank field, though it can't be saved.
+        viewModel.typeAll(Profile("", "123"))
+        assertTrue(viewModel.ready().changed)
+        assertFalse(viewModel.ready().canSave)
+
+        // Spaces around a value aren't saved, so they're no change.
+        viewModel.typeAll(Profile(" Alex Scout ", "123 "))
+        assertFalse(viewModel.ready().changed)
     }
 
     @Test

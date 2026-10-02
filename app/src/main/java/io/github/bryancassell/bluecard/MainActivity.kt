@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            BlueCardApp(uiState)
+            BlueCardApp(uiState, viewModel::dismissDamagedProgressNotice)
         }
     }
 }
