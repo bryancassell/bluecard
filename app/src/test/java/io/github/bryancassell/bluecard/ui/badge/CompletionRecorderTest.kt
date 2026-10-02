@@ -95,15 +95,10 @@ class CompletionRecorderTest {
     }
 
     @Test
-    fun eachPage_recordsItsOwnRequirement() = runTest {
-        val firstPage = recorder("1")
-        firstPage.setCompleted(true)
-        progressRepository.setRequirementCompletedDate("camping", "1", day)
-        firstPage.setCompleted(false)
-
+    fun checking_recordsThePagesOwnRequirement() = runTest {
         recorder("2").setCompleted(true)
 
-        assertEquals(RequirementProgress("camping", "1"), requirement("1"))
+        assertNull(requirement("1"))
         assertEquals(RequirementProgress("camping", "2", true, today), requirement("2"))
     }
 
@@ -195,6 +190,19 @@ class CompletionRecorderTest {
         recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun clearingOtherRequirements_keepsTheDateToBringBack() = runTest {
+        val recorder = recorder()
+        recorder.setCompleted(true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+        recorder.setCompleted(false)
+
+        recorder.clear(listOf("2"))
+        recorder.setCompleted(true)
+
+        assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
     }
 
     @Test

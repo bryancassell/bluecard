@@ -100,7 +100,7 @@ class EditCounselorViewModel @AssistedInject constructor(
             progressRepository.setCounselor(
                 badgeId,
                 counselor,
-                catalogRepository.badgeStart(badgeId, LocalDate.now(clock))
+                catalogRepository.getBadges().badgeStart(badgeId, LocalDate.now(clock))
             )
             // A field changed while it saved stays open to be saved too, rather than being lost.
             if (typed().normalized() == counselor.normalized()) saved.value = true

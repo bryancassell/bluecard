@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import java.time.LocalDate
@@ -20,15 +19,14 @@ fun MeritBadge.requirementsVersionFor(progress: BadgeProgressDetails?): Requirem
 }
 
 /**
- * How badge [badgeId] is started if the scout records something before starting it: on the
- * requirements version its pages show until then ([requirementsVersionFor]), dated [today].
- * Recording anything starts the badge, in the same transaction, so the scout never has to start
- * it separately (ARCHITECTURE.md, Recording progress).
+ * How badge [badgeId] in this catalog is started if the scout records something before starting
+ * it: on the requirements version its pages show until then ([requirementsVersionFor]), dated
+ * [today]. Recording anything starts the badge, in the same transaction, so the scout never has
+ * to start it separately (ARCHITECTURE.md, Recording progress).
  */
-suspend fun CatalogRepository.badgeStart(badgeId: String, today: LocalDate): BadgeStart {
-    val badge = getBadges().find { it.id == badgeId }
+fun List<MeritBadge>.badgeStart(badgeId: String, today: LocalDate): BadgeStart {
     // The pages show nothing to record when the catalog doesn't have that version.
-    val version = checkNotNull(badge?.requirementsVersionFor(null)) {
+    val version = checkNotNull(find { it.id == badgeId }?.requirementsVersionFor(null)) {
         "The catalog has no requirements for $badgeId"
     }
     return BadgeStart(version.effectiveDate, today)

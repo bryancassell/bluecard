@@ -1,14 +1,12 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import java.time.LocalDate
-import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class BadgeVersionTest {
@@ -18,6 +16,7 @@ class BadgeVersionTest {
         RequirementsVersion(LocalDate.of(2025, 1, 1), listOf(Requirement("1", "B.")))
     private val newest =
         RequirementsVersion(LocalDate.of(2026, 1, 1), listOf(Requirement("1", "C.")))
+    private val today = LocalDate.of(2026, 5, 20)
 
     private val badge = MeritBadge(
         id = BADGE,
@@ -55,22 +54,25 @@ class BadgeVersionTest {
     }
 
     @Test
-    fun badgeStart_isNewestVersionOnTheDayGiven() = runTest {
-        val today = LocalDate.of(2026, 5, 20)
-
-        val start = FakeCatalogRepository(listOf(badge)).badgeStart(BADGE, today)
-
-        assertEquals(BadgeStart(newest.effectiveDate, today), start)
+    fun badgeStart_isNewestVersionOnTheDayGiven() {
+        assertEquals(
+            BadgeStart(newest.effectiveDate, today),
+            listOf(badge).badgeStart(BADGE, today)
+        )
     }
 
     @Test
-    fun badgeStart_forBadgeNotInCatalog_fails() = runTest {
-        val catalog = FakeCatalogRepository(listOf(badge))
+    fun badgeStart_forBadgeNotInCatalog_fails() {
+        assertThrows(IllegalStateException::class.java) {
+            listOf(badge).badgeStart("archery", today)
+        }
+    }
 
-        val error = runCatching { catalog.badgeStart("archery", LocalDate.of(2026, 5, 20)) }
-            .exceptionOrNull()
-
-        assertTrue("Expected an IllegalStateException, got $error", error is IllegalStateException)
+    @Test
+    fun badgeStart_forBadgeWithNoVersionsInCatalog_fails() {
+        assertThrows(IllegalStateException::class.java) {
+            listOf(badge.copy(requirementVersions = emptyList())).badgeStart(BADGE, today)
+        }
     }
 
     private companion object {

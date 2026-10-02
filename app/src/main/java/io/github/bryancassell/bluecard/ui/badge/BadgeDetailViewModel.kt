@@ -154,7 +154,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
             progressRepository.setCompletedOnPriorDate(
                 badgeId,
                 date,
-                catalogRepository.badgeStart(badgeId, today())
+                catalogRepository.getBadges().badgeStart(badgeId, today())
             )
             unmarkedDate.value = null
         }

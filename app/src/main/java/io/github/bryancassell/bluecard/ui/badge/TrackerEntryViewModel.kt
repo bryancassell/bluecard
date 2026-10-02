@@ -267,7 +267,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
                 row.rowNumber,
                 values,
                 addedDate = today,
-                catalogRepository.badgeStart(badgeId, today),
+                catalogRepository.getBadges().badgeStart(badgeId, today),
                 id = row.entryId
             )
         }

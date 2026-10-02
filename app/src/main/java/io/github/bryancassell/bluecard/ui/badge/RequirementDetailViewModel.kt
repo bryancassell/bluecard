@@ -149,7 +149,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 badgeId,
                 number,
                 text,
-                catalogRepository.badgeStart(badgeId, today())
+                catalogRepository.getBadges().badgeStart(badgeId, today())
             )
         }
     }

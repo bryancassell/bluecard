@@ -42,7 +42,7 @@ class CompletionRecorder(
                 badgeId,
                 number,
                 date,
-                catalogRepository.badgeStart(badgeId, today)
+                catalogRepository.getBadges().badgeStart(badgeId, today)
             )
             unchecked = null
         } else {
@@ -54,13 +54,13 @@ class CompletionRecorder(
     }
 
     /**
-     * Clears everything recorded for the requirements numbered in [numbers], this one among them.
-     * Checking it again on this page then dates it today, even while the clear is being saved:
-     * its date from before is forgotten first. A clear that fails forgets it too, as the scout
-     * meant it to.
+     * Clears everything recorded for the requirements numbered in [numbers]. If this one is among
+     * them, checking it again on this page then dates it today, even while the clear is being
+     * saved: its date from before is forgotten first. A clear that fails forgets it too, as the
+     * scout meant it to.
      */
     suspend fun clear(numbers: Collection<String>) {
-        unchecked = null
+        if (number in numbers) unchecked = null
         progressRepository.clearRequirements(badgeId, numbers)
     }
 }
