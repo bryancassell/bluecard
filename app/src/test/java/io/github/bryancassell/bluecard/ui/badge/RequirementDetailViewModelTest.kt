@@ -454,6 +454,22 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun fixedRows_setCompletedDate_afterClearing_doesNotKeepTheDate() = runTest {
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+        saveWeek(1, day)
+        saveWeek(2, day)
+
+        // As when the scout taps Remove date just after clearing, before the page redraws.
+        viewModel.clear()
+        viewModel.setCompletedDate(null)
+        saveWeek(1, today)
+        saveWeek(2, today)
+
+        assertEquals(today, viewModel.ready().completedDate)
+    }
+
+    @Test
     fun fixedRows_clearRemovesTheScoutsDate() = runTest {
         val viewModel = viewModel("4")
         startCollecting(viewModel)

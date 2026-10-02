@@ -86,6 +86,13 @@ class RoomProgressRepository @Inject constructor(
         date: LocalDate?
     ) = writing { dao.updateCompletedDate(badgeId, number, date) }
 
+    override suspend fun setCompletedFromRowsDate(
+        badgeId: String,
+        number: String,
+        rowCount: Int,
+        date: LocalDate?
+    ) = writing { dao.updateCompletedFromRowsDate(badgeId, number, rowCount, date) }
+
     override suspend fun setRequirementComment(
         badgeId: String,
         number: String,

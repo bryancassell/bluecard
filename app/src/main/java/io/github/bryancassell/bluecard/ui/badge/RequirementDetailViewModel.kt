@@ -141,20 +141,15 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     /**
      * Changes the date this requirement, or its own work, was completed on, once marked complete;
-     * null removes it. For one that [completesFromRows], it's saved by marking the requirement,
-     * which doesn't complete it, so the date is kept while a row is deleted.
+     * null removes it. For one that [completesFromRows], the date is kept while a row is deleted
+     * ([ProgressRepository.setCompletedFromRowsDate]).
      */
     fun setCompletedDate(date: LocalDate?) {
         // The date shows only once the page has.
-        val fromRows = shown?.requirement?.completesFromRows == true
+        val rowCount = shown?.requirement?.takeIf { it.completesFromRows }?.tracker?.rowCount
         saves.launch {
-            if (fromRows) {
-                progressRepository.markRequirementCompleted(
-                    badgeId,
-                    number,
-                    date,
-                    catalogRepository.getBadges().badgeStart(badgeId, today())
-                )
+            if (rowCount != null) {
+                progressRepository.setCompletedFromRowsDate(badgeId, number, rowCount, date)
             } else {
                 progressRepository.setRequirementCompletedDate(badgeId, number, date)
             }

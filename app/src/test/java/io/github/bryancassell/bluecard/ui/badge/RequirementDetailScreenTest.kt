@@ -553,7 +553,13 @@ class RequirementDetailScreenTest {
 
     private val weeksFilledIn = withWeeks.copy(
         requirement = withWeeks.requirement.copy(completed = true),
-        completedDate = LocalDate.of(2026, 4, 15)
+        completedDate = LocalDate.of(2026, 4, 15),
+        tracker = withWeeks.tracker?.copy(
+            count = TrackerCount(3, 3, "weeks"),
+            rows = (1..3).map {
+                TrackerRow(it, it.toLong(), listOf(TrackerValue(TrackerColumnType.NUMBER, "20")))
+            }
+        )
     )
 
     @Test

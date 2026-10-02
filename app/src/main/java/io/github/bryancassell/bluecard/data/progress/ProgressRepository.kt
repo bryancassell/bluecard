@@ -75,6 +75,21 @@ interface ProgressRepository {
     suspend fun setRequirementCompletedDate(badgeId: String, number: String, date: LocalDate?)
 
     /**
+     * Gives the date requirement [number] was completed on, or no date (null), for one that's
+     * complete once each of its tracker's [rowCount] rows is filled in ([completesFromRows]).
+     * It's stored as the requirement marked [completed][RequirementProgress.completed] on that
+     * date, which doesn't complete it ([completion]). Does nothing unless every row is filled
+     * in, so a date change that lands just after the scout cleared the requirement can't bring
+     * the date back.
+     */
+    suspend fun setCompletedFromRowsDate(
+        badgeId: String,
+        number: String,
+        rowCount: Int,
+        date: LocalDate?
+    )
+
+    /**
      * Sets the requirement's comment, stored as [normalizedText]: null or blank removes it.
      * A badge that hasn't been started is started with [start], as in
      * [markRequirementCompleted].

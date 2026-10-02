@@ -122,6 +122,19 @@ class FakeProgressRepository : ProgressRepository {
         }
     }
 
+    override suspend fun setCompletedFromRowsDate(
+        badgeId: String,
+        number: String,
+        rowCount: Int,
+        date: LocalDate?
+    ) {
+        checkCanSave()
+        val entries = badges.value[badgeId]?.trackerEntries.orEmpty()
+            .filter { it.requirementNumber == number }
+        if (filledRows(entries, rowCount).size < rowCount) return
+        updateRequirement(badgeId, number) { it.copy(completed = true, completedDate = date) }
+    }
+
     override suspend fun setRequirementComment(
         badgeId: String,
         number: String,

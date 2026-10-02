@@ -641,10 +641,10 @@ and nesting must match the official page
 
 The date the scout gives a requirement completed by its fixed-row tracker is
 stored the same way: `completed` with the date, or with none once they remove
-it. For that requirement, `completed` only means they gave a date. It doesn't
-complete the requirement, so it's kept while a row is deleted and applies again
-once every row is filled in. This needed no migration or new export format.
-A mark left from before
+it. For that requirement, `completed` only means they gave a date, and doesn't
+complete it, so the date isn't tied to the rows
+(`ProgressRepository.setCompletedFromRowsDate`). This needed no migration or new
+export format. A mark left from before
 [#105](https://github.com/bryancassell/bluecard/issues/105), when these
 requirements had a checkbox, becomes the date the scout gave
 ([#116](https://github.com/bryancassell/bluecard/issues/116)).
