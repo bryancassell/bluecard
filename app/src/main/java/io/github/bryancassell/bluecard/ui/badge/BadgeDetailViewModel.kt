@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -18,6 +19,7 @@ import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.Job
@@ -39,7 +41,10 @@ class BadgeDetailViewModel @AssistedInject constructor(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val reportRepository: ReportRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    // Keeps the date to open Mark completed's picker at if the system stops the app in the
+    // background.
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     // Separate runners, so a report that fails shows its own message, not a save's.
     private val reports = TaskRunner(viewModelScope)
@@ -55,13 +60,6 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * without its report buttons, or from before its date was changed.
      */
     private var lastSave: Job? = null
-
-    /**
-     * The date the badge was marked completed on before the scout unmarked it on this page, or
-     * null. Mark completed's picker opens at it, so a mistaken Unmark loses nothing. Forgotten
-     * once the badge is marked again or cleared, or when the page closes.
-     */
-    private val unmarkedDate = MutableStateFlow<LocalDate?>(null)
 
     val uiState: StateFlow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
@@ -92,7 +90,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
             reportFailure = reportFailure,
             saveFailure = saveFailure
         )
-    }.combine(unmarkedDate) { state, unmarkedDate ->
+    }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
+        val unmarkedDate = dateFromEpochDay(unmarked)
         if (state is BadgeDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
@@ -139,7 +138,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
         creatingReport?.cancel()
         reportToShare.value = null
         // Forgotten even if the clear fails, as the scout meant it to be.
-        unmarkedDate.value = null
+        savedStateHandle[UNMARKED_DATE] = null
         lastSave = saves.launch { progressRepository.clearBadge(badgeId) }
     }
 
@@ -155,7 +154,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
                 date,
                 catalogRepository.getBadges().badgeStart(badgeId, today())
             )
-            unmarkedDate.value = null
+            savedStateHandle[UNMARKED_DATE] = null
         }
     }
 
@@ -165,7 +164,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
      */
     fun unmarkCompleted() {
         val shown = (uiState.value as? BadgeDetailUiState.Ready)?.completedOnPriorDate
-        if (shown != null) unmarkedDate.value = shown
+        if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
         lastSave = saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) }
     }
 
@@ -180,5 +179,15 @@ class BadgeDetailViewModel @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(badgeId: String): BadgeDetailViewModel
+    }
+
+    private companion object {
+        /**
+         * The epoch day of the date the badge was marked completed on before the scout unmarked
+         * it on this page, or null. Mark completed's picker opens at it, so a mistaken Unmark
+         * loses nothing. Forgotten once the badge is marked again or cleared, or when the page
+         * closes. It's set to null rather than removed, which would stop uiState following it.
+         */
+        const val UNMARKED_DATE = "unmarkedDate"
     }
 }

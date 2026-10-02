@@ -1,6 +1,9 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -116,8 +119,16 @@ class BadgeDetailViewModelTest {
     // viewModelScope uses.
     private fun viewModel(
         badgeId: String = "camping",
-        progress: ProgressRepository = progressRepository
-    ) = BadgeDetailViewModel(badgeId, catalogRepository, progress, reportRepository, clock)
+        progress: ProgressRepository = progressRepository,
+        savedStateHandle: SavedStateHandle = SavedStateHandle()
+    ) = BadgeDetailViewModel(
+        badgeId,
+        catalogRepository,
+        progress,
+        reportRepository,
+        clock,
+        savedStateHandle
+    )
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -138,8 +149,14 @@ class BadgeDetailViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel =
-            BadgeDetailViewModel("camping", loading, progressRepository, reportRepository, clock)
+        val viewModel = BadgeDetailViewModel(
+            "camping",
+            loading,
+            progressRepository,
+            reportRepository,
+            clock,
+            SavedStateHandle()
+        )
         startCollecting(viewModel)
 
         assertEquals(BadgeDetailUiState.Loading, viewModel.uiState.value)
@@ -462,6 +479,44 @@ class BadgeDetailViewModelTest {
         assertEquals(day, viewModel.ready().unmarkedDate)
 
         viewModel.markCompleted(older)
+        assertNull(viewModel.ready().unmarkedDate)
+    }
+
+    @Test
+    fun unmarkCompleted_afterTheSystemStopsTheApp_remembersTheDate() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        // Saves the ViewModel's state and restores it into a new one, as when the system stops
+        // the app.
+        viewModelScenario {
+            BadgeDetailViewModel(
+                "camping",
+                catalogRepository,
+                progressRepository,
+                reportRepository,
+                clock,
+                createSavedStateHandle()
+            )
+        }.use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.unmarkCompleted()
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertEquals(day, restored.ready().unmarkedDate)
+        }
+    }
+
+    @Test
+    fun anotherValueUnderTheUnmarkedDateKey_isIgnored() = runTest {
+        // A value the ViewModel didn't keep.
+        val viewModel =
+            viewModel(
+                savedStateHandle = SavedStateHandle(mapOf("unmarkedDate" to "From an intent."))
+            )
+        startCollecting(viewModel)
+
         assertNull(viewModel.ready().unmarkedDate)
     }
 
