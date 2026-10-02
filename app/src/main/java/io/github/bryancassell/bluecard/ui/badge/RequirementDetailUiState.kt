@@ -21,6 +21,12 @@ sealed interface RequirementDetailUiState {
          * it was completed. Null if there's no date or it isn't complete.
          */
         val completedDate: LocalDate?,
+        /**
+         * For one that's complete once its tracker's rows are, the date its last row was first
+         * saved, where Add date opens the picker once the scout removed the date. Null until
+         * every row is filled in, or for any other requirement.
+         */
+        val rowsCompletedDate: LocalDate? = null,
         val children: List<RequirementItem>,
         /** Its tracker, or null if it has none. */
         val tracker: TrackerItem?,

@@ -64,6 +64,17 @@ fun Requirement.completion(
 }
 
 /**
+ * When every row of this requirement's tracker was filled in, for one that [completesFromRows]:
+ * the latest date one of them was first saved. It's the requirement's completion date unless the
+ * scout gave one. Null until every row is filled in, if one of them has no date, or for any other
+ * requirement.
+ */
+fun Requirement.rowsCompletedDate(trackerEntries: Map<String, List<TrackerEntry>>): LocalDate? {
+    val rowCount = tracker?.rowCount?.takeIf { completesFromRows } ?: return null
+    return rowsCompletion(trackerEntries[number].orEmpty(), rowCount)?.date
+}
+
+/**
  * Whether enough of this requirement's children are complete that it needs no more of them,
  * even if its [own work][Requirement.ownWork] isn't done yet. Its other children are then not
  * needed.

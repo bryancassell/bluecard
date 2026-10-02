@@ -554,6 +554,7 @@ class RequirementDetailScreenTest {
     private val weeksFilledIn = withWeeks.copy(
         requirement = withWeeks.requirement.copy(completed = true),
         completedDate = LocalDate.of(2026, 4, 15),
+        rowsCompletedDate = LocalDate.of(2026, 4, 12),
         tracker = withWeeks.tracker?.copy(
             count = TrackerCount(3, 3, "weeks"),
             rows = (1..3).map {
@@ -577,6 +578,10 @@ class RequirementDetailScreenTest {
         show(weeksFilledIn)
 
         composeTestRule.onNodeWithText("Change date").performClick()
+        // It opens at the date shown, not the rows' date.
+        pickerDay(
+            "April 15, 2026"
+        ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         pickerDay("April 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
@@ -593,10 +598,24 @@ class RequirementDetailScreenTest {
     }
 
     @Test
-    fun fixedRowsAllFilledIn_withoutDate_offerToAddOne() {
+    fun fixedRowsAllFilledIn_withoutDate_offerToAddOne_openingAtTheRowsDate() {
         show(weeksFilledIn.copy(completedDate = null))
 
         composeTestRule.onNodeWithText("No completion date").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add date").performClick()
+        pickerDay(
+            "April 12, 2026"
+        ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 12)), dateChanges)
+    }
+
+    // As when a row was saved before database version 3, which recorded no date.
+    @Test
+    fun fixedRowsAllFilledIn_withoutDateOrRowsDate_addDateOpensAtToday() {
+        show(weeksFilledIn.copy(completedDate = null, rowsCompletedDate = null))
+
         composeTestRule.onNodeWithText("Add date").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 

@@ -16,6 +16,7 @@ import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.normalizedText
+import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -76,6 +77,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 } else {
                     recorded?.completedDate
                 },
+                rowsCompletedDate = requirement.rowsCompletedDate(found.trackerEntries),
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 comment = recorded?.comment,
@@ -89,6 +91,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val badgeName: String,
         val requirement: RequirementItem,
         val completedDate: LocalDate?,
+        val rowsCompletedDate: LocalDate?,
         val children: List<RequirementItem>,
         val tracker: TrackerItem?,
         /** The saved comment. */
@@ -119,6 +122,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             badgeName = recorded.badgeName,
             requirement = recorded.requirement,
             completedDate = recorded.completedDate,
+            rowsCompletedDate = recorded.rowsCompletedDate,
             children = recorded.children,
             tracker = recorded.tracker,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,

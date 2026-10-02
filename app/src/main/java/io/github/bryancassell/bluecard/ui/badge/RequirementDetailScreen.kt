@@ -133,7 +133,12 @@ fun RequirementDetailScreen(
                     }
                 } else if (requirement.completesFromRows && requirement.completed) {
                     // Under the header's "Completed", where a checkbox's date would be.
-                    CompletionDate(uiState.completedDate, today, onCompletedDateChange)
+                    CompletionDate(
+                        uiState.completedDate,
+                        today,
+                        onCompletedDateChange,
+                        suggested = uiState.rowsCompletedDate
+                    )
                 }
                 // Right above the sub-requirements it counts, below the checkbox for its own work.
                 requirement.choice?.let {
@@ -235,12 +240,16 @@ private fun CompletedCheckbox(label: String, checked: Boolean, onCheckedChange: 
     }
 }
 
-/** The date a completed requirement was completed on, which the scout can change or remove. */
+/**
+ * The date a completed requirement was completed on, which the scout can change or remove.
+ * Without one, Add date opens the picker at [suggested], if given, or else at today.
+ */
 @Composable
 private fun CompletionDate(
     date: LocalDate?,
     today: () -> LocalDate,
-    onDateChange: (LocalDate?) -> Unit
+    onDateChange: (LocalDate?) -> Unit,
+    suggested: LocalDate? = null
 ) {
     val formatter = rememberCompletionDateFormatter()
     EditableDate(
@@ -251,7 +260,8 @@ private fun CompletionDate(
         },
         date = date,
         today = today,
-        onDateChange = onDateChange
+        onDateChange = onDateChange,
+        suggested = suggested
     )
 }
 

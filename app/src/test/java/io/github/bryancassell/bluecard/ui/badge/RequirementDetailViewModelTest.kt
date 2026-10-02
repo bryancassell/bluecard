@@ -427,6 +427,7 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
         assertTrue(viewModel.ready().requirement.completesFromRows)
         saveWeek(1, day)
+        assertNull(viewModel.ready().rowsCompletedDate)
         saveWeek(2, today)
         assertEquals(today, viewModel.ready().completedDate)
 
@@ -436,6 +437,8 @@ class RequirementDetailViewModelTest {
         viewModel.setCompletedDate(null)
         assertNull(viewModel.ready().completedDate)
         assertTrue(viewModel.ready().requirement.completed)
+        // For Add date to open at.
+        assertEquals(today, viewModel.ready().rowsCompletedDate)
     }
 
     @Test

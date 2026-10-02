@@ -230,6 +230,26 @@ class CompletionTest {
     }
 
     @Test
+    fun rowsCompletedDate_isTheLatestRowsDate_onceEveryRowIsFilledIn() {
+        assertNull(weeks.rowsCompletedDate(entriesOf(row("5", 1, day(1)), row("5", 3, day(2)))))
+
+        val allRows = entriesOf(row("5", 1, day(1)), row("5", 2, day(4)), row("5", 3, day(2)))
+        assertEquals(day(4), weeks.rowsCompletedDate(allRows))
+
+        val noDate = entriesOf(row("5", 1, day(1)), row("5", 2), row("5", 3, day(2)))
+        assertNull(weeks.rowsCompletedDate(noDate))
+    }
+
+    @Test
+    fun rowsCompletedDate_isNull_forOtherRequirements() {
+        assertNull(log.rowsCompletedDate(entriesOf(row("6", null, day(1)))))
+        // Its children complete it, even with every row filled in.
+        val parent = allOf.copy(tracker = weeks.tracker)
+        val allRows = entriesOf(row("2", 1, day(1)), row("2", 2, day(1)), row("2", 3, day(1)))
+        assertNull(parent.rowsCompletedDate(allRows))
+    }
+
+    @Test
     fun fixedRows_aRowWithoutADateMeansNoDate() {
         val allRows = entriesOf(row("5", 1, day(1)), row("5", 2), row("5", 3, day(2)))
         assertEquals(Completion(null), weeks.completion(progressOf(), allRows))

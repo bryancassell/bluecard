@@ -50,8 +50,9 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
 
 /**
  * [text] about a date something was done on, such as "Completed on Apr 15, 2026", with buttons
- * to pick the date or remove it, labeled [removeText]. Dates after [today] can't be picked. It's
- * read as the picker opens, so a page left open past midnight offers the new day. Screen readers
+ * to pick the date or remove it, labeled [removeText]. Without a date, the picker opens at
+ * [suggested], if given, or else at [today]. Dates after [today] can't be picked. It's read as the
+ * picker opens, so a page left open past midnight offers the new day. Screen readers
  * read the date's [label], if it has one, with each button, such as "Start: Add date", so the
  * buttons of a page with more than one date aren't all the same to them.
  */
@@ -63,7 +64,8 @@ fun EditableDate(
     onDateChange: (LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
-    @StringRes removeText: Int = R.string.requirement_remove_date
+    @StringRes removeText: Int = R.string.requirement_remove_date,
+    suggested: LocalDate? = null
 ) {
     Column(modifier) {
         Text(
@@ -81,7 +83,7 @@ fun EditableDate(
             val pick = stringResource(pickText)
             PickDateButton(
                 text = pick,
-                initial = date,
+                initial = date ?: suggested,
                 today = today,
                 onPick = onDateChange,
                 modifier = Modifier.readAs(
