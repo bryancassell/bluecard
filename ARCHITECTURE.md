@@ -523,9 +523,9 @@ way.
   [trademarks](https://licensingbsa.org/trademarks/) and terms of use require
   written permission.
 - **The official page URL is stored per badge** rather than built from the
-  name, because the URLs don't always match (American Indian Culture lives at
-  `/merit-badges/indian-lore/`). Official pages have no per-requirement
-  anchors, so requirement links go to the badge page.
+  name, because the URLs don't always match (Fish and Wildlife Management lives
+  at `/merit-badges/fish-wildlife-management/`). Official pages have no
+  per-requirement anchors, so requirement links go to the badge page.
 
 ### Trackers
 

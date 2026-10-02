@@ -2,6 +2,78 @@
   "formatVersion": 1,
   "badges": [
     {
+      "id": "american-indian-culture",
+      "name": "American Indian Culture",
+      "summary": "Study American Indian cultural areas and one tribe or nation in depth, learn about languages, leaders and games, then visit a museum collection or a gathering. Formerly Indian Lore.",
+      "officialUrl": "https://www.scouting.org/merit-badges/american-indian-culture/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Name the American Indian cultural areas and what sets each one apart."
+            },
+            {
+              "number": "2",
+              "summary": "Research a tribe, group or nation, then tell your counselor about each listed part of its life, past and present."
+            },
+            {
+              "number": "3",
+              "summary": "Learn about American Indian languages, place names and leaders.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Learn 10 words in an American Indian language and what they mean."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Find out what 10 US place names of American Indian origin mean."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Name five notable American Indian leaders, past or present, with their tribes or nations and why each stands out."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Look at how American Indians have shaped others' lives, and share a traditional game.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Describe how European settlers would have fared without Native Americans already living here."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Describe eight things others took up from American Indians."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Learn a tribe's or group's game, then teach it to Scouts and lead them in playing it."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Visit American Indian museum exhibits, in person or online, or a present-day gathering.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Visit a museum in person or online, discuss two American Indian exhibitions, and identify 10 artifacts by tribe or nation, shape, size and use."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Go to a present-day American Indian gathering, then discuss its etiquette and what you saw and learned with your counselor."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "animation",
       "name": "Animation",
       "summary": "Learn what animation is, how it began and what makes it believable, then make animations with two techniques.",
@@ -2883,6 +2955,270 @@
       ]
     },
     {
+      "id": "crime-prevention",
+      "name": "Crime Prevention",
+      "summary": "Learn why crime happens and who works to stop it, survey a place's security, teach others to protect themselves, and explore careers in the field.",
+      "officialUrl": "https://www.scouting.org/merit-badges/crime-prevention/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss laws and crime with your counselor.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Why criminal laws exist."
+                },
+                {
+                  "number": "1b",
+                  "summary": "The kinds of crime, including property crimes, crimes against people, white collar crime and environmental crime."
+                },
+                {
+                  "number": "1c",
+                  "summary": "What leads people to commit crimes."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Why to obey the law even when nobody would know."
+                },
+                {
+                  "number": "1e",
+                  "summary": "What crime prevention means."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Research how each listed group helps prevent crime, and share what you find with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Citizens, including youth."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Schools."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Neighborhood, social and civic groups, including youth groups."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Private security."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Law enforcement agencies."
+                },
+                {
+                  "number": "2f",
+                  "summary": "Courts."
+                },
+                {
+                  "number": "2g",
+                  "summary": "Corrections and rehabilitation programs."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Look into crime in your community, state and nation.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "With permission and approval, research news coverage of three crimes, each of a different type, and how common each type is in your state or the US."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Note each case's agencies and courts, why you think it happened and how to prevent it, then review your research with your counselor.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "crime",
+                        "label": "Crime",
+                        "type": "text"
+                      },
+                      {
+                        "id": "type",
+                        "label": "Type of crime",
+                        "type": "text"
+                      },
+                      {
+                        "id": "agencies",
+                        "label": "Agencies and courts involved",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "why",
+                        "label": "Why it happened",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "prevention",
+                        "label": "How to prevent it",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "crime",
+                    "rowLabelPlural": "crimes"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Work on crime prevention at home and in your neighborhood.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Discuss with your counselor how activities and design help prevent crime.",
+                  "children": [
+                    {
+                      "number": "4a(1)",
+                      "summary": "How joining in family, church, sports team and club activities keeps crime down."
+                    },
+                    {
+                      "number": "4a(2)",
+                      "summary": "How the way houses, neighborhoods, public buildings, stores, streets and parks are designed can deter crime."
+                    }
+                  ]
+                },
+                {
+                  "number": "4b",
+                  "summary": "Under adult supervision and youth protection rules, survey the security of a home, neighborhood, park or camp building with the pamphlet's checklist or one your counselor approves."
+                },
+                {
+                  "number": "4c",
+                  "summary": "From your survey, use EDGE to plan a lesson on staying safe from crime, review it with your counselor, then teach it to your family or Scouts."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Research retail crime prevention and review it with your counselor.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "How shoplifting, employee theft (shrinkage) and loss prevention affect a store's finances, customer service and reputation."
+                },
+                {
+                  "number": "5b",
+                  "summary": "How stores prevent shoplifting."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Discuss reporting crime with your counselor.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "When and how to report a crime, or one about to happen."
+                },
+                {
+                  "number": "6b",
+                  "summary": "How to recognize and report child abuse and domestic violence."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Using the three R's of personal safety and protection."
+                },
+                {
+                  "number": "6d",
+                  "summary": "How reporting crime helps police get resources to victims."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Discuss peers and crime with your counselor.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "How peers influence crime, its prevention, and being a victim."
+                },
+                {
+                  "number": "7b",
+                  "summary": "How to stand up to peer pressure."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Bullying and hazing, and how to tell if a friend is bullying you or others."
+                },
+                {
+                  "number": "7d",
+                  "summary": "How gangs affect communities."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Discuss substance use and crime with your counselor.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Health and legal dangers of alcohol, tobacco, vaping, illegal drugs and diverted prescription drugs."
+                },
+                {
+                  "number": "8b",
+                  "summary": "How drinking and drug use feed violence and property crime and make people easier targets."
+                },
+                {
+                  "number": "8c",
+                  "summary": "How programs for drug awareness, prevention and recovery reduce crime."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Where to turn if you or a friend has a drug or alcohol problem."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Discuss online crime with your counselor.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Protecting yourself from online crime."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Online scams that go after your money."
+                },
+                {
+                  "number": "9c",
+                  "summary": "How to stay secure online."
+                },
+                {
+                  "number": "9d",
+                  "summary": "What identity theft is and how to guard against it."
+                },
+                {
+                  "number": "9e",
+                  "summary": "How criminals pick out victims on social media."
+                },
+                {
+                  "number": "9f",
+                  "summary": "When bullying, texting and photo sharing break the law."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "With permission and approval, interview a law enforcement officer or civil servant on their crime prevention duties and career choice, then discuss it with your counselor."
+            },
+            {
+              "number": "11",
+              "summary": "Explore three crime prevention careers, research one, and discuss whether it interests you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "cycling",
       "name": "Cycling",
       "summary": "Ride safely, keep a bike in repair, and build up to a long road or trail ride.",
@@ -3115,6 +3451,180 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "electricity",
+      "name": "Electricity",
+      "summary": "Handle electrical emergencies, check your home's wiring safety, build simple circuits and devices, and learn what the power you use costs.",
+      "officialUrl": "https://www.scouting.org/merit-badges/electricity/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know what to do in electrical emergencies.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain how to cut power to one circuit and to the whole house in an emergency."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show how to rescue someone at home who is touching a live wire."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe how to get out of a crashed car safely if a utility wire may be on it."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Show first aid for someone knocked unconscious by an apparent electric shock."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Show first aid for an electrical burn."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Explain how to handle an electrical fire."
+                },
+                {
+                  "number": "1g",
+                  "summary": "Explain what to do if an electrical storm catches you in the open."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Inspect your home for electrical safety with the pamphlet's checklist or one your counselor approves, and discuss what you find with your counselor."
+            },
+            {
+              "number": "3",
+              "summary": "Build an electromagnet and show how it attracts and repels."
+            },
+            {
+              "number": "4",
+              "summary": "Learn about kinds of current and where electricity comes from.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Compare direct and alternating current, with each one's pros, cons and a practical use."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain three methods of generating electricity."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Sketch a battery and an electric bell to show how they work, and what each part does."
+            },
+            {
+              "number": "6",
+              "summary": "Learn how circuits get overloaded and how they're protected.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain what overloading a circuit means and what you've done to keep your home's circuits from overloading."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Check a branch circuit for overload by adding up the current its equipment draws or working it out with the power equation."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain what makes a fuse blow or a circuit breaker trip."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain how to track down a blown fuse or tripped breaker at home, and show a safe breaker reset."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Draw a wiring floor plan of a room's lights, switches and outlets, showing which fuse or breaker protects each."
+            },
+            {
+              "number": "8",
+              "summary": "Make sense of your family's electric bill.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Read an electric meter, then work out the power used since the last bill and what it cost."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Explain the bill's other charges for taxes or fees."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Talk over five energy-saving ideas for your family with your counselor."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explain the listed electrical terms, units, conditions and equipment.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Electrical terms: current, energy, power, resistance and voltage."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Units of measure: amperes, ohms, volts, watts and watt-hours."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Electrical conditions: a generating source with an example, ground, open circuit, overvoltage, potential difference and short circuit."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Equipment and its use: circuit, conductor, GFCI, insulator, inverter, rectifier, rheostat, substation, surge protection, solar panel, transformer, transmission and distribution systems, and wind turbine."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Do two of the listed circuit activities.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Wire a battery to a buzzer, bell or light, controlled by a key or switch."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Build a working simple electric motor, from a kit if your counselor approves first."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Build a working rheostat."
+                },
+                {
+                  "number": "10d",
+                  "summary": "Build a working single-pole, double-throw switch."
+                },
+                {
+                  "number": "10e",
+                  "summary": "Explain how 3-way switches are wired in a lighting circuit."
+                },
+                {
+                  "number": "10f",
+                  "summary": "Wire two lights with a battery and switch in series, then in parallel, and discuss how the circuits differ."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Explore three electricity careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -5709,6 +6219,284 @@
       ]
     },
     {
+      "id": "golf",
+      "name": "Golf",
+      "summary": "Learn golf or disc golf safety, rules, history and skills, then play 18 holes with someone your age and your counselor or an approved adult.",
+      "officialUrl": "https://www.scouting.org/merit-badges/golf/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss golf course safety, and show first aid for the listed golfing injuries and illnesses."
+            },
+            {
+              "number": "2",
+              "summary": "Complete one option: traditional golf or disc golf.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2A",
+                  "summary": "Option A: traditional golf.",
+                  "children": [
+                    {
+                      "number": "2A(1)",
+                      "summary": "Study the current USGA Rules of Golf.",
+                      "children": [
+                        {
+                          "number": "2A(1)(a)",
+                          "summary": "Explain golf etiquette's three categories."
+                        },
+                        {
+                          "number": "2A(1)(b)",
+                          "summary": "Show you know what golf's terms mean."
+                        },
+                        {
+                          "number": "2A(1)(c)",
+                          "summary": "Explain the Rules of Amateur Status."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2A(2)",
+                      "summary": "Explain how the World Handicap System works."
+                    },
+                    {
+                      "number": "2A(3)",
+                      "summary": "Learn about golf's history and a top golfer.",
+                      "children": [
+                        {
+                          "number": "2A(3)(a)",
+                          "summary": "Describe how golf began."
+                        },
+                        {
+                          "number": "2A(3)(b)",
+                          "summary": "Describe how golf took hold in the United States."
+                        },
+                        {
+                          "number": "2A(3)(c)",
+                          "summary": "Pick a top golfer and describe what they've achieved."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2A(4)",
+                      "summary": "Learn how golf and fitness go together.",
+                      "children": [
+                        {
+                          "number": "2A(4)(a)",
+                          "summary": "Explain how golf can help your mental and physical health."
+                        },
+                        {
+                          "number": "2A(4)(b)",
+                          "summary": "Explain how a golf exercise plan helps your play, and demonstrate two useful exercises."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2A(5)",
+                      "summary": "Show these golf skills.",
+                      "children": [
+                        {
+                          "number": "2A(5)(a)",
+                          "summary": "Proper grip, stance, posture and swing fundamentals."
+                        },
+                        {
+                          "number": "2A(5)(b)",
+                          "summary": "A drive from a tee."
+                        },
+                        {
+                          "number": "2A(5)(c)",
+                          "summary": "A fairway wood shot."
+                        },
+                        {
+                          "number": "2A(5)(d)",
+                          "summary": "A long iron shot."
+                        },
+                        {
+                          "number": "2A(5)(e)",
+                          "summary": "A short iron shot."
+                        },
+                        {
+                          "number": "2A(5)(f)",
+                          "summary": "Approach, chip-and-run and pitch shots."
+                        },
+                        {
+                          "number": "2A(5)(g)",
+                          "summary": "A recovery shot from a bunker or heavy rough."
+                        },
+                        {
+                          "number": "2A(5)(h)",
+                          "summary": "A sound putting stroke."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2A(6)",
+                      "summary": "Play 18 holes with a golfer near your age and your counselor or an approved adult, following the rules with good etiquette and respect.",
+                      "ownWork": "With a golfer near your age plus your counselor or an adult your counselor approves, play 18 holes, in one round or two of nine.",
+                      "children": [
+                        {
+                          "number": "2A(6)(a)",
+                          "summary": "Play by the Rules of Golf."
+                        },
+                        {
+                          "number": "2A(6)(b)",
+                          "summary": "Show good golf etiquette."
+                        },
+                        {
+                          "number": "2A(6)(c)",
+                          "summary": "Respect other golfers, the committee, sponsors and the gallery."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2A(7)",
+                      "summary": "Explore three traditional golf careers, research one's education, training and experience, and tell your counselor why it interests you."
+                    }
+                  ]
+                },
+                {
+                  "number": "2B",
+                  "summary": "Option B: disc golf.",
+                  "children": [
+                    {
+                      "number": "2B(1)",
+                      "summary": "Study the current PDGA Official Rules of Disc Golf.",
+                      "children": [
+                        {
+                          "number": "2B(1)(a)",
+                          "summary": "Explain the six areas of Courtesy (812)."
+                        },
+                        {
+                          "number": "2B(1)(b)",
+                          "summary": "Describe the seven areas of Scoring (808)."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2B(2)",
+                      "summary": "Explain the PDGA Disc Golfer's Code."
+                    },
+                    {
+                      "number": "2B(3)",
+                      "summary": "Learn about disc golf's history, its discs and a top player.",
+                      "children": [
+                        {
+                          "number": "2B(3)(a)",
+                          "summary": "Tell about disc golf's history and why it's a game everyone can play."
+                        },
+                        {
+                          "number": "2B(3)(b)",
+                          "summary": "Discuss with your counselor what Ed Headrick did for disc golf."
+                        },
+                        {
+                          "number": "2B(3)(c)",
+                          "summary": "Describe how disc design has changed over time."
+                        },
+                        {
+                          "number": "2B(3)(d)",
+                          "summary": "Pick a top disc golfer and describe what they've achieved."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2B(4)",
+                      "summary": "Learn how disc golf and fitness go together.",
+                      "children": [
+                        {
+                          "number": "2B(4)(a)",
+                          "summary": "Explain how disc golf can help your mental and physical health."
+                        },
+                        {
+                          "number": "2B(4)(b)",
+                          "summary": "Explain how a disc golf exercise plan helps your play, and demonstrate two useful exercises."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2B(5)",
+                      "summary": "Show these disc golf skills.",
+                      "children": [
+                        {
+                          "number": "2B(5)(a)",
+                          "summary": "A good throwing grip."
+                        },
+                        {
+                          "number": "2B(5)(b)",
+                          "summary": "A good run-up (X-step) for a throw."
+                        },
+                        {
+                          "number": "2B(5)(c)",
+                          "summary": "A backhand shot."
+                        },
+                        {
+                          "number": "2B(5)(d)",
+                          "summary": "A forehand shot."
+                        },
+                        {
+                          "number": "2B(5)(e)",
+                          "summary": "An overhand shot."
+                        },
+                        {
+                          "number": "2B(5)(f)",
+                          "summary": "A rolling shot."
+                        },
+                        {
+                          "number": "2B(5)(g)",
+                          "summary": "A good in-line putting stance."
+                        },
+                        {
+                          "number": "2B(5)(h)",
+                          "summary": "A good straddle putting stance."
+                        },
+                        {
+                          "number": "2B(5)(i)",
+                          "summary": "A good putting grip."
+                        },
+                        {
+                          "number": "2B(5)(j)",
+                          "summary": "A good putting motion and follow-through."
+                        },
+                        {
+                          "number": "2B(5)(k)",
+                          "summary": "Proper use of a mini marker disc."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2B(6)",
+                      "summary": "Play 18 or more holes of disc golf with a player near your age and your counselor or an approved adult, following the rules with good etiquette and respect.",
+                      "ownWork": "With a disc golfer near your age plus your counselor or an adult your counselor approves, play 18 or more holes.",
+                      "children": [
+                        {
+                          "number": "2B(6)(a)",
+                          "summary": "Play by the PDGA Official Rules of Disc Golf."
+                        },
+                        {
+                          "number": "2B(6)(b)",
+                          "summary": "Show good disc golf etiquette."
+                        },
+                        {
+                          "number": "2B(6)(c)",
+                          "summary": "Respect other players and park visitors, and the wildlife, trees and plants there."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "2B(7)",
+                      "summary": "Explore three disc golf careers, research one's education, training and experience, and tell your counselor why it interests you."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "hiking",
       "name": "Hiking",
       "summary": "Hike safely and responsibly, train for distance, and finish four 10-mile hikes and a 20-mile hike.",
@@ -6832,6 +7620,149 @@
       ]
     },
     {
+      "id": "motorboating",
+      "name": "Motorboating",
+      "summary": "Learn boating safety, motors and the rules of the water, then handle a motorboat from boarding to docking with adults aboard.",
+      "officialUrl": "https://www.scouting.org/merit-badges/motorboating/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn motorboating hazards, first aid and Safety Afloat.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Discuss the listed motorboating hazards with your counselor, and how to anticipate, prevent, lessen and respond to each."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain first aid for the listed motorboating injuries and illnesses."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Discuss Safety Afloat and what it means for motorboating."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Get ready to be on the water.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Pass the Scouting America swimmer test before doing requirement 5."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe each type of PFD and when to wear it, then choose and fit one correctly."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn about boat motors and staying safe around them.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Compare inboard, outboard and inboard/outboard motors: what each is good at and used for."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain safe practices for handling fuel, servicing engines, and storing and placing equipment."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain how and why to winterize a boat motor."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain safe practices around swimmers and skiers in the water, where passengers sit underway, and boat wakes."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Show you know motorboating safety guidelines.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Go over each Safety Afloat point, including weather checks before and during an outing, required gear that's aboard and working, and a float plan."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain your area's boating laws, get an operator's permit if your state requires one, and discuss how to look up other states' laws."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Discuss how weather and rough water affect motorboating safety and performance."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Promise to follow Safety Afloat, and explain what each point means."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Explain and show how to use the equipment state and federal rules require aboard a motorboat."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Explain federal and state ventilation rules and why they exist."
+                },
+                {
+                  "number": "4g",
+                  "summary": "Explain how motorboats use lights and sound signals."
+                },
+                {
+                  "number": "4h",
+                  "summary": "Discuss common anchors and when each works best, and explain how to anchor properly."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "With your counselor or other adults aboard, show you can handle a motorboat.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Board and help others board, and check that everyone wears a properly fitted life jacket."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Refuel the boat and run through a safety check."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Attach the engine cut-off switch link if there is one, start the motor safely, and get underway from a dock or beach."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Run a course of a mile or more, showing how to overtake and pass, yield right-of-way, pass oncoming boats, turn, reverse and use navigation aids."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Anchor in open water, then bring the anchor in, stow it and get moving again."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Bring the boat in to land or a dock, then get off and help others off."
+                },
+                {
+                  "number": "5g",
+                  "summary": "Secure the boat by mooring, docking or beaching it, and stow all gear."
+                },
+                {
+                  "number": "5h",
+                  "summary": "Tie these boating knots: cleating hitch, bowline, clove hitch, anchor bend and sheet bend."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "moviemaking",
       "name": "Moviemaking",
       "summary": "Learn the craft of telling stories on film, then plan, shoot and show a short program of your own.",
@@ -7367,6 +8298,350 @@
             {
               "number": "8",
               "summary": "Research a nuclear science career and discuss what makes it interesting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oceanography",
+      "name": "Oceanography",
+      "summary": "Learn how the ocean moves and what's in it, from waves and seafloor to plankton, then do an ocean project and share what you learn.",
+      "officialUrl": "https://www.scouting.org/merit-badges/oceanography/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Name four branches of oceanography and give five or more reasons people should learn about the oceans."
+            },
+            {
+              "number": "2",
+              "summary": "Explain salinity, temperature and density and how oceanographers measure them; discuss ocean currents and the oceans' effect on weather and climate."
+            },
+            {
+              "number": "3",
+              "summary": "Describe ocean waves and how coastal water moves.",
+              "ownWork": "Describe the main features of ocean waves.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Tell apart a storm surge, tsunami, tidal wave and tidal bore."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain how sea, swell and surf differ."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain how breakers form."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain rip currents, how to stay out of them, and how to escape one."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Draw and label the ocean floor in cross-section, compare ocean depths with mountain heights, and show what these terms mean.",
+              "ownWork": "Draw a seafloor cross-section labeled with the listed features, and compare ocean depths with mountain heights.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Continental shelf."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Continental slope."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Abyssal plain."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "List seawater's main salts, gases and nutrients, describe key properties of water, and explain how sea life, evaporation and rainfall change seawater."
+            },
+            {
+              "number": "6",
+              "summary": "Describe which seawater properties matter for life, define benthos, nekton and plankton with examples of each, and explain phytoplankton's food-chain role."
+            },
+            {
+              "number": "7",
+              "summary": "Do one ocean project.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Make and use a plankton net for about 20 minutes, then identify the sample's three most common plankton under magnification; lakes or streams work too."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Model a volcanic island in stages, showing a fringing reef becoming a barrier reef and then an atoll, and describe Darwin's reef theory."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Make a Secchi disk; for five days in a row, four times daily, log water temperatures at three depths, turbidity, air temperature, clouds and waves; graph and compare temperatures.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "time",
+                        "label": "Time",
+                        "type": "text"
+                      },
+                      {
+                        "id": "surface",
+                        "label": "Surface water temperature",
+                        "type": "text"
+                      },
+                      {
+                        "id": "midwater",
+                        "label": "Midwater temperature",
+                        "type": "text"
+                      },
+                      {
+                        "id": "bottom",
+                        "label": "Bottom water temperature",
+                        "type": "text"
+                      },
+                      {
+                        "id": "air",
+                        "label": "Air temperature",
+                        "type": "text"
+                      },
+                      {
+                        "id": "turbidity",
+                        "label": "Secchi disk depth",
+                        "type": "number"
+                      },
+                      {
+                        "id": "conditions",
+                        "label": "Clouds and waves",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "reading",
+                    "rowLabelPlural": "readings"
+                  }
+                },
+                {
+                  "number": "7d",
+                  "summary": "Model how littoral currents, tides and waves move sediment near shore, with the listed formations, and show how offshore bars build up and wash away."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Build a wave generator to show wave reflection and refraction, and how groins, jetties and breakwaters change them."
+                },
+                {
+                  "number": "7f",
+                  "summary": "With permission and approval, follow one place's satellite images online for three weeks, then tell your counselor what you learned.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "notes",
+                        "label": "What you saw",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "check",
+                    "rowLabelPlural": "checks"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Share what you learn about oceanography in a report or a speech.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Read an oceanography book your counselor approves and write a 500-word report on it."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Visit an oceanographic ship or a marine institute, lab or aquarium, then write a 500-word report on your visit.",
+                  "requiredCount": 1,
+                  "ownWork": "Write a 500-word report about your visit.",
+                  "children": [
+                    {
+                      "number": "8b(1)",
+                      "summary": "An oceanographic research ship."
+                    },
+                    {
+                      "number": "8b(2)",
+                      "summary": "An oceanographic institute, marine laboratory or marine aquarium."
+                    }
+                  ]
+                },
+                {
+                  "number": "8c",
+                  "summary": "Once your counselor approves your outline, give your troop a five-minute speech on why oceanography matters or on careers in it."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Describe four ways marine scientists study the ocean, the geology beneath it, and the life in it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orienteering",
+      "name": "Orienteering",
+      "summary": "Navigate with map and compass, compete in orienteering events, design a course of your own, and teach others the sport.",
+      "officialUrl": "https://www.scouting.org/merit-badges/orienteering/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2013-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Show first aid for the listed orienteering injuries and illnesses, and explain why you should recognize your area's poisonous plants and animals."
+            },
+            {
+              "number": "2",
+              "summary": "Describe the sport of orienteering."
+            },
+            {
+              "number": "3",
+              "summary": "Learn to use an orienteering compass.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how compasses work and what sets an orienteering compass apart."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Take a compass bearing outdoors and follow it."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn to read and use a topographic map.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain how topographic maps show terrain, and find and name five terrain features both on a map and outdoors."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Find and name 10 topographic map symbols."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain declination and why it matters when you use a map and compass together."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Show magnetic north-south lines on a topographic map."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Measure distances on a map with an orienteering compass."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Orient a map with a compass."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Lay out a 100-meter pace course, find your walking and running pace on it, and explain why pace counting matters."
+            },
+            {
+              "number": "6",
+              "summary": "Learn control descriptions and orienteering techniques.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Read 20 international control description symbols and explain each."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain what a control description sheet tells you, using one as an example."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain the listed orienteering terms, such as attack point and handrail, and when you'd use each."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Compete in orienteering events and learn from each one.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Compete in three orienteering events, at least one a cross-country course; pairs or groups are fine.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "event",
+                        "label": "Event",
+                        "type": "text"
+                      },
+                      {
+                        "id": "course",
+                        "label": "Course type",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "event",
+                    "rowLabelPlural": "events"
+                  }
+                },
+                {
+                  "number": "7b",
+                  "summary": "After each event, write a report with its master map, control sheet and your route, how to cut your time between controls, your main weaknesses and how you'll improve."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Design an orienteering course.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Set up a cross-country course of 2,000 meters or more with five or more controls, and make its master map and control description sheet."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Set up a score course with 12 or more point-valued controls and a time limit of at least 60 minutes, plus its master map and control description sheet."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Serve as an official at an orienteering event, such as one on the course you set up in 8."
+            },
+            {
+              "number": "10",
+              "summary": "Teach orienteering skills to your patrol, troop or crew."
             }
           ]
         }
@@ -8296,6 +9571,39 @@
             {
               "number": "8",
               "summary": "Explore pottery careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "public-speaking",
+      "name": "Public Speaking",
+      "summary": "Practice speaking to groups: introduce yourself, give prepared and off-the-cuff talks, deliver a longer speech, and learn parliamentary procedure.",
+      "officialUrl": "https://www.scouting.org/merit-badges/public-speaking/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2003-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Introduce yourself to a group, such as your troop or class, in a three- to five-minute talk."
+            },
+            {
+              "number": "2",
+              "summary": "Get a three- to five-minute talk ready on a subject you pick, with body language and visual aids."
+            },
+            {
+              "number": "3",
+              "summary": "Give an unprepared talk of two or more minutes, in a group discussion or to your counselor, on a surprise topic your counselor picks that interests you."
+            },
+            {
+              "number": "4",
+              "summary": "Research and outline a topic your audience cares about, then write, practice and deliver an eight- to 10-minute speech in a conversational way."
+            },
+            {
+              "number": "5",
+              "summary": "Show your grasp of parliamentary procedure: run a meeting or discussion by the rules of order, or answer questions about them."
             }
           ]
         }
@@ -9587,6 +10895,523 @@
             {
               "number": "9",
               "summary": "Go over sailing terms and the points of sail, and compare today's sailboats."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snow-sports",
+      "name": "Snow Sports",
+      "summary": "Get ready for the snow with safety, first aid and fitness, then build your skills in downhill skiing, cross-country skiing, snowboarding or snowshoeing.",
+      "officialUrl": "https://www.scouting.org/merit-badges/snow-sports/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Know the hazards of snow sports and how to handle them.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the main snow sports hazards and how to anticipate, help prevent, lessen and respond to each."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating the listed snow sports injuries and illnesses, and explain splinting."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Be ready to help after an accident.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain why everyone in snow sports should be ready to give first aid after an accident."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain how to report an accident to the ski patrol or local emergency responders."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain the international trail-marking system."
+            },
+            {
+              "number": "4",
+              "summary": "Discuss why strength, endurance and flexibility matter in snow sports, and show exercises that get you fit for your option in 7."
+            },
+            {
+              "number": "5",
+              "summary": "Show up properly dressed and equipped for your option in 7, and discuss how your clothing keeps you warm and protected."
+            },
+            {
+              "number": "6",
+              "summary": "Learn the safety codes of the slopes.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain the Your Responsibility Code used where you'll ski, snowboard or snowshoe, and why everyone must follow it."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain the SMART Style safety program, why it matters, and how it applies in terrain parks and pipes."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain avalanche safety precautions, including each person's own responsibilities."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Complete one snow sports option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7A",
+                  "summary": "Option A: downhill (Alpine) skiing.",
+                  "children": [
+                    {
+                      "number": "7A(1)",
+                      "summary": "Wax and care for your skis, use and care for release bindings, and explain the international DIN standard for skiers."
+                    },
+                    {
+                      "number": "7A(2)",
+                      "summary": "Explain the American Teaching System and a basic progression for learning to ski."
+                    },
+                    {
+                      "number": "7A(3)",
+                      "summary": "Discuss the types of Alpine skis, and show two safe, easy ways to carry skis and poles."
+                    },
+                    {
+                      "number": "7A(4)",
+                      "summary": "Show you can ride one kind of lift and explain two more."
+                    },
+                    {
+                      "number": "7A(5)",
+                      "summary": "On a gentle slope, show beginner moves: the straight run, gliding wedge, wedge stop, sidestep and herringbone."
+                    },
+                    {
+                      "number": "7A(6)",
+                      "summary": "Link wedge turns on slightly steeper terrain."
+                    },
+                    {
+                      "number": "7A(7)",
+                      "summary": "Make five to 10 christies on a moderate slope."
+                    },
+                    {
+                      "number": "7A(8)",
+                      "summary": "Ski an intermediate slope under control."
+                    },
+                    {
+                      "number": "7A(9)",
+                      "summary": "Ski in varied conditions, with changes in pitch and snow, while keeping your balance and turning ability."
+                    },
+                    {
+                      "number": "7A(10)",
+                      "summary": "Name the major US ski organizations and explain what they do."
+                    }
+                  ]
+                },
+                {
+                  "number": "7B",
+                  "summary": "Option B: cross-country (Nordic) skiing.",
+                  "children": [
+                    {
+                      "number": "7B(1)",
+                      "summary": "Choose, use and care for cross-country ski gear so you stay safe and comfortable."
+                    },
+                    {
+                      "number": "7B(2)",
+                      "summary": "Explain why skiers keep off snowmobile trails, travel one way, and keep walkers and pets off ski trails."
+                    },
+                    {
+                      "number": "7B(3)",
+                      "summary": "Compare classic, skating, touring and telemark skis."
+                    },
+                    {
+                      "number": "7B(4)",
+                      "summary": "Explain how to wax skis for cross-country touring."
+                    },
+                    {
+                      "number": "7B(5)",
+                      "summary": "Discuss how cross-country, backcountry/ski touring, ski mountaineering and downhill/telemark skiing differ."
+                    },
+                    {
+                      "number": "7B(6)",
+                      "summary": "Make a packing list for a one-day ski tour."
+                    },
+                    {
+                      "number": "7B(7)",
+                      "summary": "Navigate properly with a topographic map and compass."
+                    },
+                    {
+                      "number": "7B(8)",
+                      "summary": "Control your speed and direction on a gentle, packed slope with the straight run, traverse, side slip, step turn, wedge stop and wedge turn."
+                    },
+                    {
+                      "number": "7B(9)",
+                      "summary": "On a cross-country trail, show efficient propulsion with good weight transfer, pole timing, rhythm, flow and glide."
+                    },
+                    {
+                      "number": "7B(10)",
+                      "summary": "On a 4-mile tour, handle the usual range of snow conditions; adaptive skiers may do 1 mile with their counselor's OK in advance."
+                    },
+                    {
+                      "number": "7B(11)",
+                      "summary": "Show several ways to handle steep hills or tough conditions, including uphill and downhill traverses and kick turns, sidesteps and pole drag."
+                    }
+                  ]
+                },
+                {
+                  "number": "7C",
+                  "summary": "Option C: snowboarding.",
+                  "children": [
+                    {
+                      "number": "7C(1)",
+                      "summary": "Discuss injuries from falling forward."
+                    },
+                    {
+                      "number": "7C(2)",
+                      "summary": "Choose the right snowboarding gear and use it to stay safe and comfortable."
+                    },
+                    {
+                      "number": "7C(3)",
+                      "summary": "Use and care for your own bindings, and explain the different binding methods and why leashes matter."
+                    },
+                    {
+                      "number": "7C(4)",
+                      "summary": "Compare the four kinds of snowboards, and carry one safely and easily."
+                    },
+                    {
+                      "number": "7C(5)",
+                      "summary": "Show you can ride one kind of lift and explain two more."
+                    },
+                    {
+                      "number": "7C(6)",
+                      "summary": "Show the basics of waxing a snowboard."
+                    },
+                    {
+                      "number": "7C(7)",
+                      "summary": "Show beginner snowboarding skills.",
+                      "children": [
+                        {
+                          "number": "7C(7)(a)",
+                          "summary": "On a gentle slope, show beginner moves and how you control speed and direction, including sideslipping."
+                        },
+                        {
+                          "number": "7C(7)(b)",
+                          "summary": "Traverse on slightly steeper terrain."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "7C(8)",
+                      "summary": "Perform an ollie, a nose-end grab and a wheelie on moderate terrain."
+                    },
+                    {
+                      "number": "7C(9)",
+                      "summary": "Ride an intermediate slope under control."
+                    },
+                    {
+                      "number": "7C(10)",
+                      "summary": "Ride in varied conditions, with changes in pitch and snow and moguls, while keeping your balance and turning ability."
+                    },
+                    {
+                      "number": "7C(11)",
+                      "summary": "Name the major US snowboarding organizations and explain what they do."
+                    }
+                  ]
+                },
+                {
+                  "number": "7D",
+                  "summary": "Option D: snowshoeing.",
+                  "children": [
+                    {
+                      "number": "7D(1)",
+                      "summary": "Name the parts of a snowshoe."
+                    },
+                    {
+                      "number": "7D(2)",
+                      "summary": "Explain how to size snowshoes correctly."
+                    },
+                    {
+                      "number": "7D(3)",
+                      "summary": "Describe the kinds of snowshoes and what each is for, and discuss what to weigh when choosing one."
+                    },
+                    {
+                      "number": "7D(4)",
+                      "summary": "Explain how to care for snowshoes."
+                    },
+                    {
+                      "number": "7D(5)",
+                      "summary": "Make a packing list for a one-day snowshoe hike."
+                    },
+                    {
+                      "number": "7D(6)",
+                      "summary": "Describe the best places to snowshoe, and discuss the upsides and dangers of backcountry snowshoeing."
+                    },
+                    {
+                      "number": "7D(7)",
+                      "summary": "Discuss why snowshoeing is good for you."
+                    },
+                    {
+                      "number": "7D(8)",
+                      "summary": "Break trail, climb, descend and traverse a slope efficiently."
+                    },
+                    {
+                      "number": "7D(9)",
+                      "summary": "On a 2-mile snowshoe hike, handle the usual range of snow conditions; adaptive snowshoers may do 1 mile with their counselor's OK in advance."
+                    },
+                    {
+                      "number": "7D(10)",
+                      "summary": "Navigate properly with a topographic map and compass."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "soil-and-water-conservation",
+      "name": "Soil and Water Conservation",
+      "summary": "Learn how soil forms and erodes, how water moves through a watershed, and how polluted water is treated, then do two conservation projects.",
+      "officialUrl": "https://www.scouting.org/merit-badges/soil-and-water-conservation/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2019-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn the basics of soil.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain what soil is and how it forms."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe three kinds of soil and how they differ."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Name fertile soil's three main plant nutrients and explain how to replace them when used up."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about soil erosion.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain what soil erosion is."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain why soil erosion matters and what it means for you."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Name and describe three kinds of soil erosion."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Photograph or draw two kinds of soil erosion."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how conservation practices control erosion.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain what conservation practices are."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe what three kinds of erosion control do."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Photograph or draw three kinds of erosion control."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about watersheds, river basins and aquifers.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain what a watershed is."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Find the smallest watershed you can on a contour map and outline it."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Outline the next larger watershed that contains it, as far as the map shows."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain what a river basin is and why its land and water use matters to everyone who lives there."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Explain what an aquifer is and why communities may depend on one."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how water moves through the land and how people's use of land affects it.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Draw the hydrologic cycle."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Show at least two of the listed ways water interacts with soil, such as percolation or transpiration."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Explain how clearing plants changes runoff from a watershed."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Explain how forestry, grazing and farming affect how much usable water there is."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Explain what industry's water use does to the supply."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn about water pollution and treatment.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain what water pollution means."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Describe where water pollution commonly comes from and how each source does harm."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain primary water treatment, secondary waste treatment and biochemical oxygen demand."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Draw how complete waste treatment works."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do two conservation projects.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Visit two of the listed places and write up the soil, water and energy conservation you saw, in more than 500 words.",
+                  "requiredCount": 2,
+                  "ownWork": "Write up the soil, water and energy conservation you saw, in more than 500 words.",
+                  "children": [
+                    {
+                      "number": "7a(1)",
+                      "summary": "An agricultural experiment."
+                    },
+                    {
+                      "number": "7a(2)",
+                      "summary": "A managed forest or woodlot, range or pasture."
+                    },
+                    {
+                      "number": "7a(3)",
+                      "summary": "A wildlife refuge or a fish or game management area."
+                    },
+                    {
+                      "number": "7a(4)",
+                      "summary": "A conservation-managed farm or ranch."
+                    },
+                    {
+                      "number": "7a(5)",
+                      "summary": "A managed watershed."
+                    },
+                    {
+                      "number": "7a(6)",
+                      "summary": "A waste-treatment plant."
+                    },
+                    {
+                      "number": "7a(7)",
+                      "summary": "A public drinking water treatment plant."
+                    },
+                    {
+                      "number": "7a(8)",
+                      "summary": "An industry water use installation."
+                    },
+                    {
+                      "number": "7a(9)",
+                      "summary": "A desalinization plant."
+                    }
+                  ]
+                },
+                {
+                  "number": "7b",
+                  "summary": "Plant 100 trees, bushes or vines where they'll do some good."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Seed a fifth of an acre or more with suitable grasses or legumes for a worthwhile conservation purpose."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Study a soil survey report, describe its contents, trace a map area with three or more soil kinds, and list each by full name and map symbol."
+                },
+                {
+                  "number": "7e",
+                  "summary": "List places near you, such as your neighborhood, camp, school or park, with erosion, sedimentation or pollution problems, and describe how people could fix them.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "place",
+                        "label": "Place",
+                        "type": "text"
+                      },
+                      {
+                        "id": "problem",
+                        "label": "Problem",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "fix",
+                        "label": "How to fix it",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "place",
+                    "rowLabelPlural": "places"
+                  }
+                },
+                {
+                  "number": "7f",
+                  "summary": "Do another soil and water conservation project your counselor approves."
+                }
+              ]
             }
           ]
         }
