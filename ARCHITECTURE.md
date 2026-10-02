@@ -183,6 +183,16 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   latest date works this way: screens pass their ViewModel's `today()` down, and
   the picker calls it as it opens, so a page left open past midnight offers the
   new day. It's a read, not an event, and an exception to state flowing down.
+- **What a page remembers survives the system stopping the app.** It's kept in
+  the ViewModel's `SavedStateHandle`, as a text field's text is (see
+  [Text fields](#text-fields)): for example the date Requirement detail brings
+  back to an unchecked requirement, and Badge detail's unmarked date. A date is
+  kept as its epoch day and read with `dateFromEpochDay`
+  (`ui/SavedStateDate.kt`), which, like `restoredText`, ignores a value of
+  another kind, as a backstop to
+  [#83](https://github.com/bryancassell/bluecard/issues/83). A key observed
+  with `getStateFlow` is set to null to forget it, not removed: `remove` drops
+  the flow, so the screen would stop following the key.
 
 ### Load and save failures
 

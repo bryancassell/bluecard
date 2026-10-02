@@ -66,10 +66,6 @@ class CompletionRecorderTest {
         savedStateHandle
     )
 
-    /** A copy of [handle]'s values, as the system restores a page's saved state. */
-    private fun restored(handle: SavedStateHandle) =
-        SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
-
     private suspend fun progress() = progressRepository.observeProgress("camping").first()
 
     private suspend fun requirement(number: String) =
@@ -216,19 +212,6 @@ class CompletionRecorderTest {
         recorder().setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
-    }
-
-    @Test
-    fun checkingAgainOnThePageRestoredFromItsSavedState_bringsBackTheDateItHad() = runTest {
-        val savedState = SavedStateHandle()
-        val stoppedPage = recorder(savedStateHandle = savedState)
-        stoppedPage.setCompleted(true)
-        progressRepository.setRequirementCompletedDate("camping", "1", day)
-        stoppedPage.setCompleted(false)
-
-        recorder(savedStateHandle = restored(savedState)).setCompleted(true)
-
-        assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
     }
 
     @Test

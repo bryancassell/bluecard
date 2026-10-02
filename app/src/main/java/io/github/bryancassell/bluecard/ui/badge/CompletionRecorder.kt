@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
 
@@ -34,13 +35,11 @@ class CompletionRecorder(
         if (completed) {
             val today = LocalDate.now(clock)
             val date = when (val unchecked = savedStateHandle.get<Any?>(UNCHECKED_DATE)) {
-                is Long -> LocalDate.ofEpochDay(unchecked)
-
                 // One that had no date, kept as null, or none unchecked on this page.
                 null -> if (UNCHECKED_DATE in savedStateHandle) null else today
 
-                // A value of another kind under the key is ignored, as in restoredText.
-                else -> today
+                // A value that isn't an epoch day is ignored.
+                else -> dateFromEpochDay(unchecked) ?: today
             }
             progressRepository.markRequirementCompleted(
                 advancementId,
@@ -48,7 +47,7 @@ class CompletionRecorder(
                 date,
                 catalogRepository.getAdvancements().badgeStart(advancementId, today)
             )
-            savedStateHandle.remove<Long>(UNCHECKED_DATE)
+            savedStateHandle.remove<Any?>(UNCHECKED_DATE)
         } else {
             val before = progressRepository.markRequirementNotCompleted(advancementId, number)
             // Only one that was completed has a date to bring back. One unchecked twice, as by
@@ -66,7 +65,7 @@ class CompletionRecorder(
      * scout meant it to.
      */
     suspend fun clear(numbers: Collection<String>) {
-        if (number in numbers) savedStateHandle.remove<Long>(UNCHECKED_DATE)
+        if (number in numbers) savedStateHandle.remove<Any?>(UNCHECKED_DATE)
         progressRepository.clearRequirements(advancementId, numbers)
     }
 

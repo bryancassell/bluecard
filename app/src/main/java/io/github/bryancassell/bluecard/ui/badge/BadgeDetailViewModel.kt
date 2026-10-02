@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.Job
@@ -90,8 +91,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
             saveFailure = saveFailure
         )
     }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
-        // A value of another kind under the key is ignored, as in restoredText.
-        val unmarkedDate = (unmarked as? Long)?.let(LocalDate::ofEpochDay)
+        val unmarkedDate = dateFromEpochDay(unmarked)
         if (state is BadgeDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
