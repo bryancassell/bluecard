@@ -4875,34 +4875,7 @@
                   "number": "1c",
                   "summary": "How people and wildlife use each one, and whether it's native, introduced or invasive."
                 }
-              ],
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "species",
-                    "label": "Species",
-                    "type": "text"
-                  },
-                  {
-                    "id": "features",
-                    "label": "Leaves, twigs, cones or fruit",
-                    "type": "multiline-text"
-                  },
-                  {
-                    "id": "habitat",
-                    "label": "Habitat",
-                    "type": "multiline-text"
-                  },
-                  {
-                    "id": "uses",
-                    "label": "Uses, and native or introduced",
-                    "type": "multiline-text"
-                  }
-                ],
-                "rowLabel": "species",
-                "rowLabelPlural": "species",
-                "rowCount": 15
-              }
+              ]
             },
             {
               "number": "2",
@@ -4932,11 +4905,11 @@
                 },
                 {
                   "number": "2b",
-                  "summary": "Find three stumps, logs or cores with uneven growth rings; describe each site and likely causes, and photograph or sketch each."
+                  "summary": "In your notebook from 1, describe three stumps, logs or cores with uneven rings, each site's terrain, likely causes, and a photo or sketch."
                 },
                 {
                   "number": "2c",
-                  "summary": "Study two kinds of animal, insect or disease damage to trees; explain causes and effects, and photograph or sketch each."
+                  "summary": "In your notebook from 1, describe two kinds of animal, insect or disease damage to trees: cause, effects, and a photo or sketch."
                 }
               ]
             },
@@ -5119,7 +5092,7 @@
                 },
                 {
                   "number": "7c",
-                  "summary": "Explain what to do if you find a forest fire and how crews control one, and name your wildfire agency."
+                  "summary": "Tell what to do on finding a forest fire, how firefighters would contain it, and which agency handles wildfires locally."
                 }
               ]
             },
@@ -5914,11 +5887,12 @@
             },
             {
               "number": "10",
-              "summary": "Safely approach and lead a horse from a stall, corral or field, then tie it securely, explaining each step."
+              "summary": "Walk up to a horse safely, lead it out of a stall, corral or field, and tie it up securely, explaining as you go."
             },
             {
               "number": "11",
               "summary": "Mount safely and ride these movements in one smooth, unbroken sequence on level ground.",
+              "ownWork": "Mount safely and ride 11a–11g as one continuous sequence.",
               "children": [
                 {
                   "number": "11a",
@@ -9350,11 +9324,11 @@
               "children": [
                 {
                   "number": "3a",
-                  "summary": "Explain Morse code and ways to send it, spell your first name, and send or receive a 6–10 word message."
+                  "summary": "Explain Morse code and ways to send it, spell your first name, and send or receive a 6 to 10 word message."
                 },
                 {
                   "number": "3b",
-                  "summary": "Explain ASL and its use today, spell your first name, and send or receive a 6–10 word message."
+                  "summary": "Explain ASL and its use today, spell your first name, and send or receive a 6 to 10 word message."
                 }
               ]
             },
@@ -9376,7 +9350,7 @@
                   "children": [
                     {
                       "number": "4c(1)",
-                      "summary": "Spell your first name in semaphore, and send or receive a 6–10 word message."
+                      "summary": "Spell your first name in semaphore, and send or receive a 6 to 10 word message."
                     },
                     {
                       "number": "4c(2)",
