@@ -83,7 +83,7 @@ class CatalogValidatorTest {
     @Test
     fun duplicateBadgeId() {
         assertEquals(
-            listOf("id \"first-aid\" is used more than once"),
+            listOf("badge id \"first-aid\" is used more than once"),
             errorsFor(badge, badge)
         )
     }
@@ -91,7 +91,7 @@ class CatalogValidatorTest {
     @Test
     fun duplicateRankId() {
         assertEquals(
-            listOf("id \"tenderfoot\" is used more than once"),
+            listOf("rank id \"tenderfoot\" is used more than once"),
             errorsFor(badge, ranks = listOf(rank, rank))
         )
     }
@@ -99,7 +99,7 @@ class CatalogValidatorTest {
     @Test
     fun rankIdUsedByABadge() {
         assertEquals(
-            listOf("id \"first-aid\" is used more than once"),
+            listOf("id \"first-aid\" is used by both a badge and a rank"),
             errorsFor(badge, ranks = listOf(rank.copy(id = "first-aid")))
         )
     }

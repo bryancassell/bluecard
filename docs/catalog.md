@@ -1,4 +1,4 @@
-# Writing the merit badge catalog
+# Writing the catalog
 
 The catalog of merit badges and ranks is a single JSON file bundled with the
 app: [`app/src/main/assets/catalog.json`](../app/src/main/assets/catalog.json).

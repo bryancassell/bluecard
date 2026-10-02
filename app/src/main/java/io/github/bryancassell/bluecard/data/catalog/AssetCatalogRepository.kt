@@ -19,11 +19,11 @@ class AssetCatalogRepository @Inject constructor(
     private val mutex = Mutex()
     private var catalog: Catalog? = null
 
-    override suspend fun getBadges(): List<MeritBadge> = catalog().badges
+    override suspend fun getBadges(): List<MeritBadge> = cachedCatalog().badges
 
-    override suspend fun getRanks(): List<Rank> = catalog().ranks
+    override suspend fun getRanks(): List<Rank> = cachedCatalog().ranks
 
-    private suspend fun catalog(): Catalog = mutex.withLock {
+    private suspend fun cachedCatalog(): Catalog = mutex.withLock {
         catalog ?: load().also { catalog = it }
     }
 

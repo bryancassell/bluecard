@@ -12,9 +12,12 @@ object CatalogValidator {
             add("formatVersion is ${catalog.formatVersion}; this app reads $CATALOG_FORMAT_VERSION")
         }
         if (catalog.badges.isEmpty()) add("the catalog has no badges")
+        catalog.badges.duplicateIds().forEach { add("badge id \"$it\" is used more than once") }
+        catalog.ranks.duplicateIds().forEach { add("rank id \"$it\" is used more than once") }
         // Badge and rank progress is stored in the same tables, keyed by ID.
-        (catalog.badges + catalog.ranks).groupBy { it.id }.filterValues { it.size > 1 }.keys
-            .forEach { add("id \"$it\" is used more than once") }
+        catalog.badges.map { it.id }.intersect(catalog.ranks.map { it.id }.toSet()).forEach {
+            add("id \"$it\" is used by both a badge and a rank")
+        }
         catalog.badges.forEach { addAll(validateBadge(it)) }
         catalog.ranks.forEach { addAll(validateAdvancement("rank \"${it.id}\"", it)) }
     }
@@ -101,6 +104,9 @@ object CatalogValidator {
 
         else -> emptyList()
     }
+
+    private fun List<Advancement>.duplicateIds(): Set<String> =
+        groupBy { it.id }.filterValues { it.size > 1 }.keys
 
     private fun Requirement.withDescendants(): List<Requirement> =
         listOf(this) + children.flatMap { it.withDescendants() }

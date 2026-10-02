@@ -593,10 +593,11 @@ requirement progress fresh, numbers only need to be unique within one version.
 
 ### Ranks
 
-The catalog also lists the seven ranks, Scout through Eagle, in the order
-they're earned. Most of what a badge has carries over: numbered requirements
-with sub-requirements, trackers, requirement versions and completion. So a
-`Rank` uses the same `RequirementsVersion`, `Requirement` and
+The catalog also has a list of the seven ranks, Scout through Eagle, in the
+order they're earned. It's empty until their content is written
+([#193](https://github.com/bryancassell/bluecard/issues/193)). Most of what a
+badge has carries over: numbered requirements with sub-requirements, trackers,
+requirement versions and completion. So a `Rank` uses the same `RequirementsVersion`, `Requirement` and
 `TrackerDefinition` types as a `MeritBadge`, and both are an `Advancement`,
 which the code that serves both works on.
 
