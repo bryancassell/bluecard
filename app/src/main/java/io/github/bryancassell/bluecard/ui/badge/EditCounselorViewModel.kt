@@ -11,11 +11,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,9 +32,9 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel(assistedFactory = EditCounselorViewModel.Factory::class)
 class EditCounselorViewModel @AssistedInject constructor(
     @Assisted private val badgeId: String,
-    catalogRepository: CatalogRepository,
+    private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    clock: Clock,
+    private val clock: Clock,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -50,7 +52,6 @@ class EditCounselorViewModel @AssistedInject constructor(
     val email = fields[EMAIL]
 
     private val saves = TaskRunner(viewModelScope)
-    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
 
     /** Whether the fields have been saved and the page hasn't closed yet. */
     private val saved = MutableStateFlow(false)
@@ -64,7 +65,7 @@ class EditCounselorViewModel @AssistedInject constructor(
         saves.failure
     ) { catalog, progress, _, isSaved, saveFailure ->
         // Unavailable when Badge detail is, which then doesn't open this page. Starting the badge
-        // on a save (ProgressRecorder.badgeStart) needs the badge in the catalog too.
+        // on a save (badgeStart) needs the badge in the catalog too.
         val found = catalog.badgeRequirements(badgeId, progress)
             ?: return@combine EditCounselorUiState.Unavailable
         val stored = progress?.badge?.counselor
@@ -96,7 +97,11 @@ class EditCounselorViewModel @AssistedInject constructor(
     fun save() {
         val counselor = typed()
         saves.launch {
-            progressRepository.setCounselor(badgeId, counselor, recorder.badgeStart())
+            progressRepository.setCounselor(
+                badgeId,
+                counselor,
+                catalogRepository.getBadges().badgeStart(badgeId, LocalDate.now(clock))
+            )
             // A field changed while it saved stays open to be saved too, rather than being lost.
             if (typed().normalized() == counselor.normalized()) saved.value = true
         }

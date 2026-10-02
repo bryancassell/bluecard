@@ -1,14 +1,15 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
-import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.testing.FakeClock
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -21,7 +22,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class ProgressRecorderTest {
+class CompletionRecorderTest {
     private val older = LocalDate.of(2025, 1, 1)
     private val newest = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
@@ -37,16 +38,19 @@ class ProgressRecorderTest {
         // The newest version isn't the first one listed.
         requirementVersions = listOf(
             RequirementsVersion(older, listOf(Requirement("1", "An older first requirement."))),
-            RequirementsVersion(newest, listOf(Requirement("1", "Plan a campout.")))
+            RequirementsVersion(
+                newest,
+                listOf(Requirement("1", "Plan a campout."), Requirement("2", "Pitch a tent."))
+            )
         )
     )
 
     private val catalogRepository = FakeCatalogRepository(listOf(camping))
     private val progressRepository = FakeProgressRepository()
 
-    /** A recorder for a page, such as one the scout opens. */
-    private fun recorder() =
-        ProgressRecorder("camping", catalogRepository, progressRepository, clock)
+    /** A recorder for the page of requirement [number], such as one the scout opens. */
+    private fun recorder(number: String = "1") =
+        CompletionRecorder("camping", number, catalogRepository, progressRepository, clock)
 
     private suspend fun progress() = progressRepository.observeProgress("camping").first()
 
@@ -54,13 +58,8 @@ class ProgressRecorderTest {
         progress()?.requirements?.singleOrNull { it.requirementNumber == number }
 
     @Test
-    fun badgeStart_isNewestVersionToday() = runTest {
-        assertEquals(BadgeStart(newest, today), recorder().badgeStart())
-    }
-
-    @Test
     fun checking_onUnstartedBadge_startsItAndDatesItToday() = runTest {
-        recorder().setCompleted("1", true)
+        recorder().setCompleted(true)
 
         assertEquals(BadgeProgress("camping", newest, today), progress()?.badge)
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
@@ -70,18 +69,45 @@ class ProgressRecorderTest {
     fun checking_onStartedBadge_keepsItsVersionAndDate() = runTest {
         progressRepository.startBadge("camping", older, started)
 
-        recorder().setCompleted("1", true)
+        recorder().setCompleted(true)
 
         assertEquals(BadgeProgress("camping", older, started), progress()?.badge)
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
     }
 
     @Test
+    fun checkingAsMidnightPasses_startsTheBadgeTheDayItsDated() = runTest {
+        val fakeClock = FakeClock(today.atTime(23, 59, 59).toInstant(ZoneOffset.UTC))
+        // Midnight passes while the catalog loads, after the check reads the clock.
+        val slowCatalog = object : CatalogRepository by catalogRepository {
+            override suspend fun getBadges(): List<MeritBadge> {
+                fakeClock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+                return catalogRepository.getBadges()
+            }
+        }
+        val recorder =
+            CompletionRecorder("camping", "1", slowCatalog, progressRepository, fakeClock)
+
+        recorder.setCompleted(true)
+
+        assertEquals(BadgeProgress("camping", newest, today), progress()?.badge)
+        assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun checking_recordsThePagesOwnRequirement() = runTest {
+        recorder("2").setCompleted(true)
+
+        assertNull(requirement("1"))
+        assertEquals(RequirementProgress("camping", "2", true, today), requirement("2"))
+    }
+
+    @Test
     fun unchecking_removesTheDate_andTheBadgeStaysStarted() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
 
-        recorder.setCompleted("1", false)
+        recorder.setCompleted(false)
 
         assertEquals(RequirementProgress("camping", "1"), requirement("1"))
         assertEquals(BadgeProgress("camping", newest, today), progress()?.badge)
@@ -90,11 +116,11 @@ class ProgressRecorderTest {
     @Test
     fun checkingAgainOnTheSamePage_bringsBackTheDateItHad() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
 
-        recorder.setCompleted("1", false)
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(false)
+        recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
     }
@@ -102,11 +128,11 @@ class ProgressRecorderTest {
     @Test
     fun checkingAgainOnTheSamePage_bringsBackNoDateForOneThatHadNone() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", null)
 
-        recorder.setCompleted("1", false)
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(false)
+        recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", completed = true), requirement("1"))
     }
@@ -114,13 +140,13 @@ class ProgressRecorderTest {
     @Test
     fun uncheckingTwice_keepsTheDateFromTheFirstTime() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
 
         // As by a quick double tap, before the checkbox shows the first one.
-        recorder.setCompleted("1", false)
-        recorder.setCompleted("1", false)
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(false)
+        recorder.setCompleted(false)
+        recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
     }
@@ -128,11 +154,11 @@ class ProgressRecorderTest {
     @Test
     fun checkingAgainOnAnotherPage_datesItToday() = runTest {
         val closedPage = recorder()
-        closedPage.setCompleted("1", true)
+        closedPage.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
-        closedPage.setCompleted("1", false)
+        closedPage.setCompleted(false)
 
-        recorder().setCompleted("1", true)
+        recorder().setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
     }
@@ -140,14 +166,14 @@ class ProgressRecorderTest {
     @Test
     fun checkingWhenSaveFails_keepsTheDateToBringBack() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
-        recorder.setCompleted("1", false)
+        recorder.setCompleted(false)
         progressRepository.failSaves = true
 
-        runCatching { recorder.setCompleted("1", true) }
+        runCatching { recorder.setCompleted(true) }
         progressRepository.failSaves = false
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
     }
@@ -155,15 +181,28 @@ class ProgressRecorderTest {
     @Test
     fun clear_removesWhatWasRecorded_andCheckingAgainDatesItToday() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
-        recorder.setCompleted("1", false)
+        recorder.setCompleted(false)
 
         recorder.clear(listOf("1"))
         assertNull(requirement("1"))
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
+    }
+
+    @Test
+    fun clearingOtherRequirements_keepsTheDateToBringBack() = runTest {
+        val recorder = recorder()
+        recorder.setCompleted(true)
+        progressRepository.setRequirementCompletedDate("camping", "1", day)
+        recorder.setCompleted(false)
+
+        recorder.clear(listOf("2"))
+        recorder.setCompleted(true)
+
+        assertEquals(RequirementProgress("camping", "1", true, day), requirement("1"))
     }
 
     @Test
@@ -176,14 +215,14 @@ class ProgressRecorderTest {
                 progressRepository.clearRequirements(badgeId, numbers)
             }
         }
-        val recorder = ProgressRecorder("camping", catalogRepository, slowClears, clock)
-        recorder.setCompleted("1", true)
+        val recorder = CompletionRecorder("camping", "1", catalogRepository, slowClears, clock)
+        recorder.setCompleted(true)
         progressRepository.setRequirementCompletedDate("camping", "1", day)
-        recorder.setCompleted("1", false)
+        recorder.setCompleted(false)
 
         launch { recorder.clear(listOf("1")) }
         runCurrent()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
 
         assertEquals(RequirementProgress("camping", "1", true, today), requirement("1"))
         clearSaved.complete(Unit)
@@ -192,11 +231,11 @@ class ProgressRecorderTest {
     @Test
     fun unchecking_afterTheBadgeIsCleared_doesNothing() = runTest {
         val recorder = recorder()
-        recorder.setCompleted("1", true)
+        recorder.setCompleted(true)
         progressRepository.clearBadge("camping")
 
         // As when the page still shows the requirement checked.
-        recorder.setCompleted("1", false)
+        recorder.setCompleted(false)
 
         assertNull(progress())
     }

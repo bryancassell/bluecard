@@ -12,6 +12,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -33,7 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 class RequirementDetailViewModel @AssistedInject constructor(
     @Assisted("badgeId") private val badgeId: String,
     @Assisted("number") private val number: String,
-    catalogRepository: CatalogRepository,
+    private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps an unsaved comment if the system stops the app in the background.
@@ -48,7 +49,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
     val comment = fields[COMMENT]
 
     private val saves = TaskRunner(viewModelScope)
-    private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)
+    private val recorder =
+        CompletionRecorder(badgeId, number, catalogRepository, progressRepository, clock)
 
     /**
      * The requirement as recorded, or null if the badge's requirements don't have it. It's
@@ -128,7 +130,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
      * work, completed or not.
      */
     fun setCompleted(completed: Boolean) {
-        saves.launch { recorder.setCompleted(number, completed) }
+        saves.launch { recorder.setCompleted(completed) }
     }
 
     /**
@@ -143,7 +145,12 @@ class RequirementDetailViewModel @AssistedInject constructor(
     fun saveComment() {
         val text = comment.text.toString()
         saves.launch {
-            progressRepository.setRequirementComment(badgeId, number, text, recorder.badgeStart())
+            progressRepository.setRequirementComment(
+                badgeId,
+                number,
+                text,
+                catalogRepository.getBadges().badgeStart(badgeId, today())
+            )
         }
     }
 
