@@ -59,6 +59,7 @@ own documentation says so, and each such claim links to the page.
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
   - [Coverage](#coverage)
 - [Release build](#release-build)
+- [Debug builds](#debug-builds)
 - [Decisions](#decisions)
 
 ## Overview
@@ -1003,6 +1004,49 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
   so it needs no separate upload.
 
+## Debug builds
+
+Debug builds point out mistakes while the app is in use. Release builds have
+neither of these tools. [`docs/toolchain.md`](docs/toolchain.md#debug-tools)
+says where to see what they report.
+
+- **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)**
+  is turned on in `BlueCardApplication` when the app is debuggable, as in
+  [Now in Android](https://github.com/android/nowinandroid/blob/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/NiaApplication.kt).
+  It checks `ApplicationInfo.FLAG_DEBUGGABLE`, since AGP no longer generates
+  `BuildConfig` by default.
+  - The thread policy reports disk and network access on the main thread. It
+    logs each violation and flashes the screen, as in the
+    [core app quality](https://developer.android.com/develop/adaptive-apps/quality-guidelines/core-app-quality#strictmode)
+    StrictMode test.
+  - The VM policy reports streams and cursors that are never closed, leaked
+    activities, and a `content://` URI sent to another app without a
+    permission grant. It logs each one.
+  - Both use `detectAll()`, which turns on new checks as `targetSdk` rises.
+    So neither crashes the app (`penaltyDeath()`). Now in Android
+    [removed it](https://github.com/android/nowinandroid/pull/1857) after
+    crashes from code it doesn't own, and under Robolectric a VM policy's
+    `penaltyDeath()` ends the whole test run.
+  - Fix a violation, or permit it as narrowly as possible, such as
+    `StrictMode.allowThreadDiskReads()` around one call, with a comment saying
+    why. The reference says not to "feel compelled to fix everything that
+    StrictMode finds."
+  - Local tests run the debug build, so tests that start `BlueCardApplication`
+    run with StrictMode on. Violations there are only logged.
+- **[LeakCanary](https://square.github.io/leakcanary/)** is a
+  `debugImplementation` dependency and starts itself. It reports activities and
+  windows that are still in memory after they're destroyed. It
+  [doesn't watch ViewModels](https://github.com/square/leakcanary/blob/v2.14/leakcanary-object-watcher-android-androidx/src/main/java/leakcanary/internal/AndroidXFragmentDestroyWatcher.kt#L62-L67)
+  in an app without fragments. Android Studio's Profiler can also
+  [run it](https://developer.android.com/studio/profile/capture-heap-dump).
+  - Its launcher icon is off (`src/debug/res/values/leak_canary.xml`), so
+    `adb shell monkey` and `getLaunchIntentForPackage()` open `MainActivity`.
+  - Its heap dumps hold whatever is in memory, and it may save them in the
+    phone's public Download folder, so test with made-up records.
+  - It stays on 2.x until 3.0 is stable.
+  - It isn't used in instrumented tests. They run only locally, and each check
+    dumps the heap.
+
 ## Decisions
 
 Technical decisions, each linked to the section that explains it. Choices about
@@ -1031,3 +1075,4 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
+| [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |

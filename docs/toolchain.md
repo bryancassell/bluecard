@@ -351,6 +351,35 @@ out of date, retake all three the same way, so they still match each other.
    example with [pngquant](https://pngquant.org/)), which keeps each file under
    about 60 KB with no visible difference.
 
+## Debug tools
+
+Debug builds run two tools that point out mistakes while you use the app;
+[`ARCHITECTURE.md`](../ARCHITECTURE.md#debug-builds) says why. Release builds
+have neither.
+
+**StrictMode** reports disk access on the main thread, streams and cursors that
+are never closed, and more. It logs each violation, with the stack trace of the
+call that caused it, under the Logcat tag `StrictMode`. A main-thread violation
+also flashes the screen. Filter Android Studio's Logcat with `tag:StrictMode`,
+or run:
+
+```sh
+adb logcat -s StrictMode
+```
+
+**LeakCanary** reports activities and windows that stay in memory after they're
+destroyed. To look for a leak, open a screen, rotate the phone, then leave the
+screen. Objects still in memory show as a LeakCanary notification. LeakCanary
+dumps and analyzes the heap when you tap the notification, or by itself once 5
+objects are held or the app goes to the background. The app pauses while the
+heap is dumped. Open the results from the notification, or long-press the app
+icon and choose **Leaks**. On Android 13 and higher, LeakCanary asks for
+permission to show notifications the first time it has something to report.
+Android Studio's Profiler can also run it
+([Capture a heap dump](https://developer.android.com/studio/profile/capture-heap-dump)).
+A heap dump holds whatever is in memory, so look for leaks with made-up
+records, not a real scout's.
+
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
