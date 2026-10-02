@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -15,9 +16,9 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badge.advancementRequirementsAmong
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,16 +36,11 @@ class RankDetailViewModel @AssistedInject constructor(
     @Assisted private val rankId: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    // Keeps the date to open the date picker at if the system stops the app in the background.
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val saves = TaskRunner(viewModelScope)
-
-    /**
-     * The date the rank was marked earned on before the scout unmarked it on this page, or null.
-     * The date picker opens at it, so a mistaken Unmark loses nothing. Forgotten once the rank is
-     * marked again or cleared, or when the page closes.
-     */
-    private val unmarkedDate = MutableStateFlow<LocalDate?>(null)
 
     val uiState: StateFlow<RankDetailUiState> = combine(
         flow { emit(catalogRepository.getRanks()) },
@@ -85,8 +81,9 @@ class RankDetailViewModel @AssistedInject constructor(
             },
             saveFailure = saveFailure
         )
-    }.combine(unmarkedDate) { state, unmarkedDate ->
+    }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
         // Combined after, so remembering a date doesn't work the rank's standing out again.
+        val unmarkedDate = dateFromEpochDay(unmarked)
         if (state is RankDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
     }.catchLoadFailure(RankDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RankDetailUiState.Loading)
@@ -97,7 +94,7 @@ class RankDetailViewModel @AssistedInject constructor(
      */
     fun clear() {
         // Forgotten even if the clear fails, as the scout meant it to be.
-        unmarkedDate.value = null
+        savedStateHandle[UNMARKED_DATE] = null
         saves.launch { progressRepository.clearBadge(rankId) }
     }
 
@@ -114,7 +111,7 @@ class RankDetailViewModel @AssistedInject constructor(
                 date,
                 catalogRepository.getRanks().badgeStart(rankId, today())
             )
-            unmarkedDate.value = null
+            savedStateHandle[UNMARKED_DATE] = null
         }
     }
 
@@ -125,7 +122,7 @@ class RankDetailViewModel @AssistedInject constructor(
      */
     fun unmarkEarned() {
         val shown = (uiState.value as? RankDetailUiState.Ready)?.earnedOnPriorDate
-        if (shown != null) unmarkedDate.value = shown
+        if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
         saves.launch { progressRepository.removeCompletedOnPriorDate(rankId) }
     }
 
@@ -140,5 +137,15 @@ class RankDetailViewModel @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(rankId: String): RankDetailViewModel
+    }
+
+    private companion object {
+        /**
+         * The epoch day of the date the rank was marked earned on before the scout unmarked it on
+         * this page, or null. The date picker opens at it, so a mistaken Unmark loses nothing.
+         * Forgotten once the rank is marked again or cleared, or when the page closes. It's set
+         * to null rather than removed, which would stop uiState following it.
+         */
+        const val UNMARKED_DATE = "unmarkedDate"
     }
 }

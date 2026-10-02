@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui.rank
 
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.testing.viewModelScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -70,8 +73,10 @@ class RankDetailViewModelTest {
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private fun viewModel(rankId: String = "tenderfoot") =
-        RankDetailViewModel(rankId, catalogRepository, progressRepository, clock)
+    private fun viewModel(
+        rankId: String = "tenderfoot",
+        savedStateHandle: SavedStateHandle = SavedStateHandle()
+    ) = RankDetailViewModel(rankId, catalogRepository, progressRepository, clock, savedStateHandle)
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -93,7 +98,8 @@ class RankDetailViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = RankDetailViewModel("scout", loading, progressRepository, clock)
+        val viewModel =
+            RankDetailViewModel("scout", loading, progressRepository, clock, SavedStateHandle())
         startCollecting(viewModel)
 
         assertEquals(RankDetailUiState.Loading, viewModel.uiState.value)
@@ -316,6 +322,42 @@ class RankDetailViewModelTest {
         assertEquals(day, viewModel.ready().unmarkedDate)
 
         viewModel.markEarned(older)
+        assertNull(viewModel.ready().unmarkedDate)
+    }
+
+    @Test
+    fun unmarkEarned_afterTheSystemStopsTheApp_remembersTheDate() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        // Saves the ViewModel's state and restores it into a new one, as when the system stops
+        // the app.
+        viewModelScenario {
+            RankDetailViewModel(
+                "tenderfoot",
+                catalogRepository,
+                progressRepository,
+                clock,
+                createSavedStateHandle()
+            )
+        }.use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.unmarkEarned()
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertEquals(day, restored.ready().unmarkedDate)
+        }
+    }
+
+    @Test
+    fun anotherValueUnderTheUnmarkedDateKey_isIgnored() = runTest {
+        // A value the ViewModel didn't keep.
+        val viewModel = viewModel(
+            savedStateHandle = SavedStateHandle(mapOf("unmarkedDate" to "From an intent."))
+        )
+        startCollecting(viewModel)
+
         assertNull(viewModel.ready().unmarkedDate)
     }
 
