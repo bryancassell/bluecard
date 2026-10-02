@@ -2595,6 +2595,105 @@
       ]
     },
     {
+      "id": "collections",
+      "name": "Collections",
+      "summary": "Build a collection of your choice, other than stamps or coins, and learn to care for, catalog, display and value it. Pictures or sketches can count; take specimens only with the land manager's permission, following Leave No Trace.",
+      "officialUrl": "https://www.scouting.org/merit-badges/collections/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Write a short report or outline describing your collection in detail: its history, why you enjoy it and chose it, and what you've learned."
+            },
+            {
+              "number": "2",
+              "summary": "Describe how your collection has grown over time."
+            },
+            {
+              "number": "3",
+              "summary": "Show what you know about preserving, displaying and tracking your collection.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how careful handling, cleaning and storage keep your collection in good shape."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain how to show your collection without harming it."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain the shows, seminars, conventions, contests, and museum programs and exhibits open to collectors like you."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Describe the system you use to catalog and track your collection."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Discuss collecting as an investment with your counselor.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "What investing and speculation mean for your collection."
+                },
+                {
+                  "number": "4b",
+                  "summary": "How you'd judge another collection like yours before buying it."
+                },
+                {
+                  "number": "4c",
+                  "summary": "What you could expect to get back by selling some or all of it."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Show your counselor what you know about your collection.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Discuss and define at least 10 common terms collectors use for your kind of collection."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Walk your counselor through two groups in your collection, explaining how and why you organized it; use photos if they can't see it in person."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Tell what your collection is worth in money and where those figures come from."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Describe how items like yours are graded by value, physical defects, size and age, and show the ratings used."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Name national, state or local groups tied to your kind of collection."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Explain what any ID numbers, series, brand names or other special marks on your items tell you."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Tell your counselor how you plan to keep collecting."
+            },
+            {
+              "number": "7",
+              "summary": "Explore collecting careers, research one's education, training and experience, and tell your counselor why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "communication",
       "name": "Communication",
       "summary": "Practice listening, speaking, writing and presenting to different audiences.",
@@ -3457,6 +3556,381 @@
       ]
     },
     {
+      "id": "digital-technology",
+      "name": "Digital Technology",
+      "summary": "Learn how computers, networks and apps work, use the web safely, make digital projects, and understand intellectual property and e-waste.",
+      "officialUrl": "https://www.scouting.org/merit-badges/digital-technology/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Watch the Personal Safety Awareness \"Digital Safety\" video, with permission."
+            },
+            {
+              "number": "2",
+              "summary": "Look at how digital technology has changed and where it's headed.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Briefly trace digital technology's history, and discuss how what you use compares with what a parent, grandparent or other adult had."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Imagine the computers and devices you might have as an adult, and describe them."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how digital devices store data, run programs and connect.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how computers store text, sound and pictures as digital data."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Contrast lossy and lossless compression, with an example use for each."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Describe how programming makes two digital devices more useful."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Compare computers, mobile devices and gaming consoles."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Define a computer network, and explain how a LAN differs from a WAN."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about software, malware, and the codes and tags that hold data.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain what software is and how a computer's CPU and memory run it."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Pick four programs or apps used in your home, and explain what each does for you."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Define malware, and explain how to keep your devices and their data safe."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain barcodes, QR codes and RFID tags, the data each holds, and two or more uses of each."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how data moves over the internet, and use the web safely.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Describe two or more ways the internet moves data."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With permission, find court of honor or campfire program ideas on three or more different websites, and present them and how you searched."
+                },
+                {
+                  "number": "5c",
+                  "summary": "With permission, open a secure (HTTPS) website, and explain how to tell if its certificate is trustworthy and what a secure connection means."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Do three digital projects, back up each one's files, and share them with your counselor.",
+              "requiredCount": 3,
+              "ownWork": "Back up each project's files on a separate device, and show your counselor the finished projects.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Use a spreadsheet or database for a patrol weekend campout food budget, or a troop roster (name, rank, patrol, phone) shown sorted by rank, by patrol and by name."
+                },
+                {
+                  "number": "6b",
+                  "summary": "In a word processor, draft an invitation for your troop's parents or guardians to come to a troop event."
+                },
+                {
+                  "number": "6c",
+                  "summary": "In a graphics program, lay out a troop campsite plan, or make a troop event flyer combining text and an image."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Make a presentation of five or more slides, each with text and an image, on a topic your counselor approves."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Take a digital photo of a troop activity, and send it to a device you can show your counselor on."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Record your voice digitally, then have your counselor play it back from a second device."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Blog about your Scouting activities in five or more entries with two images, and show your counselor; get permission and approval before posting it online."
+                },
+                {
+                  "number": "6h",
+                  "summary": "Build a webpage for your troop, patrol, school or place of worship with three articles, two images and a useful link; get permission and approval to post it online."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn how intellectual property is protected.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain copyright, patents, trademarks and trade secrets, and why each exists."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Explain when a friend may legally give you a free copy of software."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Discuss a recent intellectual property court case from an article or, with permission, an online report."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Do two activities about disposing of digital devices responsibly.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Explain why digital devices need proper disposal, and list three or more hazardous chemicals that can be in them or used to make them."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Explain why digital hardware should go to a certified recycler."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Find an organization online that collects old devices to reuse or recycle, learn what becomes of them, and tell your counselor."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Tour a center that recycles digital devices, learn what becomes of them, and tell your counselor."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Find out how a nearby battery recycling center handles batteries, and tell your counselor the right ways to recycle them."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore a digital technology career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Research a career related to digital technology and discuss what makes it interesting."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research a hobby that uses digital technology, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "disabilities-awareness",
+      "name": "Disabilities Awareness",
+      "summary": "Learn about disabilities and disability etiquette, visit an agency serving people with disabilities, check places for accessibility, and help build positive attitudes.",
+      "officialUrl": "https://www.scouting.org/merit-badges/disabilities-awareness/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn disability terms and etiquette.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Discuss these terms with your counselor: disability, accessibility, adaptation, accommodation, invisible disability and person-first language."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Tell why disability etiquette matters and how it changes from one disability to another, giving three examples."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Visit an agency serving people with disabilities, gather and read material on its work, learn about its members' training, job and education opportunities, and discuss it."
+            },
+            {
+              "number": "3",
+              "summary": "Learn about life with a disability in two of these ways.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Ask a Scout with a disability about their experiences in Scouting activities and earning merit badges, and discuss what you learn with your counselor."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Ask a person with a disability about their life and the activities they enjoy, and discuss it with your counselor."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Find out how one adaptive sport or recreational activity includes people with disabilities, and discuss it with your counselor."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Learn how people use independent living aids such as service animals, canes, and captioned phones and videophones, and discuss it with your counselor."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Help others understand life with a visible or invisible disability through an activity you plan or join, and discuss what you learned with your counselor."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Do one option: check places for accessibility or accommodation.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4A",
+                  "summary": "Option A: access. Visit two of these places and note how accessible they are.",
+                  "requiredCount": 2,
+                  "ownWork": "Note five possible improvements and five features that already welcome people with disabilities, and go over your notes with your counselor.",
+                  "children": [
+                    {
+                      "number": "4A(1)",
+                      "summary": "Your school."
+                    },
+                    {
+                      "number": "4A(2)",
+                      "summary": "Your place of worship."
+                    },
+                    {
+                      "number": "4A(3)",
+                      "summary": "A Scouting event or campsite."
+                    },
+                    {
+                      "number": "4A(4)",
+                      "summary": "A public exhibit or attraction, such as a theater, museum or park."
+                    }
+                  ]
+                },
+                {
+                  "number": "4B",
+                  "summary": "Option B: accommodation. Visit two of these places and observe how they accommodate invisible disabilities.",
+                  "requiredCount": 2,
+                  "ownWork": "Take notes on the accommodations you see, ask staff about ones that aren't obvious, note what could be better, and go over it with your counselor.",
+                  "children": [
+                    {
+                      "number": "4B(1)",
+                      "summary": "Your school."
+                    },
+                    {
+                      "number": "4B(2)",
+                      "summary": "Your place of worship."
+                    },
+                    {
+                      "number": "4B(3)",
+                      "summary": "A Scouting event or campsite."
+                    },
+                    {
+                      "number": "4B(4)",
+                      "summary": "A public exhibit or attraction, such as a theater, museum or park."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain what advocacy is, and do one advocacy activity.",
+              "requiredCount": 1,
+              "ownWork": "Explain what advocacy is.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Lead a disabilities awareness program your counselor approves for a Cub Scout pack or other group, explaining and modeling person-first language."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Find a disabilities awareness program in your school system or a disability advocacy agency, and volunteer eight hours with it.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number"
+                      },
+                      {
+                        "id": "work",
+                        "label": "What you did",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "session",
+                    "rowLabelPlural": "sessions"
+                  }
+                },
+                {
+                  "number": "5c",
+                  "summary": "With permission for online research, list 10 myths about people with disabilities and the facts, share it with your counselor, and present it to a Cub Scout pack or group.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "myth",
+                        "label": "Myth or misconception",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "fact",
+                        "label": "Fact",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "myth",
+                    "rowLabelPlural": "myths"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Tell your counselor what you'll do to show and encourage positive attitudes toward people with disabilities, and how what you learned changed your awareness."
+            },
+            {
+              "number": "7",
+              "summary": "Name five careers serving people with disabilities, research one that interests you, and tell your counselor why."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "electricity",
       "name": "Electricity",
       "summary": "Handle electrical emergencies, check your home's wiring safety, build simple circuits and devices, and learn what the power you use costs.",
@@ -3625,6 +4099,129 @@
             {
               "number": "11",
               "summary": "Explore three electricity careers, research one, and discuss whether it interests you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "electronics",
+      "name": "Electronics",
+      "summary": "Work safely with electronics, draw schematics, solder, build a circuit, use Ohm's law, learn about test equipment, and explore careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/electronics/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain how to stay safe when you use, build, modify or fix electronics."
+            },
+            {
+              "number": "2",
+              "summary": "Draw and explain a schematic.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Draw a simple schematic that includes resistors, capacitors, and transistors or integrated circuits, with correct symbols and every part labeled."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain what each part does."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn to solder safely.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Demonstrate proper soldering and desoldering."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Show how to keep components from being damaged by heat."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain what a printed circuit board does and the precautions for soldering one."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn how electronics control things and handle digital and analog signals, and build a circuit.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Discuss these uses of electronics with your counselor.",
+                  "children": [
+                    {
+                      "number": "4a(1)",
+                      "summary": "Using electronics to control something."
+                    },
+                    {
+                      "number": "4a(2)",
+                      "summary": "The basics of digital logic."
+                    },
+                    {
+                      "number": "4a(3)",
+                      "summary": "Using electronics in three different analog applications."
+                    }
+                  ]
+                },
+                {
+                  "number": "4b",
+                  "summary": "Convert three decimal numbers to binary and three binary numbers to decimal."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Build one of these three circuits, using a schematic you find or draw, and explain how it works.",
+                  "requiredCount": 1,
+                  "ownWork": "Find or draw a schematic for your circuit, and explain as best you can how it works.",
+                  "children": [
+                    {
+                      "number": "4c(1)",
+                      "summary": "A control device."
+                    },
+                    {
+                      "number": "4c(2)",
+                      "summary": "A digital circuit."
+                    },
+                    {
+                      "number": "4c(3)",
+                      "summary": "An analog circuit."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how electronics are measured, tested and assembled.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Use Ohm's law to solve a simple current, voltage and resistance problem."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain why and how test equipment is used in electronics, and name three kinds and how each works."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Read a resistor's color bands for your counselor and tell its resistance."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Compare through-hole and surface-mount assembly, with three advantages of each."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore three electronics careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -4018,6 +4615,140 @@
             {
               "number": "9",
               "summary": "Research an engineering career and discuss what makes it interesting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "entrepreneurship",
+      "name": "Entrepreneurship",
+      "summary": "Learn what entrepreneurs do, interview one, come up with a business idea, write a business plan for it, and think through running it.",
+      "officialUrl": "https://www.scouting.org/merit-badges/entrepreneurship/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2014-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Define entrepreneurship in your own words, and explain what entrepreneurs do for the US economy."
+            },
+            {
+              "number": "2",
+              "summary": "Explain why an entrepreneur needs good skills in communication, planning, organization, problem solving, decision making, basic math, adaptability, technical and social skills, teamwork and leadership."
+            },
+            {
+              "number": "3",
+              "summary": "Interview a business founder about their background, idea, startup and funding, successes and challenges, and how it's doing now, then discuss it."
+            },
+            {
+              "number": "4",
+              "summary": "List as many business ideas as you can, pick your best three, then choose one and explain your choice and why it could succeed."
+            },
+            {
+              "number": "5",
+              "summary": "Put your idea into a written business plan covering each of these parts.",
+              "ownWork": "Write up the business plan for your idea.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Product or service.",
+                  "children": [
+                    {
+                      "number": "5a(1)",
+                      "summary": "Describe your product or service."
+                    },
+                    {
+                      "number": "5a(2)",
+                      "summary": "Set your business's goals."
+                    },
+                    {
+                      "number": "5a(3)",
+                      "summary": "Explain how you'll make or deliver enough to meet those goals."
+                    },
+                    {
+                      "number": "5a(4)",
+                      "summary": "Describe the liability risks your product or service could carry."
+                    },
+                    {
+                      "number": "5a(5)",
+                      "summary": "Find out whether you'd need a license to make or sell it, and what kind."
+                    }
+                  ]
+                },
+                {
+                  "number": "5b",
+                  "summary": "Market analysis.",
+                  "children": [
+                    {
+                      "number": "5b(1)",
+                      "summary": "Describe your likely customers."
+                    },
+                    {
+                      "number": "5b(2)",
+                      "summary": "List your competitors and what they do well and poorly."
+                    },
+                    {
+                      "number": "5b(3)",
+                      "summary": "Explain what sets your product or service apart."
+                    }
+                  ]
+                },
+                {
+                  "number": "5c",
+                  "summary": "Financial.",
+                  "children": [
+                    {
+                      "number": "5c(1)",
+                      "summary": "Work out your startup costs and where the money will come from."
+                    },
+                    {
+                      "number": "5c(2)",
+                      "summary": "Work out your costs and set a price that earns a profit."
+                    },
+                    {
+                      "number": "5c(3)",
+                      "summary": "Explain how you'll use your sales income."
+                    }
+                  ]
+                },
+                {
+                  "number": "5d",
+                  "summary": "Personnel.",
+                  "children": [
+                    {
+                      "number": "5d(1)",
+                      "summary": "Decide which jobs you'll do yourself and why you're qualified for them."
+                    },
+                    {
+                      "number": "5d(2)",
+                      "summary": "Decide whether you'll need help and, if so, each role's duties and qualifications."
+                    }
+                  ]
+                },
+                {
+                  "number": "5e",
+                  "summary": "Promotion and marketing.",
+                  "children": [
+                    {
+                      "number": "5e(1)",
+                      "summary": "Plan how you'll get the word out to potential customers."
+                    },
+                    {
+                      "number": "5e(2)",
+                      "summary": "Show how the internet and social media will help people learn about your business."
+                    },
+                    {
+                      "number": "5e(3)",
+                      "summary": "Make a flyer or poster advertising your product or service."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Once your idea seems workable, imagine it running: discuss likely successes and problems, how you'd recover from failures, and ethical questions and how you'd handle them."
             }
           ]
         }
@@ -9722,6 +10453,695 @@
       ]
     },
     {
+      "id": "radio",
+      "name": "Radio",
+      "summary": "Learn how radio waves travel and carry information, how radio gear and cell phones work and are regulated, and try amateur radio, broadcasting, listening, direction finding or walkie-talkies.",
+      "officialUrl": "https://www.scouting.org/merit-badges/radio/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain how to stay safe working with radio gear.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Grounding for direct and alternating current circuits, power outlets, antennas and lightning."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Preventing and treating electrical burns."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Keeping lithium-ion batteries in phones and other devices from catching fire."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn the basics of radio.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Chart the radio spectrum.",
+                  "children": [
+                    {
+                      "number": "2a(1)",
+                      "summary": "Chart the electromagnetic spectrum from 300 kHz to 3,000 MHz."
+                    },
+                    {
+                      "number": "2a(2)",
+                      "summary": "Mark where MF, HF, VHF, UHF and microwave fall on it."
+                    },
+                    {
+                      "number": "2a(3)",
+                      "summary": "Place eight or more radio services on your chart, such as broadcast, CB, TV, four or more amateur bands, public safety, cellular, Wi-Fi and Bluetooth."
+                    }
+                  ]
+                },
+                {
+                  "number": "2b",
+                  "summary": "Discuss these topics with your counselor.",
+                  "children": [
+                    {
+                      "number": "2b(1)",
+                      "summary": "What radio is."
+                    },
+                    {
+                      "number": "2b(2)",
+                      "summary": "How broadcast radio differs from two-way radio."
+                    },
+                    {
+                      "number": "2b(3)",
+                      "summary": "How commercial broadcast radio differs from hobby radio."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how radio signals travel near and far.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Draw how some radio wavelengths stay local while others reach around the world."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain how WWV and WWVH can help predict what you'll hear on shortwave."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain what makes a station DX rather than local."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Discuss with your counselor how radio carries information.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "How CW Morse code, AM, FM, single sideband and frequency hopping carry information."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Why digital standards like Bluetooth, Wi-Fi and 5G can be more reliable than analog ones."
+                },
+                {
+                  "number": "4c",
+                  "summary": "How effective range changes with the way information is encoded."
+                },
+                {
+                  "number": "4d",
+                  "summary": "How Wi-Fi's top data rate compares with wired or fiber-optic connections."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about radio equipment and the services that use it.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how a block diagram differs from a schematic."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Draw a radio station block diagram with a microphone, speaker, transceiver, transmitter, receiver, amplifier, feedline and antenna, and discuss what each does."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Name everyday devices and services that communicate by analog or digital radio."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Describe the warnings NOAA Weather Radio gives and how they reach you."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Describe how RFID works and where it's used day to day."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Discuss with your counselor how radio is regulated.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "The FCC's role and how it differs from the ITU's."
+                },
+                {
+                  "number": "6b",
+                  "summary": "What call signs do in broadcast and amateur radio."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Why radio operators use the phonetic alphabet."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn how cell phones work.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Compare cellular networks with broadcast and hobby radio."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Explain what Airplane Mode does and why to use it."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Explain how cell phones keep accurate time and find location and elevation."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Explain what cell phones can and can't do in emergencies."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Explain how wireless charging works for phones and other devices."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Do one radio option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8A",
+                  "summary": "Option A: amateur radio.",
+                  "children": [
+                    {
+                      "number": "8A(1)",
+                      "summary": "Explain the purpose of the FCC's amateur radio service and what licensed operators do on the air."
+                    },
+                    {
+                      "number": "8A(2)",
+                      "summary": "Compare Technician, General and Extra Class license requirements and privileges, and tell who gives amateur exams."
+                    },
+                    {
+                      "number": "8A(3)",
+                      "summary": "Define five or more Q signals or ham radio terms."
+                    },
+                    {
+                      "number": "8A(4)",
+                      "summary": "Describe how to call for help in an emergency by voice or Morse code."
+                    },
+                    {
+                      "number": "8A(5)",
+                      "summary": "Compare handheld, mobile and base station transceivers and their uses, and explain what repeaters do."
+                    },
+                    {
+                      "number": "8A(6)",
+                      "summary": "Hold a 10-minute real or simulated voice, Morse or digital contact with proper call signs, Q signals and abbreviations; log it and its signal report, or show five QSL cards if licensed."
+                    }
+                  ]
+                },
+                {
+                  "number": "8B",
+                  "summary": "Option B: radio broadcasting.",
+                  "children": [
+                    {
+                      "number": "8B(1)",
+                      "summary": "Discuss FCC broadcast rules, including power levels, frequencies and low-power station rules."
+                    },
+                    {
+                      "number": "8B(2)",
+                      "summary": "Plan exactly half an hour of programming for station \"KBSA\" with music, news, commercials and station IDs, and record it properly as audio."
+                    },
+                    {
+                      "number": "8B(3)",
+                      "summary": "Log 15 broadcast stations you hear, and identify the program format and target audience of five.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date",
+                            "type": "date"
+                          },
+                          {
+                            "id": "time",
+                            "label": "Time",
+                            "type": "text"
+                          },
+                          {
+                            "id": "frequency",
+                            "label": "Frequency",
+                            "type": "text"
+                          },
+                          {
+                            "id": "station",
+                            "label": "Station",
+                            "type": "text"
+                          },
+                          {
+                            "id": "format",
+                            "label": "Program format",
+                            "type": "text"
+                          },
+                          {
+                            "id": "audience",
+                            "label": "Target audience",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "station",
+                        "rowLabelPlural": "stations"
+                      }
+                    },
+                    {
+                      "number": "8B(4)",
+                      "summary": "Define eight or more commercial broadcasting terms, such as segue, cut, fade, cue, dead air and PSA."
+                    },
+                    {
+                      "number": "8B(5)",
+                      "summary": "Discuss newer ways to hear radio, such as internet streaming, satellite radio and podcasts."
+                    }
+                  ]
+                },
+                {
+                  "number": "8C",
+                  "summary": "Option C: shortwave and medium-wave listening.",
+                  "children": [
+                    {
+                      "number": "8C(1)",
+                      "summary": "Scan several shortwave bands in four one-hour sessions, at least one by day and one at night; log the stations and find each on a map.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date",
+                            "type": "date"
+                          },
+                          {
+                            "id": "time",
+                            "label": "Time",
+                            "type": "text"
+                          },
+                          {
+                            "id": "frequency",
+                            "label": "Frequency",
+                            "type": "text"
+                          },
+                          {
+                            "id": "station",
+                            "label": "Station",
+                            "type": "text"
+                          },
+                          {
+                            "id": "location",
+                            "label": "Location",
+                            "type": "text"
+                          },
+                          {
+                            "id": "signal",
+                            "label": "Signal strength",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "station",
+                        "rowLabelPlural": "stations"
+                      }
+                    },
+                    {
+                      "number": "8C(2)",
+                      "summary": "Tune in several medium-wave stations in two one-hour sessions, one by day and one at night; log the stations and find each on a map.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date",
+                            "type": "date"
+                          },
+                          {
+                            "id": "time",
+                            "label": "Time",
+                            "type": "text"
+                          },
+                          {
+                            "id": "frequency",
+                            "label": "Frequency",
+                            "type": "text"
+                          },
+                          {
+                            "id": "station",
+                            "label": "Station",
+                            "type": "text"
+                          },
+                          {
+                            "id": "location",
+                            "label": "Location",
+                            "type": "text"
+                          },
+                          {
+                            "id": "signal",
+                            "label": "Signal strength",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "station",
+                        "rowLabelPlural": "stations"
+                      }
+                    },
+                    {
+                      "number": "8C(3)",
+                      "summary": "Compare your day and night logs, noting the frequencies where your chosen stations came in loudest each session, and explain the changes in signal strength."
+                    },
+                    {
+                      "number": "8C(4)",
+                      "summary": "Use your medium-wave logs to explain why some far-off stations reach you only after dark."
+                    },
+                    {
+                      "number": "8C(5)",
+                      "summary": "Show how to listen to radio, including international broadcasts, on a cell phone."
+                    }
+                  ]
+                },
+                {
+                  "number": "8D",
+                  "summary": "Option D: amateur radio direction finding.",
+                  "children": [
+                    {
+                      "number": "8D(1)",
+                      "summary": "Explain what amateur radio direction finding is and why it's valued as a pastime and a sport."
+                    },
+                    {
+                      "number": "8D(2)",
+                      "summary": "Name the frequencies and gear used in ARDF, or fox hunting."
+                    },
+                    {
+                      "number": "8D(3)",
+                      "summary": "Make a simple directional antenna for one of the two ARDF frequencies."
+                    },
+                    {
+                      "number": "8D(4)",
+                      "summary": "Use your antenna and a provided receiver in a simple fox hunt."
+                    },
+                    {
+                      "number": "8D(5)",
+                      "summary": "Use a map to show how your receiver led you to the \"fox.\""
+                    }
+                  ]
+                },
+                {
+                  "number": "8E",
+                  "summary": "Option E: FRS and GMRS walkie-talkies.",
+                  "children": [
+                    {
+                      "number": "8E(1)",
+                      "summary": "Describe FRS and GMRS and compare them with each other, other commercial two-way radios, CB and ham radio."
+                    },
+                    {
+                      "number": "8E(2)",
+                      "summary": "Explain these points about using FRS or GMRS radios.",
+                      "children": [
+                        {
+                          "number": "8E(2)(a)",
+                          "summary": "Whether you need a license, and what kind."
+                        },
+                        {
+                          "number": "8E(2)(b)",
+                          "summary": "The frequencies used and how information is encoded."
+                        },
+                        {
+                          "number": "8E(2)(c)",
+                          "summary": "How much transmit power is allowed."
+                        },
+                        {
+                          "number": "8E(2)(d)",
+                          "summary": "What antennas can be used."
+                        },
+                        {
+                          "number": "8E(2)(e)",
+                          "summary": "How far they reach and what limits it."
+                        },
+                        {
+                          "number": "8E(2)(f)",
+                          "summary": "Common everyday uses."
+                        },
+                        {
+                          "number": "8E(2)(g)",
+                          "summary": "How they help in an emergency."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "8E(3)",
+                      "summary": "Talk on FRS or GMRS radios with family, friends or Scouts during a hike, event or team game, then discuss what you learned."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore a radio career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Research a radio career and discuss whether it interests you."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research how radio could become a hobby or volunteer work, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "railroading",
+      "name": "Railroading",
+      "summary": "Learn how freight and passenger railroads work, plan a rail trip, stay safe around tracks, read rail signs and signals, and try model railroading or railfanning.",
+      "officialUrl": "https://www.scouting.org/merit-badges/railroading/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2024-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Do three activities about modern freight railroads and their equipment.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Give three kinds of freight trains running today, and explain why a unit train is more efficient than a mixed one."
+                },
+                {
+                  "number": "1b",
+                  "summary": "For one Class I or regional railroad, describe its major cities, terminals, service facilities, crew change points and main cargo."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Pick out 10 kinds of freight or passenger cars from models or pictures, and explain each one's job."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Describe how today's diesel or electric locomotives produce power, and define dynamic braking and radial steering trucks."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about passenger rail.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain Amtrak's purpose and origins, then plan a rail trip of 500 or more miles between two cities by timetable, listing times, train number and name, and service."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe the kinds of public transit that run on rails."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Do one activity about jobs and businesses in railroading.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "List four railroad departments and what each one does."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain which railroad jobs appeal to you most, and why."
+                },
+                {
+                  "number": "3c",
+                  "summary": "List four industries that support railroads, and the role of each."
+                },
+                {
+                  "number": "3d",
+                  "summary": "With permission and approval, interview a rail worker about their job, how they got into railroading, and the schooling and training it takes."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn to stay safe around railroads.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Describe what Operation Lifesaver is for and what it aims to do."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Name nine basic ways to stay safe around railroad tracks."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Name nine ways to stay safe on foot near tracks."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain how drivers can stay safe near tracks."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Explain how to stay safe riding light rail or commuter trains."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain what these rail signs, signals and markings look like and mean.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Passive and active signs."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Crossing devices: flashing red lights with or without bells, flashing red lights and gates, and cantilever flashing lights."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Road markings: pavement markings and stop bars."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Signs before a crossing: advance warning, advance warning for side streets, no train horn, and low ground clearance grade crossing signs."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Signs on railroad property: no trespassing signs."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Signs at a crossing: crossbuck, emergency notification system, multiple track, stop and yield signs."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how railroads signal.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Describe how railroad signals work, and show two basic kinds that use color or position."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Tell what three horn signals mean."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Describe one way to tell a train to make an emergency stop."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain what the end-of-train device (EOTD or FRED) on most freight trains' last car does."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do one special-interest option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Option A: model railroading, with permission and approval.",
+                  "requiredCount": 2,
+                  "children": [
+                    {
+                      "number": "7a(1)",
+                      "summary": "Design a point-to-point or loop track plan for a home model railroad, with several routes and a turnaround, terminal, yard or siding."
+                    },
+                    {
+                      "number": "7a(2)",
+                      "summary": "Assemble a kit for a model railroad car or locomotive."
+                    },
+                    {
+                      "number": "7a(3)",
+                      "summary": "Give the scales of four common model railroad gauges, and tell what scale four model cars or locomotives are built to."
+                    },
+                    {
+                      "number": "7a(4)",
+                      "summary": "Find four model railroad makers' or magazine publishers' websites, print what they offer, and discuss it with your counselor."
+                    },
+                    {
+                      "number": "7a(5)",
+                      "summary": "Make a railroad building from scratch or a kit, paint and weather it, mount it on your layout or diorama, and add scenery around it."
+                    },
+                    {
+                      "number": "7a(6)",
+                      "summary": "By yourself or with a group, lay out a model railroad or modular layout with ballast and scenery, wire it, run a train, and tell what you enjoyed most."
+                    },
+                    {
+                      "number": "7a(7)",
+                      "summary": "Run a timesaver layout in a switching contest and write down your time."
+                    },
+                    {
+                      "number": "7a(8)",
+                      "summary": "Compare running a model railroad on direct current with running it on digital command control."
+                    }
+                  ]
+                },
+                {
+                  "number": "7b",
+                  "summary": "Option B: railfanning, with permission and approval.",
+                  "requiredCount": 2,
+                  "children": [
+                    {
+                      "number": "7b(1)",
+                      "summary": "At a railroad museum, historical display or public event a real railroad hosts, photograph, film or sketch things of interest where allowed, and explain them."
+                    },
+                    {
+                      "number": "7b(2)",
+                      "summary": "Ride a scenic or historic railroad on tickets you buy, photograph its equipment with supervision, and discuss why it matters historically."
+                    },
+                    {
+                      "number": "7b(3)",
+                      "summary": "Find four rail history groups' websites, learn each one's preservation history and purpose, and ask a member how you could help."
+                    },
+                    {
+                      "number": "7b(4)",
+                      "summary": "Plan a rail trip, find from a schedule when the train reaches two stops on the way, then buy tickets, ride, and tell your counselor what you saw."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "rifle-shooting",
       "name": "Rifle Shooting",
       "summary": "Learn gun safety, then shoot a cartridge rifle, air rifle or muzzleloader on a supervised range.",
@@ -10084,6 +11504,310 @@
                 {
                   "number": "7b",
                   "summary": "Research robotics as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "salesmanship",
+      "name": "Salesmanship",
+      "summary": "Learn what salespeople do and how they serve customers, make a sales plan and pitch, sell something yourself, and explore sales careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/salesmanship/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2023-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what a salesperson does.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Describe what a salesperson is responsible for, how they serve customers, and how sales boost the economy."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how selling to businesses differs from selling to consumers."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain why a salesperson should do each of these.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Study the market to check that customers need what's being sold."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Know the product inside and out."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Tour where the product is made, if possible, to see how it's built; for a service, know what it does for customers."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Check back with customers after they buy to make sure they're happy and hear their concerns."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Write a sales plan for a product and territory your counselor assigns, and present it."
+            },
+            {
+              "number": "4",
+              "summary": "Give a sales pitch for a product your counselor chooses."
+            },
+            {
+              "number": "5",
+              "summary": "Sell in one of these ways, keeping a cost sheet and applying what you've learned about selling, then share how it went with your counselor.",
+              "requiredCount": 1,
+              "ownWork": "Keep a cost sheet, apply what you've learned about selling, and tell your counselor how it went.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Help your unit raise money selling merchandise or Scout event tickets."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Sell neighbors a service such as yard work, pet sitting, dog walking, snow shoveling or car washing, then check that they were satisfied."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Earn money working in retail sales."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Interview a salesperson or a store owner.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Interview a salesperson about the following.",
+                  "ownWork": "Interview a salesperson.",
+                  "children": [
+                    {
+                      "number": "6a(1)",
+                      "summary": "Why they chose a sales career."
+                    },
+                    {
+                      "number": "6a(2)",
+                      "summary": "What matters most when talking with customers."
+                    },
+                    {
+                      "number": "6a(3)",
+                      "summary": "How the product is sold."
+                    },
+                    {
+                      "number": "6a(4)",
+                      "summary": "Questions of your own."
+                    }
+                  ]
+                },
+                {
+                  "number": "6b",
+                  "summary": "Interview a store owner about the following.",
+                  "ownWork": "Interview a retail store owner.",
+                  "children": [
+                    {
+                      "number": "6b(1)",
+                      "summary": "How often sales representatives call on them."
+                    },
+                    {
+                      "number": "6b(2)",
+                      "summary": "Good traits for a sales representative to have, and habits to avoid."
+                    },
+                    {
+                      "number": "6b(3)",
+                      "summary": "What they weigh before opening an account with a sales representative."
+                    },
+                    {
+                      "number": "6b(4)",
+                      "summary": "Two or more questions of your own."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Research sales careers and report on them, then do the following.",
+              "ownWork": "Research sales careers and report what you find.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Write a summary of your qualifications and experience, listing related school classes and merit badges earned."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Talk with your counselor about the schooling, experience or training you'd need to work in sales."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scouting-heritage",
+      "name": "Scouting Heritage",
+      "summary": "Learn Scouting's history from Baden-Powell to today's programs, research your own unit's or council's past, collect Scouting memorabilia, and talk with former Scouts.",
+      "officialUrl": "https://www.scouting.org/merit-badges/scouting-heritage/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss Baden-Powell's life and times, why he thought young men needed Scouting, how it came to the US, and how he began Boy Scouting and Cub Scouting."
+            },
+            {
+              "number": "2",
+              "summary": "Learn about key people and things in Scouting's history.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Summarize the lives of two of these people and their roles in growing Scouting in the US.",
+                  "requiredCount": 2,
+                  "children": [
+                    {
+                      "number": "2a(1)",
+                      "summary": "Daniel Carter Beard."
+                    },
+                    {
+                      "number": "2a(2)",
+                      "summary": "William D. Boyce."
+                    },
+                    {
+                      "number": "2a(3)",
+                      "summary": "Waite Phillips."
+                    },
+                    {
+                      "number": "2a(4)",
+                      "summary": "Ernest Thompson Seton."
+                    },
+                    {
+                      "number": "2a(5)",
+                      "summary": "James E. West."
+                    },
+                    {
+                      "number": "2a(6)",
+                      "summary": "\"Green Bar Bill\" Hillcourt."
+                    },
+                    {
+                      "number": "2a(7)",
+                      "summary": "Frederick Russell Burnham."
+                    },
+                    {
+                      "number": "2a(8)",
+                      "summary": "Dr. Charles Eastman."
+                    },
+                    {
+                      "number": "2a(9)",
+                      "summary": "Edgar Robinson."
+                    }
+                  ]
+                },
+                {
+                  "number": "2b",
+                  "summary": "Discuss what two of these mean to Scouting.",
+                  "requiredCount": 2,
+                  "children": [
+                    {
+                      "number": "2b(1)",
+                      "summary": "Brownsea Island."
+                    },
+                    {
+                      "number": "2b(2)",
+                      "summary": "The first World Scout Jamboree."
+                    },
+                    {
+                      "number": "2b(3)",
+                      "summary": "The Scouts BSA Handbook."
+                    },
+                    {
+                      "number": "2b(4)",
+                      "summary": "Scout Life magazine, formerly Boys' Life."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Discuss how Scouting has grown into programs for different ages and interests over the years: Cub Scouting, Scouts BSA, Exploring and Venturing."
+            },
+            {
+              "number": "4",
+              "summary": "Do one of these Scouting history activities.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Attend a national or world jamboree or a national high-adventure base, keep a daily journal there, and then report what you did, saw and learned.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "entry",
+                        "label": "What you did and saw",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                },
+                {
+                  "number": "4b",
+                  "summary": "Write to or visit the National Scouting Museum, gather information about it, and briefly report on the role you think it plays in Scouting."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Visit a Scouting memorabilia exhibit or a museum's Scouting history gallery, or, with permission and approval, a council Scouting historian or collector, and report what you learned."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "With permission, learn the history of your unit, council, summer camp or Order of the Arrow lodge, and review your report, presentation or video on it with your counselor."
+            },
+            {
+              "number": "6",
+              "summary": "Collect your Scouting patches and memorabilia, any amount, plus any items or photos lent by former Scouts you know; show it to your counselor and share what you've learned."
+            },
+            {
+              "number": "7",
+              "summary": "Pick an old-time Scouting game from the pamphlet, or find one with your counselor's approval, make its equipment, then teach it to other Scouts and play."
+            },
+            {
+              "number": "8",
+              "summary": "Interview three or more former Scouts over 40, not anyone from requirement 5, about Scouting and how it shaped their lives, and tell your counselor what you learned."
+            },
+            {
+              "number": "9",
+              "summary": "Explore a Scouting career or volunteer role.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Research a career related to Scouting and discuss what makes it interesting."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research how you could volunteer in Scouting at any level, and set goals for it."
                 }
               ]
             }
@@ -11892,6 +13616,162 @@
             {
               "number": "9",
               "summary": "Explain how swimming benefits fitness and health."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "traffic-safety",
+      "name": "Traffic Safety",
+      "summary": "Learn why distracted, impaired and tired driving is dangerous, check a car's safety features, learn traffic laws, road design and how to share the road, and act for traffic safety in your community.",
+      "officialUrl": "https://www.scouting.org/merit-badges/traffic-safety/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn why distracted, impaired or tired drivers shouldn't drive, and how new drivers can lower their risk.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the dangers of distracted driving: list five common distractions, how they lead to crashes, and how drivers can limit them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain why no one should drive impaired, how alcohol, cold medicine and other drugs affect driving, and your state's legal blood alcohol limit, DUI penalties and open-container law."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain the danger of driving tired, and how drivers should plan ahead to stay alert when carrying family, friends, Scouts or just themselves."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Describe common new-driver mistakes, how they raise crash risk and how to lower it, and how a driving record changes insurance costs."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn how a vehicle's safety features protect you.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Buckle a lap and shoulder belt the right way, and explain why the driver and every passenger, including children in proper car seats, should always wear one."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe five vehicle safety features besides seat belts and other restraints, how each works and how it keeps people safe."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "With an adult supervising, run safety checks on a vehicle you can use.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Check that all driving and signal lights are clear and working, show their switches, and explain how lights help drivers stay safe, be courteous and communicate."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain what can block a driver's view through the windows, test the wipers with a smear-and-clear test, and describe when wipers matter in good and bad weather."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Show how to find the recommended tire pressure and check pressure and tread depth, and explain why both matter for traction, stopping distances, tire wear and fuel economy."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Make sure the car carries what you need to change a flat or seal a puncture, and show how to do both."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Away from traffic, mark reaction and braking distances at 25, 55 and 70 mph on level dry and wet pavement, and discuss how impairment, night and weather change them."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn traffic laws and what to do when stopped or in a crash.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Describe three or more traffic laws for drivers and bicyclists."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain what a driver should do, and how to behave, when pulled over by police."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain what drivers should do after a car crash."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Name the three documents the law requires drivers to carry."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how roads and signs keep traffic safe.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how intersection, median and shoulder designs make roads safer, and discuss interstate highways' safety features."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain what a sign's color and shape tell drivers, and what the different kinds of signs, signals and pavement markings are for."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how to share the road safely.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Describe how much easier it is to see at night a lit bicycle and rider, or a pedestrian, in reflective gear than unlit ones in dark clothes."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Name four or more safety rules for pedestrians, including hikers, walking along or crossing roads."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Name four or more safety rules for drivers near a school bus picking up or dropping off students."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Discuss car and truck blind spots and how to change lanes without a crash."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do one traffic safety activity in your community.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Interview a local traffic officer or traffic safety professional about their top three concerns, and discuss with your counselor how to solve one."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Pledge in writing how you'll handle the three traffic safety issues that concern you most, and discuss it with your counselor."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Organize an activity or event of your own that shows why traffic safety matters."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Research a career related to traffic safety and discuss what makes it interesting."
             }
           ]
         }
