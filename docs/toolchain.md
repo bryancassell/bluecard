@@ -320,6 +320,37 @@ again. `retrace` comes with the Android SDK Command-line Tools, which the
 Standard setup doesn't install: add them in Android Studio's **SDK Manager →
 SDK Tools → Android SDK Command-line Tools (latest)**.
 
+## Updating the README screenshots
+
+The README shows three screenshots from `docs/images/`: Home, Camping's badge
+page, and Camping requirement 9a's campout log. When a change makes them look
+out of date, retake all three the same way, so they still match each other.
+
+1. Install the debug app fresh on an emulator (they were taken on a Pixel 10),
+   set to English (US), light mode, and the default font and display size.
+2. Enter the same made-up data: the name Sam Rivera and unit Troop 214; First
+   Aid marked completed on an earlier date; Cooking 1a and 1b complete; and for
+   Camping, the counselor Jordan Lee, (214) 555-0142, jordan.lee@example.com,
+   requirements 1a, 1b, 1c, 2 and 3a complete, and three campouts on 9a.
+3. Clean up the status bar with System UI demo mode. Some notification icons
+   stay visible anyway, so also clear them from the notification shade.
+
+   ```sh
+   adb shell settings put global sysui_demo_allowed 1
+   adb shell am broadcast -a com.android.systemui.demo -e command enter
+   adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1000
+   adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
+   adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e fully true
+   adb shell am broadcast -a com.android.systemui.demo -e command network -e mobile hide
+   ```
+
+4. Take each screenshot with `adb exec-out screencap -p > screen.png`, then
+   leave demo mode: `adb shell am broadcast -a com.android.systemui.demo -e command exit`.
+5. Scale each one to 540 pixels wide, twice the width the README shows it at,
+   so it stays sharp on high-density screens. Reduce it to 256 colors (for
+   example with [pngquant](https://pngquant.org/)), which keeps each file under
+   about 60 KB with no visible difference.
+
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
