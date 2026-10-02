@@ -4,7 +4,10 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 // Navigation 3 destinations. Keys are @Serializable so the back stack survives
-// configuration changes and process death.
+// configuration changes and process death. rememberNavBackStack saves each key's class
+// name and looks up its serializer with reflection, and restoring finds the class with
+// Class.forName. In the R8-shrunk release build that relies on kotlinx.serialization's
+// keep rules, so check a new key in a release build (docs/toolchain.md).
 
 @Serializable
 data object Onboarding : NavKey

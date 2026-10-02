@@ -35,7 +35,7 @@ Run these from the repository root.
 
 | Command | What it does |
 |---|---|
-| `./gradlew build` | Compiles, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. This is the command CI runs. |
+| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. This is the command CI runs. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local tests only (`app/src/test`). |
@@ -160,7 +160,7 @@ Dependabot proposes those updates instead.
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
 - **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.
   Use them only for behavior that needs a real Android runtime. They are slower
-  and need a device, so `./gradlew build` does not run them. There are none yet.
+  and need a device, so `./gradlew build` does not run them.
 
 To run instrumented tests, create a virtual device once in Android Studio
 (**Device Manager → Create Virtual Device**), start it, then run
@@ -268,6 +268,58 @@ transport performs the restore; if it's skipped, logcat shows "Can't restore
 from D2d Transport". Its cleanup selects that transport again but leaves backup
 on, so turn backup off afterwards if it was off in step 1.
 
+## Checking a release build
+
+R8 shrinks and obfuscates the release build (see
+[`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)), but not the debug app
+or local tests. CI builds the release app, so R8's build errors fail it, but
+code that R8 breaks at runtime only fails when a release build runs. Check one
+on an emulator before each release, and after adding a library, a keep rule, a
+navigation key, or other code that uses reflection. Also check after updating
+AGP (which brings R8), or a library that uses reflection or ships keep rules
+the app relies on: kotlinx.serialization, Navigation 3, Hilt, Room or
+DataStore. As with backup, use an emulator, and point `adb` at it if a phone is
+also connected.
+
+1. Build the release APK and sign it with the debug key, since the release
+   build has no signing config yet. A debug install has the same application
+   ID, so uninstall it first to start from a fresh install.
+
+   ```sh
+   ./gradlew assembleRelease
+   # The newest stable build tools; preview versions have a "-" in their name.
+   BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -v -e - | sort -V | tail -1)"
+   "$BUILD_TOOLS/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
+       --out app/build/outputs/apk/release/app-release.apk \
+       app/build/outputs/apk/release/app-release-unsigned.apk
+   adb uninstall io.github.bryancassell.bluecard
+   adb install app/build/outputs/apk/release/app-release.apk
+   ```
+
+2. Clear the crash log, so that crashes from earlier runs of the app aren't
+   mistaken for this build's: `adb logcat -b crash -c`.
+3. Go through the key flows. Each one must work, not just not crash: some
+   failures show a message instead, such as an import that says the file isn't
+   a backup. Afterwards, check `adb logcat -b crash -d` for crashes.
+   - Onboarding, then browse and search the badges and open one.
+   - Record a counselor, a requirement's completion, and a tracker entry.
+   - Create a badge's PDF report, then save it and share it.
+   - Edit the profile from Home.
+   - Export, clear all data, then import the export.
+   - Restore after process death: open a requirement page, press Home, run
+     `adb shell am kill io.github.bryancassell.bluecard`, then reopen the app
+     from Recents. It should come back on the same page, and Back should go
+     through the pages under it. Navigation 3 saves and restores the back
+     stack with reflection, so this is the flow most likely to break.
+
+A crash's stack trace shows R8's short names. `retrace` turns them back into
+the source names, with the mapping file that the build wrote:
+`retrace app/build/outputs/mapping/release/mapping.txt <stack trace file>`.
+Each release build writes a new mapping file, so retrace before building
+again. `retrace` comes with the Android SDK Command-line Tools, which the
+Standard setup doesn't install: add them in Android Studio's **SDK Manager →
+SDK Tools → Android SDK Command-line Tools (latest)**.
+
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
@@ -278,8 +330,9 @@ When the job fails, the lint and test reports are attached to the run as a
 `reports` artifact: open the failed run on GitHub and download it from the
 **Artifacts** section of the summary page.
 
-CI does not run instrumented tests yet, because there are none; an emulator job
-will be added with the first test that needs a real device.
+CI does not run instrumented tests yet, because it has no emulator; run them by
+hand with `./gradlew connectedAndroidTest`. An emulator job is planned
+([#14](https://github.com/bryancassell/bluecard/issues/14)).
 
 Pull requests are squash-merged: each one becomes a single commit on `main`,
 titled with the PR title and described by the PR description, so write both as
@@ -291,7 +344,9 @@ libraries and plugins in the version catalog, the Gradle wrapper, and the
 GitHub Actions used by CI. Minor and patch updates arrive together in one pull
 request per ecosystem (Gradle, GitHub Actions); each major update gets its own
 pull request, since it may need code changes. CI runs on those pull requests
-like any other.
+like any other. A pull request that updates AGP or one of the libraries listed
+in [Checking a release build](#checking-a-release-build) also needs that check
+before it merges, since CI can't find what R8 breaks at runtime.
 
 Version updates propose a release only after it has been out for 3 days, so a
 broken or compromised release has time to be pulled first. Security updates
