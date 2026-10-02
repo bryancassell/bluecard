@@ -1,32 +1,50 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclassesOfSealed
 
-// Navigation 3 destinations. Keys are @Serializable so the back stack survives
-// configuration changes and process death. rememberNavBackStack saves each key's class
-// name and looks up its serializer with reflection, and restoring finds the class with
-// Class.forName. In the R8-shrunk release build that relies on kotlinx.serialization's
-// keep rules, so check a new key in a release build (docs/toolchain.md).
+/**
+ * A Navigation 3 destination. Keys are @Serializable so the back stack survives configuration
+ * changes and process death, and sealed so [BackStackSavedStateConfiguration] registers every one.
+ */
+@Serializable
+sealed interface BlueCardNavKey : NavKey
+
+/**
+ * Saves and restores the back stack without reflection: each key's serializer is found from its
+ * class in this module, and on restore from its serial name, which the compiler writes in as a
+ * string, so R8 renaming the class doesn't change it.
+ */
+@OptIn(ExperimentalSerializationApi::class) // subclassesOfSealed, in kotlinx.serialization 1.11
+val BackStackSavedStateConfiguration = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) { subclassesOfSealed<BlueCardNavKey>() }
+    }
+}
 
 @Serializable
-data object Onboarding : NavKey
+data object Onboarding : BlueCardNavKey
 
 @Serializable
-data object Home : NavKey
+data object Home : BlueCardNavKey
 
 @Serializable
-data object Badges : NavKey
+data object Badges : BlueCardNavKey
 
 @Serializable
-data class BadgeDetail(val badgeId: String) : NavKey
+data class BadgeDetail(val badgeId: String) : BlueCardNavKey
 
 @Serializable
-data object DataManagement : NavKey
+data object DataManagement : BlueCardNavKey
 
 /** A requirement of a badge or rank, by its official number, such as "4c". */
 @Serializable
-data class RequirementDetail(val advancementId: String, val number: String) : NavKey
+data class RequirementDetail(val advancementId: String, val number: String) : BlueCardNavKey
 
 /**
  * A row of the tracker on requirement [number] of badge or rank [advancementId]: in a log, entry
@@ -39,12 +57,12 @@ data class TrackerEntryDetail(
     val number: String,
     val entryId: Long? = null,
     val rowNumber: Int? = null
-) : NavKey
+) : BlueCardNavKey
 
 /** The page for entering a badge's merit badge counselor. */
 @Serializable
-data class EditCounselor(val badgeId: String) : NavKey
+data class EditCounselor(val badgeId: String) : BlueCardNavKey
 
 /** The page for changing the scout's name and unit number. */
 @Serializable
-data object EditProfile : NavKey
+data object EditProfile : BlueCardNavKey

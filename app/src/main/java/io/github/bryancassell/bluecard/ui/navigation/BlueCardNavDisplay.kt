@@ -41,7 +41,7 @@ import io.github.bryancassell.bluecard.ui.profile.EditProfileRoute
  */
 @Composable
 fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
-    val backStack = rememberNavBackStack(Home)
+    val backStack = rememberNavBackStack(BackStackSavedStateConfiguration, Home)
     // Deciding here, before anything is drawn, means the wrong screen never shows, and
     // Onboarding returns if the profile is ever missing. With only one entry, back leaves
     // the app.
@@ -81,7 +81,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.
-        entryProvider = entryProvider {
+        entryProvider = entryProvider<NavKey> {
             entry<Onboarding> { OnboardingRoute() }
             entry<Home> { key ->
                 val navigate =

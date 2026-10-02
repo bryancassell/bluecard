@@ -269,6 +269,16 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
+- **The back stack is saved without reflection.** Every key implements the
+  sealed `BlueCardNavKey`, and `rememberNavBackStack` is given a
+  `SavedStateConfiguration` that registers them all with `subclassesOfSealed`
+  (`NavKeys.kt`), so the compiler finds each key's serializer and can't miss a
+  key. Navigation 3's overload without a configuration finds keys by class name
+  with reflection, which R8's renaming could break in the release build alone,
+  where local tests can't see it
+  ([#203](https://github.com/bryancassell/bluecard/issues/203)).
+  `subclassesOfSealed` is still experimental in kotlinx.serialization 1.11, so
+  it needs `@OptIn(ExperimentalSerializationApi::class)`.
 - **Home is the fixed start destination.** Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -990,14 +1000,14 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   `app/proguard-rules.pro`, as narrow as possible, with a comment saying what
   needs it. None is needed yet: Hilt, Room, DataStore and
   kotlinx.serialization ship rules for what they reach by reflection or by
-  name, and kotlinx.serialization's rules also cover Navigation 3's back stack
-  (see `NavKeys.kt`).
-- **Navigation keys' class names aren't kept.** The saved back stack records
-  them, and R8 may rename them differently in the next version, but Android
-  drops an app's saved state when the app is updated (checked on Android 37),
-  so names saved by one version are never read by another. Saving the back
-  stack without reflection is tracked in
-  [#203](https://github.com/bryancassell/bluecard/issues/203).
+  name.
+- **Navigation keys' class names aren't kept.** The back stack is saved without
+  reflection (see [Navigation](#navigation)). It records each key's serial
+  name, which the compiler writes into the code as a string, so R8's renaming
+  changes neither what is saved nor how it's read back. A serial name is the
+  key's full class name in the source, so renaming a key changes it, but
+  Android drops an app's saved state when the app is updated (checked on
+  Android 37), so names saved by one version are never read by another.
 - **Crash reports in Android vitals are deobfuscated by Play,** from the R8
   mapping file that AGP puts in the app bundle
   ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
@@ -1013,6 +1023,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
+| [Saved back stack](#navigation) | Keys under one sealed interface, registered in a `SavedStateConfiguration` with `subclassesOfSealed`, which is experimental | No reflection, so R8 can't break saving the back stack and local tests cover it. The compiler finds every key, which listing them by hand wouldn't |
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |

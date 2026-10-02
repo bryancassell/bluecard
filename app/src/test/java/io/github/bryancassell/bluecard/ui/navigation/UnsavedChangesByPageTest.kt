@@ -48,7 +48,7 @@ class UnsavedChangesByPageTest {
         composeTestRule.setContent {
             dispatcher = LocalOnBackPressedDispatcherOwner.current!!.onBackPressedDispatcher
             val unsavedChanges = remember { UnsavedChangesByPage() }
-            val entries = entryProvider {
+            val entries = entryProvider<NavKey> {
                 entry<Home> { Text("Home") }
                 entry<DataManagement> { Text("Data management") }
                 entry<Badges> {
