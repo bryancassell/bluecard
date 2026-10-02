@@ -29,7 +29,7 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "With your counselor's approval, interview two U.S. military veterans about their experiences and what they feel they accomplished."
+                  "summary": "With your counselor's approval, interview two U.S. military veterans about what serving was like and what they think it achieved."
                 },
                 {
                   "number": "2d",
@@ -62,7 +62,7 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Explain the National Register of Historic Places and how a property qualifies, map your area's historic points of interest, tell about any listed properties nearby, and share and describe your map."
+                  "summary": "Explain what the National Register of Historic Places is and how properties get listed, then map your area's points of historic interest and describe them, including any listed properties, to your counselor."
                 },
                 {
                   "number": "4b",
@@ -299,7 +299,7 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "For each site, show it on a map and explain how it was found, what it reveals and why that matters to archaeologists and people today; then compare the sites' ages.",
+                  "summary": "For each site, locate it on a map, tell how archaeologists learned of it, what it reveals and why that matters to archaeologists and people today; then compare the sites' ages.",
                   "tracker": {
                     "columns": [
                       {
@@ -737,7 +737,7 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Pick a historic achievement in architecture that changed society, research how it shapes the world today (online with permission), and tell your counselor what you learned."
+                  "summary": "Pick a historic achievement in architecture that changed society, research its influence on today's world in books, magazines or online (with permission), and tell your counselor what you learned."
                 }
               ]
             },
@@ -1664,7 +1664,7 @@
               "children": [
                 {
                   "number": "2a",
-                  "summary": "Label 15 parts on a drawing or tracing of a perched bird."
+                  "summary": "Label 15 different parts on a drawing or tracing of a perched bird."
                 },
                 {
                   "number": "2b",
@@ -1807,6 +1807,7 @@
                 {
                   "number": "8a",
                   "summary": "Go birding on a field trip with a local club or experienced local birders.",
+                  "ownWork": "Go on the field trip.",
                   "children": [
                     {
                       "number": "8a(1)",
@@ -1860,7 +1861,7 @@
                 {
                   "number": "8c",
                   "summary": "Take part in bird banding with an approved federal or state agency, university researcher, bird observatory or certified individual.",
-                  "ownWork": "Take part in the bird banding program.",
+                  "ownWork": "Take part in bird banding with an approved or certified bander.",
                   "children": [
                     {
                       "number": "8c(1)",
@@ -1876,7 +1877,7 @@
                     },
                     {
                       "number": "8c(4)",
-                      "summary": "Tell how the birds were caught, how many species were recorded on your visit, and what you did."
+                      "summary": "Describe the capture methods you saw, how many species were recorded while you were there, and what you did."
                     }
                   ]
                 }
@@ -1924,7 +1925,7 @@
                 },
                 {
                   "number": "10c",
-                  "summary": "Explain how to help declining birds before they're listed: list ways to protect habitat, name threats migratory birds face, and tell how to protect birds' food supply."
+                  "summary": "Explain how to help declining birds before they're listed, ways to protect their habitat, the dangers migrating birds meet, and how to keep their food supply safe."
                 }
               ]
             },
@@ -3362,7 +3363,7 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Collect 20 different world coins from at least seven countries, and identify each one's country, main design elements and denomination.",
+                  "summary": "Gather 20 world coins, no two alike, from seven or more countries, and identify each one's country, denomination and main design features.",
                   "tracker": {
                     "columns": [
                       {
@@ -3388,7 +3389,7 @@
                 },
                 {
                   "number": "7b",
-                  "summary": "Collect 20 different world banknotes from at least seven countries, and identify each one's country, main design elements and denomination.",
+                  "summary": "Gather 20 world banknotes, no two alike, from seven or more countries, and identify each one's country, denomination and main design features.",
                   "tracker": {
                     "columns": [
                       {
@@ -9369,7 +9370,24 @@
               "children": [
                 {
                   "number": "1a",
-                  "summary": "Pick 10 different minerals and name a product made with each."
+                  "summary": "Pick 10 different minerals and name a product made with each.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "mineral",
+                        "label": "Mineral",
+                        "type": "text"
+                      },
+                      {
+                        "id": "product",
+                        "label": "Product made with it",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "mineral",
+                    "rowLabelPlural": "minerals",
+                    "rowCount": 10
+                  }
                 },
                 {
                   "number": "1b",
@@ -9414,6 +9432,7 @@
             {
               "number": "3",
               "summary": "Discuss the hazards miners face at an active mine and how they protect themselves.",
+              "ownWork": "Discuss the hazards a miner may face at an active mine.",
               "children": [
                 {
                   "number": "3a",
@@ -11489,7 +11508,7 @@
             },
             {
               "number": "3",
-              "summary": "Demonstrate five of a plumber's most important tools."
+              "summary": "Demonstrate how to use five important plumbing tools."
             },
             {
               "number": "4",
