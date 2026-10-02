@@ -114,7 +114,7 @@ Examples from the catalog (compare them with the official pages):
 
 | Field | Required | Meaning |
 |---|---|---|
-| `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. It identifies the requirement, so it must be unique within the version. For a requirement split into lettered options ("Option A", "Option B"), add the option's letter to the number, then its parts' labels in parentheses: Cycling 6 Option B's part (1)(c) is `6B(1)(c)`. |
+| `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. It identifies the requirement, so it must be unique within the version. For a requirement split into lettered options ("Option A", "Option B"), add the option's letter to the number, then its parts' labels in parentheses: Cycling 6 Option B's part (1)(c) is `6B(1)(c)`. If the page gives the options labels of their own, such as "(a) Option A—Model Railroading", use those labels instead: Railroading 7 Option A's part (1) is `7a(1)`. |
 | `summary` | Yes | Our own one-line summary. Aim for 15 words or fewer. This isn't a hard limit: a summary that reads clearly matters more than its length. |
 | `children` | No | Sub-requirements, in official order. |
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
