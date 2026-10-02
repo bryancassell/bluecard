@@ -1,7 +1,10 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.graphics.Insets
 import android.graphics.Rect
 import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsAnimation
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -31,9 +34,6 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.Insets
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
@@ -128,21 +128,48 @@ class TrackerEntryScreenTest {
      * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
      * after the page has handled the focus change.
      */
-    private fun openKeyboard() = showKeyboard(KEYBOARD_HEIGHT)
+    private fun openKeyboard() = moveKeyboard(from = 0.dp, to = KEYBOARD_HEIGHT)
 
     /** Closes the keyboard, as the scout does with Back while a field keeps focus. */
-    private fun closeKeyboard() = showKeyboard(0.dp)
+    private fun closeKeyboard() = moveKeyboard(from = KEYBOARD_HEIGHT, to = 0.dp)
 
-    private fun showKeyboard(height: Dp) {
-        val pixels = with(composeTestRule.density) { height.roundToPx() }
-        composeTestRule.runOnIdle {
-            val insets = WindowInsetsCompat.Builder()
-                .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, pixels))
-                .setVisible(WindowInsetsCompat.Type.ime(), pixels > 0)
-                .build()
-            ViewCompat.dispatchApplyWindowInsets(view, insets)
+    /**
+     * Moves the keyboard's top edge as the system does: it sends the page its final insets, then
+     * the insets of each frame of the animation.
+     */
+    private fun moveKeyboard(from: Dp, to: Dp) {
+        val (start, end) = with(composeTestRule.density) { from.roundToPx() to to.roundToPx() }
+        val animation = WindowInsetsAnimation(WindowInsets.Type.ime(), null, 250)
+        val bounds = WindowInsetsAnimation.Bounds(
+            Insets.NONE,
+            Insets.of(0, 0, 0, maxOf(start, end))
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.runOnUiThread {
+            view.dispatchWindowInsetsAnimationPrepare(animation)
+            view.dispatchApplyWindowInsets(keyboardInsets(end))
+            view.dispatchWindowInsetsAnimationStart(animation, bounds)
         }
+        for (frame in 1..KEYBOARD_FRAMES) {
+            composeTestRule.mainClock.advanceTimeByFrame()
+            composeTestRule.runOnUiThread {
+                animation.fraction = frame.toFloat() / KEYBOARD_FRAMES
+                val height = start + (end - start) * frame / KEYBOARD_FRAMES
+                view.dispatchWindowInsetsAnimationProgress(
+                    keyboardInsets(height),
+                    listOf(animation)
+                )
+            }
+        }
+        composeTestRule.runOnUiThread { view.dispatchWindowInsetsAnimationEnd(animation) }
+        composeTestRule.mainClock.autoAdvance = true
     }
+
+    private fun keyboardInsets(height: Int): WindowInsets = WindowInsets.Builder()
+        .setInsets(WindowInsets.Type.ime(), Insets.of(0, 0, 0, height))
+        .setVisible(WindowInsets.Type.ime(), height > 0)
+        .build()
 
     /**
      * Checks that [bounds] are on the page above the keyboard. Unclipped bounds are needed for
@@ -544,5 +571,8 @@ class TrackerEntryScreenTest {
 
         /** About as tall as a phone's keyboard. */
         val KEYBOARD_HEIGHT = 300.dp
+
+        /** About how many frames a keyboard takes to open or close. */
+        const val KEYBOARD_FRAMES = 15
     }
 }

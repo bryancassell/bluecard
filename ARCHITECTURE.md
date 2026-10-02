@@ -243,7 +243,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which can leave the Save button under the field behind the keyboard
   ([#172](https://github.com/bryancassell/bluecard/issues/172)). They're
   brought into view together only when they fit, so a field too tall for both
-  still keeps its cursor in view.
+  still keeps its cursor in view. They're also brought into view only once the
+  keyboard has stopped moving: while a request runs, Compose stops following
+  the cursor, and a phone showed a tall field's cursor left behind the
+  keyboard. Telling that the keyboard is moving takes
+  `WindowInsets.imeAnimationTarget`, which is `@ExperimentalLayoutApi`, so this
+  function opts in. A change to that API would fail the build when Compose is
+  updated.
 
 ### Navigation
 
@@ -818,9 +824,12 @@ the real one.
   on how text is measured, such as whether a long label wraps, uses
   Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
   graphics measure every character as 1px wide. Robolectric shows no keyboard,
-  so a test of what stays above it sends the page's view a keyboard inset once
-  the field's focus has settled, as a phone does (`openKeyboard` in
-  `TrackerEntryScreenTest`).
+  so a test of what stays above it moves one as a phone does
+  (`moveKeyboard` in `TrackerEntryScreenTest`). Once the field's focus has
+  settled, it sends the page's view the keyboard's final insets, then its
+  insets frame by frame through the platform's `WindowInsetsAnimation`
+  events. A keyboard that appears in one step doesn't show the behavior that
+  depends on frames, such as the page following the cursor.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally
