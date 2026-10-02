@@ -1031,21 +1031,30 @@ says where to see what they report.
     `StrictMode.allowThreadDiskReads()` around one call, with a comment saying
     why. The reference says not to "feel compelled to fix everything that
     StrictMode finds."
-  - Local tests run the debug build, so tests that start `BlueCardApplication`
-    run with StrictMode on. Violations there are only logged.
+  - Local tests can't rely on StrictMode being on or off. Under Robolectric,
+    its policies outlive the test that set them. Main-thread violations stop
+    being logged once a test ends before StrictMode has logged one. So
+    `BlueCardApplicationTest` turns StrictMode off and starts the app again
+    before each check.
 - **[LeakCanary](https://square.github.io/leakcanary/)** is a
   `debugImplementation` dependency and starts itself. It reports activities and
   windows that are still in memory after they're destroyed. It
   [doesn't watch ViewModels](https://github.com/square/leakcanary/blob/v2.14/leakcanary-object-watcher-android-androidx/src/main/java/leakcanary/internal/AndroidXFragmentDestroyWatcher.kt#L62-L67)
-  in an app without fragments. Android Studio's Profiler can also
-  [run it](https://developer.android.com/studio/profile/capture-heap-dump).
+  in an app without fragments.
   - Its launcher icon is off (`src/debug/res/values/leak_canary.xml`), so
     `adb shell monkey` and `getLaunchIntentForPackage()` open `MainActivity`.
   - Its heap dumps hold whatever is in memory, and it may save them in the
     phone's public Download folder, so test with made-up records.
+  - It brings in [Plumber](https://square.github.io/leakcanary/changelog/#plumber-android-is-a-new-artifact-that-fixes-known-android-leaks),
+    which works around known leaks in Android itself, in debug builds only.
+    So LeakCanary doesn't report those leaks, though release builds still have
+    them.
+  - It keeps its results in `leaks.db` in the databases directory, so a debug
+    build's backup includes them along with the scout's data.
   - It stays on 2.x until 3.0 is stable.
-  - It isn't used in instrumented tests. They run only locally, and each check
-    dumps the heap.
+  - Instrumented tests don't fail on leaks (`DetectLeaksAfterTestSuccess`).
+    They run only locally, and each check dumps the heap. LeakCanary still
+    runs in them, but doesn't dump the heap while JUnit is loaded.
 
 ## Decisions
 
