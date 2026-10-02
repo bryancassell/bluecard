@@ -9,8 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.R
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -31,7 +29,7 @@ class TaskFailure
 /**
  * Runs a ViewModel's tasks that can fail, such as saving progress or creating a report to
  * share or save, in [scope]. Keeps the latest one that failed until its screen has shown it
- * with [TaskFailedSnackbarHost] or [TaskFailureSnackbar].
+ * with [TaskFailureSnackbarHost] or [TaskFailureSnackbar].
  */
 class TaskRunner(private val scope: CoroutineScope) {
     private val _failure = MutableStateFlow<TaskFailure?>(null)
@@ -62,21 +60,21 @@ class TaskRunner(private val scope: CoroutineScope) {
 }
 
 /**
- * Shows a snackbar with [message] for each [failure], as [MessageSnackbarHost] does. Unless
- * it's given, the message says progress couldn't be saved, as most tasks are saves.
+ * Shows a snackbar with [message], such as that progress couldn't be saved, for each [failure],
+ * as [MessageSnackbarHost] does.
  */
 @Composable
-fun TaskFailedSnackbarHost(
+fun TaskFailureSnackbarHost(
     failure: TaskFailure?,
+    message: String,
     onShown: (TaskFailure) -> Unit,
-    modifier: Modifier = Modifier,
-    message: String = stringResource(R.string.save_failed)
+    modifier: Modifier = Modifier
 ) {
     MessageSnackbarHost(failure, message, onShown, modifier)
 }
 
 /**
- * Shows [failure] in [hostState] as [TaskFailedSnackbarHost] does, for a screen that has more
+ * Shows [failure] in [hostState] as [TaskFailureSnackbarHost] does, for a screen that has more
  * than one kind of failure, each with its own [message], to show in one host: [hostState]
  * shows one snackbar at a time, as Material asks, and queues the rest. One still waiting its
  * turn when the screen goes is dropped, as one showing is.
@@ -84,9 +82,9 @@ fun TaskFailedSnackbarHost(
 @Composable
 fun TaskFailureSnackbar(
     failure: TaskFailure?,
+    message: String,
     onShown: (TaskFailure) -> Unit,
-    hostState: SnackbarHostState,
-    message: String = stringResource(R.string.save_failed)
+    hostState: SnackbarHostState
 ) {
     MessageSnackbar(failure, message, onShown, hostState)
 }

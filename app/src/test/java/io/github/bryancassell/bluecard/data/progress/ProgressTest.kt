@@ -52,7 +52,7 @@ class ProgressTest {
     }
 
     @Test
-    fun values_areInColumnOrder_withoutColumnsTheEntryHasNoneFor() {
+    fun columnValues_areInColumnOrder_withoutColumnsTheEntryHasNoneFor() {
         val date = TrackerColumn("date", "Date", TrackerColumnType.DATE)
         val nights = TrackerColumn("nights", "Nights", TrackerColumnType.NUMBER)
         val place = TrackerColumn("place", "Place", TrackerColumnType.TEXT)
@@ -63,6 +63,6 @@ class ProgressTest {
             values = mapOf("place" to "Bear Mountain", "removed" to "Old", "nights" to "2")
         )
 
-        assertEquals(listOf(nights to "2", place to "Bear Mountain"), campouts.values(entry))
+        assertEquals(listOf(nights to "2", place to "Bear Mountain"), campouts.columnValues(entry))
     }
 }

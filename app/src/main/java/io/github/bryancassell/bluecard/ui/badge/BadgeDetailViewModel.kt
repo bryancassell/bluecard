@@ -40,8 +40,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     private val reportRepository: ReportRepository,
     private val clock: Clock
 ) : ViewModel() {
-    // Reports are written like saves: a failure is logged and shown in a snackbar, with a
-    // message of its own.
+    // Separate runners, so a report that fails shows its own message, not a save's.
     private val reports = TaskRunner(viewModelScope)
     private val saves = TaskRunner(viewModelScope)
     private val recorder = ProgressRecorder(badgeId, catalogRepository, progressRepository, clock)

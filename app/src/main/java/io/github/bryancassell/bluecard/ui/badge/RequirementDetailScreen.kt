@@ -38,8 +38,8 @@ import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.ScreenMessage
-import io.github.bryancassell.bluecard.ui.TaskFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
@@ -160,8 +160,9 @@ fun RequirementDetailScreen(
                     )
                 }
             }
-            TaskFailedSnackbarHost(
+            TaskFailureSnackbarHost(
                 failure = uiState.saveFailure,
+                message = stringResource(R.string.save_failed),
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

@@ -316,9 +316,9 @@ both taps of a double tap can reach it.
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)).
 - **Screens start other apps with one `OtherAppStarter`** from
-  `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that open
-  another app. After a tap, it ignores taps for the double-tap timeout, so a
-  browser doesn't open two tabs, or an email app two drafts
+  `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
+  open another app. After a tap, it ignores taps for the double-tap timeout,
+  so a browser doesn't open two tabs, or an email app two drafts
   ([#97](https://github.com/bryancassell/bluecard/issues/97)). Data
   management's Edit and Clear all go through it too (`OtherAppStarter.tap`), so
   a tap just after Export or Import doesn't open a page or dialog under the file

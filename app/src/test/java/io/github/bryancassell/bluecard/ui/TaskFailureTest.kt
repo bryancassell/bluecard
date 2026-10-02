@@ -23,7 +23,7 @@ import org.junit.runner.RunWith
 import org.robolectric.shadows.ShadowLog
 
 /**
- * [TaskRunner] and [TaskFailedSnackbarHost], with Robolectric so the log can be read back and
+ * [TaskRunner] and [TaskFailureSnackbarHost], with Robolectric so the log can be read back and
  * the snackbar shown.
  */
 @RunWith(AndroidJUnit4::class)
@@ -101,7 +101,9 @@ class TaskFailureTest {
     fun snackbar_showsFailure_thenReportsItShown() {
         val failure = TaskFailure()
         val shown = mutableListOf<TaskFailure>()
-        composeTestRule.setContent { TaskFailedSnackbarHost(failure, onShown = { shown += it }) }
+        composeTestRule.setContent {
+            TaskFailureSnackbarHost(failure, message, onShown = { shown += it })
+        }
 
         composeTestRule.onNodeWithText(message).assertIsDisplayed()
         assertEquals(emptyList<TaskFailure>(), shown)
@@ -119,7 +121,9 @@ class TaskFailureTest {
         val second = TaskFailure()
         var failure by mutableStateOf<TaskFailure?>(first)
         val shown = mutableListOf<TaskFailure>()
-        composeTestRule.setContent { TaskFailedSnackbarHost(failure, onShown = { shown += it }) }
+        composeTestRule.setContent {
+            TaskFailureSnackbarHost(failure, message, onShown = { shown += it })
+        }
         composeTestRule.mainClock.advanceTimeBy(5_000)
         assertEquals(listOf(first), shown)
 
@@ -137,7 +141,7 @@ class TaskFailureTest {
         var onScreen by mutableStateOf(true)
         val shown = mutableListOf<TaskFailure>()
         composeTestRule.setContent {
-            if (onScreen) TaskFailedSnackbarHost(failure, onShown = { shown += it })
+            if (onScreen) TaskFailureSnackbarHost(failure, message, onShown = { shown += it })
         }
         composeTestRule.onNodeWithText(message).assertIsDisplayed()
 
@@ -150,7 +154,7 @@ class TaskFailureTest {
 
     @Test
     fun snackbar_withNoFailure_showsNothing() {
-        composeTestRule.setContent { TaskFailedSnackbarHost(null, onShown = {}) }
+        composeTestRule.setContent { TaskFailureSnackbarHost(null, message, onShown = {}) }
 
         composeTestRule.onNodeWithText(message).assertDoesNotExist()
     }

@@ -3,9 +3,9 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.columnValues
 import io.github.bryancassell.bluecard.data.progress.filledRows
 import io.github.bryancassell.bluecard.data.progress.numberedRows
-import io.github.bryancassell.bluecard.data.progress.values
 
 /**
  * A requirement's tracker as its page shows it: how much is filled in, and its rows. A log,
@@ -66,7 +66,7 @@ fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
 
 private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow> =
     numberedRows(entries).map { (number, entry) ->
-        val rowValues = entry?.let { values(it) }.orEmpty()
+        val rowValues = entry?.let { columnValues(it) }.orEmpty()
             .map { (column, text) -> TrackerValue(column.type, text) }
         TrackerRow(number, entry?.id, rowValues)
     }

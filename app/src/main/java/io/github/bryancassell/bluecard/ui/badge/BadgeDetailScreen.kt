@@ -6,13 +6,13 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -154,11 +155,16 @@ fun BadgeDetailScreen(
             val snackbarHostState = remember { SnackbarHostState() }
             TaskFailureSnackbar(
                 failure = uiState.reportFailure,
+                message = stringResource(R.string.report_failed),
                 onShown = onReportFailureShown,
-                hostState = snackbarHostState,
-                message = stringResource(R.string.report_failed)
+                hostState = snackbarHostState
             )
-            TaskFailureSnackbar(uiState.saveFailure, onSaveFailureShown, snackbarHostState)
+            TaskFailureSnackbar(
+                failure = uiState.saveFailure,
+                message = stringResource(R.string.save_failed),
+                onShown = onSaveFailureShown,
+                hostState = snackbarHostState
+            )
             SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
     }
@@ -220,10 +226,12 @@ private fun BadgeDetails(
             val noBrowser = stringResource(R.string.badge_detail_no_browser)
             val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
             // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
-            BadgeDetailOutlinedButton(
+            OutlinedButton(
                 onClick = { startOtherApp(officialPage, noBrowser) },
                 // The button keeps its own click action, with this label.
                 modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
+                colors = badgeDetailOutlinedButtonColors(),
+                border = badgeDetailOutlinedButtonBorder(),
                 // Material's padding for an icon before the label, flipped for one after it.
                 contentPadding = with(ButtonDefaults.ButtonWithIconContentPadding) {
                     PaddingValues(
@@ -404,35 +412,30 @@ private fun ReportButtons(
  */
 @Composable
 private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
-    BadgeDetailOutlinedButton(onClick = onClick) {
+    OutlinedButton(
+        onClick = onClick,
+        colors = badgeDetailOutlinedButtonColors(),
+        border = badgeDetailOutlinedButtonBorder()
+    ) {
         Text(stringResource(text))
     }
 }
 
 /**
- * An outlined button as Badge detail's all are: the official link and the report buttons. The
- * theme's outline color, rather than Material's lighter default, keeps the outline visible on
- * the tinted background, and the label is primary blue, like a link.
+ * Colors of Badge detail's outlined buttons, the official link and the report buttons: the
+ * label is primary blue, like a link.
  */
 @Composable
-private fun BadgeDetailOutlinedButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    content: @Composable RowScope.() -> Unit
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier,
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        border = ButtonDefaults.outlinedButtonBorder()
-            .copy(brush = SolidColor(MaterialTheme.colorScheme.outline)),
-        contentPadding = contentPadding,
-        content = content
-    )
-}
+private fun badgeDetailOutlinedButtonColors(): ButtonColors =
+    ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+
+/**
+ * Border of Badge detail's outlined buttons, in the theme's outline color rather than
+ * Material's lighter default, which keeps it visible on the tinted background.
+ */
+@Composable
+private fun badgeDetailOutlinedButtonBorder(): BorderStroke = ButtonDefaults.outlinedButtonBorder()
+    .copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
 
 /**
  * Opens the share sheet with the badge's [report], once, then calls [onShared]. The Share

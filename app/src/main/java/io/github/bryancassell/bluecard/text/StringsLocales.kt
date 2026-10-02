@@ -26,7 +26,7 @@ fun stringsLocale(context: Context): Locale =
  * that formats the app's strings, such as the PDF report. The first locale of their
  * configuration is [stringsLocale]'s, and their layout direction is its direction.
  */
-fun stringsLanguageResources(context: Context): Resources = stringsLanguageResources(
+fun stringsLanguageResources(context: Context): Resources = stringsLanguageResourcesOrNull(
     context,
     context.resources.configuration,
     stringsLanguage(context.resources),
@@ -44,7 +44,7 @@ fun stringsLanguageResources(context: Context): Resources = stringsLanguageResou
 // These are the language of the strings already shown and the device's own locales, so their
 // resources are installed.
 @SuppressLint("AppBundleLocaleChanges")
-internal fun stringsLanguageResources(
+internal fun stringsLanguageResourcesOrNull(
     context: Context,
     configuration: Configuration,
     stringsLanguage: Locale,

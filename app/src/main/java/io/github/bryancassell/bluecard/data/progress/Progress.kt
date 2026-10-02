@@ -171,7 +171,7 @@ fun TrackerDefinition.numberedRows(entries: List<TrackerEntry>): List<Pair<Int, 
  * without the columns it has none for. Both the requirement's page and the PDF report show a
  * row's values this way.
  */
-fun TrackerDefinition.values(entry: TrackerEntry): List<Pair<TrackerColumn, String>> =
+fun TrackerDefinition.columnValues(entry: TrackerEntry): List<Pair<TrackerColumn, String>> =
     columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }
 
 /**

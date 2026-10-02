@@ -28,8 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.TaskFailedSnackbarHost
 import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.badge.LoadingIndicator
 
 /** Connects the Edit name and unit screen to its ViewModel. */
@@ -87,8 +87,9 @@ fun EditProfileScreen(
                 LaunchedEffect(Unit) { currentOnSaved() }
             }
             Fields(uiState, name, unitNumber, onSave)
-            TaskFailedSnackbarHost(
+            TaskFailureSnackbarHost(
                 failure = uiState.saveFailure,
+                message = stringResource(R.string.save_failed),
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )

@@ -8,7 +8,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import io.github.bryancassell.bluecard.text.stringsLanguage
-import io.github.bryancassell.bluecard.text.stringsLanguageResources
+import io.github.bryancassell.bluecard.text.stringsLanguageResourcesOrNull
 import io.github.bryancassell.bluecard.text.stringsLocales
 import java.util.Locale
 
@@ -42,7 +42,7 @@ fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
     // resources are used as they are. The layout direction is the configuration's, which the
     // layout follows: MainActivity sets it from the strings' language.
     val resources = remember(context, configuration, stringsLanguage) {
-        stringsLanguageResources(
+        stringsLanguageResourcesOrNull(
             context,
             configuration,
             stringsLanguage,
