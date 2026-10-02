@@ -574,6 +574,319 @@
       ]
     },
     {
+      "id": "automotive-maintenance",
+      "name": "Automotive Maintenance",
+      "summary": "Learn how cars work and how to care for them, from fluids, tires and brakes to engines and electric systems.",
+      "officialUrl": "https://www.scouting.org/merit-badges/automotive-maintenance/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about vehicle safety, inspections and registration.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain car maintenance hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss safety gear, tools and clothing for car work, and use them for this badge."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe what can power a motor vehicle."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain how to work safely on a vehicle with a high-voltage electrical system."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Go over the maintenance schedule in the owner's manual and explain what's due when."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Explain what safety belts and passive restraints do, why they matter, and their limits."
+                },
+                {
+                  "number": "1g",
+                  "summary": "Find out your state's emissions and safety inspection rules and how often they're needed."
+                },
+                {
+                  "number": "1h",
+                  "summary": "Explain why vehicles are registered, and find your family car's yearly renewal fee."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Do general maintenance checks.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Show how to check each of these.",
+                  "children": [
+                    {
+                      "number": "2a(1)",
+                      "summary": "Brake fluid."
+                    },
+                    {
+                      "number": "2a(2)",
+                      "summary": "Engine oil."
+                    },
+                    {
+                      "number": "2a(3)",
+                      "summary": "Coolant."
+                    },
+                    {
+                      "number": "2a(4)",
+                      "summary": "Power steering fluid."
+                    },
+                    {
+                      "number": "2a(5)",
+                      "summary": "Windshield washer fluid."
+                    },
+                    {
+                      "number": "2a(6)",
+                      "summary": "Transmission fluid."
+                    },
+                    {
+                      "number": "2a(7)",
+                      "summary": "Battery fluid, if possible, and the battery terminals."
+                    }
+                  ]
+                },
+                {
+                  "number": "2b",
+                  "summary": "Find the fuse boxes, learn the fuse types and sizes, and replace a blown fuse."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show how to inspect belts and hoses for wear and tension."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Check that all the vehicle's lights work, inside and out."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Find and check the air filter or filters."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn what the dashboard tells you.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain the fuel gauge, speedometer, tachometer, oil pressure and engine temperature gauges, and find each."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain the dashboard warning lights, including yellow versus red, using the manual if needed."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Describe the messages and maintenance reminders the dashboard can show."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn tire care.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain how tire and vehicle makers' specifications differ, and where to find each."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Show how to check and inflate a tire, and make sure the spare is ready."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain why alignment matters to tire life, and what caster, camber and toe-in are."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain what a tire's lateral-wear bar indicator shows."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Explain how to get rid of old tires legally where you live."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how engines work.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how gas and diesel engines run and differ, and what powers a gas-electric hybrid."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Discuss what engine oil does, and explain API service codes, SAE numbers and viscosity."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Explain where to look up which oil an engine takes and how much."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn about the cooling system.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain why engines need coolant and why the right type matters."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain how to flush and refill a cooling system and safely discard old coolant."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn about the fuel system.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain how engines take in air and fuel, and why both need filters."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Explain how fuel injection works with the onboard computer."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Learn the ignition and electrical systems.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Diagram one of these electrical systems and explain its parts.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "8a(1)",
+                      "summary": "Starting and charging system."
+                    },
+                    {
+                      "number": "8a(2)",
+                      "summary": "Hybrid or electric vehicle inverter."
+                    },
+                    {
+                      "number": "8a(3)",
+                      "summary": "Lighting system."
+                    }
+                  ]
+                },
+                {
+                  "number": "8b",
+                  "summary": "Explain what an engine's firing order is."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Explain what the spark gap is for."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Show the safe order for attaching jumper cables to your car battery."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Discuss what limits an electrified vehicle's range, and how to recharge one that plugs in."
+                },
+                {
+                  "number": "8f",
+                  "summary": "Explain which other car systems need the electrical system working."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Learn about the drive train.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Draw the drive train and explain each part."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Explain how automatic and standard transmissions differ."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Describe the kinds of automatic transmission fluid."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Explain which lubricants go in a standard transmission, differential and transfer case."
+                },
+                {
+                  "number": "9e",
+                  "summary": "Explain front-wheel, rear-wheel and four-wheel drive and how they differ."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Learn about brakes.",
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Explain how brakes, including antilock brakes, work."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Explain how disc and drum brakes differ."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Show how to check a vehicle's brakes, and recommend any needed repairs."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Do two of these car projects.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Compare three cars (one new, one used) by value, insurance and cost per mile, and discuss."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Explain clear-coat care; clean a vehicle inside and out, wax it, and use and explain protectant."
+                },
+                {
+                  "number": "11c",
+                  "summary": "Find the manufacturer's jack, use it correctly, and change a tire."
+                },
+                {
+                  "number": "11d",
+                  "summary": "Change a vehicle's oil and filter, and explain how to dispose of the old ones."
+                }
+              ]
+            },
+            {
+              "number": "12",
+              "summary": "Explore three automotive careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "aviation",
       "name": "Aviation",
       "summary": "Learn how aircraft fly and are flown, build and fly a model, visit an aviation site, and explore pilot certificates and careers.",
@@ -3463,6 +3776,261 @@
       ]
     },
     {
+      "id": "fire-safety",
+      "name": "Fire Safety",
+      "summary": "Learn how fires start, spread and are put out, and how to prevent and escape them at home, in public buildings and at camp.",
+      "officialUrl": "https://www.scouting.org/merit-badges/fire-safety/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn how fire works.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain what fire is."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Name the fire tetrahedron's four parts and what burning gives off."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe how a fire grows and dies out."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain the three ways heat travels."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn to choose and use fire extinguishers.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain how fires are classified."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Match each class of fire extinguisher to the fires it should be used on."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Demonstrate using a fire extinguisher and a fire blanket."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn to prevent and treat fire-related injuries.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Show and explain stop, drop, roll, cool and call."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain how clothing catches fire, how to prevent it, and how clothing affects burns."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Tell what most often causes burns and how to avoid each."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Review preventing, recognizing and treating airway burns and carbon monoxide poisoning."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn how fires are classified by how they started.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Describe natural, accidental, incendiary and undetermined fires, with an example of each."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain how an incendiary fire can lead to an arson charge."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Prevent and plan for fires at home.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how to prevent fires from cooking, electricity, smoking, dryers and rechargeable batteries."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain how to prevent seasonal fires from heating, holiday trees, candles and fireworks."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Light and snuff a candle safely, then talk candle safety with your counselor and family."
+                },
+                {
+                  "number": "5d",
+                  "summary": "With an adult and the pamphlet's checklist or one your counselor approves, inspect a home; discuss findings."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Learn your community's smoke and CO alarm rules, and list your home's alarms.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "type",
+                        "label": "Type",
+                        "type": "text"
+                      },
+                      {
+                        "id": "location",
+                        "label": "Location",
+                        "type": "text"
+                      },
+                      {
+                        "id": "expires",
+                        "label": "Expiration date",
+                        "type": "date"
+                      }
+                    ],
+                    "rowLabel": "alarm",
+                    "rowLabelPlural": "alarms"
+                  }
+                },
+                {
+                  "number": "5f",
+                  "summary": "Show smoke and CO alarm upkeep, and discuss your plan for replacing expired ones."
+                },
+                {
+                  "number": "5g",
+                  "summary": "Make a family escape plan and drill schedule, map exits and a meeting spot, then practice."
+                },
+                {
+                  "number": "5h",
+                  "summary": "Explain the dos and don'ts when you smell natural gas or smoke."
+                },
+                {
+                  "number": "5i",
+                  "summary": "Explain how to call in a fire and get firefighters on the way."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Handle flammable and combustible liquids safely.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Name household flammable and combustible liquids, and explain safe storage for them."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Describe how to refuel a mower, outboard or other engine safely from an approved container."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Find out how your community lets you safely get rid of flammable and hazardous waste."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn about fire safety in public buildings.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain how public buildings' design helps protect people from fire."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Describe the fire protection systems and gear you'll find in public buildings."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Explain how to stay fire-safe when you're in a public building."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Practice fire safety at camp.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Explain how Leave No Trace and the Outdoor Code apply to campfires."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Safely light, put out and dispose of a match, and compare safety and strike-anywhere matches."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Make a flame from a flint-and-steel or ferro rod spark; put it out using the fire tetrahedron."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Light a charcoal fire safely."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Describe three fire lays; build, light and put out one following Leave No Trace and the Outdoor Code."
+                },
+                {
+                  "number": "8f",
+                  "summary": "Show how to use a camp stove."
+                },
+                {
+                  "number": "8g",
+                  "summary": "Explain how to lay out and run a fire-safe campsite."
+                },
+                {
+                  "number": "8h",
+                  "summary": "Plan a fire safety lesson, review it with your counselor, and teach Scouts with EDGE."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Learn about wildland fires.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Name what starts wildland fires and how to prevent each."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Explain how wildland fires affect people, the economy and the environment."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Explore fire service careers.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Visit a fire station, learn about its vehicles, prevention work and careers, and discuss it."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Explore three fire safety careers, research one, and discuss whether it interests you."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "first-aid",
       "name": "First Aid",
       "summary": "Learn to prevent, recognize and treat injuries and sudden illnesses.",
@@ -4011,6 +4579,178 @@
             {
               "number": "10",
               "summary": "If rules and health allow, clean and cook a fish, ideally one you caught."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "game-design",
+      "name": "Game Design",
+      "summary": "Study what makes games fun, change the rules of a game you know, then design, prototype and test your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/game-design/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn how games work and why people play them.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Analyze and compare four games from different media, and discuss what you like and dislike.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "game",
+                        "label": "Game",
+                        "type": "text"
+                      },
+                      {
+                        "id": "medium",
+                        "label": "Medium",
+                        "type": "text"
+                      },
+                      {
+                        "id": "format",
+                        "label": "Player format",
+                        "type": "text"
+                      },
+                      {
+                        "id": "objectives",
+                        "label": "Objectives",
+                        "type": "text"
+                      },
+                      {
+                        "id": "rules",
+                        "label": "Rules",
+                        "type": "text"
+                      },
+                      {
+                        "id": "resources",
+                        "label": "Resources",
+                        "type": "text"
+                      },
+                      {
+                        "id": "theme",
+                        "label": "Theme",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "game",
+                    "rowLabelPlural": "games"
+                  }
+                },
+                {
+                  "number": "1b",
+                  "summary": "Give four kinds of play value with an example game each, and other reasons people play."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss five of the 17 listed game design terms, relating each to a specific game."
+            },
+            {
+              "number": "3",
+              "summary": "Explain intellectual property in game design, how and why it's protected, and give a licensed property example."
+            },
+            {
+              "number": "4",
+              "summary": "Change the rules of a game and see what happens.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Pick a game with changeable rules, explain how it's normally played, and play it."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Suggest several rule or goal changes and predict each one's effect on play."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Play three times, each with one different change, watching how players act and feel."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain what each change did to the players, and how well you predicted it."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Design a new game in any medium, keeping a game design notebook.",
+              "ownWork": "Keep your design work from 5a–5d in a game design notebook.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Write a vision statement: medium, player format, objectives, theme, and any setting, story and characters."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain what would make people want to play your game."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Draft the rules and define the game's resources."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Sketch the game's elements."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Prototype and playtest your game, once your counselor approves the concept.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Prototype your game, addressing player safety if needed, and record it in your notebook."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Playtest, compare with 5b, fix rule problems, make and explain one change, replay, and note the result."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Do two or more further rounds of 6b, noting each result."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Have new players test your game without help.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Write instructions that cover setting up, playing and ending the game, and list its objectives."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Watch new players try your game with only your instructions, and record their feedback."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Share your notebook, discuss reactions and lessons, name your game's best part, and suggest changes."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Talk with a game industry or game education professional.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "With permission and approval, interview a game industry professional about their role in making games."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Meet a game development teacher and discuss the skills they stress."
+                }
+              ]
             }
           ]
         }
@@ -5318,6 +6058,407 @@
       ]
     },
     {
+      "id": "moviemaking",
+      "name": "Moviemaking",
+      "summary": "Learn the craft of telling stories on film, then plan, shoot and show a short program of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/moviemaking/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Show and discuss good filmmaking: storytelling, rhythm, the 180-axis rule, camera movement, framing and lenses."
+            },
+            {
+              "number": "2",
+              "summary": "Plan, shoot and present a film of your own.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Write a three- or four-paragraph treatment that paints a picture of your story."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Make a storyboard for your film; rough sketches are fine."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show these camera techniques.",
+                  "children": [
+                    {
+                      "number": "2c(1)",
+                      "summary": "Using a tripod."
+                    },
+                    {
+                      "number": "2c(2)",
+                      "summary": "Panning a camera."
+                    },
+                    {
+                      "number": "2c(3)",
+                      "summary": "Framing a shot."
+                    },
+                    {
+                      "number": "2c(4)",
+                      "summary": "Selecting an angle."
+                    },
+                    {
+                      "number": "2c(5)",
+                      "summary": "Selecting proper lighting."
+                    },
+                    {
+                      "number": "2c(6)",
+                      "summary": "Handheld shooting."
+                    }
+                  ]
+                },
+                {
+                  "number": "2d",
+                  "summary": "Plan, shoot and present one of these programs using what you learned.",
+                  "requiredCount": 1,
+                  "ownWork": "Write a treatment first, and show the finished program to a pack, troop, patrol or class.",
+                  "children": [
+                    {
+                      "number": "2d(1)",
+                      "summary": "Record a court of honor, then hold a screening."
+                    },
+                    {
+                      "number": "2d(2)",
+                      "summary": "Write and shoot an original short feature using your new skills."
+                    },
+                    {
+                      "number": "2d(3)",
+                      "summary": "Film a vignette teaching a new Scout a Scouting skill."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Visit a production set, or explain the zoom lens.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "With permission and approval, tour a film set or TV studio to watch production work."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe how a zoom lens works and three of its key parts."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explore a career or hobby connected to moviemaking.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Research a career related to moviemaking and discuss what makes it interesting."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Research a hobby or healthy lifestyle that involves moviemaking, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "music",
+      "name": "Music",
+      "summary": "Learn how instruments make sound and how music is shared, listen widely, and make music by performing, teaching or composing.",
+      "officialUrl": "https://www.scouting.org/merit-badges/music/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Sing or play a simple piece your counselor picks with good technique, reading every marking."
+            },
+            {
+              "number": "2",
+              "summary": "Name the five instrument families, and illustrate how instruments make sound."
+            },
+            {
+              "number": "3",
+              "summary": "Explore music in two of these ways.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Hear two listed styles live or in three hours of recordings; describe and discuss them."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Talk music with an adult relative, and swap three favorite songs each."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Spend six months in a band, choir or other group, or give six public solos."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain why five American music figures still matter: at least a composer, performer, innovator and someone born 100+ years ago."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Make music in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Teach a group three songs and lead the singing with proper hand motions."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Compose and notate a 12-measure or longer piece, then play it on an instrument."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Build and learn to play a traditional instrument."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Define intellectual property, and explain the legal ways to get and share recorded music."
+            },
+            {
+              "number": "6",
+              "summary": "Explore a career or hobby connected to music.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Research a career related to music and discuss what makes it interesting."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Research music as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nature",
+      "name": "Nature",
+      "summary": "Learn how plants and animals depend on each other, study five areas of nature up close, and see how landscapes change over time.",
+      "officialUrl": "https://www.scouting.org/merit-badges/nature/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Give three ways animals depend on plants, and what threatens a plant protected near you."
+            },
+            {
+              "number": "2",
+              "summary": "Give three ways plants depend on animals, and what threatens an animal protected near you."
+            },
+            {
+              "number": "3",
+              "summary": "Explain food chains, with a four-step example on land and another in water."
+            },
+            {
+              "number": "4",
+              "summary": "Complete every part of five of these nature fields.",
+              "requiredCount": 5,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Birds.",
+                  "children": [
+                    {
+                      "number": "4a(1)",
+                      "summary": "Spot and identify eight bird species in the wild."
+                    },
+                    {
+                      "number": "4a(2)",
+                      "summary": "Build and set out a birdhouse, feeder or birdbath, and list its visitors for a month.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date",
+                            "type": "date"
+                          },
+                          {
+                            "id": "bird",
+                            "label": "Bird",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "bird",
+                        "rowLabelPlural": "birds"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "number": "4b",
+                  "summary": "Mammals.",
+                  "children": [
+                    {
+                      "number": "4b(1)",
+                      "summary": "Spot and identify three wild mammal species."
+                    },
+                    {
+                      "number": "4b(2)",
+                      "summary": "Cast a wild mammal's tracks in plaster."
+                    }
+                  ]
+                },
+                {
+                  "number": "4c",
+                  "summary": "Reptiles and amphibians.",
+                  "children": [
+                    {
+                      "number": "4c(1)",
+                      "summary": "Show you can spot your area's venomous snakes."
+                    },
+                    {
+                      "number": "4c(2)",
+                      "summary": "Spot and identify three reptile or amphibian species in the wild."
+                    },
+                    {
+                      "number": "4c(3)",
+                      "summary": "Identify a frog or toad by call, or a reptile or amphibian by its signs."
+                    }
+                  ]
+                },
+                {
+                  "number": "4d",
+                  "summary": "Insects and spiders.",
+                  "children": [
+                    {
+                      "number": "4d(1)",
+                      "summary": "Collect and identify 10 insect or spider species, in person or by photo."
+                    },
+                    {
+                      "number": "4d(2)",
+                      "summary": "Raise insects through a life stage, or keep ants or bees for a season."
+                    }
+                  ]
+                },
+                {
+                  "number": "4e",
+                  "summary": "Fish.",
+                  "children": [
+                    {
+                      "number": "4e(1)",
+                      "summary": "Identify two kinds of local native fish."
+                    },
+                    {
+                      "number": "4e(2)",
+                      "summary": "Collect four different animals that wild fish feed on."
+                    }
+                  ]
+                },
+                {
+                  "number": "4f",
+                  "summary": "Mollusks and crustaceans.",
+                  "children": [
+                    {
+                      "number": "4f(1)",
+                      "summary": "Identify five mollusk and crustacean species."
+                    },
+                    {
+                      "number": "4f(2)",
+                      "summary": "Collect six shells, then mount and label them."
+                    }
+                  ]
+                },
+                {
+                  "number": "4g",
+                  "summary": "Plants.",
+                  "children": [
+                    {
+                      "number": "4g(1)",
+                      "summary": "Spot and identify 15 wild plant species."
+                    },
+                    {
+                      "number": "4g(2)",
+                      "summary": "Gather or photograph seeds or leaves from several plants.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "4g(2)(a)",
+                          "summary": "Collect and label seeds from six plants or leaves from 12."
+                        },
+                        {
+                          "number": "4g(2)(b)",
+                          "summary": "Photograph seeds from six plants or leaves from 12, and catalog the photos."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "4h",
+                  "summary": "Soils and rocks.",
+                  "children": [
+                    {
+                      "number": "4h(1)",
+                      "summary": "Collect and identify a sandy soil, a clay soil and a humus-rich soil."
+                    },
+                    {
+                      "number": "4h(2)",
+                      "summary": "Collect and identify five kinds of local rock."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Discuss why Leave No Trace and the Outdoor Code matter, and how you followed them."
+            },
+            {
+              "number": "6",
+              "summary": "Learn how natural areas change over time.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain what succession means in nature."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Visit a natural area, judge its succession stage, and discuss its past and future changes."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore a career or hobby connected to nature.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explore three nature careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research nature as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "personal-fitness",
       "name": "Personal Fitness",
       "summary": "Build healthy habits and follow a 12-week fitness program.",
@@ -6062,6 +7203,104 @@
       ]
     },
     {
+      "id": "pottery",
+      "name": "Pottery",
+      "summary": "Learn about clay, potter's wheels and kilns, then make and decorate pots and sculpture by hand and on the wheel.",
+      "officialUrl": "https://www.scouting.org/merit-badges/pottery/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain how to safely use a potter's tools, equipment and materials."
+            },
+            {
+              "number": "2",
+              "summary": "Learn about clay bodies and potter's wheels.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Describe what goes into a good clay body, and its qualities, for each of these.",
+                  "children": [
+                    {
+                      "number": "2a(1)",
+                      "summary": "Hand-building sculpture."
+                    },
+                    {
+                      "number": "2a(2)",
+                      "summary": "Throwing on the wheel."
+                    }
+                  ]
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe three kinds of potter's wheels and how each one works."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Draw two pottery forms, each on its own 8½-by-11-inch sheet: one historical, one your own design."
+            },
+            {
+              "number": "4",
+              "summary": "Explain the 16 listed pottery terms, such as wedging, bisque and glaze."
+            },
+            {
+              "number": "5",
+              "summary": "Make and decorate pottery pieces, and learn how a kiln is fired.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Make a slab pot, a coil pot and a pinch pot, and decorate each."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Make and decorate a figurine of a person or animal, or a decorative sculpture."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Throw something useful on a potter's wheel, then decorate it."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Load and fire a kiln with an experienced adult, or describe the process in detail."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Describe the U.S. ceramic industry and some things it makes besides craft pottery."
+            },
+            {
+              "number": "7",
+              "summary": "With permission and approval, visit a kiln yard or pottery exhibit, or research pottery's history.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Visit a school's kiln yard and learn how different kinds of kilns work."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Visit a museum, gallery, studio or other place showing pottery, and share what you learned."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Research pottery's history and cultural importance, and share what you found."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore pottery careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "rifle-shooting",
       "name": "Rifle Shooting",
       "summary": "Learn gun safety, then shoot a cartridge rifle, air rifle or muzzleloader on a supervised range.",
@@ -6295,6 +7534,419 @@
             {
               "number": "3",
               "summary": "Research how shooting skills could lead to a career or hobby, and discuss it."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "robotics",
+      "name": "Robotics",
+      "summary": "Learn what robots do and how they work, then design, build, program and test a robot of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/robotics/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe while working with robots.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain robotics hazards, how to prevent and handle them, and the safety gear to wear."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating robotics injuries, such as cuts, eye injuries and burns."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss the robotics industry with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Robots' abilities and their best uses today."
+                },
+                {
+                  "number": "2b",
+                  "summary": "How remote-control vehicles, telerobots and autonomous robots compare."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Three ways robots move without wheels or tracks, and when to use each."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Discuss three major fields of robotics and why they matter, showing pictures or a video."
+            },
+            {
+              "number": "4",
+              "summary": "Design, build, program and test a robot.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "With counselor approval, pick a robot task using sensors and programming; record it in your notebook."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Design a robot with sensors, programming and 2+ degrees of freedom; draw and describe it in your notebook."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Build your robot or robotic subsystem to do the task from 4a."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Discuss programming options with your counselor, then program your robot or flowchart it.",
+                  "requiredCount": 1,
+                  "ownWork": "Talk through your robot's programming options with your counselor.",
+                  "children": [
+                    {
+                      "number": "4d(1)",
+                      "summary": "Program your robot to do its task, and put sample code in your notebook."
+                    },
+                    {
+                      "number": "4d(2)",
+                      "summary": "Flowchart your robot's program, including how it responds to sensors, for your notebook."
+                    }
+                  ]
+                },
+                {
+                  "number": "4e",
+                  "summary": "Test your robot and note results, improvements and pictures or sketches in your notebook."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Show your robot and notebook to your counselor.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Show your counselor your robot in action."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Share your notebook; discuss how the robot did, what you'd improve and what you learned."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn about robotics competitions.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Go to a robotics competition and report on it and how its teams are run."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Describe three youth robotics competitions to your counselor: format, time needed, ages and teams."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore a career or hobby connected to robotics.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explore three robotics careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research robotics as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "search-and-rescue",
+      "name": "Search and Rescue",
+      "summary": "Learn how search and rescue teams find lost people, from first aid, signals and maps to planning and running a practice search.",
+      "officialUrl": "https://www.scouting.org/merit-badges/search-and-rescue/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe and give first aid during a search.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Show or explain how to prevent and treat injuries searchers and lost people may face.",
+                  "children": [
+                    {
+                      "number": "1a(1)",
+                      "summary": "Dehydration."
+                    },
+                    {
+                      "number": "1a(2)",
+                      "summary": "Heatstroke."
+                    },
+                    {
+                      "number": "1a(3)",
+                      "summary": "Hypothermia."
+                    },
+                    {
+                      "number": "1a(4)",
+                      "summary": "Shock."
+                    },
+                    {
+                      "number": "1a(5)",
+                      "summary": "Blisters."
+                    },
+                    {
+                      "number": "1a(6)",
+                      "summary": "Eye injuries."
+                    },
+                    {
+                      "number": "1a(7)",
+                      "summary": "Ankle and knee sprains."
+                    },
+                    {
+                      "number": "1a(8)",
+                      "summary": "Chigger, tick, mosquito and biting gnat bites."
+                    },
+                    {
+                      "number": "1a(9)",
+                      "summary": "Bee stings."
+                    },
+                    {
+                      "number": "1a(10)",
+                      "summary": "Spider bites."
+                    },
+                    {
+                      "number": "1a(11)",
+                      "summary": "Scorpion stings."
+                    },
+                    {
+                      "number": "1a(12)",
+                      "summary": "Wild mammal bites."
+                    },
+                    {
+                      "number": "1a(13)",
+                      "summary": "Venomous snakebites."
+                    }
+                  ]
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how the Scout Basic Essentials protect you outdoors and keep a lost Scout safe."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Discuss what safety gear searchers carry in their field packs and the hazards it covers."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn how to avoid getting lost, and how to be found.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain how a trip plan and the buddy system prevent getting lost and speed up rescue."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain how weather, by season and by day, shapes a trip plan."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Demonstrate and explain how you'd signal ground, air or water searchers if you were lost."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Show how to signal with a mirror."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Explain how a personal locator beacon works and what the Air Force Rescue Coordination Center does."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Work with a map, compass and a GPS your counselor approves.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Find and explain a map's 5 D's: date, description, details, direction or declination, and distance."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Record a spot's altitude, latitude, longitude and US National Grid coordinates, and compare the systems."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Orient the map, take a bearing to a second spot, then gauge the distance and terrain between."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Mark a made-up place last seen, and outline a containment area along natural or built boundaries."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about the Incident Command System.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Describe your area's incident command setup, and compare it with the patrol method."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Describe how agencies near you prepare for and run search and rescue efforts."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about search and rescue teams.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Describe what a search and rescue team is responsible for."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain how wilderness, urban and water searches differ."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Name four kinds of search and rescue teams and when each is called in."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how searches are run.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain how searching differs from rescuing."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Tell place last seen (PLS) apart from last known point (LKP)."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain why clear communication matters in a search."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain how lost person behavior guides searches for a young child, a teen and an adult."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Explain these search and rescue terms.",
+                  "children": [
+                    {
+                      "number": "6e(1)",
+                      "summary": "Evaluating search urgency."
+                    },
+                    {
+                      "number": "6e(2)",
+                      "summary": "Establishing confinement."
+                    },
+                    {
+                      "number": "6e(3)",
+                      "summary": "Scent item."
+                    },
+                    {
+                      "number": "6e(4)",
+                      "summary": "Area air scent dog."
+                    },
+                    {
+                      "number": "6e(5)",
+                      "summary": "Briefing and debriefing."
+                    },
+                    {
+                      "number": "6e(6)",
+                      "summary": "Clue awareness."
+                    },
+                    {
+                      "number": "6e(7)",
+                      "summary": "Evidence preservation."
+                    },
+                    {
+                      "number": "6e(8)",
+                      "summary": "Tracking a subject."
+                    },
+                    {
+                      "number": "6e(9)",
+                      "summary": "Locating a subject using attraction."
+                    },
+                    {
+                      "number": "6e(10)",
+                      "summary": "Hasty search."
+                    },
+                    {
+                      "number": "6e(11)",
+                      "summary": "Trail sweep search."
+                    },
+                    {
+                      "number": "6e(12)",
+                      "summary": "Grid search."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "With a team of Scouts, friends or family, plan and run a practice search.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Pick a practice scenario from the pamphlet or one your counselor approves."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Write an Incident Action Plan for a hasty search in that scenario."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Before searching, hold a PAUSE briefing on hazards, safety, Scout Basic Essentials and gear."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Carry out the search."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Debrief as a team on what worked, what didn't and how to improve."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore a search and rescue career or volunteer role.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Research a search and rescue or emergency management career, and discuss what interests you."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Research volunteering with a disaster relief, wilderness rescue or ski patrol team, and set goals."
+                }
+              ]
             }
           ]
         }
@@ -7105,6 +8757,124 @@
             {
               "number": "9",
               "summary": "Explain how swimming benefits fitness and health."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weather",
+      "name": "Weather",
+      "summary": "Learn how weather works, from air pressure and clouds to the water cycle and climate, and how to stay safe in storms.",
+      "officialUrl": "https://www.scouting.org/merit-badges/weather/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Define meteorology, weather and climate; tell why weather and forecasts matter to farmers, sailors, aviators and builders."
+            },
+            {
+              "number": "2",
+              "summary": "Give outdoor safety rules for five weather dangers, contrast watches and warnings, and share them with family."
+            },
+            {
+              "number": "3",
+              "summary": "Name two forecast sources for outings, and two emergency warning sources at home and outdoors."
+            },
+            {
+              "number": "4",
+              "summary": "Explain high and low pressure and their weather, and draw detailed cold and warm front cross sections."
+            },
+            {
+              "number": "5",
+              "summary": "Explain what causes wind and rain, and how lightning and hail form."
+            },
+            {
+              "number": "6",
+              "summary": "Identify low, middle and high clouds and the weather each brings."
+            },
+            {
+              "number": "7",
+              "summary": "Draw and label the water cycle, and explain it to your counselor."
+            },
+            {
+              "number": "8",
+              "summary": "Describe how human activities can change the climate and affect people."
+            },
+            {
+              "number": "9",
+              "summary": "Explain how Earth's tilt shapes climate at the equator, the poles and in between."
+            },
+            {
+              "number": "10",
+              "summary": "Track the weather yourself, or learn from a weather professional.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Build a wind vane, anemometer, rain gauge or hygrometer; log the weather at a set time daily for a week.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "wind",
+                        "label": "Wind direction and speed",
+                        "type": "text"
+                      },
+                      {
+                        "id": "temperature",
+                        "label": "Temperature",
+                        "type": "text"
+                      },
+                      {
+                        "id": "precipitation",
+                        "label": "Precipitation",
+                        "type": "text"
+                      },
+                      {
+                        "id": "clouds",
+                        "label": "Clouds",
+                        "type": "text"
+                      },
+                      {
+                        "id": "dew-or-frost",
+                        "label": "Dew or frost",
+                        "type": "text"
+                      },
+                      {
+                        "id": "forecast",
+                        "label": "Forecast",
+                        "type": "text"
+                      },
+                      {
+                        "id": "actual",
+                        "label": "How the weather turned out",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
+                },
+                {
+                  "number": "10b",
+                  "summary": "Learn about local weather dangers and warnings from a weather service office or a weather expert."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Give a counselor-approved talk of 5+ minutes to a group on lightning, flash flood and tornado safety."
+            },
+            {
+              "number": "12",
+              "summary": "Research a career related to weather and discuss what makes it interesting."
             }
           ]
         }
