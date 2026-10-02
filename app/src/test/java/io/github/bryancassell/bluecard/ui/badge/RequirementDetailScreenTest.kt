@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import java.time.LocalDate
@@ -232,7 +233,7 @@ class RequirementDetailScreenTest {
 
         composeTestRule
             .onNodeWithText("This requirement isn't in the requirements this badge uses.")
-            .assertIsDisplayed()
+            .assert(isPaneTitledWithItsText).assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
@@ -242,7 +243,7 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assert(isPaneTitledWithItsText).assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement", substring = true).assertDoesNotExist()
     }
 

@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -121,7 +122,9 @@ class HomeScreenTest {
     fun loadFailed_showsMessageOnly() {
         show(HomeUiState.LoadFailed)
 
-        text("Couldn't load your data. Try closing and reopening BlueCard.").assertIsDisplayed()
+        text(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ).assert(isPaneTitledWithItsText).assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         text("Merit badges").assertDoesNotExist()
     }

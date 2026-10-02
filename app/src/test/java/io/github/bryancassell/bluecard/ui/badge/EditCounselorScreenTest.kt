@@ -26,6 +26,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.SaveFailure
 import org.junit.Assert.assertEquals
@@ -91,7 +92,7 @@ class EditCounselorScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assert(isPaneTitledWithItsText).assertIsDisplayed()
         composeTestRule.onNodeWithText("Counselor").assertDoesNotExist()
     }
 
@@ -101,7 +102,7 @@ class EditCounselorScreenTest {
 
         composeTestRule
             .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
-            .assertIsDisplayed()
+            .assert(isPaneTitledWithItsText).assertIsDisplayed()
         composeTestRule.onNodeWithText("Counselor").assertDoesNotExist()
     }
 

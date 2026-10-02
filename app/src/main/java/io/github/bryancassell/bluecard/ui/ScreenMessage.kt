@@ -4,13 +4,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /**
  * A message shown in place of a screen's content, such as when its data couldn't be loaded.
- * Screen readers don't announce it yet when it appears (#69).
+ *
+ * Screen readers announce it as it appears, because it's a pane titled with its own text:
+ * Compose tells accessibility services that a pane appeared whenever a node with a pane title
+ * appears (`updateSemanticsNodesCopyAndPanes` in `AndroidComposeViewAccessibilityDelegateCompat`,
+ * Compose UI 1.12.1). Why it isn't a live region, and what TalkBack says, is in ARCHITECTURE.md
+ * (Load and save failures).
  */
 @Composable
 fun ScreenMessage(text: String, modifier: Modifier = Modifier) {
-    Text(text = text, modifier = modifier.padding(16.dp))
+    Text(text = text, modifier = modifier.padding(16.dp).semantics { paneTitle = text })
 }

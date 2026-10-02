@@ -26,6 +26,7 @@ import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -128,7 +129,7 @@ class OnboardingScreenTest {
     fun failed_showsMessageAndAllowsRetry() {
         showFilledIn(SaveStatus.Failed)
 
-        saveFailedMessage().assertExists()
+        saveFailedMessage().assert(isPaneTitledWithItsText).assertExists()
         field("Name").assertIsEnabled()
         field("Unit number").assertIsEnabled()
         saveButton().assertIsEnabled()
