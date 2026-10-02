@@ -47,27 +47,34 @@ class RoomProgressRepository @Inject constructor(
     ) = writing { dao.insertBadge(BadgeProgress(badgeId, requirementsVersion, startedDate)) }
 
     override suspend fun setCounselor(badgeId: String, counselor: Counselor?, start: BadgeStart) =
-        ifStarted(badgeId, start) {
+        afterStarting(badgeId, start) {
             val stored = counselor?.normalized()
             dao.updateCounselor(badgeId, stored?.name, stored?.phone, stored?.email)
         }
 
-    override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) =
-        ifStarted(badgeId) { dao.updateCompletedOnPriorDate(badgeId, date) }
+    override suspend fun setCompletedOnPriorDate(
+        badgeId: String,
+        date: LocalDate,
+        start: BadgeStart
+    ) = afterStarting(badgeId, start) { dao.updateCompletedOnPriorDate(badgeId, date) }
+
+    // Updates nothing for a badge that isn't started.
+    override suspend fun removeCompletedOnPriorDate(badgeId: String) =
+        writing { dao.updateCompletedOnPriorDate(badgeId, null) }
 
     override suspend fun markRequirementCompleted(
         badgeId: String,
         number: String,
         completedDate: LocalDate?,
         start: BadgeStart
-    ): Unit = ifStarted(badgeId, start) {
+    ): Unit = afterStarting(badgeId, start) {
         dao.updateRequirement(badgeId, number) {
             it.copy(completed = true, completedDate = completedDate)
         }
     }
 
     override suspend fun markRequirementNotCompleted(badgeId: String, number: String) =
-        ifStarted(badgeId, notStarted = { null }) {
+        ifStarted(badgeId, notStarted = null) {
             dao.updateRequirement(badgeId, number) {
                 it.copy(completed = false, completedDate = null)
             }
@@ -84,7 +91,7 @@ class RoomProgressRepository @Inject constructor(
         number: String,
         comment: String?,
         start: BadgeStart
-    ): Unit = ifStarted(badgeId, start) {
+    ): Unit = afterStarting(badgeId, start) {
         dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedText(comment)) }
     }
 
@@ -96,7 +103,7 @@ class RoomProgressRepository @Inject constructor(
         addedDate: LocalDate,
         start: BadgeStart,
         id: Long?
-    ): Long = ifStarted(badgeId, start) {
+    ): Long = afterStarting(badgeId, start) {
         dao.addTrackerEntry(
             TrackerEntry(
                 id = id ?: 0,
@@ -167,22 +174,26 @@ class RoomProgressRepository @Inject constructor(
         this !is SQLiteDatatypeMismatchException
 
     /**
-     * Runs [action] if the badge is started, or once [start] has started it, checking and
-     * writing in one transaction. Without [start], a badge that isn't started gets [notStarted]
-     * instead, which throws [notStartedError] unless the caller gives another.
+     * Runs [action] once the badge is started, starting it with [start] first if it isn't,
+     * checking and writing in one transaction.
      */
-    private suspend fun <T> ifStarted(
+    private suspend fun <T> afterStarting(
         badgeId: String,
-        start: BadgeStart? = null,
-        notStarted: () -> T = { throw notStartedError(badgeId) },
+        start: BadgeStart,
         action: suspend () -> T
     ): T = writing {
         database.withTransaction {
-            if (!dao.isStarted(badgeId)) {
-                if (start == null) return@withTransaction notStarted()
-                dao.insertBadge(start.progress(badgeId))
-            }
+            if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
             action()
         }
     }
+
+    /**
+     * Runs [action] if the badge is started, checking and writing in one transaction, or gives
+     * [notStarted] if it isn't.
+     */
+    private suspend fun <T> ifStarted(badgeId: String, notStarted: T, action: suspend () -> T): T =
+        writing {
+            database.withTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
+        }
 }

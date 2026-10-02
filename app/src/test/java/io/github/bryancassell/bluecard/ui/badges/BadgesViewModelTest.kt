@@ -230,7 +230,7 @@ class BadgesViewModelTest {
         progressRepository.startBadge("camping", version, started)
         assertEquals(BadgeStatus.InProgress, status("camping"))
 
-        progressRepository.setCompletedOnPriorDate("camping", day)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
         assertEquals(BadgeStatus.Completed, status("camping"))
 
         progressRepository.clearBadge("camping")

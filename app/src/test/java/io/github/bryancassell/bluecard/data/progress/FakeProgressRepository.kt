@@ -61,9 +61,21 @@ class FakeProgressRepository : ProgressRepository {
         }
     }
 
-    override suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?) {
+    override suspend fun setCompletedOnPriorDate(
+        badgeId: String,
+        date: LocalDate,
+        start: BadgeStart
+    ) {
         checkCanSave()
-        updateBadge(badgeId) { it.copy(badge = it.badge.copy(completedOnPriorDate = date)) }
+        updateBadge(badgeId, start) {
+            it.copy(badge = it.badge.copy(completedOnPriorDate = date))
+        }
+    }
+
+    override suspend fun removeCompletedOnPriorDate(badgeId: String) {
+        checkCanSave()
+        if (badgeId !in badges.value) return
+        updateBadge(badgeId) { it.copy(badge = it.badge.copy(completedOnPriorDate = null)) }
     }
 
     override suspend fun markRequirementCompleted(
@@ -207,8 +219,8 @@ class FakeProgressRepository : ProgressRepository {
     }
 
     /**
-     * Changes a started badge, or one that [start] starts in the same update. Throws, as Room
-     * does, if it hasn't been started and there's no [start].
+     * Changes a started badge, or one that [start] starts in the same update. Callers without a
+     * [start] check that it's started first.
      */
     private fun updateBadge(
         badgeId: String,
@@ -220,7 +232,7 @@ class FakeProgressRepository : ProgressRepository {
                 ?: start?.let {
                     BadgeProgressDetails(it.progress(badgeId), emptyList(), emptyList())
                 }
-                ?: throw notStartedError(badgeId)
+                ?: error("Badge \"$badgeId\" hasn't been started")
             all + (badgeId to change(details))
         }
     }

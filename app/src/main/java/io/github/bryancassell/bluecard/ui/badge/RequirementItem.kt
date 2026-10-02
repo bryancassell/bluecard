@@ -34,6 +34,11 @@ data class RequirementItem(
      * complete. That requirement may still need its own work.
      */
     val notNeeded: Boolean = false,
+    /**
+     * Whether nothing toward it was recorded: it's still needed and no part of it is done, but
+     * the scout marked the badge completed on a prior date, without recording its requirements.
+     */
+    val notRecorded: Boolean = false,
     /** The work it asks for besides its sub-requirements, or null if it asks for none. */
     val ownWork: OwnWork? = null,
     /**
@@ -63,16 +68,19 @@ data class CompleteCount(val complete: Int, val needed: Int)
 /**
  * [progress] and [trackerEntries] are what the scout recorded on the badge, keyed by
  * requirement number. [partOfHasEnough] is whether a requirement this one is part of, at any
- * depth, has enough complete sub-requirements ([hasEnoughChildren]).
+ * depth, has enough complete sub-requirements ([hasEnoughChildren]). [badgeCompletedOnPriorDate]
+ * is whether the scout marked the badge completed on a prior date.
  */
 fun Requirement.toItem(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,
-    partOfHasEnough: Boolean = false
+    partOfHasEnough: Boolean = false,
+    badgeCompletedOnPriorDate: Boolean = false
 ): RequirementItem {
     val completed = completion(progress, trackerEntries) != null
     val notNeeded = partOfHasEnough && !completed
     val stillNeeded = !completed && !notNeeded
+    val partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries)
     return RequirementItem(
         number = number,
         summary = summary,
@@ -81,8 +89,9 @@ fun Requirement.toItem(
         markedByHand = isMarkedByHand,
         tracker = tracker?.count(trackerEntries[number].orEmpty()),
         notNeeded = notNeeded,
+        notRecorded = badgeCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
-        partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries),
+        partlyCompleted = partlyCompleted,
         completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null
     )
 }

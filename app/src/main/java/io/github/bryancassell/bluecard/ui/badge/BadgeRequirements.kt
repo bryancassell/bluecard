@@ -17,11 +17,17 @@ data class BadgeRequirements(
     /** The scout's recorded requirement progress, keyed by requirement number. */
     val recorded: Map<String, RequirementProgress>,
     /** The scout's tracker entries, keyed by requirement number. */
-    val trackerEntries: Map<String, List<TrackerEntry>>
+    val trackerEntries: Map<String, List<TrackerEntry>>,
+    /** Whether the scout marked the badge completed on a prior date. */
+    val completedOnPriorDate: Boolean = false
 ) {
     /** [requirement] of this badge as a row. */
-    fun item(requirement: Requirement) =
-        requirement.toItem(recorded, trackerEntries, partOfHasEnough(requirement.number))
+    fun item(requirement: Requirement) = requirement.toItem(
+        recorded,
+        trackerEntries,
+        partOfHasEnough = partOfHasEnough(requirement.number),
+        badgeCompletedOnPriorDate = completedOnPriorDate
+    )
 
     /**
      * Whether the scout has recorded anything that shows for a requirement numbered in
@@ -57,7 +63,8 @@ fun List<MeritBadge>.badgeRequirements(
         badge,
         version,
         progress?.requirements.orEmpty().associateBy { it.requirementNumber },
-        progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber }
+        progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber },
+        progress?.badge?.completedOnPriorDate != null
     )
 }
 

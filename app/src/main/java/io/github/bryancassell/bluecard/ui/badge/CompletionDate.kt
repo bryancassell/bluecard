@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.text.TextUtils
 import android.view.View
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -49,10 +50,10 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
 
 /**
  * [text] about a date something was done on, such as "Completed on Apr 15, 2026", with buttons
- * to pick the date or remove it. Dates after [today] can't be picked. It's read as the picker
- * opens, so a page left open past midnight offers the new day. Screen readers read the date's
- * [label], if it has one, with each button, such as "Start: Add date", so the buttons of a page
- * with more than one date aren't all the same to them.
+ * to pick the date or remove it, labeled [removeText]. Dates after [today] can't be picked. It's
+ * read as the picker opens, so a page left open past midnight offers the new day. Screen readers
+ * read the date's [label], if it has one, with each button, such as "Start: Add date", so the
+ * buttons of a page with more than one date aren't all the same to them.
  */
 @Composable
 fun EditableDate(
@@ -61,9 +62,9 @@ fun EditableDate(
     today: () -> LocalDate,
     onDateChange: (LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
-    label: String? = null
+    label: String? = null,
+    @StringRes removeText: Int = R.string.requirement_remove_date
 ) {
-    var picking by rememberSaveable { mutableStateOf(false) }
     Column(modifier) {
         Text(
             text = text,
@@ -78,16 +79,17 @@ fun EditableDate(
                 R.string.requirement_change_date
             }
             val pick = stringResource(pickText)
-            TextButton(
-                onClick = { picking = true },
+            PickDateButton(
+                text = pick,
+                initial = date,
+                today = today,
+                onPick = onDateChange,
                 modifier = Modifier.readAs(
                     label?.let { stringResource(R.string.labeled_date_button, it, pick) }
                 )
-            ) {
-                Text(pick)
-            }
+            )
             if (date != null) {
-                val remove = stringResource(R.string.requirement_remove_date)
+                val remove = stringResource(removeText)
                 TextButton(
                     onClick = { onDateChange(null) },
                     modifier = Modifier.readAs(
@@ -99,14 +101,33 @@ fun EditableDate(
             }
         }
     }
+}
+
+/**
+ * A text button labeled [text] that asks for a date something was done on, starting at [initial],
+ * or at [today] without one, and gives [onPick] the date picked. Dates after [today] can't be
+ * picked. It's read as the picker opens, so a page left open past midnight offers the new day.
+ */
+@Composable
+fun PickDateButton(
+    text: String,
+    initial: LocalDate?,
+    today: () -> LocalDate,
+    onPick: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var picking by rememberSaveable { mutableStateOf(false) }
+    TextButton(onClick = { picking = true }, modifier = modifier) {
+        Text(text)
+    }
     if (picking) {
         val latest = remember { today() }
         CompletionDatePickerDialog(
-            initial = date ?: latest,
+            initial = initial ?: latest,
             today = latest,
             onConfirm = {
                 picking = false
-                onDateChange(it)
+                onPick(it)
             },
             onDismiss = { picking = false }
         )

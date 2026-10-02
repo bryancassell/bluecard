@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
+import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import java.time.LocalDate
@@ -45,6 +46,12 @@ data class ReportRequirement(
      * complete. The screens say so too.
      */
     val notNeeded: Boolean,
+    /**
+     * Whether nothing toward it was recorded: it's still needed and no part of it is done, but
+     * the scout marked the badge completed on a prior date, without recording its requirements.
+     * The screens say so too.
+     */
+    val notRecorded: Boolean,
     val comment: String?,
     /** Its tracker, or null if it has none. */
     val tracker: ReportTracker?,
@@ -79,37 +86,55 @@ fun MeritBadge.report(
     val version = requirementsVersionFor(progress) ?: return null
     val recorded = progress.requirements.associateBy { it.requirementNumber }
     val entries = progress.trackerEntries.groupBy { it.requirementNumber }
+    val completedOnPriorDate = progress.badge.completedOnPriorDate != null
     return BadgeReport(
         profile = profile,
         badgeName = name,
         requirementsVersion = version.effectiveDate,
         completion = progress.completion(version),
         counselor = progress.badge.counselor,
-        requirements = version.requirements.map { it.toReport(recorded, entries) },
+        requirements = version.requirements.map {
+            it.toReport(
+                recorded,
+                entries,
+                partOfHasEnough = false,
+                badgeCompletedOnPriorDate = completedOnPriorDate
+            )
+        },
         createdDate = createdDate
     )
 }
 
 /**
  * [partOfHasEnough] is whether a requirement this one is part of, at any depth, has enough
- * complete sub-requirements ([hasEnoughChildren]).
+ * complete sub-requirements ([hasEnoughChildren]). [badgeCompletedOnPriorDate] is whether the
+ * scout marked the badge completed on a prior date. They're in the same order as in the
+ * screens' `toItem`, which works out the same states.
  */
 private fun Requirement.toReport(
     recorded: Map<String, RequirementProgress>,
     entries: Map<String, List<TrackerEntry>>,
-    partOfHasEnough: Boolean = false
+    partOfHasEnough: Boolean,
+    badgeCompletedOnPriorDate: Boolean
 ): ReportRequirement {
     val completion = completion(recorded, entries)
+    val stillNeeded = !partOfHasEnough && completion == null
     return ReportRequirement(
         number = number,
         summary = summary,
         requiredCount = choiceCount,
         completion = completion,
         notNeeded = partOfHasEnough && completion == null,
+        notRecorded = badgeCompletedOnPriorDate && stillNeeded && !hasPartDone(recorded, entries),
         comment = recorded[number]?.comment,
         tracker = tracker?.toReport(entries[number].orEmpty()),
         children = children.map {
-            it.toReport(recorded, entries, partOfHasEnough || hasEnoughChildren(recorded, entries))
+            it.toReport(
+                recorded,
+                entries,
+                partOfHasEnough = partOfHasEnough || hasEnoughChildren(recorded, entries),
+                badgeCompletedOnPriorDate = badgeCompletedOnPriorDate
+            )
         }
     )
 }

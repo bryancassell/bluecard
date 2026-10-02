@@ -181,8 +181,7 @@ class JsonBackupRepositoryTest {
             day,
             start
         )
-        progressRepository.startBadge("swimming", start.requirementsVersion, start.startedDate)
-        progressRepository.setCompletedOnPriorDate("swimming", day)
+        progressRepository.setCompletedOnPriorDate("swimming", day, start)
     }
 
     /** Everything the fakes hold, as an import of an export of it would give it back. */
@@ -412,8 +411,7 @@ class JsonBackupRepositoryTest {
             exporting.addTrackerEntry("camping", "9a", null, mapOf("nights" to nights), day, start)
         }
         exporting.addTrackerEntry("camping", "9b", 2, mapOf("place" to "Lake"), day, start)
-        exporting.startBadge("swimming", start.requirementsVersion, start.startedDate)
-        exporting.setCompletedOnPriorDate("swimming", day)
+        exporting.setCompletedOnPriorDate("swimming", day, start)
         val (export, _) = document()
         newRepository(progressRepository = exporting).exportBackup(export)
 

@@ -23,12 +23,14 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
@@ -58,6 +60,7 @@ import io.github.bryancassell.bluecard.ui.SaveFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -79,6 +82,11 @@ class BadgeDetailScreenTest {
 
     private val openedRequirements = mutableListOf<String>()
     private var counselorEdits = 0
+    private val marks = mutableListOf<LocalDate>()
+    private var unmarks = 0
+
+    /** What the page reads as today when the picker opens, which a test can move on. */
+    private var today = LocalDate.of(2026, 5, 20)
     private var reportShareRequests = 0
     private var reportsShared = 0
     private val reportsSaved = mutableListOf<Uri>()
@@ -151,6 +159,9 @@ class BadgeDetailScreenTest {
                     uiState = uiState,
                     onOpenRequirement = { openedRequirements += it },
                     onEditCounselor = { counselorEdits++ },
+                    today = { today },
+                    onMarkCompleted = { marks += it },
+                    onUnmarkCompleted = { unmarks++ },
                     onShareReport = { reportShareRequests++ },
                     onReportShared = { reportsShared++ },
                     onSaveReport = { reportsSaved += it },
@@ -169,6 +180,9 @@ class BadgeDetailScreenTest {
             uiState,
             onOpenRequirement = {},
             onEditCounselor = {},
+            today = { today },
+            onMarkCompleted = {},
+            onUnmarkCompleted = {},
             onShareReport = {},
             onReportShared = {},
             onSaveReport = {},
@@ -181,6 +195,12 @@ class BadgeDetailScreenTest {
     // Each row merges its texts, so a row is the node with the requirement's summary. It's
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
+
+    /** A day in the date picker, such as "May 20, 2026". */
+    private fun pickerDay(date: String) =
+        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
+
+    private val isSelected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
     private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")
 
@@ -509,6 +529,8 @@ class BadgeDetailScreenTest {
     @Test
     fun officialLink_thenCounselorPhoneAndEmail_opensOnlyBrowser() {
         show(ready.copy(counselor = counselor))
+        // Scrolled first, since a scroll can't finish while the clock is paused.
+        composeTestRule.onNodeWithText("pat@example.com").performScrollTo()
         composeTestRule.mainClock.autoAdvance = false
 
         composeTestRule.onNodeWithText("Official requirements").performClick()
@@ -722,6 +744,122 @@ class BadgeDetailScreenTest {
     }
 
     private val completed = ready.copy(completed = true)
+
+    private val marked = completed.copy(completedOnPriorDate = LocalDate.of(2025, 8, 1))
+
+    @Test
+    fun incompleteBadge_canBeMarkedCompleted_onADayUpToToday() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
+        // It opens at today.
+        pickerDay("May 20, 2026").assert(isSelected)
+        pickerDay("May 21, 2026").assertIsNotEnabled()
+        pickerDay("May 10, 2026").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
+        composeTestRule.onNodeWithText("OK").assertDoesNotExist()
+    }
+
+    @Test
+    fun markCompleted_isBetweenOfficialLinkAndCounselor() {
+        show(ready)
+
+        val tops = listOf("Official requirements", "Mark completed", "Counselor").map {
+            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
+        }
+        assertEquals(tops.sorted(), tops)
+    }
+
+    // So a mistaken Unmark loses nothing.
+    @Test
+    fun markCompleted_afterUnmarking_opensAtTheDateUnmarked() {
+        show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
+
+        composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
+        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
+    }
+
+    @Test
+    fun markCompleted_cancelled_marksNothing() {
+        show(ready)
+
+        composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        assertEquals(emptyList<LocalDate>(), marks)
+        composeTestRule.onNodeWithText("Cancel").assertDoesNotExist()
+    }
+
+    @Test
+    fun markCompleted_onAPageOpenPastMidnight_offersTheNewDay() {
+        show(ready)
+        today = LocalDate.of(2026, 5, 21)
+
+        composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
+        pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf(LocalDate.of(2026, 5, 21)), marks)
+    }
+
+    @Test
+    fun markedBadge_showsItsDate_aboveItsReport() {
+        show(marked)
+
+        composeTestRule.onNodeWithText("Mark completed").assertDoesNotExist()
+        val tops = listOf(
+            "Official requirements",
+            "Completed on Aug 1, 2025",
+            "Change date",
+            "Share report",
+            "Counselor"
+        ).map { composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y }
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun markedBadge_changeDate_opensAtItsDate_andMarksTheDayPicked() {
+        show(marked)
+
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        pickerDay("August 1, 2025").assert(isSelected)
+        pickerDay("August 5, 2025").performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf(LocalDate.of(2025, 8, 5)), marks)
+    }
+
+    @Test
+    fun markedBadge_unmark_unmarksIt() {
+        show(marked)
+
+        composeTestRule.onNodeWithText("Unmark").performScrollTo().performClick()
+
+        assertEquals(1, unmarks)
+        assertEquals(emptyList<LocalDate>(), marks)
+    }
+
+    @Test
+    fun badgeCompleteFromItsRequirements_cantBeMarked() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Mark completed").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Unmark").assertDoesNotExist()
+    }
+
+    @Test
+    fun requirementNotRecorded_onAMarkedBadge_saysSo() {
+        val notRecorded =
+            RequirementItem("1", "Plan a campout.", null, false, true, notRecorded = true)
+        show(marked.copy(requirements = listOf(notRecorded)))
+
+        row("Plan a campout.").assert(hasStateDescription("Not recorded"))
+    }
 
     @Test
     fun incompleteBadge_hasNoReport() {

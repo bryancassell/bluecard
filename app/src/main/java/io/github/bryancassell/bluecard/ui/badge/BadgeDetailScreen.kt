@@ -66,6 +66,7 @@ import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberStartOtherApp
+import java.time.LocalDate
 
 /** Connects the Badge detail screen to its ViewModel. */
 @Composable
@@ -82,6 +83,9 @@ fun BadgeDetailRoute(
         uiState = uiState,
         onOpenRequirement = onOpenRequirement,
         onEditCounselor = onEditCounselor,
+        today = viewModel::today,
+        onMarkCompleted = viewModel::markCompleted,
+        onUnmarkCompleted = viewModel::unmarkCompleted,
         onShareReport = viewModel::shareReport,
         onReportShared = viewModel::onReportShared,
         onSaveReport = viewModel::saveReport,
@@ -98,6 +102,11 @@ fun BadgeDetailRoute(
  * top-level requirements. Each requirement opens its own page, where the scout marks it
  * complete, and the counselor is entered on a page of its own, which keeps this one short.
  *
+ * While the badge isn't complete, the scout can mark it completed on a date they pick, up to
+ * [today], without recording its requirements, as for a badge earned before they used the app
+ * ([onMarkCompleted]). The date then shows, and they can change it or unmark the badge
+ * ([onUnmarkCompleted]).
+ *
  * Once the badge is complete, its report can be shared, which asks for it to be created
  * ([onShareReport]) and opens the share sheet once it's ready ([onReportShared]), or saved,
  * which asks the scout where with the system file picker ([onSaveReport]). At the bottom, once
@@ -108,6 +117,9 @@ fun BadgeDetailScreen(
     uiState: BadgeDetailUiState,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
+    today: () -> LocalDate,
+    onMarkCompleted: (date: LocalDate) -> Unit,
+    onUnmarkCompleted: () -> Unit,
     onShareReport: () -> Unit,
     onReportShared: () -> Unit,
     onSaveReport: (destination: Uri) -> Unit,
@@ -129,6 +141,9 @@ fun BadgeDetailScreen(
                 uiState,
                 onOpenRequirement,
                 onEditCounselor,
+                today,
+                onMarkCompleted,
+                onUnmarkCompleted,
                 onShareReport,
                 onReportShared,
                 onSaveReport,
@@ -156,6 +171,9 @@ private fun BadgeDetails(
     uiState: BadgeDetailUiState.Ready,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
+    today: () -> LocalDate,
+    onMarkCompleted: (date: LocalDate) -> Unit,
+    onUnmarkCompleted: () -> Unit,
     onShareReport: () -> Unit,
     onReportShared: () -> Unit,
     onSaveReport: (destination: Uri) -> Unit,
@@ -168,7 +186,7 @@ private fun BadgeDetails(
     uiState.reportToShare?.let { ShareReport(it, onReportShared) }
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
@@ -232,9 +250,24 @@ private fun BadgeDetails(
                         .testTag(OFFICIAL_LINK_ICON_TAG)
                 )
             }
-            if (uiState.completed) {
-                ReportButtons(uiState.name, onShareReport, onSaveReport, startOtherApp)
-            }
+        }
+        // Outside the column above, so its text buttons line up with the page's text, as Add
+        // counselor's does.
+        CompletedOnPriorDate(uiState, today, onMarkCompleted, onUnmarkCompleted)
+        if (uiState.completed) {
+            ReportButtons(
+                uiState.name,
+                onShareReport,
+                onSaveReport,
+                startOtherApp,
+                Modifier.padding(
+                    start = 16.dp,
+                    // Under Change date, whose touch area already leaves room below its text.
+                    top = if (uiState.completedOnPriorDate == null) 8.dp else 0.dp,
+                    end = 16.dp,
+                    bottom = 16.dp
+                )
+            )
         }
         CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
         Text(
@@ -258,6 +291,48 @@ private fun BadgeDetails(
                 onClear = onClear
             )
         }
+    }
+}
+
+/**
+ * While the badge isn't complete, a button to mark it completed on a date the scout picks, up to
+ * [today], without recording its requirements ([onMark]). Its picker opens at the date the scout
+ * just unmarked, if any, or at today. Once it's marked, the date, with
+ * buttons to change it ([onMark]) or unmark the badge ([onUnmark]). Nothing for a badge complete
+ * from its requirements alone.
+ *
+ * Its text buttons' touch areas are taller than they look, so they need no padding of their own
+ * to keep it apart from what's above and below.
+ */
+@Composable
+private fun CompletedOnPriorDate(
+    uiState: BadgeDetailUiState.Ready,
+    today: () -> LocalDate,
+    onMark: (date: LocalDate) -> Unit,
+    onUnmark: () -> Unit
+) {
+    val date = uiState.completedOnPriorDate
+    if (date != null) {
+        val formatter = rememberCompletionDateFormatter()
+        EditableDate(
+            text = stringResource(R.string.badge_detail_completed_on, formatter.format(date)),
+            date = date,
+            today = today,
+            onDateChange = { if (it == null) onUnmark() else onMark(it) },
+            // Its text, unlike a button's, sits at the top of its space.
+            modifier = Modifier.padding(top = 16.dp),
+            removeText = R.string.badge_detail_unmark_completed
+        )
+    } else if (!uiState.completed) {
+        PickDateButton(
+            text = stringResource(R.string.badge_detail_mark_completed),
+            // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
+            initial = uiState.unmarkedDate,
+            today = today,
+            onPick = onMark,
+            // Lines the button's text up with the page's, as for Add counselor.
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
     }
 }
 
@@ -306,7 +381,8 @@ private fun ReportButtons(
     badgeName: String,
     onShare: () -> Unit,
     onSave: (destination: Uri) -> Unit,
-    startOtherApp: OtherAppStarter
+    startOtherApp: OtherAppStarter,
+    modifier: Modifier = Modifier
 ) {
     val createDocument = rememberLauncherForActivityResult(CreateDocument(PDF)) { destination ->
         // Null when the scout leaves the file picker without saving.
@@ -316,6 +392,7 @@ private fun ReportButtons(
     val noFilePicker = stringResource(R.string.no_file_saver)
     // Wraps the buttons onto two lines when they don't fit on one, as with large text.
     FlowRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

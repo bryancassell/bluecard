@@ -7,11 +7,10 @@ import kotlinx.coroutines.flow.Flow
  * Everything the scout records about their badges.
  *
  * A badge must be started before anything is recorded for it, with [startBadge] or with the
- * [BadgeStart] that some functions take and start it with: the other functions that record
- * progress throw [IllegalStateException] for a badge that hasn't been started, except
- * [markRequirementNotCompleted], which does nothing for one. Clearing a badge or requirements
- * with nothing recorded, and changing or deleting a tracker entry that doesn't exist, do
- * nothing too.
+ * [BadgeStart] that the functions that record progress take and start it with. Undoing a
+ * completion ([removeCompletedOnPriorDate], [markRequirementNotCompleted]) does nothing for a
+ * badge that hasn't been started, and clearing a badge or requirements with nothing recorded,
+ * and changing or deleting a tracker entry that doesn't exist, do nothing too.
  *
  * Its flows throw an `IOException` when stored progress can't be read, such as when the
  * database can't be opened, and its other functions throw one when progress can't be saved.
@@ -35,8 +34,18 @@ interface ProgressRepository {
      */
     suspend fun setCounselor(badgeId: String, counselor: Counselor?, start: BadgeStart)
 
-    /** Marks the badge completed on [date] without requirement detail, or undoes it (null). */
-    suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate?)
+    /**
+     * Marks the badge completed on [date] without requirement detail, as for a badge earned
+     * before the scout used the app, or changes the date it's marked with. A badge that hasn't
+     * been started is started with [start], as in [markRequirementCompleted].
+     */
+    suspend fun setCompletedOnPriorDate(badgeId: String, date: LocalDate, start: BadgeStart)
+
+    /**
+     * Undoes [setCompletedOnPriorDate]. The badge stays started, with what's recorded for it.
+     * Does nothing for a badge that isn't started, as when its progress was cleared just before.
+     */
+    suspend fun removeCompletedOnPriorDate(badgeId: String)
 
     /**
      * Marks the requirement completed on [completedDate], or with no date (null). A badge that
@@ -124,7 +133,3 @@ interface ProgressRepository {
      */
     suspend fun replaceAll(progress: List<BadgeProgressDetails>)
 }
-
-/** What [ProgressRepository] implementations throw when a badge hasn't been started. */
-fun notStartedError(badgeId: String) =
-    IllegalStateException("Badge \"$badgeId\" hasn't been started")

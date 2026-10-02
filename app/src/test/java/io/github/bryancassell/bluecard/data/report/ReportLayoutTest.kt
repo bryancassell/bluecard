@@ -48,6 +48,7 @@ class ReportLayoutTest {
         comment: String? = null,
         requiredCount: Int? = null,
         notNeeded: Boolean = false,
+        notRecorded: Boolean = false,
         tracker: ReportTracker? = null,
         children: List<ReportRequirement> = emptyList()
     ) = ReportRequirement(
@@ -56,6 +57,7 @@ class ReportLayoutTest {
         requiredCount,
         completion,
         notNeeded,
+        notRecorded,
         comment,
         tracker,
         children
@@ -170,6 +172,14 @@ class ReportLayoutTest {
             ),
             pages.single().lines
         )
+    }
+
+    @Test
+    fun requirementNotRecorded_saysSo() {
+        val lines = layOut(report(listOf(requirement("1", "Plan.", notRecorded = true))))
+            .single().lines
+
+        assertEquals("Not recorded", lines[lines.indexOf("1. Plan.") + 1])
     }
 
     @Test

@@ -625,11 +625,11 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 - **Recording anything starts the badge**, on the requirements version its
   pages show until then (the newest), dated today
   (`ui/badge/ProgressRecorder.kt`). There's no separate "start" step.
-  `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry` and
-  `setCounselor` take a `BadgeStart`, and `ProgressRepository` starts the badge
-  in the same transaction as the write, so a save that fails doesn't leave the
-  badge started. Other functions that record progress should take one when a
-  screen first calls them.
+  `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry`,
+  `setCounselor` and `setCompletedOnPriorDate` take a `BadgeStart`, and
+  `ProgressRepository` starts the badge in the same transaction as the write,
+  so a save that fails doesn't leave the badge started. Other functions that
+  record progress should take one when a screen first calls them.
 - **The repository cleans up what the scout types:** it trims spaces around
   each value and drops blank ones (`normalizedText`, `normalizedTrackerValues`,
   `Counselor.normalized`).
@@ -678,8 +678,8 @@ detail share their Clear progress button and its dialog
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a
-badge that isn't started, rather than throw: `markRequirementNotCompleted` and
-the report functions. Clearing doesn't delete a report shared before from the
+badge that isn't started, rather than throw: `markRequirementNotCompleted`,
+`removeCompletedOnPriorDate` and the report functions. Clearing doesn't delete a report shared before from the
 cache: an app it was shared with, such as an email app that reads it only when
 it sends, may still need it.
 

@@ -65,6 +65,20 @@ class BadgeRequirementsTest {
     }
 
     @Test
+    fun completedOnPriorDate_isTold_andItsRequirementsAreNotRecorded() {
+        val started = startedOn(newest.effectiveDate)
+        assertFalse(catalog.badgeRequirements("camping", started)!!.completedOnPriorDate)
+
+        val marked = started.copy(
+            badge = started.badge.copy(completedOnPriorDate = LocalDate.of(2025, 8, 1))
+        )
+        val found = catalog.badgeRequirements("camping", marked)!!
+
+        assertTrue(found.completedOnPriorDate)
+        assertTrue(found.item(newest.requirements.first()).notRecorded)
+    }
+
+    @Test
     fun started_isVersionItWasStartedOn_withProgressByNumber() {
         val found = catalog.badgeRequirements("camping", startedOn(older.effectiveDate, "1"))
 

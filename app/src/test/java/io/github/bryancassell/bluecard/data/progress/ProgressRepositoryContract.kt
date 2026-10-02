@@ -142,12 +142,19 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun setCompletedOnPriorDate_setsAndUndoes() = test {
-        repository.setCompletedOnPriorDate(BADGE, day)
+    fun setCompletedOnPriorDate_setsChangesAndRemoves() = test {
+        repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
+
+        repository.setCompletedOnPriorDate(BADGE, day, badgeStart)
         assertEquals(day, progress()!!.badge.completedOnPriorDate)
 
-        repository.setCompletedOnPriorDate(BADGE, null)
-        assertNull(progress()!!.badge.completedOnPriorDate)
+        repository.setCompletedOnPriorDate(BADGE, laterDay, badgeStart)
+        assertEquals(laterDay, progress()!!.badge.completedOnPriorDate)
+
+        repository.removeCompletedOnPriorDate(BADGE)
+        assertEquals(BadgeProgress(BADGE, version, started), progress()!!.badge)
+        // What's recorded for its requirements stays.
+        assertEquals(listOf("1"), progress()!!.requirements.map { it.requirementNumber })
     }
 
     @Test
@@ -280,9 +287,10 @@ abstract class ProgressRepositoryContract {
         repository.setRequirementComment(BADGE, "2", "Hi", later)
         repository.addTrackerEntry(BADGE, "7a", null, mapOf("minutes" to "30"), day, later)
         repository.setCounselor(BADGE, Counselor(name = "Pat"), later)
+        repository.setCompletedOnPriorDate(BADGE, day, later)
 
         assertEquals(
-            BadgeProgress(BADGE, version, started, counselor = Counselor(name = "Pat")),
+            BadgeProgress(BADGE, version, started, Counselor(name = "Pat"), day),
             progress()!!.badge
         )
         assertEquals(listOf("1", "2"), progress()!!.requirements.map { it.requirementNumber })
@@ -509,14 +517,17 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun setCompletedOnPriorDate_onAnUnstartedBadge_failsAndRecordsNothing() = test {
-        try {
-            repository.setCompletedOnPriorDate(UNSTARTED, day)
-            fail("setCompletedOnPriorDate should fail for a badge that hasn't been started")
-        } catch (e: IllegalStateException) {
-            assertEquals(notStartedError(UNSTARTED).message, e.message)
-        }
-        assertNull(progress(UNSTARTED))
+    fun setCompletedOnPriorDate_onAnUnstartedBadge_startsIt() = test {
+        repository.setCompletedOnPriorDate(UNSTARTED, day, BadgeStart(version, laterDay))
+
+        assertEquals(
+            BadgeProgressDetails(
+                BadgeProgress(UNSTARTED, version, laterDay, completedOnPriorDate = day),
+                emptyList(),
+                emptyList()
+            ),
+            progress(UNSTARTED)
+        )
     }
 
     @Test
@@ -527,8 +538,10 @@ abstract class ProgressRepositoryContract {
         repository.clearRequirements(UNSTARTED, listOf("1"))
         repository.clearBadge(UNSTARTED)
         repository.deleteTrackerEntry(999)
-        // As when the scout unchecks a requirement on a page shown before its badge was cleared.
+        // As when the scout unchecks a requirement, or unmarks a badge completed on a prior
+        // date, on a page shown before its badge was cleared.
         val unchecked = repository.markRequirementNotCompleted(UNSTARTED, "1")
+        repository.removeCompletedOnPriorDate(UNSTARTED)
 
         assertNull(unchecked)
         assertNull(progress(UNSTARTED))
@@ -556,7 +569,9 @@ abstract class ProgressRepositoryContract {
             "startBadge" to { unwritable.startBadge(BADGE, version, started) },
             "setCounselor" to
                 { unwritable.setCounselor(BADGE, Counselor(name = "Pat"), badgeStart) },
-            "setCompletedOnPriorDate" to { unwritable.setCompletedOnPriorDate(BADGE, day) },
+            "setCompletedOnPriorDate" to
+                { unwritable.setCompletedOnPriorDate(BADGE, day, badgeStart) },
+            "removeCompletedOnPriorDate" to { unwritable.removeCompletedOnPriorDate(BADGE) },
             "markRequirementCompleted" to
                 { unwritable.markRequirementCompleted(BADGE, "1", day, badgeStart) },
             "markRequirementNotCompleted" to { unwritable.markRequirementNotCompleted(BADGE, "1") },

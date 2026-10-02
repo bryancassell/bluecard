@@ -98,8 +98,7 @@ class HomeViewModelTest {
     }
 
     private suspend fun complete(badgeId: String) {
-        start(badgeId)
-        progressRepository.setCompletedOnPriorDate(badgeId, day)
+        progressRepository.setCompletedOnPriorDate(badgeId, day, badgeStart)
     }
 
     @Test
@@ -248,7 +247,7 @@ class HomeViewModelTest {
         assertEquals(ProgressCounts(completed = 0, inProgress = 1), ready().badges)
         assertEquals(ProgressCounts(completed = 0, inProgress = 1), ready().eagle)
 
-        progressRepository.setCompletedOnPriorDate("camping", day)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
         assertEquals(ProgressCounts(completed = 1, inProgress = 0), ready().badges)
         assertEquals(ProgressCounts(completed = 1, inProgress = 0), ready().eagle)
 
