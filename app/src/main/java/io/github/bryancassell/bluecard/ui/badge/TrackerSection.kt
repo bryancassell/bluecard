@@ -112,8 +112,9 @@ private fun TrackerRowItem(
  * line break in a value, as in multi-line text, is a space.
  */
 @Composable
-private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFormatter): String? =
-    values.takeIf { it.isNotEmpty() }?.map { value ->
+private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFormatter): String? {
+    val separator = stringResource(R.string.tracker_value_separator)
+    return values.takeIf { it.isNotEmpty() }?.map { value ->
         when (value.type) {
             TrackerColumnType.DATE ->
                 storedDate(value.text)?.let { formatter.format(it) } ?: typedText(value.text)
@@ -122,4 +123,5 @@ private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFor
             TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->
                 typedText(value.text)
         }
-    }?.joinToString(" · ")?.let(::lineBreaksAsSpaces)
+    }?.joinToString(separator)?.let(::lineBreaksAsSpaces)
+}

@@ -33,6 +33,15 @@ interface ReportRepository {
  * The file name of the report on the badge named [badgeName], such as "Camping merit badge
  * report.pdf", from [resources] in the strings' language. Both a shared report and the name the
  * file picker suggests use it.
+ *
+ * A character that a file name can't hold on a phone, SD card or computer, such as "/", is
+ * replaced with "_", as the file picker replaces it when it saves a file (AOSP's
+ * `FileUtils.buildValidFatFilename`). Otherwise a badge or translation with a "/" would name a
+ * folder that doesn't exist, and the report couldn't be shared.
  */
 fun reportFileName(resources: Resources, badgeName: String): String =
-    resources.getString(R.string.report_file_name, badgeName) + ".pdf"
+    resources.getString(R.string.report_file_name, badgeName)
+        .replace(INVALID_FILE_NAME_CHARACTERS, "_") + ".pdf"
+
+/** Control characters and those a FAT file system can't hold, as in AOSP's `FileUtils`. */
+private val INVALID_FILE_NAME_CHARACTERS = Regex("""[\x00-\x1F\x7F"*/:<>?\\|]""")

@@ -342,6 +342,10 @@ both taps of a double tap can reach it.
   `StringsLanguageTagTest` checks that each `strings.xml` names its own
   language: a wrong tag, such as "en" left in a translation, would replace the
   whole translation with English.
+- **Punctuation that joins text comes from `strings.xml` too**
+  ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
+  " · " between a tracker row's values or the ": " after a label, so a
+  translation can change it.
 - **Screens are laid out in the strings' language's direction, not the
   device's** ([#66](https://github.com/bryancassell/bluecard/issues/66)).
   `MainActivity` sets it in `attachBaseContext`, so on a Persian or Arabic
