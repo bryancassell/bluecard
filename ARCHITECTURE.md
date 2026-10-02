@@ -238,14 +238,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   fields instead chain `NumberInput`, which rejects a line break, with their
   `TextLengthLimit`.
 - **A tracker entry's last field and its Save button scroll into view
-  together.** As the keyboard opens, Compose keeps only a focused field's
-  cursor in view, which can leave the Save button under the field behind the
-  keyboard. The entry page wraps its last field and its buttons in
-  `KeepInViewWhileFocused` (`ui/badge/TrackerEntryScreen.kt`). While one of
-  them has focus, it brings them all into view with a `BringIntoViewRequester`,
-  each time the keyboard shrinks the page or the field grows, as long as they
-  fit ([#172](https://github.com/bryancassell/bluecard/issues/172)). Otherwise
-  the page follows the cursor, as before.
+  together** (`KeepInViewWhileFocused` in `ui/badge/TrackerEntryScreen.kt`).
+  As the keyboard opens, Compose keeps only a focused field's cursor in view,
+  which can leave the Save button under the field behind the keyboard
+  ([#172](https://github.com/bryancassell/bluecard/issues/172)). They're
+  brought into view together only when they fit, so a field too tall for both
+  still keeps its cursor in view.
 
 ### Navigation
 

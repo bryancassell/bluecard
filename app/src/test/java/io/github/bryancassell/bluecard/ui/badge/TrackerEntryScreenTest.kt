@@ -28,6 +28,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.Insets
@@ -127,12 +128,17 @@ class TrackerEntryScreenTest {
      * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
      * after the page has handled the focus change.
      */
-    private fun openKeyboard() {
-        val height = with(composeTestRule.density) { KEYBOARD_HEIGHT.roundToPx() }
+    private fun openKeyboard() = showKeyboard(KEYBOARD_HEIGHT)
+
+    /** Closes the keyboard, as the scout does with Back while a field keeps focus. */
+    private fun closeKeyboard() = showKeyboard(0.dp)
+
+    private fun showKeyboard(height: Dp) {
+        val pixels = with(composeTestRule.density) { height.roundToPx() }
         composeTestRule.runOnIdle {
             val insets = WindowInsetsCompat.Builder()
-                .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, height))
-                .setVisible(WindowInsetsCompat.Type.ime(), true)
+                .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, pixels))
+                .setVisible(WindowInsetsCompat.Type.ime(), pixels > 0)
                 .build()
             ViewCompat.dispatchApplyWindowInsets(view, insets)
         }
@@ -459,8 +465,8 @@ class TrackerEntryScreenTest {
         assertAboveKeyboard(cursorBounds())
     }
 
-    // Fits on the page with Save, but too tall to show with Save above the keyboard, so the
-    // page keeps the cursor in view as the keyboard opens, as for any other field.
+    // Too tall to show with Save above the keyboard, so the page keeps the cursor in view as the
+    // keyboard opens, as for any other field.
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
@@ -473,6 +479,30 @@ class TrackerEntryScreenTest {
         openKeyboard()
 
         assertAboveKeyboard(cursorBounds())
+    }
+
+    // With the last field still focused, the scout scrolled up to check an earlier one. Closing
+    // the keyboard leaves the page there, rather than pulling it back down to Save.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardClosingAfterScrollingAway_leavesThePageWhereItIs() {
+        // More fields than fit on the page, with Notes still last.
+        val more = listOf("Route", "Weather", "Partner", "Goal").map {
+            TrackerColumn(it.lowercase(), it, TrackerColumnType.TEXT)
+        }
+        show(
+            newEntry.copy(columns = columns.dropLast(1) + more + columns.last()),
+            fields + more.associate { it.id to TextFieldState() }
+        )
+        field("Notes").performClick()
+        openKeyboard()
+        val heading = composeTestRule.onNodeWithText("Session 3").performScrollTo()
+        val scrolledTo = heading.getUnclippedBoundsInRoot()
+
+        closeKeyboard()
+
+        assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
 
     @Test

@@ -131,21 +131,21 @@ fun TrackerEntryScreen(
                 ) {
                     TrackerEntryHeader(uiState)
                     val trackerField: @Composable (TrackerColumn) -> Unit = { column ->
-                        // Keeps each date field's picker with its column.
-                        key(column.id) {
-                            TrackerField(
-                                column = column,
-                                field = fields.getValue(column.id),
-                                date = uiState.dates[column.id],
-                                today = today,
-                                onDateChange = { onDateChange(column.id, it) }
-                            )
-                        }
+                        TrackerField(
+                            column = column,
+                            field = fields.getValue(column.id),
+                            date = uiState.dates[column.id],
+                            today = today,
+                            onDateChange = { onDateChange(column.id, it) }
+                        )
                     }
-                    uiState.columns.dropLast(1).forEach { trackerField(it) }
+                    uiState.columns.dropLast(1).forEach { column ->
+                        // Keeps each date field's picker with its column.
+                        key(column.id) { trackerField(column) }
+                    }
                     // Keeps Save above the keyboard while the scout types in the last field.
                     KeepInViewWhileFocused(scrollState) {
-                        trackerField(uiState.columns.last())
+                        uiState.columns.lastOrNull()?.let { trackerField(it) }
                         TrackerEntryButtons(uiState, onSave, onDelete)
                     }
                 }
@@ -253,9 +253,9 @@ private fun TrackerField(
 
 /**
  * Keeps all of [content] in view while something in it has focus, when it fits in the page's
- * [scrollState] viewport: as the keyboard opens, which shrinks the viewport, and as a field in it
- * grows. Otherwise the page keeps only a focused field's cursor in view, as it does for the
- * fields above.
+ * [scrollState] viewport: as it takes focus, as the keyboard opens, which shrinks the viewport,
+ * and as a field in it grows. Otherwise the page keeps only a focused field's cursor in view, as
+ * it does for the fields above.
  */
 @Composable
 private fun KeepInViewWhileFocused(
@@ -265,10 +265,17 @@ private fun KeepInViewWhileFocused(
     val requester = remember { BringIntoViewRequester() }
     var hasFocus by remember { mutableStateOf(false) }
     var height by remember { mutableIntStateOf(0) }
+    // Read here, it recomposes only this function on each frame as the keyboard opens.
     val viewportHeight = scrollState.viewportSize
+    // Read only by the effect, so changing it doesn't recompose.
+    var previousViewportHeight by remember { mutableIntStateOf(viewportHeight) }
     // Asks again each time one changes, which cancels the request before.
     LaunchedEffect(hasFocus, height, viewportHeight) {
-        if (hasFocus && height <= viewportHeight) requester.bringIntoView()
+        // A viewport that grew, as when the keyboard closes, can't have hidden them. Asking then
+        // would pull the page back to them after the scout has scrolled away.
+        val viewportGrew = viewportHeight > previousViewportHeight
+        previousViewportHeight = viewportHeight
+        if (hasFocus && height <= viewportHeight && !viewportGrew) requester.bringIntoView()
     }
     Column(
         modifier = Modifier
