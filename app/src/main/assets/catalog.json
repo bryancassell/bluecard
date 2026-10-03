@@ -182,6 +182,416 @@
       ]
     },
     {
+      "id": "animal-science",
+      "name": "Animal Science",
+      "summary": "Learn livestock breeds, diseases, digestion, management and breeding, then study beef cattle, dairy, horses, sheep or goats, hogs or poultry in depth.",
+      "officialUrl": "https://www.scouting.org/merit-badges/animal-science/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Name two breeds in each livestock class (horses, dairy cattle, beef cattle, sheep, hogs, poultry and goats), with their main uses, merits and origins.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "class",
+                    "label": "Livestock class",
+                    "type": "text"
+                  },
+                  {
+                    "id": "breed",
+                    "label": "Breed",
+                    "type": "text"
+                  },
+                  {
+                    "id": "uses",
+                    "label": "Uses and merits",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "origin",
+                    "label": "Where it originated",
+                    "type": "text"
+                  }
+                ],
+                "rowLabel": "breed",
+                "rowLabelPlural": "breeds",
+                "rowCount": 14
+              }
+            },
+            {
+              "number": "2",
+              "summary": "List two diseases for each class in requirement 1, and describe each one's symptoms, how animals catch it and how to prevent it.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "class",
+                    "label": "Livestock class",
+                    "type": "text"
+                  },
+                  {
+                    "id": "disease",
+                    "label": "Disease",
+                    "type": "text"
+                  },
+                  {
+                    "id": "symptoms",
+                    "label": "Symptoms",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "spread",
+                    "label": "How animals catch it",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "prevention",
+                    "label": "How to prevent it",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "disease",
+                "rowLabelPlural": "diseases",
+                "rowCount": 14
+              }
+            },
+            {
+              "number": "3",
+              "summary": "Draw models of the digestive tracts of ruminants, horses, pigs and poultry, and explain how their differences shape each one's feeding."
+            },
+            {
+              "number": "4",
+              "summary": "Pick a beef cow, dairy cow, horse, sheep, goat, hog or poultry flock, and tell how you'd manage it, covering feeding, housing, disease prevention, waste removal, breeding and biosecurity as they apply."
+            },
+            {
+              "number": "5",
+              "summary": "Learn how livestock is bred and improved.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how producers improve their stock through breeding."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain pure breeding and cross breeding."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Give two modern technologies producers use with horses, dairy cattle, beef cattle, sheep, hogs, poultry or goats, and what each one offers."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Complete one option to study a kind of livestock in depth.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6A",
+                  "summary": "Option A: beef cattle.",
+                  "children": [
+                    {
+                      "number": "6A(1)",
+                      "summary": "Visit a beef farm or ranch, ask the operator how cattle are handled, fed, weighed and shipped, and report what you saw and learned; if you can't, use a breed association video or, with permission, online research."
+                    },
+                    {
+                      "number": "6A(2)",
+                      "summary": "Sketch either a feedlot for 30 or more fattening steers, with forage and grain storage and a loading chute, or a corral that handles 50 or more beef cows and their calves at once, with cutting and loading chutes."
+                    },
+                    {
+                      "number": "6A(3)",
+                      "summary": "Sketch the main wholesale and retail cuts of beef, and explain the USDA's dual grading system and the basis of each grade."
+                    },
+                    {
+                      "number": "6A(4)",
+                      "summary": "Define bull, steer, bullock, cow, heifer, freemartin, heiferette and calf."
+                    }
+                  ]
+                },
+                {
+                  "number": "6B",
+                  "summary": "Option B: dairy.",
+                  "children": [
+                    {
+                      "number": "6B(1)",
+                      "summary": "Explain how a cow or goat makes milk from forage and grain, and how dairy and beef cows' feeds differ."
+                    },
+                    {
+                      "number": "6B(2)",
+                      "summary": "Chart the components of cow's or goat's milk and how much of each."
+                    },
+                    {
+                      "number": "6B(3)",
+                      "summary": "Explain what producing grade A milk takes, and why and how milk gets pasteurized."
+                    },
+                    {
+                      "number": "6B(4)",
+                      "summary": "Describe dairy farm milking equipment and the sanitation standards farms must meet."
+                    },
+                    {
+                      "number": "6B(5)",
+                      "summary": "Define bull, cow, steer, heifer, springer, buck, doe and kid."
+                    },
+                    {
+                      "number": "6B(6)",
+                      "summary": "Visit a dairy farm or milk processing plant and report what you saw and learned; if you can't, use a breed or dairy association video or, with permission, online research."
+                    }
+                  ]
+                },
+                {
+                  "number": "6C",
+                  "summary": "Option C: horse.",
+                  "children": [
+                    {
+                      "number": "6C(1)",
+                      "summary": "Sketch a practical barn and exercise yard for saddle horses."
+                    },
+                    {
+                      "number": "6C(2)",
+                      "summary": "Tell the horse's history and how it has helped people, and discuss the special uses of each horse breed you chose in requirement 1."
+                    },
+                    {
+                      "number": "6C(3)",
+                      "summary": "Define mare, stallion, gelding, foal, colt, filly; mustang, quarter horse, draft horse, pacer, trotter; pinto, calico, palomino, roan, overo and tobiano."
+                    },
+                    {
+                      "number": "6C(4)",
+                      "summary": "Visit a horse farm and report what you saw and learned; if you can't, use a breed association video or, with permission, online research."
+                    },
+                    {
+                      "number": "6C(5)",
+                      "summary": "Outline how to feed a horse doing light work and why feed changes with the horse and its work, and describe colic, its causes and symptoms."
+                    }
+                  ]
+                },
+                {
+                  "number": "6D",
+                  "summary": "Option D: sheep or goat (pick one).",
+                  "children": [
+                    {
+                      "number": "6D(1)",
+                      "summary": "Sketch a live lamb or goat, marking where its wholesale and retail cuts are."
+                    },
+                    {
+                      "number": "6D(2)",
+                      "summary": "Discuss how wool is sorted and graded."
+                    },
+                    {
+                      "number": "6D(3)",
+                      "summary": "List products made from the milk."
+                    },
+                    {
+                      "number": "6D(4)",
+                      "summary": "Raise an animal or visit a farm.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "6D(4)(a)",
+                          "summary": "Raise a lamb or goat from weaning to market weight, keeping records of its feed, weight gain, medication, vaccinations and any deaths for your counselor to review.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "date",
+                                "label": "Date",
+                                "type": "date"
+                              },
+                              {
+                                "id": "feed",
+                                "label": "Feed eaten",
+                                "type": "multiline-text"
+                              },
+                              {
+                                "id": "weight",
+                                "label": "Weight",
+                                "type": "number"
+                              },
+                              {
+                                "id": "health",
+                                "label": "Medication, vaccinations and deaths",
+                                "type": "multiline-text"
+                              }
+                            ],
+                            "rowLabel": "entry",
+                            "rowLabelPlural": "entries"
+                          }
+                        },
+                        {
+                          "number": "6D(4)(b)",
+                          "summary": "Visit a sheep or goat farm or ranch and report what you saw and learned; if you can't, use a breed association video or, with permission, online research."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "6D(5)",
+                      "summary": "Define wether, ewe, ram and lamb for sheep, or doe, nanny, kid, buck and billy for goats."
+                    }
+                  ]
+                },
+                {
+                  "number": "6E",
+                  "summary": "Option E: hog.",
+                  "children": [
+                    {
+                      "number": "6E(1)",
+                      "summary": "Sketch the main wholesale and retail cuts of pork, and explain the recommended USDA pork grades and the basis of each."
+                    },
+                    {
+                      "number": "6E(2)",
+                      "summary": "Write an outline of feeding a gilt or sow from breeding through weaning the litter, and discuss feeding during growth and finishing."
+                    },
+                    {
+                      "number": "6E(3)",
+                      "summary": "Raise a pig or visit a hog operation.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "6E(3)(a)",
+                          "summary": "Raise a feeder pig from weaning to market weight, keeping records of its feed, weight gain, medication, vaccinations and any deaths for your counselor to review.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "date",
+                                "label": "Date",
+                                "type": "date"
+                              },
+                              {
+                                "id": "feed",
+                                "label": "Feed eaten",
+                                "type": "multiline-text"
+                              },
+                              {
+                                "id": "weight",
+                                "label": "Weight",
+                                "type": "number"
+                              },
+                              {
+                                "id": "health",
+                                "label": "Medication, vaccinations and deaths",
+                                "type": "multiline-text"
+                              }
+                            ],
+                            "rowLabel": "entry",
+                            "rowLabelPlural": "entries"
+                          }
+                        },
+                        {
+                          "number": "6E(3)(b)",
+                          "summary": "Visit a hog farm or packing plant and report what you saw and learned; if you can't, use a packer or processor video or, with permission, online research."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "6E(4)",
+                      "summary": "Define gilt, sow, barrow and boar."
+                    }
+                  ]
+                },
+                {
+                  "number": "6F",
+                  "summary": "Option F: avian.",
+                  "children": [
+                    {
+                      "number": "6F(1)",
+                      "summary": "Sketch a layer or broiler house with nests, roosts, feeders, waterers and ventilation; explain how environmental controls keep birds safe in heat, cold and bad weather, and why light matters for egg production."
+                    },
+                    {
+                      "number": "6F(2)",
+                      "summary": "Explain the dangers of overcrowding a poultry flock."
+                    },
+                    {
+                      "number": "6F(3)",
+                      "summary": "Explain how eggs are graded and what the classes of chicken meat are."
+                    },
+                    {
+                      "number": "6F(4)",
+                      "summary": "Raise poultry or visit a producer.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "6F(4)(a)",
+                          "summary": "Manage a laying flock for five months, keeping records of feed bought, eggs sold, medication, vaccinations and deaths for your counselor to review.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "date",
+                                "label": "Date",
+                                "type": "date"
+                              },
+                              {
+                                "id": "feed",
+                                "label": "Feed bought",
+                                "type": "multiline-text"
+                              },
+                              {
+                                "id": "eggs",
+                                "label": "Eggs sold",
+                                "type": "number"
+                              },
+                              {
+                                "id": "health",
+                                "label": "Medication, vaccinations and deaths",
+                                "type": "multiline-text"
+                              }
+                            ],
+                            "rowLabel": "entry",
+                            "rowLabelPlural": "entries"
+                          }
+                        },
+                        {
+                          "number": "6F(4)(b)",
+                          "summary": "Raise five chickens from hatching, keeping records of their feed, weight gain, medication, vaccinations and deaths for your counselor to review.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "date",
+                                "label": "Date",
+                                "type": "date"
+                              },
+                              {
+                                "id": "feed",
+                                "label": "Feed eaten",
+                                "type": "multiline-text"
+                              },
+                              {
+                                "id": "weight",
+                                "label": "Weights",
+                                "type": "multiline-text"
+                              },
+                              {
+                                "id": "health",
+                                "label": "Medication, vaccinations and deaths",
+                                "type": "multiline-text"
+                              }
+                            ],
+                            "rowLabel": "entry",
+                            "rowLabelPlural": "entries"
+                          }
+                        },
+                        {
+                          "number": "6F(4)(c)",
+                          "summary": "Visit a commercial poultry facility and report what you saw and learned; if you can't, use a poultry association video or, with permission, online research."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "6F(5)",
+                      "summary": "Define chick, pullet, hen, cockerel, cock and capon."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore three animal science careers, research one's education, training and experience, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "animation",
       "name": "Animation",
       "summary": "Learn what animation is, how it began and what makes it believable, then make animations with two techniques.",
@@ -5796,6 +6206,180 @@
       ]
     },
     {
+      "id": "exploration",
+      "name": "Exploration",
+      "summary": "Learn what exploration is and why it matters, study real explorers and expeditions, then plan, prepare for and go on an expedition of your own and report on it.",
+      "officialUrl": "https://www.scouting.org/merit-badges/exploration/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what exploration is.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Say what exploration is and how it's different from adventure travel, trekking or hiking, tour-group trips and recreational outdoor adventures."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how exploring the ocean, space, a jungle or a city science lab might call for different approaches."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss the history of exploration, and pick a field of study to show how exploring helped it develop."
+            },
+            {
+              "number": "3",
+              "summary": "Explain why exploring matters, and discuss these points.",
+              "ownWork": "Explain why exploring matters.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Why exploration needs a scientific basis."
+                },
+                {
+                  "number": "3b",
+                  "summary": "How explorers have helped us understand the world."
+                },
+                {
+                  "number": "3c",
+                  "summary": "What qualities you think an explorer needs."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about real exploration in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Research a living explorer, and give your counselor and unit a short report or presentation on their goals and what one of their expeditions achieved."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Research a real scientific expedition's goals and key discoveries, share them with your counselor and unit, and tell how its findings helped answer key scientific questions."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Learn about exploration in labs and research facilities, and explain to your counselor how lab and field exploration are alike."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Visit an exploration organization or research site, in person or online, and share what you learned.",
+              "requiredCount": 1,
+              "ownWork": "Share what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "With permission and approval, visit an organization that sponsors exploration and find out what kinds it supports."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With permission and approval, visit a science lab, observatory, medical research facility or similar site, and learn what exploration it does."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Discuss each step of planning an exploration and why it's needed.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Setting the objectives."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Planning the mission, with an agenda or schedule and a list of documents or permits you may need."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Budgeting, with estimated costs for travel, equipment, lodging, meals, permits and other expenses."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Working out the equipment and supplies you and the mission will need for the whole expedition."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Working out communication and transportation, including staying in touch with your base and with each other on-site."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Safety and first aid procedures, with a plan for medical evacuation, and how to avoid the hazards explorers could meet."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Choosing the team: who's essential, and what skills the leader needs."
+                },
+                {
+                  "number": "6h",
+                  "summary": "Detailed record keeping, and how to interpret and share the findings afterward."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "With permission and approval, prepare for a real expedition to an area new to you, near or far.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Have a trained expedition leader or planner, or another qualified adult experienced in exploration, supervise your preparations."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Follow the steps from requirement 6, list the equipment and supplies you'll need, discuss why you chose each, and decide who should go."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Run a pre-expedition check of requirement 6's steps and share the results; go through the Scouting America SAFE Checklist with your counselor and make sure every foreseeable hazard is covered."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Go on your expedition and report on it.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "With permission, and supervised by your counselor or a qualified person they approve, carry out your planned expedition to an area new to you."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Discuss why outdoor ethics matter in exploration, and how you put the Outdoor Code, Leave No Trace and Tread Lightly! principles into practice on your expedition."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Afterward, write a one- to three-page report covering your objectives, findings, photos, discoveries, problems and conclusion; photos, graphs or figures can fill one page."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Look into a career or hobby in exploration.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Research a career related to exploration and discuss what makes it interesting."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research exploration as a hobby, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "family-life",
       "name": "Family Life",
       "summary": "Explore what makes a family strong and do your part at home.",
@@ -6966,6 +7550,109 @@
       ]
     },
     {
+      "id": "fly-fishing",
+      "name": "Fly Fishing",
+      "summary": "Learn fly-fishing safety, gear, knots, flies and casting, then catch a fish on a fly and, if rules and health allow, clean and cook one, following local fishing rules and property laws.",
+      "officialUrl": "https://www.scouting.org/merit-badges/fly-fishing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to fly-fish safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain fly-fishing hazards, how to prevent and handle them, and five safety practices to always follow."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating cuts and scratches, puncture wounds, insect bites, hypothermia, dehydration, heat exhaustion, heatstroke and sunburn."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how to take out a hook caught in someone's arm."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Show how to balance a fly rod, line and leader; discuss kinds of fly lines and how and when to use each; and review how to care for the gear."
+            },
+            {
+              "number": "3",
+              "summary": "Tie the knots used to rig a fly rod.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Use an arbor knot to fasten backing to the fly reel's spool."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Use a nail (tube) knot to join the backing to the fly line."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Use a nail (tube) knot or a loop-to-loop to fix a leader to the fly line."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Use a surgeon's knot or a loop-to-loop to put a tippet on the leader."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Use an improved clinch knot to tie a fly to the end of the leader."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain how and when to use dry flies, wet flies, nymphs, streamers, bass bugs, poppers and saltwater flies and what each imitates, and tie at least two of them."
+            },
+            {
+              "number": "5",
+              "summary": "Show you can reliably land a fly on target 30 feet away with both overhead and roll casts."
+            },
+            {
+              "number": "6",
+              "summary": "At a fishing spot, watch what fish are eating above and below the surface, and explain why matching the hatch matters."
+            },
+            {
+              "number": "7",
+              "summary": "Learn how anglers protect fish and fishing waters.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain why the Leave No Trace Seven Principles and the Outdoor Code matter, and discuss how they help fly-fishing resources."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Discuss what catch and release means and why it matters, and how to return a fish to the water safely."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Get and review the game fishing rules where you live or plan to fish, and explain why they exist and what they achieve."
+            },
+            {
+              "number": "9",
+              "summary": "Explain good sportsmanship for anglers and how Leave No Trace and the Outdoor Code apply, including littering, trespassing, courtesy and following fishing rules."
+            },
+            {
+              "number": "10",
+              "summary": "Catch a fish on a fly and identify it."
+            },
+            {
+              "number": "11",
+              "summary": "If rules and health allow, clean and cook a fish you caught, or one you got another way if you can't catch one to eat; you don't have to eat it."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "forestry",
       "name": "Forestry",
       "summary": "Identify trees and shrubs, learn how forests are managed and protected, and see forestry at work.",
@@ -8097,6 +8784,96 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graphic-arts",
+      "name": "Graphic Arts",
+      "summary": "Learn how printing works, from artwork and design to binding, then design and print a piece yourself and visit a printer, a graphic arts program or industry websites.",
+      "officialUrl": "https://www.scouting.org/merit-badges/graphic-arts/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Review offset lithography, screen printing, electronic/digital, relief and gravure printing, using samples of three products, each printed a different way, or diagrams you draw."
+            },
+            {
+              "number": "2",
+              "summary": "Explain how continuous tone, line and halftone artwork differ, and how digital images are made and stored on a computer."
+            },
+            {
+              "number": "3",
+              "summary": "Design a printed piece and explain your typeface and layout choices, the best printing process for it and, if you have desktop publishing, the right hardware and software."
+            },
+            {
+              "number": "4",
+              "summary": "Print your design from requirement 3 in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Offset lithography: lay out your design, make a plate with a counselor-approved process, and print at least 50 copies."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Screen printing: prepare a screen, make a hand-cut or photographic stencil and fix it on, then mask the screen and print at least 20 copies."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Electronic/digital printing: lay out your design electronically, send it to a press or printer and print 50 copies; with no direct link, print the layout on paper and scan it."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Relief printing: prepare a layout or set type, make a plate or lock up the form, and print 50 copies."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about postpress work.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Discuss padding, drilling, cutting and trimming as finishing steps."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Gather, describe or identify an example of each binding: perfect, spiral, plastic comb, saddle stitch and case."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Visit one of these and tell what stood out.",
+              "requiredCount": 1,
+              "ownWork": "Tell what stood out on your visit.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Tour a newspaper printing plant and see how a story gets from the editor to the press."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Tour a retail, commercial or in-plant printer and follow a project from start to finish."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Visit a school's graphic arts program and find out its courses and prerequisites."
+                },
+                {
+                  "number": "6d",
+                  "summary": "With permission, visit three websites of graphic arts organizations or printing companies, and print or download information on products or services from two."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore three graphic arts careers, research one's education, training and experience, and discuss why it might interest you."
             }
           ]
         }
@@ -11215,6 +11992,61 @@
       ]
     },
     {
+      "id": "pets",
+      "name": "Pets",
+      "summary": "Care for a pet for four months, learn and write about its needs, then show your pet or train a pet.",
+      "officialUrl": "https://www.scouting.org/merit-badges/pets/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Show proof that you've looked after a pet for four months, getting approval before you begin; work for other merit badges can't count."
+            },
+            {
+              "number": "2",
+              "summary": "Write at least 200 words on your pet's care, feeding and housing; share some interesting facts, why you keep this kind of pet and any local laws about it."
+            },
+            {
+              "number": "3",
+              "summary": "Read a counselor-approved book or pamphlet about your kind of pet, and discuss what you learned."
+            },
+            {
+              "number": "4",
+              "summary": "Show your pet or train a pet.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Enter your pet in a pet show."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Teach a pet at least three tricks or special skills."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore a pet career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Research a career related to pets and discuss what makes it interesting."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Research a hobby or healthy lifestyle that involves pets, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "photography",
       "name": "Photography",
       "summary": "Learn how cameras and light work, practice composing and editing photos, and tell a story in pictures.",
@@ -11681,6 +12513,120 @@
             {
               "number": "8",
               "summary": "Explore pottery careers, research one, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "programming",
+      "name": "Programming",
+      "summary": "Learn programming's history, safety and software rights, then write, debug and explain programs in three different languages.",
+      "officialUrl": "https://www.scouting.org/merit-badges/programming/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Stay safe while programming.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "With permission, watch the Personal Safety Awareness \"Digital Safety\" video."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating programming injuries, including repetitive stress injuries and eyestrain."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss how programming and its languages developed, including at least three milestones."
+            },
+            {
+              "number": "3",
+              "summary": "Show what you know about programming today.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "List five popular programming languages, the industries that mainly use each, and why.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "language",
+                        "label": "Language",
+                        "type": "text"
+                      },
+                      {
+                        "id": "industries",
+                        "label": "Industries that use it, and why",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "language",
+                    "rowLabelPlural": "languages",
+                    "rowCount": 5
+                  }
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe three different devices you rely on daily that run programs."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn how software is protected and licensed.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain the four ways software can be protected as intellectual property."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain how licensing software differs from owning it."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Describe how freeware, open source and commercial software differ, and why to respect each one's terms of use."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Choose three different languages and development environments with your counselor, and write a program in each.",
+              "ownWork": "Pick three different languages and development environments with your counselor's guidance.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "In the first language, write or change a program that takes input and makes decisions and computations to produce output; debug, demonstrate and explain how it works."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Do the same in the second language and environment."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Do the same in the third language and environment."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore a programming career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Research a career related to programming and discuss what makes it interesting."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Research a hobby or healthy lifestyle that uses programming, and set goals for it."
+                }
+              ]
             }
           ]
         }
@@ -12515,6 +13461,177 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reptile-and-amphibian-study",
+      "name": "Reptile and Amphibian Study",
+      "summary": "Learn to identify reptiles and amphibians and how they live, including venomous ones, then care for or study one over time. Follow Leave No Trace and the Outdoor Code in the field, collect only with the land manager's permission and any license your state requires, and never take protected species.",
+      "officialUrl": "https://www.scouting.org/merit-badges/reptile-and-amphibian-study/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Describe how to identify six US reptile and four US amphibian species, sketch or photograph four yourself showing their key markings, and discuss all 10's habits and habitats."
+            },
+            {
+              "number": "2",
+              "summary": "Discuss roughly how many reptile and amphibian species live in the US and where, and list the most common ones near you or in your state.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "species",
+                    "label": "Species",
+                    "type": "text"
+                  }
+                ],
+                "rowLabel": "species",
+                "rowLabelPlural": "species"
+              }
+            },
+            {
+              "number": "3",
+              "summary": "Explain how each of these pairs differs.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Amphibians and reptiles."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Alligators and crocodiles."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Toads and frogs."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Snakes and lizards."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain reptiles' and amphibians' role in nature; list four federally or state-protected species and why each is protected, plus three reptiles and three amphibians near you that aren't protected; discuss what all 10 eat.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "species",
+                    "label": "Species",
+                    "type": "text"
+                  },
+                  {
+                    "id": "protected-by",
+                    "label": "Protected by (if any)",
+                    "type": "text"
+                  },
+                  {
+                    "id": "why",
+                    "label": "Why it's protected (if it is)",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "food",
+                    "label": "What it eats",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "species",
+                "rowLabelPlural": "species"
+              }
+            },
+            {
+              "number": "5",
+              "summary": "Explain how reproduction differs between reptiles and amphibians."
+            },
+            {
+              "number": "6",
+              "summary": "Watch a snake move and describe how it goes forward, including what its muscles, ribs and belly plates do."
+            },
+            {
+              "number": "7",
+              "summary": "Describe in detail six venomous US snakes and the one venomous US lizard, their habits and ranges, and what to do after a bite."
+            },
+            {
+              "number": "8",
+              "summary": "Care for or study a reptile or amphibian over time in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Keep a nonvenomous reptile or amphibian for at least a month, or eggs until they hatch or transform, in a way your counselor approves; record and report their habits and care, and pass any animal you don't own to a counselor-approved keeper.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "observed",
+                        "label": "What you observed",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "care",
+                        "label": "How you cared for it",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                },
+                {
+                  "number": "8b",
+                  "summary": "Study a reptile or amphibian at a zoo, nature center or similar exhibit weekly for three months, sketching it and noting changes; discuss its care, research its biology, threats and protections, and share what you learned.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "changes",
+                        "label": "Changes you noted",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "visit",
+                    "rowLabelPlural": "visits"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Do two of these identification or teaching activities.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "At night, identify three kinds of toads or frogs by their calls, imitate each for your counselor, and find each with a flashlight to see how and where it sings."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Identify eight reptile or amphibian species by sight."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Present three different reptiles and amphibians to a small group in a short talk with visual aids."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Correct five myths about reptiles and amphibians, explaining the truth behind each, and give seven unusual behaviors or other true facts about them."
             }
           ]
         }
@@ -14853,6 +15970,156 @@
       ]
     },
     {
+      "id": "sports",
+      "name": "Sports",
+      "summary": "Learn sports safety, health and sportsmanship, then train for and compete in two sports for a season. Activities used for this badge can't count toward other badges.",
+      "officialUrl": "https://www.scouting.org/merit-badges/sports/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to stay safe in sports.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the main risks in sports and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show you know first aid or treatment for sports injuries, including sprains; strains; muscle cramps; contusions; abrasions; blisters; dehydration; heat reactions; fractures; injured teeth; head, neck and back injuries; and concussions."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain these health basics.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Why the physical exam matters."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Why lifelong healthy habits like regular exercise matter, and how tobacco, alcohol and other harmful substances hurt your health and sports performance."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Why a healthy diet matters."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Discuss these parts of training and sportsmanship.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Why warming up and cooling down matter."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Why weight training matters."
+                },
+                {
+                  "number": "3c",
+                  "summary": "How to define an amateur athlete, and how amateurs differ from professionals."
+                },
+                {
+                  "number": "3d",
+                  "summary": "What makes a good sport, why sportsmanship matters, and what good team leaders and players are like, showing Scout spirit in and out of the game."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Pick two sports from the official list, or other recognized sports your counselor approves in advance and Scouting America allows, each with regular practice and at least four structured, officiated, scored contests against other individuals or teams; discuss how you'll do 5a–5h for each."
+            },
+            {
+              "number": "5",
+              "summary": "Train for and compete in your two sports.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "With your counselor's guidance, set up a personal training program to follow through your season, or for three months."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Track your training, practice and progress over that period with a chart or similar system.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "sport",
+                        "label": "Sport",
+                        "type": "text"
+                      },
+                      {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      },
+                      {
+                        "id": "what",
+                        "label": "What you did and how you improved",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "session",
+                    "rowLabelPlural": "sessions"
+                  }
+                },
+                {
+                  "number": "5c",
+                  "summary": "Show you can play each sport well and safely with good technique."
+                },
+                {
+                  "number": "5d",
+                  "summary": "List and describe the equipment each sport needs, including protective gear and special clothing."
+                },
+                {
+                  "number": "5e",
+                  "summary": "List and explain each sport's rules and etiquette."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Diagram each sport's playing area and explain it."
+                },
+                {
+                  "number": "5g",
+                  "summary": "Compete in each sport, on your own or with an organized team, for a season or three months."
+                },
+                {
+                  "number": "5h",
+                  "summary": "After the season, go over your finished chart with your counselor and talk about how the sports affected you mentally and physically."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore a sports career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Identify three sports-related careers, research one in depth, and discuss whether it interests you."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Research how a sport could become a hobby or part of a healthy lifestyle, and share your goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "sustainability",
       "name": "Sustainability",
       "summary": "Explore how water, food, energy and our stuff affect the planet, and how your family can help.",
@@ -15162,6 +16429,118 @@
             {
               "number": "9",
               "summary": "Explain how swimming benefits fitness and health."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "textile",
+      "name": "Textile",
+      "summary": "Learn how fibers become fabric and how natural and manufactured fibers compare, try hands-on textile projects, and explore textile careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/textile/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss why textiles matter, explain fiber, fabric and textile, and give examples you use daily."
+            },
+            {
+              "number": "2",
+              "summary": "Study fibers and fabrics.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Collect fabric swatches: two natural fiber fabrics (100 percent cotton, linen, wool or silk, no blends), two synthetic ones (nylon, polyester, acrylic, olefin or spandex) and one cellulosic (rayon, acetate or lyocell)."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Give the origin, main traits and general makeup of each fiber from 2a, and explain how cellulosic and synthetic manufactured fibers differ.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "fiber",
+                        "label": "Fiber",
+                        "type": "text"
+                      },
+                      {
+                        "id": "origin",
+                        "label": "Origin",
+                        "type": "text"
+                      },
+                      {
+                        "id": "characteristics",
+                        "label": "Main characteristics",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "content",
+                        "label": "General makeup",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "fiber",
+                    "rowLabelPlural": "fibers"
+                  }
+                },
+                {
+                  "number": "2c",
+                  "summary": "Describe the main steps from raw fiber to yarn and from yarn to fabric."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Imagine buying a new garment or textile item: tell your counselor which fiber or blend you'd want, and why."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Do two of these textile activities.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Visit a textile plant, textile products manufacturer, or textile school or college, then describe your visit and what you learned."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Build a simple loom and weave a belt, headband, place mat or wall hanging on it."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Examine woven, nonwoven and knitted fabrics under a magnifying glass, sketch them and explain how they're built differently."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Make a piece of felt."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Make two natural dyes and dye a garment or piece of fabric with them."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Waterproof a fabric."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Show how to identify fibers with a microscope or the breaking test."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain 10 of these terms: warp, harness, heddle, shed, aramid, spandex, sliver, yarn, spindle, distaff, loom, cellulose, sericulture, extrusion, carbon fibers, spinneret, staple, worsted, nonwoven and greige goods."
+            },
+            {
+              "number": "5",
+              "summary": "List pros and cons of natural plant and animal fibers and of cellulosic and synthetic manufactured fibers, and discuss at least four environmental concerns in making and caring for textiles."
+            },
+            {
+              "number": "6",
+              "summary": "Explain five textile careers to your counselor, aloud or in writing, and tell about the education, training costs and duties of the two that interest you most."
             }
           ]
         }
@@ -15831,6 +17210,152 @@
             {
               "number": "7",
               "summary": "Make a simple chip carving or low-relief carving."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "woodwork",
+      "name": "Woodwork",
+      "summary": "Learn woodworking safety, where lumber comes from and how to care for tools, then plan and build wood projects of your own and talk with a woodworking pro about the trade.",
+      "officialUrl": "https://www.scouting.org/merit-badges/woodwork/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to work safely with wood.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain woodworking hazards, how to prevent and handle them, and how to use your tools safely."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for woodworking injuries, including splinters, scratches, cuts, severe bleeding and shock; explain how to protect your eyes and hearing, and why and when to wear a dust mask."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Earn the Totin' Chip."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn where lumber comes from and what different woods are good for.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Describe how trees are grown, cut and milled into lumber, and how lumber is cured, seasoned, graded and sized."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Gather a labeled block of each of six woods used in woodworking, and describe each one's main qualities and best uses.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "wood",
+                        "label": "Kind of wood",
+                        "type": "text"
+                      },
+                      {
+                        "id": "qualities",
+                        "label": "Main qualities",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "uses",
+                        "label": "Best uses",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "block",
+                    "rowLabelPlural": "blocks",
+                    "rowCount": 6
+                  }
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Care for and sharpen your tools.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Show how to care for, use and store all the tools and equipment you work with at home or school."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Correctly sharpen two different tools' cutting edges."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Build something useful from wood with a saw, plane, hammer, brace and bit: square and measure your lumber against working drawings, then cut the parts."
+            },
+            {
+              "number": "5",
+              "summary": "Design and build your own project: make working drawings and a materials list first, and track your time and what the materials cost.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "date",
+                    "label": "Date",
+                    "type": "date"
+                  },
+                  {
+                    "id": "hours",
+                    "label": "Hours worked",
+                    "type": "number"
+                  },
+                  {
+                    "id": "materials",
+                    "label": "Materials bought",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "cost",
+                    "label": "Cost of materials",
+                    "type": "number"
+                  }
+                ],
+                "rowLabel": "entry",
+                "rowLabelPlural": "entries"
+              }
+            },
+            {
+              "number": "6",
+              "summary": "Do two of these projects.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Build a project with beveled or rounded edges from your own working drawings."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Build a project with curved or incised cuts from your own working drawings."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Build a project with miter, dowel, or mortise and tenon joints from your own working drawings."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Build a cabinet, box or other piece with a door or lid on inset hinges."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Help make wooden toys for children in need, or help with a counselor-approved woodworking service project for a charity."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Talk with a cabinetmaker or finish carpenter to learn about woodworkers' training, apprenticeships, careers, working conditions and hours, pay and unions in your area."
             }
           ]
         }
