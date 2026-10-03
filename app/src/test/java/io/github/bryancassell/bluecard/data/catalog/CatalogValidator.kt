@@ -91,15 +91,33 @@ object CatalogValidator {
                     add("$where: column id \"${column.id}\" must be lowercase words joined by '-'")
                 }
                 if (column.label.isBlank()) add("$where: column \"${column.id}\" has a blank label")
+                column.total?.let {
+                    addAll(validateTotal("$where, column \"${column.id}\"", column.type, it))
+                }
             }
             tracker.rowCount?.let { if (it < 1) add("$where: rowCount must be at least 1") }
-            addAll(validateRowLabel("$where: rowLabel", tracker.rowLabel))
-            addAll(validateRowLabel("$where: rowLabelPlural", tracker.rowLabelPlural))
+            // A fixed-row tracker's row shows how many rows are filled in, which complete it.
+            if (tracker.rowCount != null && tracker.columns.any { it.total != null }) {
+                add("$where: has a total but a fixed number of rows")
+            }
+            addAll(validateLowercaseLabel("$where: rowLabel", tracker.rowLabel))
+            addAll(validateLowercaseLabel("$where: rowLabelPlural", tracker.rowLabelPlural))
         }
 
-    // Lowercase, because the app uses it inside sentences ("8 of 12 weeks") and capitalizes it
-    // for titles ("Week 3").
-    private fun validateRowLabel(where: String, label: String): List<String> = when {
+    private fun validateTotal(
+        where: String,
+        type: TrackerColumnType,
+        total: ColumnTotal
+    ): List<String> = buildList {
+        if (type != TrackerColumnType.NUMBER) add("$where: has a total but isn't a number")
+        if (total.needed < 1) add("$where: total needed must be at least 1")
+        addAll(validateLowercaseLabel("$where: total label", total.label))
+        addAll(validateLowercaseLabel("$where: total labelPlural", total.labelPlural))
+    }
+
+    // Lowercase, because the app uses it inside sentences ("8 of 12 weeks", "4 of 6 hours") and
+    // capitalizes a row label for titles ("Week 3").
+    private fun validateLowercaseLabel(where: String, label: String): List<String> = when {
         label.isBlank() -> listOf("$where is blank")
 
         !label.first().isLowerCase() -> listOf(

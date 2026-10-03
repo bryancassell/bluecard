@@ -29,7 +29,8 @@ code. Why the catalog works this way is in
   `id`, so once a version ships, never remove a column or change its `id` or
   `type`, and never change the tracker's `rowCount`. You can change a column's
   label or add a column, and change a `text` column to `multiline-text`, but
-  not back: its saved values may then hold line breaks.
+  not back: its saved values may then hold line breaks. You can add, change or
+  remove a column's `total`, which only shows how far along the scout is.
 
 ## What counts as copying
 
@@ -157,7 +158,7 @@ A tracker is a table the scout fills in, one row per entry.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `columns` | Yes | The table's columns, each with an `id` (lowercase words joined by `-`, unique within the tracker), a `label` shown to the scout, and a `type`: `date`, `number`, `text` or `multiline-text`. Use `multiline-text` for a description or a list, such as "What you saw", and `text` for a name or a short value. A `date` takes only dates up to today, so use `text` for one that can be in the future, such as an alarm's expiration date. A `number` takes digits and one decimal separator but no minus sign, so use `text` for one that can be negative, such as a temperature. |
+| `columns` | Yes | The table's columns, each with an `id` (lowercase words joined by `-`, unique within the tracker), a `label` shown to the scout, and a `type`: `date`, `number`, `text` or `multiline-text`. Use `multiline-text` for a description or a list, such as "What you saw", and `text` for a name or a short value. A `date` takes only dates up to today, so use `text` for one that can be in the future, such as an alarm's expiration date. A `number` takes digits and one decimal separator but no minus sign, so use `text` for one that can be negative, such as a temperature. A `number` column can also have a `total` ([Column total](#column-total)). |
 | `rowLabel` | Yes | What one row is called, in lowercase, such as `week` or `session`. The app capitalizes it for titles, such as "Week 3". |
 | `rowLabelPlural` | Yes | `rowLabel` in the plural, in lowercase, such as `weeks`. The requirement's row shows it in a count, such as "8 of 12 weeks". |
 | `rowCount` | No | A fixed number of rows, such as `13` for a 13-week budget. The scout fills in each one ("Week 1" to "Week 13"). Leave it out for a log the scout adds rows to, any number of them. |
@@ -174,6 +175,43 @@ Example, a log of exercise sessions:
   "rowLabel": "session",
   "rowLabelPlural": "sessions"
 }
+```
+
+### Column total
+
+In a log, a `number` column whose values add up to an amount the requirement
+asks for, such as hours of service, can have a `total`. A tracker with a
+`rowCount` can't have one: its requirement shows how many rows are filled in,
+which complete it. The requirement then shows the
+column's values added up against it, such as "4.5 of 6 hours", in place of how
+many rows there are. It's only a guide: the scout still checks the requirement
+off, as for any log.
+
+| Field | Required | Meaning |
+|---|---|---|
+| `needed` | Yes | The amount the requirement asks for, a whole number of at least 1. |
+| `label` | Yes | What the amount is counted in, in lowercase, such as `hour`. The app shows it when `needed` is 1: "0.5 of 1 hour". |
+| `labelPlural` | Yes | `label` in the plural, in lowercase, such as `hours`. |
+
+Example, Life 4's service log, where part of a project's hours can be
+conservation:
+
+```json
+"columns": [
+  { "id": "date", "label": "Date", "type": "date" },
+  {
+    "id": "hours",
+    "label": "Hours",
+    "type": "number",
+    "total": { "needed": 6, "label": "hour", "labelPlural": "hours" }
+  },
+  {
+    "id": "conservation-hours",
+    "label": "Conservation hours (included in Hours)",
+    "type": "number",
+    "total": { "needed": 3, "label": "conservation hour", "labelPlural": "conservation hours" }
+  }
+]
 ```
 
 ## Checking your changes
@@ -202,7 +240,9 @@ It checks that:
   and the number of children, and `ownWork` is only set, and not blank, on a
   requirement with children;
 - trackers have at least one column, unique column IDs, labels, row labels
-  that start with a lowercase letter, and a `rowCount` of at least 1 when set.
+  that start with a lowercase letter, and a `rowCount` of at least 1 when set;
+- a `total` is only on a `number` column of a log, needs at least 1, and has
+  labels that start with a lowercase letter.
 
 It can't check that the structure matches the official page or that summaries
 are in our own words; reviewers check those. To check the wording, read each

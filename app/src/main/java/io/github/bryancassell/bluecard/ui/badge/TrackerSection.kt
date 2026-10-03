@@ -22,8 +22,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.text.formatTotal
 import io.github.bryancassell.bluecard.ui.lineBreaksAsSpaces
+import io.github.bryancassell.bluecard.ui.stringsLocale
 import io.github.bryancassell.bluecard.ui.typedText
 import java.time.format.DateTimeFormatter
 
@@ -37,9 +40,19 @@ fun trackerCountLabel(count: TrackerCount): String = if (count.rowCount == null)
     stringResource(R.string.tracker_count_of, count.recorded, count.rowCount, count.rows)
 }
 
+/** "4.5 of 6 hours". */
+@Composable
+fun trackerTotalLabel(total: TrackerTotal): String = stringResource(
+    R.string.tracker_total,
+    formatTotal(total.sum, stringsLocale()),
+    total.total.needed,
+    total.total.neededLabel
+)
+
 /**
- * A requirement's tracker on its page: a heading that says how much is filled in, then its
- * rows, each of which opens to fill in or change. A log has a button to add a row.
+ * A requirement's tracker on its page: a heading that says how much is filled in, its columns'
+ * totals, if it has any, then its rows, each of which opens to fill in or change. A log has a
+ * button to add a row.
  */
 @Composable
 fun TrackerSection(
@@ -57,6 +70,17 @@ fun TrackerSection(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .semantics { heading() }
         )
+        if (tracker.count.totals.isNotEmpty()) {
+            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+                tracker.count.totals.forEach {
+                    Text(
+                        text = trackerTotalLabel(it),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
         val formatter = rememberCompletionDateFormatter()
         tracker.rows.forEach { row ->
             TrackerRowItem(tracker.rowTitle, row, formatter, onOpen = { onOpenRow(row) })

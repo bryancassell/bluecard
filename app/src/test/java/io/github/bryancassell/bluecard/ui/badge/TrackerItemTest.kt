@@ -1,9 +1,12 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import java.math.BigDecimal
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -26,6 +29,20 @@ class TrackerItemTest {
         val entries = listOf(entry(1, mapOf("minutes" to "30")), entry(2, mapOf("minutes" to "45")))
 
         assertEquals(TrackerCount(2, null, "sessions"), log.count(entries))
+    }
+
+    @Test
+    fun count_hasTheTotalsOfColumnsWithOne() {
+        val hours = ColumnTotal(6, "hour", "hours")
+        val withTotal = log.copy(
+            columns = columns.map { if (it.id == "minutes") it.copy(total = hours) else it }
+        )
+        val entries = listOf(entry(1, mapOf("minutes" to "2")), entry(2, mapOf("minutes" to "3")))
+
+        assertEquals(
+            TrackerCount(2, null, "sessions", listOf(TrackerTotal(BigDecimal("5"), hours))),
+            withTotal.count(entries)
+        )
     }
 
     @Test

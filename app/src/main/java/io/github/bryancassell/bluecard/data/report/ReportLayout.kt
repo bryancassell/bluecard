@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.text.completionDateFormatter
+import io.github.bryancassell.bluecard.text.formatTotal
 import io.github.bryancassell.bluecard.text.typedText
 import java.time.LocalDate
 
@@ -169,7 +170,25 @@ private class ReportComposer(private val resources: Resources) {
         val count = definition.rowCount?.let {
             string(R.string.tracker_count_of, recorded, it, rows)
         } ?: string(R.string.tracker_count, recorded, rows)
-        add(Style.Body, count, indent, spaceBefore = 4f, keepWithNext = recorded > 0)
+        // Then its totals, such as "4 of 6 hours", as on the requirement's page.
+        val totals = tracker.totals.map { (sum, total) ->
+            string(
+                R.string.tracker_total,
+                formatTotal(sum, locale),
+                total.needed,
+                total.neededLabel
+            )
+        }
+        val lines = listOf(count) + totals
+        lines.forEachIndexed { index, line ->
+            add(
+                Style.Body,
+                line,
+                indent,
+                spaceBefore = if (index == 0) 4f else 0f,
+                keepWithNext = recorded > 0 || index < lines.lastIndex
+            )
+        }
         tracker.rows.forEach { row ->
             add(
                 Style.Subheading,

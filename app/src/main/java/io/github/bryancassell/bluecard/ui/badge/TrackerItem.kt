@@ -3,9 +3,11 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.columnValues
 import io.github.bryancassell.bluecard.data.progress.filledRows
 import io.github.bryancassell.bluecard.data.progress.numberedRows
+import io.github.bryancassell.bluecard.data.progress.totals
 
 /**
  * A requirement's tracker as its page shows it: how much is filled in, and its rows. A log,
@@ -26,7 +28,8 @@ data class TrackerItem(
 
 /**
  * How much of a tracker is filled in, for its requirement: "5 sessions" in a log, or
- * "8 of 12 weeks" in a tracker with a fixed number of rows.
+ * "8 of 12 weeks" in a tracker with a fixed number of rows, and its columns' totals, if it has
+ * any, such as "4 of 6 hours".
  */
 data class TrackerCount(
     /** The entries recorded; in a tracker with a fixed number of rows, the rows filled in. */
@@ -34,7 +37,9 @@ data class TrackerCount(
     /** The fixed number of rows, or null for a log. */
     val rowCount: Int?,
     /** What the rows are called, agreeing with the number: "session" or "sessions". */
-    val rows: String
+    val rows: String,
+    /** Its columns that have a total ([totals]), in column order. */
+    val totals: List<TrackerTotal> = emptyList()
 )
 
 /** One row of a tracker. */
@@ -61,7 +66,7 @@ fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(
 /** How much of this tracker the [entries] recorded for its requirement fill in. */
 fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
     val recorded = rowCount?.let { count -> filledRows(entries, count).size } ?: entries.size
-    return TrackerCount(recorded, rowCount, rowsLabel(recorded))
+    return TrackerCount(recorded, rowCount, rowsLabel(recorded), totals(entries))
 }
 
 private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow> =

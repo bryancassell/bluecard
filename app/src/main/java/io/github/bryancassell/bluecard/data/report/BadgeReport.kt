@@ -10,12 +10,14 @@ import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.columnValues
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
+import io.github.bryancassell.bluecard.data.progress.totals
 import java.time.LocalDate
 
 /** Everything a badge's report shows: the scout, the badge, and all they recorded for it. */
@@ -63,7 +65,9 @@ data class ReportRequirement(
 data class ReportTracker(
     val definition: TrackerDefinition,
     /** The rows filled in, in order: by row number, or in a log in the order they were added. */
-    val rows: List<ReportTrackerRow>
+    val rows: List<ReportTrackerRow>,
+    /** Its columns that have a total ([totals]), in column order. */
+    val totals: List<TrackerTotal> = emptyList()
 )
 
 /** A filled-in tracker row. */
@@ -145,5 +149,5 @@ private fun TrackerDefinition.toReport(entries: List<TrackerEntry>): ReportTrack
     val rows = numberedRows(entries).mapNotNull { (number, entry) ->
         entry?.let { ReportTrackerRow(number, columnValues(it)) }
     }
-    return ReportTracker(this, rows)
+    return ReportTracker(this, rows, totals(entries))
 }

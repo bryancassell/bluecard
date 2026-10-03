@@ -31,10 +31,13 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
+import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -421,6 +424,28 @@ class RequirementDetailScreenTest {
         row("Keep a camping log.").assert(hasText("3 nights"))
     }
 
+    @Test
+    fun subRequirementWithTotals_showsThemInsteadOfHowManyRows() {
+        val totals = listOf(
+            TrackerTotal(BigDecimal("4.5"), ColumnTotal(6, "hour", "hours")),
+            TrackerTotal(BigDecimal("2"), ColumnTotal(3, "conservation hour", "conservation hours"))
+        )
+        val child = RequirementItem(
+            "2d",
+            "Give six hours of service.",
+            null,
+            completed = false,
+            markedByHand = true,
+            TrackerCount(2, null, "projects", totals)
+        )
+        show(ready.copy(children = ready.children + child))
+
+        row("Give six hours of service.")
+            .assert(hasText("4.5 of 6 hours"))
+            .assert(hasText("2 of 3 conservation hours"))
+            .assert(hasText("2 projects").not())
+    }
+
     /** Sub-requirements with these numbers, each summarized as "Summary of <number>.". */
     private fun withSubRequirements(numbers: List<String>) = ready.copy(
         children = numbers.map {
@@ -495,6 +520,29 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("2 sessions").performScrollTo().assert(isHeading())
         row("Session 1").assert(hasText("Apr 12, 2026 · Running · 30"))
         row("Session 2").assert(hasText("Last Tuesday · Swimming"))
+    }
+
+    @Test
+    fun logWithATotal_showsItUnderTheCount() {
+        val total = TrackerTotal(BigDecimal("1.5"), ColumnTotal(1, "hour", "hours"))
+        show(
+            withLog.copy(
+                tracker = withLog.tracker?.copy(
+                    count = TrackerCount(2, null, "sessions", listOf(total))
+                )
+            )
+        )
+
+        val heading = composeTestRule.onNodeWithText("2 sessions").performScrollTo()
+        val shown = composeTestRule.onNodeWithText("1.5 of 1 hour").performScrollTo()
+            .assert(isHeading().not())
+        assertTrue(
+            shown.getUnclippedBoundsInRoot().top >= heading.getUnclippedBoundsInRoot().bottom
+        )
+        assertTrue(
+            shown.getUnclippedBoundsInRoot().bottom <=
+                row("Session 1").getUnclippedBoundsInRoot().top
+        )
     }
 
     @Test

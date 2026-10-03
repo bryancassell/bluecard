@@ -78,8 +78,8 @@ fun RequirementRows(
 /**
  * A requirement's row, which opens its page: its number, in a box that's tinted once part of it
  * is complete and filled in once all of it is, its summary, "Do N of M" when only some
- * sub-requirements are needed, how many of those it needs are complete, how much of its tracker is
- * filled in, and "Not needed" when it no longer is. Screen readers read "Completed",
+ * sub-requirements are needed, how many of those it needs are complete, how far along its tracker
+ * is ([TrackerProgress]), and "Not needed" when it no longer is. Screen readers read "Completed",
  * "In progress", "Not completed", "Not recorded" or "Not needed" as its state. The scout marks
  * a requirement complete on its page.
  */
@@ -108,7 +108,7 @@ private fun RequirementRow(
             {
                 Column {
                     choiceAndCount?.let { Text(it) }
-                    item.tracker?.let { Text(trackerCountLabel(it)) }
+                    item.tracker?.let { TrackerProgress(it) }
                     if (item.notNeeded) {
                         Text(
                             stringResource(R.string.requirement_not_needed),
@@ -132,6 +132,20 @@ private fun RequirementRow(
             )
             .semantics { stateDescription = state }
     )
+}
+
+/**
+ * How far along a requirement's tracker is: its columns' totals, such as "4 of 6 hours", if it
+ * has any, as they say more than how many rows there are. Otherwise how much of it is filled
+ * in, such as "5 sessions" or "8 of 12 weeks".
+ */
+@Composable
+private fun TrackerProgress(count: TrackerCount) {
+    if (count.totals.isEmpty()) {
+        Text(trackerCountLabel(count))
+    } else {
+        count.totals.forEach { Text(trackerTotalLabel(it)) }
+    }
 }
 
 /**

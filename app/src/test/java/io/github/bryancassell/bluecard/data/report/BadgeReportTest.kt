@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.report
 
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -13,6 +14,8 @@ import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -296,6 +299,35 @@ class BadgeReportTest {
                 ReportTrackerRow(2, listOf(date to "2026-05-02", place to "Lake Sebago"))
             ),
             tracker.rows
+        )
+    }
+
+    @Test
+    fun log_addsUpItsColumnsWithATotal() {
+        val twentyNights = ColumnTotal(20, "night", "nights")
+        val withTotal = log.copy(columns = listOf(date, nights.copy(total = twentyNights), place))
+        val badge = camping.copy(
+            requirementVersions = listOf(
+                RequirementsVersion(
+                    newest,
+                    listOf(Requirement("3", "Keep a camping log.", tracker = withTotal))
+                )
+            )
+        )
+        val entries = listOf(2L to "2", 3L to "1.5").map { (id, nights) ->
+            TrackerEntry(
+                id = id,
+                badgeId = "camping",
+                requirementNumber = "3",
+                values = mapOf("nights" to nights)
+            )
+        }
+
+        val report = badge.report(profile, progress(trackerEntries = entries), today)!!
+
+        assertEquals(
+            listOf(TrackerTotal(BigDecimal("3.5"), twentyNights)),
+            report.requirement("3").tracker!!.totals
         )
     }
 
