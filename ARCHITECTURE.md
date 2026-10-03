@@ -580,6 +580,22 @@ not new code (req. 7). Multi-line text is a type of its own, not a flag on
 text, so each `when` over the types (the field, the row's summary, the report
 and import) has to decide how to handle it.
 
+A number column of a log can have a total the requirement asks for, such as
+Life 4's 6 hours of service (`TrackerColumn.total`), which
+`data/progress/TrackerTotals.kt` adds the column up against (PRD.md's Tracker
+totals).
+
+- **Completion doesn't read totals.** It reads only what the scout marked and
+  which rows are filled in, so a total is only a guide
+  ([#193](https://github.com/bryancassell/bluecard/issues/193)). A fixed-row
+  tracker can't have a total, because its rows complete it and its row shows
+  how many are filled in.
+- **Numbers are stored as the scout typed them**: digits of any script, with a
+  point, a comma or the Arabic decimal separator, whichever their keyboard
+  offers (`DECIMAL_SEPARATORS`). So they're read with `storedNumber` when
+  they're added up, and a value that isn't a number, which an import can bring,
+  isn't counted. They're added as `BigDecimal`, so 0.1 and 0.2 hours make 0.3.
+
 ### Requirement versions
 
 Scouting America updates many badges each January 1 and can make safety changes

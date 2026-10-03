@@ -119,7 +119,33 @@ data class TrackerDefinition(
 }
 
 @Serializable
-data class TrackerColumn(val id: String, val label: String, val type: TrackerColumnType)
+data class TrackerColumn(
+    val id: String,
+    val label: String,
+    val type: TrackerColumnType,
+    /** For a number column, the amount its values add up to that the requirement asks for. */
+    val total: ColumnTotal? = null
+)
+
+/**
+ * An amount a requirement asks for, such as 6 hours of service, that a number column's values
+ * add up to. The requirement shows the total against it, such as "4 of 6 hours", but it doesn't
+ * complete the requirement.
+ */
+@Serializable
+data class ColumnTotal(
+    val needed: Int,
+    /** What the amount is counted in, in lowercase, such as "hour". */
+    val label: String,
+    /** [label] in the plural, such as "hours". */
+    val labelPlural: String
+) {
+    /**
+     * What the amount is counted in, agreeing with the amount needed, as in "0.5 of 1 hour" or
+     * "4 of 6 hours". The catalog is in English, so its labels follow English plurals.
+     */
+    val neededLabel: String get() = if (needed == 1) label else labelPlural
+}
 
 @Serializable
 enum class TrackerColumnType {

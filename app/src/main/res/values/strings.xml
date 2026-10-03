@@ -168,6 +168,10 @@
     <!-- How much of a requirement's tracker is filled in, when it has a fixed number of rows,
          such as "8 of 12 weeks". What a row is called comes from the catalog. -->
     <string name="tracker_count_of">%1$d of %2$d %3$s</string>
+    <!-- A tracker column's numbers added up, against the amount its requirement asks for, such
+         as "4.5 of 6 hours" or "2 of 3 conservation hours". The first number is already
+         formatted, and what the amount is counted in comes from the catalog. -->
+    <string name="tracker_total">%1$s of %2$d %3$s</string>
     <!-- Title of a row of a tracker, with what a row is called and its number, such as
          "Week 3" or "Session 12". -->
     <string name="tracker_row_title">%1$s %2$d</string>

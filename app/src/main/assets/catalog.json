@@ -831,7 +831,12 @@
                       {
                         "id": "hours",
                         "label": "Hours",
-                        "type": "number"
+                        "type": "number",
+                        "total": {
+                          "needed": 8,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
                       },
                       {
                         "id": "work",
@@ -2556,7 +2561,12 @@
                       {
                         "id": "nights",
                         "label": "Nights",
-                        "type": "number"
+                        "type": "number",
+                        "total": {
+                          "needed": 20,
+                          "label": "night",
+                          "labelPlural": "nights"
+                        }
                       },
                       {
                         "id": "shelter",
@@ -3183,7 +3193,12 @@
                       {
                         "id": "hours",
                         "label": "Hours",
-                        "type": "number"
+                        "type": "number",
+                        "total": {
+                          "needed": 8,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
                       },
                       {
                         "id": "work",
@@ -5169,7 +5184,12 @@
                       {
                         "id": "hours",
                         "label": "Hours",
-                        "type": "number"
+                        "type": "number",
+                        "total": {
+                          "needed": 8,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
                       },
                       {
                         "id": "work",
@@ -14086,7 +14106,12 @@
                       {
                         "id": "hours",
                         "label": "Hours",
-                        "type": "number"
+                        "type": "number",
+                        "total": {
+                          "needed": 10,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
                       }
                     ],
                     "rowLabel": "practice",
@@ -17647,7 +17672,12 @@
                   {
                     "id": "hours",
                     "label": "Hours",
-                    "type": "number"
+                    "type": "number",
+                    "total": {
+                      "needed": 1,
+                      "label": "hour",
+                      "labelPlural": "hours"
+                    }
                   },
                   {
                     "id": "work",
@@ -17885,7 +17915,12 @@
                   {
                     "id": "hours",
                     "label": "Hours",
-                    "type": "number"
+                    "type": "number",
+                    "total": {
+                      "needed": 2,
+                      "label": "hour",
+                      "labelPlural": "hours"
+                    }
                   },
                   {
                     "id": "work",
@@ -18135,7 +18170,12 @@
                   {
                     "id": "hours",
                     "label": "Hours",
-                    "type": "number"
+                    "type": "number",
+                    "total": {
+                      "needed": 3,
+                      "label": "hour",
+                      "labelPlural": "hours"
+                    }
                   },
                   {
                     "id": "work",
@@ -18201,7 +18241,12 @@
                   {
                     "id": "hours",
                     "label": "Hours",
-                    "type": "number"
+                    "type": "number",
+                    "total": {
+                      "needed": 6,
+                      "label": "hour",
+                      "labelPlural": "hours"
+                    }
                   },
                   {
                     "id": "work",
@@ -18271,12 +18316,22 @@
                   {
                     "id": "hours",
                     "label": "Hours",
-                    "type": "number"
+                    "type": "number",
+                    "total": {
+                      "needed": 6,
+                      "label": "hour",
+                      "labelPlural": "hours"
+                    }
                   },
                   {
                     "id": "conservation-hours",
                     "label": "Conservation hours (included in Hours)",
-                    "type": "number"
+                    "type": "number",
+                    "total": {
+                      "needed": 3,
+                      "label": "conservation hour",
+                      "labelPlural": "conservation hours"
+                    }
                   },
                   {
                     "id": "work",
