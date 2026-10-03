@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.RankStanding
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
@@ -27,14 +28,20 @@ data class AdvancementRequirements<out A : Advancement>(
      * Whether the scout marked it completed on a prior date, or, for a rank, marked a rank above
      * it earned, which counts it as earned ([advancementRequirementsAmong]).
      */
-    val completedOnPriorDate: Boolean = false
+    val completedOnPriorDate: Boolean = false,
+    /**
+     * The badges the scout has completed, which a rank's requirements that ask for merit badges
+     * count. None for a badge, whose requirements don't ask for any.
+     */
+    val earnedBadges: EarnedBadges = EarnedBadges.None
 ) {
     /** [requirement] of this badge or rank as a row. */
     fun item(requirement: Requirement) = requirement.toItem(
         recorded,
         trackerEntries,
         partOfHasEnough = partOfHasEnough(requirement.number),
-        advancementCompletedOnPriorDate = completedOnPriorDate
+        advancementCompletedOnPriorDate = completedOnPriorDate,
+        earnedBadges = earnedBadges
     )
 
     /**
@@ -53,7 +60,7 @@ data class AdvancementRequirements<out A : Advancement>(
      */
     private fun partOfHasEnough(number: String): Boolean = version.pathTo(number).orEmpty()
         .dropLast(1)
-        .any { it.hasEnoughChildren(recorded, trackerEntries) }
+        .any { it.hasEnoughChildren(recorded, trackerEntries, earnedBadges) }
 }
 
 /**
@@ -79,22 +86,28 @@ fun <A : Advancement> List<A>.advancementRequirements(
 
 /**
  * As [advancementRequirements], from the scout's [progress] keyed by ID, which for a rank must
- * have every rank's. A rank that counts as earned because the scout marked a rank above it earned
- * on a prior date ([RankStanding.earnedWith]) reads as marked itself, so a requirement not
- * recorded for it reads "Not recorded", as on the rank they marked. Every page that shows a
- * rank's requirements reads them through this, so they agree. A caller that has already worked
- * out the ranks' [standings] from [progress] passes them, so they aren't worked out again.
+ * have every rank's, and the badges they've completed ([earnedBadges]), which a rank's
+ * requirements that ask for merit badges count. A rank that counts as earned because the scout
+ * marked a rank above it earned on a prior date ([RankStanding.earnedWith]) reads as marked
+ * itself, so a requirement not recorded for it reads "Not recorded", as on the rank they marked.
+ * Every page that shows a rank's requirements reads them through this, so they agree. A caller
+ * that has already worked out the ranks' [standings] from [progress] passes them, so they aren't
+ * worked out again.
  */
 fun <A : Advancement> List<A>.advancementRequirementsAmong(
     id: String,
     progress: Map<String, BadgeProgressDetails>,
+    earnedBadges: EarnedBadges,
     standings: List<RankStanding>? = null
 ): AdvancementRequirements<A>? {
     val found = advancementRequirements(id, progress[id]) ?: return null
     if (found.advancement !is Rank) return found
-    val standing = (standings ?: filterIsInstance<Rank>().standings(progress))
+    val standing = (standings ?: filterIsInstance<Rank>().standings(progress, earnedBadges))
         .first { it.rank.id == id }
-    return if (standing.earnedWith == null) found else found.copy(completedOnPriorDate = true)
+    return found.copy(
+        completedOnPriorDate = found.completedOnPriorDate || standing.earnedWith != null,
+        earnedBadges = earnedBadges
+    )
 }
 
 /** The requirement numbered [number], at any depth, or null if there is none. */

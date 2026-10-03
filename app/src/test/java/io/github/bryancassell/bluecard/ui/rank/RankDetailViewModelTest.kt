@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -227,6 +228,41 @@ class RankDetailViewModelTest {
         )
         assertEquals(0.5f, viewModel.ready().fractionDone)
         assertTrue(viewModel.ready().canClear)
+    }
+
+    // Scout's requirements are done, and Tenderfoot's 2 asks for one Eagle-required badge.
+    @Test
+    fun requirementThatAsksForMeritBadges_completesFromBadgeProgress_andEarnsTheRank() = runTest {
+        val earn = Requirement("2", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 1))
+        catalogRepository.badges = listOf(
+            MeritBadge(
+                id = "camping",
+                name = "Camping",
+                summary = "Our summary of Camping.",
+                officialUrl = "https://www.scouting.org/merit-badges/camping/",
+                eagleRequired = true,
+                requirementVersions = emptyList()
+            )
+        )
+        catalogRepository.ranks = listOf(
+            rank("scout", "Scout"),
+            rank("tenderfoot", "Tenderfoot").copy(
+                requirementVersions = listOf(
+                    RequirementsVersion(newest, listOf(Requirement("1", "First."), earn))
+                )
+            )
+        )
+        complete("scout", "1", "2")
+        complete("tenderfoot", "1")
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        assertEquals(listOf(true, false), viewModel.ready().requirements.map { it.completed })
+
+        progressRepository.setCompletedOnPriorDate("camping", today, rankStart)
+
+        assertEquals(listOf(true, true), viewModel.ready().requirements.map { it.completed })
+        assertEquals(RankStatus.Earned, viewModel.ready().status)
+        assertEquals(today, viewModel.ready().earnedOn)
     }
 
     @Test

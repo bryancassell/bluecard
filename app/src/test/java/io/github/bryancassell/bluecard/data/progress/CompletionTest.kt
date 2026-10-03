@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -26,6 +28,13 @@ class CompletionTest {
     /** Completion from requirement progress alone, with no tracker entries. */
     private fun Requirement.completion(progress: Map<String, RequirementProgress>) =
         completion(progress, emptyMap())
+
+    // Two merit badges, one of them Eagle-required.
+    private val meritBadges = Requirement(
+        number = "4",
+        summary = "Earn two merit badges.",
+        meritBadges = MeritBadgesNeeded(total = 2, eagleRequired = 1)
+    )
 
     // Requirement 2 needs both children; requirement 3 needs any two of three.
     private val allOf = Requirement(
@@ -190,6 +199,7 @@ class CompletionTest {
         assertFalse(allOf.isMarkedByHand)
         assertFalse(ownWorkAndTwoOf.isMarkedByHand)
         assertFalse(weeks.isMarkedByHand)
+        assertFalse(meritBadges.isMarkedByHand)
     }
 
     @Test
@@ -388,6 +398,56 @@ class CompletionTest {
             )
         )
     }
+
+    @Test
+    fun meritBadges_completeOnceThereAreEnoughBadges() {
+        assertNull(meritBadges.completion(emptyMap(), emptyMap(), earned(day(2) to false)))
+        assertEquals(
+            Completion(day(9)),
+            meritBadges.completion(emptyMap(), emptyMap(), earned(day(2) to false, day(9) to true))
+        )
+    }
+
+    // It has no checkbox, but a stored mark could come from a catalog without meritBadges.
+    @Test
+    fun meritBadges_aStoredMarkDoesNotCompleteThem() {
+        assertNull(meritBadges.completion(progressOf(done("4", day(1))), emptyMap()))
+        assertFalse(meritBadges.hasPartDone(progressOf(done("4", day(1))), emptyMap()))
+    }
+
+    @Test
+    fun meritBadges_hasPartDone_onceABadgeCountsTowardThem() {
+        assertFalse(meritBadges.hasPartDone(emptyMap(), emptyMap(), EarnedBadges.None))
+        assertTrue(meritBadges.hasPartDone(emptyMap(), emptyMap(), earned(day(2) to false)))
+        // Only an Eagle-required badge counts toward one Eagle-required badge.
+        val oneEagleRequired = meritBadges.copy(meritBadges = MeritBadgesNeeded(1, 1))
+        assertFalse(oneEagleRequired.hasPartDone(emptyMap(), emptyMap(), earned(day(2) to false)))
+    }
+
+    @Test
+    fun rank_withMeritBadges_completeOnTheLastDateItNeeded() {
+        val rankVersion = RequirementsVersion(day(1), listOf(leaf("1"), meritBadges))
+        val earned = earned(day(2) to false, day(9) to true)
+
+        assertNull(badge(done("1", day(5))).completion(rankVersion))
+        assertEquals(Completion(day(9)), badge(done("1", day(5))).completion(rankVersion, earned))
+    }
+
+    /** Badges completed on these days, each Eagle-required or not. */
+    private fun earned(vararg badges: Pair<LocalDate, Boolean>) = EarnedBadges(
+        badges.mapIndexed { index, (date, eagleRequired) ->
+            EarnedBadge(meritBadge("badge-$index", eagleRequired), date, eagleRequired)
+        }
+    )
+
+    private fun meritBadge(id: String, eagleRequired: Boolean) = MeritBadge(
+        id = id,
+        name = id,
+        summary = "Our summary of $id.",
+        officialUrl = "https://www.scouting.org/merit-badges/$id/",
+        eagleRequired = eagleRequired,
+        requirementVersions = emptyList()
+    )
 
     private companion object {
         const val BADGE = "personal-fitness"

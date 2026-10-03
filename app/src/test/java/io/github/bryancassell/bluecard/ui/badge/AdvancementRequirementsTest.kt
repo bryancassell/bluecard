@@ -7,6 +7,8 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
+import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.standings
@@ -254,20 +256,27 @@ class AdvancementRequirementsTest {
 
         assertEquals(
             advancements.advancementRequirements("camping", progress["camping"]),
-            advancements.advancementRequirementsAmong("camping", progress)
+            advancements.advancementRequirementsAmong("camping", progress, EarnedBadges.None)
         )
     }
 
     @Test
     fun among_notInCatalog_isNull() {
-        assertNull(advancements.advancementRequirementsAmong("eagle", mapOf(marked("eagle"))))
+        assertNull(
+            advancements.advancementRequirementsAmong(
+                "eagle",
+                mapOf(marked("eagle")),
+                EarnedBadges.None
+            )
+        )
     }
 
     @Test
     fun among_rankCountedAsEarnedWithARankAbove_readsAsMarked() {
         val found = advancements.advancementRequirementsAmong(
             "scout",
-            mapOf(marked("tenderfoot"))
+            mapOf(marked("tenderfoot")),
+            EarnedBadges.None
         )!!
 
         assertTrue(found.completedOnPriorDate)
@@ -278,19 +287,54 @@ class AdvancementRequirementsTest {
     fun among_rankNotCountedAsEarned_readsAsOnItsOwn() {
         val found = advancements.advancementRequirementsAmong(
             "tenderfoot",
-            mapOf(marked("scout"))
+            mapOf(marked("scout")),
+            EarnedBadges.None
         )!!
 
         assertFalse(found.completedOnPriorDate)
         assertFalse(found.item(newest.requirements.first()).notRecorded)
     }
 
+    @Test
+    fun among_rank_countsTheBadgesTheScoutHasCompleted() {
+        val earned = EarnedBadges(
+            listOf(
+                EarnedBadge(camping, LocalDate.of(2026, 5, 1), countsOnceAsEagleRequired = false)
+            )
+        )
+
+        val found = advancements.advancementRequirementsAmong("scout", emptyMap(), earned)!!
+
+        assertEquals(earned, found.earnedBadges)
+    }
+
+    // A badge's requirements don't ask for badges.
+    @Test
+    fun among_badge_countsNoBadges() {
+        val earned = EarnedBadges(
+            listOf(
+                EarnedBadge(camping, LocalDate.of(2026, 5, 1), countsOnceAsEagleRequired = false)
+            )
+        )
+
+        val found = advancements.advancementRequirementsAmong("chess", emptyMap(), earned)!!
+
+        assertEquals(EarnedBadges.None, found.earnedBadges)
+    }
+
     // So a page that has worked them out doesn't again.
     @Test
     fun among_givenStandings_readsTheRankAsThoseHaveIt() {
-        val standings = listOf(scout, tenderfoot).standings(mapOf(marked("tenderfoot")))
+        val standings =
+            listOf(scout, tenderfoot).standings(mapOf(marked("tenderfoot")), EarnedBadges.None)
 
-        val found = advancements.advancementRequirementsAmong("scout", emptyMap(), standings)!!
+        val found =
+            advancements.advancementRequirementsAmong(
+                "scout",
+                emptyMap(),
+                EarnedBadges.None,
+                standings
+            )!!
 
         assertTrue(found.completedOnPriorDate)
     }

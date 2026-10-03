@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -151,6 +152,32 @@ class FractionDoneTest {
         val entries = entriesOf(row("6", null), row("6", null))
         assertEquals(0f, log.fractionDone(emptyMap(), entries))
         assertEquals(1f, log.fractionDone(progressOf(done("6")), entries))
+    }
+
+    @Test
+    fun meritBadges_countTheBadgesNeededTheScoutHas() {
+        // Six badges, four of them Eagle-required.
+        val meritBadges = Requirement(
+            number = "7",
+            summary = "Earn six merit badges.",
+            meritBadges = MeritBadgesNeeded(total = 6, eagleRequired = 4)
+        )
+
+        assertEquals(0f, meritBadges.fractionDone(emptyMap(), emptyMap(), EarnedBadges.None))
+        // Three that aren't Eagle-required: only two of them count, as four more Eagle-required
+        // badges are needed.
+        assertEquals(
+            2f / 6,
+            meritBadges.fractionDone(emptyMap(), emptyMap(), earned(false, false, false))
+        )
+        assertEquals(
+            1f,
+            meritBadges.fractionDone(
+                emptyMap(),
+                emptyMap(),
+                earned(false, false, true, true, true, true)
+            )
+        )
     }
 
     @Test
@@ -325,6 +352,17 @@ class FractionDoneTest {
         assertEquals(BadgeStatus.InProgress, personalFitness.status(onMissingVersion))
         assertNull(personalFitness.fractionDoneWhileInProgress(onMissingVersion))
     }
+
+    /** Badges completed with no date, each Eagle-required or not. */
+    private fun earned(vararg eagleRequired: Boolean) = EarnedBadges(
+        eagleRequired.mapIndexed { index, counts ->
+            EarnedBadge(
+                personalFitness.copy(id = "badge-$index", eagleRequired = counts),
+                null,
+                counts
+            )
+        }
+    )
 
     private companion object {
         const val BADGE = "personal-fitness"

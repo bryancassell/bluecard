@@ -23,8 +23,9 @@ code. Why the catalog works this way is in
   requirements change, add the new version and leave the old one in place:
   scouts' progress is saved against it. Never remove a shipped version or
   change its requirement numbers or structure, and don't add or remove
-  `ownWork` on one: completion is worked out from the catalog each time, so it
-  would change which badges scouts have completed.
+  `ownWork` or `meritBadges` on one, or change `meritBadges`' numbers:
+  completion is worked out from the catalog each time, so it would change which
+  badges and ranks scouts have completed.
 - **Keep a shipped tracker's columns.** Scouts' entries are saved by column
   `id`, so once a version ships, never remove a column or change its `id` or
   `type`, and never change the tracker's `rowCount`. You can change a column's
@@ -153,6 +154,13 @@ format as a badge's.
   months in the rank below: Star 1 and 5, Life 1 and 5, and Eagle 1 and 4.
   That includes Star 5 and Life 5, though a leadership project can replace
   their months in a position of responsibility.
+- **Merit badges:** give `meritBadges` to each requirement that asks for merit
+  badges: Star 3, Life 3 and Eagle 3. Its numbers are the badges needed in
+  all, so Life 3's "five more for 11 in all, at least seven of them
+  Eagle-required" has a `total` of 11 and an `eagleRequired` of 7. Only Eagle
+  3 has `eagleGroupsCountOnce`: Star and Life let the scout "choose any of the
+  merit badges on the required list for Eagle", and Eagle lets them "choose
+  only one" of each either-or choice.
 - **Where the PDF is out of date:** summarize the current rule and give the
   version the date it took effect.
   - **Eagle 3** counts 13 Eagle-required badges, not the PDF's 14, because
@@ -180,6 +188,7 @@ format as a badge's.
 | `tracker` | No | For requirements that need repeated entries, such as a weekly log. See below. |
 | `ownWork` | No | For a requirement with `children` that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are. Add it for any ask no child covers, including a closing step such as discussing what you did with your counselor. Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). The `summary` still describes the whole requirement. |
 | `monthsInRank` | No | Only on a rank's requirement that asks for months in the rank below, such as Star 1's four months as a First Class Scout: how many months, at least 1. Its page shows the date the scout becomes eligible, counted from when they earned the rank below, but the scout still checks it off. The lowest rank can't have it, since no rank is below it. See [Rank](#rank) for which requirements have it. |
+| `meritBadges` | No | Only on a rank's requirement that asks for merit badges, such as Star 3's six, at least four of them Eagle-required: `{"total": 6, "eagleRequired": 4}`, the badges needed in all and how many of them must be Eagle-required, each at least 1. Every Eagle-required badge counts toward `eagleRequired`, unless it has `"eagleGroupsCountOnce": true`: then only one badge of each `eagleGroup` does, and the group's others count only toward `total`. Set that where the official text lets the scout choose only one badge of each either-or choice. The requirement is complete once the scout has completed enough badges, so they don't check it off, and it can't have `children` or a `tracker`. See [Rank](#rank) for which requirements have it. |
 
 ### Tracker
 
@@ -271,6 +280,10 @@ It checks that:
   requirement with children;
 - `monthsInRank` is at least 1, and only on a requirement of a rank other than
   the lowest;
+- `meritBadges` is only on a rank's requirement with no children or tracker,
+  its `total` is at least 1, and its `eagleRequired` is between 1 and its
+  `total`, and no more than the catalog's Eagle-required badges, counting each
+  `eagleGroup` once with `eagleGroupsCountOnce`;
 - trackers have at least one column, unique column IDs, labels, row labels
   that start with a lowercase letter, and a `rowCount` of at least 1 when set;
 - a `total` is only on a `number` column of a log, needs at least 1, and has

@@ -14,18 +14,26 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
  *   when only some are needed, the furthest along of them count. Its tracker, if any, doesn't
  *   count, as it doesn't for completion.
  * - One without children but with a tracker with a fixed number of rows counts its filled rows.
+ * - A rank's requirement that asks for merit badges counts the badges needed that the scout's
+ *   [earnedBadges] give it ([MeritBadgeCredit.counted]).
  * - Any other requirement is marked complete by hand ([isMarkedByHand]), so it has no parts.
  */
 fun Requirement.fractionDone(
     progress: Map<String, RequirementProgress>,
-    trackerEntries: Map<String, List<TrackerEntry>>
+    trackerEntries: Map<String, List<TrackerEntry>>,
+    earnedBadges: EarnedBadges = EarnedBadges.None
 ): Float {
-    if (completion(progress, trackerEntries) != null) return 1f
+    if (completion(progress, trackerEntries, earnedBadges) != null) return 1f
     val rowCount = tracker?.rowCount
     return when {
+        meritBadges != null ->
+            earnedBadges.toward(meritBadges).counted.toFloat() / meritBadges.total
+
         children.isNotEmpty() -> {
             val needed = requiredCount ?: children.size
-            val childrenDone = children.map { it.fractionDone(progress, trackerEntries) }
+            val childrenDone = children.map {
+                it.fractionDone(progress, trackerEntries, earnedBadges)
+            }
                 .sortedDescending()
                 .take(needed)
                 .sum()
@@ -44,16 +52,35 @@ fun Requirement.fractionDone(
 }
 
 /**
- * How much of a started badge is done on [version] of its requirements, from 0 to 1: the
- * average of its top-level requirements' [fractionDone], so each weighs the same. A badge marked
- * completed on a prior date is all done.
+ * How much of a started badge or rank is done on [version] of its requirements, from 0 to 1: the
+ * average of its top-level requirements' [fractionDone], so each weighs the same. One marked
+ * completed on a prior date is all done. A rank's requirements that ask for merit badges count
+ * the scout's [earnedBadges].
  */
-fun BadgeProgressDetails.fractionDone(version: RequirementsVersion): Float {
+fun BadgeProgressDetails.fractionDone(
+    version: RequirementsVersion,
+    earnedBadges: EarnedBadges = EarnedBadges.None
+): Float {
     if (badge.completedOnPriorDate != null) return 1f
-    val progress = requirements.associateBy { it.requirementNumber }
-    val entries = trackerEntries.groupBy { it.requirementNumber }
-    return version.requirements.map { it.fractionDone(progress, entries) }.average().toFloat()
+    return version.fractionDone(
+        requirements.associateBy { it.requirementNumber },
+        trackerEntries.groupBy { it.requirementNumber },
+        earnedBadges
+    )
 }
+
+/**
+ * How much of a badge or rank on this version of its requirements is done, from 0 to 1, from
+ * the scout's recorded progress and tracker entries (each keyed by requirement number) and
+ * [earnedBadges], as [BadgeProgressDetails.fractionDone] works it out.
+ */
+fun RequirementsVersion.fractionDone(
+    progress: Map<String, RequirementProgress>,
+    trackerEntries: Map<String, List<TrackerEntry>>,
+    earnedBadges: EarnedBadges
+): Float = requirements.map { it.fractionDone(progress, trackerEntries, earnedBadges) }
+    .average()
+    .toFloat()
 
 /**
  * How much of this badge is done, from 0 to 1, from the scout's [progress] on it (null if it

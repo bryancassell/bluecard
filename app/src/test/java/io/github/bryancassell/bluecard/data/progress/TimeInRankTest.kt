@@ -117,3 +117,7 @@ class TimeInRankTest {
         assertNull(ranks.standings(emptyMap()).timeInRank("first-class", active))
     }
 }
+
+/** The scout's standing on each rank when they haven't completed any badges. */
+private fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>) =
+    standings(progress, EarnedBadges.None)

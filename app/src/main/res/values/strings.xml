@@ -355,4 +355,49 @@
         <item quantity="one">Eligible %1$d month after earning %2$s, which has no date it was earned on</item>
         <item quantity="other">Eligible %1$d months after earning %2$s, which has no date it was earned on</item>
     </plurals>
+    <!-- How many merit badges the scout has completed, against the number a rank's requirement
+         asks for, such as "4 of 6 merit badges". The quantity is the number it asks for. -->
+    <plurals name="requirement_merit_badges_count">
+        <item quantity="one">%1$d of %2$d merit badge</item>
+        <item quantity="other">%1$d of %2$d merit badges</item>
+    </plurals>
+    <!-- How many of the scout's merit badges count as Eagle-required, against the number a
+         rank's requirement asks for, such as "2 of 4 Eagle-required". The quantity is the
+         number it asks for. -->
+    <plurals name="requirement_eagle_required_count">
+        <item quantity="one">%1$d of %2$d Eagle-required</item>
+        <item quantity="other">%1$d of %2$d Eagle-required</item>
+    </plurals>
+    <!-- On the page of a rank's requirement that asks for merit badges, how many more the scout
+         needs, when any badge will do, such as "Needs 2 more merit badges". The quantity is the
+         number needed. -->
+    <plurals name="requirement_merit_badges_needed">
+        <item quantity="one">Needs %1$d more merit badge</item>
+        <item quantity="other">Needs %1$d more merit badges</item>
+    </plurals>
+    <!-- The same when every one of them must be Eagle-required, such as "Needs 2 more
+         Eagle-required merit badges". The quantity is the number needed. -->
+    <plurals name="requirement_eagle_required_badges_needed">
+        <item quantity="one">Needs %1$d more Eagle-required merit badge</item>
+        <item quantity="other">Needs %1$d more Eagle-required merit badges</item>
+    </plurals>
+    <!-- The same when only some of them must be Eagle-required, such as "Needs 3 more merit
+         badges, 1 of them Eagle-required": the number needed, then how many of them must be
+         Eagle-required, which is always fewer. The quantity is the number needed. -->
+    <plurals name="requirement_merit_badges_needed_some_eagle_required">
+        <item quantity="one">Needs %1$d more merit badge, %2$d of them Eagle-required</item>
+        <item quantity="other">Needs %1$d more merit badges, %2$d of them Eagle-required</item>
+    </plurals>
+    <!-- Heading of the list of merit badges the scout has completed, on the page of a rank's
+         requirement that asks for merit badges. -->
+    <string name="requirement_merit_badges_title">Merit badges</string>
+    <!-- Under a badge's name in that list: the date the scout completed it on, such as
+         "Completed on Apr 15, 2026". -->
+    <string name="requirement_merit_badge_completed_on">Completed on %1$s</string>
+    <!-- The same for a badge completed with no date. -->
+    <string name="requirement_merit_badge_completed">Completed</string>
+    <!-- At the end of a badge's row in that list, when it counts as one of the Eagle-required
+         badges the requirement asks for. Of the badges in an Eagle "one of" group, only one
+         counts. -->
+    <string name="requirement_merit_badge_eagle_required">Eagle-required</string>
 </resources>

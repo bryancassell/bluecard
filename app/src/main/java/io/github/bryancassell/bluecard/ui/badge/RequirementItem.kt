@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.progress.EarnedBadges
+import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
@@ -23,8 +25,8 @@ data class RequirementItem(
     val completed: Boolean,
     /**
      * Whether the scout marks it complete by hand, with a checkbox on its page. Otherwise its
-     * sub-requirements or its tracker's rows decide ([isMarkedByHand]); one with [ownWork] has a
-     * checkbox for that work instead.
+     * sub-requirements, its tracker's rows or the scout's badges decide ([isMarkedByHand]); one
+     * with [ownWork] has a checkbox for that work instead.
      */
     val markedByHand: Boolean,
     /** How much of its tracker is filled in, with its totals, or null if it has none. */
@@ -57,7 +59,12 @@ data class RequirementItem(
      * Whether it's complete once every row of its tracker is filled in ([completesFromRows]).
      * Its page then has the date it was completed on, which the scout can change.
      */
-    val completesFromRows: Boolean = false
+    val completesFromRows: Boolean = false,
+    /**
+     * For a rank's requirement that asks for merit badges, how far the scout's completed badges
+     * go toward it, or null for any other requirement.
+     */
+    val meritBadges: MeritBadgeCredit? = null
 )
 
 /**
@@ -77,18 +84,20 @@ data class CompleteCount(val complete: Int, val needed: Int)
  * requirement number. [partOfHasEnough] is whether a requirement this one is part of, at any
  * depth, has enough complete sub-requirements ([hasEnoughChildren]).
  * [advancementCompletedOnPriorDate] is whether the scout marked the badge or rank completed on a
- * prior date.
+ * prior date. [earnedBadges] are the badges the scout has completed, which a rank's requirement
+ * that asks for merit badges counts.
  */
 fun Requirement.toItem(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,
     partOfHasEnough: Boolean = false,
-    advancementCompletedOnPriorDate: Boolean = false
+    advancementCompletedOnPriorDate: Boolean = false,
+    earnedBadges: EarnedBadges = EarnedBadges.None
 ): RequirementItem {
-    val completed = completion(progress, trackerEntries) != null
+    val completed = completion(progress, trackerEntries, earnedBadges) != null
     val notNeeded = partOfHasEnough && !completed
     val stillNeeded = !completed && !notNeeded
-    val partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries)
+    val partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries, earnedBadges)
     return RequirementItem(
         number = number,
         summary = summary,
@@ -100,17 +109,23 @@ fun Requirement.toItem(
         notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = partlyCompleted,
-        completeCount = if (stillNeeded) completeCount(progress, trackerEntries) else null,
-        completesFromRows = completesFromRows
+        completeCount = if (stillNeeded) {
+            completeCount(progress, trackerEntries, earnedBadges)
+        } else {
+            null
+        },
+        completesFromRows = completesFromRows,
+        meritBadges = meritBadges?.let(earnedBadges::toward)
     )
 }
 
 /** How many of the children it needs are complete, or null if none are. */
 private fun Requirement.completeCount(
     progress: Map<String, RequirementProgress>,
-    trackerEntries: Map<String, List<TrackerEntry>>
+    trackerEntries: Map<String, List<TrackerEntry>>,
+    earnedBadges: EarnedBadges
 ): CompleteCount? {
-    val complete = children.count { it.completion(progress, trackerEntries) != null }
+    val complete = children.count { it.completion(progress, trackerEntries, earnedBadges) != null }
     // More than it needs are complete only while its own work isn't.
     return if (complete == 0) null else CompleteCount(minOf(complete, neededCount), neededCount)
 }
