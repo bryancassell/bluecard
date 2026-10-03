@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -77,23 +78,26 @@ fun MeritBadgeSection(
         }
         val formatter = rememberCompletionDateFormatter()
         badges.forEach { earned ->
-            AdvancementRow(
-                name = earned.badge.name,
-                detail = earned.completedOn?.let {
-                    stringResource(
-                        R.string.requirement_merit_badge_completed_on,
-                        formatter.format(it)
-                    )
-                } ?: stringResource(R.string.requirement_merit_badge_completed),
-                status = if (earned.countsAsEagleRequired(credit.needed)) {
-                    stringResource(R.string.requirement_merit_badge_eagle_required)
-                } else {
-                    null
-                },
-                fractionDone = null,
-                onClickLabel = stringResource(R.string.badges_open_badge),
-                onClick = { onOpenBadge(earned.badge.id) }
-            )
+            // Keyed, so a row's state stays with its badge when one before it is cleared.
+            key(earned.badge.id) {
+                AdvancementRow(
+                    name = earned.badge.name,
+                    detail = earned.completedOn?.let {
+                        stringResource(
+                            R.string.requirement_merit_badge_completed_on,
+                            formatter.format(it)
+                        )
+                    } ?: stringResource(R.string.requirement_merit_badge_completed),
+                    status = if (earned.countsAsEagleRequired(credit.needed)) {
+                        stringResource(R.string.requirement_merit_badge_eagle_required)
+                    } else {
+                        null
+                    },
+                    fractionDone = null,
+                    onClickLabel = stringResource(R.string.badges_open_badge),
+                    onClick = { onOpenBadge(earned.badge.id) }
+                )
+            }
         }
     }
 }

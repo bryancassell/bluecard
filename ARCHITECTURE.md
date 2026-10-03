@@ -763,17 +763,15 @@ such as Star 3's six, at least four of them Eagle-required) is the only
 completion that depends on other items' progress
 ([#193](https://github.com/bryancassell/bluecard/issues/193)). Completion and
 the progress bar take the scout's completed badges as `EarnedBadges`
-(`data/progress/EarnedBadges.kt`), worked out once from every badge's progress
-with each badge's own completion, and the requirement is complete on the day
-there were first enough. Whether an Eagle "one of" group counts once toward
-Eagle-required comes from the catalog (`eagleGroupsCountOnce`), so each
-requirement follows its official wording, and a group that does counts once
-through `eagleSlots`, as on Home. `EarnedBadges` is a
-parameter that defaults to none, because a badge's requirements never ask for
-badges, which the catalog test checks. So only the code that serves ranks
-passes it, and `standings` requires it. Nothing about the requirement is
-stored, so a page that shows a rank reads every badge's progress as well as
-every rank's, and follows a badge that's completed, changed or cleared.
+(`data/progress/EarnedBadges.kt`), worked out once per change in progress
+rather than in each requirement. Whether an Eagle "one of" group counts once
+comes from the catalog (`eagleGroupsCountOnce`), not the code, so each
+requirement can follow its own official wording, and a group counts once
+through the same `eagleSlots` as Home. `EarnedBadges` is a parameter that
+defaults to none, because a badge's requirements never ask for badges, which
+the catalog test checks. So only the code that serves ranks passes it, and
+`standings` requires it. Nothing about the requirement is stored, so a page
+that shows a rank reads every badge's progress as well as every rank's.
 
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
