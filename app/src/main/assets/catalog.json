@@ -5650,7 +5650,7 @@
                 },
                 {
                   "number": "1c",
-                  "summary": "Describe traits of seven breeds, one from each major group, or give a short history of one breed."
+                  "summary": "Describe traits of seven breeds, one from each major group, or tell the story of one breed."
                 }
               ]
             },
@@ -7154,7 +7154,7 @@
                 },
                 {
                   "number": "3b",
-                  "summary": "Organize a tool rack, or a storage system for nails, bolts, nuts and washers."
+                  "summary": "Set up a tool rack, or storage for nails, bolts, nuts and washers."
                 },
                 {
                   "number": "3c",
@@ -7187,7 +7187,7 @@
             },
             {
               "number": "5",
-              "summary": "Visit an implement dealer and ask the technician or service manager for preventive maintenance tips, why it matters, what it costs and what causes wear or damage; report what you learn."
+              "summary": "Visit an implement dealer and interview the technician or service manager about preventive maintenance: why it matters, what it costs and what wears out or damages machines; then report back."
             },
             {
               "number": "6",
@@ -8816,7 +8816,7 @@
               "children": [
                 {
                   "number": "1a",
-                  "summary": "Explain to your counselor what genealogy, ancestor and descendant mean."
+                  "summary": "Define genealogy, ancestor and descendant for your counselor."
                 },
                 {
                   "number": "1b",
@@ -8869,11 +8869,55 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Name three kinds of physical genealogy resources, where to find them, and how they help you build a family tree."
+                  "summary": "Name three kinds of physical genealogy resources, where to find them, and how they help you build a family tree.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "resource",
+                        "label": "Resource",
+                        "type": "text"
+                      },
+                      {
+                        "id": "where",
+                        "label": "Where to find it",
+                        "type": "text"
+                      },
+                      {
+                        "id": "helps",
+                        "label": "How it helps you build a family tree",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "resource",
+                    "rowLabelPlural": "resources",
+                    "rowCount": 3
+                  }
                 },
                 {
                   "number": "4b",
-                  "summary": "Name three kinds of digital genealogy resources, where to find them, and how they help you build a family tree."
+                  "summary": "Name three kinds of digital genealogy resources, where to find them, and how they help you build a family tree.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "resource",
+                        "label": "Resource",
+                        "type": "text"
+                      },
+                      {
+                        "id": "where",
+                        "label": "Where to find it",
+                        "type": "text"
+                      },
+                      {
+                        "id": "helps",
+                        "label": "How it helps you build a family tree",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "resource",
+                    "rowLabelPlural": "resources",
+                    "rowCount": 3
+                  }
                 },
                 {
                   "number": "4c",
@@ -8893,7 +8937,7 @@
               "number": "5",
               "summary": "Contact one of these about its genealogy services and report back.",
               "requiredCount": 1,
-              "ownWork": "Ask what genealogical services, records or activities they offer, and report what you learn.",
+              "ownWork": "Find out what genealogy help, records or activities they offer, and report back.",
               "children": [
                 {
                   "number": "5a",
@@ -10531,7 +10575,24 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "List three inventions and how each has helped people."
+                  "summary": "List three inventions and how each has helped people.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "invention",
+                        "label": "Invention",
+                        "type": "text"
+                      },
+                      {
+                        "id": "helped",
+                        "label": "How it has helped people",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "invention",
+                    "rowLabelPlural": "inventions",
+                    "rowCount": 3
+                  }
                 }
               ]
             },
@@ -10583,7 +10644,7 @@
             {
               "number": "6",
               "summary": "Plan an invention that would solve a problem, keeping a notebook of your progress.",
-              "ownWork": "Choose something to invent that would solve a problem for your family, troop, chartered organization, community or a special-interest group, and keep a notebook of your progress.",
+              "ownWork": "Pick a problem facing your family, troop, chartered organization, community or a special-interest group, and an invention to solve it; keep a notebook of your progress.",
               "children": [
                 {
                   "number": "6a",
@@ -15113,7 +15174,29 @@
                 },
                 {
                   "number": "1c",
-                  "summary": "Pick four of the listed diseases, and explain how people get each and how it might be prevented."
+                  "summary": "Pick four of the listed diseases, and explain how people get each and how it might be prevented.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "disease",
+                        "label": "Disease",
+                        "type": "text"
+                      },
+                      {
+                        "id": "how-people-get-it",
+                        "label": "How people get it",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "prevention",
+                        "label": "How it might be prevented",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "disease",
+                    "rowLabelPlural": "diseases",
+                    "rowCount": 4
+                  }
                 },
                 {
                   "number": "1d",
@@ -15182,7 +15265,7 @@
                     },
                     {
                       "number": "5b(2)",
-                      "summary": "Find out what lets microorganisms grow in food, how to help stop them growing and spreading, and how to kill them."
+                      "summary": "Learn what lets microorganisms thrive in food, how to keep them in check, and how to kill them."
                     },
                     {
                       "number": "5b(3)",
