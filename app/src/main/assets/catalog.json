@@ -298,7 +298,7 @@
                     },
                     {
                       "number": "6A(2)",
-                      "summary": "Sketch either a feedlot for 30 or more fattening steers, with forage and grain storage and a loading chute, or a corral for 50 or more beef cows and their calves, with cutting and loading chutes."
+                      "summary": "Sketch either a feedlot for 30 or more fattening steers, with forage and grain storage and a loading chute, or a corral that handles 50 or more beef cows and their calves at once, with cutting and loading chutes."
                     },
                     {
                       "number": "6A(3)",
@@ -557,7 +557,7 @@
                               {
                                 "id": "weight",
                                 "label": "Weights",
-                                "type": "text"
+                                "type": "multiline-text"
                               },
                               {
                                 "id": "health",
@@ -6262,7 +6262,7 @@
                 },
                 {
                   "number": "4b",
-                  "summary": "Research a real scientific expedition's goals and key discoveries, share them with your counselor and unit, and tell how its findings helped settle important scientific questions."
+                  "summary": "Research a real scientific expedition's goals and key discoveries, share them with your counselor and unit, and tell how its findings helped answer key scientific questions."
                 },
                 {
                   "number": "4c",
@@ -8792,7 +8792,7 @@
     {
       "id": "graphic-arts",
       "name": "Graphic Arts",
-      "summary": "Learn how printing works, from artwork and design to binding, then design and print a piece yourself and visit a printer or graphic arts program.",
+      "summary": "Learn how printing works, from artwork and design to binding, then design and print a piece yourself and visit a printer, a graphic arts program or industry websites.",
       "officialUrl": "https://www.scouting.org/merit-badges/graphic-arts/",
       "requirementVersions": [
         {
@@ -11994,7 +11994,7 @@
     {
       "id": "pets",
       "name": "Pets",
-      "summary": "Care for a pet for four months, learn and write about its needs, then show it or train it.",
+      "summary": "Care for a pet for four months, learn and write about its needs, then show your pet or train a pet.",
       "officialUrl": "https://www.scouting.org/merit-badges/pets/",
       "requirementVersions": [
         {
@@ -12597,6 +12597,7 @@
             {
               "number": "5",
               "summary": "Choose three different languages and development environments with your counselor, and write a program in each.",
+              "ownWork": "Pick three different languages and development environments with your counselor's guidance.",
               "children": [
                 {
                   "number": "5a",
@@ -15971,7 +15972,7 @@
     {
       "id": "sports",
       "name": "Sports",
-      "summary": "Learn sports safety, health and sportsmanship, then train for and compete in two sports for a season. Activities used for this badge can't count toward other merit badges.",
+      "summary": "Learn sports safety, health and sportsmanship, then train for and compete in two sports for a season. Activities used for this badge can't count toward other badges.",
       "officialUrl": "https://www.scouting.org/merit-badges/sports/",
       "requirementVersions": [
         {
@@ -16033,7 +16034,7 @@
             },
             {
               "number": "4",
-              "summary": "Pick two sports from the official list, or other recognized sports your counselor approves in advance and Scouting America allows, each with regular practice and at least four officiated, scored contests; discuss how you'll do 5a–5h for each."
+              "summary": "Pick two sports from the official list, or other recognized sports your counselor approves in advance and Scouting America allows, each with regular practice and at least four structured, officiated, scored contests against other individuals or teams; discuss how you'll do 5a–5h for each."
             },
             {
               "number": "5",
