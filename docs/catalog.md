@@ -59,6 +59,30 @@ Examples from the catalog (compare them with the official pages):
 | First Aid 3g | Immersion foot, frostnip, frostbite and ice burns. | Fine: the official list of names. |
 | Environmental Science 1 | Explain environmental science in your own words and how it helps. | Fine: a name and a common phrase from the official text, in a sentence of our own. |
 
+## Dating a version
+
+Use the date from Scouting America's yearly list of requirement updates, if the
+badge is on one. The page can also change without being listed, and any change
+to the words counts, even one word: a requirement's text (Textile 1's "define"
+became "explain"), a note built into a requirement, a label (Theater 1's
+footnote gained "Note:"), or a page note that sets conditions (Collections'
+note on collecting). Changes to punctuation, capitalization, spacing or resource
+links don't count.
+
+Date an unlisted change January 1 of the year it first appears in the Internet
+Archive's copies of the official page. That date is an estimate: say so in the
+pull request, and name the copies on either side of the change.
+
+## When the official page is wrong
+
+When the live page has an obvious mistake, such as one requirement repeating
+another's text, summarize the last correct text, from an archived copy of the
+page or an official requirements PDF, and say which in the pull request.
+Graphic Arts 4d and Insect Study 9b repeat their neighbors' text on the page.
+When the page points to the wrong requirement and no copy has it right, point
+to the one it means: Plant Science 8C(3) says requirement 5, but means the plant
+lists in 6.
+
 ## Format
 
 ```json
@@ -137,7 +161,7 @@ format as a badge's.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `effectiveDate` | Yes | The date the version took effect, as `YYYY-MM-DD`. Most changes take effect January 1. |
+| `effectiveDate` | Yes | The date the version took effect, as `YYYY-MM-DD`. Most changes take effect January 1. See [Dating a version](#dating-a-version). |
 | `requirements` | Yes | The top-level requirements, in official order. |
 
 ### Requirement

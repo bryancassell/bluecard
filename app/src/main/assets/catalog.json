@@ -2295,11 +2295,11 @@
               "children": [
                 {
                   "number": "11a",
-                  "summary": "Write a plan for a trek of at least five days, 30 miles and three campsites, including a description of the area and how to get there, a daily schedule, food and gear lists, a safety and emergency plan and a budget."
+                  "summary": "Write a plan for a trek of at least five days, 30 miles and three campsites: the area and how to reach it, a daily schedule, food and gear lists, safety and emergency plans and a budget."
                 },
                 {
                   "number": "11b",
-                  "summary": "Following Leave No Trace and the Outdoor Code, take the trek from 11a, with at least five full days, 30 miles and three campsites, and do a service project your counselor approves on it."
+                  "summary": "Following Leave No Trace and the Outdoor Code, take that trek, at least five full days, 30 miles and three campsites, and do a counselor-approved service project on it."
                 },
                 {
                   "number": "11c",
@@ -9419,7 +9419,7 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Find your home's main electrical switch box, and learn to replace a fuse or reset a circuit breaker."
+                  "summary": "Track down a main electrical switch box, and learn how to change a fuse or reset a circuit breaker."
                 },
                 {
                   "number": "4b",
@@ -9748,7 +9748,7 @@
                 },
                 {
                   "number": "4c",
-                  "summary": "Make a scrapbook of the 20 insects from 4b with photos, sketches, illustrations and articles, labeling each with its common and scientific names where you can, and share it with your counselor."
+                  "summary": "Make a scrapbook of 4b's 20 insects with photos, sketches, illustrations and articles, labeled with common and scientific names where possible, and share it with your counselor."
                 },
                 {
                   "number": "4d",
@@ -9792,7 +9792,7 @@
                     },
                     {
                       "number": "5b(2)",
-                      "summary": "Study a beehive: take out the combs, find the queen, estimate the brood, count the queen cells, and explain how to judge how much honey it holds; if you're allergic to bee stings, do 5b(1) instead."
+                      "summary": "Study a beehive: remove the combs, find the queen, estimate the brood, count queen cells and explain how to gauge its honey; if allergic to bee stings, do 5b(1)."
                     }
                   ]
                 }
@@ -11138,19 +11138,19 @@
                 },
                 {
                   "number": "4b",
-                  "summary": "Structural model: lay out and build a 1:8 model of a wood-frame building's corner, showing its floor and wall framing, from cardboard, foam board or wood; review its parts and your challenges with your counselor."
+                  "summary": "Structural model: lay out and build a 1:8 model of a wood-frame building's corner framing in cardboard, foam board or wood; review its parts and your challenges with your counselor."
                 },
                 {
                   "number": "4c",
-                  "summary": "Process model: design and build a model of your house's plumbing at 1:16 or an agreed scale, showing hot and cold supply, waste lines and venting; discuss your plan, scale and materials before building, and any problems after."
+                  "summary": "Process model: design and build a 1:16 (or agreed scale) model of your house's plumbing, with hot and cold supply, waste lines and venting; discuss your plan, scale and materials first and any problems after."
                 },
                 {
                   "number": "4d",
-                  "summary": "Mechanical model: design a device using at least two of the six simple machines, digitally if you like; once your counselor approves it, build a working physical model and discuss its materials, function and challenges."
+                  "summary": "Mechanical model: design a device using at least two of the six simple machines; once your counselor approves it, build a working physical model and discuss its materials, function and challenges."
                 },
                 {
                   "number": "4e",
-                  "summary": "Industrial model: measure a real passenger vehicle, draw or model it from the top, front, rear and sides, and build a 1:12 or 1:24 model of it, physically or by digital rendering or 3D printing; discuss the hardest parts."
+                  "summary": "Industrial model: measure a real passenger vehicle, draw or model its top, front, rear and sides, then build a 1:12 or 1:24 model, physically or digitally; discuss the hardest parts."
                 }
               ]
             },
@@ -13196,7 +13196,7 @@
             },
             {
               "number": "4",
-              "summary": "Explain how water, light, air, temperature and pests affect plants; describe what soil is, what it does and why it matters, the texture, structure and makeup of fertile soil, and how to improve soil."
+              "summary": "Explain how water, light, air, temperature and pests affect plants; what soil is, does and why it matters; fertile soil's texture, structure and makeup; and how to improve soil."
             },
             {
               "number": "5",
@@ -13204,7 +13204,7 @@
             },
             {
               "number": "6",
-              "summary": "List the common names of at least 10 native and 10 cultivated plants near home, and five local invasive non-native plants and the harm they do; explain how to curb invasives without hurting people, wildlife or the environment.",
+              "summary": "Give the common names of at least 10 native and 10 cultivated plants near home and five local non-native invasives and their harm; explain how to curb invasives safely for people, wildlife and the environment.",
               "tracker": {
                 "columns": [
                   {
@@ -13257,11 +13257,11 @@
                     },
                     {
                       "number": "8A(2)",
-                      "summary": "Build a seed germination tester, use it to test 50 seeds of four of these: corn, cotton, alfalfa, soybeans, clover, wheat, rice, rye or barley, and work out the percentage that are alive."
+                      "summary": "Build a seed germination tester and test 50 seeds of four of these: corn, cotton, alfalfa, soybeans, clover, wheat, rice, rye or barley; find the percentage alive."
                     },
                     {
                       "number": "8A(3)",
-                      "summary": "For each of corn, small grains and cotton, explain one major insect pest and one major disease; collect and name five local weeds that compete with crops, and explain how to control them safely for people, wildlife and helpful insects.",
+                      "summary": "For each of corn, small grains and cotton, explain a major insect pest and a major disease; collect and name five local crop weeds and explain controlling them without harming people, wildlife or useful insects.",
                       "tracker": {
                         "columns": [
                           {
@@ -13325,7 +13325,7 @@
                           "children": [
                             {
                               "number": "8A(5)(c)(1)",
-                              "summary": "Collect, count and label samples of perennial grasses, annual grasses, legumes and broadleaf weeds for display; tell how each grass and legume is used; and log where you found each and share the log.",
+                              "summary": "Collect, count and label display samples of perennial and annual grasses, legumes and broadleaf weeds, tell how each grass and legume is used, and log and share where you found each.",
                               "tracker": {
                                 "columns": [
                                   {
@@ -13613,7 +13613,7 @@
                             },
                             {
                               "number": "8B(5)(d)(4)",
-                              "summary": "Name four kinds of things you could add to a yard or park to help birds and wildlife, and list 10 local native plants that benefit them, with common and scientific names.",
+                              "summary": "Name four kinds of things to add to a yard or park for birds and wildlife, and list 10 local native plants that benefit them, with common and scientific names.",
                               "tracker": {
                                 "columns": [
                                   {
@@ -13656,7 +13656,7 @@
                         },
                         {
                           "number": "8C(1)(c)",
-                          "summary": "Record how the plants differ at a forest's edge, near water, in burned areas and near a road or railroad.",
+                          "summary": "Note how the plants change wherever you find a forest's edge, water, a burned area, or a road or railroad.",
                           "tracker": {
                             "columns": [
                               {
@@ -13704,7 +13704,7 @@
                     },
                     {
                       "number": "8C(3)",
-                      "summary": "Explain how an identification key works and use a simple one to identify 10 plants besides those from general requirement 5; explain how common and scientific names differ and why scientific names matter."
+                      "summary": "Describe how plant identification keys work, and name 10 plants with a simple key, not counting those from requirement 6; explain how common and scientific names differ and why scientific names matter."
                     },
                     {
                       "number": "8C(4)",
@@ -13794,7 +13794,7 @@
                           "children": [
                             {
                               "number": "8C(6)(b)(1)",
-                              "summary": "Visit two sites, at least one other than the site from field botany requirement 1."
+                              "summary": "Visit two sites, at least one other than the site from 8C(1)."
                             },
                             {
                               "number": "8C(6)(b)(2)",
@@ -13844,7 +13844,7 @@
                           "children": [
                             {
                               "number": "8C(6)(c)(1)",
-                              "summary": "Visit two sites, at least one other than the site from field botany requirement 1."
+                              "summary": "Visit two sites, at least one other than the site from 8C(1)."
                             },
                             {
                               "number": "8C(6)(c)(2)",
@@ -13948,7 +13948,7 @@
                             },
                             {
                               "number": "8C(6)(d)(3)",
-                              "summary": "Explain how a voucher specimen is mounted and prepared for permanent storage, and how to handle specimens without damaging them."
+                              "summary": "Explain how voucher specimens are prepared and mounted to keep for good, and how to handle them without damage."
                             },
                             {
                               "number": "8C(6)(d)(4)",
@@ -13982,7 +13982,7 @@
             },
             {
               "number": "9",
-              "summary": "Discuss why the Leave No Trace Seven Principles and the Outdoor Code matter in plant science, and explain how you followed them in natural areas while observing, collecting and identifying plants."
+              "summary": "Discuss why Leave No Trace and the Outdoor Code matter in plant science, and how you followed them in natural areas while observing, collecting and identifying plants."
             }
           ]
         }
@@ -16158,7 +16158,7 @@
                 },
                 {
                   "number": "2b",
-                  "summary": "With permission and approval, interview two established professionals from outside your school on how their schooling and training prepared them for their careers and how they keep learning; discuss what you find."
+                  "summary": "With permission and approval, interview two established professionals from outside your school about how their education prepared them and how they keep learning; discuss what you find."
                 },
                 {
                   "number": "2c",
@@ -16172,7 +16172,7 @@
             },
             {
               "number": "3",
-              "summary": "Get a note from your principal, or an official they name, that your behavior, leadership and service were satisfactory this past year; if you're home-schooled or have no principal, a counterpart such as a parent or guardian can write it."
+              "summary": "Get a note from your principal, or an official they name, that your behavior, leadership and service this past year were satisfactory; if home-schooled or without a principal, ask a counterpart such as a parent or guardian."
             },
             {
               "number": "4",
@@ -18510,11 +18510,11 @@
                 },
                 {
                   "number": "3g",
-                  "summary": "With your counselor's approval, design a play's lighting, or help install, focus, color, program and run a production's lighting."
+                  "summary": "With your counselor's approval, either design a play's lighting or join a production's lighting crew to install, focus, color, program and run the lights."
                 },
                 {
                   "number": "3h",
-                  "summary": "With your counselor's approval, help install, focus, equalize, program and run a production's sound."
+                  "summary": "With your counselor's approval, join a production's sound crew to install, focus, equalize, program and run the sound."
                 },
                 {
                   "number": "3i",
@@ -18970,7 +18970,7 @@
               "children": [
                 {
                   "number": "1a",
-                  "summary": "Explain the likely whitewater hazards, including fallen trees and branches, rocks, hydraulics at ledges or low-head dams, strong wind, cold water or air, and thunderstorms, and how to anticipate, prevent, lessen and respond to them."
+                  "summary": "Explain likely whitewater hazards, including fallen trees, rocks, hydraulics at ledges or low-head dams, strong wind, cold, and thunderstorms, and how to anticipate, prevent, lessen and respond to them."
                 },
                 {
                   "number": "1b",
@@ -19103,7 +19103,7 @@
             },
             {
               "number": "6",
-              "summary": "Explain why communication matters on every whitewater outing, and use the American Whitewater Universal River Signals, by sight and by sound: \"Stop,\" \"Are you OK?,\" \"Help/emergency,\" \"Run river right,\" \"Run river left\" and \"All clear—come ahead.\""
+              "summary": "Explain why communication matters on every whitewater outing, and use the American Whitewater Universal River Signals, visual and audible, for stop, are you OK, help, run river right or left, and all clear."
             },
             {
               "number": "7",
@@ -19130,7 +19130,7 @@
             },
             {
               "number": "10",
-              "summary": "Wearing a proper life jacket and dressed for the weather and water, do these on moving water in an equipped whitewater tandem canoe, solo canoe or solo kayak; in a tandem canoe, do each from both bow and stern.",
+              "summary": "In a proper life jacket and dressed for the weather and water, do these on moving water in an equipped whitewater tandem canoe, solo canoe or solo kayak; in a tandem, do each from bow and stern.",
               "children": [
                 {
                   "number": "10a",
