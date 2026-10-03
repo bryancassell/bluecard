@@ -217,8 +217,8 @@ private class ReportComposer(private val resources: Resources) {
      * A rank's requirement that asks for merit badges: how many the scout has completed, and how
      * many of them count as Eagle-required, worded as on the requirement's page, then each badge
      * with the date it was completed on, and "Eagle-required" if it counts as Eagle-required
-     * toward the requirement. The page's line on how many more are needed is left out: the
-     * report is on an earned rank, as a record rather than a plan.
+     * toward the requirement. The page's line on how many more are needed is left out, as the
+     * report is on a rank that's already earned.
      */
     private fun add(meritBadges: ReportMeritBadges, indent: Int) {
         val credit = meritBadges.credit
