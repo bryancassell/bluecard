@@ -108,6 +108,62 @@
       ]
     },
     {
+      "id": "american-cultures",
+      "name": "American Cultures",
+      "summary": "Pick three groups with different racial, cultural, national or ethnic backgrounds, one of them your own, learn about them for requirements 1–3, and lead a discussion on how groups can understand one another.",
+      "officialUrl": "https://www.scouting.org/merit-badges/american-cultures/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about two of your groups, a different one for each choice.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Attend a festival, celebration or other event of one group, then report on it."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Visit a place of worship, school or other institution of one group, then report on it."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Interview someone from one group about its heritage and traditions, then report on it."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Learn one group's traditional song, dance, poem or story, and teach it to some friends."
+                },
+                {
+                  "number": "1e",
+                  "summary": "See a library or museum program or exhibit on one group's traditions, then report on it."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Imagine a city or country where only one of your groups has ever lived; describe it today, then with all three of your groups living there."
+            },
+            {
+              "number": "3",
+              "summary": "Tell how your three groups' religious and social customs differ, and some ideas and practices they have in common."
+            },
+            {
+              "number": "4",
+              "summary": "Pick three people of different racial, ethnic or religious backgrounds, and tell how each has contributed to our country."
+            },
+            {
+              "number": "5",
+              "summary": "Give your Scout unit or a school class a talk on how different groups have learned to live together, then lead a discussion on what would help groups understand each other."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "american-heritage",
       "name": "American Heritage",
       "summary": "Explore the Declaration of Independence, people and groups who shaped the country, its national symbols, your family's and community's history, and how the past bears on today.",
@@ -5572,6 +5628,194 @@
       ]
     },
     {
+      "id": "dog-care",
+      "name": "Dog Care",
+      "summary": "Learn about dog breeds, training, health and first aid, and care for your own dog for two months. Work for this badge can't count toward any other badge.",
+      "officialUrl": "https://www.scouting.org/merit-badges/dog-care/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn where dogs come from and how breeds differ.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Briefly discuss where dogs came from and how they were domesticated."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe traits shared by the dogs in each of the seven major dog groups."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe traits of seven breeds, one from each major group, or give a short history of one breed."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Name at least 10 body parts correctly, pointing each out on a dog or a sketch."
+            },
+            {
+              "number": "3",
+              "summary": "Learn what owning a dog involves.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain why house-training, obedience training and socialization matter for your dog."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain what \"responsible pet ownership\" means."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain what to think about, including temperament, when choosing a breed for a family dog."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Look after your dog for two months, keeping a log of its food, exercise, training, weekly weight, grooming and bathing, any vet care and costs, and describe where it lives and sleeps.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "date",
+                    "label": "Date",
+                    "type": "date"
+                  },
+                  {
+                    "id": "food",
+                    "label": "Food and amount fed",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "exercise",
+                    "label": "Exercise and training",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "weight",
+                    "label": "Weight",
+                    "type": "number"
+                  },
+                  {
+                    "id": "care",
+                    "label": "Grooming, bathing and vet care",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "cost",
+                    "label": "Cost",
+                    "type": "number"
+                  }
+                ],
+                "rowLabel": "entry",
+                "rowLabelPlural": "entries"
+              }
+            },
+            {
+              "number": "5",
+              "summary": "Explain how to obedience train a dog and the gear you'd need, then have your dog obey three of these commands: come, sit, down, heel, stay, fetch, get it, drop it."
+            },
+            {
+              "number": "6",
+              "summary": "Learn how to keep a dog healthy.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Discuss which vaccinations a dog where you live needs, and when, from puppy to adult."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Discuss how to protect a dog where you live from fleas, ticks, heartworms and intestinal worms, from puppy to adult."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain why dental care and tooth brushing matter for your dog's health."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Discuss why grooming a dog's coat and nails regularly helps."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Discuss with your counselor how your area's seasons, such as hot summers, cold winters or high humidity, affect caring for your dog."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Discuss with your counselor what to weigh when deciding to spay or neuter your dog, and the benefits."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn first aid for dogs.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain how to handle a hurt dog safely."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Show how to put on an emergency muzzle."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Explain how to treat wounds and what first aid to give for a dog bite."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Show a simple way to dress and bandage your dog's foot, body or head."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Explain what to do if a car hits a dog."
+                },
+                {
+                  "number": "7f",
+                  "summary": "List what a dog owner's first-aid kit should hold."
+                },
+                {
+                  "number": "7g",
+                  "summary": "Tell why treating a serious illness at home is risky."
+                },
+                {
+                  "number": "7h",
+                  "summary": "Briefly discuss what causes rabies, parvovirus, distemper and heartworms in dogs, how they spread, their signs and symptoms, and how to prevent them."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Visit a veterinary hospital or animal shelter, then tell your counselor about your visit."
+            },
+            {
+              "number": "9",
+              "summary": "Learn the laws and ordinances about dogs where you live."
+            },
+            {
+              "number": "10",
+              "summary": "Explore a career or hobby working with dogs.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Find three careers that use skills with dogs, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Research how working with dogs could become a hobby or part of a healthy lifestyle, and share your goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "electricity",
       "name": "Electricity",
       "summary": "Handle electrical emergencies, check your home's wiring safety, build simple circuits and devices, and learn what the power you use costs.",
@@ -6845,6 +7089,128 @@
             {
               "number": "7",
               "summary": "Discuss what makes a good parent or guardian."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "farm-mechanics",
+      "name": "Farm Mechanics",
+      "summary": "Learn farm shop safety and how engines and hydraulics deliver power, then care for tools and machines and learn preventive maintenance from an implement dealer.",
+      "officialUrl": "https://www.scouting.org/merit-badges/farm-mechanics/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2023-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to work safely on farm equipment.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Discuss what safety gear, tools and clothing to use when checking or fixing farm equipment, and use them whenever needed for this badge."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Draw a plan of a well-equipped farm shop, and point out the safety devices and features it must have."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Locate and explain each universal warning and safety symbol on a piece of equipment."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain what a safety data sheet (SDS) is for, and get one for every flammable or hazardous material you use for this badge."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain how each of these produces or transfers power.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "A diesel engine."
+                },
+                {
+                  "number": "2b",
+                  "summary": "A hydraulic system."
+                },
+                {
+                  "number": "2c",
+                  "summary": "A transmission or any other power system."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Do two of these tool jobs.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Put a new handle on any farm tool."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Organize a tool rack, or a storage system for nails, bolts, nuts and washers."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Use a hand file to dress a chisel or punch whose head has mushroomed."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Use a hand file to reshape a screwdriver tip."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Service a machine, check one before use, or get one ready for winter.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Service an engine-powered machine: grease every fitting, change the oil and oil filter, clean the air filter and radiator fins, and replace the fuel filters."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Make a preoperational checklist for an engine-powered machine that covers its coolant, engine oil, hydraulic or transmission fluid and battery voltage (using a voltmeter), then use it to check the machine."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Get any farm machine ready to store for the winter."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Visit an implement dealer and ask the technician or service manager for preventive maintenance tips, why it matters, what it costs and what causes wear or damage; report what you learn."
+            },
+            {
+              "number": "6",
+              "summary": "Explain each step of one of these maintenance jobs.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Tightening hydraulic fittings."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Checking the air filter."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Cleaning a work piece with a wire-brush wheel."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore three farm mechanics careers, research one's education, training and experience, and discuss why it might interest you."
             }
           ]
         }
@@ -8436,6 +8802,156 @@
       ]
     },
     {
+      "id": "genealogy",
+      "name": "Genealogy",
+      "summary": "Learn how family history research works, interview a relative, find and judge records, and start your family tree and family group records.",
+      "officialUrl": "https://www.scouting.org/merit-badges/genealogy/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn the basic ideas of genealogy.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain to your counselor what genealogy, ancestor and descendant mean."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe a family tree and the information it holds."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe a family group record and the information it holds."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Record a life story or keep a journal.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Make a timeline of your life or a relative's, then use it to write a short biography."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Write in a journal at least once a week for six weeks.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "entry",
+                        "label": "Entry",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "With a parent's or guardian's help, interview a relative or family friend in person or by phone, email or letter, and record what you learn."
+            },
+            {
+              "number": "4",
+              "summary": "Learn where to find family records and how to judge them.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Name three kinds of physical genealogy resources, where to find them, and how they help you build a family tree."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Name three kinds of digital genealogy resources, where to find them, and how they help you build a family tree."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Get at least one document that backs up an event for your pedigree chart or family group record."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Tell how you found the document from 4c and how you'd judge the information in it."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Say where you'd likely find marriage, census and birth records and burial information."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Contact one of these about its genealogy services and report back.",
+              "requiredCount": 1,
+              "ownWork": "Ask what genealogical services, records or activities they offer, and report what you learn.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "A genealogical or lineage society."
+                },
+                {
+                  "number": "5b",
+                  "summary": "A professional genealogist, someone paid to do genealogy research."
+                },
+                {
+                  "number": "5c",
+                  "summary": "A surname organization, such as your family's."
+                },
+                {
+                  "number": "5d",
+                  "summary": "A school or institution that teaches genealogy."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Any place that keeps genealogy records, such as a courthouse, genealogy library, archive or state library."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Start your family tree with yourself and at least two more generations, on the pamphlet's chart or in genealogy software."
+            },
+            {
+              "number": "7",
+              "summary": "Fill in two family group records: one with you and your siblings as the children, and one with your parent or guardian and their siblings."
+            },
+            {
+              "number": "8",
+              "summary": "Learn how technology has changed genealogy.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Explain how computers and the internet are changing genealogy."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Explain what photography, including microfilming, has done for genealogy."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Explain what record indexing is and its effect on genealogy."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Discuss what your research has taught you about your family."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "geocaching",
       "name": "Geocaching",
       "summary": "Learn GPS and map skills, find geocaches responsibly, and lead a geohunt for other young people.",
@@ -9236,6 +9752,122 @@
       ]
     },
     {
+      "id": "health-care-professions",
+      "name": "Health Care Professions",
+      "summary": "Explore careers across health care, visit a professional at work, learn about medical ethics and patient privacy, and volunteer at a health event.",
+      "officialUrl": "https://www.scouting.org/merit-badges/health-care-professions/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about three of these that interest you: allopathic physician (MD), osteopathic physician (DO), podiatrist, chiropractor, nurse practitioner, psychologist, optometrist or audiologist.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Briefly tell your counselor what each one does in providing health care."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Tell your counselor the education and licenses each one needs."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about three of these that interest you: physician assistant, registered nurse, certified nurse midwife, certified nurse assistant, licensed practical or vocational nurse, nurse anesthetist, pharmacist, pharmacy technician, or EMT or paramedic.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Briefly tell your counselor what each one does in providing health care."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Tell your counselor the education and licenses each one needs."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn about three of these that interest you: physical therapist, occupational therapist, orthotist or prosthetist, medical appliance technician, respiratory therapist, medical assistant, dietitian or speech-language pathologist.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Briefly tell your counselor what each one does in providing health care."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Tell your counselor the education and licenses each one needs."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about three of these that interest you: biomedical engineer, medical technologist, phlebotomist, radiology technologist, sonographer, medical records specialist, cytopathologist or histotechnologist.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Briefly tell your counselor what each one does in providing health care."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Tell your counselor the education and licenses each one needs."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Visit someone in one of the careers from requirements 1–4 at their workplace, and discuss what you learn with your counselor.",
+              "ownWork": "Pick a career from requirements 1–4 and visit someone in it at their workplace.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Why they chose their career."
+                },
+                {
+                  "number": "5b",
+                  "summary": "What they like most about their job."
+                },
+                {
+                  "number": "5c",
+                  "summary": "The hardest parts of their job."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Tools or instruments they might use at work."
+                },
+                {
+                  "number": "5e",
+                  "summary": "What has surprised them most about their career."
+                },
+                {
+                  "number": "5f",
+                  "summary": "What continuing education they need to stay certified."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Discuss with your counselor what you understand the Physician's Oath to mean."
+            },
+            {
+              "number": "7",
+              "summary": "Describe why health care providers keep patient information confidential, and explain what HIPAA is."
+            },
+            {
+              "number": "8",
+              "summary": "Find a recent medical advance or discovery in the news, and discuss with your counselor how it could change patient care."
+            },
+            {
+              "number": "9",
+              "summary": "With permission and approval, volunteer at a health event or facility in your community, such as a blood drive or health fair, and tell your counselor what you did and learned."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "hiking",
       "name": "Hiking",
       "summary": "Hike safely and responsibly, train for distance, and finish four 10-mile hikes and a 20-mile hike.",
@@ -9874,6 +10506,121 @@
                   "summary": "Research how insect study could become a personal hobby, and share your goals for it."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "inventing",
+      "name": "Inventing",
+      "summary": "Learn how inventions and patents work and what inventors do, then design, model, build and test an invention of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/inventing/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Define inventing in your own words, and learn how inventions have mattered.",
+              "ownWork": "Define inventing in your own words.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain to your counselor how inventors and their inventions have helped the U.S. economy grow."
+                },
+                {
+                  "number": "1b",
+                  "summary": "List three inventions and how each has helped people."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn from an inventor.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "With permission and approval, interview an adult inventor about their useful item or process, then share what you learned with your counselor."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Read about three inventors, then tell your counselor about the one you found most interesting."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn about intellectual property and patents.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Define intellectual property, and explain which government agencies protect it, what kinds can be protected, how, and why that protection is needed."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain the parts of a patent and the kinds of patents there are."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Find a patent number on camping gear you've used; with permission, look the patent up online, compare the item with its claims and drawings, and report to your counselor."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain to your counselor what patent infringement means."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Discuss which kinds of inventions are fine to share and why, and how one unpatented invention has affected society."
+            },
+            {
+              "number": "5",
+              "summary": "Pick a store-bought product you used on a troop overnight camping trip, sketch how you'd improve it, and discuss your ideas with your counselor."
+            },
+            {
+              "number": "6",
+              "summary": "Plan an invention that would solve a problem, keeping a notebook of your progress.",
+              "ownWork": "Choose something to invent that would solve a problem for your family, troop, chartered organization, community or a special-interest group, and keep a notebook of your progress.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Talk with people who might use it to learn their needs, then write up what the invention is and how it solves the problem, with a detailed sketch."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Make a model of it from clay, cardboard or another easy-to-find material, and list the materials a working prototype would need."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Show the idea and the model to your counselor and the people who'd use it, and write their feedback in your notebook."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Once your counselor approves your plans, build, test and judge a working prototype, compare it with what you pictured, and have your counselor critique it."
+            },
+            {
+              "number": "8",
+              "summary": "Join a team that builds things, or visit an invention museum.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Help a club or team, such as a robotics team or a science or engineering club, build something useful, and tell your counselor about it."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Visit a museum or exhibit about an inventor or invention, then present what you saw to your troop, patrol or another group."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Discuss what it takes to be an inventor, how to grow as a creative problem solver, and three career fields that use an inventor's skills."
             }
           ]
         }
@@ -14344,6 +15091,177 @@
       ]
     },
     {
+      "id": "public-health",
+      "name": "Public Health",
+      "summary": "Learn how diseases spread and can be prevented, how communities keep water, food and the environment safe, and what public health agencies do.",
+      "officialUrl": "https://www.scouting.org/merit-badges/public-health/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what public health is and how diseases spread.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain what public health is."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how people get E. coli, tetanus, AIDS, encephalitis, salmonellosis, Lyme disease and COVID-19."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Pick four of the listed diseases, and explain how people get each and how it might be prevented."
+                },
+                {
+                  "number": "1d",
+                  "summary": "For all 10 diseases in 1c's list, explain what kind each is (viral, bacterial, environmental or toxin), what might carry it, how to help stop exposure or spread, and its treatments."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about immunization.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain what immunization means."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Name eight diseases young children should be immunized against, two that everyone needs booster shots for now and then, and one immunization everyone should get each year."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Discuss with your counselor which diseases and conditions in 1b have no immunization yet."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Discuss how unsafe drinking water spreads disease, show two ways to make water safe to drink at camp, and explain how to wash, dry and keep dishes and utensils clean at home and at camp."
+            },
+            {
+              "number": "4",
+              "summary": "Explain what vectors are, how and why to control insects and rodents at home, in your community and at camp, and which vectors individuals can easily control and which need long-term group action."
+            },
+            {
+              "number": "5",
+              "summary": "With permission and approval, visit a waste facility or a place that serves food.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Visit a wastewater or solid-waste facility in your community, and learn how it handles waste.",
+                  "ownWork": "Visit a wastewater or solid-waste facility in your community.",
+                  "children": [
+                    {
+                      "number": "5a(1)",
+                      "summary": "Describe how the facility handles sewage or solid waste safely, from treatment to disposal."
+                    },
+                    {
+                      "number": "5a(2)",
+                      "summary": "Tell your counselor about your visit and what you learned."
+                    },
+                    {
+                      "number": "5a(3)",
+                      "summary": "Describe how to get rid of sewage and solid waste when camping in the wilderness."
+                    }
+                  ]
+                },
+                {
+                  "number": "5b",
+                  "summary": "Visit a place that serves food, such as a restaurant or school cafeteria, and learn how it keeps food safe.",
+                  "ownWork": "Visit a place that serves food, such as a restaurant or school cafeteria.",
+                  "children": [
+                    {
+                      "number": "5b(1)",
+                      "summary": "Watch how food is prepared, handled and stored, and learn what the facility does to prevent contamination."
+                    },
+                    {
+                      "number": "5b(2)",
+                      "summary": "Find out what lets microorganisms grow in food, how to help stop them growing and spreading, and how to kill them."
+                    },
+                    {
+                      "number": "5b(3)",
+                      "summary": "Discuss why checking food temperatures with a thermometer matters."
+                    },
+                    {
+                      "number": "5b(4)",
+                      "summary": "Tell your counselor about your visit and what you learned."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Describe the health dangers of pollution, tobacco, alcohol and drugs.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Describe how air, water and noise pollution can harm health."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Describe how using tobacco and abusing alcohol and drugs can harm health."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Describe how abusing illegal and prescription drugs can harm health."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "With permission and approval, learn what a public health agency does.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Visit a public health agency, or explore its website.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "7a(1)",
+                      "summary": "Visit your city, county, state or federal public health agency."
+                    },
+                    {
+                      "number": "7a(2)",
+                      "summary": "Get to know the website of your city, county, state or a federal health agency."
+                    }
+                  ]
+                },
+                {
+                  "number": "7b",
+                  "summary": "Then learn about the agency's work.",
+                  "children": [
+                    {
+                      "number": "7b(1)",
+                      "summary": "Compare your community's four leading causes of death with its four leading causes of disease, for any of the past five years, and explain how the agency is working to reduce them."
+                    },
+                    {
+                      "number": "7b(2)",
+                      "summary": "Explain what your health agency does when a disease breaks out."
+                    },
+                    {
+                      "number": "7b(3)",
+                      "summary": "Discuss how the agency can help the public in disasters such as floods, storms, tornadoes and earthquakes; you can include the cleanup afterward."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Choose a public health career that appeals to you, research the education, training and experience it takes, and discuss your findings with your counselor."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "public-speaking",
       "name": "Public Speaking",
       "summary": "Practice speaking to groups: introduce yourself, give prepared and off-the-cuff talks, deliver a longer speech, and learn parliamentary procedure.",
@@ -16004,6 +16922,210 @@
       ]
     },
     {
+      "id": "safety",
+      "name": "Safety",
+      "summary": "Learn to spot and manage hazards at home, in public, online and while traveling, and how to protect yourself and others from crime, assault and abuse.",
+      "officialUrl": "https://www.scouting.org/merit-badges/safety/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what safety and hazards are.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Define safety, and describe what being safe looks like."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe hazards and the ways people manage them to make harm less likely."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn to keep your family and home safe.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss what usually causes injuries at home and how to prevent them."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Discuss why fireworks are dangerous."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Discuss what usually starts fires at home and how to prevent them."
+                },
+                {
+                  "number": "2d",
+                  "summary": "With an adult, use the pamphlet's home safety checklist or one your counselor approves to check your home or a similar building for hazards, then go over the results with your counselor."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Draw a fire-escape plan for your home or a similar building, showing escape routes from every room and an outside meeting place; hold a drill, then review both with your counselor."
+                },
+                {
+                  "number": "2f",
+                  "summary": "Plan your family's evacuation for local weather or other natural disasters, assemble or check a supplies kit using the pamphlet's checklist or one your counselor approves, and explain how a family would use both in an emergency."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn to stay safe from crime.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Describe the kinds of crime teens are most likely to face."
+                },
+                {
+                  "number": "3b",
+                  "summary": "With an adult, use the pamphlet's home security checklist or one your counselor approves to check how well your home or a similar building is protected from crime, then go over the results with your counselor."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explain to your counselor how to stay safe in public places.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "How to get out of a public building, hotel or stadium safely in an emergency."
+                },
+                {
+                  "number": "4b",
+                  "summary": "How Scouts take shelter at camp, and why."
+                },
+                {
+                  "number": "4c",
+                  "summary": "What Scouts should do if there's an active shooter."
+                },
+                {
+                  "number": "4d",
+                  "summary": "What \"If You See Something, Say Something\" means."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how Scouting keeps young people safe.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Discuss the Safeguarding Youth rules every adult and Scout follows to keep Scouting activities safe."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Discuss when a situation or someone's behavior means you should Recognize, Resist and Report possible abuse."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Discuss how anyone can report suspected abuse, through the Scouts First Helpline or other ways."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain how to avoid or prevent assault in these settings.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "On the street."
+                },
+                {
+                  "number": "6b",
+                  "summary": "At a restaurant event."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Sexual assault at a party or on a date."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Discuss staying safe online with your counselor.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "How to keep from becoming a victim of crime online."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Common online money scams."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Strong online security."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Identity theft and how to guard against it."
+                },
+                {
+                  "number": "7e",
+                  "summary": "How criminals find victims through social media."
+                },
+                {
+                  "number": "7f",
+                  "summary": "How bullying, texting or sharing photos can turn into a crime."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explain how to travel safely in each of these ways.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Walking in a city."
+                },
+                {
+                  "number": "8b",
+                  "summary": "In a friend's car or truck."
+                },
+                {
+                  "number": "8c",
+                  "summary": "In a rideshare."
+                },
+                {
+                  "number": "8d",
+                  "summary": "On a bus."
+                },
+                {
+                  "number": "8e",
+                  "summary": "On a subway or train."
+                },
+                {
+                  "number": "8f",
+                  "summary": "On a commercial flight."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore a safety career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Research a career related to safety and discuss what makes it interesting."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research a hobby, lifestyle or volunteer role that uses safety skills, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "salesmanship",
       "name": "Salesmanship",
       "summary": "Learn what salespeople do and how they serve customers, make a sales plan and pitch, sell something yourself, and explore sales careers.",
@@ -17051,6 +18173,316 @@
             {
               "number": "10",
               "summary": "Discuss cryptography's history, invent a code, send a friend a message of up to 25 words in it, then review it with your counselor."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skating",
+      "name": "Skating",
+      "summary": "Learn skating safety and first aid, then learn the gear and skills of ice skating, roller skating, in-line skating or skateboarding.",
+      "officialUrl": "https://www.scouting.org/merit-badges/skating/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to skate safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain to your counselor the likely hazards of skating and how to anticipate, help prevent, lessen and respond to them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for the listed skating injuries and illnesses."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "With an experienced adult supervising, complete one of four skating options.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2A",
+                  "summary": "Option A: ice skating.",
+                  "children": [
+                    {
+                      "number": "2A(1)",
+                      "summary": "Explain how to ice skate safely and courteously."
+                    },
+                    {
+                      "number": "2A(2)",
+                      "summary": "Discuss how to prepare to skate outdoors on natural ice, and explain how to rescue someone who falls through."
+                    },
+                    {
+                      "number": "2A(3)",
+                      "summary": "Discuss the different kinds of ice skates, their parts and what each part does."
+                    },
+                    {
+                      "number": "2A(4)",
+                      "summary": "Describe how to carry ice skates at the rink and when traveling."
+                    },
+                    {
+                      "number": "2A(5)",
+                      "summary": "Describe how to put ice skates away for a long stretch, such as the off-season."
+                    },
+                    {
+                      "number": "2A(6)",
+                      "summary": "Skate forward at least 40 feet, then stop fully with a one- or two-foot snowplow stop."
+                    },
+                    {
+                      "number": "2A(7)",
+                      "summary": "Skate forward, then glide on both feet, then on your right foot and then your left."
+                    },
+                    {
+                      "number": "2A(8)",
+                      "summary": "Push off from a T position and stroke forward around the test area; in figure skates, don't use the toe picks."
+                    },
+                    {
+                      "number": "2A(9)",
+                      "summary": "Glide backward on two feet for at least twice your height."
+                    },
+                    {
+                      "number": "2A(10)",
+                      "summary": "Skate backward at least 20 feet on both skates."
+                    },
+                    {
+                      "number": "2A(11)",
+                      "summary": "Build up speed, then glide on two feet through a 180-degree turn around a cone, turning right and then left."
+                    },
+                    {
+                      "number": "2A(12)",
+                      "summary": "Do forward crossovers in a figure eight."
+                    },
+                    {
+                      "number": "2A(13)",
+                      "summary": "Explain to your counselor how to stay safe in an ice-skating race."
+                    },
+                    {
+                      "number": "2A(14)",
+                      "summary": "Do a hockey stop."
+                    }
+                  ]
+                },
+                {
+                  "number": "2B",
+                  "summary": "Option B: roller skating.",
+                  "children": [
+                    {
+                      "number": "2B(1)",
+                      "summary": "Explain how to roller skate safely and courteously."
+                    },
+                    {
+                      "number": "2B(2)",
+                      "summary": "Discuss a roller skate's parts and what each one does."
+                    },
+                    {
+                      "number": "2B(3)",
+                      "summary": "Describe five ways to take good care of roller skates."
+                    },
+                    {
+                      "number": "2B(4)",
+                      "summary": "Going each way around the rink, skate at least 100 feet forward on two feet in smooth, linked strokes, and show the right ways to stop."
+                    },
+                    {
+                      "number": "2B(5)",
+                      "summary": "Skate forward and glide at least 15 feet on each skate in turn."
+                    },
+                    {
+                      "number": "2B(6)",
+                      "summary": "Do a forward crossover."
+                    },
+                    {
+                      "number": "2B(7)",
+                      "summary": "Skate backward at least 40 feet on both skates, then at least 15 feet on one."
+                    },
+                    {
+                      "number": "2B(8)",
+                      "summary": "Slalom forward at least 40 feet on both skates, then at least 20 feet on one."
+                    },
+                    {
+                      "number": "2B(9)",
+                      "summary": "Slalom backward at least 15 feet on both skates."
+                    },
+                    {
+                      "number": "2B(10)",
+                      "summary": "Shuttle skate once around the rink without stopping, bending down twice along the way."
+                    },
+                    {
+                      "number": "2B(11)",
+                      "summary": "Do two spins in a row, or hop, skip and jump on skates for at least 10 feet."
+                    },
+                    {
+                      "number": "2B(12)",
+                      "summary": "Do a stepover."
+                    },
+                    {
+                      "number": "2B(13)",
+                      "summary": "While skating, dribble a basketball or push a hockey ball with a stick at least 40 feet out and back."
+                    }
+                  ]
+                },
+                {
+                  "number": "2C",
+                  "summary": "Option C: in-line skating.",
+                  "children": [
+                    {
+                      "number": "2C(1)",
+                      "summary": "Explain how to in-line skate safely and courteously."
+                    },
+                    {
+                      "number": "2C(2)",
+                      "summary": "Describe an in-line skate's parts and what each one does."
+                    },
+                    {
+                      "number": "2C(3)",
+                      "summary": "Describe the safety gear in-line skating requires, and the gear that's recommended."
+                    },
+                    {
+                      "number": "2C(4)",
+                      "summary": "Explain four ways to take good care of in-line skates."
+                    },
+                    {
+                      "number": "2C(5)",
+                      "summary": "Skate at least 100 feet forward on two feet in smooth, linked strokes."
+                    },
+                    {
+                      "number": "2C(6)",
+                      "summary": "Skate forward and glide at least 15 feet on each skate in turn."
+                    },
+                    {
+                      "number": "2C(7)",
+                      "summary": "Use the heel brake to stop on flat pavement when told to."
+                    },
+                    {
+                      "number": "2C(8)",
+                      "summary": "Do a forward crossover."
+                    },
+                    {
+                      "number": "2C(9)",
+                      "summary": "Do linked forward swizzles for at least 40 feet."
+                    },
+                    {
+                      "number": "2C(10)",
+                      "summary": "Skate backward at least 40 feet in linked backward swizzles."
+                    },
+                    {
+                      "number": "2C(11)",
+                      "summary": "Skating at a strong pace, do a lunge turn around an object your counselor picks beforehand."
+                    },
+                    {
+                      "number": "2C(12)",
+                      "summary": "Do a mohawk."
+                    },
+                    {
+                      "number": "2C(13)",
+                      "summary": "On pavement with a gentle slope, do at least four one-footed downhill slaloms in a row."
+                    },
+                    {
+                      "number": "2C(14)",
+                      "summary": "Describe how to pass someone walking or skating ahead of you."
+                    },
+                    {
+                      "number": "2C(15)",
+                      "summary": "Describe at least three ways to get around an obstacle you didn't see coming."
+                    },
+                    {
+                      "number": "2C(16)",
+                      "summary": "Describe two ways to step up and down a curb on skates, and show at least one."
+                    }
+                  ]
+                },
+                {
+                  "number": "2D",
+                  "summary": "Option D: skateboarding.",
+                  "children": [
+                    {
+                      "number": "2D(1)",
+                      "summary": "Explain how skateboarding began and how it has changed."
+                    },
+                    {
+                      "number": "2D(2)",
+                      "summary": "Describe what skateboarding does for you: fitness, balance, coordination, perseverance and creativity."
+                    },
+                    {
+                      "number": "2D(3)",
+                      "summary": "Explain how to skateboard safely and courteously, including right-of-way and how skaters signal and warn each other."
+                    },
+                    {
+                      "number": "2D(4)",
+                      "summary": "Explain the protective gear a skater needs, including a helmet, knee and elbow pads and wrist guards, and show how to wear it properly."
+                    },
+                    {
+                      "number": "2D(5)",
+                      "summary": "Describe street and vert, the two main skateboarding styles, and common skatepark features such as ramps, rails and spines."
+                    },
+                    {
+                      "number": "2D(6)",
+                      "summary": "Explain a skateboard's parts, such as the deck, trucks, wheels and hardware."
+                    },
+                    {
+                      "number": "2D(7)",
+                      "summary": "Assemble a board from its deck, wheels, trucks, hardware and grip tape, in the right order."
+                    },
+                    {
+                      "number": "2D(8)",
+                      "summary": "Explain how to look after a skateboard: cleaning it, adjusting its bolts and replacing parts."
+                    },
+                    {
+                      "number": "2D(9)",
+                      "summary": "Explain regular and goofy stances, and show which you prefer."
+                    },
+                    {
+                      "number": "2D(10)",
+                      "summary": "Show how to push, cruise and carve on flat ground."
+                    },
+                    {
+                      "number": "2D(11)",
+                      "summary": "Show at least two ways to brake and stop."
+                    },
+                    {
+                      "number": "2D(12)",
+                      "summary": "Do a basic ollie and at least one variation."
+                    },
+                    {
+                      "number": "2D(13)",
+                      "summary": "Show how to drop in from coping."
+                    },
+                    {
+                      "number": "2D(14)",
+                      "summary": "Show three skateboarding tricks in all, from any of these types.",
+                      "requiredCount": 1,
+                      "ownWork": "Do three tricks in all, from one or more of these types.",
+                      "children": [
+                        {
+                          "number": "2D(14)(a)",
+                          "summary": "Flat ground tricks."
+                        },
+                        {
+                          "number": "2D(14)(b)",
+                          "summary": "Flip and shove-it tricks."
+                        },
+                        {
+                          "number": "2D(14)(c)",
+                          "summary": "Grind and slide tricks."
+                        },
+                        {
+                          "number": "2D(14)(d)",
+                          "summary": "Air and grab tricks."
+                        },
+                        {
+                          "number": "2D(14)(e)",
+                          "summary": "Footplant tricks."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -18741,6 +20173,128 @@
             {
               "number": "8",
               "summary": "Research a career related to traffic safety and discuss what makes it interesting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "veterinary-medicine",
+      "name": "Veterinary Medicine",
+      "summary": "Learn the many roles veterinarians and veterinary technicians play and how to train for them, and see a veterinarian's work up close.",
+      "officialUrl": "https://www.scouting.org/merit-badges/veterinary-medicine/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss with your counselor what veterinarians do in these kinds of practice.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Companion or small animal medicine, and equine medicine."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Food animal or large animal medicine."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Exotic animal medicine."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Marine animal medicine, for mammals and fish."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Poultry medicine."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Wildlife medicine and aquaculture medicine."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss with your counselor what veterinarians do in these fields.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Public health, and tracking and controlling zoonotic diseases."
+                },
+                {
+                  "number": "2b",
+                  "summary": "The military."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Food safety and inspection."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Laboratory animal medicine and research."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Teaching and government."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Describe a veterinarian's training and what you need before applying, and name the veterinary college in your state or nearest you."
+            },
+            {
+              "number": "4",
+              "summary": "Explain what a registered veterinary technician (RVT) or animal health technician (AHT) does, their training, the school in your state or nearest you, and how one would assist a veterinarian in three practice types from requirement 1."
+            },
+            {
+              "number": "5",
+              "summary": "Discuss with your counselor a veterinarian's part in the bond between people and animals."
+            },
+            {
+              "number": "6",
+              "summary": "See a veterinarian's work up close.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Visit a veterinary clinic or hospital that works in a practice from requirement 1, watch the veterinarians and staff for as long as you can, then give your counselor a presentation on what you learned."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Shadow a veterinarian in a field from requirement 2 for as long as you can, learn what extra training and unusual duties the job involves, and present to your counselor what you learned, including how the field serves the public."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Pick a career from requirement 1 or 2, and discuss it with your counselor.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Why someone would choose this field."
+                },
+                {
+                  "number": "7b",
+                  "summary": "What you'd like about the job."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Its biggest challenges."
+                },
+                {
+                  "number": "7d",
+                  "summary": "What has surprised you most about it."
+                },
+                {
+                  "number": "7e",
+                  "summary": "What continuing education it takes to stay certified."
+                }
+              ]
             }
           ]
         }
