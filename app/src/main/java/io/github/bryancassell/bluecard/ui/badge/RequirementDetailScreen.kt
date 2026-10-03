@@ -53,6 +53,7 @@ fun RequirementDetailRoute(
     number: String,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
+    onOpenBadge: (badgeId: String) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RequirementDetailViewModel =
@@ -66,6 +67,7 @@ fun RequirementDetailRoute(
         comment = viewModel.comment,
         onOpenRequirement = onOpenRequirement,
         onOpenTrackerEntry = onOpenTrackerEntry,
+        onOpenBadge = onOpenBadge,
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
         today = viewModel::today,
@@ -83,9 +85,11 @@ fun RequirementDetailRoute(
  * besides its sub-requirements, its sub-requirements, its tracker, and the scout's [comment] on
  * it. A sub-requirement opens its own page in turn, and a tracker row opens the Tracker entry
  * page ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to
- * a log opens it with neither. At the bottom, once anything is recorded, the scout can clear it
- * ([onClear]), with what's recorded for the requirements under it. Back with unsaved changes to
- * the comment asks first, then [onDiscard] closes the page without saving them.
+ * a log opens it with neither. A rank's requirement that asks for merit badges lists the badges
+ * the scout has completed, each of which opens its page ([onOpenBadge]). At the bottom, once
+ * anything is recorded, the scout can clear it ([onClear]), with what's recorded for the
+ * requirements under it. Back with unsaved changes to the comment asks first, then [onDiscard]
+ * closes the page without saving them.
  */
 @Composable
 fun RequirementDetailScreen(
@@ -93,6 +97,7 @@ fun RequirementDetailScreen(
     comment: TextFieldState,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
+    onOpenBadge: (badgeId: String) -> Unit,
     onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     today: () -> LocalDate,
@@ -157,6 +162,14 @@ fun RequirementDetailScreen(
                         tracker = tracker,
                         onOpenRow = { onOpenTrackerEntry(it.entryId, it.number) },
                         onAddRow = { onOpenTrackerEntry(null, null) },
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+                requirement.meritBadges?.let { credit ->
+                    MeritBadgeSection(
+                        credit = credit,
+                        badges = uiState.earnedBadges.orEmpty(),
+                        onOpenBadge = onOpenBadge,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }

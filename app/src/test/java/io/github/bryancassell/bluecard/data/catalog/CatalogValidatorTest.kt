@@ -75,7 +75,12 @@ class CatalogValidatorTest {
             id = "second-class",
             name = "Second Class",
             requirementVersions = listOf(
-                version.copy(requirements = listOf(requirement.copy(monthsInRank = 4)))
+                version.copy(
+                    requirements = listOf(
+                        requirement.copy(monthsInRank = 4),
+                        Requirement("2", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 1))
+                    )
+                )
             )
         )
         assertEquals(
@@ -302,6 +307,122 @@ class CatalogValidatorTest {
             errorsForRequirements(requirement.copy(monthsInRank = 4))
         )
     }
+
+    @Test
+    fun meritBadges_onABadge() {
+        val eagleBadge = badge.copy(id = "camping", eagleRequired = true)
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\": " +
+                    "has meritBadges but it isn't a rank's"
+            ),
+            errorsFor(
+                badge.copy(
+                    requirementVersions = listOf(
+                        version.copy(
+                            requirements = listOf(
+                                requirement.copy(meritBadges = MeritBadgesNeeded(1, 1))
+                            )
+                        )
+                    )
+                ),
+                eagleBadge
+            )
+        )
+    }
+
+    @Test
+    fun meritBadges_withChildrenAndATracker() {
+        val where = "rank \"tenderfoot\", version 2026-01-01, requirement \"1\""
+        assertEquals(
+            listOf(
+                "$where: has meritBadges and children",
+                "$where: has meritBadges and a tracker"
+            ),
+            errorsForRankRequirement(
+                requirement.copy(
+                    meritBadges = MeritBadgesNeeded(1, 1),
+                    children = listOf(Requirement("1a", "A.")),
+                    tracker = tracker
+                )
+            )
+        )
+    }
+
+    @Test
+    fun meritBadges_malformedCounts() {
+        val where = "rank \"tenderfoot\", version 2026-01-01, requirement \"1\""
+        val between = "$where: meritBadges eagleRequired must be between 1 and its total"
+        assertEquals(
+            listOf("$where: meritBadges total must be at least 1", between),
+            errorsForRankRequirement(requirement.copy(meritBadges = MeritBadgesNeeded(0, 1)))
+        )
+        assertEquals(
+            listOf(between),
+            errorsForRankRequirement(requirement.copy(meritBadges = MeritBadgesNeeded(2, 0)))
+        )
+        assertEquals(
+            listOf(between),
+            errorsForRankRequirement(requirement.copy(meritBadges = MeritBadgesNeeded(1, 2)))
+        )
+    }
+
+    @Test
+    fun meritBadges_moreEagleRequiredThanTheCatalogHas() {
+        val cycling = badge.copy(id = "cycling", eagleRequired = true, eagleGroup = "c-h-s")
+        val hiking = badge.copy(id = "hiking", eagleRequired = true, eagleGroup = "c-h-s")
+
+        // First Aid, not Eagle-required here, so there are enough badges for a total of 3.
+        fun errorsAskingFor(needed: MeritBadgesNeeded) = errorsFor(
+            badge,
+            cycling,
+            hiking,
+            ranks = listOf(
+                rank.copy(
+                    requirementVersions = listOf(
+                        version.copy(requirements = listOf(requirement.copy(meritBadges = needed)))
+                    )
+                )
+            )
+        )
+        val where = "rank \"tenderfoot\", version 2026-01-01, requirement \"1\""
+
+        assertEquals(emptyList<String>(), errorsAskingFor(MeritBadgesNeeded(2, 2)))
+        assertEquals(
+            listOf("$where: meritBadges asks for 3 Eagle-required badges, but the catalog has 2"),
+            errorsAskingFor(MeritBadgesNeeded(3, 3))
+        )
+        // Two badges, but one the scout needs, since they're in a group.
+        assertEquals(
+            listOf(
+                "$where: meritBadges asks for 2 Eagle-required badges, but the catalog has 1, " +
+                    "counting each group once"
+            ),
+            errorsAskingFor(MeritBadgesNeeded(2, 2, eagleGroupsCountOnce = true))
+        )
+    }
+
+    @Test
+    fun meritBadges_moreThanTheCatalogHas() {
+        assertEquals(
+            listOf(
+                "rank \"tenderfoot\", version 2026-01-01, requirement \"1\": " +
+                    "meritBadges asks for 3 badges, but the catalog has 2"
+            ),
+            errorsForRankRequirement(requirement.copy(meritBadges = MeritBadgesNeeded(3, 1)))
+        )
+    }
+
+    /** The errors for a catalog with two Eagle-required badges and a rank with [requirement]. */
+    private fun errorsForRankRequirement(requirement: Requirement) = errorsFor(
+        badge.copy(eagleRequired = true),
+        badge.copy(id = "camping", eagleRequired = true),
+        ranks = listOf(
+            rank.copy(
+                requirementVersions = listOf(version.copy(requirements = listOf(requirement)))
+            )
+        )
+    )
 
     @Test
     fun malformedTracker() {

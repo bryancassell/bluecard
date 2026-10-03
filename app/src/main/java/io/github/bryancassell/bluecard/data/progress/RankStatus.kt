@@ -46,15 +46,19 @@ data class RankStanding(
 
 /**
  * The scout's standing on each of these ranks, which are in the order they're earned, from
- * their [progress] keyed by badge or rank ID. Every screen that shows a rank's status asks this,
- * so they agree.
+ * their [progress] keyed by badge or rank ID and the badges they've completed ([earnedBadges]),
+ * which a rank's requirements that ask for merit badges count. Every screen that shows a rank's
+ * status asks this, so they agree.
  *
  * A rank is earned once it's complete ([completion]) and the rank below it is earned, or once
  * it, or a rank above it, is marked earned on a prior date. So the earned ranks are always the
  * lowest ones, and the lowest rank that isn't earned is in progress. Nothing about it is stored,
  * so unmarking a rank undoes what its mark counted.
  */
-fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>): List<RankStanding> {
+fun List<Rank>.standings(
+    progress: Map<String, BadgeProgressDetails>,
+    earnedBadges: EarnedBadges
+): List<RankStanding> {
     val isMarked = { rank: Rank -> progress[rank.id]?.badge?.completedOnPriorDate != null }
     val highestMarked = indexOfLast(isMarked)
     var belowEarned = true
@@ -66,7 +70,7 @@ fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>): List<Rank
         val completion = if (markedOn ==
             null
         ) {
-            version?.let { rankProgress?.completion(it) }
+            version?.let { rankProgress?.completion(it, earnedBadges) }
         } else {
             null
         }
@@ -81,11 +85,16 @@ fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>): List<Rank
         RankStanding(
             rank = rank,
             status = status,
-            // One not started has nothing done, which shows only while it's in progress.
+            // One not started has nothing recorded, though badges can count toward it. Its bar
+            // shows only while it's in progress.
             fractionDone = when {
                 earned || version == null -> null
-                rankProgress != null -> rankProgress.fractionDone(version)
-                status == RankStatus.InProgress -> 0f
+
+                rankProgress != null -> rankProgress.fractionDone(version, earnedBadges)
+
+                status == RankStatus.InProgress ->
+                    version.fractionDone(emptyMap(), emptyMap(), earnedBadges)
+
                 else -> null
             },
             // Not marked itself, so a rank above it is.

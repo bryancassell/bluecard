@@ -684,6 +684,10 @@ works on.
   `standings` for a rank's status and bar, as they ask `BadgeStatus.kt` for a
   badge's, so they agree. A page that shows a rank reads every rank's progress
   (`observeAllProgress`), not only its own.
+- **Merit badge requirements** (`Requirement.meritBadges`) complete from the
+  badges the scout has completed, not from anything recorded on the rank
+  ([Completion](#completion)), so `standings` takes the scout's
+  `EarnedBadges`.
 - **Time in rank** (`Requirement.monthsInRank`, `data/progress/TimeInRank.kt`)
   is counted from the date `standings` gives the rank below, so it agrees with
   Rank detail about when that rank was earned. Like a tracker's total, it's
@@ -721,9 +725,10 @@ requirement progress, tracker entries and the catalog:
 - A requirement with children is complete when enough of them are, even if it
   also has a tracker. One that also asks for work of its own (`ownWork` in the
   catalog) needs the scout to mark that complete too. One without children but
-  with a fixed-row tracker is complete when every row has an entry. Any other
-  requirement, including one with a log, is complete when the scout marked it
-  complete.
+  with a fixed-row tracker is complete when every row has an entry. A rank's
+  requirement that asks for merit badges is complete once the scout has
+  completed enough of them (below). Any other requirement, including one with
+  a log, is complete when the scout marked it complete.
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
 - The completion date is when the last requirement or own work it needed was
@@ -731,8 +736,9 @@ requirement progress, tracker entries and the catalog:
   fixed-row tracker is completed on the date the scout gave it, if they gave
   one, or else on the date its last row was first saved.
 - A requirement has part done (`hasPartDone`) once anything in it that the scout
-  records is: its own work, a requirement under it at any depth, or a row of a
-  tracker on it or under it. Its row shows this until it's complete.
+  records is: its own work, a requirement under it at any depth, a row of a
+  tracker on it or under it, or a badge that counts toward the merit badges it
+  asks for. Its row shows this until it's complete.
 
 A requirement's own work is stored as that requirement's own
 `RequirementProgress`, as for one marked complete by hand, so it needs no new
@@ -751,6 +757,21 @@ export format. A mark left from before
 [#105](https://github.com/bryancassell/bluecard/issues/105), when these
 requirements had a checkbox, becomes the date the scout gave
 ([#116](https://github.com/bryancassell/bluecard/issues/116)).
+
+A rank's requirement that asks for merit badges (`Requirement.meritBadges`,
+such as Star 3's six, at least four of them Eagle-required) is the only
+completion that depends on other items' progress
+([#193](https://github.com/bryancassell/bluecard/issues/193)). Completion and
+the progress bar take the scout's completed badges as `EarnedBadges`
+(`data/progress/EarnedBadges.kt`), worked out once per change in progress
+rather than in each requirement. Whether an Eagle "one of" group counts once
+comes from the catalog (`eagleGroupsCountOnce`), not the code, so each
+requirement can follow its own official wording, and a group counts once
+through the same `eagleSlots` as Home. `EarnedBadges` is a parameter that
+defaults to none, because a badge's requirements never ask for badges, which
+the catalog test checks. So only the code that serves ranks passes it, and
+`standings` requires it. Nothing about the requirement is stored, so a page
+that shows a rank reads every badge's progress as well as every rank's.
 
 Because nothing about completion is saved, editing or clearing progress can't
 leave a stale completion state behind.
@@ -782,7 +803,8 @@ read, it shows the load-failed message instead (see
 The Home ViewModel combines the profile, the catalog and the scout's progress.
 It counts badges completed and in progress, and Eagle-required progress against
 the Eagle-required badges in the catalog, counting each Eagle "one of" group
-once (see [`PRD.md`](PRD.md#design-decisions)). It also lists every badge in
+once (`eagleSlots` in `data/catalog/Catalog.kt`, which Eagle 3 counts by too;
+see [`PRD.md`](PRD.md#design-decisions)). It also lists every badge in
 progress, in the row Badges uses
 (`ui/badges/BadgeRow.kt`).
 

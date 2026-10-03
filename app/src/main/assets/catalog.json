@@ -22202,7 +22202,11 @@
             },
             {
               "number": "3",
-              "summary": "Earn six merit badges, at least four of them from the Eagle-required list."
+              "summary": "Earn six merit badges, at least four of them from the Eagle-required list.",
+              "meritBadges": {
+                "total": 6,
+                "eagleRequired": 4
+              }
             },
             {
               "number": "4",
@@ -22279,7 +22283,11 @@
             },
             {
               "number": "3",
-              "summary": "Earn five more merit badges for 11 in all, at least seven of them Eagle-required."
+              "summary": "Earn five more merit badges for 11 in all, at least seven of them Eagle-required.",
+              "meritBadges": {
+                "total": 11,
+                "eagleRequired": 7
+              }
             },
             {
               "number": "4",
@@ -22397,7 +22405,12 @@
             },
             {
               "number": "3",
-              "summary": "Earn 21 merit badges in all, including the 13 required for Eagle. Extra badges from an either-or choice count as electives."
+              "summary": "Earn 21 merit badges in all, including the 13 required for Eagle. Extra badges from an either-or choice count as electives.",
+              "meritBadges": {
+                "total": 21,
+                "eagleRequired": 13,
+                "eagleGroupsCountOnce": true
+              }
             },
             {
               "number": "4",

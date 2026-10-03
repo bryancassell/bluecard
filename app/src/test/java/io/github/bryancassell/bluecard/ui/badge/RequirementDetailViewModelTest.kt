@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -17,6 +18,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
@@ -782,6 +784,60 @@ class RequirementDetailViewModelTest {
                 viewModel.ready().timeInRank
             )
         }
+
+    @Test
+    fun rankRequirementWithMeritBadges_listsTheCompletedBadgesByName_asTheyChange() = runTest {
+        val earn = Requirement(
+            "3",
+            "Earn two merit badges.",
+            meritBadges = MeritBadgesNeeded(total = 2, eagleRequired = 1)
+        )
+        val star = tenderfoot.copy(
+            id = "star",
+            name = "Star",
+            requirementVersions = listOf(RequirementsVersion(newest, listOf(earn)))
+        )
+        val eagleCamping = camping.copy(eagleRequired = true)
+        val archery = camping.copy(id = "archery", name = "Archery")
+        catalogRepository.badges = listOf(eagleCamping, archery)
+        catalogRepository.ranks = listOf(star)
+        // From a catalog where the scout checked it off, which no longer completes it.
+        progressRepository.markRequirementCompleted("star", "3", older, badgeStart)
+        val viewModel = viewModel("3", advancementId = "star")
+        startCollecting(viewModel)
+        assertEquals(emptyList<EarnedBadge>(), viewModel.ready().earnedBadges)
+        assertEquals(0, viewModel.ready().requirement.meritBadges?.completed)
+        assertFalse(viewModel.ready().requirement.completed)
+        assertNull(viewModel.ready().completedDate)
+
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        progressRepository.setCompletedOnPriorDate("archery", today, badgeStart)
+
+        assertEquals(
+            listOf(EarnedBadge(archery, today, false), EarnedBadge(eagleCamping, day, true)),
+            viewModel.ready().earnedBadges
+        )
+        assertTrue(viewModel.ready().requirement.completed)
+        // Once there were two badges.
+        assertEquals(today, viewModel.ready().completedDate)
+
+        progressRepository.clearBadge("camping")
+
+        assertEquals(listOf(EarnedBadge(archery, today, false)), viewModel.ready().earnedBadges)
+        assertFalse(viewModel.ready().requirement.completed)
+    }
+
+    @Test
+    fun requirementWithoutMeritBadges_listsNoBadges() = runTest {
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val badgeRequirement = viewModel("1")
+        val rankRequirement = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(badgeRequirement)
+        startCollecting(rankRequirement)
+
+        assertNull(badgeRequirement.ready().earnedBadges)
+        assertNull(rankRequirement.ready().earnedBadges)
+    }
 
     @Test
     fun requirementWithoutTimeInRank_hasNone() = runTest {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.eagleSlots
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
@@ -58,19 +59,14 @@ class HomeViewModel @Inject constructor(
 
 /**
  * One status for each Eagle-required badge, except that the badges in a "one of" group
- * share one. Earning any of them meets the requirement, so the group's status is that of
- * its furthest-along badge.
+ * share one ([eagleSlots]). Earning any of them meets the requirement, so the group's status is
+ * that of its furthest-along badge.
  */
 private fun eagleStatuses(
     catalog: List<ListedBadge>,
     statusById: Map<String, BadgeStatus>
-): List<BadgeStatus> {
-    val (grouped, single) = catalog.mapNotNull { (badge) -> badge.takeIf { it.eagleRequired } }
-        .partition { it.eagleGroup != null }
-    val groups = grouped.groupBy { it.eagleGroup }.values
-    return single.map { statusById.getValue(it.id) } +
-        groups.map { group -> group.maxOf { statusById.getValue(it.id) } }
-}
+): List<BadgeStatus> = catalog.map { it.badge }.eagleSlots()
+    .map { slot -> slot.maxOf { statusById.getValue(it.id) } }
 
 /** The badges in progress, listed as on Badges, in [catalog]'s order. */
 private fun badgesInProgress(

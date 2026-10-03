@@ -60,6 +60,7 @@ class RemovalButtonScreenshotTest {
                         comment = TextFieldState(),
                         onOpenRequirement = {},
                         onOpenTrackerEntry = { _, _ -> },
+                        onOpenBadge = {},
                         onCompletedChange = {},
                         onCompletedDateChange = {},
                         today = { today },

@@ -58,6 +58,7 @@ import dagger.hilt.android.testing.UninstallModules
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -173,6 +174,9 @@ class MainActivityTest {
             )
         ),
         listOf("Scout", "Tenderfoot").map { name ->
+            // Tenderfoot's 2 asks for a merit badge.
+            val earn =
+                Requirement("2", "Earn a merit badge.", meritBadges = MeritBadgesNeeded(1, 1))
             Rank(
                 id = name.lowercase(),
                 name = name,
@@ -181,7 +185,8 @@ class MainActivityTest {
                 requirementVersions = listOf(
                     RequirementsVersion(
                         LocalDate.of(2026, 1, 1),
-                        listOf(Requirement("1", "$name's first."))
+                        listOf(Requirement("1", "$name's first.")) +
+                            listOfNotNull(earn.takeIf { name == "Tenderfoot" })
                     )
                 )
             )
@@ -1270,6 +1275,28 @@ class MainActivityTest {
         composeTestRule.onNode(hasText("Scout") and hasText("Earned")).assertIsDisplayed()
         composeTestRule.onNode(hasText("Tenderfoot") and hasText("In progress"))
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun openBadge_fromARequirementThatAsksForMeritBadges_showsBadgeDetail_andBackReturns() {
+        runBlocking {
+            progressRepository.setCompletedOnPriorDate(
+                "camping",
+                LocalDate.of(2025, 8, 1),
+                BadgeStart(LocalDate.of(2026, 1, 1), today)
+            )
+        }
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Tenderfoot").performClick()
+        composeTestRule.onNodeWithText("Earn a merit badge.").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithText("Camping").performScrollTo().performClick()
+
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        pressBack()
+        composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
     }
 
     @Test

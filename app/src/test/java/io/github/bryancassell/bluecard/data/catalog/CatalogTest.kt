@@ -65,7 +65,12 @@ class CatalogTest {
                   "effectiveDate": "2026-01-01",
                   "requirements": [
                     { "number": "1a", "summary": "Pack for a campout." },
-                    { "number": "2", "summary": "Be active in your troop.", "monthsInRank": 4 }
+                    { "number": "2", "summary": "Be active in your troop.", "monthsInRank": 4 },
+                    {
+                      "number": "3",
+                      "summary": "Earn six merit badges.",
+                      "meritBadges": { "total": 6, "eagleRequired": 4, "eagleGroupsCountOnce": true }
+                    }
                   ]
                 }]
               }]
@@ -148,6 +153,15 @@ class CatalogTest {
                                     number = "2",
                                     summary = "Be active in your troop.",
                                     monthsInRank = 4
+                                ),
+                                Requirement(
+                                    number = "3",
+                                    summary = "Earn six merit badges.",
+                                    meritBadges = MeritBadgesNeeded(
+                                        total = 6,
+                                        eagleRequired = 4,
+                                        eagleGroupsCountOnce = true
+                                    )
                                 )
                             )
                         )
