@@ -11,6 +11,7 @@ import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import android.text.TextUtils
 import android.view.View
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.core.graphics.withTranslation
 import io.github.bryancassell.bluecard.R
@@ -23,7 +24,8 @@ import io.github.bryancassell.bluecard.text.totalFormat
 import io.github.bryancassell.bluecard.text.typedText
 import java.time.LocalDate
 
-// A badge's report, laid out on US Letter pages. Sizes are in PDF points, 1/72 of an inch.
+// A badge's or rank's report, laid out on US Letter pages. Sizes are in PDF points, 1/72 of an
+// inch.
 
 /** The width of a report's pages: 8.5 inches. */
 const val PAGE_WIDTH = 612
@@ -72,7 +74,7 @@ internal class PlacedText(
  * language (`stringsLanguageResources`). Dates and numbers are formatted in their first
  * locale, and text is laid out in its direction (ARCHITECTURE.md, Language and layout direction).
  */
-fun layOutReport(report: BadgeReport, resources: Resources): List<ReportPage> =
+fun layOutReport(report: AdvancementReport, resources: Resources): List<ReportPage> =
     ReportComposer(resources).apply { add(report) }.pages()
 
 /** The text styles of a report. */
@@ -119,13 +121,21 @@ private class ReportComposer(private val resources: Resources) {
 
     private val paragraphs = mutableListOf<Paragraph>()
 
-    fun add(report: BadgeReport) {
+    fun add(report: AdvancementReport) {
         val profile = report.profile
-        add(Style.Body, string(R.string.report_kind))
-        add(Style.Title, report.badgeName, spaceBefore = 2f)
+        val kind = when (report.kind) {
+            ReportKind.MeritBadge -> R.string.report_kind
+            ReportKind.Rank -> R.string.report_kind_rank
+        }
+        add(Style.Body, string(kind))
+        add(Style.Title, report.name, spaceBefore = 2f)
         add(Style.Body, string(R.string.report_scout, typed(profile.name)), spaceBefore = 8f)
         add(Style.Body, string(R.string.report_unit, typed(profile.unitNumber)))
-        add(Style.Body, completionText(report.completion))
+        val status = when (report.kind) {
+            ReportKind.MeritBadge -> completionText(report.completion)
+            ReportKind.Rank -> earnedText(report)
+        }
+        add(Style.Body, status)
         val version = date(report.requirementsVersion)
         add(Style.Body, string(R.string.report_requirements_version, version))
         add(Style.Body, string(R.string.report_created_on, date(report.createdDate)))
@@ -160,6 +170,7 @@ private class ReportComposer(private val resources: Resources) {
         add(Style.Body, status, indent)
         requirement.comment?.let { addLabeled(R.string.report_comment, typed(it), indent) }
         requirement.tracker?.let { add(it, indent) }
+        requirement.meritBadges?.let { add(it, indent) }
         requirement.children.forEach { add(it, depth + 1) }
     }
 
@@ -203,6 +214,50 @@ private class ReportComposer(private val resources: Resources) {
     }
 
     /**
+     * A rank's requirement that asks for merit badges: how many the scout has completed, and how
+     * many of them count as Eagle-required, worded as on the requirement's page, then each badge
+     * with the date it was completed on, and "Eagle-required" if it counts as Eagle-required
+     * toward the requirement. The page's line on how many more are needed is left out, as the
+     * report is on a rank that's already earned.
+     */
+    private fun add(meritBadges: ReportMeritBadges, indent: Int) {
+        val credit = meritBadges.credit
+        val needed = credit.needed
+        val counts = listOf(
+            quantityString(
+                R.plurals.requirement_merit_badges_count,
+                needed.total,
+                credit.completed,
+                needed.total
+            ),
+            quantityString(
+                R.plurals.requirement_eagle_required_count,
+                needed.eagleRequired,
+                credit.eagleRequired,
+                needed.eagleRequired
+            )
+        )
+        counts.forEachIndexed { index, line ->
+            add(
+                Style.Body,
+                line,
+                indent,
+                spaceBefore = if (index == 0) 4f else 0f,
+                keepWithNext = meritBadges.badges.isNotEmpty() || index < counts.lastIndex
+            )
+        }
+        meritBadges.badges.forEach { earned ->
+            val parts = listOfNotNull(
+                earned.badge.name,
+                completionText(Completion(earned.completedOn)),
+                string(R.string.requirement_merit_badge_eagle_required)
+                    .takeIf { earned.countsAsEagleRequired(needed) }
+            )
+            add(Style.Body, parts.joinToString(valueSeparator), indent)
+        }
+    }
+
+    /**
      * A row's values, each after its column's label, separated as on screen, such as by " · ". A
      * value after multi-line text starts a new line, so it doesn't read as the text's last line.
      */
@@ -234,8 +289,21 @@ private class ReportComposer(private val resources: Resources) {
         else -> string(R.string.report_completed_on, date(completion.date))
     }
 
+    /** How the rank was earned, and when, as its page says. */
+    private fun earnedText(report: AdvancementReport): String {
+        val earnedOn = report.completion?.date
+        return when {
+            report.earnedWith != null -> string(R.string.report_earned_with, report.earnedWith)
+            earnedOn == null -> string(R.string.report_earned)
+            else -> string(R.string.report_earned_on, date(earnedOn))
+        }
+    }
+
     private fun string(@StringRes id: Int, vararg args: Any): String =
         resources.getString(id, *args)
+
+    private fun quantityString(@PluralsRes id: Int, quantity: Int, vararg args: Any): String =
+        resources.getQuantityString(id, quantity, *args)
 
     // Text the scout typed keeps its own direction, as on screen. A line break ends a paragraph
     // for the bidi algorithm, and the wrapping with it, so each line is wrapped on its own.

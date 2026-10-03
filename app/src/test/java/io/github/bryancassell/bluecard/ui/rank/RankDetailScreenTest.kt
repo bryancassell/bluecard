@@ -2,6 +2,12 @@ package io.github.bryancassell.bluecard.ui.rank
 
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -24,6 +30,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
@@ -31,6 +39,7 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -49,6 +58,35 @@ class RankDetailScreenTest {
     private var clears = 0
     private val saveFailuresShown = mutableListOf<TaskFailure>()
     private val today = LocalDate.of(2026, 5, 20)
+    private var reportShareRequests = 0
+    private var reportsShared = 0
+    private val reportsSaved = mutableListOf<Uri>()
+    private val reportFailuresShown = mutableListOf<TaskFailure>()
+
+    /** The intents of the activities launched for a result, such as the file picker's. */
+    private val launchedForResult = mutableListOf<Intent>()
+    private val destination = Uri.parse("content://documents/tenderfoot-report.pdf")
+
+    /**
+     * Stands in for the activity's result registry, so the file picker gives [destination]
+     * straight away, as the testing guide shows:
+     * https://developer.android.com/training/basics/intents/result#test
+     */
+    private val resultRegistryOwner = object : ActivityResultRegistryOwner {
+        override val activityResultRegistry = object : ActivityResultRegistry() {
+            override fun <I, O> onLaunch(
+                requestCode: Int,
+                contract: ActivityResultContract<I, O>,
+                input: I,
+                options: ActivityOptionsCompat?
+            ) {
+                launchedForResult += contract.createIntent(application, input)
+                dispatchResult(requestCode, destination)
+            }
+        }
+    }
+
+    private val application = ApplicationProvider.getApplicationContext<Application>()
 
     private val ready = RankDetailUiState.Ready(
         name = "Tenderfoot",
@@ -73,15 +111,23 @@ class RankDetailScreenTest {
 
     private fun show(uiState: RankDetailUiState) {
         composeTestRule.setContent {
-            RankDetailScreen(
-                uiState = uiState,
-                onOpenRequirement = { openedRequirements += it },
-                today = { today },
-                onMarkEarned = { marks += it },
-                onUnmarkEarned = { unmarks++ },
-                onClear = { clears++ },
-                onSaveFailureShown = { saveFailuresShown += it }
-            )
+            CompositionLocalProvider(
+                LocalActivityResultRegistryOwner provides resultRegistryOwner
+            ) {
+                RankDetailScreen(
+                    uiState = uiState,
+                    onOpenRequirement = { openedRequirements += it },
+                    today = { today },
+                    onMarkEarned = { marks += it },
+                    onUnmarkEarned = { unmarks++ },
+                    onShareReport = { reportShareRequests++ },
+                    onReportShared = { reportsShared++ },
+                    onSaveReport = { reportsSaved += it },
+                    onReportFailureShown = { reportFailuresShown += it },
+                    onClear = { clears++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
+                )
+            }
         }
     }
 
@@ -177,7 +223,6 @@ class RankDetailScreenTest {
 
         text("Official requirements").performClick()
 
-        val application = ApplicationProvider.getApplicationContext<Application>()
         val started = shadowOf(application).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, started?.action)
         assertEquals("https://www.scouting.org/tenderfoot.pdf", started?.dataString)
@@ -348,6 +393,104 @@ class RankDetailScreenTest {
         val link = text("Official requirements").getUnclippedBoundsInRoot()
         val heading = text("Requirements").getUnclippedBoundsInRoot()
         assertTrue(heading.top - link.bottom >= 16.dp)
+    }
+
+    private fun assertOffersReport() {
+        listOf("Share report", "Save report").forEach {
+            text(it)
+                .performScrollTo()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                .assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun earnedRank_offersToShareAndSaveItsReport() {
+        show(earned.copy(earnedOn = LocalDate.of(2026, 4, 15)))
+
+        assertOffersReport()
+    }
+
+    // It's earned, though nothing may be recorded for it.
+    @Test
+    fun rankEarnedWithARankAbove_offersItsReport() {
+        show(earnedWithLife)
+
+        assertOffersReport()
+    }
+
+    @Test
+    fun rankNotEarned_hasNoReport_evenWithItsRequirementsComplete() {
+        show(ready.copy(fractionDone = 1f, waitingOn = "Scout", canClear = true))
+
+        text("Share report").assertDoesNotExist()
+        text("Save report").assertDoesNotExist()
+    }
+
+    @Test
+    fun reportButtons_areUnderHowTheRankIsEarned_aboveTheRequirements() {
+        show(marked)
+
+        val tops = listOf("Earned on Aug 1, 2025", "Change date", "Share report", "Requirements")
+            .map(::topOf)
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun shareReport_asksForTheReport() {
+        show(marked)
+
+        text("Share report").performScrollTo().performClick()
+
+        assertEquals(1, reportShareRequests)
+        // The share sheet opens once the report is ready.
+        assertNull(shadowOf(application).nextStartedActivity)
+    }
+
+    @Test
+    fun reportToShare_opensShareSheetWithIt_once() {
+        val report = Uri.parse("content://io.github.bryancassell.bluecard.reports/tenderfoot.pdf")
+        show(marked.copy(reportToShare = report))
+        composeTestRule.waitForIdle()
+
+        val chooser = shadowOf(application).nextStartedActivity
+        assertEquals(Intent.ACTION_CHOOSER, chooser?.action)
+        val send =
+            IntentCompat.getParcelableExtra(chooser!!, Intent.EXTRA_INTENT, Intent::class.java)!!
+        assertEquals(
+            report,
+            IntentCompat.getParcelableExtra(send, Intent.EXTRA_STREAM, Uri::class.java)
+        )
+        assertEquals(1, reportsShared)
+        assertNull(shadowOf(application).nextStartedActivity)
+    }
+
+    @Test
+    fun saveReport_suggestsTheRanksFileName_andSavesWhereTheScoutChose() {
+        show(marked)
+
+        text("Save report").performScrollTo().performClick()
+
+        val picker = launchedForResult.single()
+        assertEquals(Intent.ACTION_CREATE_DOCUMENT, picker.action)
+        assertEquals("Tenderfoot rank report.pdf", picker.getStringExtra(Intent.EXTRA_TITLE))
+        assertEquals(listOf(destination), reportsSaved)
+    }
+
+    @Test
+    fun reportFailed_showsMessage_thenReportsItShown() {
+        val failure = TaskFailure()
+        show(marked.copy(reportFailure = failure))
+
+        val message = "Couldn't create the report. Try again."
+        text(message).assertIsDisplayed()
+        assertEquals(emptyList<TaskFailure>(), reportFailuresShown)
+
+        // A short snackbar shows for 4 seconds.
+        composeTestRule.mainClock.advanceTimeBy(5_000)
+
+        text(message).assertDoesNotExist()
+        assertEquals(listOf(failure), reportFailuresShown)
     }
 
     @Test

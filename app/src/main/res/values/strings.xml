@@ -259,22 +259,27 @@
          name of the rank below it, which has to be earned first, such as "Earned once
          Tenderfoot is earned". -->
     <string name="rank_detail_waiting_on">Earned once %1$s is earned</string>
-    <!-- Buttons on a completed badge's page, for its report: a PDF of everything the scout
-         recorded for it. Share opens Android's share sheet; Save asks where to save it. -->
+    <!-- Buttons on a completed badge's page and an earned rank's, for its report: a PDF of
+         everything the scout recorded for it. Share opens Android's share sheet; Save asks
+         where to save it. -->
     <string name="badge_detail_share_report">Share report</string>
     <string name="badge_detail_save_report">Save report</string>
     <!-- Shown when tapping Save report or Export, if no app on the phone can save files. -->
     <string name="no_file_saver">No app on this phone can save files.</string>
-    <!-- Shown briefly when a badge's report couldn't be created or saved. -->
+    <!-- Shown briefly when a badge's or rank's report couldn't be created or saved. -->
     <string name="report_failed">Couldn\'t create the report. Try again.</string>
     <!-- The report's file name, without its ".pdf" extension, with the badge's name, such as
          "Camping merit badge report". Each of " * / : < > ? \ | becomes "_", since a file
          name can't hold it. -->
     <string name="report_file_name">%1$s merit badge report</string>
+    <!-- A rank's report's file name, as for a badge's, such as "Star rank report". -->
+    <string name="report_file_name_rank">%1$s rank report</string>
     <!-- The rest of these are printed in the report, a PDF of everything the scout recorded
-         for a badge, to give to their counselor or keep. -->
+         for a badge or rank, to give to their counselor or board of review, or keep. -->
     <!-- Above the badge's name, at the top of the first page. -->
     <string name="report_kind">Merit badge report</string>
+    <!-- Above the rank's name, at the top of the first page. -->
+    <string name="report_kind_rank">Rank report</string>
     <string name="report_scout">Scout: %1$s</string>
     <string name="report_unit">Unit: %1$s</string>
     <!-- The effective date of the requirements the scout worked on, such as "Requirements
@@ -287,6 +292,13 @@
     <!-- For a badge or requirement that's complete but has no completion date. -->
     <string name="report_completed">Completed</string>
     <string name="report_not_completed">Not completed</string>
+    <!-- When the rank was earned, such as "Earned on Apr 15, 2026", as on its page. -->
+    <string name="report_earned_on">Earned on %1$s</string>
+    <!-- For a rank that's earned but has no date it was earned on. -->
+    <string name="report_earned">Earned</string>
+    <!-- For a rank that counts as earned because the scout marked a higher rank earned, with
+         that rank's name, such as "Counted as earned with Life", as on its page. -->
+    <string name="report_earned_with">Counted as earned with %1$s</string>
     <!-- Heading of the merit badge counselor's details. -->
     <string name="report_counselor">Counselor</string>
     <string name="report_counselor_name">Name</string>

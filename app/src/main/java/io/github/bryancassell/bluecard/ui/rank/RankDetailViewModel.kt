@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,13 +14,16 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
+import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
+import io.github.bryancassell.bluecard.ui.badge.ReportTasks
 import io.github.bryancassell.bluecard.ui.badge.advancementRequirementsAmong
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,22 +32,28 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * One rank from the catalog, with the scout's progress on its requirements and their standing on
- * it, which depends on the ranks below and above it too. While it isn't earned, or counts as
- * earned only with a rank above it, the scout can mark it earned on a prior date. Once it's
- * started, its progress can be cleared.
+ * it, which depends on the ranks below and above it too, and its report once it's earned. While
+ * it isn't earned, or counts as earned only with a rank above it, the scout can mark it earned on
+ * a prior date. Once it's started, its progress can be cleared.
  */
 @HiltViewModel(assistedFactory = RankDetailViewModel.Factory::class)
 class RankDetailViewModel @AssistedInject constructor(
     @Assisted private val rankId: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
+    reportRepository: ReportRepository,
     private val clock: Clock,
     // Keeps the date to open the date picker at if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val report = ReportTasks(viewModelScope, reportRepository, rankId)
     private val saves = TaskRunner(viewModelScope)
 
-    val uiState: StateFlow<RankDetailUiState> = combine(
+    /**
+     * The page as worked out from the catalog and progress, before [uiState] adds the date just
+     * unmarked and the report.
+     */
+    private val rank: Flow<RankDetailUiState> = combine(
         flow { emit(catalogRepository.getRanks() to catalogRepository.getBadges()) },
         // Every rank's, because the ranks below and above this one decide whether it's earned,
         // and every badge's, which its requirements that ask for merit badges count.
@@ -85,21 +95,61 @@ class RankDetailViewModel @AssistedInject constructor(
             },
             saveFailure = saveFailure
         )
-    }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
-        // Combined after, so remembering a date doesn't work the rank's standing out again.
-        val unmarkedDate = dateFromEpochDay(unmarked)
-        if (state is RankDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
+    }
+
+    val uiState: StateFlow<RankDetailUiState> = combine(
+        rank,
+        savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null),
+        report.reportToShare,
+        report.failure
+    ) { state, unmarked, reportToShare, reportFailure ->
+        // Combined after, so remembering a date or sharing a report doesn't work the rank's
+        // standing out again.
+        if (state is RankDetailUiState.Ready) {
+            state.copy(
+                unmarkedDate = dateFromEpochDay(unmarked),
+                reportToShare = reportToShare,
+                reportFailure = reportFailure
+            )
+        } else {
+            state
+        }
     }.catchLoadFailure(RankDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RankDetailUiState.Loading)
 
     /**
+     * Creates the rank's report, for the screen to open the share sheet with
+     * ([RankDetailUiState.Ready.reportToShare]). Does nothing while one is being created, so a
+     * double tap shares it once.
+     */
+    fun shareReport() {
+        report.share()
+    }
+
+    /** The screen has opened the share sheet with the report. */
+    fun onReportShared() {
+        report.onShared()
+    }
+
+    /** Saves the rank's report to [destination], a document the scout chose to create. */
+    fun saveReport(destination: Uri) {
+        report.save(destination)
+    }
+
+    /** The scout has been told about [failure]. */
+    fun onReportFailureShown(failure: TaskFailure) {
+        report.onFailureShown(failure)
+    }
+
+    /**
      * Clears everything recorded for the rank, so it isn't started anymore. The page then shows
-     * the requirements of the newest version.
+     * the requirements of the newest version. A report still being created to share is dropped,
+     * so the share sheet doesn't open with what was cleared.
      */
     fun clear() {
         // Forgotten even if the clear fails, as the scout meant it to be.
         savedStateHandle[UNMARKED_DATE] = null
-        saves.launch { progressRepository.clearBadge(rankId) }
+        report.follow(saves.launch { progressRepository.clearBadge(rankId) })
     }
 
     /**
@@ -109,14 +159,16 @@ class RankDetailViewModel @AssistedInject constructor(
      * recorded.
      */
     fun markEarned(date: LocalDate) {
-        saves.launch {
-            progressRepository.setCompletedOnPriorDate(
-                rankId,
-                date,
-                catalogRepository.getRanks().badgeStart(rankId, today())
-            )
-            savedStateHandle[UNMARKED_DATE] = null
-        }
+        report.follow(
+            saves.launch {
+                progressRepository.setCompletedOnPriorDate(
+                    rankId,
+                    date,
+                    catalogRepository.getRanks().badgeStart(rankId, today())
+                )
+                savedStateHandle[UNMARKED_DATE] = null
+            }
+        )
     }
 
     /**
@@ -127,7 +179,7 @@ class RankDetailViewModel @AssistedInject constructor(
     fun unmarkEarned() {
         val shown = (uiState.value as? RankDetailUiState.Ready)?.earnedOnPriorDate
         if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
-        saves.launch { progressRepository.removeCompletedOnPriorDate(rankId) }
+        report.follow(saves.launch { progressRepository.removeCompletedOnPriorDate(rankId) })
     }
 
     /** The scout has been told that a save failed ([failure]). */

@@ -1,15 +1,9 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.content.ClipData
-import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -19,19 +13,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
@@ -42,9 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
@@ -189,7 +179,7 @@ private fun BadgeDetails(
         CompletedOnPriorDate(uiState, today, onMarkCompleted, onUnmarkCompleted)
         if (uiState.completed) {
             ReportButtons(
-                uiState.name,
+                reportFileName(LocalResources.current, ReportKind.MeritBadge, uiState.name),
                 onShareReport,
                 onSaveReport,
                 startOtherApp,
@@ -301,86 +291,4 @@ private fun EagleTag(label: String) {
             Text(text = label, style = style)
         }
     }
-}
-
-private const val PDF = "application/pdf"
-
-/**
- * Buttons that share the badge's report through the share sheet ([onShare]), or save it where
- * the scout chooses with the system file picker ([onSave]).
- */
-@Composable
-private fun ReportButtons(
-    badgeName: String,
-    onShare: () -> Unit,
-    onSave: (destination: Uri) -> Unit,
-    startOtherApp: OtherAppStarter,
-    modifier: Modifier = Modifier
-) {
-    val createDocument = rememberLauncherForActivityResult(CreateDocument(PDF)) { destination ->
-        // Null when the scout leaves the file picker without saving.
-        destination?.let(onSave)
-    }
-    val fileName = reportFileName(LocalResources.current, badgeName)
-    val noFilePicker = stringResource(R.string.no_file_saver)
-    // Wraps the buttons onto two lines when they don't fit on one, as with large text.
-    FlowRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        ReportButton(R.string.badge_detail_share_report, onClick = { startOtherApp.tap(onShare) })
-        ReportButton(
-            R.string.badge_detail_save_report,
-            onClick = { startOtherApp.launch(createDocument, fileName, noFilePicker) }
-        )
-    }
-}
-
-/**
- * A button for the report, outlined as the official link is, so the Eagle-required tag stays
- * the only filled shape on the page.
- */
-@Composable
-private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        colors = detailOutlinedButtonColors(),
-        border = detailOutlinedButtonBorder()
-    ) {
-        Text(stringResource(text))
-    }
-}
-
-/**
- * Opens the share sheet with the badge's [report], once, then calls [onShared]. The Share
- * report tap already went through the screen's [OtherAppStarter], so this doesn't, and the
- * share sheet is always there to start. The report waits in UI state, so if Badge detail is
- * covered before it's ready, as by another app or a requirement's page, the share sheet opens
- * once Badge detail shows again. Going back from Badge detail clears its ViewModel, and the
- * report with it.
- */
-@Composable
-private fun ShareReport(report: Uri, onShared: () -> Unit) {
-    val context = LocalContext.current
-    val currentOnShared by rememberUpdatedState(onShared)
-    LaunchedEffect(report) {
-        context.startActivity(shareIntent(report))
-        currentOnShared()
-    }
-}
-
-/**
- * The share sheet, to send [report] to the app the scout picks. The clip data lets the share
- * sheet show the file, and the flag grants the app picked permission to read it:
- * https://developer.android.com/training/sharing/send#adding-rich-content-previews
- */
-private fun shareIntent(report: Uri): Intent {
-    val send = Intent(Intent.ACTION_SEND).apply {
-        type = PDF
-        putExtra(Intent.EXTRA_STREAM, report)
-        clipData = ClipData.newRawUri(null, report)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-    return Intent.createChooser(send, null)
 }

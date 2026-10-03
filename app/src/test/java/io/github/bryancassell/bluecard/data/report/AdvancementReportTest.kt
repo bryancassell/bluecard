@@ -2,6 +2,8 @@ package io.github.bryancassell.bluecard.data.report
 
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -12,9 +14,12 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import io.github.bryancassell.bluecard.data.progress.earnedBadges
+import io.github.bryancassell.bluecard.data.progress.standings
 import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -23,7 +28,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class BadgeReportTest {
+class AdvancementReportTest {
     private val older = LocalDate.of(2025, 1, 1)
     private val newest = LocalDate.of(2026, 1, 1)
     private val started = LocalDate.of(2026, 3, 1)
@@ -90,7 +95,7 @@ class BadgeReportTest {
 
     private fun report(progress: BadgeProgressDetails) = camping.report(profile, progress, today)!!
 
-    private fun BadgeReport.requirement(number: String): ReportRequirement {
+    private fun AdvancementReport.requirement(number: String): ReportRequirement {
         fun List<ReportRequirement>.find(): ReportRequirement? =
             firstNotNullOfOrNull { if (it.number == number) it else it.children.find() }
         return requirements.find()!!
@@ -103,10 +108,12 @@ class BadgeReportTest {
         val report = report(progress(counselor = counselor))
 
         assertEquals(profile, report.profile)
-        assertEquals("Camping", report.badgeName)
+        assertEquals(ReportKind.MeritBadge, report.kind)
+        assertEquals("Camping", report.name)
         assertEquals(newest, report.requirementsVersion)
         assertEquals(counselor, report.counselor)
         assertEquals(today, report.createdDate)
+        assertNull(report.earnedWith)
     }
 
     @Test
@@ -263,7 +270,7 @@ class BadgeReportTest {
     }
 
     /** The numbers of the requirements that are [ReportRequirement.notRecorded], at any depth. */
-    private fun BadgeReport.notRecorded(): List<String> {
+    private fun AdvancementReport.notRecorded(): List<String> {
         fun List<ReportRequirement>.all(): List<ReportRequirement> =
             flatMap { listOf(it) + it.children.all() }
         return requirements.all().filter { it.notRecorded }.map { it.number }
@@ -356,5 +363,234 @@ class BadgeReportTest {
     @Test
     fun requirementWithoutTracker_hasNone() {
         assertNull(report(progress()).requirement("1").tracker)
+    }
+
+    // Ranks. Tenderfoot's requirement 2 asks for two merit badges, one of them Eagle-required.
+
+    private val chess = MeritBadge(
+        id = "chess",
+        name = "Chess",
+        summary = "Our summary of Chess.",
+        officialUrl = "https://www.scouting.org/merit-badges/chess/",
+        requirementVersions = listOf(
+            RequirementsVersion(newest, listOf(Requirement("1", "Play a game.")))
+        )
+    )
+    private val eagleCamping = camping.copy(eagleRequired = true)
+    private val badges = listOf(eagleCamping, chess)
+
+    private fun rank(id: String, name: String, requirements: List<Requirement>) = Rank(
+        id = id,
+        name = name,
+        summary = "Our summary of $name.",
+        officialUrl = "https://www.scouting.org/$id.pdf",
+        requirementVersions = listOf(RequirementsVersion(newest, requirements))
+    )
+
+    private val ranks = listOf(
+        rank("scout", "Scout", listOf(Requirement("1", "Learn the Scout Oath."))),
+        rank(
+            "tenderfoot",
+            "Tenderfoot",
+            listOf(
+                Requirement("1", "Pitch a tent."),
+                Requirement(
+                    "2",
+                    "Earn two merit badges.",
+                    meritBadges = MeritBadgesNeeded(total = 2, eagleRequired = 1)
+                )
+            )
+        ),
+        rank("second-class", "Second Class", listOf(Requirement("1", "Cook a meal.")))
+    )
+
+    private fun rankProgress(
+        id: String,
+        requirements: List<RequirementProgress> = emptyList(),
+        markedOn: LocalDate? = null
+    ) = BadgeProgressDetails(
+        BadgeProgress(id, newest, started, completedOnPriorDate = markedOn),
+        requirements,
+        emptyList()
+    )
+
+    private fun rankCompleted(
+        id: String,
+        number: String,
+        date: LocalDate?,
+        comment: String? = null
+    ) = RequirementProgress(id, number, completed = true, completedDate = date, comment)
+
+    /** A badge marked completed on [date], which counts toward a rank's merit badges. */
+    private fun badgeCompleted(id: String, date: LocalDate) = BadgeProgressDetails(
+        BadgeProgress(id, newest, started, completedOnPriorDate = date),
+        emptyList(),
+        emptyList()
+    )
+
+    /** The report on rank [id], from [progress] on badges and ranks. */
+    private fun rankReport(id: String, vararg progress: BadgeProgressDetails): AdvancementReport? {
+        val byId = progress.associateBy { it.badge.badgeId }
+        val earnedBadges = badges.earnedBadges(byId)
+        return ranks.standings(byId, earnedBadges)
+            .first { it.rank.id == id }
+            .report(profile, byId[id], earnedBadges, today)
+    }
+
+    @Test
+    fun rankEarnedFromItsRequirements_isEarnedOnTheirLastDate_withNoCounselor() {
+        val report = rankReport(
+            "scout",
+            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate.of(2026, 4, 1))))
+        )!!
+
+        assertEquals(ReportKind.Rank, report.kind)
+        assertEquals("Scout", report.name)
+        assertEquals(profile, report.profile)
+        assertEquals(newest, report.requirementsVersion)
+        assertEquals(Completion(LocalDate.of(2026, 4, 1)), report.completion)
+        assertNull(report.earnedWith)
+        assertNull(report.counselor)
+        assertEquals(today, report.createdDate)
+    }
+
+    @Test
+    fun rankEarned_withARequirementWithoutADate_isEarnedWithNoDate() {
+        val report = rankReport(
+            "scout",
+            rankProgress("scout", listOf(rankCompleted("scout", "1", null)))
+        )!!
+
+        assertEquals(Completion(null), report.completion)
+    }
+
+    // Its requirements are complete, but Scout isn't earned. Rank detail offers no report then.
+    @Test
+    fun rankNotEarned_hasNoReport() {
+        val error = runCatching {
+            rankReport(
+                "second-class",
+                rankProgress("second-class", listOf(rankCompleted("second-class", "1", null)))
+            )
+        }.exceptionOrNull()
+
+        assertTrue(
+            "Expected IllegalArgumentException, got $error",
+            error is IllegalArgumentException
+        )
+    }
+
+    @Test
+    fun rankMarkedEarned_isEarnedThen_andWhatsNotRecordedSaysSo() {
+        val marked = LocalDate.of(2025, 8, 1)
+        val report = rankReport(
+            "tenderfoot",
+            rankProgress("tenderfoot", markedOn = marked)
+        )!!
+
+        assertEquals(Completion(marked), report.completion)
+        assertNull(report.earnedWith)
+        assertEquals(listOf(true, true), report.requirements.map { it.notRecorded })
+    }
+
+    // As on its page, it reads as marked itself, on the version it would be started on.
+    @Test
+    fun rankCountedAsEarnedWithARankAbove_saysSo_andWhatsNotRecordedSaysSo() {
+        val report = rankReport(
+            "scout",
+            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1))
+        )!!
+
+        assertNull(report.completion)
+        assertEquals("Tenderfoot", report.earnedWith)
+        assertEquals(newest, report.requirementsVersion)
+        assertTrue(report.requirements.single().notRecorded)
+    }
+
+    // Marked earned, so it has a report.
+    @Test
+    fun rankRequirements_haveWhatTheScoutRecorded() {
+        val report = rankReport(
+            "tenderfoot",
+            rankProgress(
+                "tenderfoot",
+                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 1), "At camp.")),
+                markedOn = LocalDate.of(2026, 6, 1)
+            )
+        )!!
+
+        val pitch = report.requirement("1")
+        assertEquals(Completion(LocalDate.of(2026, 4, 1)), pitch.completion)
+        assertEquals("At camp.", pitch.comment)
+        assertNull(pitch.meritBadges)
+    }
+
+    // Scout is earned, and the badges complete Tenderfoot, so it's earned on their date.
+    @Test
+    fun requirementThatAsksForMeritBadges_listsEveryBadgeCompleted_inNameOrder() {
+        val report = rankReport(
+            "tenderfoot",
+            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate.of(2026, 4, 1)))),
+            rankProgress(
+                "tenderfoot",
+                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 2)))
+            ),
+            badgeCompleted("chess", LocalDate.of(2026, 5, 1)),
+            badgeCompleted("camping", LocalDate.of(2026, 5, 3))
+        )!!
+
+        assertEquals(Completion(LocalDate.of(2026, 5, 3)), report.completion)
+        val badgesNeeded = report.requirement("2")
+        assertEquals(Completion(LocalDate.of(2026, 5, 3)), badgesNeeded.completion)
+        val meritBadges = badgesNeeded.meritBadges!!
+        assertEquals(2, meritBadges.credit.completed)
+        assertEquals(1, meritBadges.credit.eagleRequired)
+        assertEquals(
+            listOf("Camping" to LocalDate.of(2026, 5, 3), "Chess" to LocalDate.of(2026, 5, 1)),
+            meritBadges.badges.map { it.badge.name to it.completedOn }
+        )
+    }
+
+    @Test
+    fun requirementThatAsksForMeritBadges_withNoneCompleted_listsNone() {
+        val report = rankReport(
+            "tenderfoot",
+            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1))
+        )!!
+
+        val badgesNeeded = report.requirement("2")
+        assertNull(badgesNeeded.completion)
+        assertEquals(0, badgesNeeded.meritBadges!!.credit.completed)
+        assertEquals(emptyList<EarnedBadge>(), badgesNeeded.meritBadges.badges)
+    }
+
+    // A badge that counts toward it is a part done, so it isn't "Not recorded".
+    @Test
+    fun requirementThatAsksForMeritBadges_withABadge_onAMarkedRank_isNotNotRecorded() {
+        val report = rankReport(
+            "tenderfoot",
+            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1)),
+            badgeCompleted("chess", LocalDate.of(2026, 5, 1))
+        )!!
+
+        assertFalse(report.requirement("2").notRecorded)
+        assertTrue(report.requirement("1").notRecorded)
+    }
+
+    // Marked earned, which needs no version.
+    @Test
+    fun rankOnVersionMissingFromCatalog_hasNoReport() {
+        val progress = BadgeProgressDetails(
+            BadgeProgress(
+                "scout",
+                LocalDate.of(2020, 1, 1),
+                started,
+                completedOnPriorDate = LocalDate.of(2025, 8, 1)
+            ),
+            emptyList(),
+            emptyList()
+        )
+
+        assertNull(rankReport("scout", progress))
     }
 }

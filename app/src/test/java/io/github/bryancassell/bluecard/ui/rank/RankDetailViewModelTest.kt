@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.testing.viewModelScenario
@@ -14,11 +15,14 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -71,13 +75,22 @@ class RankDetailViewModelTest {
         )
     )
     private val progressRepository = FakeProgressRepository()
+    private val reportRepository = FakeReportRepository(progressRepository, catalogRepository)
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private fun viewModel(
         rankId: String = "tenderfoot",
+        progress: ProgressRepository = progressRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle()
-    ) = RankDetailViewModel(rankId, catalogRepository, progressRepository, clock, savedStateHandle)
+    ) = RankDetailViewModel(
+        rankId,
+        catalogRepository,
+        progress,
+        reportRepository,
+        clock,
+        savedStateHandle
+    )
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -99,8 +112,14 @@ class RankDetailViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel =
-            RankDetailViewModel("scout", loading, progressRepository, clock, SavedStateHandle())
+        val viewModel = RankDetailViewModel(
+            "scout",
+            loading,
+            progressRepository,
+            reportRepository,
+            clock,
+            SavedStateHandle()
+        )
         startCollecting(viewModel)
 
         assertEquals(RankDetailUiState.Loading, viewModel.uiState.value)
@@ -371,6 +390,7 @@ class RankDetailViewModelTest {
                 "tenderfoot",
                 catalogRepository,
                 progressRepository,
+                reportRepository,
                 clock,
                 createSavedStateHandle()
             )
@@ -553,6 +573,177 @@ class RankDetailViewModelTest {
 
         viewModel.onSaveFailureShown(failure!!)
         assertNull(viewModel.ready().saveFailure)
+    }
+
+    @Test
+    fun shareReport_ofAnEarnedRank_createsItsReport_forTheScreenToShare() = runTest {
+        complete("scout", "1", "2")
+        val viewModel = viewModel("scout")
+        startCollecting(viewModel)
+        assertNull(viewModel.ready().reportToShare)
+
+        viewModel.shareReport()
+
+        assertEquals(listOf("scout"), reportRepository.shared)
+        assertEquals(FakeReportRepository.reportUri("scout"), viewModel.ready().reportToShare)
+
+        viewModel.onReportShared()
+
+        assertNull(viewModel.ready().reportToShare)
+    }
+
+    // It has a report, though it isn't started.
+    @Test
+    fun shareReport_ofARankEarnedWithARankAbove_createsItsReport() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        val viewModel = viewModel("scout")
+        startCollecting(viewModel)
+
+        viewModel.shareReport()
+
+        assertEquals(FakeReportRepository.reportUri("scout"), viewModel.ready().reportToShare)
+    }
+
+    @Test
+    fun saveReport_savesItWhereTheScoutChose() = runTest {
+        complete("scout", "1", "2")
+        val viewModel = viewModel("scout")
+        startCollecting(viewModel)
+        val destination = Uri.parse("content://documents/scout-report.pdf")
+
+        viewModel.saveReport(destination)
+
+        assertEquals(listOf("scout" to destination), reportRepository.saved)
+        assertNull(viewModel.ready().reportFailure)
+    }
+
+    @Test
+    fun report_whenItCantBeCreatedOrSaved_showsFailureUntilItsShown() = runTest {
+        complete("scout", "1", "2")
+        val viewModel = viewModel("scout")
+        startCollecting(viewModel)
+        reportRepository.failSaves = true
+
+        viewModel.shareReport()
+
+        val failure = viewModel.ready().reportFailure
+        assertNotNull(failure)
+        assertNull(viewModel.ready().reportToShare)
+        // Told as a report that failed, not as a save.
+        assertNull(viewModel.ready().saveFailure)
+        viewModel.onReportFailureShown(failure!!)
+        assertNull(viewModel.ready().reportFailure)
+
+        viewModel.saveReport(Uri.parse("content://documents/scout-report.pdf"))
+
+        assertNotNull(viewModel.ready().reportFailure)
+    }
+
+    // Otherwise the share sheet would open with a report of what the scout just cleared.
+    @Test
+    fun clear_whileAReportIsBeingCreatedToShare_dropsIt() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        val writing = CompletableDeferred<Unit>()
+        reportRepository.writing = writing
+        viewModel.shareReport()
+
+        viewModel.clear()
+        writing.complete(Unit)
+
+        assertNull(viewModel.ready().reportToShare)
+        assertNull(viewModel.ready().reportFailure)
+        assertNull(progressRepository.observeProgress("tenderfoot").first())
+    }
+
+    // Otherwise the share sheet would open with a report of the date from before.
+    @Test
+    fun changingTheDate_whileAReportIsBeingCreatedToShare_dropsIt() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        val writing = CompletableDeferred<Unit>()
+        reportRepository.writing = writing
+        viewModel.shareReport()
+
+        viewModel.markEarned(older)
+        writing.complete(Unit)
+
+        assertNull(viewModel.ready().reportToShare)
+        assertEquals(older, viewModel.ready().earnedOnPriorDate)
+    }
+
+    private val saved = CompletableDeferred<Unit>()
+
+    /**
+     * Saves marks, unmarks and clears only once [saved] lets them through, as Room takes a
+     * moment to.
+     */
+    private val slowSaves = object : ProgressRepository by progressRepository {
+        override suspend fun setCompletedOnPriorDate(
+            badgeId: String,
+            date: LocalDate,
+            start: BadgeStart
+        ) {
+            saved.await()
+            progressRepository.setCompletedOnPriorDate(badgeId, date, start)
+        }
+
+        override suspend fun removeCompletedOnPriorDate(badgeId: String) {
+            saved.await()
+            progressRepository.removeCompletedOnPriorDate(badgeId)
+        }
+
+        override suspend fun clearBadge(badgeId: String) {
+            saved.await()
+            progressRepository.clearBadge(badgeId)
+        }
+    }
+
+    // As when the scout marks the rank earned, then taps Share report as soon as it shows.
+    @Test
+    fun shareReport_rightAfterMarkingTheRankEarned_waitsForIt() = runTest {
+        val viewModel = viewModel(progress = slowSaves)
+        startCollecting(viewModel)
+
+        viewModel.markEarned(day)
+        viewModel.shareReport()
+        assertEquals(emptyList<String>(), reportRepository.shared)
+        saved.complete(Unit)
+
+        assertEquals(FakeReportRepository.reportUri("tenderfoot"), viewModel.ready().reportToShare)
+    }
+
+    // As when the scout unmarks the rank, then taps Share report before the page redraws.
+    @Test
+    fun shareReport_rightAfterUnmarking_waitsForIt_andSharesNothing() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        val viewModel = viewModel(progress = slowSaves)
+        startCollecting(viewModel)
+
+        viewModel.unmarkEarned()
+        viewModel.shareReport()
+        assertEquals(emptyList<String>(), reportRepository.shared)
+        saved.complete(Unit)
+
+        assertEquals(listOf("tenderfoot"), reportRepository.shared)
+        assertNull(viewModel.ready().reportToShare)
+    }
+
+    // As when the scout confirms Clear, then taps Save report before the page redraws.
+    @Test
+    fun saveReport_rightAfterAClear_waitsForIt_andSavesNothing() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        val viewModel = viewModel(progress = slowSaves)
+        startCollecting(viewModel)
+
+        viewModel.clear()
+        viewModel.saveReport(Uri.parse("content://documents/tenderfoot-report.pdf"))
+        saved.complete(Unit)
+
+        assertEquals(emptyList<Pair<String, Uri>>(), reportRepository.saved)
+        assertNull(viewModel.ready().reportFailure)
     }
 
     @Test

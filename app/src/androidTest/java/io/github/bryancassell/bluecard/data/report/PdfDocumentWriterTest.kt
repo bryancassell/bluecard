@@ -39,11 +39,13 @@ class PdfDocumentWriterTest {
     )
 
     /** A report long enough for several pages. */
-    private val report = BadgeReport(
+    private val report = AdvancementReport(
         profile = Profile("Alex Scout", "123"),
-        badgeName = "Camping",
+        kind = ReportKind.MeritBadge,
+        name = "Camping",
         requirementsVersion = LocalDate.of(2026, 1, 1),
         completion = Completion(LocalDate.of(2026, 6, 3)),
+        earnedWith = null,
         counselor = Counselor("Pat Lee", "555-0100", "pat@example.com"),
         requirements = (1..40).map {
             ReportRequirement(
@@ -58,6 +60,7 @@ class PdfDocumentWriterTest {
                     log,
                     listOf(ReportTrackerRow(1, listOf(log.columns[1] to "$it")))
                 ),
+                meritBadges = null,
                 children = emptyList()
             )
         },

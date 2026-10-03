@@ -29,7 +29,6 @@ import io.github.bryancassell.bluecard.data.progress.timeInRank
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
-import io.github.bryancassell.bluecard.ui.badges.badgeNameOrder
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
 import java.time.LocalDate
@@ -128,9 +127,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 timeInRank = standings?.timeInRank(advancementId, requirement),
-                earnedBadges = requirement.meritBadges?.let {
-                    found.earnedBadges.badges.sortedWith(compareBy(badgeNameOrder()) { it.badge })
-                },
+                earnedBadges = requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
                 comment = recorded?.comment,
                 numbersWithin = numbersWithin,
                 hasRecorded = found.hasRecorded(numbersWithin)

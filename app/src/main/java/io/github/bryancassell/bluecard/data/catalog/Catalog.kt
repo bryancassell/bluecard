@@ -1,7 +1,9 @@
 package io.github.bryancassell.bluecard.data.catalog
 
+import java.text.Collator
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
+import java.util.Locale
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -122,6 +124,14 @@ data class MeritBadgesNeeded(
      */
     val eagleGroupsCountOnce: Boolean = false
 )
+
+/**
+ * The order badges are listed in. Badge names are English whatever the device language, so
+ * they're sorted by English rules: an accented letter sorts with its base letter, and case
+ * only breaks ties.
+ */
+fun badgeNameOrder(): Comparator<MeritBadge> =
+    compareBy(Collator.getInstance(Locale.ENGLISH), MeritBadge::name)
 
 /**
  * The Eagle-required badges in this catalog, one list for each badge the scout needs: a badge

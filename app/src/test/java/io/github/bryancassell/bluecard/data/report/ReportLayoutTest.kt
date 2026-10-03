@@ -12,12 +12,16 @@ import androidx.core.text.BidiFormatter
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
+import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -54,29 +58,50 @@ class ReportLayoutTest {
         notNeeded: Boolean = false,
         notRecorded: Boolean = false,
         tracker: ReportTracker? = null,
+        meritBadges: ReportMeritBadges? = null,
         children: List<ReportRequirement> = emptyList()
     ) = ReportRequirement(
-        number,
-        summary,
-        requiredCount,
-        completion,
-        notNeeded,
-        notRecorded,
-        comment,
-        tracker,
-        children
+        number = number,
+        summary = summary,
+        requiredCount = requiredCount,
+        completion = completion,
+        notNeeded = notNeeded,
+        notRecorded = notRecorded,
+        comment = comment,
+        tracker = tracker,
+        meritBadges = meritBadges,
+        children = children
     )
 
     private fun report(
         requirements: List<ReportRequirement>,
         profile: Profile = Profile("Alex Scout", "123"),
         counselor: Counselor? = Counselor("Pat Lee", "555-0100", "pat@example.com")
-    ) = BadgeReport(
+    ) = AdvancementReport(
         profile = profile,
-        badgeName = "Camping",
+        kind = ReportKind.MeritBadge,
+        name = "Camping",
         requirementsVersion = LocalDate.of(2026, 1, 1),
         completion = Completion(LocalDate.of(2026, 6, 3)),
+        earnedWith = null,
         counselor = counselor,
+        requirements = requirements,
+        createdDate = LocalDate.of(2026, 9, 30)
+    )
+
+    /** A rank's report, earned on Jun 3, 2026 unless [completion] says otherwise. */
+    private fun rankReport(
+        requirements: List<ReportRequirement> = emptyList(),
+        completion: Completion? = Completion(LocalDate.of(2026, 6, 3)),
+        earnedWith: String? = null
+    ) = AdvancementReport(
+        profile = Profile("Alex Scout", "123"),
+        kind = ReportKind.Rank,
+        name = "Star",
+        requirementsVersion = LocalDate.of(2026, 1, 1),
+        completion = completion,
+        earnedWith = earnedWith,
+        counselor = null,
         requirements = requirements,
         createdDate = LocalDate.of(2026, 9, 30)
     )
@@ -121,7 +146,7 @@ class ReportLayoutTest {
         )
     )
 
-    private fun layOut(report: BadgeReport, resources: Resources = context.resources) =
+    private fun layOut(report: AdvancementReport, resources: Resources = context.resources) =
         layOutReport(report, resources)
 
     /** Resources in [locales], BCP 47 tags in order, as `stringsLanguageResources` gives. */
@@ -177,6 +202,139 @@ class ReportLayoutTest {
                 "Page 1 of 1"
             ),
             pages.single().lines
+        )
+    }
+
+    @Test
+    fun rankReport_isTitledAsARank_saysWhenItWasEarned_andHasNoCounselor() {
+        val lines = layOut(rankReport()).single().lines
+
+        assertEquals(
+            listOf(
+                "Rank report",
+                "Star",
+                "Scout: Alex Scout",
+                "Unit: 123",
+                "Earned on Jun 3, 2026",
+                "Requirements effective Jan 1, 2026",
+                "Created on Sep 30, 2026",
+                "Requirements",
+                "Page 1 of 1"
+            ),
+            lines
+        )
+    }
+
+    @Test
+    fun rankReport_saysWhetherTheRankIsEarned_asItsPageDoes() {
+        fun status(report: AdvancementReport) = layOut(report).single().lines[4]
+
+        assertEquals("Earned", status(rankReport(completion = Completion(null))))
+        assertEquals(
+            "Counted as earned with Life",
+            status(rankReport(completion = null, earnedWith = "Life"))
+        )
+    }
+
+    private val eagleRequiredBadge = MeritBadge(
+        id = "camping",
+        name = "Camping",
+        summary = "Our summary of Camping.",
+        officialUrl = "https://www.scouting.org/merit-badges/camping/",
+        eagleRequired = true,
+        requirementVersions = emptyList()
+    )
+    private val electiveBadge = eagleRequiredBadge.copy(
+        id = "chess",
+        name = "Chess",
+        eagleRequired = false
+    )
+
+    @Test
+    fun requirementThatAsksForMeritBadges_hasTheCounts_thenEachBadgeCompleted() {
+        val credit = MeritBadgeCredit(
+            needed = MeritBadgesNeeded(total = 6, eagleRequired = 4),
+            completed = 2,
+            eagleRequired = 1,
+            completion = null
+        )
+        val badges = listOf(
+            EarnedBadge(eagleRequiredBadge, LocalDate.of(2026, 5, 3), true),
+            EarnedBadge(electiveBadge, null, false)
+        )
+        val lines = layOut(
+            rankReport(
+                listOf(
+                    requirement(
+                        "3",
+                        "Earn six merit badges.",
+                        comment = "Two to go.",
+                        meritBadges = ReportMeritBadges(credit, badges)
+                    )
+                )
+            )
+        ).single().lines
+
+        val title = lines.indexOf("3. Earn six merit badges.")
+        assertEquals(
+            listOf(
+                "Not completed",
+                "Notes: Two to go.",
+                "2 of 6 merit badges",
+                "1 of 4 Eagle-required",
+                "Camping · Completed on May 3, 2026 · Eagle-required",
+                "Chess · Completed"
+            ),
+            lines.subList(title + 1, title + 7)
+        )
+    }
+
+    // As on its page, a badge counts as Eagle-required by the requirement's rule.
+    @Test
+    fun meritBadge_isEagleRequired_onlyIfItCountsAsEagleRequiredTowardTheRequirement() {
+        val credit = MeritBadgeCredit(
+            needed = MeritBadgesNeeded(total = 21, eagleRequired = 13, eagleGroupsCountOnce = true),
+            completed = 1,
+            eagleRequired = 0,
+            completion = null
+        )
+        // Eagle-required, but not the first of its group completed.
+        val badges = listOf(EarnedBadge(eagleRequiredBadge, LocalDate.of(2026, 5, 3), false))
+        val lines = layOut(
+            rankReport(
+                listOf(
+                    requirement("3", "Earn 21.", meritBadges = ReportMeritBadges(credit, badges))
+                )
+            )
+        ).single().lines
+
+        assertTrue("Camping · Completed on May 3, 2026" in lines)
+    }
+
+    @Test
+    fun requirementThatAsksForMeritBadges_withNone_hasOnlyTheCounts() {
+        val credit = MeritBadgeCredit(
+            needed = MeritBadgesNeeded(total = 1, eagleRequired = 1),
+            completed = 0,
+            eagleRequired = 0,
+            completion = null
+        )
+        val lines = layOut(
+            rankReport(
+                listOf(
+                    requirement(
+                        "3",
+                        "Earn one.",
+                        meritBadges = ReportMeritBadges(credit, emptyList())
+                    )
+                )
+            )
+        ).single().lines
+
+        val title = lines.indexOf("3. Earn one.")
+        assertEquals(
+            listOf("Not completed", "0 of 1 merit badge", "0 of 1 Eagle-required", "Page 1 of 1"),
+            lines.subList(title + 1, lines.size)
         )
     }
 

@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.progress.RankStanding
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
+import io.github.bryancassell.bluecard.data.progress.readsAsMarked
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import io.github.bryancassell.bluecard.data.progress.standings
 
@@ -105,7 +106,7 @@ fun <A : Advancement> List<A>.advancementRequirementsAmong(
     val standing = (standings ?: filterIsInstance<Rank>().standings(progress, earnedBadges))
         .first { it.rank.id == id }
     return found.copy(
-        completedOnPriorDate = found.completedOnPriorDate || standing.earnedWith != null,
+        completedOnPriorDate = standing.readsAsMarked(progress[id]),
         earnedBadges = earnedBadges
     )
 }

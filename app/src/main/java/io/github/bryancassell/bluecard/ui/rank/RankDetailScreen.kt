@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -23,6 +25,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.data.report.ReportKind
+import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -32,7 +36,9 @@ import io.github.bryancassell.bluecard.ui.badge.ClearProgress
 import io.github.bryancassell.bluecard.ui.badge.EditableDate
 import io.github.bryancassell.bluecard.ui.badge.LoadingIndicator
 import io.github.bryancassell.bluecard.ui.badge.PickDateButton
+import io.github.bryancassell.bluecard.ui.badge.ReportButtons
 import io.github.bryancassell.bluecard.ui.badge.RequirementRows
+import io.github.bryancassell.bluecard.ui.badge.ShareReport
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
@@ -54,6 +60,10 @@ fun RankDetailRoute(
         today = viewModel::today,
         onMarkEarned = viewModel::markEarned,
         onUnmarkEarned = viewModel::unmarkEarned,
+        onShareReport = viewModel::shareReport,
+        onReportShared = viewModel::onReportShared,
+        onSaveReport = viewModel::saveReport,
+        onReportFailureShown = viewModel::onReportFailureShown,
         onClear = viewModel::clear,
         onSaveFailureShown = viewModel::onSaveFailureShown,
         modifier = modifier
@@ -68,8 +78,12 @@ fun RankDetailRoute(
  * without recording its requirements, as for a rank earned before they used the app
  * ([onMarkEarned]). The date then shows, and they can change it or unmark the rank
  * ([onUnmarkEarned]). A rank that counts as earned only because a rank above it is marked says
- * so, and the scout can give it a date of its own the same way. At the bottom, once the rank is
- * started, the scout can clear its progress ([onClear]).
+ * so, and the scout can give it a date of its own the same way.
+ *
+ * Once the rank is earned, its report can be shared, which asks for it to be created
+ * ([onShareReport]) and opens the share sheet once it's ready ([onReportShared]), or saved,
+ * which asks the scout where with the system file picker ([onSaveReport]). At the bottom, once
+ * the rank is started, the scout can clear its progress ([onClear]).
  */
 @Composable
 fun RankDetailScreen(
@@ -78,6 +92,10 @@ fun RankDetailScreen(
     today: () -> LocalDate,
     onMarkEarned: (date: LocalDate) -> Unit,
     onUnmarkEarned: () -> Unit,
+    onShareReport: () -> Unit,
+    onReportShared: () -> Unit,
+    onSaveReport: (destination: Uri) -> Unit,
+    onReportFailureShown: (TaskFailure) -> Unit,
     onClear: () -> Unit,
     onSaveFailureShown: (TaskFailure) -> Unit,
     modifier: Modifier = Modifier
@@ -91,8 +109,25 @@ fun RankDetailScreen(
             ScreenMessage(stringResource(R.string.rank_requirements_unavailable), modifier)
 
         is RankDetailUiState.Ready -> Box(modifier = modifier) {
-            RankDetails(uiState, onOpenRequirement, today, onMarkEarned, onUnmarkEarned, onClear)
+            RankDetails(
+                uiState,
+                onOpenRequirement,
+                today,
+                onMarkEarned,
+                onUnmarkEarned,
+                onShareReport,
+                onReportShared,
+                onSaveReport,
+                onClear
+            )
+            // One host for both kinds of failure, so they show one at a time.
             val snackbarHostState = remember { SnackbarHostState() }
+            TaskFailureSnackbar(
+                failure = uiState.reportFailure,
+                message = stringResource(R.string.report_failed),
+                onShown = onReportFailureShown,
+                hostState = snackbarHostState
+            )
             TaskFailureSnackbar(
                 failure = uiState.saveFailure,
                 message = stringResource(R.string.save_failed),
@@ -111,10 +146,15 @@ private fun RankDetails(
     today: () -> LocalDate,
     onMarkEarned: (date: LocalDate) -> Unit,
     onUnmarkEarned: () -> Unit,
+    onShareReport: () -> Unit,
+    onReportShared: () -> Unit,
+    onSaveReport: (destination: Uri) -> Unit,
     onClear: () -> Unit
 ) {
-    // Opens the official requirements in the browser, once for quick taps.
+    // Opens the official requirements in the browser. The report shares it, so quick taps on
+    // either open one app, once.
     val startOtherApp = rememberOtherAppStarter()
+    uiState.reportToShare?.let { ShareReport(it, onReportShared) }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         AdvancementHeader(
             name = uiState.name,
@@ -127,6 +167,17 @@ private fun RankDetails(
         )
         // Outside the header's column, so its text buttons line up with the page's text.
         EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned)
+        if (uiState.status == RankStatus.Earned) {
+            ReportButtons(
+                reportFileName(LocalResources.current, ReportKind.Rank, uiState.name),
+                onShareReport,
+                onSaveReport,
+                startOtherApp,
+                // None above: what's above leaves room under it, as Change date and Add date's
+                // touch areas do, or as "Earned on" does to match them.
+                Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            )
+        }
         Text(
             text = stringResource(R.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,

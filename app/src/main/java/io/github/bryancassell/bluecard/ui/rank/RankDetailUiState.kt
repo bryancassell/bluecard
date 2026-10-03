@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
+import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
@@ -60,6 +61,13 @@ sealed interface RankDetailUiState {
          * mark counts as earned, and those above it earned in order after it.
          */
         val unearnedByClear: List<String> = emptyList(),
+        /**
+         * The rank's report, once it's ready to share, until the screen has opened the share
+         * sheet with it.
+         */
+        val reportToShare: Uri? = null,
+        /** The report couldn't be created or saved, and the scout hasn't been told yet. */
+        val reportFailure: TaskFailure? = null,
         /** A save couldn't be made, and the scout hasn't been told yet. */
         val saveFailure: TaskFailure? = null
     ) : RankDetailUiState

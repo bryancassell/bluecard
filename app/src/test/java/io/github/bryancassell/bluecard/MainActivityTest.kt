@@ -204,7 +204,7 @@ class MainActivityTest {
     val damagedProgressRepository: DamagedProgressRepository = fakeDamagedProgressRepository
 
     // PdfDocument only runs on a device.
-    private val fakeReportRepository = FakeReportRepository(progressRepository)
+    private val fakeReportRepository = FakeReportRepository(progressRepository, catalogRepository)
 
     @BindValue
     @JvmField
@@ -1275,6 +1275,27 @@ class MainActivityTest {
         composeTestRule.onNode(hasText("Scout") and hasText("Earned")).assertIsDisplayed()
         composeTestRule.onNode(hasText("Tenderfoot") and hasText("In progress"))
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun shareReport_ofAnEarnedRank_opensShareSheetWithTheRanksReport() {
+        openScout()
+        composeTestRule.onNodeWithText("Mark earned").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        composeTestRule.onNodeWithText("Share report").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(listOf("scout"), fakeReportRepository.shared)
+        var started: Intent? = null
+        scenario.onActivity { started = shadowOf(it).nextStartedActivity }
+        assertEquals(Intent.ACTION_CHOOSER, started?.action)
+        val send =
+            IntentCompat.getParcelableExtra(started!!, Intent.EXTRA_INTENT, Intent::class.java)!!
+        assertEquals(
+            FakeReportRepository.reportUri("scout"),
+            IntentCompat.getParcelableExtra(send, Intent.EXTRA_STREAM, Uri::class.java)
+        )
     }
 
     @Test

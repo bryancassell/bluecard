@@ -22,8 +22,6 @@ import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -40,26 +38,14 @@ class BadgeDetailViewModel @AssistedInject constructor(
     @Assisted private val badgeId: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val reportRepository: ReportRepository,
+    reportRepository: ReportRepository,
     private val clock: Clock,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    // Separate runners, so a report that fails shows its own message, not a save's.
-    private val reports = TaskRunner(viewModelScope)
+    private val report = ReportTasks(viewModelScope, reportRepository, badgeId)
     private val saves = TaskRunner(viewModelScope)
-    private val reportToShare = MutableStateFlow<Uri?>(null)
-
-    /** The report being created to share, if there is one. */
-    private var creatingReport: Job? = null
-
-    /**
-     * The latest save. A report asked for after it waits for it, so it reads what the scout last
-     * did: not the badge from before a clear, as it could in the moment before the page redraws
-     * without its report buttons, or from before its date was changed.
-     */
-    private var lastSave: Job? = null
 
     val uiState: StateFlow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
@@ -68,8 +54,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
             emit(catalog to catalog.eagleGroups())
         },
         progressRepository.observeProgress(badgeId),
-        reportToShare,
-        reports.failure,
+        report.reportToShare,
+        report.failure,
         saves.failure
     ) { (catalog, eagleGroups), progress, reportToShare, reportFailure, saveFailure ->
         val found = catalog.advancementRequirements(badgeId, progress)
@@ -102,31 +88,22 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * double tap shares it once.
      */
     fun shareReport() {
-        if (creatingReport?.isActive == true) return
-        val save = lastSave
-        creatingReport = reports.launch {
-            save?.join()
-            reportToShare.value = reportRepository.createReportToShare(badgeId)
-        }
+        report.share()
     }
 
     /** The screen has opened the share sheet with the report. */
     fun onReportShared() {
-        reportToShare.value = null
+        report.onShared()
     }
 
     /** Saves the badge's report to [destination], a document the scout chose to create. */
     fun saveReport(destination: Uri) {
-        val save = lastSave
-        reports.launch {
-            save?.join()
-            reportRepository.saveReport(badgeId, destination)
-        }
+        report.save(destination)
     }
 
     /** The scout has been told about [failure]. */
     fun onReportFailureShown(failure: TaskFailure) {
-        reports.onShown(failure)
+        report.onFailureShown(failure)
     }
 
     /**
@@ -135,11 +112,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * created to share is dropped, so the share sheet doesn't open with what was cleared.
      */
     fun clear() {
-        creatingReport?.cancel()
-        reportToShare.value = null
         // Forgotten even if the clear fails, as the scout meant it to be.
         savedStateHandle[UNMARKED_DATE] = null
-        lastSave = saves.launch { progressRepository.clearBadge(badgeId) }
+        report.follow(saves.launch { progressRepository.clearBadge(badgeId) })
     }
 
     /**
@@ -148,14 +123,16 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * isn't started is started, as when anything is recorded.
      */
     fun markCompleted(date: LocalDate) {
-        lastSave = saves.launch {
-            progressRepository.setCompletedOnPriorDate(
-                badgeId,
-                date,
-                catalogRepository.getBadges().badgeStart(badgeId, today())
-            )
-            savedStateHandle[UNMARKED_DATE] = null
-        }
+        report.follow(
+            saves.launch {
+                progressRepository.setCompletedOnPriorDate(
+                    badgeId,
+                    date,
+                    catalogRepository.getBadges().badgeStart(badgeId, today())
+                )
+                savedStateHandle[UNMARKED_DATE] = null
+            }
+        )
     }
 
     /**
@@ -165,7 +142,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     fun unmarkCompleted() {
         val shown = (uiState.value as? BadgeDetailUiState.Ready)?.completedOnPriorDate
         if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
-        lastSave = saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) }
+        report.follow(saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) })
     }
 
     /** The scout has been told that a save failed ([failure]). */
