@@ -2,6 +2,112 @@
   "formatVersion": 1,
   "badges": [
     {
+      "id": "american-business",
+      "name": "American Business",
+      "summary": "Learn how business works in the United States, from free enterprise and finance to ethics and labor law, then research a business and explore a business career.",
+      "officialUrl": "https://www.scouting.org/merit-badges/american-business/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explore free enterprise and the history and reach of American business.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain four features of U.S. free enterprise, how freedom differs from license, and how the Scout Oath and Law apply to business."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Describe the Industrial Revolution and the developments that began America's modern industrial era, and discuss three people who shaped U.S. business or industry and what each did."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Name and describe the five primary areas of business."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Trace the history of American labor unions, explain why unions and employers should cooperate, and name two major unions today."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Discuss how business affects the economy at local, national and global levels."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn how businesses track, raise and protect money.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain the income statement, balance sheet and statement of cash flows, and discuss how each guides business leaders' decisions."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain how changing interest rates, taxes and government spending push money toward or away from business and industry."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain how sole proprietorships, partnerships and LLCs raise capital, and four ways corporations do."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Name five kinds of insurance a business can use, and what each is for."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Look at profit, sustainability, ethics and online selling.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain the role profit plays in a business."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe green marketing and sustainable business practices."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain how ethics shapes business decisions."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Discuss how running a brick-and-mortar business differs from running one online."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Describe what the U.S. Department of Labor does, and discuss two of these laws: FLSA, OSHA, FMLA and ERISA."
+            },
+            {
+              "number": "5",
+              "summary": "Pick a business, research how accounting, finance, economics, marketing and management each apply to it, and share what you find."
+            },
+            {
+              "number": "6",
+              "summary": "Explore a business career.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Find three careers in one primary area of business, research one's education, training and experience, and discuss why it interests you."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Interview a business leader about their company and career path, discuss the role of ethics in business decisions, and share what you learned."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "american-heritage",
       "name": "American Heritage",
       "summary": "Explore the Declaration of Independence, people and groups who shaped the country, its national symbols, your family's and community's history, and how the past bears on today.",
@@ -1994,6 +2100,236 @@
                 {
                   "number": "5e",
                   "summary": "Explore three aviation careers, research one, and discuss whether it interests you."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "backpacking",
+      "name": "Backpacking",
+      "summary": "Learn backpacking health, gear, crew planning, low-impact camping, navigation and trail cooking, then take three multi-day treks and plan, take and journal a five-day, 30-mile trek.",
+      "officialUrl": "https://www.scouting.org/merit-badges/backpacking/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Discuss preventing and treating health problems on a backpacking trip, including hypothermia, heat reactions, frostbite, dehydration, insect stings, tick bites, snakebite and blisters."
+            },
+            {
+              "number": "2",
+              "summary": "Learn what to carry.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "List the 10 Scout Basic Essentials for any backpacking trek, and explain why you need each one."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe 10 ways to make your pack lighter and smaller without putting your health or safety at risk."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how a trek crew works.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain the right range of sizes for a trek crew."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Describe how to organize a trek crew."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain how you'd keep the risks of a backpacking trek low."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain what an emergency response plan is for."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn to backpack with little impact.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain why the Leave No Trace Seven Principles and the Outdoor Code matter on a backpacking trip, and give at least five ways your crew can reduce its impact."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Describe how to deal with human and other waste on a trek, and why and how to keep yourself clean."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain what to look for when picking a campsite."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about safe drinking water.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Treat water two ways, and explain why it must be treated."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain why drinking enough water on a trek matters."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn to find your way.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Show your skill at reading topographic maps."
+                },
+                {
+                  "number": "6b",
+                  "summary": "On a trek, find where you are at three different places, with a map and compass, or with a GPS receiver on a topographic map and on the ground."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain how to avoid getting lost, and what to do if you do."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explain how to get ready for and handle bad weather."
+            },
+            {
+              "number": "8",
+              "summary": "Learn to cook on the trail.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Compare the pros and cons of backpacking stoves that burn at least three different fuels."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Show you can run a backpacking stove and handle liquid fuel safely."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Cook three meals on a backpacking stove, with fuel that fits in your pack."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Show how you wash and sanitize cooking and eating gear and store food properly on a trek."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Plan and take a short backpacking hike.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Put together a written plan and schedule for a patrol or crew backpacking hike of at least 2 miles."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Inspect the patrol and its gear before the hike."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Show how you'd pack your own gear plus your part of the crew's shared gear and food."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Show how to put on your pack and adjust it to fit."
+                },
+                {
+                  "number": "9e",
+                  "summary": "Following your plan from 9a, carry your fully loaded pack on a hike of at least 2 miles."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Following Leave No Trace and the Outdoor Code, go on three or more treks of at least three days, 15 miles and two campsites each, carrying all you need.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "start-date",
+                    "label": "Start date",
+                    "type": "date"
+                  },
+                  {
+                    "id": "where",
+                    "label": "Where",
+                    "type": "text"
+                  },
+                  {
+                    "id": "days",
+                    "label": "Days",
+                    "type": "number"
+                  },
+                  {
+                    "id": "miles",
+                    "label": "Miles",
+                    "type": "number"
+                  },
+                  {
+                    "id": "campsites",
+                    "label": "Campsites used",
+                    "type": "number"
+                  }
+                ],
+                "rowLabel": "trek",
+                "rowLabelPlural": "treks",
+                "rowCount": 3
+              }
+            },
+            {
+              "number": "11",
+              "summary": "Plan, take and journal a long backpacking trek.",
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Write a plan for a trek of at least five days, 30 miles and three campsites: the area and how to reach it, a daily schedule, food and gear lists, safety and emergency plans and a budget."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Following Leave No Trace and the Outdoor Code, take that trek, at least five full days, 30 miles and three campsites, and do a counselor-approved service project on it."
+                },
+                {
+                  "number": "11c",
+                  "summary": "Keep a daily journal on the trek: what you did each day, what worked well, and what to do better next time.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activities",
+                        "label": "What you did",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "notes",
+                        "label": "What worked well and what to improve",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
                 }
               ]
             }
@@ -9008,6 +9344,204 @@
       ]
     },
     {
+      "id": "home-repairs",
+      "name": "Home Repairs",
+      "summary": "Learn to work safely, then make hands-on repairs outside, to furniture and fixtures, and to your home's electrical, plumbing and interior. A parent, guardian or your counselor may supervise any of the work.",
+      "officialUrl": "https://www.scouting.org/merit-badges/home-repairs/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to work safely on home repairs.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the likely hazards of home repairs and how to anticipate, prevent, lessen and respond to them, and describe the safety gear and clothing to wear."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss general home repair precautions, and name at least 10 safety rules for anyone doing repairs."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "With a parent, guardian or counselor supervising, do three of these outdoor and weatherproofing jobs.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Maintain or recondition a yard tool, and show how to clean it up and store it properly."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Weatherstrip a window or door."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Caulk cracks or joints exposed to the weather."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Patch a break in concrete or asphalt."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Repair or replace a window or door screen."
+                },
+                {
+                  "number": "2f",
+                  "summary": "Replace a pane of glass."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "With a parent, guardian or counselor supervising, do three of these building and repair jobs.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Install or build storage for tools."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Build a workbench."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Repair a piece of furniture."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Paint or varnish a piece of furniture, a door or a house's trim."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Fix a sagging door or gate."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Fix a loose step or railing."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Repair a fence."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "With a parent, guardian or counselor supervising, do two of these electrical jobs.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Track down a main electrical switch box, and learn how to change a fuse or reset a circuit breaker."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Replace an electrical cord, or repair a plug or lamp socket."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Install a single-pole light switch."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Replace an electrical wall outlet."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "With a parent, guardian or counselor supervising, learn to shut off the water and do two of these plumbing jobs.",
+              "requiredCount": 2,
+              "ownWork": "Find the main water shutoff, including any well pump, and know how to turn it off.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Clear a clogged drain or trap."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Fix a leaky faucet."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Repair a flush toilet."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Fix a leaky hose or connector."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Clean or replace a sprinkler head."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "With a parent, guardian or counselor supervising, do three of these indoor jobs.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Paint a wall or ceiling."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Repair or replace damaged tile, linoleum or vinyl flooring."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Put up curtain or drapery rods, and hang the curtains or drapes."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Patch a hole in drywall."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Use drywall anchors to hang a picture, plant hanger or other object your parent or guardian approves."
+                },
+                {
+                  "number": "6f",
+                  "summary": "Reinforce a picture frame."
+                },
+                {
+                  "number": "6g",
+                  "summary": "Mend something made of china, glass or pottery."
+                },
+                {
+                  "number": "6h",
+                  "summary": "Fix a drawer slide, or fix or replace cabinet pulls."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore a home repair career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Research a career related to home repairs and discuss what makes it interesting."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research a hobby or healthy lifestyle that uses home repair skills, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "horsemanship",
       "name": "Horsemanship",
       "summary": "Learn to handle, care for and ride a horse safely, from grooming and feeding to tack and basic riding.",
@@ -9127,6 +9661,217 @@
                 {
                   "number": "12b",
                   "summary": "Research a hobby or healthy lifestyle that involves horses, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "insect-study",
+      "name": "Insect Study",
+      "summary": "Learn insect anatomy, life cycles, social lives, ecology and conservation, raise an insect to adulthood, and observe and document 20 species. Collect only where it's allowed, sparingly, within local laws and without harming the habitat.",
+      "officialUrl": "https://www.scouting.org/merit-badges/insect-study/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to stay safe around ants and bees.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the likely hazards of ants and bees and how to anticipate, prevent, lessen and respond to them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating health problems from working with ants and bees, including insect bites and anaphylactic shock."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn insect anatomy.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain what makes an insect unlike other animals."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Show the differences between insects, millipedes and spiders."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show the main body parts on an insect, and name them."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Describe the traits that set the major insect orders apart."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn about insect life cycles.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain how a butterfly's life history differs from a grasshopper's."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Raise an insect from larva to adult through complete metamorphosis; first check it isn't protected and collecting is allowed there, and usually return it where you found it."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Observe and document insects.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Discuss why the Leave No Trace Seven Principles and the Outdoor Code matter in insect study, and explain how you followed them while observing, collecting and identifying insects."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Observe 20 different species of live insects in their habitats, from at least four orders.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "insect",
+                        "label": "Insect",
+                        "type": "text"
+                      },
+                      {
+                        "id": "order",
+                        "label": "Order",
+                        "type": "text"
+                      },
+                      {
+                        "id": "habitat",
+                        "label": "Habitat",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "insect",
+                    "rowLabelPlural": "insects",
+                    "rowCount": 20
+                  }
+                },
+                {
+                  "number": "4c",
+                  "summary": "Make a scrapbook of 4b's 20 insects with photos, sketches, illustrations and articles, labeled with common and scientific names where possible, and share it with your counselor."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Pick eight species from your scrapbook and identify the role each plays in its ecosystem.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "species",
+                        "label": "Species",
+                        "type": "text"
+                      },
+                      {
+                        "id": "role",
+                        "label": "Role in the ecosystem",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "species",
+                    "rowLabelPlural": "species",
+                    "rowCount": 8
+                  }
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about social insects.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain what sets social insects apart from solitary ones."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Study an ant colony or a beehive.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "5b(1)",
+                      "summary": "Watch an ant colony in an ant farm, find the queen and the workers, and explain the colony's different chambers."
+                    },
+                    {
+                      "number": "5b(2)",
+                      "summary": "Study a beehive: remove the combs, find the queen, estimate the brood, count queen cells and explain how to gauge its honey; if allergic to bee stings, do 5b(1)."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn insects' place in nature.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Explain how insects fit into the food web of other insects, fish, birds and mammals."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain how insects pollinate plants."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn how insects and people affect each other.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explain how bees and people depend on each other, what colony collapse disorder is and what may cause it, and how it threatens our food supply."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Describe three alternatives to insecticides for protecting crops and their yields, with the pros and cons of each."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Learn about insect conservation.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Describe the migration route of an insect such as the monarch butterfly, the challenges it faces, and how Scouts can help it."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Learn about a threatened or endangered insect, and discuss its challenges and how Scouts can help it."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore an insect study career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Find three careers that use insect study, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research how insect study could become a personal hobby, and share your goals for it."
                 }
               ]
             }
@@ -10324,6 +11069,137 @@
             {
               "number": "8",
               "summary": "Research a career related to mining and discuss what makes it interesting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "model-design-and-building",
+      "name": "Model Design and Building",
+      "summary": "Learn modelmaking safety and the kinds of models and how they're made, then plan and build an original model and a fantasy spacecraft, by hand, by computer or both.",
+      "officialUrl": "https://www.scouting.org/merit-badges/model-design-and-building/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Before you start your project, go over modelmaking safety with your counselor, for both traditional and computer-aided work, and why each precaution matters.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain how to stay safe with modelmaking hand tools, and when to wear protective gear."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain best practices for staying safe with design software and digital fabrication tools."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how to handle flammable or hazardous materials safely."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn the kinds of models and how they're made.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain what architectural, structural, process, mechanical and industrial models are used for."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain how traditional or computer design tools help with drawing plans, testing how a model works, picturing it, and building or fabricating its parts."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Describe traditional and modern materials and ways of making these models, both physical and digital."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Plan an original model project.",
+              "ownWork": "Pick which kind of model from requirement 4 you'll make, with your counselor's guidance; design it yourself, not from a kit.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Draw scale plans for your model."
+                },
+                {
+                  "number": "3b",
+                  "summary": "List the materials you'll need."
+                },
+                {
+                  "number": "3c",
+                  "summary": "List the tools you'll need."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain why you chose this subject."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Discuss whether you'll use computer design tools to finish the project."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Build one kind of model, by hand, by computer design or both.",
+              "requiredCount": 1,
+              "ownWork": "Before you start, discuss your approach with your counselor, including any use of CAD or 3D modeling software, and present your plans and finished model.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Architectural model: draw floor plans and elevations, then build a 1:48 model house with windows, doors and structure; discuss materials, detail, outside finish and colors, and present both."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Structural model: lay out and build a 1:8 model of a wood-frame building's corner framing in cardboard, foam board or wood; review its parts and your challenges with your counselor."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Process model: design and build a 1:16 (or agreed scale) model of your house's plumbing, with hot and cold supply, waste lines and venting; discuss your plan, scale and materials first and any problems after."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Mechanical model: design a device using at least two of the six simple machines; once your counselor approves it, build a working physical model and discuss its materials, function and challenges."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Industrial model: measure a real passenger vehicle, draw or model its top, front, rear and sides, then build a 1:12 or 1:24 model, physically or digitally; discuss the hardest parts."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Create a fantasy spacecraft model for a science-fiction film.",
+              "ownWork": "Design and build the model at a scale that makes practical sense, by traditional or computer methods or both.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Study real aircraft, submarines and naval ships to inspire your design."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Design its parts, such as the cockpit, living areas, engines and storage."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Sketch or render the finished design from several angles."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Discuss your design process and scale, the physical or digital materials you used, how you engineered the model, and the difficulties you met and what you learned."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Research a career related to model design and building and discuss what makes it interesting."
             }
           ]
         }
@@ -12318,6 +13194,821 @@
       ]
     },
     {
+      "id": "plant-science",
+      "name": "Plant Science",
+      "summary": "Learn how plants grow, reproduce and serve people, then go deeper in agronomy, horticulture or field botany. Collect only where it's allowed, sparingly, within local laws and without harming the surroundings; pictures or sketches can stand in for specimens.",
+      "officialUrl": "https://www.scouting.org/merit-badges/plant-science/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Draw a flowering plant, label at least five of its parts, and explain what each one does."
+            },
+            {
+              "number": "2",
+              "summary": "Explain photosynthesis and why it matters, and give at least five ways people rely on plants."
+            },
+            {
+              "number": "3",
+              "summary": "Explain why honeybees and other pollinating insects matter to plants."
+            },
+            {
+              "number": "4",
+              "summary": "Explain how water, light, air, temperature and pests affect plants; what soil is, does and why it matters; fertile soil's texture, structure and makeup; and how to improve soil."
+            },
+            {
+              "number": "5",
+              "summary": "Explain how to propagate plants by seeds, roots, cuttings, tubers and grafting, and grow a plant using one of those methods."
+            },
+            {
+              "number": "6",
+              "summary": "Give the common names of at least 10 native and 10 cultivated plants near home and five local non-native invasives and their harm; explain how to curb invasives safely for people, wildlife and the environment.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "name",
+                    "label": "Common name",
+                    "type": "text"
+                  },
+                  {
+                    "id": "kind",
+                    "label": "Native, cultivated or invasive",
+                    "type": "text"
+                  },
+                  {
+                    "id": "harm",
+                    "label": "How it's harmful (invasive plants)",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "plant",
+                "rowLabelPlural": "plants"
+              }
+            },
+            {
+              "number": "7",
+              "summary": "Explore a plant science career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Research a career related to plant science and discuss what makes it interesting."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research a hobby or healthy lifestyle that uses plant science, and set goals for it."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Do one plant science option.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8A",
+                  "summary": "Option A: agronomy.",
+                  "children": [
+                    {
+                      "number": "8A(1)",
+                      "summary": "Describe how to get a seedbed ready."
+                    },
+                    {
+                      "number": "8A(2)",
+                      "summary": "Build a seed germination tester and test 50 seeds of four of these: corn, cotton, alfalfa, soybeans, clover, wheat, rice, rye or barley; find the percentage alive."
+                    },
+                    {
+                      "number": "8A(3)",
+                      "summary": "For each of corn, small grains and cotton, explain a major insect pest and a major disease; collect and name five local crop weeds and explain controlling them without harming people, wildlife or useful insects.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "weed",
+                            "label": "Weed",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "weed",
+                        "rowLabelPlural": "weeds"
+                      }
+                    },
+                    {
+                      "number": "8A(4)",
+                      "summary": "On a U.S. map, find the main regions growing corn, cotton, forage crops, small grains and oil crops, and explain how their climate and location make them leaders."
+                    },
+                    {
+                      "number": "8A(5)",
+                      "summary": "Do every part of one crop alternative.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "8A(5)(a)",
+                          "summary": "Corn.",
+                          "children": [
+                            {
+                              "number": "8A(5)(a)(1)",
+                              "summary": "Grow a plot of corn for your counselor to inspect, recording the seed variety or experimental code number."
+                            },
+                            {
+                              "number": "8A(5)(a)(2)",
+                              "summary": "Describe modern commercial corn farming and what corn adds to today's food and fuel supply."
+                            },
+                            {
+                              "number": "8A(5)(a)(3)",
+                              "summary": "Describe an insect that harms corn, how it affects the crop and how it's controlled."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8A(5)(b)",
+                          "summary": "Cotton.",
+                          "children": [
+                            {
+                              "number": "8A(5)(b)(1)",
+                              "summary": "Grow a plot of cotton for your counselor to inspect."
+                            },
+                            {
+                              "number": "8A(5)(b)(2)",
+                              "summary": "Describe modern commercial cotton farming, the uses of cotton fiber and seed, and the crop's economic value."
+                            },
+                            {
+                              "number": "8A(5)(b)(3)",
+                              "summary": "Describe an insect that harms cotton, how it affects the crop and how it's controlled."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8A(5)(c)",
+                          "summary": "Forage crops.",
+                          "children": [
+                            {
+                              "number": "8A(5)(c)(1)",
+                              "summary": "Collect, count and label display samples of perennial and annual grasses, legumes and broadleaf weeds, tell how each grass and legume is used, and log and share where you found each.",
+                              "tracker": {
+                                "columns": [
+                                  {
+                                    "id": "sample",
+                                    "label": "Sample",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "kind",
+                                    "label": "Kind",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "where",
+                                    "label": "Where you found it",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "use",
+                                    "label": "How it's used (grasses and legumes)",
+                                    "type": "multiline-text"
+                                  }
+                                ],
+                                "rowLabel": "sample",
+                                "rowLabelPlural": "samples"
+                              }
+                            },
+                            {
+                              "number": "8A(5)(c)(2)",
+                              "summary": "Explain how legumes can enrich soil or, in some conditions, wear it out, and how livestock can do either."
+                            },
+                            {
+                              "number": "8A(5)(c)(3)",
+                              "summary": "Name five plants poisonous to livestock, and describe the ways forage crops can be fed to livestock."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8A(5)(d)",
+                          "summary": "Small grains.",
+                          "children": [
+                            {
+                              "number": "8A(5)(d)(1)",
+                              "summary": "Give the latest production figures for small grain crops from the U.S. Statistical Report or Agricultural Statistics Handbook."
+                            },
+                            {
+                              "number": "8A(5)(d)(2)",
+                              "summary": "Help harvest a grain crop; explain how to cut harvest losses and modern ways to grow one small grain."
+                            },
+                            {
+                              "number": "8A(5)(d)(3)",
+                              "summary": "Tour a grain elevator, flour mill, cereal plant, or feed or seed company and speak with its operator, taking notes; then describe its processes and report on the visit to your patrol, troop or class."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8A(5)(e)",
+                          "summary": "Oil crops.",
+                          "children": [
+                            {
+                              "number": "8A(5)(e)(1)",
+                              "summary": "Grow a plot of soybeans for your counselor to inspect."
+                            },
+                            {
+                              "number": "8A(5)(e)(2)",
+                              "summary": "Describe modern commercial soybean growing and what soybeans add to our food supply."
+                            },
+                            {
+                              "number": "8A(5)(e)(3)",
+                              "summary": "Explain why a hard frost right after soybeans come up can harm them."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "8B",
+                  "summary": "Option B: horticulture.",
+                  "children": [
+                    {
+                      "number": "8B(1)",
+                      "summary": "Visit a public garden, arboretum, retail or wholesale nursery, or production or conservatory greenhouse, and tell what you learned about horticulture there."
+                    },
+                    {
+                      "number": "8B(2)",
+                      "summary": "Explain the 14 horticulture terms listed, from hardiness zone to perennial; find your hardiness zone and list 10 landscape plants you like that suit your climate, with common and scientific names.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "common-name",
+                            "label": "Common name",
+                            "type": "text"
+                          },
+                          {
+                            "id": "scientific-name",
+                            "label": "Scientific name",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "plant",
+                        "rowLabelPlural": "plants"
+                      }
+                    },
+                    {
+                      "number": "8B(3)",
+                      "summary": "Propagate, grow, prune or plant.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "8B(3)(a)",
+                          "summary": "Explain how vegetative and sexual propagation differ and some horticultural advantages of each, and grow a plant from a stem or root cutting or a graft."
+                        },
+                        {
+                          "number": "8B(3)(b)",
+                          "summary": "Move 12 seedlings or rooted cuttings into bigger containers and grow them for at least a month."
+                        },
+                        {
+                          "number": "8B(3)(c)",
+                          "summary": "Show good pruning techniques and explain why pruning matters."
+                        },
+                        {
+                          "number": "8B(3)(d)",
+                          "summary": "Get permission, then properly plant a tree or shrub in a suitable spot."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "8B(4)",
+                      "summary": "Learn to choose landscape plants.",
+                      "children": [
+                        {
+                          "number": "8B(4)(a)",
+                          "summary": "Explain why good landscape design, and picking plants that suit each site and its conditions, matter."
+                        },
+                        {
+                          "number": "8B(4)(b)",
+                          "summary": "Explain why it helps to know how big a plant will get."
+                        },
+                        {
+                          "number": "8B(4)(c)",
+                          "summary": "Explain why you might sometimes choose a slower-growing landscape plant over a faster-growing one."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "8B(5)",
+                      "summary": "Do every part of one horticulture alternative.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "8B(5)(a)",
+                          "summary": "Bedding plants.",
+                          "children": [
+                            {
+                              "number": "8B(5)(a)(1)",
+                              "summary": "In pots or flats of a manufactured soil mix, grow bedding plants suited to your area from seed or cuttings; explain your choice of mix and what it contains."
+                            },
+                            {
+                              "number": "8B(5)(a)(2)",
+                              "summary": "Move the plants to a landscape bed and tend it until the growing season ends, recording what you did and saw, the materials you used and their costs.",
+                              "tracker": {
+                                "columns": [
+                                  {
+                                    "id": "date",
+                                    "label": "Date",
+                                    "type": "date"
+                                  },
+                                  {
+                                    "id": "activities",
+                                    "label": "What you did and saw",
+                                    "type": "multiline-text"
+                                  },
+                                  {
+                                    "id": "materials",
+                                    "label": "Materials used",
+                                    "type": "multiline-text"
+                                  },
+                                  {
+                                    "id": "cost",
+                                    "label": "Cost",
+                                    "type": "number"
+                                  }
+                                ],
+                                "rowLabel": "entry",
+                                "rowLabelPlural": "entries"
+                              }
+                            },
+                            {
+                              "number": "8B(5)(a)(3)",
+                              "summary": "Show mulching, fertilizing, watering, weeding and deadheading, and explain how each helps your plants."
+                            },
+                            {
+                              "number": "8B(5)(a)(4)",
+                              "summary": "Explain how gardening with annuals differs from gardening with perennials."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8B(5)(b)",
+                          "summary": "Fruit, berry and nut crops.",
+                          "children": [
+                            {
+                              "number": "8B(5)(b)(1)",
+                              "summary": "Plant five fruit or nut trees, grapevines or berry plants suited to your area, and fully care for them for one season."
+                            },
+                            {
+                              "number": "8B(5)(b)(2)",
+                              "summary": "Properly prune a tree, vine or shrub, and explain why plants need pruning."
+                            },
+                            {
+                              "number": "8B(5)(b)(3)",
+                              "summary": "Show one kind of graft and explain why it's useful."
+                            },
+                            {
+                              "number": "8B(5)(b)(4)",
+                              "summary": "Pick a fruit, nut or berry crop and describe how it's processed for use."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8B(5)(c)",
+                          "summary": "Woody ornamentals.",
+                          "children": [
+                            {
+                              "number": "8B(5)(c)(1)",
+                              "summary": "Plant five or more trees or shrubs in a landscape, and fully care for them for one growing season."
+                            },
+                            {
+                              "number": "8B(5)(c)(2)",
+                              "summary": "Properly prune a tree or shrub, and explain why plants need pruning."
+                            },
+                            {
+                              "number": "8B(5)(c)(3)",
+                              "summary": "List 10 trees, besides those from requirement 6, with common and scientific names, and tell your counselor how each is used in landscaping.",
+                              "tracker": {
+                                "columns": [
+                                  {
+                                    "id": "common-name",
+                                    "label": "Common name",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "scientific-name",
+                                    "label": "Scientific name",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "use",
+                                    "label": "How it's used in the landscape",
+                                    "type": "multiline-text"
+                                  }
+                                ],
+                                "rowLabel": "tree",
+                                "rowLabelPlural": "trees",
+                                "rowCount": 10
+                              }
+                            },
+                            {
+                              "number": "8B(5)(c)(4)",
+                              "summary": "For each kind of tree or shrub, describe its size, texture, color, flowers, leaves, fruit, hardiness, growing needs and anything special that makes it stand out."
+                            },
+                            {
+                              "number": "8B(5)(c)(5)",
+                              "summary": "Give five ways trees make our environment better."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8B(5)(d)",
+                          "summary": "Home gardening.",
+                          "children": [
+                            {
+                              "number": "8B(5)(d)(1)",
+                              "summary": "Design and plant a garden or landscape of at least 10 by 10 feet."
+                            },
+                            {
+                              "number": "8B(5)(d)(2)",
+                              "summary": "Plant at least 10 different kinds of plants in it, explain why you chose your vegetable and flower varieties, and care for the garden for one season."
+                            },
+                            {
+                              "number": "8B(5)(d)(3)",
+                              "summary": "Show soil preparation, staking, watering, weeding, mulching, composting, fertilizing, pest management and pruning, and explain why each is done."
+                            },
+                            {
+                              "number": "8B(5)(d)(4)",
+                              "summary": "Name four kinds of things to add to a yard or park for birds and wildlife, and list 10 local native plants that benefit them, with common and scientific names.",
+                              "tracker": {
+                                "columns": [
+                                  {
+                                    "id": "common-name",
+                                    "label": "Common name",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "scientific-name",
+                                    "label": "Scientific name",
+                                    "type": "text"
+                                  }
+                                ],
+                                "rowLabel": "plant",
+                                "rowLabelPlural": "plants"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "8C",
+                  "summary": "Option C: field botany.",
+                  "children": [
+                    {
+                      "number": "8C(1)",
+                      "summary": "Visit a natural area near home and study its plants.",
+                      "ownWork": "Go to a natural area near home, such as a park, forest or Scout camp.",
+                      "children": [
+                        {
+                          "number": "8C(1)(a)",
+                          "summary": "Find which plant species there are the largest and the most plentiful, and note whether they shade other plants."
+                        },
+                        {
+                          "number": "8C(1)(b)",
+                          "summary": "Using maps, textbooks or the internet, describe what may shape which plants grow there, including latitude, climate, air and soil temperature, soil type and pH, geology, hydrology and topography."
+                        },
+                        {
+                          "number": "8C(1)(c)",
+                          "summary": "Note how the plants change wherever you find a forest's edge, water, a burned area, or a road or railroad.",
+                          "tracker": {
+                            "columns": [
+                              {
+                                "id": "place",
+                                "label": "Where",
+                                "type": "text"
+                              },
+                              {
+                                "id": "plants",
+                                "label": "Plants you saw",
+                                "type": "multiline-text"
+                              }
+                            ],
+                            "rowLabel": "place",
+                            "rowLabelPlural": "places"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "number": "8C(2)",
+                      "summary": "Pick a study site of at least 100 by 100 feet, list 10 trees or shrubs and 10 non-woody plants growing there, and mark each native or exotic.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "plant",
+                            "label": "Plant",
+                            "type": "text"
+                          },
+                          {
+                            "id": "woody",
+                            "label": "Woody or non-woody",
+                            "type": "text"
+                          },
+                          {
+                            "id": "origin",
+                            "label": "Native or exotic",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "plant",
+                        "rowLabelPlural": "plants",
+                        "rowCount": 20
+                      }
+                    },
+                    {
+                      "number": "8C(3)",
+                      "summary": "Describe how plant identification keys work, and name 10 plants with a simple key, not counting those from requirement 6; explain how common and scientific names differ and why scientific names matter."
+                    },
+                    {
+                      "number": "8C(4)",
+                      "summary": "Once you have permission to collect, collect, identify, press, mount and label 10 different common local plants, and explain why voucher specimens matter for documenting a field botanist's finds.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "date",
+                            "label": "Date collected",
+                            "type": "date"
+                          },
+                          {
+                            "id": "plant",
+                            "label": "Plant",
+                            "type": "text"
+                          },
+                          {
+                            "id": "where",
+                            "label": "Where you found it",
+                            "type": "text"
+                          }
+                        ],
+                        "rowLabel": "plant",
+                        "rowLabelPlural": "plants"
+                      }
+                    },
+                    {
+                      "number": "8C(5)",
+                      "summary": "Get a list of your state's rare plants, explain what's being done there to protect rare plants and natural areas, and write a paragraph on one of them."
+                    },
+                    {
+                      "number": "8C(6)",
+                      "summary": "Do every part of one field study alternative.",
+                      "requiredCount": 1,
+                      "children": [
+                        {
+                          "number": "8C(6)(a)",
+                          "summary": "Tree inventory.",
+                          "children": [
+                            {
+                              "number": "8C(6)(a)(1)",
+                              "summary": "Inventory the trees of your neighborhood, a park, part of your town or a Scout camp."
+                            },
+                            {
+                              "number": "8C(6)(a)(2)",
+                              "summary": "Document your inventory with leaves, flowers or fruits you collect, press and label."
+                            },
+                            {
+                              "number": "8C(6)(a)(3)",
+                              "summary": "List the kinds of trees by scientific and common name, note how many there are and how big (diameter at 4½ feet), and find the largest of each species.",
+                              "tracker": {
+                                "columns": [
+                                  {
+                                    "id": "scientific-name",
+                                    "label": "Scientific name",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "common-name",
+                                    "label": "Common name",
+                                    "type": "text"
+                                  },
+                                  {
+                                    "id": "count",
+                                    "label": "How many",
+                                    "type": "number"
+                                  },
+                                  {
+                                    "id": "largest",
+                                    "label": "Largest diameter",
+                                    "type": "text"
+                                  }
+                                ],
+                                "rowLabel": "species",
+                                "rowLabelPlural": "species"
+                              }
+                            },
+                            {
+                              "number": "8C(6)(a)(4)",
+                              "summary": "Teach two or more people to identify at least five tree or shrub species with a leaf or twig key."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8C(6)(b)",
+                          "summary": "Transect study.",
+                          "children": [
+                            {
+                              "number": "8C(6)(b)(1)",
+                              "summary": "Visit two sites, at least one other than the site from 8C(1)."
+                            },
+                            {
+                              "number": "8C(6)(b)(2)",
+                              "summary": "Study two different kinds of plant communities with transects at least 500 feet long."
+                            },
+                            {
+                              "number": "8C(6)(b)(3)",
+                              "summary": "At each site, record soil and other conditions and do these, then chart your results.",
+                              "ownWork": "Record the soil and other conditions affecting the plants at each site, then graph or chart your results.",
+                              "children": [
+                                {
+                                  "number": "8C(6)(b)(3)(a)",
+                                  "summary": "Identify every tree within 10 feet of the transect line."
+                                },
+                                {
+                                  "number": "8C(6)(b)(3)(b)",
+                                  "summary": "Measure each tree's diameter at 4½ feet, and map and list each one.",
+                                  "tracker": {
+                                    "columns": [
+                                      {
+                                        "id": "site",
+                                        "label": "Site",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "tree",
+                                        "label": "Tree",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "diameter",
+                                        "label": "Diameter",
+                                        "type": "text"
+                                      }
+                                    ],
+                                    "rowLabel": "tree",
+                                    "rowLabelPlural": "trees"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8C(6)(c)",
+                          "summary": "Nested plot.",
+                          "children": [
+                            {
+                              "number": "8C(6)(c)(1)",
+                              "summary": "Visit two sites, at least one other than the site from 8C(1)."
+                            },
+                            {
+                              "number": "8C(6)(c)(2)",
+                              "summary": "Use nested plots to inventory two different kinds of plant communities."
+                            },
+                            {
+                              "number": "8C(6)(c)(3)",
+                              "summary": "At each site, record soil and other conditions and do these, then chart your results.",
+                              "ownWork": "Record the soil and other conditions affecting the plants at each site, then graph or chart your results.",
+                              "children": [
+                                {
+                                  "number": "8C(6)(c)(3)(a)",
+                                  "summary": "In a 100-by-100-foot plot, identify, measure and map each tree, measuring the diameter at 4½ feet of each one over 3 inches across.",
+                                  "tracker": {
+                                    "columns": [
+                                      {
+                                        "id": "site",
+                                        "label": "Site",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "tree",
+                                        "label": "Tree",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "diameter",
+                                        "label": "Diameter",
+                                        "type": "text"
+                                      }
+                                    ],
+                                    "rowLabel": "tree",
+                                    "rowLabelPlural": "trees"
+                                  }
+                                },
+                                {
+                                  "number": "8C(6)(c)(3)(b)",
+                                  "summary": "In a 10-by-10-foot plot inside each larger plot, identify and count all the trees and shrubs.",
+                                  "tracker": {
+                                    "columns": [
+                                      {
+                                        "id": "site",
+                                        "label": "Site",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "species",
+                                        "label": "Tree or shrub",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "count",
+                                        "label": "How many",
+                                        "type": "number"
+                                      }
+                                    ],
+                                    "rowLabel": "species",
+                                    "rowLabelPlural": "species"
+                                  }
+                                },
+                                {
+                                  "number": "8C(6)(c)(3)(c)",
+                                  "summary": "In a 4-by-4-foot plot inside the 10-by-10, identify and count all the plants; where ferns, grasses, mosses and the like can't be told apart, estimate each species' cover in square inches.",
+                                  "tracker": {
+                                    "columns": [
+                                      {
+                                        "id": "site",
+                                        "label": "Site",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "species",
+                                        "label": "Plant",
+                                        "type": "text"
+                                      },
+                                      {
+                                        "id": "count",
+                                        "label": "How many, or square inches of cover",
+                                        "type": "text"
+                                      }
+                                    ],
+                                    "rowLabel": "species",
+                                    "rowLabelPlural": "species"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8C(6)(d)",
+                          "summary": "Herbarium visit.",
+                          "children": [
+                            {
+                              "number": "8C(6)(d)(1)",
+                              "summary": "Arrange ahead to visit an herbarium at a university, park or botanical garden, or, with permission, visit an herbarium's website."
+                            },
+                            {
+                              "number": "8C(6)(d)(2)",
+                              "summary": "Explain how the specimens are arranged and how researchers use them; if you can, see voucher specimens of a plant rare in your state."
+                            },
+                            {
+                              "number": "8C(6)(d)(3)",
+                              "summary": "Explain how voucher specimens are prepared and mounted to keep for good, and how to handle them without damage."
+                            },
+                            {
+                              "number": "8C(6)(d)(4)",
+                              "summary": "Describe the tools and references botanists use in an herbarium."
+                            }
+                          ]
+                        },
+                        {
+                          "number": "8C(6)(e)",
+                          "summary": "Plant conservation organization visit.",
+                          "children": [
+                            {
+                              "number": "8C(6)(e)(1)",
+                              "summary": "Arrange ahead to visit a private conservation group or government agency that protects rare plants and natural areas."
+                            },
+                            {
+                              "number": "8C(6)(e)(2)",
+                              "summary": "Describe how the organization studies and protects rare plants and natural areas."
+                            },
+                            {
+                              "number": "8C(6)(e)(3)",
+                              "summary": "Describe the organization's land management, such as controlled burns or removing invasive plants and other threats to native plants; if you can, visit a preserve it manages."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Discuss why Leave No Trace and the Outdoor Code matter in plant science, and how you followed them in natural areas while observing, collecting and identifying plants."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "plumbing",
       "name": "Plumbing",
       "summary": "Learn how a home's water supply and drains work and the tools, terms and pipes plumbers use, then do hands-on jobs such as joining pipe or replacing a faucet.",
@@ -13487,6 +15178,119 @@
       ]
     },
     {
+      "id": "reading",
+      "name": "Reading",
+      "summary": "Learn to find your way around a library, read books of different kinds and about the world, do a project from a how-to book and give four hours of reading-related service.",
+      "officialUrl": "https://www.scouting.org/merit-badges/reading/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to use a library.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Tour a library, and discuss how it's organized and the resources and services it offers."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Learn to search a library's card or computer catalog by author, title and subject."
+                },
+                {
+                  "number": "1c",
+                  "summary": "In a library, use the catalog to find six books of four different kinds, such as poetry, fiction, nonfiction and biographies."
+                },
+                {
+                  "number": "1d",
+                  "summary": "With help from your counselor or the librarian, try to find those six books on the shelves."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Explain what a library card is, why you need one and how to get one."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Find books to read.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Name a book you enjoyed, and find out what else its author has written."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Look at one or more \"best books\" lists, by year, subject or of all time, and pick at least one book you'd like to read."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Read four different kinds of books, and for each one, do one of these.",
+              "requiredCount": 1,
+              "ownWork": "Read four different kinds of books, such as poetry, fiction, nonfiction or biographies, and do one of these for each.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Write a review saying what you liked or didn't, and whether you'd recommend the book and to whom."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Watch a movie of the book, and discuss with your counselor how the two compare and which you enjoyed more."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Give a book talk to your class, troop or patrol."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Read a how-to nonfiction book or magazine, not a merit badge pamphlet; with permission and approval, do a project from it and share how it went."
+            },
+            {
+              "number": "5",
+              "summary": "Read about the world around you in any two sources, such as books, magazines, newspapers, the internet with permission, or field manuals, and discuss what you learned."
+            },
+            {
+              "number": "6",
+              "summary": "With permission and approval, give at least four hours of service to one of these, then discuss it with your counselor.",
+              "requiredCount": 1,
+              "ownWork": "After at least four hours of service, discuss your participation with your counselor.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Read to someone sick, blind or homebound in a hospital or extended-care facility."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Volunteer at your school library or a public library."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Read stories to younger children, in a group or one-on-one."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Organize a book swap in your troop, school or place of worship."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Organize a book drive and give the books to an organization in need."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Find three careers that use reading skills, research one, and discuss whether it interests you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "reptile-and-amphibian-study",
       "name": "Reptile and Amphibian Study",
       "summary": "Learn to identify reptiles and amphibians and how they live, including venomous ones, then care for or study one over time. Follow Leave No Trace and the Outdoor Code in the field, collect only with the land manager's permission and any license your state requires, and never take protected species.",
@@ -14337,6 +16141,91 @@
                 {
                   "number": "7b",
                   "summary": "Talk with your counselor about the schooling, experience or training you'd need to work in sales."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scholarship",
+      "name": "Scholarship",
+      "summary": "Show good or improving grades and good conduct at school, learn beyond the classroom, take part in school teamwork and write about what education will do for you.",
+      "officialUrl": "https://www.scouting.org/merit-badges/scholarship/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Show strong or improving grades.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Show a B average (80 percent) or better for one term or semester."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show your grades went up for one term or semester compared with the one before."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn beyond the classroom.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "List places where you live, other than schools, where you can learn; visit one and report how you used it to teach yourself."
+                },
+                {
+                  "number": "2b",
+                  "summary": "With permission and approval, interview two established professionals from outside your school about how their education prepared them and how they keep learning; discuss what you find."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show your counselor how a daily planner keeps your assignments and activities on track, and talk about how you use your time."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Discuss the pros and cons of ways to research schoolwork, such as the library, books and periodicals, and the internet."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Get a note from your principal, or an official they name, that your behavior, leadership and service this past year were satisfactory; if home-schooled or without a principal, ask a counterpart such as a parent or guardian."
+            },
+            {
+              "number": "4",
+              "summary": "Show what you've gained from school teamwork.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Show you've taken part in an extracurricular school activity, and discuss its benefits and what it taught you about teamwork."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Discuss your part in a school team project from the past semester and how you helped the team and project."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Write a report of 250 to 300 words.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Write on how your schooling will help you later and how you'll keep learning on your own."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Write on two careers that interest you and how particular classes and good scholarship will help you reach them."
                 }
               ]
             }
@@ -16572,6 +18461,136 @@
       ]
     },
     {
+      "id": "theater",
+      "name": "Theater",
+      "summary": "See or read plays and review them, write a one-act play, take on three jobs on or behind the stage, perform a pantomime and learn the language of the stage.",
+      "officialUrl": "https://www.scouting.org/merit-badges/theater/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "See or read three full-length plays, not on TV, video or film; review each, discuss its plot, and if you watched it, comment on the acting and staging.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "date",
+                    "label": "Date",
+                    "type": "date"
+                  },
+                  {
+                    "id": "play",
+                    "label": "Play",
+                    "type": "text"
+                  },
+                  {
+                    "id": "seen-or-read",
+                    "label": "Seen or read",
+                    "type": "text"
+                  },
+                  {
+                    "id": "review",
+                    "label": "Review",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "play",
+                "rowLabelPlural": "plays"
+              }
+            },
+            {
+              "number": "2",
+              "summary": "Write a one-act play that runs at least 10 minutes, with a main character, conflict and climax."
+            },
+            {
+              "number": "3",
+              "summary": "Discuss theater safety, then take on three theater jobs.",
+              "requiredCount": 3,
+              "ownWork": "Discuss how to keep the cast and crew safe when working in a theater.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Play a major role in a full-length play, or a role in three one-act plays."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Direct a play of at least 10 minutes: cast it, rehearse it and stage it."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Design the set for a play or theatrical production, and build a model of it."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Design costumes for five characters in a production set in a past era."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Show your hair and makeup design skills by making up yourself or a friend, as directed, as a historical figure, clown, extraterrestrial or monster."
+                },
+                {
+                  "number": "3f",
+                  "summary": "With your counselor's approval, help build and paint a production's scenery."
+                },
+                {
+                  "number": "3g",
+                  "summary": "With your counselor's approval, either design a play's lighting or join a production's lighting crew to install, focus, color, program and run the lights."
+                },
+                {
+                  "number": "3h",
+                  "summary": "With your counselor's approval, join a production's sound crew to install, focus, equalize, program and run the sound."
+                },
+                {
+                  "number": "3i",
+                  "summary": "Be a production's stage manager, recording every cue and stage setup in your calling script."
+                },
+                {
+                  "number": "3j",
+                  "summary": "Be the musical director of a musical theater production."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Perform one of these scenes in mime or pantomime; your counselor picks it.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Walking into a big room filled with pictures, furniture and other interesting things."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Dropping your books in a puddle while boarding a bus that leaves before you've picked them up."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Talking with a teacher who doesn't believe your story about a failed school test."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Helping a slow-learning new Scout at camp pass a cooking test."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Eating at a banquet with good meat, a vegetable you dislike and ice cream for dessert."
+                },
+                {
+                  "number": "4f",
+                  "summary": "Doing a circus act, such as juggling, walking a high wire or taming lions."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explain all 19 stage terms the requirement lists, from proscenium arch to sightlines."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "traffic-safety",
       "name": "Traffic Safety",
       "summary": "Learn why distracted, impaired and tired driving is dangerous, check a car's safety features, learn traffic laws, road design and how to share the road, and act for traffic safety in your community.",
@@ -16954,6 +18973,270 @@
                 {
                   "number": "7b",
                   "summary": "Discuss what the American Welding Society does for welders."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "whitewater",
+      "name": "Whitewater",
+      "summary": "Earn Canoeing or Kayaking first, then learn to paddle moving water safely: read rivers, signal, maneuver, make rescues, and plan and paddle whitewater trips.",
+      "officialUrl": "https://www.scouting.org/merit-badges/whitewater/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn whitewater safety.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain likely whitewater hazards, including fallen trees, rocks, hydraulics at ledges or low-head dams, strong wind, cold, and thunderstorms, and how to anticipate, prevent, lessen and respond to them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Review how to prevent, recognize and treat the 12 whitewater injuries and illnesses listed, from cold-water shock and hypothermia to shoulder dislocation and submersion."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Discuss Safety Afloat and the American Whitewater safety guidelines, including helmets and life jackets."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn how rivers and boats behave.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Draw lines showing how water flows through an upstream V, downstream V, riffle, eddy and eddy line, ledge, river bend, shallows, current at different depths, drop, horizon line and hydraulic."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain what makes waves, including standing waves and wave trains."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain how to edge the boat while keeping your body upright.",
+                  "children": [
+                    {
+                      "number": "2c(1)",
+                      "summary": "Entering and leaving an eddy."
+                    },
+                    {
+                      "number": "2c(2)",
+                      "summary": "Ferrying downstream and upstream."
+                    }
+                  ]
+                },
+                {
+                  "number": "2d",
+                  "summary": "Explain when, why and how to scout a river from shore and from the water, and when to portage instead."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Earn Canoeing or Kayaking, then show its strokes and maneuvers.",
+              "requiredCount": 1,
+              "ownWork": "Earn Canoeing or Kayaking, whichever matches the boat you'll use, before starting requirements 4 through 12.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "If you're using a canoe, show your counselor the strokes and maneuvers from Canoeing."
+                },
+                {
+                  "number": "3b",
+                  "summary": "If you're using a kayak, show your counselor the strokes and maneuvers from Kayaking."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "On calm water, show the strokes and techniques for your kind of boat.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4A",
+                  "summary": "Option A: tandem canoeist. Do all of these on calm water.",
+                  "children": [
+                    {
+                      "number": "4A(1)",
+                      "summary": "From the bow: cross forward, bow draw, cross bow draw, bow pry and sculling draw."
+                    },
+                    {
+                      "number": "4A(2)",
+                      "summary": "From the stern: stern draw, stern pry, sculling draw, and forward with stern pry."
+                    },
+                    {
+                      "number": "4A(3)",
+                      "summary": "High brace, low brace and righting pry."
+                    }
+                  ]
+                },
+                {
+                  "number": "4B",
+                  "summary": "Option B: solo canoeist. Do all of these on calm water.",
+                  "children": [
+                    {
+                      "number": "4B(1)",
+                      "summary": "Cross forward, bow draw, cross bow draw, stern draw, pry, stern pry, sculling draw, and forward with stern pry."
+                    },
+                    {
+                      "number": "4B(2)",
+                      "summary": "High brace, low brace and righting pry."
+                    }
+                  ]
+                },
+                {
+                  "number": "4C",
+                  "summary": "Option C: solo kayaker. Do all of these on calm water.",
+                  "children": [
+                    {
+                      "number": "4C(1)",
+                      "summary": "Bow draw, rudder and sculling draw."
+                    },
+                    {
+                      "number": "4C(2)",
+                      "summary": "High brace and low brace."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn to rate a river's difficulty.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain the International Scale of River Difficulty, and use it to rate a stretch of river your counselor approves."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Identify the features of that river that set its class on the scale."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Discuss how the amount of flow can move a river from one class to another and change its features and hazards."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain why communication matters on every whitewater outing, and use the American Whitewater Universal River Signals, visual and audible, for stop, are you OK, help, run river right or left, and all clear."
+            },
+            {
+              "number": "7",
+              "summary": "Describe the boats paddled on moving water.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "If you're using a canoe, describe the kinds of moving-water canoes and how their design, materials and purpose differ."
+                },
+                {
+                  "number": "7b",
+                  "summary": "If you're using a kayak, describe the kinds of moving-water kayaks and how their design, materials and purpose differ."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Go over with your counselor the personal and group gear a safe whitewater outing calls for, and how and why to use each."
+            },
+            {
+              "number": "9",
+              "summary": "Read a Class II stretch of river your counselor approves: describe the best lines and other routes, how to use its features and how to stay clear of its hazards."
+            },
+            {
+              "number": "10",
+              "summary": "In a proper life jacket and dressed for the weather and water, do these on moving water in an equipped whitewater tandem canoe, solo canoe or solo kayak; in a tandem, do each from bow and stern.",
+              "children": [
+                {
+                  "number": "10a",
+                  "summary": "Launch and land."
+                },
+                {
+                  "number": "10b",
+                  "summary": "Paddle straight ahead for at least 10 boat lengths."
+                },
+                {
+                  "number": "10c",
+                  "summary": "Backpaddle straight for at least five boat lengths."
+                },
+                {
+                  "number": "10d",
+                  "summary": "Ferry upstream from each side of the river."
+                },
+                {
+                  "number": "10e",
+                  "summary": "Ferry downstream from each side of the river."
+                },
+                {
+                  "number": "10f",
+                  "summary": "Do an eddy turn from each side of an eddy."
+                },
+                {
+                  "number": "10g",
+                  "summary": "Peel out from each side of an eddy."
+                }
+              ]
+            },
+            {
+              "number": "11",
+              "summary": "Explain and show these to your counselor.",
+              "children": [
+                {
+                  "number": "11a",
+                  "summary": "Rescuing yourself after capsizing in moving water, including a wet exit if needed."
+                },
+                {
+                  "number": "11b",
+                  "summary": "Using a throw rope to rescue a swimmer in whitewater."
+                },
+                {
+                  "number": "11c",
+                  "summary": "Catching a throw rope as the swimmer."
+                },
+                {
+                  "number": "11d",
+                  "summary": "Portaging: where it makes sense, and when and how to do it."
+                },
+                {
+                  "number": "11e",
+                  "summary": "The whitewater buddy system, with at least three people in three boats."
+                }
+              ]
+            },
+            {
+              "number": "12",
+              "summary": "Paddle whitewater trips on Class I or II rivers, at least six hours in all, and do these for each trip.",
+              "ownWork": "Paddle one or more canoe or kayak trips on a Class I or II river, with at least six hours of paddling in all.",
+              "children": [
+                {
+                  "number": "12a",
+                  "summary": "Help write the trip plan: route with put-ins and takeouts, schedule, gear, safety precautions and emergency procedures."
+                },
+                {
+                  "number": "12b",
+                  "summary": "Find out the local rules and get permission from landowners and land managers ahead of time."
+                },
+                {
+                  "number": "12c",
+                  "summary": "Explain how the trip follows Safety Afloat and the American Whitewater safety guidelines."
+                },
+                {
+                  "number": "12d",
+                  "summary": "Show how to keep personal and group gear dry and how to load and secure it in the boats, then run the trip as planned with other paddlers."
+                },
+                {
+                  "number": "12e",
+                  "summary": "Review with your counselor how your plans held up on each trip."
                 }
               ]
             }
