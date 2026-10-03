@@ -11,6 +11,7 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -43,17 +44,20 @@ class RankDetailViewModel @AssistedInject constructor(
     private val saves = TaskRunner(viewModelScope)
 
     val uiState: StateFlow<RankDetailUiState> = combine(
-        flow { emit(catalogRepository.getRanks()) },
-        // Every rank's, because the ranks below and above this one decide whether it's earned.
+        flow { emit(catalogRepository.getRanks() to catalogRepository.getBadges()) },
+        // Every rank's, because the ranks below and above this one decide whether it's earned,
+        // and every badge's, which its requirements that ask for merit badges count.
         progressRepository.observeAllProgress(),
         saves.failure
-    ) { ranks, allProgress, saveFailure ->
+    ) { (ranks, badges), allProgress, saveFailure ->
         val progressById = allProgress.associateBy { it.badge.badgeId }
-        val standings = ranks.standings(progressById)
+        val earnedBadges = badges.earnedBadges(progressById)
+        val standings = ranks.standings(progressById, earnedBadges)
         val standing = standings.find { it.rank.id == rankId }
             ?: return@combine RankDetailUiState.Unavailable
-        val found = ranks.advancementRequirementsAmong(rankId, progressById, standings)
-            ?: return@combine RankDetailUiState.Unavailable
+        val found =
+            ranks.advancementRequirementsAmong(rankId, progressById, earnedBadges, standings)
+                ?: return@combine RankDetailUiState.Unavailable
         val progress = progressById[rankId]
         RankDetailUiState.Ready(
             name = found.advancement.name,
@@ -71,7 +75,7 @@ class RankDetailViewModel @AssistedInject constructor(
                 emptyList()
             } else {
                 // The other ranks earned now that wouldn't be once this one is cleared.
-                standings.zip(ranks.standings(progressById - rankId))
+                standings.zip(ranks.standings(progressById - rankId, earnedBadges))
                     .filter { (now, cleared) ->
                         now.rank.id != rankId &&
                             now.status == RankStatus.Earned &&

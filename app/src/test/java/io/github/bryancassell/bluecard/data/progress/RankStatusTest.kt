@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -180,6 +182,70 @@ class RankStatusTest {
         assertNull(ranks.standings(mapOf(progress(scout, "1", "2")))[0].fractionDone)
     }
 
+    // Star needs requirement 1, and requirement 2's one Eagle-required badge.
+    private val star = rank("star").let {
+        it.copy(
+            requirementVersions = listOf(
+                RequirementsVersion(
+                    version,
+                    listOf(
+                        Requirement("1", "First."),
+                        Requirement("2", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 1))
+                    )
+                )
+            )
+        )
+    }
+
+    /** One Eagle-required badge, completed on [on]. */
+    private fun earnedBadge(on: LocalDate) = EarnedBadges(
+        listOf(
+            EarnedBadge(
+                MeritBadge(
+                    "camping",
+                    "Camping",
+                    "Camp.",
+                    "https://www.scouting.org/",
+                    true,
+                    null,
+                    emptyList()
+                ),
+                on,
+                countsOnceAsEagleRequired = true
+            )
+        )
+    )
+
+    @Test
+    fun rankWithMeritBadges_isEarnedOnceTheScoutHasEnough_onTheLastDateItNeeded() {
+        val later = day.plusDays(10)
+        val progress = mapOf(progress(scout, "1", "2"), progress(star, "1"))
+
+        assertEquals(
+            RankStanding(star, RankStatus.InProgress, 0.5f),
+            listOf(scout, star).standings(progress, EarnedBadges.None)[1]
+        )
+        assertEquals(
+            RankStanding(star, RankStatus.Earned, earnedOn = later),
+            listOf(scout, star).standings(progress, earnedBadge(later))[1]
+        )
+    }
+
+    @Test
+    fun inProgressRank_notStarted_countsBadgesTowardItsBar() {
+        val standings =
+            listOf(scout, star).standings(mapOf(progress(scout, "1", "2")), earnedBadge(day))
+
+        assertEquals(RankStanding(star, RankStatus.InProgress, 0.5f), standings[1])
+    }
+
+    @Test
+    fun rankNotStarted_andNotInProgress_hasNoBar_thoughBadgesCountTowardIt() {
+        val standings = listOf(scout, star).standings(emptyMap(), earnedBadge(day))
+
+        assertEquals(RankStanding(star, RankStatus.NotEarned), standings[1])
+    }
+
     @Test
     fun rankMarkedEarned_countsEveryRankBelowAsEarned_withIt() {
         val standings = ranks.standings(mapOf(progress(secondClass, earnedOnPriorDate = day)))
@@ -271,3 +337,7 @@ class RankStatusTest {
         assertEquals(tenderfoot, standings[0].earnedWith)
     }
 }
+
+/** The scout's standing on each rank when they haven't completed any badges. */
+private fun List<Rank>.standings(progress: Map<String, BadgeProgressDetails>) =
+    standings(progress, EarnedBadges.None)

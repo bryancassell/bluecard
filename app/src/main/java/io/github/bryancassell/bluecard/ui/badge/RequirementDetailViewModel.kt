@@ -11,13 +11,17 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
+import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
 import io.github.bryancassell.bluecard.data.progress.standings
@@ -25,6 +29,7 @@ import io.github.bryancassell.bluecard.data.progress.timeInRank
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
+import io.github.bryancassell.bluecard.ui.badges.badgeNameOrder
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import java.time.Clock
 import java.time.LocalDate
@@ -76,8 +81,10 @@ class RequirementDetailViewModel @AssistedInject constructor(
     private val recorded = flow {
         val catalog = catalogRepository.getAdvancements()
         val ranks = catalog.filterIsInstance<Rank>()
+        val badges = catalog.filterIsInstance<MeritBadge>()
         // A rank's page reads every rank's progress, because a rank above it can count it as
-        // earned, and its time in rank counts from the rank below. A badge's reads only its own.
+        // earned, and its time in rank counts from the rank below. It reads every badge's too,
+        // which its requirements that ask for merit badges count. A badge's reads only its own.
         val isRank = ranks.any { it.id == advancementId }
         val progress = if (isRank) {
             progressRepository.observeAllProgress()
@@ -87,21 +94,33 @@ class RequirementDetailViewModel @AssistedInject constructor(
         emitAll(
             progress.map { all ->
                 val byId = all.associateBy { it.badge.badgeId }
-                Triple(catalog, byId, if (isRank) ranks.standings(byId) else null)
+                val earnedBadges = if (isRank) badges.earnedBadges(byId) else EarnedBadges.None
+                val standings = if (isRank) ranks.standings(byId, earnedBadges) else null
+                // Checked on every change, not only when the page opens, because which version
+                // the badge or rank uses depends on its progress.
+                val found = catalog.advancementRequirementsAmong(
+                    advancementId,
+                    byId,
+                    earnedBadges,
+                    standings
+                )
+                found to standings
             }
         )
-    }.map { (catalog, progress, standings) ->
-        // Checked on every change, not only when the page opens, because which version
-        // the badge or rank uses depends on its progress.
-        val found = catalog.advancementRequirementsAmong(advancementId, progress, standings)
+    }.map { (found, standings) ->
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
             val numbersWithin = requirement.numbersWithin()
             RecordedRequirement(
                 advancementName = found.advancement.name,
                 requirement = found.item(requirement),
-                completedDate = if (requirement.completesFromRows) {
-                    requirement.completion(found.recorded, found.trackerEntries)?.date
+                // For one complete from its rows or from badges, the date it was completed on:
+                // for the former, the one the scout gave, if any.
+                completedDate = if (requirement.completesFromRows ||
+                    requirement.meritBadges != null
+                ) {
+                    requirement.completion(found.recorded, found.trackerEntries, found.earnedBadges)
+                        ?.date
                 } else {
                     recorded?.completedDate
                 },
@@ -109,6 +128,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 timeInRank = standings?.timeInRank(advancementId, requirement),
+                earnedBadges = requirement.meritBadges?.let {
+                    found.earnedBadges.badges.sortedWith(compareBy(badgeNameOrder()) { it.badge })
+                },
                 comment = recorded?.comment,
                 numbersWithin = numbersWithin,
                 hasRecorded = found.hasRecorded(numbersWithin)
@@ -124,6 +146,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val children: List<RequirementItem>,
         val tracker: TrackerItem?,
         val timeInRank: TimeInRank?,
+        val earnedBadges: List<EarnedBadge>?,
         /** The saved comment. */
         val comment: String?,
         /** The numbers of this requirement and of every one under it. */
@@ -156,6 +179,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             children = recorded.children,
             tracker = recorded.tracker,
             timeInRank = recorded.timeInRank,
+            earnedBadges = recorded.earnedBadges,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
             canClear = recorded.hasRecorded,
             saveFailure = saveFailure

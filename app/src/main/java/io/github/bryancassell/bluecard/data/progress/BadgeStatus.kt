@@ -11,14 +11,24 @@ enum class BadgeStatus {
 
 /**
  * The scout's status on this badge, from its recorded [progress] (null if it hasn't been
- * started). Completion is checked against the requirements version the badge is worked on.
+ * started), as [completion] decides.
  */
-fun MeritBadge.status(progress: BadgeProgressDetails?): BadgeStatus {
-    if (progress == null) return BadgeStatus.NotStarted
+fun MeritBadge.status(progress: BadgeProgressDetails?): BadgeStatus = when {
+    progress == null -> BadgeStatus.NotStarted
+    completion(progress) != null -> BadgeStatus.Completed
+    else -> BadgeStatus.InProgress
+}
+
+/**
+ * Whether the scout completed this badge, from its recorded [progress] (null if it hasn't been
+ * started), or null if they haven't. Completion is checked against the requirements version the
+ * badge is worked on.
+ */
+fun MeritBadge.completion(progress: BadgeProgressDetails?): Completion? {
+    if (progress == null) return null
     // Checked first, because a badge marked completed on a prior date needs no version.
-    if (progress.badge.completedOnPriorDate != null) return BadgeStatus.Completed
+    progress.badge.completedOnPriorDate?.let { return Completion(it) }
     // A badge on a version missing from the catalog can't be checked.
-    val version = requirementsVersionFor(progress) ?: return BadgeStatus.InProgress
-    val completed = progress.completion(version) != null
-    return if (completed) BadgeStatus.Completed else BadgeStatus.InProgress
+    val version = requirementsVersionFor(progress) ?: return null
+    return progress.completion(version)
 }

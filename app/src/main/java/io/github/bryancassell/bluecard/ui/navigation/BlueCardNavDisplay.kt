@@ -141,6 +141,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                             TrackerEntryDetail(key.advancementId, key.number, entryId, rowNumber)
                         )
                     },
+                    onOpenBadge = { navigate(BadgeDetail(it)) },
                     // Once the scout discards an unsaved comment.
                     onClose = { backStack.closeIfOnTop(key) }
                 )

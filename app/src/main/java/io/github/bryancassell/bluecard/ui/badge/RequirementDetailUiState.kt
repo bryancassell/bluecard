@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
@@ -19,8 +20,9 @@ sealed interface RequirementDetailUiState {
         /**
          * When the scout completed it, for a requirement they marked complete, or its own work,
          * for one with own work they marked complete ([RequirementItem.ownWork]). For one that's
-         * complete once its tracker's rows are ([RequirementItem.completesFromRows]), it's when
-         * it was completed. Null if there's no date or it isn't complete.
+         * complete once its tracker's rows are ([RequirementItem.completesFromRows]), or once the
+         * scout has completed enough merit badges ([RequirementItem.meritBadges]), it's when it
+         * was completed. Null if there's no date or it isn't complete.
          */
         val completedDate: LocalDate?,
         /**
@@ -37,6 +39,11 @@ sealed interface RequirementDetailUiState {
          * scout becomes eligible. Null for any other requirement.
          */
         val timeInRank: TimeInRank? = null,
+        /**
+         * For a rank's requirement that asks for merit badges, the badges the scout has
+         * completed, which count toward it, in name order. Null for any other requirement.
+         */
+        val earnedBadges: List<EarnedBadge>? = null,
         /** Whether the comment field differs from the saved comment, so it can be saved. */
         val commentChanged: Boolean,
         /**

@@ -22,27 +22,54 @@ object CatalogValidator {
         catalog.badges.map { it.id }.intersect(catalog.ranks.map { it.id }.toSet()).forEach {
             add("id \"$it\" is used by both a badge and a rank")
         }
-        catalog.badges.forEach { addAll(validateBadge(it)) }
+        val badgeRules = RequirementRules(
+            noMonthsInRank = "it isn't a rank's",
+            noMeritBadges = "it isn't a rank's",
+            badges = catalog.badges.size,
+            eagleRequiredBadges = catalog.badges.count { it.eagleRequired },
+            eagleSlots = catalog.badges.eagleSlots().size
+        )
+        catalog.badges.forEach { addAll(validateBadge(it, badgeRules)) }
         catalog.ranks.forEachIndexed { index, rank ->
-            // Time in rank counts from the rank below.
-            val noMonthsInRank = if (index == 0) "it's the lowest rank" else null
-            addAll(validateAdvancement("rank \"${rank.id}\"", rank, noMonthsInRank))
+            val rules = badgeRules.copy(
+                // Time in rank counts from the rank below.
+                noMonthsInRank = if (index == 0) "it's the lowest rank" else null,
+                noMeritBadges = null
+            )
+            addAll(validateAdvancement("rank \"${rank.id}\"", rank, rules))
         }
     }
 
-    private fun validateBadge(badge: MeritBadge): List<String> = buildList {
-        val where = "badge \"${badge.id}\""
-        addAll(validateAdvancement(where, badge, noMonthsInRank = "it isn't a rank's"))
-        if (badge.eagleGroup != null && !badge.eagleRequired) {
-            add("$where: has an eagleGroup but is not eagleRequired")
-        }
-    }
+    /** What a requirement can have that depends on the badge or rank it's part of. */
+    private data class RequirementRules(
+        /** Why it can't have monthsInRank, or null if it can. */
+        val noMonthsInRank: String?,
+        /** Why it can't have meritBadges, or null if it can. */
+        val noMeritBadges: String?,
+        /** How many badges the catalog has: the most meritBadges can ask for. */
+        val badges: Int,
+        /** How many Eagle-required badges the catalog has: the most meritBadges can ask for. */
+        val eagleRequiredBadges: Int,
+        /**
+         * The same, counting each "one of" group once ([eagleSlots]): the most meritBadges can ask
+         * for when its groups count once.
+         */
+        val eagleSlots: Int
+    )
 
-    /** [noMonthsInRank] is why its requirements can't have monthsInRank, or null if they can. */
+    private fun validateBadge(badge: MeritBadge, rules: RequirementRules): List<String> =
+        buildList {
+            val where = "badge \"${badge.id}\""
+            addAll(validateAdvancement(where, badge, rules))
+            if (badge.eagleGroup != null && !badge.eagleRequired) {
+                add("$where: has an eagleGroup but is not eagleRequired")
+            }
+        }
+
     private fun validateAdvancement(
         where: String,
         advancement: Advancement,
-        noMonthsInRank: String?
+        rules: RequirementRules
     ): List<String> = buildList {
         if (!idPattern.matches(advancement.id)) {
             add("$where: id must be lowercase words joined by '-'")
@@ -57,20 +84,14 @@ object CatalogValidator {
         versions.duplicatesBy { it.effectiveDate }
             .forEach { add("$where: more than one version effective $it") }
         versions.forEach { version ->
-            addAll(
-                validateVersion(
-                    "$where, version ${version.effectiveDate}",
-                    version,
-                    noMonthsInRank
-                )
-            )
+            addAll(validateVersion("$where, version ${version.effectiveDate}", version, rules))
         }
     }
 
     private fun validateVersion(
         where: String,
         version: RequirementsVersion,
-        noMonthsInRank: String?
+        rules: RequirementRules
     ): List<String> = buildList {
         if (version.requirements.isEmpty()) add("$where: has no requirements")
         val all = version.requirements.flatMap { it.withDescendants() }
@@ -78,16 +99,14 @@ object CatalogValidator {
             add("$where: requirement number \"$it\" is used more than once")
         }
         all.forEach {
-            addAll(
-                validateRequirement("$where, requirement \"${it.number}\"", it, noMonthsInRank)
-            )
+            addAll(validateRequirement("$where, requirement \"${it.number}\"", it, rules))
         }
     }
 
     private fun validateRequirement(
         where: String,
         requirement: Requirement,
-        noMonthsInRank: String?
+        rules: RequirementRules
     ): List<String> = buildList {
         if (requirement.number.isBlank()) add("$where: number is blank")
         if (requirement.summary.isBlank()) add("$where: summary is blank")
@@ -104,7 +123,37 @@ object CatalogValidator {
         requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }
         requirement.monthsInRank?.let {
             if (it < 1) add("$where: monthsInRank must be at least 1")
-            noMonthsInRank?.let { why -> add("$where: has monthsInRank but $why") }
+            rules.noMonthsInRank?.let { why -> add("$where: has monthsInRank but $why") }
+        }
+        requirement.meritBadges?.let { addAll(validateMeritBadges(where, requirement, it, rules)) }
+    }
+
+    private fun validateMeritBadges(
+        where: String,
+        requirement: Requirement,
+        needed: MeritBadgesNeeded,
+        rules: RequirementRules
+    ): List<String> = buildList {
+        rules.noMeritBadges?.let { why -> add("$where: has meritBadges but $why") }
+        // Its completion comes from badge progress alone.
+        if (requirement.children.isNotEmpty()) add("$where: has meritBadges and children")
+        if (requirement.tracker != null) add("$where: has meritBadges and a tracker")
+        if (needed.total < 1) add("$where: meritBadges total must be at least 1")
+        if (needed.total > rules.badges) {
+            add(
+                "$where: meritBadges asks for ${needed.total} badges, but the catalog has ${rules.badges}"
+            )
+        }
+        if (needed.eagleRequired !in 1..needed.total) {
+            add("$where: meritBadges eagleRequired must be between 1 and its total")
+        }
+        val most = if (needed.eagleGroupsCountOnce) rules.eagleSlots else rules.eagleRequiredBadges
+        if (needed.eagleRequired > most) {
+            val counted = if (needed.eagleGroupsCountOnce) ", counting each group once" else ""
+            add(
+                "$where: meritBadges asks for ${needed.eagleRequired} Eagle-required badges, " +
+                    "but the catalog has $most$counted"
+            )
         }
     }
 

@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -172,6 +173,27 @@ class RanksViewModelTest {
             ),
             ranks().map { it.status }
         )
+    }
+
+    @Test
+    fun badgesCompleted_countTowardARanksRequirementThatAsksForThem() = runTest {
+        val earn = Requirement("1", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 1))
+        catalogRepository.badges = catalogRepository.badges.map { it.copy(eagleRequired = true) }
+        catalogRepository.ranks = listOf(
+            rank("scout", "Scout").copy(
+                requirementVersions = listOf(
+                    RequirementsVersion(version, listOf(Requirement("2", "Second."), earn))
+                )
+            ),
+            rank("tenderfoot", "Tenderfoot")
+        )
+        complete("scout", "2")
+        startCollecting(viewModel)
+        assertEquals(RankStatus.InProgress, ranks()[0].status)
+
+        progressRepository.setCompletedOnPriorDate("camping", day, rankStart)
+
+        assertEquals(RankStatus.Earned, ranks()[0].status)
     }
 
     @Test

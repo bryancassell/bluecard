@@ -92,13 +92,45 @@ data class Requirement(
      * months as First Class, the months it asks for, or null. It shows when the scout becomes
      * eligible, but doesn't complete the requirement.
      */
-    val monthsInRank: Int? = null
+    val monthsInRank: Int? = null,
+    /**
+     * For a rank's requirement that asks for merit badges, such as Star 3's six, how many and
+     * how many of them Eagle-required, or null. It's complete once the scout has completed
+     * enough badges, so they don't mark it by hand.
+     */
+    val meritBadges: MeritBadgesNeeded? = null
 ) {
     /** How many of its children must be done. */
     val neededCount: Int get() = requiredCount ?: children.size
 
     /** How many of its children must be done when that's fewer than all of them, or null. */
     val choiceCount: Int? get() = requiredCount?.takeIf { it < children.size }
+}
+
+/**
+ * How many merit badges a rank's requirement asks the scout to have completed in all ([total]),
+ * and how many of them must be Eagle-required ([eagleRequired]).
+ */
+@Serializable
+data class MeritBadgesNeeded(
+    val total: Int,
+    val eagleRequired: Int,
+    /**
+     * Whether the badges of an Eagle "one of" group count once toward [eagleRequired]
+     * ([eagleSlots]), as for Eagle 3, which needs one of each group. Otherwise every
+     * Eagle-required badge counts, as for Star 3 and Life 3.
+     */
+    val eagleGroupsCountOnce: Boolean = false
+)
+
+/**
+ * The Eagle-required badges in this catalog, one list for each badge the scout needs: a badge
+ * required on its own, or the badges of a "one of" group ([MeritBadge.eagleGroup]), such as
+ * Cycling, Hiking and Swimming, any of which meets the requirement.
+ */
+fun List<MeritBadge>.eagleSlots(): List<List<MeritBadge>> {
+    val (grouped, single) = filter { it.eagleRequired }.partition { it.eagleGroup != null }
+    return single.map { listOf(it) } + grouped.groupBy { it.eagleGroup }.values
 }
 
 /** Repeated entries a requirement needs, such as a weekly exercise log. */

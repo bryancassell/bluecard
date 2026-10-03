@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import javax.inject.Inject
@@ -21,10 +22,11 @@ class RanksViewModel @Inject constructor(
     progressRepository: ProgressRepository
 ) : ViewModel() {
     val uiState: StateFlow<RanksUiState> = combine(
-        flow { emit(catalogRepository.getRanks()) },
+        flow { emit(catalogRepository.getRanks() to catalogRepository.getBadges()) },
         progressRepository.observeAllProgress()
-    ) { ranks, progress ->
-        val standings = ranks.standings(progress.associateBy { it.badge.badgeId })
+    ) { (ranks, badges), progress ->
+        val progressById = progress.associateBy { it.badge.badgeId }
+        val standings = ranks.standings(progressById, badges.earnedBadges(progressById))
         RanksUiState.Ready(
             standings.map { RankListItem(it.rank.id, it.rank.name, it.status, it.fractionDone) }
         )

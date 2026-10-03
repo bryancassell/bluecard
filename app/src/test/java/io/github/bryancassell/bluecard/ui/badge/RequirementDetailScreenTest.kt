@@ -6,8 +6,10 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -32,7 +34,12 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.Completion
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
+import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
@@ -60,6 +67,7 @@ class RequirementDetailScreenTest {
 
     private val openedRequirements = mutableListOf<String>()
     private val openedTrackerEntries = mutableListOf<Pair<Long?, Int?>>()
+    private val openedBadges = mutableListOf<String>()
     private val completedChanges = mutableListOf<Boolean>()
     private val dateChanges = mutableListOf<LocalDate?>()
     private var commentsSaved = 0
@@ -214,6 +222,7 @@ class RequirementDetailScreenTest {
                     onOpenTrackerEntry = { entryId, rowNumber ->
                         openedTrackerEntries += entryId to rowNumber
                     },
+                    onOpenBadge = { openedBadges += it },
                     onCompletedChange = { completedChanges += it },
                     onCompletedDateChange = { dateChanges += it },
                     today = { today },
@@ -797,6 +806,203 @@ class RequirementDetailScreenTest {
             .onNodeWithText("Eligible from Jan 1, 2027, 4 months after earning First Class")
             .assertIsDisplayed()
         completedCheckbox().assertIsOn()
+    }
+
+    private fun badge(id: String, name: String, eagleRequired: Boolean = false) = MeritBadge(
+        id = id,
+        name = name,
+        summary = "Our summary of $name.",
+        officialUrl = "https://www.scouting.org/merit-badges/$id/",
+        eagleRequired = eagleRequired,
+        requirementVersions = emptyList()
+    )
+
+    /** Six merit badges, four of them Eagle-required, the scout has [completed] of. */
+    private fun meritBadgeCredit(completed: Int, eagleRequired: Int) = MeritBadgeCredit(
+        MeritBadgesNeeded(total = 6, eagleRequired = 4),
+        completed,
+        eagleRequired,
+        if (completed >= 6 && eagleRequired >= 4) Completion(null) else null
+    )
+
+    /**
+     * A rank's requirement that asks for six merit badges, four of them Eagle-required, as Star 3
+     * does. The scout has four, three of them Eagle-required: Camping, with no date, Chess, and
+     * Hiking and Swimming, of the same "one of" group, which both count.
+     */
+    private val withMeritBadges = leaf.copy(
+        advancementName = "Star",
+        requirement = RequirementItem(
+            "3",
+            "Earn six merit badges.",
+            null,
+            false,
+            markedByHand = false,
+            partlyCompleted = true,
+            meritBadges = meritBadgeCredit(completed = 4, eagleRequired = 3)
+        ),
+        earnedBadges = listOf(
+            EarnedBadge(badge("camping", "Camping", true), null, countsOnceAsEagleRequired = true),
+            EarnedBadge(badge("chess", "Chess"), LocalDate.of(2026, 2, 1), false),
+            EarnedBadge(badge("hiking", "Hiking", true), LocalDate.of(2026, 3, 1), true),
+            EarnedBadge(badge("swimming", "Swimming", true), LocalDate.of(2026, 4, 15), false)
+        )
+    )
+
+    /** [withMeritBadges] with [credit] instead. */
+    private fun withMeritBadgeCredit(credit: MeritBadgeCredit) = withMeritBadges.copy(
+        requirement = withMeritBadges.requirement.copy(
+            completed = credit.completion != null,
+            meritBadges = credit
+        )
+    )
+
+    @Test
+    fun subRequirementWithMeritBadges_showsHowManyCount() {
+        val child = RequirementItem(
+            "2d",
+            "Earn six merit badges.",
+            null,
+            completed = false,
+            markedByHand = false,
+            meritBadges = meritBadgeCredit(completed = 1, eagleRequired = 0)
+        )
+        show(ready.copy(children = ready.children + child))
+
+        row("Earn six merit badges.")
+            .assert(hasText("1 of 6 merit badges"))
+            .assert(hasText("0 of 4 Eagle-required"))
+    }
+
+    @Test
+    fun meritBadges_showHowManyCountAndHowManyMoreAreNeeded_underTheirHeading() {
+        show(withMeritBadges)
+
+        val heading = composeTestRule.onNodeWithText("Merit badges").performScrollTo()
+            .assert(isHeading())
+        listOf(
+            "4 of 6 merit badges",
+            "3 of 4 Eagle-required",
+            "Needs 2 more merit badges, 1 of them Eagle-required"
+        ).forEach {
+            val line = composeTestRule.onNodeWithText(
+                it
+            ).performScrollTo().assert(isHeading().not())
+            assertTrue(
+                line.getUnclippedBoundsInRoot().top >= heading.getUnclippedBoundsInRoot().bottom
+            )
+            assertTrue(
+                line.getUnclippedBoundsInRoot().bottom <=
+                    row("Camping").getUnclippedBoundsInRoot().top
+            )
+        }
+    }
+
+    // They're complete once the scout has enough badges, not by hand.
+    @Test
+    fun meritBadges_haveNoCheckbox() {
+        show(withMeritBadges)
+
+        composeTestRule.onNode(isToggleable()).assertDoesNotExist()
+    }
+
+    @Test
+    fun meritBadges_listTheBadges_withTheirDates_andEachEagleRequiredOne() {
+        show(withMeritBadges)
+
+        row("Camping")
+            .assert(hasText("Completed"))
+            .assert(hasText("Eagle-required"))
+        row("Chess")
+            .assert(hasText("Completed on Feb 1, 2026"))
+            .assert(hasText("Eagle-required").not())
+        row("Hiking")
+            .assert(hasText("Completed on Mar 1, 2026"))
+            .assert(hasText("Eagle-required"))
+        row("Swimming")
+            .assert(hasText("Completed on Apr 15, 2026"))
+            .assert(hasText("Eagle-required"))
+    }
+
+    // As for Eagle 3: of Hiking and Swimming, only Hiking, completed first, counts.
+    @Test
+    fun meritBadgesWhoseGroupsCountOnce_labelOnlyTheFirstBadgeOfAGroup() {
+        show(withMeritBadgeCredit(MeritBadgeCredit(MeritBadgesNeeded(21, 13, true), 4, 2, null)))
+
+        row("Camping").assert(hasText("Eagle-required"))
+        row("Hiking").assert(hasText("Eagle-required"))
+        row("Swimming").assert(hasText("Eagle-required").not())
+    }
+
+    @Test
+    fun tappingABadge_opensIt() {
+        show(withMeritBadges)
+
+        row("Hiking").assertHasClickAction().performClick()
+
+        assertEquals(listOf("hiking"), openedBadges)
+    }
+
+    @Test
+    fun meritBadges_needed_whenAnyBadgeWillDo() {
+        show(withMeritBadgeCredit(meritBadgeCredit(completed = 4, eagleRequired = 4)))
+
+        composeTestRule.onNodeWithText("Needs 2 more merit badges").performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun meritBadges_needed_oneMore() {
+        show(withMeritBadgeCredit(meritBadgeCredit(completed = 5, eagleRequired = 4)))
+
+        composeTestRule.onNodeWithText("Needs 1 more merit badge").performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    // Seven badges, but only two Eagle-required.
+    @Test
+    fun meritBadges_needed_whenOnlyEagleRequiredBadgesWillDo() {
+        show(withMeritBadgeCredit(meritBadgeCredit(completed = 7, eagleRequired = 2)))
+
+        composeTestRule.onNodeWithText("7 of 6 merit badges").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Needs 2 more Eagle-required merit badges")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun meritBadges_withEnough_areCompleted_andNeedNoMore() {
+        show(withMeritBadgeCredit(meritBadgeCredit(completed = 6, eagleRequired = 4)))
+
+        // Under the summary, not on Camping's row, which has no date.
+        composeTestRule.onNode(hasText("Completed") and hasClickAction().not())
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Needs", substring = true).assertDoesNotExist()
+    }
+
+    private fun hasClickLabel(label: String) = SemanticsMatcher("click label is \"$label\"") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
+    }
+
+    @Test
+    fun meritBadges_withNoBadges_listNone() {
+        show(
+            withMeritBadgeCredit(meritBadgeCredit(completed = 0, eagleRequired = 0))
+                .copy(earnedBadges = emptyList())
+        )
+
+        composeTestRule.onNodeWithText("0 of 6 merit badges").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Needs 6 more merit badges, 4 of them Eagle-required")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNode(hasClickLabel("open badge")).assertDoesNotExist()
+    }
+
+    @Test
+    fun requirementWithoutMeritBadges_listsNoBadges() {
+        show(leaf)
+
+        composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 
     @Test

@@ -1,11 +1,16 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
+import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -273,5 +278,86 @@ class RequirementItemTest {
     @Test
     fun noTracker_hasNoCount() {
         assertNull(leaf.toItem(emptyMap(), emptyMap()).tracker)
+    }
+
+    // Two merit badges, one of them Eagle-required.
+    private val meritBadges = Requirement(
+        "3",
+        "Earn two merit badges.",
+        meritBadges = MeritBadgesNeeded(total = 2, eagleRequired = 1)
+    )
+
+    private fun earned(vararg eagleRequired: Boolean) = EarnedBadges(
+        eagleRequired.mapIndexed { index, counts ->
+            EarnedBadge(
+                MeritBadge(
+                    "badge-$index",
+                    "Badge $index",
+                    "S.",
+                    "https://www.scouting.org/",
+                    counts,
+                    null,
+                    emptyList()
+                ),
+                LocalDate.of(2026, 5, 1),
+                counts
+            )
+        }
+    )
+
+    @Test
+    fun meritBadges_arentMarkedByHand_andCarryTheBadgesCredit() {
+        val earned = earned(false)
+
+        assertEquals(
+            RequirementItem(
+                "3",
+                "Earn two merit badges.",
+                null,
+                false,
+                markedByHand = false,
+                partlyCompleted = true,
+                meritBadges = earned.toward(MeritBadgesNeeded(2, 1))
+            ),
+            meritBadges.toItem(emptyMap(), emptyMap(), earnedBadges = earned)
+        )
+    }
+
+    @Test
+    fun meritBadges_withNoBadges_haveNothingDone() {
+        val item = meritBadges.toItem(emptyMap(), emptyMap())
+
+        assertFalse(item.partlyCompleted)
+        assertEquals(0, item.meritBadges?.completed)
+    }
+
+    @Test
+    fun meritBadges_withEnoughBadges_areCompleted() {
+        val item = meritBadges.toItem(emptyMap(), emptyMap(), earnedBadges = earned(false, true))
+
+        assertTrue(item.completed)
+        assertFalse(item.partlyCompleted)
+    }
+
+    // A rank marked earned without recording its requirements.
+    @Test
+    fun meritBadges_onARankMarkedEarned_areNotRecorded_untilABadgeCounts() {
+        assertTrue(
+            meritBadges.toItem(emptyMap(), emptyMap(), advancementCompletedOnPriorDate = true)
+                .notRecorded
+        )
+        assertFalse(
+            meritBadges.toItem(
+                emptyMap(),
+                emptyMap(),
+                advancementCompletedOnPriorDate = true,
+                earnedBadges = earned(true)
+            ).notRecorded
+        )
+    }
+
+    @Test
+    fun otherRequirements_haveNoMeritBadgesCredit() {
+        assertNull(leaf.toItem(emptyMap(), emptyMap(), earnedBadges = earned(true)).meritBadges)
     }
 }

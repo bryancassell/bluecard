@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class BadgeStatusTest {
@@ -82,6 +83,32 @@ class BadgeStatusTest {
             BadgeStatus.Completed,
             badge.status(progress(LocalDate.of(2024, 1, 1), completedOnPriorDate = day))
         )
+    }
+
+    @Test
+    fun completion_isNull_untilEveryRequirementIsDone() {
+        assertNull(badge.completion(null))
+        assertNull(badge.completion(progress(newVersion, "1")))
+    }
+
+    @Test
+    fun completion_isOnTheDateTheLastRequirementWasDone() {
+        assertEquals(Completion(day), badge.completion(progress(newVersion, "1", "2")))
+    }
+
+    @Test
+    fun completion_whenMarkedCompletedOnPriorDate_isOnThatDate() {
+        val prior = LocalDate.of(2025, 6, 1)
+
+        assertEquals(
+            Completion(prior),
+            badge.completion(progress(LocalDate.of(2024, 1, 1), completedOnPriorDate = prior))
+        )
+    }
+
+    @Test
+    fun completion_onAVersionMissingFromCatalog_isNull() {
+        assertNull(badge.completion(progress(LocalDate.of(2024, 1, 1), "1", "2")))
     }
 
     private companion object {
