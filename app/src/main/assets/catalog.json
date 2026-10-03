@@ -153,7 +153,29 @@
             },
             {
               "number": "4",
-              "summary": "Pick three people of different racial, ethnic or religious backgrounds, and tell how each has contributed to our country."
+              "summary": "Pick three people of different racial, ethnic or religious backgrounds, and tell how each has contributed to our country.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "person",
+                    "label": "Person",
+                    "type": "text"
+                  },
+                  {
+                    "id": "background",
+                    "label": "Background",
+                    "type": "text"
+                  },
+                  {
+                    "id": "contribution",
+                    "label": "Their contribution",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "person",
+                "rowLabelPlural": "people",
+                "rowCount": 3
+              }
             },
             {
               "number": "5",
@@ -5646,7 +5668,7 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Describe traits shared by the dogs in each of the seven major dog groups."
+                  "summary": "For each of the seven major dog groups, describe what its dogs have in common."
                 },
                 {
                   "number": "1c",
@@ -7113,7 +7135,7 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Draw a plan of a well-equipped farm shop, and point out the safety devices and features it must have."
+                  "summary": "Sketch a plan for a well-equipped farm shop, marking the safety devices and features it's required to have."
                 },
                 {
                   "number": "1c",
@@ -8843,18 +8865,19 @@
                   "tracker": {
                     "columns": [
                       {
-                        "id": "date",
-                        "label": "Date",
+                        "id": "start",
+                        "label": "Week starting",
                         "type": "date"
                       },
                       {
-                        "id": "entry",
-                        "label": "Entry",
+                        "id": "entries",
+                        "label": "What you wrote about",
                         "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "entry",
-                    "rowLabelPlural": "entries"
+                    "rowLabel": "week",
+                    "rowLabelPlural": "weeks",
+                    "rowCount": 6
                   }
                 }
               ]
@@ -8869,7 +8892,7 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Name three kinds of physical genealogy resources, where to find them, and how they help you build a family tree.",
+                  "summary": "Pick three kinds of physical genealogy resources, and say where each is kept and what it adds to your family tree.",
                   "tracker": {
                     "columns": [
                       {
@@ -8884,7 +8907,7 @@
                       },
                       {
                         "id": "helps",
-                        "label": "How it helps you build a family tree",
+                        "label": "What it adds to your family tree",
                         "type": "multiline-text"
                       }
                     ],
@@ -8895,7 +8918,7 @@
                 },
                 {
                   "number": "4b",
-                  "summary": "Name three kinds of digital genealogy resources, where to find them, and how they help you build a family tree.",
+                  "summary": "Pick three kinds of digital genealogy resources, and say where each is found and what it adds to your family tree.",
                   "tracker": {
                     "columns": [
                       {
@@ -8910,7 +8933,7 @@
                       },
                       {
                         "id": "helps",
-                        "label": "How it helps you build a family tree",
+                        "label": "What it adds to your family tree",
                         "type": "multiline-text"
                       }
                     ],
@@ -8983,7 +9006,7 @@
                 },
                 {
                   "number": "8c",
-                  "summary": "Explain what record indexing is and its effect on genealogy."
+                  "summary": "Describe how records get indexed and how indexing has changed genealogy."
                 }
               ]
             },
@@ -15200,7 +15223,39 @@
                 },
                 {
                   "number": "1d",
-                  "summary": "For all 10 diseases in 1c's list, explain what kind each is (viral, bacterial, environmental or toxin), what might carry it, how to help stop exposure or spread, and its treatments."
+                  "summary": "For all 10 diseases in 1c's list, explain what kind each is (viral, bacterial, environmental or toxin), what might carry it, how to help stop exposure or spread, and its treatments.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "disease",
+                        "label": "Disease",
+                        "type": "text"
+                      },
+                      {
+                        "id": "type",
+                        "label": "Type",
+                        "type": "text"
+                      },
+                      {
+                        "id": "spread",
+                        "label": "How it spreads",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "prevention",
+                        "label": "How to prevent it",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "treatments",
+                        "label": "Treatments",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "disease",
+                    "rowLabelPlural": "diseases",
+                    "rowCount": 10
+                  }
                 }
               ]
             },
@@ -15218,7 +15273,7 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Discuss with your counselor which diseases and conditions in 1b have no immunization yet."
+                  "summary": "Discuss with your counselor which diseases and conditions in requirement 1 have no immunization yet."
                 }
               ]
             },
@@ -17033,7 +17088,7 @@
               "children": [
                 {
                   "number": "2a",
-                  "summary": "Discuss what usually causes injuries at home and how to prevent them."
+                  "summary": "Explain what usually causes injuries at home and how to prevent them."
                 },
                 {
                   "number": "2b",
@@ -17041,7 +17096,7 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Discuss what usually starts fires at home and how to prevent them."
+                  "summary": "Explain what usually starts fires at home and how to prevent them."
                 },
                 {
                   "number": "2d",
@@ -18307,7 +18362,7 @@
                     },
                     {
                       "number": "2A(4)",
-                      "summary": "Describe how to carry ice skates at the rink and when traveling."
+                      "summary": "Describe how to carry ice skates around the rink and on trips."
                     },
                     {
                       "number": "2A(5)",
@@ -18497,7 +18552,7 @@
                     },
                     {
                       "number": "2D(4)",
-                      "summary": "Explain the protective gear a skater needs, including a helmet, knee and elbow pads and wrist guards, and show how to wear it properly."
+                      "summary": "Explain why skaters need protective gear, including a helmet, knee and elbow pads and wrist guards, and show how to wear each properly."
                     },
                     {
                       "number": "2D(5)",
