@@ -408,7 +408,7 @@ both taps of a double tap can reach it.
 | `ProfileRepository` | Scout name and unit number; first-launch setup is done once they are saved | [Preferences DataStore](https://developer.android.com/topic/libraries/architecture/datastore) |
 | `CatalogRepository` | Merit badges, requirements, requirement versions (read-only) | JSON file in `assets/`, parsed with [kotlinx.serialization](https://kotlinlang.org/docs/serialization.html) |
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
-| `ReportRepository` | Building a badge's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
+| `ReportRepository` | Building a badge's or rank's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
 | `BackupRepository` | Export and import of all user data | JSON written to or read from a user-chosen file |
 | `DamagedProgressRepository` | Progress set aside because SQLite found the database damaged, and whether the scout has been told | Files in the app's no-backup directory |
 
@@ -532,7 +532,7 @@ io.github.bryancassell.bluecard
 | **Badges** | Browse all current badges and search by name or description, with a progress bar on each badge in progress. One screen: the list filters as the scout types. |
 | **Badge detail** | A progress bar while the badge is in progress, summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
 | **Ranks** | The seven ranks, Scout through Eagle Scout, in the order they're earned, in the same rows as Badges, each with its status and progress bar ([Ranks](#ranks)). |
-| **Rank detail** | Like Badge detail without the counselor or Eagle-required label: summary, official link, progress bar, how it's earned ("mark earned on a prior date", the rank above that counts it as earned, the date it was earned on, or the rank below it waits on), the requirement list, and Clear progress. No report yet ([#193](https://github.com/bryancassell/bluecard/issues/193)). |
+| **Rank detail** | Like Badge detail without the counselor or Eagle-required label: summary, official link, progress bar, how it's earned ("mark earned on a prior date", the rank above that counts it as earned, the date it was earned on, or the rank below it waits on), "Share report" and "Save report" once earned, the requirement list, and Clear progress. |
 | **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, a completion date for one completed by its fixed-row tracker, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
@@ -841,10 +841,11 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 
 ### PDF report
 
-Once a badge is complete, Badge detail offers "Share report" and "Save report".
-`PdfReportRepository` reads the profile, the catalog and the badge's progress
-(`data/report/BadgeReport.kt`) and lays out the pages with `StaticLayout`
-(`ReportLayout.kt`), in the strings' language and direction (see
+Once a badge is complete, Badge detail offers "Share report" and "Save report",
+and Rank detail does once a rank is earned. `PdfReportRepository` reads the
+profile, the catalog and the progress (`data/report/AdvancementReport.kt`) and
+lays out the pages with `StaticLayout` (`ReportLayout.kt`), in the strings'
+language and direction (see
 [Language and layout direction](#language-and-layout-direction)).
 `PdfDocumentWriter` draws them onto framework `PdfDocument` pages and writes the
 PDF. `androidx.pdf` is not used: it is for viewing PDFs, is still in beta, and
@@ -859,10 +860,16 @@ requires API 28 (BlueCard's minimum is 26).
   [system file picker](https://developer.android.com/training/data-storage/shared/documents-files)
   (`ActivityResultContracts.CreateDocument`). The save runs in the app's scope,
   as progress writes do (see [Writes](#writes)), so it finishes if the scout
-  leaves Badge detail.
+  leaves the page.
 
 Neither needs storage permissions. A report that can't be created or saved
 shows a snackbar, as a failed save does (`TaskRunner`).
+
+A rank's report reads every rank's and badge's progress, as Rank detail does,
+and asks `standings` for the rank's standing ([Ranks](#ranks)). So it says how
+the rank was earned as the page does, and a rank has a report exactly when the
+page offers one: once it's earned, even when it's counted as earned with a rank
+above it and isn't started.
 
 ### Clearing data
 

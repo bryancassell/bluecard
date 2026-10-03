@@ -12,6 +12,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
@@ -226,7 +228,7 @@ class PdfReportRepositoryTest {
 
         assertEquals(
             "a_b_c_d_e_f_g_h_i_j_k_l Search_Rescue.pdf",
-            reportFileName(translation, "Search/Rescue")
+            reportFileName(translation, ReportKind.MeritBadge, "Search/Rescue")
         )
     }
 
@@ -475,6 +477,106 @@ class PdfReportRepositoryTest {
         catalogRepository.badges = listOf(chess.copy(requirementVersions = emptyList()))
 
         assertThrows<IllegalStateException> { repository.createReportToShare("chess") }
+    }
+
+    // Scout asks for one requirement, and Tenderfoot for a merit badge.
+    private fun rank(id: String, name: String, requirement: Requirement) = Rank(
+        id = id,
+        name = name,
+        summary = "Our summary of $name.",
+        officialUrl = "https://www.scouting.org/$id.pdf",
+        requirementVersions = listOf(RequirementsVersion(newest, listOf(requirement)))
+    )
+
+    private val scout = rank("scout", "Scout", Requirement("1", "Learn the Scout Oath."))
+    private val tenderfoot = rank(
+        "tenderfoot",
+        "Tenderfoot",
+        Requirement("1", "Earn a merit badge.", meritBadges = MeritBadgesNeeded(1, 0))
+    )
+    private val rankStart = BadgeStart(newest, LocalDate.of(2026, 3, 1))
+
+    @Before
+    fun addRanks() {
+        catalogRepository.ranks = listOf(scout, tenderfoot)
+    }
+
+    @Test
+    fun createReportToShare_forAnEarnedRank_writesItsReport_namedAfterTheRank() = runTest {
+        progressRepository.markRequirementCompleted(
+            "scout",
+            "1",
+            LocalDate.of(2026, 4, 5),
+            rankStart
+        )
+
+        val report = repository.createReportToShare("scout")!!
+
+        assertEquals(pdfWriter.lastWritten, report.read())
+        val lines = pdfWriter.pages.single().flatMap { it.lines }
+        assertEquals(
+            listOf("Rank report", "Scout", "Scout: Alex Scout", "Unit: 123"),
+            lines.take(4)
+        )
+        assertTrue("Earned on Apr 5, 2026" in lines)
+        assertEquals("Scout rank report.pdf", report.displayName())
+    }
+
+    // Chess is complete on Apr 2, from completeChess.
+    @Test
+    fun rankReport_listsTheMeritBadgesTheScoutCompleted() = runTest {
+        progressRepository.markRequirementCompleted(
+            "scout",
+            "1",
+            LocalDate.of(2026, 4, 5),
+            rankStart
+        )
+        progressRepository.startBadge("tenderfoot", newest, LocalDate.of(2026, 3, 1))
+
+        repository.createReportToShare("tenderfoot")
+
+        val lines = pdfWriter.pages.single().flatMap { it.lines }
+        assertTrue("Earned on Apr 2, 2026" in lines)
+        assertTrue("1 of 1 merit badge" in lines)
+        assertTrue("Chess · Completed on Apr 2, 2026" in lines)
+    }
+
+    // As when the scout clears or unmarks the rank and taps Share or Save report before the
+    // page redraws: Tenderfoot is complete, but Scout isn't earned.
+    @Test
+    fun forAStartedRankNotEarned_makesNoReport() = runTest {
+        progressRepository.startBadge("tenderfoot", newest, LocalDate.of(2026, 3, 1))
+        val (document, file) = createdDocument()
+
+        assertNull(repository.createReportToShare("tenderfoot"))
+        repository.saveReport("tenderfoot", document)
+
+        assertNull(pdfWriter.lastWritten)
+        assertFalse(file.exists())
+    }
+
+    // It has a report, though it isn't started.
+    @Test
+    fun rankCountedAsEarnedWithARankAbove_hasAReport_thatSaysSo() = runTest {
+        progressRepository.setCompletedOnPriorDate(
+            "tenderfoot",
+            LocalDate.of(2025, 8, 1),
+            rankStart
+        )
+
+        repository.createReportToShare("scout")
+
+        val lines = pdfWriter.pages.single().flatMap { it.lines }
+        assertTrue("Counted as earned with Tenderfoot" in lines)
+        assertTrue("Not recorded" in lines)
+    }
+
+    @Test
+    fun rankReport_onVersionMissingFromCatalog_throwsIllegalState() = runTest {
+        progressRepository.setCompletedOnPriorDate("scout", LocalDate.of(2025, 8, 1), rankStart)
+        catalogRepository.ranks = listOf(scout.copy(requirementVersions = emptyList()))
+
+        assertThrows<IllegalStateException> { repository.createReportToShare("scout") }
     }
 
     // The app has only English strings, so a report on a Persian phone is in English, with

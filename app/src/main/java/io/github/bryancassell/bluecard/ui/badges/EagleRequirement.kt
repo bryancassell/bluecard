@@ -6,9 +6,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
 import io.github.bryancassell.bluecard.ui.stringsLocale
-import java.text.Collator
-import java.util.Locale
 
 /** How a badge counts toward Eagle Scout. */
 sealed interface EagleRequirement {
@@ -21,14 +20,6 @@ sealed interface EagleRequirement {
      */
     data class OneOf(val badgeNames: List<String>) : EagleRequirement
 }
-
-/**
- * The order badges are listed in. Badge names are English whatever the device language, so
- * they're sorted by English rules: an accented letter sorts with its base letter, and case
- * only breaks ties.
- */
-fun badgeNameOrder(): Comparator<MeritBadge> =
-    compareBy(Collator.getInstance(Locale.ENGLISH), MeritBadge::name)
 
 /** Maps each Eagle group in this catalog to the names of its badges, in [badgeNameOrder]. */
 fun List<MeritBadge>.eagleGroups(): Map<String, List<String>> {

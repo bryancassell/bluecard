@@ -302,7 +302,7 @@ emulator, and point `adb` at it if a phone is also connected.
    a backup. Afterwards, check `adb logcat -b crash -d` for crashes.
    - Onboarding, then browse and search the badges and open one.
    - Record a counselor, a requirement's completion, and a tracker entry.
-   - Create a badge's PDF report, then save it and share it.
+   - Create a badge's and a rank's PDF reports, then save and share them.
    - Edit the profile from Home.
    - Export, clear all data, then import the export.
    - Restore after process death: open a requirement page, press Home, run
