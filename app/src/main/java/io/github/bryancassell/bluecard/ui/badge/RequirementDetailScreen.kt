@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -35,6 +36,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.ScreenMessage
@@ -116,7 +118,7 @@ fun RequirementDetailScreen(
         // Ends the page above the keyboard, so the comment field can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                RequirementHeader(uiState.advancementName, uiState.requirement)
+                RequirementHeader(uiState.advancementName, uiState.requirement, uiState.timeInRank)
                 val requirement = uiState.requirement
                 // Its own work is stored as the requirement's own progress, like one marked by
                 // hand, so it has the same checkbox and date.
@@ -179,7 +181,11 @@ fun RequirementDetailScreen(
 }
 
 @Composable
-private fun RequirementHeader(advancementName: String, requirement: RequirementItem) {
+private fun RequirementHeader(
+    advancementName: String,
+    requirement: RequirementItem,
+    timeInRank: TimeInRank?
+) {
     Column(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -196,6 +202,13 @@ private fun RequirementHeader(advancementName: String, requirement: RequirementI
             modifier = Modifier.semantics { heading() }
         )
         Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
+        timeInRank?.let {
+            Text(
+                text = timeInRankText(it),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         // One the scout marks by hand has a "Completed" checkbox instead. One with own work
         // shows it here, as its checkbox is only for that work.
         if (!requirement.markedByHand && requirement.completed) {
@@ -214,6 +227,40 @@ private fun RequirementHeader(advancementName: String, requirement: RequirementI
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+/**
+ * When the scout becomes eligible for a requirement that asks for time in the rank below, or why
+ * that isn't known yet.
+ */
+@Composable
+private fun timeInRankText(timeInRank: TimeInRank): String {
+    val months = timeInRank.months
+    val rankBelow = timeInRank.rankBelow
+    val formatter = rememberCompletionDateFormatter()
+    return when (val eligibility = timeInRank.eligibility) {
+        is TimeInRank.Eligibility.From -> pluralStringResource(
+            R.plurals.requirement_time_in_rank_eligible_from,
+            months,
+            formatter.format(eligibility.date),
+            months,
+            rankBelow
+        )
+
+        TimeInRank.Eligibility.RankBelowHasNoDate -> pluralStringResource(
+            R.plurals.requirement_time_in_rank_no_date,
+            months,
+            months,
+            rankBelow
+        )
+
+        TimeInRank.Eligibility.RankBelowNotEarned -> pluralStringResource(
+            R.plurals.requirement_time_in_rank_not_earned,
+            months,
+            months,
+            rankBelow
+        )
     }
 }
 

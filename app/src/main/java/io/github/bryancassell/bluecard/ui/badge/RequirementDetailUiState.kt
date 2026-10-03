@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 
@@ -31,6 +32,11 @@ sealed interface RequirementDetailUiState {
         val children: List<RequirementItem>,
         /** Its tracker, or null if it has none. */
         val tracker: TrackerItem?,
+        /**
+         * For a rank's requirement that asks for time in the rank below, that time and when the
+         * scout becomes eligible. Null for any other requirement.
+         */
+        val timeInRank: TimeInRank? = null,
         /** Whether the comment field differs from the saved comment, so it can be saved. */
         val commentChanged: Boolean,
         /**

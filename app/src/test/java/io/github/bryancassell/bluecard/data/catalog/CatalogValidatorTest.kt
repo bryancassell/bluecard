@@ -71,7 +71,13 @@ class CatalogValidatorTest {
                 version.copy(effectiveDate = LocalDate.of(2025, 1, 1))
             )
         )
-        val secondClass = rank.copy(id = "second-class", name = "Second Class")
+        val secondClass = rank.copy(
+            id = "second-class",
+            name = "Second Class",
+            requirementVersions = listOf(
+                version.copy(requirements = listOf(requirement.copy(monthsInRank = 4)))
+            )
+        )
         assertEquals(
             emptyList<String>(),
             errorsFor(badge, eagleBadge, ranks = listOf(rank, secondClass))
@@ -250,6 +256,50 @@ class CatalogValidatorTest {
         assertEquals(
             listOf("$where: ownWork is blank"),
             errorsForRequirements(requirement.copy(ownWork = " ", children = children))
+        )
+    }
+
+    @Test
+    fun monthsInRank_lessThanOne() {
+        val active = requirement.copy(monthsInRank = 0)
+        val secondClass = rank.copy(
+            id = "second-class",
+            requirementVersions = listOf(version.copy(requirements = listOf(active)))
+        )
+        assertEquals(
+            listOf(
+                "rank \"second-class\", version 2026-01-01, requirement \"1\": " +
+                    "monthsInRank must be at least 1"
+            ),
+            errorsFor(badge, ranks = listOf(rank, secondClass))
+        )
+    }
+
+    @Test
+    fun monthsInRank_onTheLowestRank() {
+        val active = requirement.copy(
+            children = listOf(Requirement("1a", "Be active.", monthsInRank = 4))
+        )
+        val lowest = rank.copy(
+            requirementVersions = listOf(version.copy(requirements = listOf(active)))
+        )
+        assertEquals(
+            listOf(
+                "rank \"tenderfoot\", version 2026-01-01, requirement \"1a\": " +
+                    "has monthsInRank but it's the lowest rank"
+            ),
+            errorsFor(badge, ranks = listOf(lowest, rank.copy(id = "second-class")))
+        )
+    }
+
+    @Test
+    fun monthsInRank_onABadge() {
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\": " +
+                    "has monthsInRank but it isn't a rank's"
+            ),
+            errorsForRequirements(requirement.copy(monthsInRank = 4))
         )
     }
 

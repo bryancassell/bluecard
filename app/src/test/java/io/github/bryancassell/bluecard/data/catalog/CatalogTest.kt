@@ -63,7 +63,10 @@ class CatalogTest {
                 "officialUrl": "https://www.scouting.org/tenderfoot/",
                 "requirementVersions": [{
                   "effectiveDate": "2026-01-01",
-                  "requirements": [{ "number": "1a", "summary": "Pack for a campout." }]
+                  "requirements": [
+                    { "number": "1a", "summary": "Pack for a campout." },
+                    { "number": "2", "summary": "Be active in your troop.", "monthsInRank": 4 }
+                  ]
                 }]
               }]
             }
@@ -140,7 +143,12 @@ class CatalogTest {
                         RequirementsVersion(
                             effectiveDate = LocalDate.of(2026, 1, 1),
                             requirements = listOf(
-                                Requirement(number = "1a", summary = "Pack for a campout.")
+                                Requirement(number = "1a", summary = "Pack for a campout."),
+                                Requirement(
+                                    number = "2",
+                                    summary = "Be active in your troop.",
+                                    monthsInRank = 4
+                                )
                             )
                         )
                     )

@@ -684,6 +684,11 @@ works on.
   `standings` for a rank's status and bar, as they ask `BadgeStatus.kt` for a
   badge's, so they agree. A page that shows a rank reads every rank's progress
   (`observeAllProgress`), not only its own.
+- **Time in rank** (`Requirement.monthsInRank`, `data/progress/TimeInRank.kt`)
+  is counted from the date `standings` gives the rank below, so it agrees with
+  Rank detail about when that rank was earned. Like a tracker's total, it's
+  only a guide: completion doesn't read it, so the scout checks the requirement
+  off ([#193](https://github.com/bryancassell/bluecard/issues/193)).
 
 ## Data model
 

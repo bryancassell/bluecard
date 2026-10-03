@@ -14,11 +14,14 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
+import io.github.bryancassell.bluecard.data.progress.standings
+import io.github.bryancassell.bluecard.data.progress.timeInRank
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -72,18 +75,25 @@ class RequirementDetailViewModel @AssistedInject constructor(
      */
     private val recorded = flow {
         val catalog = catalogRepository.getAdvancements()
+        val ranks = catalog.filterIsInstance<Rank>()
         // A rank's page reads every rank's progress, because a rank above it can count it as
-        // earned. A badge's reads only its own.
-        val progress = if (catalog.find { it.id == advancementId } is Rank) {
+        // earned, and its time in rank counts from the rank below. A badge's reads only its own.
+        val isRank = ranks.any { it.id == advancementId }
+        val progress = if (isRank) {
             progressRepository.observeAllProgress()
         } else {
             progressRepository.observeProgress(advancementId).map { listOfNotNull(it) }
         }
-        emitAll(progress.map { all -> catalog to all.associateBy { it.badge.badgeId } })
-    }.map { (catalog, progress) ->
+        emitAll(
+            progress.map { all ->
+                val byId = all.associateBy { it.badge.badgeId }
+                Triple(catalog, byId, if (isRank) ranks.standings(byId) else null)
+            }
+        )
+    }.map { (catalog, progress, standings) ->
         // Checked on every change, not only when the page opens, because which version
         // the badge or rank uses depends on its progress.
-        val found = catalog.advancementRequirementsAmong(advancementId, progress)
+        val found = catalog.advancementRequirementsAmong(advancementId, progress, standings)
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
             val numbersWithin = requirement.numbersWithin()
@@ -98,6 +108,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 rowsCompletedDate = requirement.rowsCompletedDate(found.trackerEntries),
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
+                timeInRank = standings?.timeInRank(advancementId, requirement),
                 comment = recorded?.comment,
                 numbersWithin = numbersWithin,
                 hasRecorded = found.hasRecorded(numbersWithin)
@@ -112,6 +123,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val rowsCompletedDate: LocalDate?,
         val children: List<RequirementItem>,
         val tracker: TrackerItem?,
+        val timeInRank: TimeInRank?,
         /** The saved comment. */
         val comment: String?,
         /** The numbers of this requirement and of every one under it. */
@@ -143,6 +155,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             rowsCompletedDate = recorded.rowsCompletedDate,
             children = recorded.children,
             tracker = recorded.tracker,
+            timeInRank = recorded.timeInRank,
             commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
             canClear = recorded.hasRecorded,
             saveFailure = saveFailure

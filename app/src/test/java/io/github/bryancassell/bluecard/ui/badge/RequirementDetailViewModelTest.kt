@@ -20,6 +20,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.time.Duration
@@ -755,6 +756,39 @@ class RequirementDetailViewModelTest {
         progressRepository.removeCompletedOnPriorDate("second-class")
 
         assertFalse(viewModel.ready().requirement.notRecorded)
+    }
+
+    @Test
+    fun rankRequirementWithTimeInRank_showsWhenTheScoutIsEligible_onceTheRankBelowIsEarned() =
+        runTest {
+            val active = Requirement("1", "Be active for four months.", monthsInRank = 4)
+            val secondClass = tenderfoot.copy(
+                id = "second-class",
+                name = "Second Class",
+                requirementVersions = listOf(RequirementsVersion(newest, listOf(active)))
+            )
+            catalogRepository.ranks = listOf(tenderfoot, secondClass)
+            val viewModel = viewModel("1", advancementId = "second-class")
+            startCollecting(viewModel)
+            assertEquals(
+                TimeInRank(4, "Tenderfoot", TimeInRank.Eligibility.RankBelowNotEarned),
+                viewModel.ready().timeInRank
+            )
+
+            progressRepository.setCompletedOnPriorDate("tenderfoot", day, badgeStart)
+
+            assertEquals(
+                TimeInRank(4, "Tenderfoot", TimeInRank.Eligibility.From(day.plusMonths(4))),
+                viewModel.ready().timeInRank
+            )
+        }
+
+    @Test
+    fun requirementWithoutTimeInRank_hasNone() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().timeInRank)
     }
 
     @Test

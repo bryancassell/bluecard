@@ -18218,7 +18218,8 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "As a First Class Scout, take an active part in your troop for four months or more."
+              "summary": "As a First Class Scout, take an active part in your troop for four months or more.",
+              "monthsInRank": 4
             },
             {
               "number": "2",
@@ -18260,7 +18261,8 @@
             },
             {
               "number": "5",
-              "summary": "As a First Class Scout, serve four months in troop positions of responsibility (not assistant patrol leader), or do a Scoutmaster-approved leadership project."
+              "summary": "As a First Class Scout, serve four months in troop positions of responsibility (not assistant patrol leader), or do a Scoutmaster-approved leadership project.",
+              "monthsInRank": 4
             },
             {
               "number": "6a",
@@ -18293,7 +18295,8 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "As a Star Scout, take an active part in your troop for six months or more."
+              "summary": "As a Star Scout, take an active part in your troop for six months or more.",
+              "monthsInRank": 6
             },
             {
               "number": "2",
@@ -18345,7 +18348,8 @@
             },
             {
               "number": "5",
-              "summary": "As a Star Scout, serve six months in troop positions of responsibility (not assistant patrol leader), or do a Scoutmaster-approved leadership project."
+              "summary": "As a Star Scout, serve six months in troop positions of responsibility (not assistant patrol leader), or do a Scoutmaster-approved leadership project.",
+              "monthsInRank": 6
             },
             {
               "number": "6",
@@ -18409,7 +18413,8 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "As a Life Scout, take an active part in your troop for six months or more."
+              "summary": "As a Life Scout, take an active part in your troop for six months or more.",
+              "monthsInRank": 6
             },
             {
               "number": "2",
@@ -18421,7 +18426,8 @@
             },
             {
               "number": "4",
-              "summary": "As a Life Scout, serve six months in troop positions of responsibility, not assistant patrol leader or bugler. A leadership project can't replace it."
+              "summary": "As a Life Scout, serve six months in troop positions of responsibility, not assistant patrol leader or bugler. A leadership project can't replace it.",
+              "monthsInRank": 6
             },
             {
               "number": "5",

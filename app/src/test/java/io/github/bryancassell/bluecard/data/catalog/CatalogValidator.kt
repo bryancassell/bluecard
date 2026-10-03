@@ -23,62 +23,90 @@ object CatalogValidator {
             add("id \"$it\" is used by both a badge and a rank")
         }
         catalog.badges.forEach { addAll(validateBadge(it)) }
-        catalog.ranks.forEach { addAll(validateAdvancement("rank \"${it.id}\"", it)) }
+        catalog.ranks.forEachIndexed { index, rank ->
+            // Time in rank counts from the rank below.
+            val noMonthsInRank = if (index == 0) "it's the lowest rank" else null
+            addAll(validateAdvancement("rank \"${rank.id}\"", rank, noMonthsInRank))
+        }
     }
 
     private fun validateBadge(badge: MeritBadge): List<String> = buildList {
         val where = "badge \"${badge.id}\""
-        addAll(validateAdvancement(where, badge))
+        addAll(validateAdvancement(where, badge, noMonthsInRank = "it isn't a rank's"))
         if (badge.eagleGroup != null && !badge.eagleRequired) {
             add("$where: has an eagleGroup but is not eagleRequired")
         }
     }
 
-    private fun validateAdvancement(where: String, advancement: Advancement): List<String> =
-        buildList {
-            if (!idPattern.matches(advancement.id)) {
-                add("$where: id must be lowercase words joined by '-'")
-            }
-            if (advancement.name.isBlank()) add("$where: name is blank")
-            if (advancement.summary.isBlank()) add("$where: summary is blank")
-            if (!advancement.officialUrl.startsWith(OFFICIAL_URL_PREFIX)) {
-                add("$where: officialUrl must start with $OFFICIAL_URL_PREFIX")
-            }
-            val versions = advancement.requirementVersions
-            if (versions.isEmpty()) add("$where: has no requirement versions")
-            versions.duplicatesBy { it.effectiveDate }
-                .forEach { add("$where: more than one version effective $it") }
-            versions.forEach { version ->
-                addAll(validateVersion("$where, version ${version.effectiveDate}", version))
-            }
+    /** [noMonthsInRank] is why its requirements can't have monthsInRank, or null if they can. */
+    private fun validateAdvancement(
+        where: String,
+        advancement: Advancement,
+        noMonthsInRank: String?
+    ): List<String> = buildList {
+        if (!idPattern.matches(advancement.id)) {
+            add("$where: id must be lowercase words joined by '-'")
         }
+        if (advancement.name.isBlank()) add("$where: name is blank")
+        if (advancement.summary.isBlank()) add("$where: summary is blank")
+        if (!advancement.officialUrl.startsWith(OFFICIAL_URL_PREFIX)) {
+            add("$where: officialUrl must start with $OFFICIAL_URL_PREFIX")
+        }
+        val versions = advancement.requirementVersions
+        if (versions.isEmpty()) add("$where: has no requirement versions")
+        versions.duplicatesBy { it.effectiveDate }
+            .forEach { add("$where: more than one version effective $it") }
+        versions.forEach { version ->
+            addAll(
+                validateVersion(
+                    "$where, version ${version.effectiveDate}",
+                    version,
+                    noMonthsInRank
+                )
+            )
+        }
+    }
 
-    private fun validateVersion(where: String, version: RequirementsVersion): List<String> =
-        buildList {
-            if (version.requirements.isEmpty()) add("$where: has no requirements")
-            val all = version.requirements.flatMap { it.withDescendants() }
-            all.duplicatesBy { it.number }.forEach {
-                add("$where: requirement number \"$it\" is used more than once")
-            }
-            all.forEach { addAll(validateRequirement("$where, requirement \"${it.number}\"", it)) }
+    private fun validateVersion(
+        where: String,
+        version: RequirementsVersion,
+        noMonthsInRank: String?
+    ): List<String> = buildList {
+        if (version.requirements.isEmpty()) add("$where: has no requirements")
+        val all = version.requirements.flatMap { it.withDescendants() }
+        all.duplicatesBy { it.number }.forEach {
+            add("$where: requirement number \"$it\" is used more than once")
         }
+        all.forEach {
+            addAll(
+                validateRequirement("$where, requirement \"${it.number}\"", it, noMonthsInRank)
+            )
+        }
+    }
 
-    private fun validateRequirement(where: String, requirement: Requirement): List<String> =
-        buildList {
-            if (requirement.number.isBlank()) add("$where: number is blank")
-            if (requirement.summary.isBlank()) add("$where: summary is blank")
-            requirement.requiredCount?.let { count ->
-                val children = requirement.children.size
-                if (count !in 1..children) {
-                    add("$where: requiredCount is $count but it has $children children")
-                }
+    private fun validateRequirement(
+        where: String,
+        requirement: Requirement,
+        noMonthsInRank: String?
+    ): List<String> = buildList {
+        if (requirement.number.isBlank()) add("$where: number is blank")
+        if (requirement.summary.isBlank()) add("$where: summary is blank")
+        requirement.requiredCount?.let { count ->
+            val children = requirement.children.size
+            if (count !in 1..children) {
+                add("$where: requiredCount is $count but it has $children children")
             }
-            requirement.ownWork?.let { ownWork ->
-                if (requirement.children.isEmpty()) add("$where: ownWork but it has no children")
-                if (ownWork.isBlank()) add("$where: ownWork is blank")
-            }
-            requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }
         }
+        requirement.ownWork?.let { ownWork ->
+            if (requirement.children.isEmpty()) add("$where: ownWork but it has no children")
+            if (ownWork.isBlank()) add("$where: ownWork is blank")
+        }
+        requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }
+        requirement.monthsInRank?.let {
+            if (it < 1) add("$where: monthsInRank must be at least 1")
+            noMonthsInRank?.let { why -> add("$where: has monthsInRank but $why") }
+        }
+    }
 
     private fun validateTracker(where: String, tracker: TrackerDefinition): List<String> =
         buildList {

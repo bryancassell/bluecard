@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.paragraphDirection
@@ -181,6 +182,26 @@ class RequirementDetailScreenTest {
     private val completedLeaf = leaf.copy(
         requirement = leaf.requirement.copy(completed = true),
         completedDate = LocalDate.of(2026, 4, 15)
+    )
+
+    /**
+     * A rank's requirement that asks for four months in the rank below, which was earned on
+     * Sep 1, 2026.
+     */
+    private val withTimeInRank = leaf.copy(
+        advancementName = "Star",
+        requirement = RequirementItem(
+            "1",
+            "Be active for four months.",
+            null,
+            false,
+            markedByHand = true
+        ),
+        timeInRank = TimeInRank(
+            4,
+            "First Class",
+            TimeInRank.Eligibility.From(LocalDate.of(2027, 1, 1))
+        )
     )
 
     private fun show(uiState: RequirementDetailUiState) {
@@ -698,6 +719,91 @@ class RequirementDetailScreenTest {
         }
 
         assertEquals(listOf("2a", "2b", "2c"), openedRequirements)
+    }
+
+    @Test
+    fun timeInRank_saysWhenTheScoutIsEligible_underTheSummary_aboveTheCheckbox() {
+        show(withTimeInRank)
+
+        val checkbox = completedCheckbox()
+        val summary = composeTestRule.onNodeWithText("Be active for four months.")
+        val line = composeTestRule
+            .onNodeWithText("Eligible from Jan 1, 2027, 4 months after earning First Class")
+            .assertIsDisplayed()
+        assertTrue(
+            line.getUnclippedBoundsInRoot().top >= summary.getUnclippedBoundsInRoot().bottom
+        )
+        assertTrue(
+            line.getUnclippedBoundsInRoot().bottom <= checkbox.getUnclippedBoundsInRoot().top
+        )
+    }
+
+    @Test
+    fun timeInRank_whileTheRankBelowIsntEarned_saysSo() {
+        show(
+            withTimeInRank.copy(
+                timeInRank = TimeInRank(4, "First Class", TimeInRank.Eligibility.RankBelowNotEarned)
+            )
+        )
+
+        composeTestRule
+            .onNodeWithText("Eligible 4 months after earning First Class, which isn't earned yet")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun timeInRank_whileTheRankBelowHasNoDate_saysSo() {
+        show(
+            withTimeInRank.copy(
+                timeInRank = TimeInRank(4, "First Class", TimeInRank.Eligibility.RankBelowHasNoDate)
+            )
+        )
+
+        composeTestRule
+            .onNodeWithText(
+                "Eligible 4 months after earning First Class, which has no date it was earned on"
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun timeInRank_ofOneMonth_saysMonth() {
+        show(
+            withTimeInRank.copy(
+                timeInRank = TimeInRank(
+                    1,
+                    "First Class",
+                    TimeInRank.Eligibility.From(LocalDate.of(2026, 10, 1))
+                )
+            )
+        )
+
+        composeTestRule
+            .onNodeWithText("Eligible from Oct 1, 2026, 1 month after earning First Class")
+            .assertIsDisplayed()
+    }
+
+    // The date is only a guide, so it stays once the scout checks the requirement off.
+    @Test
+    fun timeInRank_ofACompletedRequirement_staysWithTheCheckedBox() {
+        show(
+            withTimeInRank.copy(
+                requirement = withTimeInRank.requirement.copy(completed = true),
+                completedDate = LocalDate.of(2026, 11, 2)
+            )
+        )
+
+        composeTestRule
+            .onNodeWithText("Eligible from Jan 1, 2027, 4 months after earning First Class")
+            .assertIsDisplayed()
+        completedCheckbox().assertIsOn()
+    }
+
+    @Test
+    fun requirementWithoutTimeInRank_saysNothingAboutEligibility() {
+        show(leaf)
+
+        composeTestRule.onNodeWithText("Eligible", substring = true).assertDoesNotExist()
     }
 
     @Test
