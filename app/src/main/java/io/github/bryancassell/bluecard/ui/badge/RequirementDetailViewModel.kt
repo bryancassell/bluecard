@@ -114,8 +114,13 @@ class RequirementDetailViewModel @AssistedInject constructor(
             RecordedRequirement(
                 advancementName = found.advancement.name,
                 requirement = found.item(requirement),
-                completedDate = if (requirement.completesFromRows) {
-                    requirement.completion(found.recorded, found.trackerEntries)?.date
+                // For one complete from its rows or from badges, the date it was completed on:
+                // for the former, the one the scout gave, if any.
+                completedDate = if (requirement.completesFromRows ||
+                    requirement.meritBadges != null
+                ) {
+                    requirement.completion(found.recorded, found.trackerEntries, found.earnedBadges)
+                        ?.date
                 } else {
                     recorded?.completedDate
                 },

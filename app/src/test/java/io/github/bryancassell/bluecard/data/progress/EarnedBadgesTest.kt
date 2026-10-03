@@ -252,7 +252,7 @@ class EarnedBadgesTest {
     }
 
     // Seven badges, but only two Eagle-required: two more Eagle-required badges complete it, and
-    // three of the five that aren't count toward the six.
+    // only two of the five that aren't count toward the six, with the two Eagle-required ones.
     @Test
     fun moreNeeded_isTheEagleRequiredShort_whenOnlyThoseWillDo() {
         val credit = MeritBadgeCredit(MeritBadgesNeeded(6, 4), 7, 2, null)

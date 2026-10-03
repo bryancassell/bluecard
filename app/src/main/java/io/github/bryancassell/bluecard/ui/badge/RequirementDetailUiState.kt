@@ -20,8 +20,9 @@ sealed interface RequirementDetailUiState {
         /**
          * When the scout completed it, for a requirement they marked complete, or its own work,
          * for one with own work they marked complete ([RequirementItem.ownWork]). For one that's
-         * complete once its tracker's rows are ([RequirementItem.completesFromRows]), it's when
-         * it was completed. Null if there's no date or it isn't complete.
+         * complete once its tracker's rows are ([RequirementItem.completesFromRows]), or once the
+         * scout has completed enough merit badges ([RequirementItem.meritBadges]), it's when it
+         * was completed. Null if there's no date or it isn't complete.
          */
         val completedDate: LocalDate?,
         /**

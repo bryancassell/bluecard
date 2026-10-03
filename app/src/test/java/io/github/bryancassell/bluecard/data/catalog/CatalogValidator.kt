@@ -25,6 +25,7 @@ object CatalogValidator {
         val badgeRules = RequirementRules(
             noMonthsInRank = "it isn't a rank's",
             noMeritBadges = "it isn't a rank's",
+            badges = catalog.badges.size,
             eagleRequiredBadges = catalog.badges.count { it.eagleRequired },
             eagleSlots = catalog.badges.eagleSlots().size
         )
@@ -45,6 +46,8 @@ object CatalogValidator {
         val noMonthsInRank: String?,
         /** Why it can't have meritBadges, or null if it can. */
         val noMeritBadges: String?,
+        /** How many badges the catalog has: the most meritBadges can ask for. */
+        val badges: Int,
         /** How many Eagle-required badges the catalog has: the most meritBadges can ask for. */
         val eagleRequiredBadges: Int,
         /**
@@ -136,6 +139,11 @@ object CatalogValidator {
         if (requirement.children.isNotEmpty()) add("$where: has meritBadges and children")
         if (requirement.tracker != null) add("$where: has meritBadges and a tracker")
         if (needed.total < 1) add("$where: meritBadges total must be at least 1")
+        if (needed.total > rules.badges) {
+            add(
+                "$where: meritBadges asks for ${needed.total} badges, but the catalog has ${rules.badges}"
+            )
+        }
         if (needed.eagleRequired !in 1..needed.total) {
             add("$where: meritBadges eagleRequired must be between 1 and its total")
         }

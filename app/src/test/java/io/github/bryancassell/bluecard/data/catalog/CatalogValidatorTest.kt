@@ -371,7 +371,10 @@ class CatalogValidatorTest {
     fun meritBadges_moreEagleRequiredThanTheCatalogHas() {
         val cycling = badge.copy(id = "cycling", eagleRequired = true, eagleGroup = "c-h-s")
         val hiking = badge.copy(id = "hiking", eagleRequired = true, eagleGroup = "c-h-s")
+
+        // First Aid, not Eagle-required here, so there are enough badges for a total of 3.
         fun errorsAskingFor(needed: MeritBadgesNeeded) = errorsFor(
+            badge,
             cycling,
             hiking,
             ranks = listOf(
@@ -396,6 +399,17 @@ class CatalogValidatorTest {
                     "counting each group once"
             ),
             errorsAskingFor(MeritBadgesNeeded(2, 2, eagleGroupsCountOnce = true))
+        )
+    }
+
+    @Test
+    fun meritBadges_moreThanTheCatalogHas() {
+        assertEquals(
+            listOf(
+                "rank \"tenderfoot\", version 2026-01-01, requirement \"1\": " +
+                    "meritBadges asks for 3 badges, but the catalog has 2"
+            ),
+            errorsForRankRequirement(requirement.copy(meritBadges = MeritBadgesNeeded(3, 1)))
         )
     }
 

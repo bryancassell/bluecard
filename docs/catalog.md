@@ -281,9 +281,10 @@ It checks that:
 - `monthsInRank` is at least 1, and only on a requirement of a rank other than
   the lowest;
 - `meritBadges` is only on a rank's requirement with no children or tracker,
-  its `total` is at least 1, and its `eagleRequired` is between 1 and its
-  `total`, and no more than the catalog's Eagle-required badges, counting each
-  `eagleGroup` once with `eagleGroupsCountOnce`;
+  its `total` is at least 1 and no more than the catalog's badges, and its
+  `eagleRequired` is between 1 and its `total`, and no more than the catalog's
+  Eagle-required badges, counting each `eagleGroup` once with
+  `eagleGroupsCountOnce`;
 - trackers have at least one column, unique column IDs, labels, row labels
   that start with a lowercase letter, and a `rowCount` of at least 1 when set;
 - a `total` is only on a `number` column of a log, needs at least 1, and has

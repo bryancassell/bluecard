@@ -801,10 +801,14 @@ class RequirementDetailViewModelTest {
         val archery = camping.copy(id = "archery", name = "Archery")
         catalogRepository.badges = listOf(eagleCamping, archery)
         catalogRepository.ranks = listOf(star)
+        // From a catalog where the scout checked it off, which no longer completes it.
+        progressRepository.markRequirementCompleted("star", "3", older, badgeStart)
         val viewModel = viewModel("3", advancementId = "star")
         startCollecting(viewModel)
         assertEquals(emptyList<EarnedBadge>(), viewModel.ready().earnedBadges)
         assertEquals(0, viewModel.ready().requirement.meritBadges?.completed)
+        assertFalse(viewModel.ready().requirement.completed)
+        assertNull(viewModel.ready().completedDate)
 
         progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
         progressRepository.setCompletedOnPriorDate("archery", today, badgeStart)
@@ -814,6 +818,8 @@ class RequirementDetailViewModelTest {
             viewModel.ready().earnedBadges
         )
         assertTrue(viewModel.ready().requirement.completed)
+        // Once there were two badges.
+        assertEquals(today, viewModel.ready().completedDate)
 
         progressRepository.clearBadge("camping")
 
