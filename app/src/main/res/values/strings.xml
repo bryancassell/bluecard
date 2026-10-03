@@ -334,4 +334,25 @@
         <item quantity="one">Do %1$d of %2$d (%3$d of %4$d complete)</item>
         <item quantity="other">Do %1$d of %2$d (%3$d of %4$d complete)</item>
     </plurals>
+    <!-- Under the summary on the page of a rank's requirement that asks for time in the rank
+         below, such as "Eligible from Jan 1, 2027, 4 months after earning First Class": the
+         date the scout becomes eligible to complete it, the months it asks for, and the rank
+         below. The quantity is the months. -->
+    <plurals name="requirement_time_in_rank_eligible_from">
+        <item quantity="one">Eligible from %1$s, %2$d month after earning %3$s</item>
+        <item quantity="other">Eligible from %1$s, %2$d months after earning %3$s</item>
+    </plurals>
+    <!-- The same while the rank below isn't earned, such as "Eligible 4 months after earning
+         First Class, which isn't earned yet". The quantity is the months. -->
+    <plurals name="requirement_time_in_rank_not_earned">
+        <item quantity="one">Eligible %1$d month after earning %2$s, which isn\'t earned yet</item>
+        <item quantity="other">Eligible %1$d months after earning %2$s, which isn\'t earned yet</item>
+    </plurals>
+    <!-- The same while the rank below is earned with no date, such as when it only counts as
+         earned with a rank above it: "Eligible 4 months after earning First Class, which has no
+         date it was earned on". The quantity is the months. -->
+    <plurals name="requirement_time_in_rank_no_date">
+        <item quantity="one">Eligible %1$d month after earning %2$s, which has no date it was earned on</item>
+        <item quantity="other">Eligible %1$d months after earning %2$s, which has no date it was earned on</item>
+    </plurals>
 </resources>

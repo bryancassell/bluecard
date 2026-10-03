@@ -149,6 +149,10 @@ format as a badge's.
   sentence, such as Eagle 3's "(a) First Aid, (b) Citizenship in the
   Community…", aren't requirements of their own: summarize them in the
   requirement's summary.
+- **Time in rank:** give `monthsInRank` to each requirement that asks for
+  months in the rank below: Star 1 and 5, Life 1 and 5, and Eagle 1 and 4.
+  That includes Star 5 and Life 5, though a leadership project can replace
+  their months in a position of responsibility.
 - **Where the PDF is out of date:** summarize the current rule and give the
   version the date it took effect.
   - **Eagle 3** counts 13 Eagle-required badges, not the PDF's 14, because
@@ -175,6 +179,7 @@ format as a badge's.
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
 | `tracker` | No | For requirements that need repeated entries, such as a weekly log. See below. |
 | `ownWork` | No | For a requirement with `children` that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are. Add it for any ask no child covers, including a closing step such as discussing what you did with your counselor. Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). The `summary` still describes the whole requirement. |
+| `monthsInRank` | No | Only on a rank's requirement that asks for months in the rank below, such as Star 1's four months as a First Class Scout: how many months, at least 1. Its page shows the date the scout becomes eligible, counted from when they earned the rank below, but the scout still checks it off. The lowest rank can't have it, since no rank is below it. See [Rank](#rank) for which requirements have it. |
 
 ### Tracker
 
@@ -264,6 +269,8 @@ It checks that:
 - every requirement has a number and a summary, `requiredCount` is between 1
   and the number of children, and `ownWork` is only set, and not blank, on a
   requirement with children;
+- `monthsInRank` is at least 1, and only on a requirement of a rank other than
+  the lowest;
 - trackers have at least one column, unique column IDs, labels, row labels
   that start with a lowercase letter, and a `rowCount` of at least 1 when set;
 - a `total` is only on a `number` column of a log, needs at least 1, and has

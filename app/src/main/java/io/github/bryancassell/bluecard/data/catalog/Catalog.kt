@@ -86,7 +86,13 @@ data class Requirement(
      * to take before them, or null if it asks for none. Only a requirement with children has
      * one.
      */
-    val ownWork: String? = null
+    val ownWork: String? = null,
+    /**
+     * For a rank's requirement that asks for time in the rank below, such as Star 1's four
+     * months as First Class, the months it asks for, or null. It shows when the scout becomes
+     * eligible, but doesn't complete the requirement.
+     */
+    val monthsInRank: Int? = null
 ) {
     /** How many of its children must be done. */
     val neededCount: Int get() = requiredCount ?: children.size
