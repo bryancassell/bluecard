@@ -144,7 +144,8 @@ private fun TrackerProgress(count: TrackerCount) {
     if (count.totals.isEmpty()) {
         Text(trackerCountLabel(count))
     } else {
-        count.totals.forEach { Text(trackerTotalLabel(it)) }
+        val format = rememberTotalFormat()
+        count.totals.forEach { Text(trackerTotalLabel(it, format)) }
     }
 }
 

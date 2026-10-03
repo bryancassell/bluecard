@@ -1,16 +1,17 @@
 package io.github.bryancassell.bluecard.text
 
 import androidx.core.text.BidiFormatter
-import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.time.format.DecimalStyle
 import java.time.format.FormatStyle
 import java.util.Locale
 
-// Formats shared by the screens and the PDF report, so both write dates and the scout's text
-// the same way. Compose code uses the functions that build on these: ui/badge/CompletionDate.kt's
-// rememberCompletionDateFormatter and ui/TypedText.kt's typedText.
+// Formats shared by the screens and the PDF report, so both write dates, totals and the scout's
+// text the same way. Compose code uses the functions that build on these:
+// ui/badge/CompletionDate.kt's rememberCompletionDateFormatter, ui/badge/TrackerSection.kt's
+// rememberTotalFormat and ui/TypedText.kt's typedText.
 
 /**
  * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
@@ -23,13 +24,17 @@ fun completionDateFormatter(locale: Locale): DateTimeFormatter =
         .withDecimalStyle(DecimalStyle.of(locale))
 
 /**
- * Writes [total], a tracker column's values added up, such as the 4.5 in "4.5 of 6 hours", in
- * [locale], the strings' locale ([stringsLocale]), with its digits and decimal separator, and as
- * many decimal places as the values have.
+ * Formats a tracker column's values added up, such as the 4.5 in "4.5 of 6 hours", in [locale],
+ * the strings' locale ([stringsLocale]), with its digits and decimal separator. It has up to two
+ * decimal places, rounded down, so a total never reads as reaching the amount before it does.
+ * Its digits aren't grouped, like the amount after it, and because the scout can type a comma
+ * as a decimal separator.
  */
-fun formatTotal(total: BigDecimal, locale: Locale): String = NumberFormat.getNumberInstance(locale)
-    .apply { maximumFractionDigits = maxOf(total.scale(), 0) }
-    .format(total)
+fun totalFormat(locale: Locale): NumberFormat = NumberFormat.getNumberInstance(locale).apply {
+    maximumFractionDigits = 2
+    roundingMode = RoundingMode.DOWN
+    isGroupingUsed = false
+}
 
 /**
  * [text] the scout typed, to show on its own or inside one of the app's strings, which are in

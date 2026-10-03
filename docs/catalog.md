@@ -183,8 +183,9 @@ In a log, a `number` column whose values add up to an amount the requirement
 asks for, such as hours of service, can have a `total`. A tracker with a
 `rowCount` can't have one: its requirement shows how many rows are filled in,
 which complete it. The requirement then shows the
-column's values added up against it, such as "4.5 of 6 hours", in place of how
-many rows there are. It's only a guide: the scout still checks the requirement
+column's values added up against it, such as "4.5 of 6 hours": on its row in
+place of how many rows there are, and on its page and in the report under that
+count. It's only a guide: the scout still checks the requirement
 off, as for any log.
 
 | Field | Required | Meaning |

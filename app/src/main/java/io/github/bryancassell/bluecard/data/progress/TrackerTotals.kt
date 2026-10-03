@@ -9,7 +9,7 @@ import java.math.BigDecimal
  * The decimal separators a number in a tracker row can have, whichever the scout's keyboard
  * offers: a point, a comma, and the Arabic decimal separator that Persian keyboards offer.
  */
-val DECIMAL_SEPARATORS = setOf('.', ',', '٫')
+val DECIMAL_SEPARATORS = setOf('.', ',', '\u066B')
 
 /**
  * A number column's stored value as a number, or null if it isn't one. The scout types digits of
@@ -17,14 +17,13 @@ val DECIMAL_SEPARATORS = setOf('.', ',', '٫')
  * typed, but a value imported from a backup can be any text.
  */
 fun storedNumber(text: String): BigDecimal? {
-    if (text.count { it in DECIMAL_SEPARATORS } > 1) return null
     val digits = text.map { char ->
         when (char) {
             in DECIMAL_SEPARATORS -> '.'
             else -> char.digitToIntOrNull()?.digitToChar() ?: return null
         }
     }
-    // Null for a lone separator, which has no digit.
+    // Null for a lone separator, which has no digit, or for more than one.
     return String(digits.toCharArray()).toBigDecimalOrNull()
 }
 

@@ -19,7 +19,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.text.completionDateFormatter
-import io.github.bryancassell.bluecard.text.formatTotal
+import io.github.bryancassell.bluecard.text.totalFormat
 import io.github.bryancassell.bluecard.text.typedText
 import java.time.LocalDate
 
@@ -101,8 +101,9 @@ private class ReportComposer(private val resources: Resources) {
     private val rightToLeft =
         TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
-    // Dates are written as on screen.
+    // Dates and totals are written as on screen.
     private val dateFormatter = completionDateFormatter(locale)
+    private val totalFormat = totalFormat(locale)
 
     // Between a tracker row's values, as on screen.
     private val valueSeparator = resources.getString(R.string.tracker_value_separator)
@@ -174,7 +175,7 @@ private class ReportComposer(private val resources: Resources) {
         val totals = tracker.totals.map { (sum, total) ->
             string(
                 R.string.tracker_total,
-                formatTotal(sum, locale),
+                totalFormat.format(sum),
                 total.needed,
                 total.neededLabel
             )
