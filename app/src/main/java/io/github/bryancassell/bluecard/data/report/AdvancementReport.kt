@@ -5,7 +5,6 @@ import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.Completion
@@ -22,6 +21,7 @@ import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.numberedRows
+import io.github.bryancassell.bluecard.data.progress.readsAsMarked
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import io.github.bryancassell.bluecard.data.progress.totals
 import java.time.LocalDate
@@ -41,8 +41,8 @@ data class AdvancementReport(
     /** Effective date of the requirements version it's worked on. */
     val requirementsVersion: LocalDate,
     /**
-     * When the badge was completed or the rank earned, or null if it isn't, or for a rank
-     * counted as earned with a rank above it ([earnedWith]).
+     * When the badge was completed or the rank earned, or null for a badge that isn't complete
+     * or a rank counted as earned with a rank above it ([earnedWith]).
      */
     val completion: Completion?,
     /**
@@ -106,7 +106,7 @@ data class ReportTrackerRow(
 /**
  * A rank's requirement that asks for merit badges ([Requirement.meritBadges]): how far the
  * scout's completed badges go toward it, and every badge they've completed, in name order
- * ([badgeNameOrder]), as its page lists them.
+ * ([EarnedBadges.inNameOrder]), as its page lists them.
  */
 data class ReportMeritBadges(val credit: MeritBadgeCredit, val badges: List<EarnedBadge>)
 
@@ -139,10 +139,11 @@ fun MeritBadge.report(
 }
 
 /**
- * The report on this standing's rank for [profile], from their [progress] on it, null if it
- * isn't started, and the badges they've completed ([earnedBadges]), which its requirements that
- * ask for merit badges count. Created on [createdDate]. Null if the catalog doesn't have the
- * version the rank was started on, which only a catalog edited during development can cause.
+ * The report on this standing's rank, which must be earned, for [profile], from their
+ * [progress] on it, null if it isn't started, and the badges they've completed
+ * ([earnedBadges]), which its requirements that ask for merit badges count. Created on
+ * [createdDate]. Null if the catalog doesn't have the version the rank was started on, which
+ * only a catalog edited during development can cause.
  *
  * A rank counted as earned with a rank above it reads as marked itself, as on its page, so a
  * requirement not recorded for it is [ReportRequirement.notRecorded].
@@ -153,23 +154,19 @@ fun RankStanding.report(
     earnedBadges: EarnedBadges,
     createdDate: LocalDate
 ): AdvancementReport? {
+    require(status == RankStatus.Earned) { "${rank.id} isn't earned, so it has no report" }
     val version = rank.requirementsVersionFor(progress) ?: return null
     return AdvancementReport(
         profile = profile,
         kind = ReportKind.Rank,
         name = rank.name,
         requirementsVersion = version.effectiveDate,
-        completion = if (status == RankStatus.Earned && earnedWith == null) {
-            Completion(earnedOn)
-        } else {
-            null
-        },
+        completion = if (earnedWith == null) Completion(earnedOn) else null,
         earnedWith = earnedWith?.name,
         counselor = null,
         requirements = version.reportRequirements(
             progress,
-            completedOnPriorDate = progress?.badge?.completedOnPriorDate != null ||
-                earnedWith != null,
+            completedOnPriorDate = readsAsMarked(progress),
             earnedBadges = earnedBadges
         ),
         createdDate = createdDate
@@ -189,7 +186,7 @@ private fun RequirementsVersion.reportRequirements(
 ): List<ReportRequirement> {
     val recorded = progress?.requirements.orEmpty().associateBy { it.requirementNumber }
     val entries = progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber }
-    val badgesByName = earnedBadges.badges.sortedWith(compareBy(badgeNameOrder()) { it.badge })
+    val badgesByName = earnedBadges.inNameOrder()
 
     // [partOfHasEnough] is whether a requirement this one is part of, at any depth, has enough
     // complete sub-requirements ([hasEnoughChildren]). Its states are worked out in the same

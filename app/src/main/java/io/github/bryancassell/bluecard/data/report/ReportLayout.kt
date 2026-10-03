@@ -215,9 +215,10 @@ private class ReportComposer(private val resources: Resources) {
 
     /**
      * A rank's requirement that asks for merit badges: how many the scout has completed, and how
-     * many of them count as Eagle-required, as on the requirement's page, then each badge with
-     * the date it was completed on, and "Eagle-required" if it counts as Eagle-required toward
-     * the requirement.
+     * many of them count as Eagle-required, worded as on the requirement's page, then each badge
+     * with the date it was completed on, and "Eagle-required" if it counts as Eagle-required
+     * toward the requirement. The page's line on how many more are needed is left out: the
+     * report is on an earned rank, as a record rather than a plan.
      */
     private fun add(meritBadges: ReportMeritBadges, indent: Int) {
         val credit = meritBadges.credit
@@ -288,14 +289,13 @@ private class ReportComposer(private val resources: Resources) {
         else -> string(R.string.report_completed_on, date(completion.date))
     }
 
-    /** Whether a rank is earned, and when, as its page says. */
+    /** How the rank was earned, and when, as its page says. */
     private fun earnedText(report: AdvancementReport): String {
-        val completion = report.completion
+        val earnedOn = report.completion?.date
         return when {
             report.earnedWith != null -> string(R.string.report_earned_with, report.earnedWith)
-            completion == null -> string(R.string.report_not_earned)
-            completion.date == null -> string(R.string.report_earned)
-            else -> string(R.string.report_earned_on, date(completion.date))
+            earnedOn == null -> string(R.string.report_earned)
+            else -> string(R.string.report_earned_on, date(earnedOn))
         }
     }
 

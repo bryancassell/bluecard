@@ -230,7 +230,6 @@ class ReportLayoutTest {
         fun status(report: AdvancementReport) = layOut(report).single().lines[4]
 
         assertEquals("Earned", status(rankReport(completion = Completion(null))))
-        assertEquals("Not earned", status(rankReport(completion = null)))
         assertEquals(
             "Counted as earned with Life",
             status(rankReport(completion = null, earnedWith = "Life"))

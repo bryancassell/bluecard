@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -48,15 +49,17 @@ class RankDetailViewModel @AssistedInject constructor(
     private val report = ReportTasks(viewModelScope, reportRepository, rankId)
     private val saves = TaskRunner(viewModelScope)
 
-    val uiState: StateFlow<RankDetailUiState> = combine(
+    /**
+     * The page as worked out from the catalog and progress, before [uiState] adds the date just
+     * unmarked and the report.
+     */
+    private val rank: Flow<RankDetailUiState> = combine(
         flow { emit(catalogRepository.getRanks() to catalogRepository.getBadges()) },
         // Every rank's, because the ranks below and above this one decide whether it's earned,
         // and every badge's, which its requirements that ask for merit badges count.
         progressRepository.observeAllProgress(),
-        report.reportToShare,
-        report.failure,
         saves.failure
-    ) { (ranks, badges), allProgress, reportToShare, reportFailure, saveFailure ->
+    ) { (ranks, badges), allProgress, saveFailure ->
         val progressById = allProgress.associateBy { it.badge.badgeId }
         val earnedBadges = badges.earnedBadges(progressById)
         val standings = ranks.standings(progressById, earnedBadges)
@@ -90,14 +93,27 @@ class RankDetailViewModel @AssistedInject constructor(
                     }
                     .map { (now) -> now.rank.name }
             },
-            reportToShare = reportToShare,
-            reportFailure = reportFailure,
             saveFailure = saveFailure
         )
-    }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
-        // Combined after, so remembering a date doesn't work the rank's standing out again.
-        val unmarkedDate = dateFromEpochDay(unmarked)
-        if (state is RankDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
+    }
+
+    val uiState: StateFlow<RankDetailUiState> = combine(
+        rank,
+        savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null),
+        report.reportToShare,
+        report.failure
+    ) { state, unmarked, reportToShare, reportFailure ->
+        // Combined after, so remembering a date or sharing a report doesn't work the rank's
+        // standing out again.
+        if (state is RankDetailUiState.Ready) {
+            state.copy(
+                unmarkedDate = dateFromEpochDay(unmarked),
+                reportToShare = reportToShare,
+                reportFailure = reportFailure
+            )
+        } else {
+            state
+        }
     }.catchLoadFailure(RankDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RankDetailUiState.Loading)
 
@@ -131,10 +147,9 @@ class RankDetailViewModel @AssistedInject constructor(
      * so the share sheet doesn't open with what was cleared.
      */
     fun clear() {
-        report.drop()
         // Forgotten even if the clear fails, as the scout meant it to be.
         savedStateHandle[UNMARKED_DATE] = null
-        report.lastSave = saves.launch { progressRepository.clearBadge(rankId) }
+        report.follow(saves.launch { progressRepository.clearBadge(rankId) })
     }
 
     /**
@@ -144,14 +159,16 @@ class RankDetailViewModel @AssistedInject constructor(
      * recorded.
      */
     fun markEarned(date: LocalDate) {
-        report.lastSave = saves.launch {
-            progressRepository.setCompletedOnPriorDate(
-                rankId,
-                date,
-                catalogRepository.getRanks().badgeStart(rankId, today())
-            )
-            savedStateHandle[UNMARKED_DATE] = null
-        }
+        report.follow(
+            saves.launch {
+                progressRepository.setCompletedOnPriorDate(
+                    rankId,
+                    date,
+                    catalogRepository.getRanks().badgeStart(rankId, today())
+                )
+                savedStateHandle[UNMARKED_DATE] = null
+            }
+        )
     }
 
     /**
@@ -162,7 +179,7 @@ class RankDetailViewModel @AssistedInject constructor(
     fun unmarkEarned() {
         val shown = (uiState.value as? RankDetailUiState.Ready)?.earnedOnPriorDate
         if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
-        report.lastSave = saves.launch { progressRepository.removeCompletedOnPriorDate(rankId) }
+        report.follow(saves.launch { progressRepository.removeCompletedOnPriorDate(rankId) })
     }
 
     /** The scout has been told that a save failed ([failure]). */

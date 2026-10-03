@@ -32,12 +32,8 @@ class ReportTasks(
     /** The report being created to share, if there is one. */
     private var creating: Job? = null
 
-    /**
-     * The page's latest save. A report asked for after it waits for it, so it reads what the
-     * scout last did: not the badge or rank from before a clear, as it could in the moment
-     * before the page redraws without its report buttons, or from before its date was changed.
-     */
-    var lastSave: Job? = null
+    /** The page's latest save that changes what the report shows ([follow]). */
+    private var lastSave: Job? = null
 
     /**
      * Creates the report to share ([reportToShare]). Does nothing while one is being created, so
@@ -72,11 +68,16 @@ class ReportTasks(
     }
 
     /**
-     * Drops a report still being created to share, or ready to share, so the share sheet doesn't
-     * open with what the scout just cleared.
+     * Has the report follow [save], a change to what it shows, such as a clear or a new date. A
+     * report still being created to share, or ready to share, is dropped, so the share sheet
+     * doesn't open with what the scout just changed. A report asked for after it waits for it, so
+     * it reads what the scout last did: not the badge or rank from before a clear, as it could in
+     * the moment before the page redraws without its report buttons, or from before its date was
+     * changed.
      */
-    fun drop() {
+    fun follow(save: Job) {
         creating?.cancel()
         toShare.value = null
+        lastSave = save
     }
 }

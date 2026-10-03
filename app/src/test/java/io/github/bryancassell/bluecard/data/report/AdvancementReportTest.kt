@@ -464,16 +464,20 @@ class AdvancementReportTest {
         assertEquals(Completion(null), report.completion)
     }
 
-    // Its requirements are complete, but Scout isn't earned.
+    // Its requirements are complete, but Scout isn't earned. Rank detail offers no report then.
     @Test
-    fun rankNotEarned_isNotCompleted() {
-        val report = rankReport(
-            "second-class",
-            rankProgress("second-class", listOf(rankCompleted("second-class", "1", null)))
-        )!!
+    fun rankNotEarned_hasNoReport() {
+        val error = runCatching {
+            rankReport(
+                "second-class",
+                rankProgress("second-class", listOf(rankCompleted("second-class", "1", null)))
+            )
+        }.exceptionOrNull()
 
-        assertNull(report.completion)
-        assertNull(report.earnedWith)
+        assertTrue(
+            "Expected IllegalArgumentException, got $error",
+            error is IllegalArgumentException
+        )
     }
 
     @Test
@@ -503,13 +507,15 @@ class AdvancementReportTest {
         assertTrue(report.requirements.single().notRecorded)
     }
 
+    // Marked earned, so it has a report.
     @Test
     fun rankRequirements_haveWhatTheScoutRecorded() {
         val report = rankReport(
             "tenderfoot",
             rankProgress(
                 "tenderfoot",
-                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 1), "At camp."))
+                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 1), "At camp.")),
+                markedOn = LocalDate.of(2026, 6, 1)
             )
         )!!
 
@@ -519,14 +525,21 @@ class AdvancementReportTest {
         assertNull(pitch.meritBadges)
     }
 
+    // Scout is earned, and the badges complete Tenderfoot, so it's earned on their date.
     @Test
     fun requirementThatAsksForMeritBadges_listsEveryBadgeCompleted_inNameOrder() {
         val report = rankReport(
             "tenderfoot",
+            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate.of(2026, 4, 1)))),
+            rankProgress(
+                "tenderfoot",
+                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 2)))
+            ),
             badgeCompleted("chess", LocalDate.of(2026, 5, 1)),
             badgeCompleted("camping", LocalDate.of(2026, 5, 3))
         )!!
 
+        assertEquals(Completion(LocalDate.of(2026, 5, 3)), report.completion)
         val badgesNeeded = report.requirement("2")
         assertEquals(Completion(LocalDate.of(2026, 5, 3)), badgesNeeded.completion)
         val meritBadges = badgesNeeded.meritBadges!!
@@ -540,7 +553,10 @@ class AdvancementReportTest {
 
     @Test
     fun requirementThatAsksForMeritBadges_withNoneCompleted_listsNone() {
-        val report = rankReport("tenderfoot")!!
+        val report = rankReport(
+            "tenderfoot",
+            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1))
+        )!!
 
         val badgesNeeded = report.requirement("2")
         assertNull(badgesNeeded.completion)
@@ -561,10 +577,16 @@ class AdvancementReportTest {
         assertTrue(report.requirement("1").notRecorded)
     }
 
+    // Marked earned, which needs no version.
     @Test
     fun rankOnVersionMissingFromCatalog_hasNoReport() {
         val progress = BadgeProgressDetails(
-            BadgeProgress("scout", LocalDate.of(2020, 1, 1), started),
+            BadgeProgress(
+                "scout",
+                LocalDate.of(2020, 1, 1),
+                started,
+                completedOnPriorDate = LocalDate.of(2025, 8, 1)
+            ),
             emptyList(),
             emptyList()
         )

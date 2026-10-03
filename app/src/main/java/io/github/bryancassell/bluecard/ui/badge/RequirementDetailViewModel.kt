@@ -13,7 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
-import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.EarnedBadges
@@ -128,9 +127,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 children = requirement.children.map(found::item),
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 timeInRank = standings?.timeInRank(advancementId, requirement),
-                earnedBadges = requirement.meritBadges?.let {
-                    found.earnedBadges.badges.sortedWith(compareBy(badgeNameOrder()) { it.badge })
-                },
+                earnedBadges = requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
                 comment = recorded?.comment,
                 numbersWithin = numbersWithin,
                 hasRecorded = found.hasRecorded(numbersWithin)

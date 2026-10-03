@@ -45,6 +45,14 @@ data class RankStanding(
 )
 
 /**
+ * Whether the rank reads as marked earned on a prior date, from the scout's [progress] on it:
+ * it's marked itself, or it counts as earned with a rank above it that is ([earnedWith]). Its
+ * requirements still needed with no part done then read "Not recorded", as on a marked badge.
+ */
+fun RankStanding.readsAsMarked(progress: BadgeProgressDetails?): Boolean =
+    progress?.badge?.completedOnPriorDate != null || earnedWith != null
+
+/**
  * The scout's standing on each of these ranks, which are in the order they're earned, from
  * their [progress] keyed by badge or rank ID and the badges they've completed ([earnedBadges]),
  * which a rank's requirements that ask for merit badges count. Every screen that shows a rank's

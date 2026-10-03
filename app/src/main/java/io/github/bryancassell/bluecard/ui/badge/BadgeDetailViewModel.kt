@@ -112,10 +112,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * created to share is dropped, so the share sheet doesn't open with what was cleared.
      */
     fun clear() {
-        report.drop()
         // Forgotten even if the clear fails, as the scout meant it to be.
         savedStateHandle[UNMARKED_DATE] = null
-        report.lastSave = saves.launch { progressRepository.clearBadge(badgeId) }
+        report.follow(saves.launch { progressRepository.clearBadge(badgeId) })
     }
 
     /**
@@ -124,14 +123,16 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * isn't started is started, as when anything is recorded.
      */
     fun markCompleted(date: LocalDate) {
-        report.lastSave = saves.launch {
-            progressRepository.setCompletedOnPriorDate(
-                badgeId,
-                date,
-                catalogRepository.getBadges().badgeStart(badgeId, today())
-            )
-            savedStateHandle[UNMARKED_DATE] = null
-        }
+        report.follow(
+            saves.launch {
+                progressRepository.setCompletedOnPriorDate(
+                    badgeId,
+                    date,
+                    catalogRepository.getBadges().badgeStart(badgeId, today())
+                )
+                savedStateHandle[UNMARKED_DATE] = null
+            }
+        )
     }
 
     /**
@@ -141,7 +142,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     fun unmarkCompleted() {
         val shown = (uiState.value as? BadgeDetailUiState.Ready)?.completedOnPriorDate
         if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
-        report.lastSave = saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) }
+        report.follow(saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) })
     }
 
     /** The scout has been told that a save failed ([failure]). */

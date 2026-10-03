@@ -657,6 +657,23 @@ class RankDetailViewModelTest {
         assertNull(progressRepository.observeProgress("tenderfoot").first())
     }
 
+    // Otherwise the share sheet would open with a report of the date from before.
+    @Test
+    fun changingTheDate_whileAReportIsBeingCreatedToShare_dropsIt() = runTest {
+        progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+        val writing = CompletableDeferred<Unit>()
+        reportRepository.writing = writing
+        viewModel.shareReport()
+
+        viewModel.markEarned(older)
+        writing.complete(Unit)
+
+        assertNull(viewModel.ready().reportToShare)
+        assertEquals(older, viewModel.ready().earnedOnPriorDate)
+    }
+
     private val saved = CompletableDeferred<Unit>()
 
     /**

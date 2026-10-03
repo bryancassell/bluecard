@@ -80,6 +80,20 @@ class EarnedBadgesTest {
 
     // Ranks' progress is read with the badges'. A rank isn't in the badge catalog, so it's left
     // out.
+    // As a rank's requirement that asks for merit badges lists them.
+    @Test
+    fun inNameOrder_sortsTheBadgesByName() {
+        val earned = EarnedBadges(
+            listOf(
+                EarnedBadge(swimming, may, countsOnceAsEagleRequired = true),
+                EarnedBadge(chess, march, countsOnceAsEagleRequired = false),
+                EarnedBadge(camping, null, countsOnceAsEagleRequired = true)
+            )
+        )
+
+        assertEquals(listOf(camping, chess, swimming), earned.inNameOrder().map { it.badge })
+    }
+
     @Test
     fun earnedBadges_leaveOutProgressNotInTheCatalog() {
         val rank = completed(badge("star"), march)
