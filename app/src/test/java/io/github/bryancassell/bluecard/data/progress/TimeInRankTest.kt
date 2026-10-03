@@ -53,7 +53,7 @@ class TimeInRankTest {
     }
 
     @Test
-    fun rankBelowNotEarned_hasNoDate() {
+    fun rankBelowNotEarned_saysSo() {
         assertEquals(
             TimeInRank(4, "First Class", TimeInRank.Eligibility.RankBelowNotEarned),
             starTimeInRank(progress(firstClass, "1"))

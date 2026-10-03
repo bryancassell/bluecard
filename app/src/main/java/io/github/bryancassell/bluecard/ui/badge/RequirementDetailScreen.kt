@@ -238,30 +238,20 @@ private fun RequirementHeader(
 private fun timeInRankText(timeInRank: TimeInRank): String {
     val months = timeInRank.months
     val rankBelow = timeInRank.rankBelow
-    val formatter = rememberCompletionDateFormatter()
-    return when (val eligibility = timeInRank.eligibility) {
-        is TimeInRank.Eligibility.From -> pluralStringResource(
+    val withoutDate = when (val eligibility = timeInRank.eligibility) {
+        is TimeInRank.Eligibility.From -> return pluralStringResource(
             R.plurals.requirement_time_in_rank_eligible_from,
             months,
-            formatter.format(eligibility.date),
+            rememberCompletionDateFormatter().format(eligibility.date),
             months,
             rankBelow
         )
 
-        TimeInRank.Eligibility.RankBelowHasNoDate -> pluralStringResource(
-            R.plurals.requirement_time_in_rank_no_date,
-            months,
-            months,
-            rankBelow
-        )
+        TimeInRank.Eligibility.RankBelowHasNoDate -> R.plurals.requirement_time_in_rank_no_date
 
-        TimeInRank.Eligibility.RankBelowNotEarned -> pluralStringResource(
-            R.plurals.requirement_time_in_rank_not_earned,
-            months,
-            months,
-            rankBelow
-        )
+        TimeInRank.Eligibility.RankBelowNotEarned -> R.plurals.requirement_time_in_rank_not_earned
     }
+    return pluralStringResource(withoutDate, months, months, rankBelow)
 }
 
 /**

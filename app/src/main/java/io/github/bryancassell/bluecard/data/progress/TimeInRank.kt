@@ -34,8 +34,10 @@ data class TimeInRank(
  */
 fun List<RankStanding>.timeInRank(rankId: String, requirement: Requirement): TimeInRank? {
     val months = requirement.monthsInRank ?: return null
+    val index = indexOfFirst { it.rank.id == rankId }
     // The catalog gives none to the lowest rank, which has none below it.
-    val below = getOrNull(indexOfFirst { it.rank.id == rankId } - 1) ?: return null
+    if (index < 1) return null
+    val below = this[index - 1]
     val earnedOn = below.earnedOn
     return TimeInRank(
         months = months,
