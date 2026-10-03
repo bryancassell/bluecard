@@ -11,12 +11,15 @@ import android.os.LocaleList
 import androidx.core.text.BidiFormatter
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -40,6 +43,7 @@ class ReportLayoutTest {
     private val place = TrackerColumn("place", "Place", TrackerColumnType.TEXT)
     private val log = TrackerDefinition(listOf(date, nights, place), "trip", "trips")
     private val weeks = TrackerDefinition(listOf(place), "week", "weeks", rowCount = 3)
+    private val twentyNights = ColumnTotal(20, "night", "nights")
 
     private fun requirement(
         number: String,
@@ -105,7 +109,8 @@ class ReportLayoutTest {
                     listOf(
                         ReportTrackerRow(1, listOf(nights to "2", place to "Bear Mountain")),
                         ReportTrackerRow(2, listOf(date to "2026-05-02", place to "Lake Sebago"))
-                    )
+                    ),
+                    listOf(TrackerTotal(BigDecimal("2"), twentyNights))
                 )
             ),
             requirement(
@@ -160,6 +165,7 @@ class ReportLayoutTest {
                 "3. Keep a camping log.",
                 "Completed on Jun 3, 2026",
                 "2 trips",
+                "2 of 20 nights",
                 "Trip 1",
                 "Nights: 2 · Place: Bear Mountain",
                 "Trip 2",
@@ -256,6 +262,7 @@ class ReportLayoutTest {
 
         assertTrue("Created on Sep ٣٠, ٢٠٢٦" in lines)
         assertTrue("Do ٢ of ٣" in lines)
+        assertTrue("٢ of ٢٠ nights" in lines)
         assertEquals("Page ١ of ١", lines.last())
     }
 
@@ -305,40 +312,56 @@ class ReportLayoutTest {
 
     /**
      * A report whose "Requirements" heading is further down the first page the longer [nameWords]
-     * is, and whose [count] requirements each have a log with a few rows.
+     * is, and whose [count] requirements each have a log with a few rows, and their nights added
+     * up if [withTotals].
      */
-    private fun reportWithTrackers(nameWords: Int, count: Int) = report(
+    private fun reportWithTrackers(nameWords: Int, count: Int, withTotals: Boolean) = report(
         profile = Profile("Alex" + " Scout".repeat(nameWords), "123"),
         requirements = (1..count).map { number ->
             requirement(
                 "$number",
                 "Requirement number $number of the badge.",
                 Completion(LocalDate.of(2026, 4, 1)),
-                tracker = ReportTracker(
-                    log,
-                    (1..(number + nameWords) % 4).map {
-                        ReportTrackerRow(it, listOf(nights to "$it", place to "Lake $it"))
-                    }
-                )
+                tracker = (1..(number + nameWords) % 4).let { rows ->
+                    ReportTracker(
+                        log,
+                        rows.map {
+                            ReportTrackerRow(it, listOf(nights to "$it", place to "Lake $it"))
+                        },
+                        if (withTotals) {
+                            listOf(TrackerTotal(rows.sum().toBigDecimal(), twentyNights))
+                        } else {
+                            emptyList()
+                        }
+                    )
+                }
             )
         }
     )
 
-    // A heading followed by a requirement's title, or a tracker's count followed by its first
-    // row's title, is a run of paragraphs that each go with the next. Catches one left at the
-    // foot of a page wherever the page breaks fall. A count with no rows after it ends its
-    // requirement, so it can be.
+    // A heading followed by a requirement's title, or a tracker's count followed by its totals
+    // and its first row's title, is a run of paragraphs that each go with the next. Catches one
+    // left at the foot of a page wherever the page breaks fall. A count or total with nothing
+    // after it ends its requirement, so it can be.
     @Test
     fun headingsTitlesAndTrackerCounts_areNeverLastOnAPage() {
-        val kept = Regex("""Counselor|Requirements|.* of the badge\.|[1-9]\d* trips?|Trip \d+""")
-        for (nameWords in 0..240 step 3) {
-            val pages = layOut(reportWithTrackers(nameWords, count = 12))
-            pages.dropLast(1).forEachIndexed { index, page ->
-                val last = page.lines.dropLast(1).last()
-                assertFalse(
-                    "Page ${index + 1}, $nameWords words in the name, ends with \"$last\"",
-                    kept.matches(last)
-                )
+        val always = """Counselor|Requirements|.* of the badge\.|Trip \d+"""
+        // With totals after it, a count with no rows isn't last in its requirement.
+        val kept = mapOf(
+            false to Regex("""$always|[1-9]\d* trips?"""),
+            true to Regex("""$always|\d+ trips?|[1-9]\d* of 20 nights""")
+        )
+        for ((withTotals, keptLines) in kept) {
+            for (nameWords in 0..240 step 3) {
+                val pages = layOut(reportWithTrackers(nameWords, count = 12, withTotals))
+                pages.dropLast(1).forEachIndexed { index, page ->
+                    val last = page.lines.dropLast(1).last()
+                    assertFalse(
+                        "Page ${index + 1}, $nameWords words in the name, totals $withTotals, " +
+                            "ends with \"$last\"",
+                        keptLines.matches(last)
+                    )
+                }
             }
         }
     }

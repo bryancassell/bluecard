@@ -38,7 +38,12 @@ class CatalogTest {
                         "tracker": {
                           "columns": [
                             { "id": "date", "label": "Date", "type": "date" },
-                            { "id": "miles", "label": "Miles", "type": "number" },
+                            {
+                              "id": "miles",
+                              "label": "Miles",
+                              "type": "number",
+                              "total": { "needed": 20, "label": "mile", "labelPlural": "miles" }
+                            },
                             { "id": "notes", "label": "Notes", "type": "text" },
                             { "id": "sights", "label": "What you saw", "type": "multiline-text" }
                           ],
@@ -99,7 +104,8 @@ class CatalogTest {
                                                     TrackerColumn(
                                                         "miles",
                                                         "Miles",
-                                                        TrackerColumnType.NUMBER
+                                                        TrackerColumnType.NUMBER,
+                                                        ColumnTotal(20, "mile", "miles")
                                                     ),
                                                     TrackerColumn(
                                                         "notes",

@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -22,9 +23,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.text.totalFormat
 import io.github.bryancassell.bluecard.ui.lineBreaksAsSpaces
+import io.github.bryancassell.bluecard.ui.stringsLocale
 import io.github.bryancassell.bluecard.ui.typedText
+import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 
 // A requirement's tracker, on its page and in its row.
@@ -37,9 +42,26 @@ fun trackerCountLabel(count: TrackerCount): String = if (count.rowCount == null)
     stringResource(R.string.tracker_count_of, count.recorded, count.rowCount, count.rows)
 }
 
+/** Formats a tracker's totals in the strings' language ([totalFormat]). */
+@Composable
+fun rememberTotalFormat(): NumberFormat {
+    val locale = stringsLocale()
+    return remember(locale) { totalFormat(locale) }
+}
+
+/** "4.5 of 6 hours", with the total written by [format] ([rememberTotalFormat]). */
+@Composable
+fun trackerTotalLabel(total: TrackerTotal, format: NumberFormat): String = stringResource(
+    R.string.tracker_total,
+    format.format(total.sum),
+    total.total.needed,
+    total.total.neededLabel
+)
+
 /**
- * A requirement's tracker on its page: a heading that says how much is filled in, then its
- * rows, each of which opens to fill in or change. A log has a button to add a row.
+ * A requirement's tracker on its page: a heading that says how much is filled in, its columns'
+ * totals, if it has any, then its rows, each of which opens to fill in or change. A log has a
+ * button to add a row.
  */
 @Composable
 fun TrackerSection(
@@ -57,6 +79,18 @@ fun TrackerSection(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .semantics { heading() }
         )
+        if (tracker.count.totals.isNotEmpty()) {
+            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+                val format = rememberTotalFormat()
+                tracker.count.totals.forEach {
+                    Text(
+                        text = trackerTotalLabel(it, format),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
         val formatter = rememberCompletionDateFormatter()
         tracker.rows.forEach { row ->
             TrackerRowItem(tracker.rowTitle, row, formatter, onOpen = { onOpenRow(row) })

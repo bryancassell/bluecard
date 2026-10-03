@@ -27,7 +27,7 @@ data class RequirementItem(
      * checkbox for that work instead.
      */
     val markedByHand: Boolean,
-    /** How much of its tracker is filled in, or null if it has none. */
+    /** How much of its tracker is filled in, with its totals, or null if it has none. */
     val tracker: TrackerCount? = null,
     /**
      * Whether it's no longer needed: it isn't complete, but a requirement it's part of has enough

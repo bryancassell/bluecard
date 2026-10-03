@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.ui.text.input.KeyboardType
+import io.github.bryancassell.bluecard.data.progress.DECIMAL_SEPARATORS
 
 /**
  * Keeps a text field to a number: digits, with at most one decimal separator, whichever the
@@ -13,13 +14,10 @@ import androidx.compose.ui.text.input.KeyboardType
 object NumberInput : InputTransformation {
     override val keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
 
-    /** A point, a comma, and the Arabic decimal separator that Persian keyboards offer. */
-    private val separators = setOf('.', ',', '\u066B')
-
     override fun TextFieldBuffer.transformInput() {
         val text = asCharSequence()
-        if (text.count { it in separators } > 1 ||
-            text.any { !it.isDigit() && it !in separators }
+        if (text.count { it in DECIMAL_SEPARATORS } > 1 ||
+            text.any { !it.isDigit() && it !in DECIMAL_SEPARATORS }
         ) {
             revertAllChanges()
         }

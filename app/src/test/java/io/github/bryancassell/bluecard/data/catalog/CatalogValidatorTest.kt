@@ -47,7 +47,18 @@ class CatalogValidatorTest {
             requiredCount = 1,
             ownWork = "Explain why.",
             children = listOf(
-                Requirement(number = "2a", summary = "A."),
+                Requirement(
+                    number = "2a",
+                    summary = "A.",
+                    tracker = tracker.copy(
+                        columns = tracker.columns + TrackerColumn(
+                            "hours",
+                            "Hours",
+                            TrackerColumnType.NUMBER,
+                            ColumnTotal(1, "hour", "hours")
+                        )
+                    )
+                ),
                 Requirement(number = "2b", summary = "B.", tracker = tracker.copy(rowCount = 3))
             )
         )
@@ -265,6 +276,51 @@ class CatalogValidatorTest {
                 "$where: rowLabelPlural \"Hikes\" must start with a lowercase letter"
             ),
             errorsForRequirements(requirement.copy(tracker = bad))
+        )
+    }
+
+    @Test
+    fun malformedTotal() {
+        val total = ColumnTotal(needed = 0, label = "", labelPlural = "Hours")
+        val bad = tracker.copy(
+            columns = listOf(
+                TrackerColumn("hours", "Hours", TrackerColumnType.NUMBER, total),
+                TrackerColumn(
+                    "notes",
+                    "Notes",
+                    TrackerColumnType.TEXT,
+                    ColumnTotal(1, "hour", "hours")
+                )
+            )
+        )
+        val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker"
+        assertEquals(
+            listOf(
+                "$where, column \"hours\": total needed must be at least 1",
+                "$where, column \"hours\": total label is blank",
+                "$where, column \"hours\": total labelPlural \"Hours\" must start with a lowercase letter",
+                "$where, column \"notes\": has a total but isn't a number"
+            ),
+            errorsForRequirements(requirement.copy(tracker = bad))
+        )
+    }
+
+    @Test
+    fun totalOnATrackerWithAFixedNumberOfRows() {
+        val hours =
+            TrackerColumn(
+                "hours",
+                "Hours",
+                TrackerColumnType.NUMBER,
+                ColumnTotal(6, "hour", "hours")
+            )
+        val weeks = tracker.copy(columns = listOf(hours), rowCount = 12)
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "has a total but a fixed number of rows"
+            ),
+            errorsForRequirements(requirement.copy(tracker = weeks))
         )
     }
 
