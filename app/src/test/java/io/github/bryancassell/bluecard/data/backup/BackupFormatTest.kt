@@ -412,12 +412,76 @@ class BackupFormatTest {
         val withLineBreaks = backup.copy(
             progress = listOf(
                 camping.copy(
+                    requirements = listOf(
+                        RequirementProgress("camping", "7", comment = "Hiked.\r\nSaw a hawk.")
+                    ),
                     trackerEntries = listOf(TrackerEntry(0, "camping", "9a", null, values))
                 )
             )
         )
 
         assertEquals(valid(withLineBreaks), decode(encodeBackup(withLineBreaks)))
+    }
+
+    // As each single-line field replaces them, so the text stored is the text the scout sees.
+    @Test
+    fun decodeBackup_replacesLineBreaksInSingleLineText_withSpaces() {
+        fun withCounselorAndEntries(counselor: Counselor, note: String, place: String) =
+            camping.copy(
+                badge = camping.badge.copy(counselor = counselor),
+                trackerEntries = listOf(
+                    TrackerEntry(0, "camping", "9a", null, mapOf("note" to note)),
+                    TrackerEntry(0, "camping", "9b", 1, mapOf("place" to place))
+                )
+            )
+        val withLineBreaks = Backup(
+            Profile("Alex\nScout", "Troop\r\n12"),
+            listOf(
+                withCounselorAndEntries(
+                    Counselor("Pat\nLee", "555\n123-4567", "pat\u2028lee@example.com"),
+                    note = "Rain\nall night\u0085",
+                    place = "Pine\nLake"
+                )
+            )
+        )
+        val withSpaces = Backup(
+            Profile("Alex Scout", "Troop 12"),
+            listOf(
+                withCounselorAndEntries(
+                    Counselor("Pat Lee", "555 123-4567", "pat lee@example.com"),
+                    note = "Rain all night",
+                    place = "Pine Lake"
+                )
+            )
+        )
+
+        assertEquals(valid(withSpaces), decode(encodeBackup(withLineBreaks)))
+    }
+
+    // "\r\n" is one line break, which the field holds as one space.
+    @Test
+    fun decodeBackup_withSingleLineTextThatFitsOnceItsLineBreaksAreSpaces_isValid() {
+        fun withLineBreak(maxLength: Int) = "x".repeat(maxLength - 2) + "\r\nx"
+        fun withSpace(maxLength: Int) = "x".repeat(maxLength - 2) + " x"
+        fun withName(name: String, note: String) = Backup(
+            Profile(name, "Troop 12"),
+            listOf(
+                camping.copy(
+                    trackerEntries = listOf(
+                        TrackerEntry(0, "camping", "9a", null, mapOf("note" to note))
+                    )
+                )
+            )
+        )
+        val file = withName(
+            withLineBreak(PROFILE_NAME_MAX_LENGTH),
+            withLineBreak(TRACKER_TEXT_MAX_LENGTH)
+        )
+
+        assertEquals(
+            valid(withName(withSpace(PROFILE_NAME_MAX_LENGTH), withSpace(TRACKER_TEXT_MAX_LENGTH))),
+            decode(encodeBackup(file))
+        )
     }
 
     // As repositories store what the scout types, so an edited file can't store what the app

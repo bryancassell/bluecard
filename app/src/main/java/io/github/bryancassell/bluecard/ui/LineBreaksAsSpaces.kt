@@ -2,13 +2,14 @@ package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
+import io.github.bryancassell.bluecard.text.LINE_BREAK_CHARS
 
 /**
  * Replaces each line break in a field's text with a space after every edit, such as a paste.
  * A single-line field (`TextFieldLineLimits.SingleLine`) keeps a line break in its text but
  * doesn't show one: it draws "\n" as a space and "\r" as nothing. The text would then hold a
- * break the scout never saw. "\r\n" counts as one line break, and so does each of Unicode's
- * other line-ending characters.
+ * break the scout never saw. "\r\n" counts as one line break, and so does each of
+ * [LINE_BREAK_CHARS]. Import replaces them the same way (`text.lineBreaksAsSpaces`).
  *
  * Use it through [singleLineInput], which chains it after a [TextLengthLimit], so the limit
  * cuts a huge paste before this replaces its line breaks. It replaces them one at a time,
@@ -27,14 +28,3 @@ object LineBreaksAsSpaces : InputTransformation {
         }
     }
 }
-
-/** [text] with each line break replaced with a space, as [LineBreaksAsSpaces] replaces them. */
-fun lineBreaksAsSpaces(text: String): String = text.replace(LINE_BREAK, " ")
-
-/**
- * Line feed, vertical tab, form feed, carriage return, next line, and line and paragraph
- * separators.
- */
-private const val LINE_BREAK_CHARS = "\n\u000B\u000C\r\u0085\u2028\u2029"
-
-private val LINE_BREAK = Regex("\r\n|[$LINE_BREAK_CHARS]")
