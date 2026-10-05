@@ -49,6 +49,8 @@ class HomeViewModel @Inject constructor(
         // Without a profile, the navigation root replaces Home with Onboarding.
         if (profile == null) return@combine HomeUiState.Loading
         val progressById = progress.associateBy { it.badge.badgeId }
+        // From the badges in catalog order, not name order (catalog), as on Ranks: earnedBadges
+        // breaks ties within an Eagle group by it.
         val standings = ranks.standings(progressById, badges.earnedBadges(progressById))
         val statusById = catalog.associate { (badge) ->
             badge.id to badge.status(progressById[badge.id])

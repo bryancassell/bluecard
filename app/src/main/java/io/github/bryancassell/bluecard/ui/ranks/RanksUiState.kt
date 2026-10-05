@@ -15,7 +15,7 @@ sealed interface RanksUiState {
     data class Ready(val ranks: List<RankListItem>) : RanksUiState
 }
 
-/** One rank in the list. */
+/** One rank in the list, or the rank in progress on Home. */
 data class RankListItem(
     val id: String,
     val name: String,
