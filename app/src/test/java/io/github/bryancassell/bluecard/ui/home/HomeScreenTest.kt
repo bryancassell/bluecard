@@ -1,5 +1,8 @@
 package io.github.bryancassell.bluecard.ui.home
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -24,7 +27,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.RankStatus
-import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -90,7 +93,11 @@ class HomeScreenTest {
         )
     )
 
-    private fun show(uiState: HomeUiState) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<HomeUiState>(HomeUiState.Loading)
+
+    private fun show(state: HomeUiState) {
+        uiState = state
         composeTestRule.setContent {
             HomeScreen(
                 uiState = uiState,
@@ -144,12 +151,19 @@ class HomeScreenTest {
     fun loadFailed_showsMessageOnly() {
         show(HomeUiState.LoadFailed)
 
-        text("Couldn't load your data. Try closing and reopening BlueCard.")
-            .assertIsDisplayed()
-            .assert(isPaneTitledWithItsText)
+        text("Couldn't load your data. Try closing and reopening BlueCard.").assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         text("Merit badges").assertDoesNotExist()
         text("Ranks").assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(HomeUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = HomeUiState.LoadFailed }
     }
 
     @Test

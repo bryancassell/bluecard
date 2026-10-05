@@ -2,6 +2,9 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.activity.ComponentDialog
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -43,7 +46,7 @@ import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
-import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
@@ -213,7 +216,13 @@ class RequirementDetailScreenTest {
         )
     )
 
-    private fun show(uiState: RequirementDetailUiState) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<RequirementDetailUiState>(
+        RequirementDetailUiState.Loading
+    )
+
+    private fun show(state: RequirementDetailUiState) {
+        uiState = state
         composeTestRule.setContent {
             back.Content {
                 RequirementDetailScreen(
@@ -279,8 +288,17 @@ class RequirementDetailScreenTest {
 
         composeTestRule
             .onNodeWithText("This requirement isn't in the requirements this badge or rank uses.")
-            .assertIsDisplayed().assert(isPaneTitledWithItsText)
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
+    }
+
+    @Test
+    fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        show(RequirementDetailUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "This requirement isn't in the requirements this badge or rank uses."
+        ) { uiState = RequirementDetailUiState.Unavailable }
     }
 
     @Test
@@ -289,8 +307,17 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
+        ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(RequirementDetailUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = RequirementDetailUiState.LoadFailed }
     }
 
     @Test

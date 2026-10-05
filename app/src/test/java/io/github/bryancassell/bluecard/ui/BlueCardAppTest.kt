@@ -1,15 +1,17 @@
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.MainActivityUiState
-import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,8 +50,20 @@ class BlueCardAppTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
+        ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
+        composeTestRule.setContent {
+            BlueCardApp(uiState, onDismissDamagedProgressNotice = {})
+        }
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = MainActivityUiState.LoadFailed }
     }
 }

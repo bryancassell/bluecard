@@ -2,17 +2,14 @@ package io.github.bryancassell.bluecard.ui.home
 
 import androidx.annotation.PluralsRes
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -20,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -33,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.BadgeRow
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -79,14 +75,14 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        HomeUiState.Loading -> Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-
-        HomeUiState.LoadFailed -> LoadFailedMessage(modifier)
+        // One branch, so screen readers hear the message (see LoadingOrMessage).
+        HomeUiState.Loading, HomeUiState.LoadFailed -> LoadingOrMessage(
+            message = when (uiState) {
+                HomeUiState.LoadFailed -> stringResource(R.string.load_failed)
+                else -> null
+            },
+            modifier = modifier
+        )
 
         is HomeUiState.Ready -> Column(
             modifier = modifier

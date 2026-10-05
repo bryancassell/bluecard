@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
@@ -46,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
@@ -111,14 +109,13 @@ fun BadgesScreen(
             )
         }
         when (uiState) {
-            BadgesUiState.Loading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-
-            BadgesUiState.LoadFailed -> LoadFailedMessage()
+            // One branch, so screen readers hear the message (see LoadingOrMessage).
+            BadgesUiState.Loading, BadgesUiState.LoadFailed -> LoadingOrMessage(
+                message = when (uiState) {
+                    BadgesUiState.LoadFailed -> stringResource(R.string.load_failed)
+                    else -> null
+                }
+            )
 
             // MatchCount says so.
             BadgesUiState.NoMatches -> Unit

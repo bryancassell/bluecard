@@ -204,7 +204,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   shows the message in place of the whole app. This follows "Show errors on the
   screen" in the UI layer guide, which keeps errors in UI state. The message has
   no "Try again" button, which limits when a screen loads again
-  (`LoadFailedMessage`). Data management shows no such message: it loads only
+  (`catchLoadFailure`). Data management shows no such message: it loads only
   whether a badge or rank is started, for its Clear all button, which its
   export and import don't need.
 - **Save failures are a UI state too.** When something can't be saved, a
@@ -218,31 +218,30 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   happen. Onboarding predates this and shows its own message under its button.
   Data management runs its import and clear as it runs its export, with its own
   messages in one snackbar, rather than with a `TaskRunner`.
-- **A message that takes a screen's place is a pane titled with its own text**
-  ([#69](https://github.com/bryancassell/bluecard/issues/69)), so screen
-  readers announce it as it appears. Show one with `ScreenMessage`
-  (`ui/ScreenMessage.kt`), as every load-failed and unavailable message does.
-  Onboarding's save-failed message, under its button, is a pane the same way.
-  When Android 16 deprecated `announceForAccessibility`, its
-  [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
-  pointed to pane titles "for significant UI changes like window changes".
-  Material 3's `SnackbarHost` gives each snackbar a pane title too. A live
-  region isn't enough: Compose compares the semantics tree at most every
-  100 ms, and sends a live region's change only for a node that was in its last
-  comparison (`sendSemanticsPropertyChangeEvents` in
-  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). The
-  message is a new node, and even a live region composed with the screen would
-  count as new if the screen's data arrived within 100 ms. A node with a pane
-  title is announced whenever it appears, new or not
-  (`updateSemanticsNodesCopyAndPanes`). What TalkBack says is in PRD.md's
-  Design decisions.
-  - **Don't put one inside a node that merges its descendants**, such as a
-    clickable card. A pane title can't be merged, and Compose throws when it
-    tries, such as when a screen reader is on.
-  - **Android 8.0 and 8.1 haven't been checked.** Pane titles came in Android 9
-    (API 28), and minSdk is 26. Compose sends the same pane event on every
-    version, but whether TalkBack reads it on Android 8 is unverified. At worst
-    the message isn't announced there, as before #69.
+- **A message that takes a screen's place is a live region composed while the
+  screen loads** ([#69](https://github.com/bryancassell/bluecard/issues/69)),
+  so screen readers announce it as it appears. `ScreenMessage`
+  (`ui/ScreenMessage.kt`) is a polite live region with no text while loading,
+  and the message once loading fails or the content is unavailable. A screen
+  shows its loading, load-failed and unavailable states from one `when` branch
+  that calls `LoadingOrMessage`, so the node stays the same as its text
+  changes. The navigation root, which shows nothing while loading, calls
+  `ScreenMessage` itself the same way. Compose sends a live region's change only for a node it has already
+  seen (`sendSemanticsPropertyChangeEvents` in
+  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
+  message composed as a new node, as in its own branch, isn't announced.
+  Onboarding's save-failed message, under its button, is composed empty the
+  same way.
+  - **Live regions are what Android points to.** When Android 16 deprecated
+    `announceForAccessibility`, its
+    [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
+    pointed to live regions "to inform the user of changes to critical UI",
+    and to pane titles "for significant UI changes like window changes".
+  - **A pane title was tried first.** Compose announces a pane even as a new
+    node, but TalkBack treated the message like a window: it said "BlueCard",
+    the window's title, whenever the message went away. Compose also throws
+    when it has to merge a pane title into a parent, which happens only with a
+    screen reader on.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
   developer without a scout reporting it: BlueCard is published on Google Play,
@@ -1198,7 +1197,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
 | [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
-| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a pane titled with its own text | Compose announces a pane whenever one appears, but a live region only when a node it already compared changes, which a fast load can miss. Android 16 points to pane titles for significant UI changes |
+| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |

@@ -27,7 +27,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.BackPresses
-import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
@@ -52,7 +52,11 @@ class EditCounselorScreenTest {
 
     private val ready = EditCounselorUiState.Ready(badgeName = "Camping", changed = false)
 
-    private fun show(uiState: EditCounselorUiState) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<EditCounselorUiState>(EditCounselorUiState.Loading)
+
+    private fun show(state: EditCounselorUiState) {
+        uiState = state
         composeTestRule.setContent {
             back.Content {
                 EditCounselorScreen(
@@ -98,8 +102,17 @@ class EditCounselorScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
+        ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Counselor").assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(EditCounselorUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = EditCounselorUiState.LoadFailed }
     }
 
     @Test
@@ -108,8 +121,17 @@ class EditCounselorScreenTest {
 
         composeTestRule
             .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
-            .assertIsDisplayed().assert(isPaneTitledWithItsText)
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Counselor").assertDoesNotExist()
+    }
+
+    @Test
+    fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        show(EditCounselorUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "This badge's requirements aren't in this version of BlueCard."
+        ) { uiState = EditCounselorUiState.Unavailable }
     }
 
     @Test

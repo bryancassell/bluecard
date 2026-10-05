@@ -8,6 +8,9 @@ import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -35,7 +38,7 @@ import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
-import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import java.time.LocalDate
@@ -110,7 +113,11 @@ class RankDetailScreenTest {
     private val earnedWithLife = ready.copy(status = RankStatus.Earned, earnedWith = "Life")
     private val earned = ready.copy(status = RankStatus.Earned, canClear = true)
 
-    private fun show(uiState: RankDetailUiState) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<RankDetailUiState>(RankDetailUiState.Loading)
+
+    private fun show(state: RankDetailUiState) {
+        uiState = state
         composeTestRule.setContent {
             CompositionLocalProvider(
                 LocalActivityResultRegistryOwner provides resultRegistryOwner
@@ -171,20 +178,34 @@ class RankDetailScreenTest {
     fun loadFailed_showsMessageOnly() {
         show(RankDetailUiState.LoadFailed)
 
-        text("Couldn't load your data. Try closing and reopening BlueCard.")
-            .assertIsDisplayed()
-            .assert(isPaneTitledWithItsText)
+        text("Couldn't load your data. Try closing and reopening BlueCard.").assertIsDisplayed()
         text("Requirements").assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(RankDetailUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = RankDetailUiState.LoadFailed }
     }
 
     @Test
     fun unavailable_showsMessageOnly() {
         show(RankDetailUiState.Unavailable)
 
-        text("This rank's requirements aren't in this version of BlueCard.")
-            .assertIsDisplayed()
-            .assert(isPaneTitledWithItsText)
+        text("This rank's requirements aren't in this version of BlueCard.").assertIsDisplayed()
         text("Requirements").assertDoesNotExist()
+    }
+
+    @Test
+    fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        show(RankDetailUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "This rank's requirements aren't in this version of BlueCard."
+        ) { uiState = RankDetailUiState.Unavailable }
     }
 
     @Test

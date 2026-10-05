@@ -27,10 +27,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
-import io.github.bryancassell.bluecard.ui.LoadFailedMessage
+import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
-import io.github.bryancassell.bluecard.ui.badge.LoadingIndicator
 
 /** Connects the Edit name and unit screen to its ViewModel. */
 @Composable
@@ -76,9 +75,14 @@ fun EditProfileScreen(
         onDiscard = onDiscard
     )
     when (uiState) {
-        EditProfileUiState.Loading -> LoadingIndicator(modifier)
-
-        EditProfileUiState.LoadFailed -> LoadFailedMessage(modifier)
+        // One branch, so screen readers hear the message (see LoadingOrMessage).
+        EditProfileUiState.Loading, EditProfileUiState.LoadFailed -> LoadingOrMessage(
+            message = when (uiState) {
+                EditProfileUiState.LoadFailed -> stringResource(R.string.load_failed)
+                else -> null
+            },
+            modifier = modifier
+        )
 
         // Ends the page above the keyboard, so every field can be scrolled into view.
         is EditProfileUiState.Ready -> Box(modifier = modifier.imePadding()) {

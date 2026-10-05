@@ -17,8 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.badge.LoadingIndicator
+import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 
 /** Connects the Ranks screen to its ViewModel. */
 @Composable
@@ -51,9 +50,13 @@ fun RanksScreen(
                 .semantics { heading() }
         )
         when (uiState) {
-            RanksUiState.Loading -> LoadingIndicator()
-
-            RanksUiState.LoadFailed -> LoadFailedMessage()
+            // One branch, so screen readers hear the message (see LoadingOrMessage).
+            RanksUiState.Loading, RanksUiState.LoadFailed -> LoadingOrMessage(
+                message = when (uiState) {
+                    RanksUiState.LoadFailed -> stringResource(R.string.load_failed)
+                    else -> null
+                }
+            )
 
             // A lazy list, as on Badges, scrolls when large text makes the ranks taller than
             // the screen, and screen readers say how many it has.
