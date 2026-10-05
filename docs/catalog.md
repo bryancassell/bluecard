@@ -76,6 +76,10 @@ Date an unlisted change January 1 of the year it first appears in the Internet
 Archive's copies of the official page. That date is an estimate: say so in the
 pull request, and name the copies on either side of the change.
 
+Date a new badge the day Scouting America launched it, from its announcement
+(Competitive Gaming launched 2026-07-24 at the National Jamboree), unless its
+words have changed since then.
+
 ## When the official page is wrong
 
 When the live page has an obvious mistake, such as one requirement repeating
