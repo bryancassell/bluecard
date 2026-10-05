@@ -237,6 +237,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
     pointed to live regions "to inform the user of changes to critical UI",
     and to pane titles "for significant UI changes like window changes".
+  - **A failure after a screen has loaded isn't announced.** The message then
+    replaces the screen's content, not its loading state, so it's a new node.
+    That's left as is because it's rare. TalkBack should still read the
+    message as its focus moves off the content that went away, but that
+    wasn't checked.
   - **A pane title was tried first.** Compose announces a pane even as a new
     node, but TalkBack treated the message like a window: it said "BlueCard",
     the window's title, whenever the message went away. Compose also throws
