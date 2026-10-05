@@ -222,7 +222,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen loads** ([#69](https://github.com/bryancassell/bluecard/issues/69)),
   so screen readers announce it as it appears. `ScreenMessage`
   (`ui/ScreenMessage.kt`) is a polite live region with no text while loading,
-  and the message once loading fails or the content is unavailable. A screen
+  and the message once loading fails or the content is unavailable. While it
+  has no text, it's hidden from screen readers: Compose lets them focus any
+  node with text, even empty text, and a hidden node is still tracked. A screen
   shows its loading, load-failed and unavailable states from one `when` branch
   that calls `LoadingOrMessage`, so the node stays the same as its text
   changes. The navigation root, which shows nothing while loading, calls
@@ -237,11 +239,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
     pointed to live regions "to inform the user of changes to critical UI",
     and to pane titles "for significant UI changes like window changes".
-  - **A failure after a screen has loaded isn't announced.** The message then
-    replaces the screen's content, not its loading state, so it's a new node.
-    That's left as is because it's rare. TalkBack should still read the
-    message as its focus moves off the content that went away, but that
-    wasn't checked.
+  - **Two cases aren't announced.** A failure after a screen has loaded
+    replaces the screen's content, not its loading state, so the message is a
+    new node. That's rare, and TalkBack should still read the message as its
+    focus moves off the content that went away, but that wasn't checked. A
+    screen composed already showing the message, such as after rotation,
+    doesn't announce it again; it was announced when it first appeared.
   - **A pane title was tried first.** Compose announces a pane even as a new
     node, but TalkBack treated the message like a window: it said "BlueCard",
     the window's title, whenever the message went away. Compose also throws

@@ -268,21 +268,7 @@ class EditCounselorScreenTest {
 
     @Test
     fun saved_closesThePageOnce() {
-        var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(changed = true))
-        composeTestRule.setContent {
-            back.Content {
-                EditCounselorScreen(
-                    uiState = uiState,
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    onSave = {},
-                    onSaved = { closes++ },
-                    onDiscard = {},
-                    onSaveFailureShown = {}
-                )
-            }
-        }
+        show(ready.copy(changed = true))
         assertEquals(0, closes)
 
         // Saved before the saved counselor arrives from the database, which then changes the
@@ -298,21 +284,7 @@ class EditCounselorScreenTest {
     @Test
     fun savedAgain_afterClosing_closesThePageAgain() {
         // As when the page is opened again before its ViewModel is cleared.
-        var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(saved = true))
-        composeTestRule.setContent {
-            back.Content {
-                EditCounselorScreen(
-                    uiState = uiState,
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    onSave = {},
-                    onSaved = { closes++ },
-                    onDiscard = {},
-                    onSaveFailureShown = {}
-                )
-            }
-        }
+        show(ready.copy(saved = true))
         composeTestRule.waitForIdle()
 
         uiState = ready.copy(saved = false)

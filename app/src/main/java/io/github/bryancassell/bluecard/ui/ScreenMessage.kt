@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,10 @@ import androidx.compose.ui.unit.dp
  * when a new one appears (`sendSemanticsPropertyChangeEvents` in
  * `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). So compose it while the
  * screen loads too, with no text, from the same call, as [LoadingOrMessage] does.
+ *
+ * While it has no text, it's hidden from screen readers, which would otherwise stop on it when
+ * swiping: Compose lets them focus any node with text, even empty text. A hidden node is still
+ * tracked, so the message replacing it is announced.
  */
 @Composable
 fun ScreenMessage(text: String?, modifier: Modifier = Modifier) {
@@ -29,7 +34,10 @@ fun ScreenMessage(text: String?, modifier: Modifier = Modifier) {
         text = text.orEmpty(),
         modifier = modifier
             .padding(16.dp)
-            .semantics { liveRegion = LiveRegionMode.Polite }
+            .semantics {
+                liveRegion = LiveRegionMode.Polite
+                if (text == null) hideFromAccessibility()
+            }
     )
 }
 
