@@ -348,10 +348,12 @@ out of date, retake all three the same way, so they still match each other.
    leave demo mode: `adb shell am broadcast -a com.android.systemui.demo -e command exit`.
 5. Scale each one to 540 pixels wide, twice the width the README shows it at,
    so it stays sharp on high-density screens. Reduce it to 256 colors, which
-   keeps each file under about 60 KB with no visible difference. Pillow's
-   `img.convert("RGB").quantize(256, method=Image.Quantize.MEDIANCUT)` does it,
-   and reproduces an unchanged screenshot byte for byte, so only the images
-   that changed show in the diff.
+   keeps each file under about 60 KB with no visible difference. With Pillow,
+   `img.resize((540, height), Image.Resampling.LANCZOS).convert("RGB").quantize(256, method=Image.Quantize.MEDIANCUT)`,
+   saved with `save(path, optimize=True)`, reproduces an unchanged screenshot
+   byte for byte, so only the images that changed show in the diff. Another
+   resize filter changes every pixel, and a save without `optimize` changes the
+   file's bytes.
 
 ## Debug tools
 

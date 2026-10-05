@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -46,11 +47,30 @@ class HomeScreenTest {
     private var ranksOpened = 0
     private var dataManagementOpened = 0
 
+    /**
+     * Every rank, the first [earned] of them earned and the next in progress with [fractionDone]
+     * of it done.
+     */
+    private fun ranks(earned: Int, fractionDone: Float? = 0f) = listOf(
+        "scout" to "Scout",
+        "tenderfoot" to "Tenderfoot",
+        "second-class" to "Second Class",
+        "first-class" to "First Class",
+        "star" to "Star",
+        "life" to "Life",
+        "eagle" to "Eagle Scout"
+    ).mapIndexed { index, (id, name) ->
+        when {
+            index < earned -> RankListItem(id, name, RankStatus.Earned)
+            index == earned -> RankListItem(id, name, RankStatus.InProgress, fractionDone)
+            else -> RankListItem(id, name, RankStatus.NotEarned)
+        }
+    }
+
     private val noProgress = HomeUiState.Ready(
         name = "Alex Scout",
         unitNumber = "123",
-        rank = null,
-        nextRank = RankListItem("scout", "Scout", RankStatus.InProgress, fractionDone = 0f),
+        ranks = ranks(earned = 0),
         badges = ProgressCounts(completed = 0, inProgress = 0),
         eagle = ProgressCounts(completed = 0, inProgress = 0),
         eagleTotal = 13,
@@ -58,13 +78,7 @@ class HomeScreenTest {
     )
 
     private val withProgress = noProgress.copy(
-        rank = "Tenderfoot",
-        nextRank = RankListItem(
-            "second-class",
-            "Second Class",
-            RankStatus.InProgress,
-            fractionDone = 0.4f
-        ),
+        ranks = ranks(earned = 2, fractionDone = 0.4f),
         badges = ProgressCounts(completed = 5, inProgress = 3),
         eagle = ProgressCounts(completed = 4, inProgress = 2)
     )
@@ -128,7 +142,7 @@ class HomeScreenTest {
         it.config.getOrNull(SemanticsActions.OnClick)?.label == "open rank"
     }
 
-    private fun rankRow(name: String) = composeTestRule.onNode(hasText(name) and opensRank)
+    private fun rankCard() = composeTestRule.onNode(hasText("Your rank") and isHeading())
 
     @Test
     fun loading_showsProgressAndNoProfile() {
@@ -164,7 +178,7 @@ class HomeScreenTest {
     fun nameTypedInPersian_keepsItsPunctuationAtItsEnd() {
         show(noProgress.copy(name = "علی رضایی."))
 
-        // The rank's line is a heading too.
+        // The rank's card is a heading too.
         val name = composeTestRule.onNode(isHeading() and hasText("علی", substring = true))
             .visualText()
 
@@ -182,54 +196,83 @@ class HomeScreenTest {
     }
 
     @Test
-    fun noRankEarned_saysSo_withScoutInProgress() {
+    fun noRankEarned_saysSo_withScoutNext() {
         show(noProgress)
 
-        text("You haven't earned a rank yet.").assert(isHeading()).assertIsDisplayed()
-        rankRow("Scout").assert(hasText("In progress")).assertIsDisplayed()
+        rankCard()
+            .assert(hasText("None yet"))
+            .assert(hasText("0 of 7 ranks earned"))
+            .assert(hasText("Next: Scout"))
+            .assert(hasText("In progress"))
+            .assert(hasStateDescription("0% done"))
+            .assertIsDisplayed()
     }
 
+    // Screen readers hear the card as one heading: the rank, how many ranks are earned, and the
+    // rank in progress, with how much of it is done as its state, as on Ranks.
     @Test
-    fun rankEarned_showsIt_withTheRankInProgressAsOnRanks() {
+    fun rankEarned_showsIt_withTheRankInProgress() {
         show(withProgress)
 
-        text("Your rank: Tenderfoot").assert(isHeading()).assertIsDisplayed()
-        rankRow("Second Class")
+        rankCard()
+            .assert(hasText("Tenderfoot"))
+            .assert(hasText("2 of 7 ranks earned"))
+            .assert(hasText("Next: Second Class"))
             .assert(hasText("In progress"))
             .assert(hasStateDescription("40% done"))
             .assertIsDisplayed()
     }
 
+    // The names under the trail's ends would read as ranks of their own.
     @Test
-    fun everyRankEarned_showsNoRankInProgress() {
-        show(withProgress.copy(rank = "Eagle Scout", nextRank = null))
+    fun trailsEndNames_arentRead() {
+        show(withProgress)
 
-        text("Your rank: Eagle Scout").assertIsDisplayed()
-        composeTestRule.onAllNodes(opensRank).assertCountEquals(0)
+        rankCard().assert(!hasText("Scout")).assert(!hasText("Eagle Scout"))
+    }
+
+    // As for a rank whose requirements version isn't in the catalog.
+    @Test
+    fun rankInProgress_thatCantBeMeasured_hasNoState() {
+        show(withProgress.copy(ranks = ranks(earned = 2, fractionDone = null)))
+
+        rankCard()
+            .assert(hasText("Next: Second Class"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
     }
 
     @Test
-    fun rank_isAboveTheBadgeSummary_withItsRowEdgeToEdge() {
+    fun everyRankEarned_saysSo_andOpensNothing() {
+        show(withProgress.copy(ranks = ranks(earned = 7)))
+
+        rankCard()
+            .assert(hasText("Eagle Scout"))
+            .assert(hasText("7 of 7 ranks earned"))
+            .assert(hasText("Every rank earned"))
+            .assert(!hasText("In progress"))
+            .assert(!hasClickAction())
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun rankCard_isAboveTheBadgeSummary_inset() {
         show(withProgress)
 
         val screen = composeTestRule.onRoot().getUnclippedBoundsInRoot()
         val unit = text("Unit: 123").getUnclippedBoundsInRoot()
-        val rank = text("Your rank: Tenderfoot").getUnclippedBoundsInRoot()
-        val row = rankRow("Second Class").getUnclippedBoundsInRoot()
+        val card = rankCard().getUnclippedBoundsInRoot()
         val summary = text("Your merit badges").getUnclippedBoundsInRoot()
-        assertTrue(unit.bottom < rank.top)
-        assertTrue(rank.bottom <= row.top)
-        assertTrue(row.bottom < summary.top)
-        assertTrue(rank.left > screen.left)
-        assertEquals(screen.left, row.left)
-        assertEquals(screen.right, row.right)
+        assertTrue(unit.bottom < card.top)
+        assertTrue(card.bottom < summary.top)
+        assertTrue(card.left > screen.left)
+        assertTrue(card.right < screen.right)
     }
 
     @Test
-    fun clickingRankInProgress_opensIt() {
+    fun clickingRankCard_opensTheRankInProgress() {
         show(withProgress)
 
-        rankRow("Second Class").performClick()
+        rankCard().assert(opensRank).performClick()
 
         assertEquals(listOf("second-class"), openedRanks)
         assertEquals(0, ranksOpened)
@@ -258,9 +301,9 @@ class HomeScreenTest {
     fun withProgress_showsEagleProgress() {
         show(withProgress)
 
-        // Below the rank, so it can start off screen.
+        // Below the rank card, so it can start off screen.
         text("Eagle-required").assert(isHeading()).performScrollTo().assertIsDisplayed()
-        text("4 of 13 completed").assertIsDisplayed()
+        text("4 of 13 completed").performScrollTo().assertIsDisplayed()
         text("2 in progress").performScrollTo().assertIsDisplayed()
     }
 

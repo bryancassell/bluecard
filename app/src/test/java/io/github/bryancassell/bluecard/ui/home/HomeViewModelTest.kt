@@ -177,8 +177,11 @@ class HomeViewModelTest {
             HomeUiState.Ready(
                 name = "Alex Scout",
                 unitNumber = "123",
-                rank = null,
-                nextRank = RankListItem("scout", "Scout", RankStatus.InProgress, 0f),
+                ranks = listOf(
+                    RankListItem("scout", "Scout", RankStatus.InProgress, 0f),
+                    RankListItem("tenderfoot", "Tenderfoot", RankStatus.NotEarned),
+                    RankListItem("second-class", "Second Class", RankStatus.NotEarned)
+                ),
                 badges = ProgressCounts(completed = 0, inProgress = 0),
                 eagle = ProgressCounts(completed = 0, inProgress = 0),
                 eagleTotal = 3,
@@ -360,7 +363,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun rank_isTheHighestEarned_andNextRankIsTheOneInProgress() = runTest {
+    fun ranks_areInOrderAsOnRanks_withTheHighestEarnedAndTheOneInProgress() = runTest {
         progressRepository.markRequirementCompleted("scout", "1", day, badgeStart)
         progressRepository.markRequirementCompleted("scout", "2", day, badgeStart)
         progressRepository.markRequirementCompleted("tenderfoot", "1", day, badgeStart)
@@ -368,18 +371,23 @@ class HomeViewModelTest {
         progressRepository.markRequirementCompleted("second-class", "1", day, badgeStart)
         startCollecting(viewModel)
 
-        assertEquals("Scout", ready().rank)
         assertEquals(
-            RankListItem("tenderfoot", "Tenderfoot", RankStatus.InProgress, 0.5f),
-            ready().nextRank
+            listOf(
+                RankListItem("scout", "Scout", RankStatus.Earned),
+                RankListItem("tenderfoot", "Tenderfoot", RankStatus.InProgress, 0.5f),
+                RankListItem("second-class", "Second Class", RankStatus.NotEarned, 0.5f)
+            ),
+            ready().ranks
         )
+        assertEquals("scout", ready().rank?.id)
+        assertEquals("tenderfoot", ready().nextRank?.id)
     }
 
     @Test
     fun rankMarkedEarned_countsTheRanksBelowIt_untilUnmarked() = runTest {
         complete("tenderfoot")
         startCollecting(viewModel)
-        assertEquals("Tenderfoot", ready().rank)
+        assertEquals("tenderfoot", ready().rank?.id)
         assertEquals("second-class", ready().nextRank?.id)
 
         progressRepository.removeCompletedOnPriorDate("tenderfoot")
@@ -393,7 +401,7 @@ class HomeViewModelTest {
         complete("second-class")
         startCollecting(viewModel)
 
-        assertEquals("Second Class", ready().rank)
+        assertEquals("second-class", ready().rank?.id)
         assertNull(ready().nextRank)
     }
 

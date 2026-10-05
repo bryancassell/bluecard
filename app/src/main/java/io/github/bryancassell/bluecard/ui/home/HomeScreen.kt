@@ -37,7 +37,6 @@ import io.github.bryancassell.bluecard.ui.LoadFailedMessage
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.BadgeRow
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
-import io.github.bryancassell.bluecard.ui.ranks.RankRow
 import io.github.bryancassell.bluecard.ui.typedText
 
 /** Connects the Home screen to its ViewModel. */
@@ -64,9 +63,9 @@ fun HomeRoute(
 }
 
 /**
- * The scout's name and unit, their rank and the rank they're working toward, a summary of their
- * merit badge progress, and the badges they have in progress, with buttons that open Badges,
- * Ranks and Data management.
+ * The scout's name and unit, a card with their rank and the rank they're working toward, a summary
+ * of their merit badge progress, and the badges they have in progress, with buttons that open
+ * Badges, Ranks and Data management.
  */
 @Composable
 fun HomeScreen(
@@ -108,19 +107,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-            // The scout's rank, then the rank they're working toward, in the same row as on Ranks.
-            Column {
-                Text(
-                    text = uiState.rank?.let { stringResource(R.string.home_rank, it) }
-                        ?: stringResource(R.string.home_no_rank),
-                    style = MaterialTheme.typography.titleMedium,
-                    // Lets screen reader users jump to it, as to the cards' titles.
-                    modifier = inset.semantics { heading() }
-                )
-                uiState.nextRank?.let { rank ->
-                    RankRow(rank, onClick = { onOpenRank(rank.id) })
-                }
-            }
+            RankCard(uiState, onOpenRank, modifier = inset)
             if (uiState.hasNoProgress) {
                 Text(stringResource(R.string.home_no_progress), modifier = inset)
             } else {

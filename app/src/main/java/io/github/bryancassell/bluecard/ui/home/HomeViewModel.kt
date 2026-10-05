@@ -9,7 +9,6 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.status
@@ -57,8 +56,7 @@ class HomeViewModel @Inject constructor(
         HomeUiState.Ready(
             name = profile.name,
             unitNumber = profile.unitNumber,
-            rank = standings.lastOrNull { it.status == RankStatus.Earned }?.rank?.name,
-            nextRank = standings.find { it.status == RankStatus.InProgress }?.toListItem(),
+            ranks = standings.map { it.toListItem() },
             badges = statusById.values.counts(),
             eagle = eagle.counts(),
             eagleTotal = eagle.size,

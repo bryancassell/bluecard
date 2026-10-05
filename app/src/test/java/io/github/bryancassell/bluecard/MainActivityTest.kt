@@ -506,7 +506,7 @@ class MainActivityTest {
         runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
-        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Edit").performClick()
         assertFieldText("Name", "Alex Scout")
         assertFieldText("Unit number", "123")
@@ -1137,14 +1137,14 @@ class MainActivityTest {
         }
 
         composeTestRule.onNodeWithText("Your merit badges").assertIsDisplayed()
-        composeTestRule.onNodeWithText("0 of 1 completed").assertIsDisplayed()
+        composeTestRule.onNodeWithText("0 of 1 completed").performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun openDataManagement_showsDataManagement() {
         launchWithProfile()
 
-        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
 
         home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Data management").assertIsDisplayed()
@@ -1153,18 +1153,19 @@ class MainActivityTest {
     @Test
     fun back_fromDataManagement_returnsHome() {
         launchWithProfile()
-        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
         // As in back_fromBadges_returnsHome, let the new entry settle before pressing back.
         composeTestRule.waitForIdle()
 
         pressBack()
 
-        home().assertIsDisplayed()
+        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
+        home().performScrollTo().assertIsDisplayed()
     }
 
     private fun openEditNameAndUnit() {
         launchWithProfile()
-        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Edit").performClick()
     }
 
@@ -1188,7 +1189,10 @@ class MainActivityTest {
 
         pressBack()
 
-        composeTestRule.onNode(isHeading() and hasText("Sam Scout")).assertIsDisplayed()
+        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
+        composeTestRule.onNode(isHeading() and hasText("Sam Scout"))
+            .performScrollTo()
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("Unit: Crew 7").assertIsDisplayed()
     }
 
@@ -1237,7 +1241,8 @@ class MainActivityTest {
 
         pressBack()
 
-        home().assertIsDisplayed()
+        // Home keeps where it was scrolled to, with the name above the screen.
+        home().performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -1281,7 +1286,7 @@ class MainActivityTest {
     fun openRankInProgress_fromHome_showsRankDetail_andBackReturnsHome() {
         launchWithProfile()
 
-        composeTestRule.onNode(hasText("Scout") and hasText("In progress")).performClick()
+        composeTestRule.onNode(hasText("Your rank") and hasText("Next: Scout")).performClick()
 
         home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Our summary of Scout.").assertIsDisplayed()
@@ -1300,9 +1305,9 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
         pressBack()
 
-        composeTestRule.onNodeWithText("Your rank: Scout").assertIsDisplayed()
-        composeTestRule.onNode(hasText("Tenderfoot") and hasText("In progress"))
-            .assertIsDisplayed()
+        composeTestRule.onNode(
+            hasText("Your rank") and hasText("Scout") and hasText("Next: Tenderfoot")
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -1356,7 +1361,8 @@ class MainActivityTest {
         tapTwiceInOneFrame("Ranks")
         pressBack()
 
-        home().assertIsDisplayed()
+        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
+        home().performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -1374,7 +1380,7 @@ class MainActivityTest {
     fun doubleTap_onRankInProgress_opensItOnce() {
         launchWithProfile()
 
-        tapTwiceInOneFrame("Scout")
+        tapTwiceInOneFrame("Next: Scout")
         pressBack()
 
         home().assertIsDisplayed()
@@ -1394,16 +1400,18 @@ class MainActivityTest {
     fun doubleTap_onManageData_opensDataManagementOnce() {
         launchWithProfile()
 
+        composeTestRule.onNodeWithText("Manage data").performScrollTo()
         tapTwiceInOneFrame("Manage data")
         pressBack()
 
-        home().assertIsDisplayed()
+        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
+        home().performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun doubleTap_onEditNameAndUnit_opensItOnce() {
         launchWithProfile()
-        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
 
         tapTwiceInOneFrame("Edit")
         pressBack()
@@ -1507,7 +1515,7 @@ class MainActivityTest {
     @Test
     fun tap_onPageReturnedTo_afterDoubleTapTimeout_worksWhileClosingPageFinishes() {
         launchWithProfile()
-        composeTestRule.onNodeWithText("Manage data").performClick()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
         composeTestRule.waitForIdle()
 
         // Data management slides away beside Home, so once Home's 300 ms double-tap timeout
