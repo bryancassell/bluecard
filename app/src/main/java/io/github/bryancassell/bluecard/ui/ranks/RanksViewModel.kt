@@ -26,9 +26,8 @@ class RanksViewModel @Inject constructor(
         progressRepository.observeAllProgress()
     ) { (ranks, badges), progress ->
         val progressById = progress.associateBy { it.badge.badgeId }
-        val standings = ranks.standings(progressById, badges.earnedBadges(progressById))
         RanksUiState.Ready(
-            standings.map { RankListItem(it.rank.id, it.rank.name, it.status, it.fractionDone) }
+            ranks.standings(progressById, badges.earnedBadges(progressById)).map { it.toListItem() }
         )
     }.catchLoadFailure(RanksUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RanksUiState.Loading)

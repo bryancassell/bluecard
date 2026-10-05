@@ -9,11 +9,15 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.data.progress.earnedBadges
+import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.ListedBadge
 import io.github.bryancassell.bluecard.ui.badges.inListOrder
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.ranks.toListItem
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,8 +26,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * The scout's profile, a summary of their progress and the badges they have in progress, kept
- * up to date as the profile or progress changes.
+ * The scout's profile, their rank and the rank they're working toward, a summary of their badge
+ * progress and the badges they have in progress, kept up to date as the profile or progress
+ * changes.
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -35,12 +40,16 @@ class HomeViewModel @Inject constructor(
         profileRepository.observeProfile(),
         // What depends only on the catalog is worked out when Home starts collecting, not on
         // every profile or progress change.
-        flow { emit(catalogRepository.getBadges().inListOrder()) },
+        flow {
+            val badges = catalogRepository.getBadges()
+            emit(Triple(badges, badges.inListOrder(), catalogRepository.getRanks()))
+        },
         progressRepository.observeAllProgress()
-    ) { profile, catalog, progress ->
+    ) { profile, (badges, catalog, ranks), progress ->
         // Without a profile, the navigation root replaces Home with Onboarding.
         if (profile == null) return@combine HomeUiState.Loading
         val progressById = progress.associateBy { it.badge.badgeId }
+        val standings = ranks.standings(progressById, badges.earnedBadges(progressById))
         val statusById = catalog.associate { (badge) ->
             badge.id to badge.status(progressById[badge.id])
         }
@@ -48,6 +57,8 @@ class HomeViewModel @Inject constructor(
         HomeUiState.Ready(
             name = profile.name,
             unitNumber = profile.unitNumber,
+            rank = standings.lastOrNull { it.status == RankStatus.Earned }?.rank?.name,
+            nextRank = standings.find { it.status == RankStatus.InProgress }?.toListItem(),
             badges = statusById.values.counts(),
             eagle = eagle.counts(),
             eagleTotal = eagle.size,

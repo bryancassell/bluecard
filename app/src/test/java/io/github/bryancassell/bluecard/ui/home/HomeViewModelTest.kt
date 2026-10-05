@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -12,9 +13,11 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 import java.time.LocalDate
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
@@ -22,6 +25,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -72,8 +76,27 @@ class HomeViewModelTest {
         badge("pottery")
     )
 
+    private fun rank(id: String, name: String) = Rank(
+        id = id,
+        name = name,
+        summary = "Our summary of $name.",
+        officialUrl = "https://www.scouting.org/$id.pdf",
+        requirementVersions = listOf(
+            RequirementsVersion(
+                version,
+                listOf(Requirement("1", "First."), Requirement("2", "Second."))
+            )
+        )
+    )
+
+    private val ranks = listOf(
+        rank("scout", "Scout"),
+        rank("tenderfoot", "Tenderfoot"),
+        rank("second-class", "Second Class")
+    )
+
     private val profileRepository = FakeProfileRepository(Profile("Alex Scout", "123"))
-    private val catalogRepository = FakeCatalogRepository(catalog)
+    private val catalogRepository = FakeCatalogRepository(catalog, ranks)
     private val progressRepository = FakeProgressRepository()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
@@ -154,6 +177,8 @@ class HomeViewModelTest {
             HomeUiState.Ready(
                 name = "Alex Scout",
                 unitNumber = "123",
+                rank = null,
+                nextRank = RankListItem("scout", "Scout", RankStatus.InProgress, 0f),
                 badges = ProgressCounts(completed = 0, inProgress = 0),
                 eagle = ProgressCounts(completed = 0, inProgress = 0),
                 eagleTotal = 3,
@@ -326,23 +351,68 @@ class HomeViewModelTest {
     // Ranks share the badges' progress tables, but aren't badges.
     @Test
     fun rankProgress_isntCountedOrListedAsABadge() = runTest {
-        catalogRepository.ranks = listOf("scout", "tenderfoot").map { id ->
-            Rank(
-                id = id,
-                name = id.replaceFirstChar(Char::uppercase),
-                summary = "Our summary of $id.",
-                officialUrl = "https://www.scouting.org/$id.pdf",
-                requirementVersions = listOf(
-                    RequirementsVersion(version, listOf(Requirement("1", "First.")))
-                )
-            )
-        }
         complete("scout")
         start("tenderfoot")
         startCollecting(viewModel)
 
         assertTrue(ready().hasNoProgress)
         assertEquals(emptyList<String>(), idsInProgress())
+    }
+
+    @Test
+    fun rank_isTheHighestEarned_andNextRankIsTheOneInProgress() = runTest {
+        progressRepository.markRequirementCompleted("scout", "1", day, badgeStart)
+        progressRepository.markRequirementCompleted("scout", "2", day, badgeStart)
+        progressRepository.markRequirementCompleted("tenderfoot", "1", day, badgeStart)
+        // Started out of order, so it isn't the one in progress.
+        progressRepository.markRequirementCompleted("second-class", "1", day, badgeStart)
+        startCollecting(viewModel)
+
+        assertEquals("Scout", ready().rank)
+        assertEquals(
+            RankListItem("tenderfoot", "Tenderfoot", RankStatus.InProgress, 0.5f),
+            ready().nextRank
+        )
+    }
+
+    @Test
+    fun rankMarkedEarned_countsTheRanksBelowIt_untilUnmarked() = runTest {
+        complete("tenderfoot")
+        startCollecting(viewModel)
+        assertEquals("Tenderfoot", ready().rank)
+        assertEquals("second-class", ready().nextRank?.id)
+
+        progressRepository.removeCompletedOnPriorDate("tenderfoot")
+
+        assertNull(ready().rank)
+        assertEquals("scout", ready().nextRank?.id)
+    }
+
+    @Test
+    fun nextRank_onceEveryRankIsEarned_isNull() = runTest {
+        complete("second-class")
+        startCollecting(viewModel)
+
+        assertEquals("Second Class", ready().rank)
+        assertNull(ready().nextRank)
+    }
+
+    @Test
+    fun nextRank_countsBadgesCompleted() = runTest {
+        val earn = Requirement("2", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 1))
+        catalogRepository.ranks = listOf(
+            rank("scout", "Scout").copy(
+                requirementVersions = listOf(
+                    RequirementsVersion(version, listOf(Requirement("1", "First."), earn))
+                )
+            )
+        ) + ranks.drop(1)
+        startCollecting(viewModel)
+        assertEquals(0f, ready().nextRank?.fractionDone)
+
+        complete("camping")
+
+        assertEquals(0.5f, ready().nextRank?.fractionDone)
     }
 
     @Test

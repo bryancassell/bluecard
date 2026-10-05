@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.ranks
 
+import io.github.bryancassell.bluecard.data.progress.RankStanding
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 
 /** What the Ranks screen shows. */
@@ -25,3 +26,6 @@ data class RankListItem(
      */
     val fractionDone: Float? = null
 )
+
+/** The rank's row, with the scout's standing on it. Home shows the rank in progress in it too. */
+fun RankStanding.toListItem() = RankListItem(rank.id, rank.name, status, fractionDone)

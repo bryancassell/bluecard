@@ -73,7 +73,7 @@ fun RanksScreen(
  * much is done while it shows one.
  */
 @Composable
-private fun RankRow(rank: RankListItem, onClick: () -> Unit) {
+fun RankRow(rank: RankListItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     AdvancementRow(
         name = rank.name,
         detail = null,
@@ -84,6 +84,7 @@ private fun RankRow(rank: RankListItem, onClick: () -> Unit) {
         },
         fractionDone = rank.fractionDone,
         onClickLabel = stringResource(R.string.ranks_open_rank),
-        onClick = onClick
+        onClick = onClick,
+        modifier = modifier
     )
 }
