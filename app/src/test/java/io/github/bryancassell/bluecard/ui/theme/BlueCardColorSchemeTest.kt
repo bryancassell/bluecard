@@ -97,6 +97,8 @@ class BlueCardColorSchemeTest {
                 listOf(
                     Triple("onBackground", onBackground, background),
                     Triple("onPrimary", onPrimary, primary),
+                    // Home's rank card: its quieter text, and the ranks still to earn.
+                    Triple("inversePrimary on primary", inversePrimary, primary),
                     Triple("onPrimaryContainer", onPrimaryContainer, primaryContainer),
                     Triple("onSecondary", onSecondary, secondary),
                     Triple("onSecondaryContainer", onSecondaryContainer, secondaryContainer),

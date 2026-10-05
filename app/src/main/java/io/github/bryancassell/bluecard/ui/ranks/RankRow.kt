@@ -8,8 +8,8 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.badges.AdvancementRow
 
 /**
- * A rank's row, as on Ranks and, for the rank in progress, Home. It's the same row as a badge's:
- * the rank's name and status, with a bar for how much is done while it shows one.
+ * A rank's row on Ranks. It's the same row as a badge's: the rank's name and status, with a bar
+ * for how much is done while it shows one.
  */
 @Composable
 fun RankRow(rank: RankListItem, onClick: () -> Unit, modifier: Modifier = Modifier) {

@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.home
 
+import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 
@@ -14,13 +15,11 @@ sealed interface HomeUiState {
     data class Ready(
         val name: String,
         val unitNumber: String,
-        /** The name of the highest rank the scout has earned, or null before they've earned one. */
-        val rank: String?,
         /**
-         * The rank the scout is working toward, the one in progress, as on Ranks. Null once
-         * they've earned every rank.
+         * Every rank, in the order they're earned, with the scout's standing on each, as on
+         * Ranks.
          */
-        val nextRank: RankListItem?,
+        val ranks: List<RankListItem>,
         /** Every badge in the catalog that the scout has started. */
         val badges: ProgressCounts,
         /**
@@ -33,6 +32,15 @@ sealed interface HomeUiState {
         /** Every badge in the catalog that the scout has in progress, in alphabetical order. */
         val badgesInProgress: List<BadgeListItem>
     ) : HomeUiState {
+        /** The highest rank the scout has earned, or null before they've earned one. */
+        val rank: RankListItem? get() = ranks.lastOrNull { it.status == RankStatus.Earned }
+
+        /**
+         * The rank the scout is working toward, the one in progress. Null once they've earned
+         * every rank.
+         */
+        val nextRank: RankListItem? get() = ranks.find { it.status == RankStatus.InProgress }
+
         /** The scout hasn't started a badge yet. */
         val hasNoProgress: Boolean get() = badges == ProgressCounts(completed = 0, inProgress = 0)
     }
