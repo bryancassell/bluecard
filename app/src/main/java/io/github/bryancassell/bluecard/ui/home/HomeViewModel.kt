@@ -45,17 +45,15 @@ class HomeViewModel @Inject constructor(
             emit(Triple(badges, badges.inListOrder(), catalogRepository.getRanks()))
         },
         progressRepository.observeAllProgress()
-    ) { profile, (badges, catalog, ranks), progress ->
+    ) { profile, (badges, listedBadges, ranks), progress ->
         // Without a profile, the navigation root replaces Home with Onboarding.
         if (profile == null) return@combine HomeUiState.Loading
         val progressById = progress.associateBy { it.badge.badgeId }
-        // From the badges in catalog order, not name order (catalog), as on Ranks: earnedBadges
-        // breaks ties within an Eagle group by it.
         val standings = ranks.standings(progressById, badges.earnedBadges(progressById))
-        val statusById = catalog.associate { (badge) ->
+        val statusById = listedBadges.associate { (badge) ->
             badge.id to badge.status(progressById[badge.id])
         }
-        val eagle = eagleStatuses(catalog, statusById)
+        val eagle = eagleStatuses(listedBadges, statusById)
         HomeUiState.Ready(
             name = profile.name,
             unitNumber = profile.unitNumber,
@@ -64,7 +62,7 @@ class HomeViewModel @Inject constructor(
             badges = statusById.values.counts(),
             eagle = eagle.counts(),
             eagleTotal = eagle.size,
-            badgesInProgress = badgesInProgress(catalog, statusById, progressById)
+            badgesInProgress = badgesInProgress(listedBadges, statusById, progressById)
         )
     }.catchLoadFailure(HomeUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)

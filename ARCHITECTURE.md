@@ -802,10 +802,9 @@ read, it shows the load-failed message instead (see
 
 The Home ViewModel combines the profile, the catalog and the scout's progress.
 It shows the highest rank earned and the rank in progress from `standings`, as
-Ranks does ([Ranks](#ranks)), in Ranks' row (`RankRow` in
-`ui/ranks/RanksScreen.kt`). It counts badges completed and in progress, and
-Eagle-required progress against the Eagle-required badges in the catalog,
-counting each Eagle "one of" group
+Ranks does ([Ranks](#ranks)), in Ranks' row (`ui/ranks/RankRow.kt`). It counts
+badges completed and in progress, and Eagle-required progress against the
+Eagle-required badges in the catalog, counting each Eagle "one of" group
 once (`eagleSlots` in `data/catalog/Catalog.kt`, which Eagle 3 counts by too;
 see [`PRD.md`](PRD.md#design-decisions)). It also lists every badge in
 progress, in the row Badges uses
