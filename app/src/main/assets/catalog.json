@@ -1604,7 +1604,7 @@
     },
     {
       "id": "artificial-intelligence",
-      "name": "Artificial Intelligence",
+      "name": "Artificial Intelligence (AI)",
       "summary": "Learn what AI and automation are and how they're used, weigh AI's ethics and risks such as deepfakes, practice working with AI, and put it to use in a project or lesson.",
       "officialUrl": "https://www.scouting.org/merit-badges/artificial-intelligence/",
       "requirementVersions": [
@@ -5212,8 +5212,8 @@
                   "tracker": {
                     "columns": [
                       {
-                        "id": "moment",
-                        "label": "Moment",
+                        "id": "turning-point",
+                        "label": "Turning point",
                         "type": "text"
                       },
                       {
@@ -5227,8 +5227,8 @@
                         "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "moment",
-                    "rowLabelPlural": "moments",
+                    "rowLabel": "turning point",
+                    "rowLabelPlural": "turning points",
                     "rowCount": 5
                   }
                 }
@@ -5249,8 +5249,8 @@
                   "tracker": {
                     "columns": [
                       {
-                        "id": "strategy",
-                        "label": "Strategy",
+                        "id": "way",
+                        "label": "Way to deal with it",
                         "type": "multiline-text"
                       },
                       {
@@ -5259,8 +5259,8 @@
                         "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "strategy",
-                    "rowLabelPlural": "strategies",
+                    "rowLabel": "way",
+                    "rowLabelPlural": "ways",
                     "rowCount": 5
                   }
                 },
@@ -5282,7 +5282,7 @@
                       {
                         "id": "age",
                         "label": "How it fits your age group",
-                        "type": "text"
+                        "type": "multiline-text"
                       }
                     ],
                     "rowLabel": "game",
@@ -5320,8 +5320,7 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days",
-                    "rowCount": 14
+                    "rowLabelPlural": "days"
                   }
                 },
                 {
@@ -5337,7 +5336,7 @@
                       {
                         "id": "activity",
                         "label": "Activity",
-                        "type": "text"
+                        "type": "multiline-text"
                       },
                       {
                         "id": "minutes",
@@ -5346,8 +5345,7 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days",
-                    "rowCount": 14
+                    "rowLabelPlural": "days"
                   }
                 },
                 {
@@ -5367,8 +5365,7 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days",
-                    "rowCount": 14
+                    "rowLabelPlural": "days"
                   }
                 },
                 {
@@ -6393,8 +6390,8 @@
                   "tracker": {
                     "columns": [
                       {
-                        "id": "situation",
-                        "label": "Situation",
+                        "id": "use",
+                        "label": "Use",
                         "type": "text"
                       },
                       {
@@ -6408,8 +6405,8 @@
                         "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "situation",
-                    "rowLabelPlural": "situations",
+                    "rowLabel": "use",
+                    "rowLabelPlural": "uses",
                     "rowCount": 3
                   }
                 },
@@ -14960,6 +14957,11 @@
                         "type": "multiline-text"
                       },
                       {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      },
+                      {
                         "id": "progress",
                         "label": "Progress",
                         "type": "multiline-text"
@@ -22635,8 +22637,7 @@
                       }
                     ],
                     "rowLabel": "point",
-                    "rowLabelPlural": "points",
-                    "rowCount": 9
+                    "rowLabelPlural": "points"
                   }
                 },
                 {
