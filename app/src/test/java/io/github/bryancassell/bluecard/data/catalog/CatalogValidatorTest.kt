@@ -141,10 +141,24 @@ class CatalogValidatorTest {
                 "$where: id must be lowercase words joined by '-'",
                 "$where: name is blank",
                 "$where: summary is blank",
-                "$where: officialUrl must start with https://www.scouting.org/",
+                "$where: officialUrl must start with https://www.scouting.org/merit-badges/",
                 "$where: has an eagleGroup but is not eagleRequired"
             ),
             errorsFor(bad)
+        )
+    }
+
+    @Test
+    fun testLabPilotBadge() {
+        val pilot = badge.copy(
+            officialUrl = "https://www.scouting.org/skills/merit-badges/test-lab/dance/"
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\": officialUrl must start with " +
+                    "https://www.scouting.org/merit-badges/"
+            ),
+            errorsFor(pilot)
         )
     }
 
