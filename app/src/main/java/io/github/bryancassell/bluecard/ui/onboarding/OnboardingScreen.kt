@@ -15,8 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -78,11 +77,13 @@ fun OnboardingScreen(
             Text(stringResource(R.string.onboarding_save))
         }
         if (uiState.saveStatus == SaveStatus.Failed) {
+            val message = stringResource(R.string.onboarding_save_failed)
             Text(
-                text = stringResource(R.string.onboarding_save_failed),
+                text = message,
                 color = MaterialTheme.colorScheme.error,
-                // Read out by screen readers when it appears.
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                // Read out by screen readers as it appears, like ScreenMessage. A retry that fails
+                // too isn't read again, since the message stays on screen.
+                modifier = Modifier.semantics { paneTitle = message }
             )
         }
     }

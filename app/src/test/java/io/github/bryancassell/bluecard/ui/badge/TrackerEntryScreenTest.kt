@@ -38,6 +38,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
@@ -223,7 +224,7 @@ class TrackerEntryScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Session", substring = true).assertDoesNotExist()
     }
 
@@ -232,7 +233,7 @@ class TrackerEntryScreenTest {
         show(TrackerEntryUiState.Unavailable)
 
         composeTestRule.onNodeWithText("This entry isn't in the tracker anymore.")
-            .assertIsDisplayed()
+            .assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Save").assertDoesNotExist()
     }
 

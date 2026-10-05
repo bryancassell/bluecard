@@ -39,6 +39,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -175,7 +176,7 @@ class BadgesScreenTest {
         composeTestRule.onNodeWithText("Merit badges").assert(isHeading()).assertIsDisplayed()
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()

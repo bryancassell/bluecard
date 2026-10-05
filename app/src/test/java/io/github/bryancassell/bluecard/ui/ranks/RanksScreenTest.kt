@@ -22,6 +22,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -87,7 +88,7 @@ class RanksScreenTest {
         composeTestRule.onNodeWithText("Ranks").assert(isHeading()).assertIsDisplayed()
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
     }

@@ -35,6 +35,7 @@ import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import java.time.LocalDate
@@ -170,7 +171,9 @@ class RankDetailScreenTest {
     fun loadFailed_showsMessageOnly() {
         show(RankDetailUiState.LoadFailed)
 
-        text("Couldn't load your data. Try closing and reopening BlueCard.").assertIsDisplayed()
+        text("Couldn't load your data. Try closing and reopening BlueCard.")
+            .assertIsDisplayed()
+            .assert(isPaneTitledWithItsText)
         text("Requirements").assertDoesNotExist()
     }
 
@@ -178,7 +181,9 @@ class RankDetailScreenTest {
     fun unavailable_showsMessageOnly() {
         show(RankDetailUiState.Unavailable)
 
-        text("This rank's requirements aren't in this version of BlueCard.").assertIsDisplayed()
+        text("This rank's requirements aren't in this version of BlueCard.")
+            .assertIsDisplayed()
+            .assert(isPaneTitledWithItsText)
         text("Requirements").assertDoesNotExist()
     }
 

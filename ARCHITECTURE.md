@@ -218,6 +218,24 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   happen. Onboarding predates this and shows its own message under its button.
   Data management runs its import and clear as it runs its export, with its own
   messages in one snackbar, rather than with a `TaskRunner`.
+- **A message that takes a screen's place is a pane titled with its own text**
+  ([#69](https://github.com/bryancassell/bluecard/issues/69)), so screen
+  readers announce it as it appears. Show one with `ScreenMessage`
+  (`ui/ScreenMessage.kt`), as every load-failed and unavailable message does.
+  Onboarding's save-failed message, under its button, is a pane the same way.
+  When Android 16 deprecated `announceForAccessibility`, its
+  [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
+  pointed to pane titles "for significant UI changes like window changes".
+  Material 3's `SnackbarHost` gives each snackbar a pane title too. A live
+  region isn't enough: Compose compares the semantics tree at most every
+  100 ms, and sends a live region's change only for a node that was in its last
+  comparison (`sendSemanticsPropertyChangeEvents` in
+  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). The
+  message is a new node, and even a live region composed with the screen would
+  count as new if the screen's data arrived within 100 ms. A node with a pane
+  title is announced whenever it appears, new or not
+  (`updateSemanticsNodesCopyAndPanes`). What TalkBack says is in PRD.md's
+  Design decisions.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
   developer without a scout reporting it: BlueCard is published on Google Play,
@@ -1173,6 +1191,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
 | [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
+| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a pane titled with its own text | Compose announces a pane whenever one appears, but a live region only when a node it already compared changes, which a fast load can miss. Android 16 points to pane titles for significant UI changes |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |

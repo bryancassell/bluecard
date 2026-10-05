@@ -3,11 +3,13 @@ package io.github.bryancassell.bluecard.ui
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.MainActivityUiState
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +48,7 @@ class BlueCardAppTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }

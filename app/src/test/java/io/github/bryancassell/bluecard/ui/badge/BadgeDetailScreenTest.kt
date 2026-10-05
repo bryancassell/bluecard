@@ -55,6 +55,7 @@ import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -714,7 +715,7 @@ class BadgeDetailScreenTest {
 
         composeTestRule
             .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
-            .assertIsDisplayed()
+            .assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Requirements").assertDoesNotExist()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
     }
@@ -725,7 +726,7 @@ class BadgeDetailScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Requirements").assertDoesNotExist()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
     }

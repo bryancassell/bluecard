@@ -43,6 +43,7 @@ import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.isPaneTitledWithItsText
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
@@ -278,7 +279,7 @@ class RequirementDetailScreenTest {
 
         composeTestRule
             .onNodeWithText("This requirement isn't in the requirements this badge or rank uses.")
-            .assertIsDisplayed()
+            .assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
@@ -288,7 +289,7 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText(
             "Couldn't load your data. Try closing and reopening BlueCard."
-        ).assertIsDisplayed()
+        ).assertIsDisplayed().assert(isPaneTitledWithItsText)
         composeTestRule.onNodeWithText("Requirement", substring = true).assertDoesNotExist()
     }
 
