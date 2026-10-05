@@ -17,6 +17,11 @@ code. Why the catalog works this way is in
   following" counts must match the official page exactly, because scouts and
   counselors use those numbers. The one exception is either/or children (see
   `requiredCount` below).
+- **Official merit badges only.** Scouts BSA Test Lab pilot badges, such as
+  Dance and Psychology, are left out: they count toward ranks only once they
+  become official, and their requirements are taken down when the pilot ends.
+  When one becomes official, add it like any new badge (see
+  [Dating a version](#dating-a-version)).
 - **Current requirements only, until the first release.** Write each badge's
   current requirements as its only version.
 - **After the first release, keep every shipped version.** When a badge's
