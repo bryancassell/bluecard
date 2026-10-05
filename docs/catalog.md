@@ -68,8 +68,9 @@ badge is on one. The page can also change without being listed, and any change
 to the words counts, even one word: a requirement's text (Textile 1's "define"
 became "explain"), a note built into a requirement, a label (Theater 1's
 footnote gained "Note:"), or a page note that sets conditions (Collections'
-note on collecting). Changes to punctuation, capitalization, spacing or resource
-links don't count.
+note on collecting). Changes to punctuation, capitalization, spacing, resource
+links or how a word is spelled (Dentistry 6a's "papier-mâché" became
+"paper-mâché") don't count.
 
 Date an unlisted change January 1 of the year it first appears in the Internet
 Archive's copies of the official page. That date is an estimate: say so in the
