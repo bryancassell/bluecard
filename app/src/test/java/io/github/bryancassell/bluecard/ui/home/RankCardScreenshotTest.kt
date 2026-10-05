@@ -9,8 +9,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
-import io.github.bryancassell.bluecard.data.progress.RankStatus
-import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Rule
 import org.junit.Test
@@ -50,25 +48,10 @@ class RankCardScreenshotTest {
         fractionDone: Float? = null,
         layoutDirection: LayoutDirection = LayoutDirection.Ltr
     ) {
-        val ranks = listOf(
-            "scout" to "Scout",
-            "tenderfoot" to "Tenderfoot",
-            "second-class" to "Second Class",
-            "first-class" to "First Class",
-            "star" to "Star",
-            "life" to "Life",
-            "eagle" to "Eagle Scout"
-        ).mapIndexed { index, (id, name) ->
-            when {
-                index < earned -> RankListItem(id, name, RankStatus.Earned)
-                index == earned -> RankListItem(id, name, RankStatus.InProgress, fractionDone)
-                else -> RankListItem(id, name, RankStatus.NotEarned)
-            }
-        }
         val uiState = HomeUiState.Ready(
             name = "Sam Rivera",
             unitNumber = "214",
-            ranks = ranks,
+            ranks = ranks(earned, fractionDone),
             badges = ProgressCounts(completed = 0, inProgress = 0),
             eagle = ProgressCounts(completed = 0, inProgress = 0),
             eagleTotal = 13,

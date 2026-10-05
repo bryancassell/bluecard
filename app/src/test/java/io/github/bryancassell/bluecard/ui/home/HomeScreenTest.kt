@@ -24,11 +24,9 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
-import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
-import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -46,26 +44,6 @@ class HomeScreenTest {
     private var badgesOpened = 0
     private var ranksOpened = 0
     private var dataManagementOpened = 0
-
-    /**
-     * Every rank, the first [earned] of them earned and the next in progress with [fractionDone]
-     * of it done.
-     */
-    private fun ranks(earned: Int, fractionDone: Float? = 0f) = listOf(
-        "scout" to "Scout",
-        "tenderfoot" to "Tenderfoot",
-        "second-class" to "Second Class",
-        "first-class" to "First Class",
-        "star" to "Star",
-        "life" to "Life",
-        "eagle" to "Eagle Scout"
-    ).mapIndexed { index, (id, name) ->
-        when {
-            index < earned -> RankListItem(id, name, RankStatus.Earned)
-            index == earned -> RankListItem(id, name, RankStatus.InProgress, fractionDone)
-            else -> RankListItem(id, name, RankStatus.NotEarned)
-        }
-    }
 
     private val noProgress = HomeUiState.Ready(
         name = "Alex Scout",
@@ -252,6 +230,16 @@ class HomeScreenTest {
             .assert(!hasText("In progress"))
             .assert(!hasClickAction())
             .assertIsDisplayed()
+        composeTestRule.onAllNodes(opensRank).assertCountEquals(0)
+    }
+
+    // As in a catalog without ranks: Home shows the rest rather than failing.
+    @Test
+    fun noRanks_showsNoRankCard() {
+        show(withProgress.copy(ranks = emptyList()))
+
+        text("Your rank").assertDoesNotExist()
+        text("Your merit badges").assertIsDisplayed()
     }
 
     @Test
@@ -272,7 +260,10 @@ class HomeScreenTest {
     fun clickingRankCard_opensTheRankInProgress() {
         show(withProgress)
 
-        rankCard().assert(opensRank).performClick()
+        rankCard()
+            .assert(opensRank)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .performClick()
 
         assertEquals(listOf("second-class"), openedRanks)
         assertEquals(0, ranksOpened)

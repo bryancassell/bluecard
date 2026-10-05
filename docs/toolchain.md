@@ -350,7 +350,8 @@ out of date, retake all three the same way, so they still match each other.
    so it stays sharp on high-density screens. Reduce it to 256 colors, which
    keeps each file under about 60 KB with no visible difference. With Pillow,
    `img.resize((540, height), Image.Resampling.LANCZOS).convert("RGB").quantize(256, method=Image.Quantize.MEDIANCUT)`,
-   saved with `save(path, optimize=True)`, reproduces an unchanged screenshot
+   where `height` is `round(img.height * 540 / img.width)` (1212 for the Pixel
+   10), saved with `save(path, optimize=True)`, reproduces an unchanged screenshot
    byte for byte, so only the images that changed show in the diff. Another
    resize filter changes every pixel, and a save without `optimize` changes the
    file's bytes.

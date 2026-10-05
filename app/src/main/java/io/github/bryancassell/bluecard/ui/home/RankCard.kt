@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -95,7 +94,13 @@ fun RankCard(
             // one. Screen readers hear how many ranks are earned instead.
             Row(modifier = Modifier.fillMaxWidth().clearAndSetSemantics {}) {
                 val labelStyle = MaterialTheme.typography.labelSmall
-                Text(uiState.ranks.first().name, style = labelStyle, color = colors.inversePrimary)
+                // Half the row each, so a long name wraps rather than squeezing the other.
+                Text(
+                    text = uiState.ranks.first().name,
+                    style = labelStyle,
+                    color = colors.inversePrimary,
+                    modifier = Modifier.weight(1f)
+                )
                 Text(
                     text = uiState.ranks.last().name,
                     style = labelStyle,
@@ -148,7 +153,6 @@ private fun RankTrail(ranks: List<RankListItem>, modifier: Modifier = Modifier) 
     val done = colors.onPrimary
     val toGo = colors.inversePrimary
     val background = colors.primary
-    val rightToLeft = LocalLayoutDirection.current == LayoutDirection.Rtl
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -159,7 +163,9 @@ private fun RankTrail(ranks: List<RankListItem>, modifier: Modifier = Modifier) 
         // Strokes are drawn centered on their circle, so each is inset to keep within its dot.
         val largeRadius = LargeDot.toPx() / 2
         val smallRadius = SmallDot.toPx() / 2
-        val step = (size.width - 2 * largeRadius) / ranks.lastIndex
+        val rightToLeft = layoutDirection == LayoutDirection.Rtl
+        // A catalog with one rank has a single dot, at the start.
+        val step = (size.width - 2 * largeRadius) / ranks.lastIndex.coerceAtLeast(1)
         fun dotCenter(index: Int): Offset {
             val x = largeRadius + index * step
             return Offset(if (rightToLeft) size.width - x else x, center.y)
@@ -178,12 +184,13 @@ private fun RankTrail(ranks: List<RankListItem>, modifier: Modifier = Modifier) 
                 RankStatus.InProgress -> {
                     val radius = largeRadius - lineWidth / 2
                     drawCircle(background, radius, dot)
-                    // Filled clockwise from the top, as far as the rank is done.
+                    // Filled from the top as far as the rank is done, clockwise, or right to
+                    // left counterclockwise, so the fill leads toward the ranks ahead.
                     rank.fractionDone?.let {
                         drawArc(
                             color = done,
                             startAngle = -90f,
-                            sweepAngle = 360f * it,
+                            sweepAngle = 360f * it * if (rightToLeft) -1 else 1,
                             useCenter = true,
                             topLeft = dot - Offset(radius, radius),
                             size = Size(2 * radius, 2 * radius)

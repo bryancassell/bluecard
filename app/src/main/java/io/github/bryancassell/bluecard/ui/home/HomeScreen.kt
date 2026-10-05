@@ -107,7 +107,10 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-            RankCard(uiState, onOpenRank, modifier = inset)
+            // A catalog with no ranks has no rank to show.
+            if (uiState.ranks.isNotEmpty()) {
+                RankCard(uiState, onOpenRank, modifier = inset)
+            }
             if (uiState.hasNoProgress) {
                 Text(stringResource(R.string.home_no_progress), modifier = inset)
             } else {

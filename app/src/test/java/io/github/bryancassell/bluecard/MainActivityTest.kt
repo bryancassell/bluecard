@@ -249,6 +249,9 @@ class MainActivityTest {
     // field that holds the same name.
     private fun home() = composeTestRule.onNode(isHeading() and hasText("Alex Scout"))
 
+    // Home's Ranks button, rather than the Ranks screen's title.
+    private fun ranksButton() = composeTestRule.onNode(hasText("Ranks") and hasClickAction())
+
     // Without a profile, Home would show only its loading indicator.
     private fun homeLoading() = composeTestRule.onNode(
         SemanticsMatcher.expectValue(
@@ -1159,8 +1162,10 @@ class MainActivityTest {
 
         pressBack()
 
-        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
-        home().performScrollTo().assertIsDisplayed()
+        // Home is back where it was scrolled to: the button tapped is on screen, and the name
+        // above it.
+        home().assertExists()
+        composeTestRule.onNodeWithText("Manage data").assertIsDisplayed()
     }
 
     private fun openEditNameAndUnit() {
@@ -1241,8 +1246,10 @@ class MainActivityTest {
 
         pressBack()
 
-        // Home keeps where it was scrolled to, with the name above the screen.
-        home().performScrollTo().assertIsDisplayed()
+        // Home is back where it was scrolled to: the button tapped is on screen, and the name
+        // above it.
+        home().assertExists()
+        ranksButton().assertIsDisplayed()
     }
 
     @Test
@@ -1361,8 +1368,9 @@ class MainActivityTest {
         tapTwiceInOneFrame("Ranks")
         pressBack()
 
-        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
-        home().performScrollTo().assertIsDisplayed()
+        // Home is back where it was scrolled to, as in back_fromRanks_returnsHome.
+        home().assertExists()
+        ranksButton().assertIsDisplayed()
     }
 
     @Test
@@ -1404,8 +1412,9 @@ class MainActivityTest {
         tapTwiceInOneFrame("Manage data")
         pressBack()
 
-        // Home keeps where it was scrolled to, as in back_fromRanks_returnsHome.
-        home().performScrollTo().assertIsDisplayed()
+        // Home is back where it was scrolled to, as in back_fromDataManagement_returnsHome.
+        home().assertExists()
+        composeTestRule.onNodeWithText("Manage data").assertIsDisplayed()
     }
 
     @Test
