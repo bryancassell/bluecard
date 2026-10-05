@@ -1727,6 +1727,312 @@
       ]
     },
     {
+      "id": "athletics",
+      "name": "Athletics",
+      "summary": "Learn athletic safety, health and sportsmanship, train in an activity for three months, improve in four kinds of events, and help at a sports meet.",
+      "officialUrl": "https://www.scouting.org/merit-badges/athletics/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to stay safe in athletics.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain athletics hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for athletics injuries and illnesses, including sprains, strains, contusions, abrasions, blisters, dehydration, heat reactions and concussions."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Discuss staying healthy with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss why a yearly physical matters and why it covers overall health, immunizations, medications, allergies and medical history, and tell when you last had one."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain your healthy habits, especially in training, and how tobacco, alcohol and other harmful substances can hurt your health and athletic performance."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Describe a nutritious, balanced diet and how you keep yours healthy."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Choose an athletic activity and train for it for three months.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "With your counselor's guidance, set up a training program for your activity and follow it for three months."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Track your progress over those three months with a chart or other method.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "training",
+                        "label": "Training done",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "progress",
+                        "label": "Progress",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain the equipment the activity needs and the right clothing for it and the season."
+                },
+                {
+                  "number": "3d",
+                  "summary": "After three months, review your 3b records, discuss your progress with your counselor, and tell how your training has changed you in body and mind."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about rules, warm-ups and sportsmanship.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain the rules of two athletic activities, including the one you chose in requirement 3."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Discuss why warming up beforehand and cooling down afterward matter for every training session or event."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain what makes an athlete an amateur, and how amateurs differ from professionals."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Discuss what good sportsmanship looks like, why it matters, and its role in individual and group activities."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Do the events in four of these groups, and show improvement over three months.",
+              "requiredCount": 4,
+              "children": [
+                {
+                  "number": "5A",
+                  "summary": "Option A: sprinting.",
+                  "children": [
+                    {
+                      "number": "5A(1)",
+                      "summary": "100-meter dash."
+                    },
+                    {
+                      "number": "5A(2)",
+                      "summary": "200-meter dash."
+                    }
+                  ]
+                },
+                {
+                  "number": "5B",
+                  "summary": "Option B: long-distance running.",
+                  "children": [
+                    {
+                      "number": "5B(1)",
+                      "summary": "3K run."
+                    },
+                    {
+                      "number": "5B(2)",
+                      "summary": "5K run."
+                    }
+                  ]
+                },
+                {
+                  "number": "5C",
+                  "summary": "Option C: long jump or high jump.",
+                  "children": [
+                    {
+                      "number": "5C(1)",
+                      "summary": "Running long jump or running high jump, best of three tries."
+                    },
+                    {
+                      "number": "5C(2)",
+                      "summary": "Standing long jump or standing high jump, best of three tries."
+                    }
+                  ]
+                },
+                {
+                  "number": "5D",
+                  "summary": "Option D: swimming.",
+                  "children": [
+                    {
+                      "number": "5D(1)",
+                      "summary": "100-meter swim."
+                    },
+                    {
+                      "number": "5D(2)",
+                      "summary": "200-meter swim."
+                    }
+                  ]
+                },
+                {
+                  "number": "5E",
+                  "summary": "Option E: pull-ups and push-ups.",
+                  "children": [
+                    {
+                      "number": "5E(1)",
+                      "summary": "Pull-ups in two minutes."
+                    },
+                    {
+                      "number": "5E(2)",
+                      "summary": "Push-ups in two minutes."
+                    }
+                  ]
+                },
+                {
+                  "number": "5F",
+                  "summary": "Option F: baseball throw.",
+                  "children": [
+                    {
+                      "number": "5F(1)",
+                      "summary": "10 throws at a target for accuracy, from 20 feet at ages 11–12, 30 feet at 13–15 or 40 feet at 16–17."
+                    },
+                    {
+                      "number": "5F(2)",
+                      "summary": "Five throws for distance, counting the total."
+                    }
+                  ]
+                },
+                {
+                  "number": "5G",
+                  "summary": "Option G: basketball shooting.",
+                  "children": [
+                    {
+                      "number": "5G(1)",
+                      "summary": "10 free throws for accuracy."
+                    },
+                    {
+                      "number": "5G(2)",
+                      "summary": "Shoot from each of these spots for skill and agility.",
+                      "children": [
+                        {
+                          "number": "5G(2)(a)",
+                          "summary": "Left-side layup."
+                        },
+                        {
+                          "number": "5G(2)(b)",
+                          "summary": "Right-side layup."
+                        },
+                        {
+                          "number": "5G(2)(c)",
+                          "summary": "Left side of the hoop, along the key line."
+                        },
+                        {
+                          "number": "5G(2)(d)",
+                          "summary": "Right side of the hoop, along the key line."
+                        },
+                        {
+                          "number": "5G(2)(e)",
+                          "summary": "Where the key line meets the free-throw line, left side."
+                        },
+                        {
+                          "number": "5G(2)(f)",
+                          "summary": "Where the key line meets the free-throw line, right side."
+                        },
+                        {
+                          "number": "5G(2)(g)",
+                          "summary": "Top of the key."
+                        },
+                        {
+                          "number": "5G(2)(h)",
+                          "summary": "Another spot along the three-point line."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "5H",
+                  "summary": "Option H: football or soccer kick.",
+                  "children": [
+                    {
+                      "number": "5H(1)",
+                      "summary": "Eight kicks for goals from the 10-yard line."
+                    },
+                    {
+                      "number": "5H(2)",
+                      "summary": "Five football or soccer kicks for distance, counting the total."
+                    }
+                  ]
+                },
+                {
+                  "number": "5I",
+                  "summary": "Option I: weight training.",
+                  "children": [
+                    {
+                      "number": "5I(1)",
+                      "summary": "Chest or bench press, two sets of 15 reps."
+                    },
+                    {
+                      "number": "5I(2)",
+                      "summary": "Leg curls, two sets of 15 reps."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Plan a sports meet and help at one.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Plan a sports meet or field day with 10 activities, at least five from requirement 5's groups, outlining each official's duties and listing the equipment needed."
+                },
+                {
+                  "number": "6b",
+                  "summary": "With permission and approval, work as an official or volunteer at a sports meet and see how its officials work, then tell your counselor about your duties and what you learned."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore an athletics career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Explore three athletics careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research how athletics could become a hobby or part of a healthy lifestyle, and share your goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "automotive-maintenance",
       "name": "Automotive Maintenance",
       "summary": "Learn how cars work and how to care for them, from fluids, tires and brakes to engines and electric systems.",
@@ -4545,6 +4851,194 @@
       ]
     },
     {
+      "id": "composite-materials",
+      "name": "Composite Materials",
+      "summary": "Learn to work safely with composites, how they compare with other materials and how they're made, then build two composite projects.",
+      "officialUrl": "https://www.scouting.org/merit-badges/composite-materials/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to work safely with composites.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the hazards of working with composites, how to prevent and handle them, and what safety gear and clothing to wear."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain the precautions for handling, storing and throwing away resins, reinforcements and other composite supplies, and why health, safety and care for the environment matter."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Describe a safety data sheet (SDS) and what it's used for."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn what composites are and how they compare with other materials.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain what composites are, and trace how they've developed over time."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Compare composites with wood, aluminum, copper and steel, covering physical, electrical, mechanical, corrosion, flammability, cost and other properties, and give one example of shaping and using each of the four."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how composites are made, and study reinforcements and resins.",
+              "ownWork": "Explain the steps in making a composite.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Discuss three reinforcement materials, their pros, cons and uses, and what each one's SDS says about toxicity, disposal and safe handling.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "reinforcement",
+                        "label": "Reinforcement",
+                        "type": "text"
+                      },
+                      {
+                        "id": "pros-cons",
+                        "label": "Pros and cons",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "uses",
+                        "label": "Uses",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "sds",
+                        "label": "SDS: toxicity, disposal and handling",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "reinforcement",
+                    "rowLabelPlural": "reinforcements",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "3b",
+                  "summary": "Discuss three resins, including thermoset and thermoplastic ones, with their pros, cons and uses, and what each one's SDS says about toxicity, disposal and safe handling.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "resin",
+                        "label": "Resin",
+                        "type": "text"
+                      },
+                      {
+                        "id": "kind",
+                        "label": "Thermoset or thermoplastic",
+                        "type": "text"
+                      },
+                      {
+                        "id": "pros-cons",
+                        "label": "Pros and cons",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "uses",
+                        "label": "Uses",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "sds",
+                        "label": "SDS: toxicity, disposal and handling",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "resin",
+                    "rowLabelPlural": "resins",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "3c",
+                  "summary": "Think up a promising new use for each of your 3b resins.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "resin",
+                        "label": "Resin",
+                        "type": "text"
+                      },
+                      {
+                        "id": "new-use",
+                        "label": "New use",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "resin",
+                    "rowLabelPlural": "resins",
+                    "rowCount": 3
+                  }
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "With permission and approval, visit a composites company or explore composites websites.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Tour a business that makes or repairs composite products, then talk over what you learned with your counselor."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Find three composites websites, and tell your counselor what you learned from them."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Make two composite projects.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Complete two composite projects, at least one from the pamphlet; the other can be your own, if your counselor approves it first."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With your counselor's help, find a safe place to do the projects, supervised by your counselor or an adult they approve who knows composites."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Agree with your counselor on how to judge the finished projects, then use that to evaluate them together."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explore a composites career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Research a career related to composites and discuss what makes it interesting."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Research a hobby or interest that uses composites skills, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "cooking",
       "name": "Cooking",
       "summary": "Learn food safety and nutrition, and cook at home, in camp and on the trail.",
@@ -5264,6 +5758,174 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dentistry",
+      "name": "Dentistry",
+      "summary": "Learn how teeth are built and decay, visit a dentist, and help others keep their teeth and gums healthy.",
+      "officialUrl": "https://www.scouting.org/merit-badges/dentistry/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "With your counselor's guidance, study a tooth on X-rays (radiographs) and draw it.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Examine how the teeth are built and check for decay."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Working from the X-rays, draw a lower molar with its parts and surfaces labeled and the bone and gums around it."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Add to your drawing the points where nerves and blood vessels pass into and out of the tooth."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Mark the parts of the tooth in your drawing where bacterial plaque tends to build up."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn what harms teeth and gums.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain, aloud or in writing, the causes of tooth decay and gum disease and the role bacterial plaque, sugars and acid each play."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain what injuries can cause tooth loss, the kinds of mouth guards that protect against it and the sports that call for one."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain first aid for saving a knocked-out tooth."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Discuss how tobacco can damage your mouth, teeth and gums."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Visit a dentist, asking ahead for an exam and a plaque-control demonstration; ask your questions, then tell your counselor what a checkup involves."
+            },
+            {
+              "number": "4",
+              "summary": "Do two of these.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Name five or more instruments and five or more pieces of equipment that dentists use."
+                },
+                {
+                  "number": "4b",
+                  "summary": "With a dentist's help, make a dental stone cast using a vibrator, mixing bowl, water measure, plastic measure, model stone and spatula."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Write down all you eat over three days, circle the items with sugars that plaque can turn into acid, and list snacks to avoid for healthy teeth.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "food",
+                        "label": "What you ate",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "sugars",
+                        "label": "Items with sugars",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Discuss these with your counselor.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "How fluoride protects teeth from decay, and the ways teeth can get it."
+                },
+                {
+                  "number": "5b",
+                  "summary": "The links between the mouth and the rest of the body, such as chewing, saliva, enzymes, nutrition and speech."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Do two of these.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Make a model tooth from soap, clay, papier-mâché or wax, and use it with a string and big brush to show your troop or a class how to brush and floss."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Make a poster on preventing dental disease and why good oral health matters."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Gather five or more ads for different toothpastes, list each one's claims, and tell how accurate they are.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "toothpaste",
+                        "label": "Toothpaste",
+                        "type": "text"
+                      },
+                      {
+                        "id": "claims",
+                        "label": "Its claims",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "accuracy",
+                        "label": "How accurate they are",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "ad",
+                    "rowLabelPlural": "ads",
+                    "rowCount": 5
+                  }
+                },
+                {
+                  "number": "6d",
+                  "summary": "Write a school newspaper feature on caring for teeth and gums, including how tobacco can harm them."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Draw and write about how tooth decay progresses, and describe how dentists repair it with fillings and other treatments."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore three dentistry careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -6404,6 +7066,195 @@
                   "summary": "Research how emergency skills could become a hobby or healthy habit."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "energy",
+      "name": "Energy",
+      "summary": "Learn how energy changes form and moves through systems, audit your home's energy use, and explore where energy comes from and how to use less of it.",
+      "officialUrl": "https://www.scouting.org/merit-badges/energy/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Find a source online about energy, and come back to it after the other requirements.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "With permission, find a blog, podcast, website or article online about using or saving energy, and discuss what interested you, what questions it raises and what you didn't understand."
+                },
+                {
+                  "number": "1b",
+                  "summary": "After requirements 2 to 8, return to your 1a source and explain how the badge work deepened your understanding of it."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Show how energy changes form.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Pick three of these and explain how each uses energy and what conversions happen: toaster, greenhouse, lightbulb, bow drill, cell phone, nuclear reactor, sauna or electric vehicles.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "device",
+                        "label": "Device",
+                        "type": "text"
+                      },
+                      {
+                        "id": "use",
+                        "label": "How it uses energy",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "conversions",
+                        "label": "Its energy conversions",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "device",
+                    "rowLabelPlural": "devices",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "2b",
+                  "summary": "Build something that changes energy from one form to another at least twice, and explain it to your counselor."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain an everyday system where energy moves to do useful work, and what it shows about efficiency.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Identify which parts of the system the moving energy affects."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Tell where the system mainly gets its energy."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Identify what useful results the system produces."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Identify where the system loses energy."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Audit your home's energy use, keep a 14-day log of how your family saved energy, and report what you learned.",
+              "ownWork": "Audit your home's energy use, keep a 14-day log of what your family did to use less, write up a report, and afterward discuss what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "List the kinds of energy your home uses, how each one reaches your home, how it's measured and what it costs, or record the fuel, miles, miles per gallon and trips of your family car or another vehicle."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Suggest smarter ways your family could use energy day to day, explain sustainable energy sources, and how reusing and recycling affect your energy use."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "In a notebook, describe five ways energy is wasted at school or in your community and how to cut each, and explain energy trade-offs.",
+              "ownWork": "In a notebook, describe five cases of wasted energy at your school or in your community, suggest ways to cut each, and describe what trade-offs in energy use are.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how your ideas would save money, cut pollution or improve your community in other ways."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain how routines, habits or convenience would have to change to cut the waste, and why people might push back."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Make these pie charts and explain what each shows and where your data came from, and how cost affects nonrenewable energy and its alternatives.",
+              "ownWork": "Explain how a nonrenewable resource's price shapes how much it's used and when other energy sources become practical.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "The main sources of U.S. energy."
+                },
+                {
+                  "number": "6b",
+                  "summary": "The share of U.S. energy that's imported."
+                },
+                {
+                  "number": "6c",
+                  "summary": "How energy use splits among homes, businesses, industry and transportation."
+                },
+                {
+                  "number": "6d",
+                  "summary": "The mix of fuels behind U.S. electricity."
+                },
+                {
+                  "number": "6e",
+                  "summary": "How much of each primary energy resource the world is known or estimated to have."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "For five of these energy systems, explain what's being done to get more usable energy from them, including the technology, cost, environmental impact and safety.",
+              "requiredCount": 5,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Biomass digesters or waste-to-energy plants."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Cogeneration plants."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Fossil fuel power plants."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Fuel cells."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Geothermal power plants."
+                },
+                {
+                  "number": "7f",
+                  "summary": "Nuclear power plants."
+                },
+                {
+                  "number": "7g",
+                  "summary": "Solar power systems."
+                },
+                {
+                  "number": "7h",
+                  "summary": "Tidal energy, wave energy or ocean thermal energy conversion devices."
+                },
+                {
+                  "number": "7i",
+                  "summary": "Wind turbines."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore three energy careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -8824,6 +9675,202 @@
       ]
     },
     {
+      "id": "gardening",
+      "name": "Gardening",
+      "summary": "Grow vegetables and flowers, test seeds and fight pests, learn about pollinators and nutrition, and keep up a compost, hydroponic, water or other garden project.",
+      "officialUrl": "https://www.scouting.org/merit-badges/gardening/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to garden safely.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain gardening hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Discuss preventing and treating gardening health problems, including cuts, scratches, puncture wounds, insect bites, anaphylactic shock, heat reactions and reactions to pesticides and fertilizers."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Grow vegetables and flowers, and talk with your counselor about what you observe as they grow.",
+              "ownWork": "Discuss what you see with your counselor as your plants grow.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Raise six vegetables to harvest: three from seed, three from seedlings."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Raise six flowers until they bloom: three from seed, three from seedlings."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Describe what each of these foods offers nutritionally.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Three root or tuber crops.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "crop",
+                        "label": "Crop",
+                        "type": "text"
+                      },
+                      {
+                        "id": "nutrition",
+                        "label": "Nutritional value",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "crop",
+                    "rowLabelPlural": "crops",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "3b",
+                  "summary": "Three vegetables that grow above the ground.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "vegetable",
+                        "label": "Vegetable",
+                        "type": "text"
+                      },
+                      {
+                        "id": "nutrition",
+                        "label": "Nutritional value",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "vegetable",
+                    "rowLabelPlural": "vegetables",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "3c",
+                  "summary": "Three fruits.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "fruit",
+                        "label": "Fruit",
+                        "type": "text"
+                      },
+                      {
+                        "id": "nutrition",
+                        "label": "Nutritional value",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "fruit",
+                    "rowLabelPlural": "fruits",
+                    "rowCount": 3
+                  }
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Test 100 seeds to find what percentage germinate, and suggest why some didn't sprout."
+            },
+            {
+              "number": "5",
+              "summary": "Visit a county extension office, local university, agricultural college, nursery, farm, botanical garden or arboretum, and report what you learned."
+            },
+            {
+              "number": "6",
+              "summary": "Explain why and how growers use honeybees to pollinate food crops, the problems bees face today, and what a world with no pollinators would mean for people."
+            },
+            {
+              "number": "7",
+              "summary": "Name five garden pests, insects or plant diseases, and give two ways to deal with each, at least one of them organic.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "pest",
+                    "label": "Pest",
+                    "type": "text"
+                  },
+                  {
+                    "id": "organic",
+                    "label": "Organic solution",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "second",
+                    "label": "Second solution",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "pest",
+                "rowLabelPlural": "pests",
+                "rowCount": 5
+              }
+            },
+            {
+              "number": "8",
+              "summary": "Do one of these projects, recording what you see each week, and discuss the results with your counselor.",
+              "requiredCount": 1,
+              "ownWork": "Record what you observe each week, and talk over your project's results with your counselor.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Build and tend a compost bin for 90 days."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Build and tend a vermipost (worm compost) bin for 90 days."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Build a hydroponic garden of three vegetables or herbs, or three ornamental plants, and keep it going through harvest or flowering, or for 90 days."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Build a water garden, either a container at least 12 by 6 inches and 6 inches deep or a small in-ground pond no bigger than 6 by 3 feet and 24 inches deep, and keep it up for 90 days."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Prepare a honey super for a hive, then take out a full one and get the honey ready to sell."
+                },
+                {
+                  "number": "8f",
+                  "summary": "Grow your own garden in soil, indoors or out, from seed or plantings, with at least three counselor-approved kinds of plants, until harvest or for 90 days, whichever comes first."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore a gardening career or hobby.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Explore three gardening careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Research how gardening could become a hobby or part of a healthy lifestyle, and share your goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "genealogy",
       "name": "Genealogy",
       "summary": "Learn how family history research works, interview a relative, find and judge records, and start your family tree and family group records.",
@@ -10711,6 +11758,133 @@
       ]
     },
     {
+      "id": "journalism",
+      "name": "Journalism",
+      "summary": "Learn about press freedom and journalism ethics, compare how different outlets cover the news, visit a newsroom, and write or photograph stories of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/journalism/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain freedom of the press and the First Amendment, how to tell fact from opinion, and the terms libel, slander, defamation, fair comment and criticism, public figure, privacy and malice, and how they bear on journalism ethics."
+            },
+            {
+              "number": "2",
+              "summary": "Compare news coverage and visit a newsroom, in print and online or in radio and TV.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "2A",
+                  "summary": "Option A: newspaper, magazine and online journalism, with permission for the online parts.",
+                  "children": [
+                    {
+                      "number": "2A(1)",
+                      "summary": "On the same day, compare one event's coverage in a local and a national news source, a news magazine and a social media feed: each story's length, how fairly and accurately it gives different views, and how the source handled it.",
+                      "tracker": {
+                        "columns": [
+                          {
+                            "id": "source",
+                            "label": "Source",
+                            "type": "text"
+                          },
+                          {
+                            "id": "length",
+                            "label": "Story length",
+                            "type": "text"
+                          },
+                          {
+                            "id": "fairness",
+                            "label": "Fairness and accuracy",
+                            "type": "multiline-text"
+                          },
+                          {
+                            "id": "handling",
+                            "label": "How it handled the story",
+                            "type": "multiline-text"
+                          }
+                        ],
+                        "rowLabel": "source",
+                        "rowLabelPlural": "sources",
+                        "rowCount": 4
+                      }
+                    },
+                    {
+                      "number": "2A(2)",
+                      "summary": "Tour a newspaper, magazine or news website's divisions, and ask a business executive how management works with reporters, editors and photographers and what makes a good news outlet; a virtual visit your counselor approves in advance counts if you can't go in person."
+                    }
+                  ]
+                },
+                {
+                  "number": "2B",
+                  "summary": "Option B: radio and television journalism.",
+                  "children": [
+                    {
+                      "number": "2B(1)",
+                      "summary": "On one day, watch a local and a national network newscast, hear a radio newscast and, with permission, view a national broadcaster's news online; list each one's stories, features, elements and time or space, compare their fairness and accuracy, and explain why coverage differed between outlets."
+                    },
+                    {
+                      "number": "2B(2)",
+                      "summary": "Tour a radio or TV station, focusing on its news departments; ask a manager about how the station runs, especially how managers and the news team cooperate, and what makes a station good; and go along with a reporter on a story if you can."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn how hard news and feature stories differ and the five W's and H, then write or report a story.",
+              "requiredCount": 1,
+              "ownWork": "Discuss how hard news and feature stories differ, and explain the five W's and H.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Write a hard news or feature article about a current or unusual event that interests you, for print, online, audio or video, and share it with your counselor."
+                },
+                {
+                  "number": "3b",
+                  "summary": "With permission and approval, interview a community member who's influential through leadership, talent, career or life experience, then report what you learned about them to your counselor, in writing or aloud."
+                },
+                {
+                  "number": "3c",
+                  "summary": "With permission and approval, read a journalist's autobiography, and write an article on what you learned about them and what they've given to journalism."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Write a 200-word feature or hard news article on a Scouting event you attend, in inverted pyramid or chronological style; review it with your counselor, then send it to your community paper or a council or district newsletter."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Go to a public event and cover it in one of these ways.",
+              "requiredCount": 1,
+              "ownWork": "Go to a public event.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Write one article on it in inverted pyramid style and another in chronological style."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Write a news story, a feature story and a critical review of it for radio, TV or a podcast."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Tell its story in a series of news and feature photos, with captions and a short synopsis of the event."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore three journalism careers, research one, and discuss whether it interests you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "kayaking",
       "name": "Kayaking",
       "summary": "Learn kayak safety, gear and strokes, then paddle, maneuver and practice rescues on the water.",
@@ -10880,6 +12054,98 @@
                   "summary": "Paddle a figure 8 around buoys three to four boat lengths apart."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "landscape-architecture",
+      "name": "Landscape Architecture",
+      "summary": "Visit a landscape architect's project, learn plants for your area, and map, study and redesign a building's entrance area.",
+      "officialUrl": "https://www.scouting.org/merit-badges/landscape-architecture/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Visit a finished landscape project designed by a landscape architect, getting its design plan from the architect first if you can."
+            },
+            {
+              "number": "2",
+              "summary": "After your visit, discuss these things about the design with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Whether it had separate spaces, a clear entry point and path system, and both sun and shade."
+                },
+                {
+                  "number": "2b",
+                  "summary": "How its structures and its seating, eating and parking areas worked with the rest of the design."
+                },
+                {
+                  "number": "2c",
+                  "summary": "How the design looked after the comfort, shelter and security of the people using it."
+                },
+                {
+                  "number": "2d",
+                  "summary": "How the trees, shrubs and ground covers chosen made the site more attractive and useful."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "With help from your counselor or a nursery, choose five shrubs, five trees and a ground cover that grow locally and differ in shape, size and texture, then show pictures or samples to a group and explain how you'd use and care for each.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "plant",
+                    "label": "Plant",
+                    "type": "text"
+                  },
+                  {
+                    "id": "kind",
+                    "label": "Shrub, tree or ground cover",
+                    "type": "text"
+                  },
+                  {
+                    "id": "use",
+                    "label": "How you'd use it in a design",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "care",
+                    "label": "Care it would need",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "plant",
+                "rowLabelPlural": "plants"
+              }
+            },
+            {
+              "number": "4",
+              "summary": "With permission from whoever is in charge, study the entry area of a place of worship, school or public building, then map it, its drainage and a safer redesign.",
+              "ownWork": "With permission from whoever is in charge, study a place of worship, school or public building, and find where most people arrive by bus or car.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "With a measuring tape, draw the main entry area to a scale you state, showing the driveway, the path to the main door and any sidewalks, structures, plants, lights, drains, utilities or furnishings; keep the original and make two copies."
+                },
+                {
+                  "number": "4b",
+                  "summary": "On one copy, draw arrows for the way water flows over the site, and mark its ditches and the spots where water pools."
+                },
+                {
+                  "number": "4c",
+                  "summary": "On the other copy, redesign the area so it's safer and more comfortable to use."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore three landscape architecture careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -17653,6 +18919,53 @@
       ]
     },
     {
+      "id": "scuba-diving",
+      "name": "Scuba Diving",
+      "summary": "Learn scuba first aid and CPR, earn Swimming and an Open Water Diver certification, and study the Scuba Diver's Code and aquatic ecosystems.",
+      "officialUrl": "https://www.scouting.org/merit-badges/scuba-diving/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn first aid and CPR for diving.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Show first aid for scuba diving injuries and illnesses: hypothermia, hyperventilation, squeezes, decompression illness, nitrogen narcosis, motion sickness, fatigue, overexertion, heat reactions, dehydration, injuries from aquatic life, and cuts and scrapes."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain when CPR is needed and how to tell, then show CPR on a counselor-approved training device."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Earn the Swimming merit badge before doing requirements 3 to 6."
+            },
+            {
+              "number": "3",
+              "summary": "Discuss the Scuba Diver's Code and why each guideline matters for a diver's safety."
+            },
+            {
+              "number": "4",
+              "summary": "Become a certified Open Water Diver through a scuba organization that Scouting America's scuba policy recognizes."
+            },
+            {
+              "number": "5",
+              "summary": "Define an ecosystem, and describe four aquatic ecosystems you might dive in."
+            },
+            {
+              "number": "6",
+              "summary": "Explore three scuba careers, research one's education, training and experience, and discuss why it might interest you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "sculpture",
       "name": "Sculpture",
       "summary": "Learn to work safely with a sculptor's tools, model or cast your own pieces, and explore sculpture as art, a career or a hobby.",
@@ -20317,6 +21630,175 @@
       ]
     },
     {
+      "id": "truck-transportation",
+      "name": "Truck Transportation",
+      "summary": "Learn how trucks move goods for businesses, visit a truck terminal, and plan a freight shipment.",
+      "officialUrl": "https://www.scouting.org/merit-badges/truck-transportation/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "List the major trucking companies that serve your town."
+            },
+            {
+              "number": "2",
+              "summary": "Learn how trucking fits into commerce.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Describe trucking's part in commerce, which moves goods, funds and information."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Describe where trucks fit in the supply chain of a manufacturer, importer, wholesaler or retailer."
+                },
+                {
+                  "number": "2c",
+                  "summary": "On paper, lay out how goods made overseas travel to a store in this country."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Compare gasoline and diesel truck engines, including the advantages of each."
+            },
+            {
+              "number": "4",
+              "summary": "Visit a truck terminal, find out these things there, and afterward share what you learned with your counselor.",
+              "ownWork": "Visit a truck terminal, and afterward tell your counselor what you learned.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Find out how the company's maintenance program helps its fleet, drivers and the road stay safe."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Ask how dispatchers and drivers on the road stay in touch."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Ask a professional truck driver about driving safely, and list five safety rules every professional trucker must obey."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Look over a driver's log to see what information it holds."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Learn about key federal regulations that protect the public."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how a trucking company is organized.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Outline a trucking company's organization and what each department does."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Name five trucking company jobs and what each involves.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "job",
+                        "label": "Job",
+                        "type": "text"
+                      },
+                      {
+                        "id": "description",
+                        "label": "What it involves",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "job",
+                    "rowLabelPlural": "jobs",
+                    "rowCount": 5
+                  }
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Name five government agencies tied closely to trucking, and describe what each one does.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "agency",
+                    "label": "Agency",
+                    "type": "text"
+                  },
+                  {
+                    "id": "role",
+                    "label": "Its role",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "agency",
+                "rowLabelPlural": "agencies",
+                "rowCount": 5
+              }
+            },
+            {
+              "number": "7",
+              "summary": "Name five kinds of trucks and the job each one does.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "kind",
+                    "label": "Kind of truck",
+                    "type": "text"
+                  },
+                  {
+                    "id": "service",
+                    "label": "Service it provides",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "truck",
+                "rowLabelPlural": "trucks",
+                "rowCount": 5
+              }
+            },
+            {
+              "number": "8",
+              "summary": "Explain in writing how you'd ship 500 pounds of goods (freight class 65) by truck to a town 500 miles away within three days.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "How to get the shipment ready."
+                },
+                {
+                  "number": "8b",
+                  "summary": "How to compare at least three carriers' transit times and rates."
+                },
+                {
+                  "number": "8c",
+                  "summary": "How to pick a carrier."
+                },
+                {
+                  "number": "8d",
+                  "summary": "How to insure it against damage."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Define bill of lading, ETA, logbook, intermodal, containers, tariff, shippers, carrier, consignee, drayage and cartage."
+            },
+            {
+              "number": "10",
+              "summary": "Research a career related to trucking and discuss what makes it interesting."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "veterinary-medicine",
       "name": "Veterinary Medicine",
       "summary": "Learn the many roles veterinarians and veterinary technicians play and how to train for them, and see a veterinarian's work up close.",
@@ -20433,6 +21915,81 @@
                   "summary": "What continuing education it takes to stay certified."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "water-sports",
+      "name": "Water Sports",
+      "summary": "Learn water sports safety, life jackets and skier signals, then waterski or wakeboard, from deep-water starts to crossing wakes.",
+      "officialUrl": "https://www.scouting.org/merit-badges/water-sports/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about water sports safety.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain water sports hazards and how to prevent and handle them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Review preventing, recognizing and treating blisters, cold-water shock and hypothermia, dehydration, heat-related illnesses, sunburn, sprains, strains, minor cuts and bruises, spinal injury, and concussions and head trauma."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Review Safety Afloat and explain how it applies to water sports."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about life jackets and the Water Sports Safety Code.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss what makes a life jacket right for water sports and why you must always wear one when waterskiing or wakeboarding, then show how to pick and fit one."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Go over the Water Sports Safety Code with your counselor and promise to follow it whenever you're on the water for this badge; then review the precautions a boat driver must take when towing skiers and wakeboarders."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Pass the Scouting America swimmer test before doing requirements 4 to 6."
+            },
+            {
+              "number": "4",
+              "summary": "Give the boat's safety observer the skier signals for skier safe, faster, slower, turns, back to dock, cut motor and skier in water."
+            },
+            {
+              "number": "5",
+              "summary": "On two skis, one ski or a wakeboard, do these with reasonable control.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Go from the boat into the water and get up from a deep-water start on your own."
+                },
+                {
+                  "number": "5b",
+                  "summary": "From outside the wakes, cross both of them four times without falling, returning to the middle after each crossing."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Fall correctly to miss an obstacle, and let go of the handle and glide to a stop while staying balanced."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Adjust your ski or wakeboard bindings to fit, on shore and in deep water, and get a ski or board back on after it comes off in a fall."
             }
           ]
         }
