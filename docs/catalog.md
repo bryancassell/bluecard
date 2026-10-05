@@ -17,10 +17,12 @@ code. Why the catalog works this way is in
   following" counts must match the official page exactly, because scouts and
   counselors use those numbers. The one exception is either/or children (see
   `requiredCount` below).
-- **Official merit badges only.** Scouts BSA Test Lab pilot badges, such as
-  Dance and Psychology, are left out: they count toward ranks only once they
+- **Leave out Test Lab pilots.** Scouts BSA Test Lab pilot badges, whose
+  requirements are on Scouting America's Test Lab pages rather than a
+  `/merit-badges/` page, aren't added: they count toward ranks only once they
   become official, and their requirements are taken down when the pilot ends.
-  When one becomes official, add it like any new badge (see
+  When one becomes official, add it like any new badge, dated the day it became
+  official rather than the day its pilot began (see
   [Dating a version](#dating-a-version)).
 - **Current requirements only, until the first release.** Write each badge's
   current requirements as its only version.
@@ -82,10 +84,10 @@ Archive's copies of the official page. That date is an estimate: say so in the
 pull request, and name the copies on either side of the change.
 
 Date a new badge the day Scouting America launched it, from its announcement
-(Competitive Gaming launched 2026-07-24 at the National Jamboree). Changes in
-the year it launched keep that date; a change in a later year dates it as above
-(Artificial Intelligence launched in 2025, and its note's label changed in
-2026).
+(Competitive Gaming launched 2026-07-24 at the National Jamboree, after a Test
+Lab pilot that began in March). Changes in the year it launched keep that date;
+a change in a later year dates it as above (Artificial Intelligence launched in
+2025, and its note's label changed in 2026).
 
 ## When the official page is wrong
 
@@ -283,7 +285,8 @@ It checks that:
   Eagle Scout, in that order;
 - badge and rank IDs are unique across both and in the right form, and every
   badge and rank has a name, a summary, a `https://www.scouting.org/` URL and
-  at least one version;
+  at least one version, and every badge's URL is a
+  `https://www.scouting.org/merit-badges/` page;
 - a badge or rank doesn't have two versions with the same effective date, and
   `eagleGroup` is only set on Eagle-required badges;
 - every version has requirements, and requirement numbers are unique within it;

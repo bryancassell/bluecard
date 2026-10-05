@@ -639,6 +639,11 @@ requirement progress fresh, numbers only need to be unique within one version.
   order; the app treats whatever is in the file as the full list. A unit test
   validates the file (unique IDs, valid structure, a URL for every badge and
   rank).
+- **Scouts BSA Test Lab pilot badges are left out** until they become
+  official: the catalog has no way to mark a badge as a pilot, and ranks'
+  merit badge counts (Star 3, Life 3) would credit one. The unit test enforces
+  it by requiring each badge's URL to be a `/merit-badges/` page, which pilots
+  don't have.
 - **Discontinued badges aren't handled yet:** the Badges list shows every badge
   in the catalog. Once shipped, a badge can't be removed, because progress is
   stored against it, so hiding discontinued badges from scouts who haven't
