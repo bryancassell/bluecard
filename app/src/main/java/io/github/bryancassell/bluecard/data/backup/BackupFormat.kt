@@ -74,9 +74,9 @@ fun encodeBackup(backup: Backup): String =
  * - The name and unit number aren't blank, and no text is longer than its field takes (such as
  *   [NOTES_MAX_LENGTH]), so none is cut short when the scout edits it.
  *
- * Text is stored as the app stores what the scout types: a single-line field's line breaks are
- * spaces, as the field replaces them ([lineBreaksAsSpaces]), and repositories trim it
- * ([normalizedText]). A field's length limit applies to the text as it's stored.
+ * Text is cleaned up as the app does when the scout saves it: it's trimmed ([normalizedText]),
+ * and a single-line text field's line breaks are spaces, as the field replaces them
+ * ([lineBreaksAsSpaces]). A field's length limit applies to the text as it's stored.
  *
  * The JSON is decoded as it's read, never into a tree of the whole file, so a large or deeply
  * nested file that isn't an export can't use up the app's memory or stack.
