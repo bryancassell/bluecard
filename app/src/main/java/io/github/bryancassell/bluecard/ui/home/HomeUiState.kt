@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.home
 
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
+import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 
 /** What the Home screen shows. */
 sealed interface HomeUiState {
@@ -13,6 +14,13 @@ sealed interface HomeUiState {
     data class Ready(
         val name: String,
         val unitNumber: String,
+        /** The name of the highest rank the scout has earned, or null before they've earned one. */
+        val rank: String?,
+        /**
+         * The rank the scout is working toward, the one in progress, as on Ranks. Null once
+         * they've earned every rank.
+         */
+        val nextRank: RankListItem?,
         /** Every badge in the catalog that the scout has started. */
         val badges: ProgressCounts,
         /**

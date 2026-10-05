@@ -91,6 +91,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                     onOpenBadge = { navigate(BadgeDetail(it)) },
                     onOpenBadges = { navigate(Badges) },
                     onOpenRanks = { navigate(Ranks) },
+                    onOpenRank = { navigate(RankDetail(it)) },
                     onOpenDataManagement = { navigate(DataManagement) }
                 )
             }

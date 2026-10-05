@@ -326,10 +326,12 @@ out of date, retake all three the same way, so they still match each other.
 
 1. Install the debug app fresh on an emulator (they were taken on a Pixel 10),
    set to English (US), light mode, and the default font and display size.
-2. Enter the same made-up data: the name Sam Rivera and unit Troop 214; First
-   Aid marked completed on an earlier date; Cooking 1a and 1b complete; and for
-   Camping, the counselor Jordan Lee, (214) 555-0142, jordan.lee@example.com,
-   requirements 1a, 1b, 1c, 2 and 3a complete, and three campouts on 9a.
+2. Enter the same made-up data: the name Sam Rivera and unit Troop 214;
+   Tenderfoot marked earned on an earlier date; Second Class 1a and 1b
+   complete; First Aid marked completed on an earlier date; Cooking 1a and 1b
+   complete; and for Camping, the counselor Jordan Lee, (214) 555-0142,
+   jordan.lee@example.com, requirements 1a, 1b, 1c, 2 and 3a complete, and
+   three campouts on 9a.
 3. Clean up the status bar with System UI demo mode. Some notification icons
    stay visible anyway, so also clear them from the notification shade.
 
@@ -345,9 +347,11 @@ out of date, retake all three the same way, so they still match each other.
 4. Take each screenshot with `adb exec-out screencap -p > screen.png`, then
    leave demo mode: `adb shell am broadcast -a com.android.systemui.demo -e command exit`.
 5. Scale each one to 540 pixels wide, twice the width the README shows it at,
-   so it stays sharp on high-density screens. Reduce it to 256 colors (for
-   example with [pngquant](https://pngquant.org/)), which keeps each file under
-   about 60 KB with no visible difference.
+   so it stays sharp on high-density screens. Reduce it to 256 colors, which
+   keeps each file under about 60 KB with no visible difference. Pillow's
+   `img.convert("RGB").quantize(256, method=Image.Quantize.MEDIANCUT)` does it,
+   and reproduces an unchanged screenshot byte for byte, so only the images
+   that changed show in the diff.
 
 ## Debug tools
 

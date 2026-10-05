@@ -286,7 +286,7 @@ class MainActivityTest {
 
     private fun openCamping() {
         launchWithProfile()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Merit badges").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Camping").performClick()
     }
 
@@ -545,7 +545,7 @@ class MainActivityTest {
         }
         launchWithProfile()
 
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        composeTestRule.onNodeWithText("Merit badges").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("In progress").assertIsDisplayed()
     }
@@ -1278,6 +1278,34 @@ class MainActivityTest {
     }
 
     @Test
+    fun openRankInProgress_fromHome_showsRankDetail_andBackReturnsHome() {
+        launchWithProfile()
+
+        composeTestRule.onNode(hasText("Scout") and hasText("In progress")).performClick()
+
+        home().assertDoesNotExist()
+        composeTestRule.onNodeWithText("Our summary of Scout.").assertIsDisplayed()
+        composeTestRule.waitForIdle()
+        pressBack()
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun markingRankEarned_showsOnHome() {
+        openScout()
+        composeTestRule.onNodeWithText("Mark earned").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+        composeTestRule.waitForIdle()
+        pressBack()
+        composeTestRule.waitForIdle()
+        pressBack()
+
+        composeTestRule.onNodeWithText("Your rank: Scout").assertIsDisplayed()
+        composeTestRule.onNode(hasText("Tenderfoot") and hasText("In progress"))
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun shareReport_ofAnEarnedRank_opensShareSheetWithTheRanksReport() {
         openScout()
         composeTestRule.onNodeWithText("Mark earned").performScrollTo().performClick()
@@ -1340,6 +1368,16 @@ class MainActivityTest {
         pressBack()
 
         composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
+    }
+
+    @Test
+    fun doubleTap_onRankInProgress_opensItOnce() {
+        launchWithProfile()
+
+        tapTwiceInOneFrame("Scout")
+        pressBack()
+
+        home().assertIsDisplayed()
     }
 
     @Test

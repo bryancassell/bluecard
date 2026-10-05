@@ -15,8 +15,7 @@ With BlueCard, a scout can:
 - Mark a badge completed on an earlier date, without entering each requirement.
 - Save or share a PDF report of everything recorded for a completed badge.
 - Track their ranks, Scout through Eagle, the same way, with the merit badges
-  that Star, Life and Eagle need counted from their badge progress. This is
-  still being built: see [Status](#status).
+  that Star, Life and Eagle need counted from their badge progress.
 - Export their name, unit number and progress to a file, and import it later,
   for example on a new phone.
 
@@ -27,7 +26,7 @@ they turn backup off in the phone's settings.
 
 <p>
   <img src="docs/images/home.png" width="250"
-    alt="Home screen: one badge completed and two in progress, Eagle-required progress, and the Camping and Cooking badges in progress">
+    alt="Home screen: the Tenderfoot rank with Second Class in progress, one badge completed and two in progress, Eagle-required progress, and the Camping and Cooking badges in progress">
   <img src="docs/images/badge-detail.png" width="250"
     alt="Camping badge page: progress bar, Eagle-required label, the counselor's contact details, and the first requirements, two of them complete">
   <img src="docs/images/tracker.png" width="250"
@@ -36,9 +35,8 @@ they turn backup off in the phone's settings.
 
 ## Status
 
-BlueCard is in development and hasn't been released yet. Rank tracking is still
-being built ([#193](https://github.com/bryancassell/bluecard/issues/193)), and
-the catalog doesn't include every merit badge yet.
+BlueCard is in development and hasn't been released yet. The catalog doesn't
+include every merit badge yet.
 
 ## Supported devices
 

@@ -528,7 +528,7 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges, Ranks and Data management. |
+| **Home** | Name, unit, the scout's rank, then the rank in progress, in the same row as on Ranks, opening its Rank detail. A progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges, Ranks and Data management. |
 | **Badges** | Browse all current badges and search by name or description, with a progress bar on each badge in progress. One screen: the list filters as the scout types. |
 | **Badge detail** | A progress bar while the badge is in progress, summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
 | **Ranks** | The seven ranks, Scout through Eagle Scout, in the order they're earned, in the same rows as Badges, each with its status and progress bar ([Ranks](#ranks)). |
@@ -801,8 +801,10 @@ read, it shows the load-failed message instead (see
 ### Home summary
 
 The Home ViewModel combines the profile, the catalog and the scout's progress.
-It counts badges completed and in progress, and Eagle-required progress against
-the Eagle-required badges in the catalog, counting each Eagle "one of" group
+It shows the highest rank earned and the rank in progress from `standings`, as
+Ranks does ([Ranks](#ranks)), in Ranks' row (`ui/ranks/RankRow.kt`). It counts
+badges completed and in progress, and Eagle-required progress against the
+Eagle-required badges in the catalog, counting each Eagle "one of" group
 once (`eagleSlots` in `data/catalog/Catalog.kt`, which Eagle 3 counts by too;
 see [`PRD.md`](PRD.md#design-decisions)). It also lists every badge in
 progress, in the row Badges uses

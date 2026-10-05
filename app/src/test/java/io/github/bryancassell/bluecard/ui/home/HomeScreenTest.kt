@@ -23,9 +23,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -39,6 +41,7 @@ class HomeScreenTest {
     val composeTestRule = createComposeRule()
 
     private val openedBadges = mutableListOf<String>()
+    private val openedRanks = mutableListOf<String>()
     private var badgesOpened = 0
     private var ranksOpened = 0
     private var dataManagementOpened = 0
@@ -46,6 +49,8 @@ class HomeScreenTest {
     private val noProgress = HomeUiState.Ready(
         name = "Alex Scout",
         unitNumber = "123",
+        rank = null,
+        nextRank = RankListItem("scout", "Scout", RankStatus.InProgress, fractionDone = 0f),
         badges = ProgressCounts(completed = 0, inProgress = 0),
         eagle = ProgressCounts(completed = 0, inProgress = 0),
         eagleTotal = 13,
@@ -53,6 +58,13 @@ class HomeScreenTest {
     )
 
     private val withProgress = noProgress.copy(
+        rank = "Tenderfoot",
+        nextRank = RankListItem(
+            "second-class",
+            "Second Class",
+            RankStatus.InProgress,
+            fractionDone = 0.4f
+        ),
         badges = ProgressCounts(completed = 5, inProgress = 3),
         eagle = ProgressCounts(completed = 4, inProgress = 2)
     )
@@ -84,6 +96,7 @@ class HomeScreenTest {
                 onOpenBadge = { openedBadges += it },
                 onOpenBadges = { badgesOpened++ },
                 onOpenRanks = { ranksOpened++ },
+                onOpenRank = { openedRanks += it },
                 onOpenDataManagement = { dataManagementOpened++ }
             )
         }
@@ -110,6 +123,12 @@ class HomeScreenTest {
     }
 
     private fun row(name: String) = composeTestRule.onNode(hasText(name) and opensBadge)
+
+    private val opensRank = SemanticsMatcher("click label is \"open rank\"") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == "open rank"
+    }
+
+    private fun rankRow(name: String) = composeTestRule.onNode(hasText(name) and opensRank)
 
     @Test
     fun loading_showsProgressAndNoProfile() {
@@ -145,7 +164,9 @@ class HomeScreenTest {
     fun nameTypedInPersian_keepsItsPunctuationAtItsEnd() {
         show(noProgress.copy(name = "علی رضایی."))
 
-        val name = composeTestRule.onNode(isHeading()).visualText()
+        // The rank's line is a heading too.
+        val name = composeTestRule.onNode(isHeading() and hasText("علی", substring = true))
+            .visualText()
 
         assertTrue(name, name.startsWith("."))
     }
@@ -158,6 +179,60 @@ class HomeScreenTest {
         val unit = text("Unit:", substring = true).visualText()
 
         assertTrue(unit, unit.startsWith("Unit: ."))
+    }
+
+    @Test
+    fun noRankEarned_saysSo_withScoutInProgress() {
+        show(noProgress)
+
+        text("You haven't earned a rank yet.").assert(isHeading()).assertIsDisplayed()
+        rankRow("Scout").assert(hasText("In progress")).assertIsDisplayed()
+    }
+
+    @Test
+    fun rankEarned_showsIt_withTheRankInProgressAsOnRanks() {
+        show(withProgress)
+
+        text("Your rank: Tenderfoot").assert(isHeading()).assertIsDisplayed()
+        rankRow("Second Class")
+            .assert(hasText("In progress"))
+            .assert(hasStateDescription("40% done"))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun everyRankEarned_showsNoRankInProgress() {
+        show(withProgress.copy(rank = "Eagle Scout", nextRank = null))
+
+        text("Your rank: Eagle Scout").assertIsDisplayed()
+        composeTestRule.onAllNodes(opensRank).assertCountEquals(0)
+    }
+
+    @Test
+    fun rank_isAboveTheBadgeSummary_withItsRowEdgeToEdge() {
+        show(withProgress)
+
+        val screen = composeTestRule.onRoot().getUnclippedBoundsInRoot()
+        val unit = text("Unit: 123").getUnclippedBoundsInRoot()
+        val rank = text("Your rank: Tenderfoot").getUnclippedBoundsInRoot()
+        val row = rankRow("Second Class").getUnclippedBoundsInRoot()
+        val summary = text("Your merit badges").getUnclippedBoundsInRoot()
+        assertTrue(unit.bottom < rank.top)
+        assertTrue(rank.bottom <= row.top)
+        assertTrue(row.bottom < summary.top)
+        assertTrue(rank.left > screen.left)
+        assertEquals(screen.left, row.left)
+        assertEquals(screen.right, row.right)
+    }
+
+    @Test
+    fun clickingRankInProgress_opensIt() {
+        show(withProgress)
+
+        rankRow("Second Class").performClick()
+
+        assertEquals(listOf("second-class"), openedRanks)
+        assertEquals(0, ranksOpened)
     }
 
     @Test
@@ -183,9 +258,10 @@ class HomeScreenTest {
     fun withProgress_showsEagleProgress() {
         show(withProgress)
 
-        text("Eagle-required").assert(isHeading()).assertIsDisplayed()
+        // Below the rank, so it can start off screen.
+        text("Eagle-required").assert(isHeading()).performScrollTo().assertIsDisplayed()
         text("4 of 13 completed").assertIsDisplayed()
-        text("2 in progress").assertIsDisplayed()
+        text("2 in progress").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -194,6 +270,7 @@ class HomeScreenTest {
 
         // Screen readers get "4 of 13 completed" instead of a percentage without context.
         composeTestRule.onNode(eagleBar(4f / 13))
+            .performScrollTo()
             .assertIsDisplayed()
             .assert(hiddenFromScreenReaders)
     }
