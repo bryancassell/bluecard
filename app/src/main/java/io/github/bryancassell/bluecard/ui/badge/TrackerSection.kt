@@ -25,8 +25,8 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import io.github.bryancassell.bluecard.text.totalFormat
-import io.github.bryancassell.bluecard.ui.lineBreaksAsSpaces
 import io.github.bryancassell.bluecard.ui.stringsLocale
 import io.github.bryancassell.bluecard.ui.typedText
 import java.text.NumberFormat

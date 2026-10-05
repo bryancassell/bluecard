@@ -518,8 +518,9 @@ io.github.bryancassell.bluecard
 │   ├── progress/       ProgressRepository + Room entities and DAOs
 │   ├── report/         ReportRepository (PDF)
 │   └── backup/         BackupRepository and the export format
-├── text/               The strings' locales, and dates and typed text formatted in them, for the
-│                       screens and for code outside Compose, such as the PDF report
+├── text/               The strings' locales, dates and typed text formatted in them, and line
+│                       breaks as spaces, for the screens and for code outside Compose, such as
+│                       the PDF report and import
 └── di/                 Hilt modules
 ```
 
@@ -920,6 +921,13 @@ it before changing anything, since import replaces all current data (see
   version too. Each requirement, tracker row and column must be in that
   version, and no text longer than its field takes, so none is cut short when
   the scout edits it.
+- **Import stores text as the app stores what the scout types,** rather than
+  rejecting a file for it: trimmed, as repositories store it, and with each line
+  break in a single-line value (the name, unit number, counselor's fields and a
+  tracker's text columns) replaced with a space, as its field replaces them (see
+  [Text fields](#text-fields)). The field draws a break as a space anyway, and
+  replaces it, unseen, on the scout's first edit. Length limits apply to the
+  text as it's stored.
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.
