@@ -439,7 +439,7 @@ class BackupFormatTest {
             listOf(
                 withCounselorAndEntries(
                     Counselor("Pat\nLee", "555\n123-4567", "pat\u2028lee@example.com"),
-                    note = "Rain\nall night",
+                    note = "Rain\nall night\u0085",
                     place = "Pine\nLake"
                 )
             )
@@ -461,11 +461,25 @@ class BackupFormatTest {
     // "\r\n" is one line break, which the field holds as one space.
     @Test
     fun decodeBackup_withSingleLineTextThatFitsOnceItsLineBreaksAreSpaces_isValid() {
-        val start = "x".repeat(PROFILE_NAME_MAX_LENGTH - 2)
-        val file = backup.copy(profile = Profile("$start\r\nx", "Troop 12"))
+        fun withLineBreak(maxLength: Int) = "x".repeat(maxLength - 2) + "\r\nx"
+        fun withSpace(maxLength: Int) = "x".repeat(maxLength - 2) + " x"
+        fun withName(name: String, note: String) = Backup(
+            Profile(name, "Troop 12"),
+            listOf(
+                camping.copy(
+                    trackerEntries = listOf(
+                        TrackerEntry(0, "camping", "9a", null, mapOf("note" to note))
+                    )
+                )
+            )
+        )
+        val file = withName(
+            withLineBreak(PROFILE_NAME_MAX_LENGTH),
+            withLineBreak(TRACKER_TEXT_MAX_LENGTH)
+        )
 
         assertEquals(
-            valid(backup.asImported().copy(profile = Profile("$start x", "Troop 12"))),
+            valid(withName(withSpace(PROFILE_NAME_MAX_LENGTH), withSpace(TRACKER_TEXT_MAX_LENGTH))),
             decode(encodeBackup(file))
         )
     }
