@@ -82,7 +82,8 @@ fun OnboardingScreen(
                 text = message,
                 color = MaterialTheme.colorScheme.error,
                 // Read out by screen readers as it appears, like ScreenMessage. A retry that fails
-                // too isn't read again, since the message stays on screen.
+                // too usually isn't: the message is hidden while saving, and whether that's ever
+                // drawn depends on timing (#234).
                 modifier = Modifier.semantics { paneTitle = message }
             )
         }

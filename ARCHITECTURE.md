@@ -236,6 +236,13 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   title is announced whenever it appears, new or not
   (`updateSemanticsNodesCopyAndPanes`). What TalkBack says is in PRD.md's
   Design decisions.
+  - **Don't put one inside a node that merges its descendants**, such as a
+    clickable card. A pane title can't be merged, and Compose throws when it
+    tries, such as when a screen reader is on.
+  - **Android 8.0 and 8.1 haven't been checked.** Pane titles came in Android 9
+    (API 28), and minSdk is 26. Compose sends the same pane event on every
+    version, but whether TalkBack reads it on Android 8 is unverified. At worst
+    the message isn't announced there, as before #69.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
   developer without a scout reporting it: BlueCard is published on Google Play,

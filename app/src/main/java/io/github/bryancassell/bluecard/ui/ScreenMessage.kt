@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
  * Compose tells accessibility services that a pane appeared whenever a node with a pane title
  * appears (`updateSemanticsNodesCopyAndPanes` in `AndroidComposeViewAccessibilityDelegateCompat`,
  * Compose UI 1.12.1). Why it isn't a live region is in ARCHITECTURE.md (Load and save failures).
+ *
+ * Don't put it inside a node that merges its descendants, such as a clickable card: a pane title
+ * can't be merged, and Compose throws when it tries, such as when a screen reader is on.
  */
 @Composable
 fun ScreenMessage(text: String, modifier: Modifier = Modifier) {
