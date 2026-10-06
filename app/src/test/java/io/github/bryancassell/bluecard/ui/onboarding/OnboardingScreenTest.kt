@@ -6,6 +6,9 @@ import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -26,6 +29,7 @@ import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -56,7 +60,11 @@ class OnboardingScreenTest {
     // The view that hosts the screen, which connects the keyboard to the focused field.
     private lateinit var view: View
 
-    private fun show(uiState: OnboardingUiState) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<OnboardingUiState>(OnboardingUiState())
+
+    private fun show(state: OnboardingUiState) {
+        uiState = state
         composeTestRule.setContent {
             view = LocalView.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
@@ -132,6 +140,15 @@ class OnboardingScreenTest {
         field("Name").assertIsEnabled()
         field("Unit number").assertIsEnabled()
         saveButton().assertIsEnabled()
+    }
+
+    @Test
+    fun failed_isAnnouncedWhenItAppears() {
+        showFilledIn()
+
+        composeTestRule.assertAnnouncedWhenShown("Couldn't save. Try again.") {
+            uiState = OnboardingUiState(SaveStatus.Failed, isComplete = true)
+        }
     }
 
     @Test

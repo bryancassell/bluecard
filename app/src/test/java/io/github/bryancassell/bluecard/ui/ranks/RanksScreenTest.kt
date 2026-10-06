@@ -1,6 +1,9 @@
 package io.github.bryancassell.bluecard.ui.ranks
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -22,6 +25,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -47,7 +51,11 @@ class RanksScreenTest {
         RankListItem("eagle", "Eagle Scout", RankStatus.NotEarned)
     )
 
-    private fun show(uiState: RanksUiState, density: Density? = null) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<RanksUiState>(RanksUiState.Loading)
+
+    private fun show(state: RanksUiState, density: Density? = null) {
+        uiState = state
         composeTestRule.setContent {
             CompositionLocalProvider(LocalDensity provides (density ?: LocalDensity.current)) {
                 RanksScreen(uiState = uiState, onOpenRank = { openedRanks += it })
@@ -90,6 +98,15 @@ class RanksScreenTest {
         ).assertIsDisplayed()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
         list().assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(RanksUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = RanksUiState.LoadFailed }
     }
 
     @Test

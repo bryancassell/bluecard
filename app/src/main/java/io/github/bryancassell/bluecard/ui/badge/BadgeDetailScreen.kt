@@ -34,8 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
-import io.github.bryancassell.bluecard.ui.LoadFailedMessage
-import io.github.bryancassell.bluecard.ui.ScreenMessage
+import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
@@ -104,12 +103,17 @@ fun BadgeDetailScreen(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        BadgeDetailUiState.Loading -> LoadingIndicator(modifier)
-
-        BadgeDetailUiState.LoadFailed -> LoadFailedMessage(modifier)
-
-        BadgeDetailUiState.Unavailable ->
-            ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
+        // One branch, so screen readers hear the message (see LoadingOrMessage).
+        BadgeDetailUiState.Loading,
+        BadgeDetailUiState.LoadFailed,
+        BadgeDetailUiState.Unavailable -> LoadingOrMessage(
+            message = when (uiState) {
+                BadgeDetailUiState.LoadFailed -> stringResource(R.string.load_failed)
+                BadgeDetailUiState.Unavailable -> stringResource(R.string.requirements_unavailable)
+                else -> null
+            },
+            modifier = modifier
+        )
 
         is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
             BadgeDetails(

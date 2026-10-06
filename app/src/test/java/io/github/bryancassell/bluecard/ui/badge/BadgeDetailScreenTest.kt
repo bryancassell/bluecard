@@ -11,6 +11,9 @@ import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -55,6 +58,7 @@ import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -146,10 +150,14 @@ class BadgeDetailScreenTest {
         )
     )
 
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<BadgeDetailUiState>(BadgeDetailUiState.Loading)
+
     private fun show(
-        uiState: BadgeDetailUiState,
+        state: BadgeDetailUiState,
         layoutDirection: LayoutDirection = LayoutDirection.Ltr
     ) {
+        uiState = state
         composeTestRule.setContent {
             CompositionLocalProvider(
                 LocalLayoutDirection provides layoutDirection,
@@ -720,6 +728,15 @@ class BadgeDetailScreenTest {
     }
 
     @Test
+    fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        show(BadgeDetailUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "This badge's requirements aren't in this version of BlueCard."
+        ) { uiState = BadgeDetailUiState.Unavailable }
+    }
+
+    @Test
     fun loadFailed_showsMessageOnly() {
         show(BadgeDetailUiState.LoadFailed)
 
@@ -728,6 +745,15 @@ class BadgeDetailScreenTest {
         ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirements").assertDoesNotExist()
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(BadgeDetailUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = BadgeDetailUiState.LoadFailed }
     }
 
     @Test

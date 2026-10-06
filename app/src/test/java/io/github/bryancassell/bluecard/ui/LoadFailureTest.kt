@@ -13,8 +13,8 @@ import org.junit.runner.RunWith
 import org.robolectric.shadows.ShadowLog
 
 /**
- * [catchLoadFailure], with Robolectric so its log can be read back. The screen tests cover
- * [LoadFailedMessage].
+ * [catchLoadFailure], with Robolectric so its log can be read back. The screen tests cover the
+ * load-failed message.
  */
 @RunWith(AndroidJUnit4::class)
 class LoadFailureTest {

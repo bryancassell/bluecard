@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -77,13 +78,18 @@ fun OnboardingScreen(
         Button(onClick = onSave, enabled = uiState.canSave, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.onboarding_save))
         }
-        if (uiState.saveStatus == SaveStatus.Failed) {
-            Text(
-                text = stringResource(R.string.onboarding_save_failed),
-                color = MaterialTheme.colorScheme.error,
-                // Read out by screen readers when it appears.
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
-            )
-        }
+        // Composed before a save fails too, with no text and hidden, so screen readers hear the
+        // message as it appears (see ScreenMessage). A retry that fails too usually isn't heard:
+        // the message is cleared while saving, and whether that's ever drawn depends on timing
+        // (#234).
+        val failed = uiState.saveStatus == SaveStatus.Failed
+        Text(
+            text = if (failed) stringResource(R.string.onboarding_save_failed) else "",
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.semantics {
+                liveRegion = LiveRegionMode.Polite
+                if (!failed) hideFromAccessibility()
+            }
+        )
     }
 }

@@ -6,6 +6,9 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsAnimation
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -38,6 +41,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
@@ -99,10 +103,14 @@ class TrackerEntryScreenTest {
         canDelete = true
     )
 
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<TrackerEntryUiState>(TrackerEntryUiState.Loading)
+
     private fun show(
-        uiState: TrackerEntryUiState,
+        state: TrackerEntryUiState,
         fields: Map<String, TextFieldState> = this.fields
     ) {
+        uiState = state
         composeTestRule.setContent {
             view = LocalView.current
             back.Content {
@@ -228,12 +236,30 @@ class TrackerEntryScreenTest {
     }
 
     @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(TrackerEntryUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = TrackerEntryUiState.LoadFailed }
+    }
+
+    @Test
     fun unavailable_showsMessageOnly() {
         show(TrackerEntryUiState.Unavailable)
 
         composeTestRule.onNodeWithText("This entry isn't in the tracker anymore.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Save").assertDoesNotExist()
+    }
+
+    @Test
+    fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        show(TrackerEntryUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "This entry isn't in the tracker anymore."
+        ) { uiState = TrackerEntryUiState.Unavailable }
     }
 
     @Test

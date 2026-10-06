@@ -39,6 +39,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -180,6 +181,15 @@ class BadgesScreenTest {
         list().assertDoesNotExist()
         searchField().assertDoesNotExist()
         shownCount().assertDoesNotExist()
+    }
+
+    @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(BadgesUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = BadgesUiState.LoadFailed }
     }
 
     @Test

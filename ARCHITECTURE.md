@@ -204,7 +204,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   shows the message in place of the whole app. This follows "Show errors on the
   screen" in the UI layer guide, which keeps errors in UI state. The message has
   no "Try again" button, which limits when a screen loads again
-  (`LoadFailedMessage`). Data management shows no such message: it loads only
+  (`catchLoadFailure`). Data management shows no such message: it loads only
   whether a badge or rank is started, for its Clear all button, which its
   export and import don't need.
 - **Save failures are a UI state too.** When something can't be saved, a
@@ -218,6 +218,38 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   happen. Onboarding predates this and shows its own message under its button.
   Data management runs its import and clear as it runs its export, with its own
   messages in one snackbar, rather than with a `TaskRunner`.
+- **A message that takes a screen's place is a live region composed while the
+  screen loads** ([#69](https://github.com/bryancassell/bluecard/issues/69)),
+  so screen readers announce it as it appears. `ScreenMessage`
+  (`ui/ScreenMessage.kt`) is a polite live region with no text while loading,
+  and the message once loading fails or the content is unavailable. While it
+  has no text, it's hidden from screen readers: Compose lets them focus any
+  node with text, even empty text, and a hidden node is still tracked. A screen
+  shows its loading, load-failed and unavailable states from one `when` branch
+  that calls `LoadingOrMessage`, so the node stays the same as its text
+  changes. The navigation root, which shows nothing while loading, calls
+  `ScreenMessage` itself the same way. Compose sends a live region's change only for a node it has already
+  seen (`sendSemanticsPropertyChangeEvents` in
+  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
+  message composed as a new node, as in its own branch, isn't announced.
+  Onboarding's save-failed message, under its button, is composed empty the
+  same way.
+  - **Live regions are what Android points to.** When Android 16 deprecated
+    `announceForAccessibility`, its
+    [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
+    pointed to live regions "to inform the user of changes to critical UI",
+    and to pane titles "for significant UI changes like window changes".
+  - **Two cases aren't announced.** A failure after a screen has loaded
+    replaces the screen's content, not its loading state, so the message is a
+    new node. That's rare, and TalkBack should still read the message as its
+    focus moves off the content that went away, but that wasn't checked. A
+    screen composed already showing the message, such as after rotation,
+    doesn't announce it again; it was announced when it first appeared.
+  - **A pane title was tried first.** Compose announces a pane even as a new
+    node, but TalkBack treated the message like a window: it said "BlueCard",
+    the window's title, whenever the message went away. Compose also throws
+    when it has to merge a pane title into a parent, which happens only with a
+    screen reader on.
 - **Any other exception is a bug and still crashes the app.** The app has no
   crash reporting of its own, so a crash is the only way a bug reaches the
   developer without a scout reporting it: BlueCard is published on Google Play,
@@ -1186,6 +1218,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
 | [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
+| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |

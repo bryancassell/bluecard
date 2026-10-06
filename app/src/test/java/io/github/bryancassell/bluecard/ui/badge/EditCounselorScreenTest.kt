@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
@@ -51,7 +52,11 @@ class EditCounselorScreenTest {
 
     private val ready = EditCounselorUiState.Ready(badgeName = "Camping", changed = false)
 
-    private fun show(uiState: EditCounselorUiState) {
+    /** The UI state shown, which a test can change after [show]. */
+    private var uiState by mutableStateOf<EditCounselorUiState>(EditCounselorUiState.Loading)
+
+    private fun show(state: EditCounselorUiState) {
+        uiState = state
         composeTestRule.setContent {
             back.Content {
                 EditCounselorScreen(
@@ -102,6 +107,15 @@ class EditCounselorScreenTest {
     }
 
     @Test
+    fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        show(EditCounselorUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        ) { uiState = EditCounselorUiState.LoadFailed }
+    }
+
+    @Test
     fun unavailable_showsMessageOnly() {
         show(EditCounselorUiState.Unavailable)
 
@@ -109,6 +123,15 @@ class EditCounselorScreenTest {
             .onNodeWithText("This badge's requirements aren't in this version of BlueCard.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Counselor").assertDoesNotExist()
+    }
+
+    @Test
+    fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        show(EditCounselorUiState.Loading)
+
+        composeTestRule.assertAnnouncedWhenShown(
+            "This badge's requirements aren't in this version of BlueCard."
+        ) { uiState = EditCounselorUiState.Unavailable }
     }
 
     @Test
@@ -245,21 +268,7 @@ class EditCounselorScreenTest {
 
     @Test
     fun saved_closesThePageOnce() {
-        var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(changed = true))
-        composeTestRule.setContent {
-            back.Content {
-                EditCounselorScreen(
-                    uiState = uiState,
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    onSave = {},
-                    onSaved = { closes++ },
-                    onDiscard = {},
-                    onSaveFailureShown = {}
-                )
-            }
-        }
+        show(ready.copy(changed = true))
         assertEquals(0, closes)
 
         // Saved before the saved counselor arrives from the database, which then changes the
@@ -275,21 +284,7 @@ class EditCounselorScreenTest {
     @Test
     fun savedAgain_afterClosing_closesThePageAgain() {
         // As when the page is opened again before its ViewModel is cleared.
-        var uiState by mutableStateOf<EditCounselorUiState>(ready.copy(saved = true))
-        composeTestRule.setContent {
-            back.Content {
-                EditCounselorScreen(
-                    uiState = uiState,
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    onSave = {},
-                    onSaved = { closes++ },
-                    onDiscard = {},
-                    onSaveFailureShown = {}
-                )
-            }
-        }
+        show(ready.copy(saved = true))
         composeTestRule.waitForIdle()
 
         uiState = ready.copy(saved = false)
