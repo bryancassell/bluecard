@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule

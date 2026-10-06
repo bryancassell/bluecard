@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import java.time.LocalDate
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Serializable
@@ -73,7 +74,9 @@ fun encodeBackup(backup: Backup): String =
  * - The name and unit number aren't blank, and no text is longer than its field takes (such as
  *   [NOTES_MAX_LENGTH]), so none is cut short when the scout edits it.
  *
- * Text is stored as repositories store what the scout types ([normalizedText]).
+ * Text is cleaned up as the app does when the scout saves it: it's trimmed ([normalizedText]),
+ * and a single-line text field's line breaks are spaces, as the field replaces them
+ * ([lineBreaksAsSpaces]). A field's length limit applies to the text as it's stored.
  *
  * The JSON is decoded as it's read, never into a tree of the whole file, so a large or deeply
  * nested file that isn't an export can't use up the app's memory or stack.
@@ -216,9 +219,9 @@ private fun BadgeJson.toProgress(version: RequirementsVersion): BadgeProgressDet
     requireValid(rows.distinctBy { it.requirementNumber to it.rowNumber }.size == rows.size)
     val counselor = counselor?.let {
         Counselor(
-            optionalText(it.name, COUNSELOR_NAME_MAX_LENGTH),
-            optionalText(it.phone, COUNSELOR_PHONE_MAX_LENGTH),
-            optionalText(it.email, COUNSELOR_EMAIL_MAX_LENGTH)
+            singleLineText(it.name, COUNSELOR_NAME_MAX_LENGTH),
+            singleLineText(it.phone, COUNSELOR_PHONE_MAX_LENGTH),
+            singleLineText(it.email, COUNSELOR_EMAIL_MAX_LENGTH)
         ).normalized()
     }
     return BadgeProgressDetails(
@@ -249,7 +252,11 @@ private fun TrackerEntryJson.toEntry(
     )
     val columns = tracker.columns.associate { it.id to it.type }
     requireValid(values.keys.all { it in columns })
-    val stored = normalizedTrackerValues(values)
+    // A text column's field is single-line, as singleLineText describes.
+    val typed = values.mapValues { (column, value) ->
+        if (columns.getValue(column) == TrackerColumnType.TEXT) lineBreaksAsSpaces(value) else value
+    }
+    val stored = normalizedTrackerValues(typed)
     requireValid(stored.all { (column, value) -> columns.getValue(column).takes(value) })
     return TrackerEntry(
         badgeId = badgeId,
@@ -286,6 +293,13 @@ private fun RequirementsVersion.requirementsByNumber(): Map<String, Requirement>
 private fun optionalText(text: String?, maxLength: Int): String? =
     normalizedText(text).also { requireValid(it == null || it.length <= maxLength) }
 
-/** Text the scout must have typed, such as their name. */
+/**
+ * Text the scout typed in a single-line field, such as a counselor's name: [optionalText] with
+ * each line break a space, as the field replaces them ([lineBreaksAsSpaces]).
+ */
+private fun singleLineText(text: String?, maxLength: Int): String? =
+    optionalText(text?.let(::lineBreaksAsSpaces), maxLength)
+
+/** Single-line text the scout must have typed, such as their name. */
 private fun requiredText(text: String, maxLength: Int): String =
-    optionalText(text, maxLength) ?: throw InvalidBackupException()
+    singleLineText(text, maxLength) ?: throw InvalidBackupException()

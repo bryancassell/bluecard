@@ -22,8 +22,14 @@
     <string name="onboarding_save">Get started</string>
     <string name="onboarding_save_failed">Couldn\'t save. Try again.</string>
     <string name="home_unit">Unit: %1$s</string>
-    <string name="home_rank">Your rank: %1$s</string>
-    <string name="home_no_rank">You haven\'t earned a rank yet.</string>
+    <!-- Above the scout's rank on Home's rank card. -->
+    <string name="home_rank_title">Your rank</string>
+    <!-- In place of the rank's name on Home's rank card, before the scout has earned one. -->
+    <string name="home_no_rank">None yet</string>
+    <!-- On Home's rank card, the rank in progress, such as "Next: Second Class". -->
+    <string name="home_next_rank">Next: %1$s</string>
+    <!-- On Home's rank card in place of home_next_rank, once the scout has earned every rank. -->
+    <string name="home_every_rank_earned">Every rank earned</string>
     <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
     <string name="home_badges_title">Your merit badges</string>
     <string name="home_eagle_title">Eagle-required</string>
@@ -323,6 +329,12 @@
     <plurals name="home_in_progress">
         <item quantity="one">%1$d in progress</item>
         <item quantity="other">%1$d in progress</item>
+    </plurals>
+    <!-- What screen readers say for the trail of ranks on Home's rank card, such as "2 of 7 ranks
+         earned". The quantity is the number of ranks. -->
+    <plurals name="home_ranks_earned">
+        <item quantity="one">%1$d of %2$d rank earned</item>
+        <item quantity="other">%1$d of %2$d ranks earned</item>
     </plurals>
     <!-- The quantity is the number completed. -->
     <plurals name="home_eagle_completed">

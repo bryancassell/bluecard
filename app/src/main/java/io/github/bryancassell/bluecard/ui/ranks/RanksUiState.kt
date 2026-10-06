@@ -15,7 +15,7 @@ sealed interface RanksUiState {
     data class Ready(val ranks: List<RankListItem>) : RanksUiState
 }
 
-/** One rank in the list, or the rank in progress on Home. */
+/** One rank in the list, or on Home's rank card. */
 data class RankListItem(
     val id: String,
     val name: String,
@@ -27,5 +27,5 @@ data class RankListItem(
     val fractionDone: Float? = null
 )
 
-/** The rank's row, with the scout's standing on it. Home shows the rank in progress in it too. */
+/** The rank's row, with the scout's standing on it, which Home's rank card shows too. */
 fun RankStanding.toListItem() = RankListItem(rank.id, rank.name, status, fractionDone)

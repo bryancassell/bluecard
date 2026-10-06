@@ -366,6 +366,106 @@
       ]
     },
     {
+      "id": "american-labor",
+      "name": "American Labor",
+      "summary": "Learn what concerns American workers, how unions and labor relations work and how the labor movement grew, and argue a labor issue from both sides.",
+      "officialUrl": "https://www.scouting.org/merit-badges/american-labor/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Research the concerns of working people, and list at least eight, describing each or giving examples.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "concern",
+                    "label": "Concern",
+                    "type": "text"
+                  },
+                  {
+                    "id": "description",
+                    "label": "Description or examples",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "concern",
+                "rowLabelPlural": "concerns",
+                "rowCount": 8
+              }
+            },
+            {
+              "number": "2",
+              "summary": "With permission and approval, visit or contact a union, central labor council or employee organization, then do these.",
+              "ownWork": "With permission and approval, visit the office or a meeting of a local union, central labor council or employee organization, or reach one online.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Learn what the organization does."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Share your list of concerns from requirement 1, and ask which matter most to them and why."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Diagram how the organization is set up, from local to national level if it applies."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Explain what unions are, what they do and how they serve members, showing you understand labor, management, collective bargaining, negotiation, union and open shops, grievance procedures, mediation, arbitration, work stoppages, strikes and lockouts."
+            },
+            {
+              "number": "4",
+              "summary": "Compare the adversarial model of labor-management relations with a cooperative-bargaining style."
+            },
+            {
+              "number": "5",
+              "summary": "Explore the labor movement's history in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Make a timeline of key moments in American labor history, from the 1770s to now."
+                },
+                {
+                  "number": "5b",
+                  "summary": "With an exhibit, scrapbook or computer presentation, show three big wins of the American labor movement and what they mean for workers."
+                },
+                {
+                  "number": "5c",
+                  "summary": "With permission and approval, watch a movie about organized labor in the U.S., then discuss it and what you learned."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Read a biography, approved by your counselor, of someone who shaped the American labor movement, and explain their contribution."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Explain globalization, how it affects American workers, and how the global workforce fits into the U.S. economy."
+            },
+            {
+              "number": "7",
+              "summary": "Pick a labor issue that matters to many workers, argue management's side and then labor's, aloud or in writing, and sum up the basic rights and responsibilities of employers and of union and nonunion employees."
+            },
+            {
+              "number": "8",
+              "summary": "Discuss the goals of a business's owners, stockholders, customers, employees, employee representatives, community and public officials, why they reach agreements and compromises, and how those affect each group."
+            },
+            {
+              "number": "9",
+              "summary": "Explore labor relations careers, pick one that interests you, and discuss its main duties and the qualifications, education and training it takes."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "animal-science",
       "name": "Animal Science",
       "summary": "Learn livestock breeds, diseases, digestion, management and breeding, then study beef cattle, dairy, horses, sheep or goats, hogs or poultry in depth.",
@@ -1497,6 +1597,168 @@
             {
               "number": "7",
               "summary": "Explore three art careers and the training one of them needs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "artificial-intelligence",
+      "name": "Artificial Intelligence (AI)",
+      "summary": "Learn what AI and automation are and how they're used, weigh AI's ethics and risks such as deepfakes, practice working with AI, and put it to use in a project or lesson.",
+      "officialUrl": "https://www.scouting.org/merit-badges/artificial-intelligence/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Explain what each of these terms means: artificial intelligence (AI), AI agents, automation, basic programming, bots, data, databases, digital workers, general AI, machine learning (ML), narrow AI, superintelligent AI, tasks, triggers, workflows and variables."
+            },
+            {
+              "number": "2",
+              "summary": "Learn the basics of AI, and share what you learned.",
+              "ownWork": "Share what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Give 10 examples of AI in everyday life today."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Give five examples of AI at work today."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Give five ways AI can help at school or with your education."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Play 10 rounds of the \"AI or Not?\" game with your counselor, deciding whether each scenario uses AI, and discuss your answers."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Make a timeline of five turning points in the history of AI."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn the basics of automation, and share what you learned.",
+              "ownWork": "Share what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Give 10 examples of automation in everyday life today."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Give five examples of automation at work today."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Give five ways automation can help at school or with your education."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Explain how automation runs repetitive tasks on its own, making fewer mistakes than people and using resources better."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Make a timeline of five turning points in the history of automation."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Explore ethics in AI, and share what you learned.",
+              "ownWork": "Share what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Research the ethics of AI and how to use it responsibly, including bias, privacy and decisions made by AI."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Play and discuss five rounds of the \"What Would You Do?\" ethics scenarios with your counselor."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Write your own rules for using AI ethically."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain the Turing test."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about deepfakes, and share what you learned.",
+              "ownWork": "Share what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain what a deepfake is and how it can harm someone."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Describe what to do if a deepfake affects you or someone you know."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Build skills for working with AI, and share what you learned.",
+              "ownWork": "Share what you learned with your counselor.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Discuss how AI learns and where it falls short."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Name five ways to communicate effectively with AI."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain why prompt engineering matters for getting better results from AI."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Give three examples of clear instructions you'd write for a school task."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Put AI to work in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "With your counselor's approval, pick an AI project for an interest of yours or a community need, plan its goals, data needs and ethical issues, build it with suitable AI tools, and share it, the steps you took and how it went."
+                },
+                {
+                  "number": "7b",
+                  "summary": "With your counselor's approval, plan and teach a short AI lesson to your patrol or other Scouts, including an age-appropriate AI-generated explanation of AI, everyday and workplace examples, and a hands-on demo of AI helping with schoolwork, Scouting or advancement; then share how you made and taught it."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore an AI or automation career.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Explore three AI or automation careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Interview an AI or automation professional about their daily work, challenges and view of the field's future, and the training, education, certifications, experience and costs to get started, and share what you learned."
+                }
+              ]
             }
           ]
         }
@@ -3086,6 +3348,53 @@
                   "summary": "Research how bird study could become a hobby, and set goals for it."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bugling",
+      "name": "Bugling",
+      "summary": "Learn the bugle's history and how it works, sound the traditional calls, compose one of your own, and serve as your troop's bugler. A trumpet or cornet works too.",
+      "officialUrl": "https://www.scouting.org/merit-badges/bugling/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Summarize the bugle's history."
+            },
+            {
+              "number": "2",
+              "summary": "Learn how the bugle works, and write a call of your own.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain and show how a bugle makes its sound, and where it fits in the brass family."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Write a call to signal a routine troop or patrol activity, such as mealtime, and play it for your unit or patrol."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Sound 10 of these calls: \"First Call,\" \"Reveille,\" \"Assembly,\" \"Mess,\" \"Drill,\" \"Fatigue,\" \"Officers,\" \"Recall,\" \"Church,\" \"Swimming,\" \"Fire,\" \"Retreat,\" \"To the Colors,\" \"Call to Quarters\" and \"Taps.\""
+            },
+            {
+              "number": "4",
+              "summary": "Explain the occasion for each call in requirement 3."
+            },
+            {
+              "number": "5",
+              "summary": "Explain how to care for, clean and maintain a bugle."
+            },
+            {
+              "number": "6",
+              "summary": "Serve as your troop's bugler for three months."
             }
           ]
         }
@@ -4851,6 +5160,388 @@
       ]
     },
     {
+      "id": "competitive-gaming",
+      "name": "Competitive Gaming",
+      "summary": "Learn the history of video games and esports, game safely and with good sportsmanship, balance gaming with sleep and exercise, and explore gaming technology and careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/competitive-gaming/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-07-24",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn the history of video games and esports.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Make a timeline of how video games have changed since 1958, with at least one key event per decade."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Name five major video game genres, explain what defines each, and give an example game.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "genre",
+                        "label": "Genre",
+                        "type": "text"
+                      },
+                      {
+                        "id": "definition",
+                        "label": "What defines it",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "example",
+                        "label": "Example game",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "genre",
+                    "rowLabelPlural": "genres",
+                    "rowCount": 5
+                  }
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain how esports differs from casual gaming through organized competition, such as teams, tournaments and coaching, and name two games played both ways."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Research five turning points in the esports industry since 1990, including key tournaments, technology and organizations, and discuss what you found.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "turning-point",
+                        "label": "Turning point",
+                        "type": "text"
+                      },
+                      {
+                        "id": "year",
+                        "label": "Year",
+                        "type": "text"
+                      },
+                      {
+                        "id": "why",
+                        "label": "What happened and why it mattered",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "turning point",
+                    "rowLabelPlural": "turning points",
+                    "rowCount": 5
+                  }
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "With permission, watch the \"Digital Safety\" video, and live the Scout Oath and Law when gaming online.",
+              "ownWork": "With permission, watch the Personal Safety Awareness \"Digital Safety\" video.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Define \"toxicity in gaming,\" describe a real or imagined case of it, and explain how the Scout Oath and Law could prevent or settle it."
+                },
+                {
+                  "number": "2b",
+                  "summary": "List five ways to deal with bad experiences in online games, and how each fits a point of the Scout Oath or Law.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "way",
+                        "label": "Way to deal with it",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "oath-law",
+                        "label": "How it reflects the Scout Oath or Law",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "way",
+                    "rowLabelPlural": "ways",
+                    "rowCount": 5
+                  }
+                },
+                {
+                  "number": "2c",
+                  "summary": "Learn the ESRB rating system, log each game you own with its rating and how it suits your age, and say whether you agree with the ESRB's descriptions.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "game",
+                        "label": "Game",
+                        "type": "text"
+                      },
+                      {
+                        "id": "rating",
+                        "label": "ESRB rating",
+                        "type": "text"
+                      },
+                      {
+                        "id": "age",
+                        "label": "How it fits your age group",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "game",
+                    "rowLabelPlural": "games"
+                  }
+                },
+                {
+                  "number": "2d",
+                  "summary": "List five ways to keep online gaming positive for you and others, and practice one with your troop, patrol or family."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Balance gaming with sleep and exercise.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Read two credible articles on gaming's benefits and two on its harms, and chart where they agree and disagree."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Log your daily gaming time for two weeks, then sum up what you found.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours gaming",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
+                },
+                {
+                  "number": "3c",
+                  "summary": "Over the same two weeks, log your daily physical activity and compare it with the CDC's advice of an hour of moderate-to-vigorous activity a day for ages 6–17.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
+                },
+                {
+                  "number": "3d",
+                  "summary": "Over the same two weeks, log your daily sleep and compare it with the CDC's advice: 9–12 hours for ages 6–12 and 8–10 hours for ages 13–18.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours of sleep",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
+                  }
+                },
+                {
+                  "number": "3e",
+                  "summary": "After 3b–3d, plan a balanced week of healthy sleep, physical activity and agreed gaming time, follow it, and summarize how it went."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Game safely and connect with others.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain what's good and what's risky about online gaming."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Find and list ten tips for staying safe in online games."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Play a favorite game with your parent or guardian for at least 30 minutes: show how to use its privacy and safety settings, explain what you enjoy, and let them play part of the time."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Play a team or co-op multiplayer game with another Scout, friend or community member, showing positive communication, teamwork and sportsmanship, then discuss how working together affected how your team played and how much fun you had."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Explore the technology behind competitive gaming.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how console and PC gaming differ, and list the pros and cons of each."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Play one game, any game, on at least two different platforms, and compare how it plays and performs on each."
+                },
+                {
+                  "number": "5c",
+                  "summary": "On a PC builder website, design your ideal gaming PC with a parts list covering the CPU, motherboard, RAM, hard drive, power supply, graphics card, fans and case, and discuss your choices."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Lead or serve in competitive gaming in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Teach online gaming safety or digital citizenship to your troop, patrol, younger Scouts or family."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Watch a live-streamed esports event, noting how the broadcasters present it, how players talk to each other and how viewers take part online, and share what you learned about how online esports events are run and shown."
+                },
+                {
+                  "number": "6c",
+                  "summary": "With another Scout, troop member or family member, go to an esports tournament, convention or community event with competitive gaming, then share what the live atmosphere was like and how it changed your view of playing in front of an audience."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Explore careers in competitive gaming.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Research two colleges with varsity esports teams, and record each one's gaming scholarships and amounts, gaming or IT degrees, games played and league.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "college",
+                        "label": "College",
+                        "type": "text"
+                      },
+                      {
+                        "id": "scholarships",
+                        "label": "Gaming scholarships and amounts",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "degrees",
+                        "label": "Gaming or IT degrees",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "games",
+                        "label": "Games the team plays",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "league",
+                        "label": "League or association",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "college",
+                    "rowLabelPlural": "colleges",
+                    "rowCount": 2
+                  }
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research three careers that support esports without being a player, and for each, find its main duties, the education or training it needs, and how it helps gaming or esports succeed.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "career",
+                        "label": "Career",
+                        "type": "text"
+                      },
+                      {
+                        "id": "duties",
+                        "label": "Main responsibilities",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "training",
+                        "label": "Education or training",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "contribution",
+                        "label": "How it helps gaming or esports",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "career",
+                    "rowLabelPlural": "careers",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "7c",
+                  "summary": "On a major game publisher's careers page, pick three jobs that interest you and find the education, skills and experience each needs.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "job",
+                        "label": "Job",
+                        "type": "text"
+                      },
+                      {
+                        "id": "education",
+                        "label": "Education",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "skills",
+                        "label": "Skills",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "experience",
+                        "label": "Experience",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "job",
+                    "rowLabelPlural": "jobs",
+                    "rowCount": 3
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "composite-materials",
       "name": "Composite Materials",
       "summary": "Learn to work safely with composites, how they compare with other materials and how they're made, then build two composite projects.",
@@ -5520,6 +6211,298 @@
             {
               "number": "11",
               "summary": "Explore three crime prevention careers, research one, and discuss whether it interests you."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cybersecurity",
+      "name": "Cybersecurity",
+      "summary": "Learn how to stay safe and act ethically online, how attacks happen and how systems are defended, and practice securing your own devices.",
+      "officialUrl": "https://www.scouting.org/merit-badges/cybersecurity/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-09-22",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn to stay safe using digital devices.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "With permission, watch the Personal Safety Awareness \"Digital Safety\" video."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how to guard your digital footprint, and show how to adjust privacy settings so your personal details, photos and location stay private."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Discuss preventing and giving first aid for injuries from heavy device use, and staying safe using a mobile device while walking or biking."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Think about right and wrong online.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Tie three points of the Scout Law to how people act online and on connected devices."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Discuss good and bad behavior online, how you'd handle situations like finding an unlocked device, and why they call for good judgment guided by the Scout Law and your values."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Learn cybersecurity basics, discussing each with your counselor.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Describe three kinds of computer systems attackers might target, and why each must be protected."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain the C.I.A. Triad (confidentiality, integrity and availability) and why it's central to cybersecurity."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn about cyber threats, vulnerabilities and attacks, discussing each with your counselor.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Explain what vulnerabilities, threats and exploits are, with an example of each that could affect a site or app you use."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Research how one kind of malware works, and explain what it does to a system and how it can hurt its victims."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain two dangers of public Wi-Fi and how to lessen or avoid each."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Explain spoofing and phishing, how to spot a fake message or website, and how to protect yourself and others when you find one."
+                },
+                {
+                  "number": "4e",
+                  "summary": "Look at cybersecurity in the news, a movie or a book.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "4e(1)",
+                      "summary": "Read news of a recent cyber incident, such as a data breach, and explain how it likely happened and how it affects or could affect the victim."
+                    },
+                    {
+                      "number": "4e(2)",
+                      "summary": "With permission, watch a movie or read a book where cybersecurity plays a big part, and discuss how it's portrayed and how true to life it is."
+                    }
+                  ]
+                },
+                {
+                  "number": "4f",
+                  "summary": "List your cyber attack surface, every way someone could get at your data or devices, and discuss it."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn about cyber defenses and secure your devices.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Describe three tools that protect computers or networks, such as firewalls or antivirus software."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Keep your software up to date.",
+                  "children": [
+                    {
+                      "number": "5b(1)",
+                      "summary": "Explain why your computer needs the latest updates and what trouble they can head off."
+                    },
+                    {
+                      "number": "5b(2)",
+                      "summary": "Show how to check for and install updates on a computer or mobile device you may use (or, if you can't, walk through an online guide with screenshots), and how to confirm it's current."
+                    }
+                  ]
+                },
+                {
+                  "number": "5c",
+                  "summary": "With permission, do three of these system-security tasks on a computer or mobile device, and discuss them with your counselor.",
+                  "requiredCount": 3,
+                  "ownWork": "Discuss the three you did with your counselor.",
+                  "children": [
+                    {
+                      "number": "5c(1)",
+                      "summary": "Explain what makes a password good and why, then give an account a strong password."
+                    },
+                    {
+                      "number": "5c(2)",
+                      "summary": "Explain how multi-factor authentication (MFA) makes accounts safer, and show how to use an authenticator app or other MFA."
+                    },
+                    {
+                      "number": "5c(3)",
+                      "summary": "Set up a password manager and show your counselor how it works."
+                    },
+                    {
+                      "number": "5c(4)",
+                      "summary": "Run a virus scan and show your counselor the results."
+                    },
+                    {
+                      "number": "5c(5)",
+                      "summary": "With a command line or built-in tool, view the programs and processes running on your computer, and discuss what you find and anything unexpected."
+                    },
+                    {
+                      "number": "5c(6)",
+                      "summary": "View your computer's open network connections from the command line, and discuss what you find."
+                    },
+                    {
+                      "number": "5c(7)",
+                      "summary": "Show how to back up a mobile device to a computer or cloud storage."
+                    },
+                    {
+                      "number": "5c(8)",
+                      "summary": "Look up how to secure a home computer or network, and write a five-item checklist your family can follow."
+                    },
+                    {
+                      "number": "5c(9)",
+                      "summary": "Find at least one more vulnerability on a computer or network you're allowed to use, discuss it, and fix it with the owner's permission."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how cryptography protects information.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Find three uses of encryption in cybersecurity, and for each, explain the kind used and why it matters.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "use",
+                        "label": "Use",
+                        "type": "text"
+                      },
+                      {
+                        "id": "kind",
+                        "label": "Kind of encryption",
+                        "type": "text"
+                      },
+                      {
+                        "id": "why",
+                        "label": "Why it matters",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "use",
+                    "rowLabelPlural": "uses",
+                    "rowCount": 3
+                  }
+                },
+                {
+                  "number": "6b",
+                  "summary": "Show how to check that a website connection is encrypted."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Try encryption one of these ways.",
+                  "requiredCount": 1,
+                  "children": [
+                    {
+                      "number": "6c(1)",
+                      "summary": "Invent an encryption code, such as a substitution cipher, show it encrypting and decrypting a message, and explain where it's strong and weak."
+                    },
+                    {
+                      "number": "6c(2)",
+                      "summary": "Install an end-to-end encrypted app from an official app store, and explain what that means, how it works and why it's safer than other ways of communicating."
+                    },
+                    {
+                      "number": "6c(3)",
+                      "summary": "Hash a file or text, have another Scout or your counselor change it, then hash it again and compare the checksums to show integrity checking."
+                    },
+                    {
+                      "number": "6c(4)",
+                      "summary": "Make a PGP email key, trade public keys with others and your counselor, add theirs to your key ring, and send an encrypted message."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Describe four everyday devices that could go online: what connecting them is good for, the risks it brings, and how to protect them.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "device",
+                    "label": "Device",
+                    "type": "text"
+                  },
+                  {
+                    "id": "useful",
+                    "label": "What connecting it is good for",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "risks",
+                    "label": "Risks",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "protect",
+                    "label": "How to protect it",
+                    "type": "multiline-text"
+                  }
+                ],
+                "rowLabel": "device",
+                "rowLabelPlural": "devices",
+                "rowCount": 4
+              }
+            },
+            {
+              "number": "8",
+              "summary": "Try a cybersecurity activity.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Find out about a cybersecurity competition, camp or other activity you could join now or later, and describe it to your counselor: type, time needed and ages."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Compete in a cybersecurity challenge with your troop, school or another counselor-approved group, using an existing platform or one you design."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Present a cybersecurity topic you pick to your patrol, troop or another counselor-approved group, including at least one demonstration or hands-on activity."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Explore a cybersecurity career.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Explore three cybersecurity careers, research one, and discuss whether it interests you."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Visit a cybersecurity business or organization, find out what its different jobs involve and the degrees or certifications behind them, and share what you learned."
+                }
+              ]
             }
           ]
         }
@@ -6494,6 +7477,144 @@
                   "summary": "Research how working with dogs could become a hobby or part of a healthy lifestyle, and share your goals for it."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drafting",
+      "name": "Drafting",
+      "summary": "Make a pencil drawing and a CAD drawing ready for manufacturing, revise them from your counselor's redlines, practice Gothic lettering, and learn about the drafting trade.",
+      "officialUrl": "https://www.scouting.org/merit-badges/drafting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2025-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Prepare two sheets of drawing paper with borders and title blocks: one for your requirement 2 drawing and one for your requirement 6 lettering.",
+              "ownWork": "Lay out both sheets with proper borders and title blocks.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Rough-sketch each project drawing to work out what paper size to format."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Fill in each title block's key information in single-stroke vertical or slant Gothic lettering."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "On your manual-project sheet, make a pencil drawing ready for manufacturing, with the title block filled in, in one of these types.",
+              "requiredCount": 1,
+              "ownWork": "Fill in the whole title block.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Architectural: draw a floor, service, elevation or landscaping plan to scale with an architect's scale, showing dimensions, key sections, notes and construction needs, plus a bill of materials listing at least three materials or parts."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Mechanical: draw a mechanical device or interesting object to scale, in orthographic (third-angle) or isometric style, with an engineer's scale, showing dimensions, key sections, notes and manufacturing needs, plus a bill of materials listing at least three materials or parts."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Electrical: draw a simple schematic of a radio or electronic circuit with standard symbols, and print a bill of materials listing its major components."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Make a CAD drawing ready for manufacturing, with the title block filled in, in one of these types.",
+              "requiredCount": 1,
+              "ownWork": "Fill in the whole title block.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Architectural: draw a floor, service, elevation or landscaping plan to scale with an architect's scale, showing dimensions, key sections, notes and construction needs."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Mechanical: draw a mechanical device or interesting object to scale, in orthographic (third-angle) or isometric style, with an engineer's scale, showing dimensions, key sections, notes and manufacturing needs."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Electrical: draw a simple schematic of a radio or electronic circuit with standard symbols, and print a bill of materials listing its major components."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Have your drawings checked and revised.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Give your counselor copies of your requirement 2 and 3 drawings, on paper or digitally, and get back redlined versions marking changes to make."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Fix what was redlined, flag the fix with a revision marker, and add a revision block."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Discuss how requirements 2, 3 and 4 differed, how CAD helped in 3 and 4, and the software you used and other software available."
+            },
+            {
+              "number": "6",
+              "summary": "On your lettering sheet from requirement 1, hand-letter in single-stroke slant or vertical Gothic, without a template or guide, a short explanation of CAD's biggest benefit in an industry you pick, backed by what you learned in requirements 2 through 5."
+            },
+            {
+              "number": "7",
+              "summary": "Learn about the drafting trade one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Visit a workplace that uses drafting and do these.",
+                  "ownWork": "Visit a workplace that uses drafting, and ask to see examples of its work, its drafting areas and the tools used.",
+                  "children": [
+                    {
+                      "number": "7a(1)",
+                      "summary": "Learn how their drafting splits between manual and CAD, and if they use CAD, what software and how and why they picked it."
+                    },
+                    {
+                      "number": "7a(2)",
+                      "summary": "Ask about their drafting services, who uses the designs and how, and discuss how drafters work with others in drafting and across the business."
+                    },
+                    {
+                      "number": "7a(3)",
+                      "summary": "Ask how much drafting matters to what the business produces, and how it contributes."
+                    }
+                  ]
+                },
+                {
+                  "number": "7b",
+                  "summary": "Research the drafting trade on your own, at the library or online with permission, and discuss these.",
+                  "children": [
+                    {
+                      "number": "7b(1)",
+                      "summary": "Older drafting tools and how and why they were used, which are still in use and how that use has changed, and which newer tools are replacing."
+                    },
+                    {
+                      "number": "7b(2)",
+                      "summary": "Past media and how drawings were used, stored and copied, and how CAD has changed the media and drawing storage and reproduction."
+                    },
+                    {
+                      "number": "7b(3)",
+                      "summary": "Whether new media have opened new uses for designers' drawings and other output, and briefly how new media are used in industry today."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Explore three drafting careers, research one, and discuss whether it interests you."
             }
           ]
         }
@@ -13549,6 +14670,369 @@
                 {
                   "number": "4b",
                   "summary": "Research a hobby or healthy lifestyle that involves moviemaking, and set goals for it."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multisport",
+      "name": "Multisport",
+      "summary": "Train for and finish a short triathlon, duathlon, aquathlon or aquabike, learning about safety, health, equipment and transitions along the way.",
+      "officialUrl": "https://www.scouting.org/merit-badges/multisport/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn about multisport safety.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Explain the hazards you're most likely to meet in multisport activities and how to anticipate, prevent, mitigate and respond to them."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Show first aid for injuries or illnesses you could get in multisport events, including abrasions, blisters, concussions, contusions, dehydration, hypothermia, overheating, sprains and strains."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Learn about health habits for training.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Discuss why a yearly physical matters, why it covers overall health, immunizations, medications, allergies and medical history, and when you last had one."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Explain why good health habits matter, especially in training, and how tobacco, alcohol and other harmful substances hurt your health and athletic performance."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain what a healthy diet is and why it matters."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Get to know the multisport events and choose a format.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Discuss how familiar and experienced you are with swimming, biking and running, and each leg's order and distance."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Explain which of the three is your strongest and which you could improve most."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Name the equipment you need for swimming, biking and running."
+                },
+                {
+                  "number": "3d",
+                  "summary": "With your counselor, pick one format to focus on for the rest of the badge: triathlon, duathlon, aquathlon or aquabike."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Prepare for each leg of the format you chose in 3d.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "4A",
+                  "summary": "Option A: triathlon.",
+                  "children": [
+                    {
+                      "number": "4A(1)",
+                      "summary": "Prepare for the swim.",
+                      "children": [
+                        {
+                          "number": "4A(1)(a)",
+                          "summary": "Earn the Swimming merit badge before starting requirements 5 through 8."
+                        },
+                        {
+                          "number": "4A(1)(b)",
+                          "summary": "Explain each part of Scouting America's Safe Swim Defense and how you'll make sure your swims follow it."
+                        },
+                        {
+                          "number": "4A(1)(c)",
+                          "summary": "Explain how pool and open-water swims differ, and the water temperatures that call for a wet suit."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "4A(2)",
+                      "summary": "Prepare for the bike ride.",
+                      "children": [
+                        {
+                          "number": "4A(2)(a)",
+                          "summary": "Explain how to ride predictably, be conspicuous, think ahead and ride ready."
+                        },
+                        {
+                          "number": "4A(2)(b)",
+                          "summary": "Discuss the regular checks that keep a bike safe to ride."
+                        },
+                        {
+                          "number": "4A(2)(c)",
+                          "summary": "Explain why you should ride in a helmet that fits properly and in clothes suited to the weather."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "4A(3)",
+                      "summary": "Prepare for the run.",
+                      "children": [
+                        {
+                          "number": "4A(3)(a)",
+                          "summary": "Show how to warm up and cool down for a run, and explain why hydration, nutrition, injury prevention and rest matter."
+                        },
+                        {
+                          "number": "4A(3)(b)",
+                          "summary": "Learn the basic rules of the road for runners and explain them."
+                        },
+                        {
+                          "number": "4A(3)(c)",
+                          "summary": "Show running drills including high knees, butt kicks, lunges, inchworms and soldier kicks."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "4B",
+                  "summary": "Option B: duathlon.",
+                  "children": [
+                    {
+                      "number": "4B(1)",
+                      "summary": "Prepare for the bike ride.",
+                      "children": [
+                        {
+                          "number": "4B(1)(a)",
+                          "summary": "Explain how to ride predictably, be conspicuous, think ahead and ride ready."
+                        },
+                        {
+                          "number": "4B(1)(b)",
+                          "summary": "Discuss the regular checks that keep a bike safe to ride."
+                        },
+                        {
+                          "number": "4B(1)(c)",
+                          "summary": "Explain why you should ride in a helmet that fits properly and in clothes suited to the weather."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "4B(2)",
+                      "summary": "Prepare for the run.",
+                      "children": [
+                        {
+                          "number": "4B(2)(a)",
+                          "summary": "Show how to warm up and cool down for a run, and explain why hydration, nutrition, injury prevention and rest matter."
+                        },
+                        {
+                          "number": "4B(2)(b)",
+                          "summary": "Learn the basic rules of the road for runners and explain them."
+                        },
+                        {
+                          "number": "4B(2)(c)",
+                          "summary": "Show running drills including high knees, butt kicks, lunges, inchworms and soldier kicks."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "4C",
+                  "summary": "Option C: aquathlon.",
+                  "children": [
+                    {
+                      "number": "4C(1)",
+                      "summary": "Prepare for the swim.",
+                      "children": [
+                        {
+                          "number": "4C(1)(a)",
+                          "summary": "Earn the Swimming merit badge before starting requirements 5 through 8."
+                        },
+                        {
+                          "number": "4C(1)(b)",
+                          "summary": "Explain each part of Scouting America's Safe Swim Defense and how you'll make sure your swims follow it."
+                        },
+                        {
+                          "number": "4C(1)(c)",
+                          "summary": "Explain how pool and open-water swims differ, and the water temperatures that call for a wet suit."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "4C(2)",
+                      "summary": "Prepare for the run.",
+                      "children": [
+                        {
+                          "number": "4C(2)(a)",
+                          "summary": "Show how to warm up and cool down for a run, and explain why hydration, nutrition, injury prevention and rest matter."
+                        },
+                        {
+                          "number": "4C(2)(b)",
+                          "summary": "Learn the basic rules of the road for runners and explain them."
+                        },
+                        {
+                          "number": "4C(2)(c)",
+                          "summary": "Show running drills including high knees, butt kicks, lunges, inchworms and soldier kicks."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "number": "4D",
+                  "summary": "Option D: aquabike.",
+                  "children": [
+                    {
+                      "number": "4D(1)",
+                      "summary": "Prepare for the swim.",
+                      "children": [
+                        {
+                          "number": "4D(1)(a)",
+                          "summary": "Earn the Swimming merit badge before starting requirements 5 through 8."
+                        },
+                        {
+                          "number": "4D(1)(b)",
+                          "summary": "Explain each part of Scouting America's Safe Swim Defense and how you'll make sure your swims follow it."
+                        },
+                        {
+                          "number": "4D(1)(c)",
+                          "summary": "Explain how pool and open-water swims differ, and the water temperatures that call for a wet suit."
+                        }
+                      ]
+                    },
+                    {
+                      "number": "4D(2)",
+                      "summary": "Prepare for the bike ride.",
+                      "children": [
+                        {
+                          "number": "4D(2)(a)",
+                          "summary": "Explain how to ride predictably, be conspicuous, think ahead and ride ready."
+                        },
+                        {
+                          "number": "4D(2)(b)",
+                          "summary": "Discuss the regular checks that keep a bike safe to ride."
+                        },
+                        {
+                          "number": "4D(2)(c)",
+                          "summary": "Explain why you should ride in a helmet that fits properly and in clothes suited to the weather."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Train for four weeks in your chosen format.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "With your counselor's guidance, make a four-week training plan for your format to build technique, confidence and endurance, with sessions of at least 25 minutes that start with a warmup and end with stretching."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Track your training and progress over the four weeks with a chart or other method.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "training",
+                        "label": "Training done",
+                        "type": "multiline-text"
+                      },
+                      {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      },
+                      {
+                        "id": "progress",
+                        "label": "Progress",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "entry",
+                    "rowLabelPlural": "entries"
+                  }
+                },
+                {
+                  "number": "5c",
+                  "summary": "Set a personal goal for improving your time, technique or distance."
+                },
+                {
+                  "number": "5d",
+                  "summary": "After the four weeks, review your progress with your counselor and how training has changed you in mind and body."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how to set up a transition area for your gear, and discuss how to switch between legs smoothly and safely."
+            },
+            {
+              "number": "7",
+              "summary": "After finishing 1–6, complete your chosen format's legs back to back on one day, with smooth, safe transitions between them.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Triathlon: swim 100 m, bike 3 km and run 1 km."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Duathlon: run 1.5 km, bike 3 km and run 0.75 km."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Aquathlon: swim 100 m and run 1 km."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Aquabike: swim 100 m and bike 3 km."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Keep going in multisport: do two of these and discuss them with your counselor.",
+              "requiredCount": 2,
+              "ownWork": "Discuss the two you did with your counselor.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Find two ways to stay in multisport once you've earned this badge."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Learn about an Olympic, Paralympic or pro triathlete, past or present, and share their history in the sport and what inspires you most about them."
+                },
+                {
+                  "number": "8c",
+                  "summary": "Show leadership: start a training group and teach your peers why physical activity, nutrition and multisport's disciplines matter."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Enter and compete in a sanctioned multisport event near you."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Volunteer at a local multisport, running, biking, swimming or adaptive sports event."
                 }
               ]
             }
@@ -20917,6 +22401,302 @@
       ]
     },
     {
+      "id": "stamp-collecting",
+      "name": "Stamp Collecting",
+      "summary": "Learn what stamps reveal about the world and how postal systems work, use a collector's tools and catalogs, and mount a stamp collection of your own.",
+      "officialUrl": "https://www.scouting.org/merit-badges/stamp-collecting/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Learn what stamps can teach and how postal systems grew.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Discuss how collecting stamps can help you understand people, places, institutions, history and geography."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Give a short history of how the U.S. postal system grew, and how it differs from other countries' mail systems."
+                }
+              ]
+            },
+            {
+              "number": "2",
+              "summary": "Explain what topical stamp collecting is, and describe three other kinds of stamp collections."
+            },
+            {
+              "number": "3",
+              "summary": "Show at least one example of each of these.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Perforated and imperforate stamps."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Mint and used stamps."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Sheet, booklet and coil stamps."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Numbers on a plate block, booklet or coil, or marginal markings."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Overprint and surcharge."
+                },
+                {
+                  "number": "3f",
+                  "summary": "Metered mail."
+                },
+                {
+                  "number": "3g",
+                  "summary": "Definitive, commemorative, semipostal and airmail stamps."
+                },
+                {
+                  "number": "3h",
+                  "summary": "Cancellation and postmark."
+                },
+                {
+                  "number": "3i",
+                  "summary": "First day cover."
+                },
+                {
+                  "number": "3j",
+                  "summary": "Postal stationery: an aerogramme, stamped envelope and postal card."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Learn how stamps are valued.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Look up several different stamp issues in one standard catalog, and explain why a stamp's catalog value and its price may differ."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Explain what a stamp's \"condition\" means, and show examples of the things that raise or lower its value."
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Show how to use at least three of these collector's tools.",
+              "requiredCount": 3,
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Stamp tongs."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Water and tray."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Magnifiers."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Hinges and stamp mounts."
+                },
+                {
+                  "number": "5e",
+                  "summary": "Perforation gauge."
+                },
+                {
+                  "number": "5f",
+                  "summary": "Glassine envelopes and cover sleeves."
+                },
+                {
+                  "number": "5g",
+                  "summary": "Watermark fluid."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn to mount and care for stamps.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Demonstrate mounting stamps, hinged or hingeless, and show an album with at least one page of several stamps."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Discuss three or more ways to keep stamps, covers and albums in top condition."
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Do two of these stamp activities.",
+              "requiredCount": 2,
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Design a stamp, cancellation or cachet."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Go with an experienced collector to a post office, stamp club or stamp show, and tell what you saw and learned."
+                },
+                {
+                  "number": "7c",
+                  "summary": "With permission, find an interesting article in a stamp newspaper, magazine, book or website, and write a review of it."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Report on a famous figure in the stamp world or the story behind a particular stamp."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Describe how stamps are made, including printing methods, paper types, perforation styles and gumming."
+                },
+                {
+                  "number": "7f",
+                  "summary": "Make a two- to three-page stamp display that uses clippings, drawings and other creative touches to tell a story linking the stamps to history, geography or a topic you like."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Mount and show one of these collections in an album you bought or made.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "At least 250 different stamps from at least 15 countries."
+                },
+                {
+                  "number": "8b",
+                  "summary": "One stamp from each of 50 different countries, mounted on maps to show where each is from."
+                },
+                {
+                  "number": "8c",
+                  "summary": "At least 100 different stamps from one country or a group of closely related countries."
+                },
+                {
+                  "number": "8d",
+                  "summary": "At least 75 different stamps on one topic, such as Scouting, birds or space; they may come from different countries."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Postal items you find in your mail over 30 days, including at least five different types from requirement 3."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "surveying",
+      "name": "Surveying",
+      "summary": "Survey and map a small lot with a surveying instrument, GPS and a level, learn to read a deed, and explore new surveying technology and careers.",
+      "officialUrl": "https://www.scouting.org/merit-badges/surveying/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-01-01",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Show first aid for surveying injuries, including cuts, scratches, snakebite, insect stings, tick bites, heat and cold reactions and dehydration, and explain why surveyors must know the area's poisonous plants and animals."
+            },
+            {
+              "number": "2",
+              "summary": "Survey a five-sided lot your counselor lays out.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Set up an instrument over one corner, sight another, and by radial measurement record the angle and distance to the other corners as your counselor directs, then to five nearby features.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "point",
+                        "label": "Corner or feature",
+                        "type": "text"
+                      },
+                      {
+                        "id": "angle",
+                        "label": "Angle turned",
+                        "type": "text"
+                      },
+                      {
+                        "id": "distance",
+                        "label": "Distance",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "point",
+                    "rowLabelPlural": "points"
+                  }
+                },
+                {
+                  "number": "2b",
+                  "summary": "Use GPS to measure three of those points again, and compare the distances between them."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Using your requirement 2 field notes, a protractor and a scale, plot your points and draw a scale map of the lot with a north arrow, scale bar, title and date, and hand in a neat copy."
+            },
+            {
+              "number": "4",
+              "summary": "Treat one corner marker from requirement 2 as a benchmark at 100 feet, and use a level and rod to record readings and work out the other four corners' elevations.",
+              "tracker": {
+                "columns": [
+                  {
+                    "id": "corner",
+                    "label": "Corner marker",
+                    "type": "text"
+                  },
+                  {
+                    "id": "readings",
+                    "label": "Readings",
+                    "type": "multiline-text"
+                  },
+                  {
+                    "id": "elevation",
+                    "label": "Elevation (feet)",
+                    "type": "number"
+                  }
+                ],
+                "rowLabel": "corner",
+                "rowLabelPlural": "corners",
+                "rowCount": 4
+              }
+            },
+            {
+              "number": "5",
+              "summary": "From the local courthouse or a title agency, get the deed to a property your counselor approves, and discuss its parts and why each matters."
+            },
+            {
+              "number": "6",
+              "summary": "Discuss new tools in surveying, such as drones and laser scanners, and what each does well and poorly."
+            },
+            {
+              "number": "7",
+              "summary": "Explain what GPS is, why it matters and how it's changing surveying."
+            },
+            {
+              "number": "8",
+              "summary": "Explore three surveying careers, research one, and discuss whether it interests you."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "sustainability",
       "name": "Sustainability",
       "summary": "Explore how water, food, energy and our stuff affect the planet, and how your family can help.",
@@ -22678,6 +24458,250 @@
                   "summary": "Research a related hobby or volunteer role, and set goals for it."
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wildland-fire-management",
+      "name": "Wildland Fire Management",
+      "summary": "Learn how wildfires behave, the harm they do and the good prescribed fire can do, how they're prevented and fought safely, and take action against wildfire where you live.",
+      "officialUrl": "https://www.scouting.org/merit-badges/wildland-fire-management/",
+      "requirementVersions": [
+        {
+          "effectiveDate": "2026-07-29",
+          "requirements": [
+            {
+              "number": "1",
+              "summary": "Research and discuss the history of wildland fire in the U.S. and how it has been fought, prevented and managed."
+            },
+            {
+              "number": "2",
+              "summary": "Research the harm wildfires do in the U.S., including acres burned in each of the last three years, and discuss their effects on these.",
+              "ownWork": "Research the harm wildfires do in the U.S., including the acres burned in each of the last three years, and discuss it with your counselor.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Commercial forest products."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Fish and wildlife habitat."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Soil and water."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Recreation and public use."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Homes, communities and human resources."
+                },
+                {
+                  "number": "2f",
+                  "summary": "Air quality and public health."
+                }
+              ]
+            },
+            {
+              "number": "3",
+              "summary": "Discuss how prescribed fire is used for each of these.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Fuel reduction."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Fish and wildlife habitat enhancement."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Ecosystem restoration."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Forest regeneration."
+                },
+                {
+                  "number": "3e",
+                  "summary": "Insect and disease control."
+                }
+              ]
+            },
+            {
+              "number": "4",
+              "summary": "Discuss wildfire prevention and mitigation.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Wildfire prevention.",
+                  "children": [
+                    {
+                      "number": "4a(1)",
+                      "summary": "The main causes of wildfires in the U.S."
+                    },
+                    {
+                      "number": "4a(2)",
+                      "summary": "How you can prevent human-caused wildfires in your community and on unit outings."
+                    }
+                  ]
+                },
+                {
+                  "number": "4b",
+                  "summary": "Wildfire mitigation.",
+                  "children": [
+                    {
+                      "number": "4b(1)",
+                      "summary": "The wildland-urban interface."
+                    },
+                    {
+                      "number": "4b(2)",
+                      "summary": "Defensible space, and how to protect homes and communities in the wildland-urban interface from wildfire."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "5",
+              "summary": "Learn how wildfires behave.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Discuss how weather, topography and fuel shape how a wildland fire behaves, with examples."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain how removing heat, fuel or oxygen can put out a wildfire."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Diagram the parts of a wildfire."
+                }
+              ]
+            },
+            {
+              "number": "6",
+              "summary": "Learn how wildland firefighters stay safe.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Discuss the personal protective equipment wildland firefighters wear and how they use it."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Discuss each of these and why it matters for staying safe and aware while fighting wildland fire.",
+                  "children": [
+                    {
+                      "number": "6b(1)",
+                      "summary": "The 10 Standard Firefighting Orders."
+                    },
+                    {
+                      "number": "6b(2)",
+                      "summary": "The 18 Watch Out Situations."
+                    },
+                    {
+                      "number": "6b(3)",
+                      "summary": "Lookouts, Communication, Escape Routes and Safety Zones (LCES)."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "number": "7",
+              "summary": "Learn wildfire suppression tactics.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Alone or with a small team, show these tactics on your 5c diagram or a wildfire map, with tokens for firefighting resources, and explain when each is used.",
+                  "ownWork": "Explain the conditions in which you'd use each tactic.",
+                  "children": [
+                    {
+                      "number": "7a(1)",
+                      "summary": "Direct attack."
+                    },
+                    {
+                      "number": "7a(2)",
+                      "summary": "Indirect attack."
+                    },
+                    {
+                      "number": "7a(3)",
+                      "summary": "Minimum impact suppression tactics."
+                    },
+                    {
+                      "number": "7a(4)",
+                      "summary": "Using hand crews, machinery and aircraft."
+                    },
+                    {
+                      "number": "7a(5)",
+                      "summary": "Mop-up."
+                    },
+                    {
+                      "number": "7a(6)",
+                      "summary": "Repair and restoration."
+                    }
+                  ]
+                },
+                {
+                  "number": "7b",
+                  "summary": "Diagram the Incident Command System, and, alone or with your team, explain what the Command and General Staff positions do on a wildfire."
+                }
+              ]
+            },
+            {
+              "number": "8",
+              "summary": "Learn the tools of wildfire suppression.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Show how to use three hand tools made for wildland firefighting, and use one to build a fireline."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Discuss seven other tools, pieces of equipment or apparatus made for wildland firefighting, and how each is used."
+                }
+              ]
+            },
+            {
+              "number": "9",
+              "summary": "Take action on wildfire in one of these ways.",
+              "requiredCount": 1,
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Make a fire readiness plan for a wildland area you know, with a map of resources, water, natural and built barriers and access, covering fuel loads, fire apparatus, structure protection, values at risk, medical and evacuation needs and possible suppression tactics."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Talk with a state or federal forestry official or your local fire warden about the kinds and causes of wildland fire in your area, its peak seasons and which agency fights it, then discuss what you learned with your counselor."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Do a Firewise assessment of a home or building in the wildland-urban interface, find its fire risks and hazards, complete a counselor-approved project to lower its risk and make it better prepared, and write a short report."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Meet a fire prevention specialist or local fire official about prevention efforts in your community, then make a fire prevention skit, video or billboard concept and share it with your counselor and troop or another counselor-approved group."
+                },
+                {
+                  "number": "9e",
+                  "summary": "Meet a meteorologist or fire weather expert to discuss your area's fire weather concerns and typical fire seasons and what leads to a Fire Weather Watch or Red Flag Warning, then discuss what you learned with your counselor."
+                }
+              ]
+            },
+            {
+              "number": "10",
+              "summary": "Research a historic catastrophic U.S. wildland fire, and discuss with your counselor, troop or a counselor-approved group what caused it, how it was handled and what could have prevented it; explain its lessons and how it changed later firefighting policy or tactics."
+            },
+            {
+              "number": "11",
+              "summary": "Research a career related to wildland fire management and discuss what makes it interesting."
             }
           ]
         }

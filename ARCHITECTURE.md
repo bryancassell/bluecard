@@ -550,8 +550,9 @@ io.github.bryancassell.bluecard
 │   ├── progress/       ProgressRepository + Room entities and DAOs
 │   ├── report/         ReportRepository (PDF)
 │   └── backup/         BackupRepository and the export format
-├── text/               The strings' locales, and dates and typed text formatted in them, for the
-│                       screens and for code outside Compose, such as the PDF report
+├── text/               The strings' locales, dates and typed text formatted in them, and line
+│                       breaks as spaces, for the screens and for code outside Compose, such as
+│                       the PDF report and import
 └── di/                 Hilt modules
 ```
 
@@ -560,7 +561,7 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, the scout's rank, then the rank in progress, in the same row as on Ranks, opening its Rank detail. A progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges, Ranks and Data management. |
+| **Home** | Name, unit, and a card with the scout's rank, a trail of every rank, and the rank in progress, opening its Rank detail. A progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges, Ranks and Data management. |
 | **Badges** | Browse all current badges and search by name or description, with a progress bar on each badge in progress. One screen: the list filters as the scout types. |
 | **Badge detail** | A progress bar while the badge is in progress, summary, Eagle-required flag, link to the official page, "Share report" and "Save report" once complete, counselor details (tapping the phone or email opens the phone or email app), requirement list with completion state, each opening the requirement's page, and "mark completed on a prior date". At the bottom, once the badge is started, a button clears its progress. |
 | **Ranks** | The seven ranks, Scout through Eagle Scout, in the order they're earned, in the same rows as Badges, each with its status and progress bar ([Ranks](#ranks)). |
@@ -671,6 +672,11 @@ requirement progress fresh, numbers only need to be unique within one version.
   order; the app treats whatever is in the file as the full list. A unit test
   validates the file (unique IDs, valid structure, a URL for every badge and
   rank).
+- **Scouts BSA Test Lab pilot badges are left out** until they become
+  official: the catalog has no way to mark a badge as a pilot, and ranks'
+  merit badge counts (Star 3, Life 3) would credit one. The unit test enforces
+  it by requiring each badge's URL to be a `/merit-badges/` page, which pilots
+  don't have.
 - **Discontinued badges aren't handled yet:** the Badges list shows every badge
   in the catalog. Once shipped, a badge can't be removed, because progress is
   stored against it, so hiding discontinued badges from scouts who haven't
@@ -833,8 +839,9 @@ read, it shows the load-failed message instead (see
 ### Home summary
 
 The Home ViewModel combines the profile, the catalog and the scout's progress.
-It shows the highest rank earned and the rank in progress from `standings`, as
-Ranks does ([Ranks](#ranks)), in Ranks' row (`ui/ranks/RankRow.kt`). It counts
+It works out every rank's standing with `standings`, as Ranks does
+([Ranks](#ranks)), for the rank card (`ui/home/RankCard.kt`): the highest rank
+earned, a trail of every rank, and the rank in progress. It counts
 badges completed and in progress, and Eagle-required progress against the
 Eagle-required badges in the catalog, counting each Eagle "one of" group
 once (`eagleSlots` in `data/catalog/Catalog.kt`, which Eagle 3 counts by too;
@@ -952,6 +959,12 @@ it before changing anything, since import replaces all current data (see
   version too. Each requirement, tracker row and column must be in that
   version, and no text longer than its field takes, so none is cut short when
   the scout edits it.
+- **Import cleans up text as the app does when the scout saves it,** rather
+  than rejecting a file for it ([`PRD.md`](PRD.md#design-decisions)): it's
+  trimmed, and each line break in single-line text (the name, unit number,
+  counselor's fields and a tracker's text columns) is replaced with a space, as
+  its field replaces them (see [Text fields](#text-fields)). Length limits apply
+  to the text as it's stored.
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.

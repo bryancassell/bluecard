@@ -36,7 +36,7 @@ object CatalogValidator {
                 noMonthsInRank = if (index == 0) "it's the lowest rank" else null,
                 noMeritBadges = null
             )
-            addAll(validateAdvancement("rank \"${rank.id}\"", rank, rules))
+            addAll(validateAdvancement("rank \"${rank.id}\"", rank, rules, OFFICIAL_URL_PREFIX))
         }
     }
 
@@ -60,7 +60,7 @@ object CatalogValidator {
     private fun validateBadge(badge: MeritBadge, rules: RequirementRules): List<String> =
         buildList {
             val where = "badge \"${badge.id}\""
-            addAll(validateAdvancement(where, badge, rules))
+            addAll(validateAdvancement(where, badge, rules, BADGE_URL_PREFIX))
             if (badge.eagleGroup != null && !badge.eagleRequired) {
                 add("$where: has an eagleGroup but is not eagleRequired")
             }
@@ -69,15 +69,16 @@ object CatalogValidator {
     private fun validateAdvancement(
         where: String,
         advancement: Advancement,
-        rules: RequirementRules
+        rules: RequirementRules,
+        urlPrefix: String
     ): List<String> = buildList {
         if (!idPattern.matches(advancement.id)) {
             add("$where: id must be lowercase words joined by '-'")
         }
         if (advancement.name.isBlank()) add("$where: name is blank")
         if (advancement.summary.isBlank()) add("$where: summary is blank")
-        if (!advancement.officialUrl.startsWith(OFFICIAL_URL_PREFIX)) {
-            add("$where: officialUrl must start with $OFFICIAL_URL_PREFIX")
+        if (!advancement.officialUrl.startsWith(urlPrefix)) {
+            add("$where: officialUrl must start with $urlPrefix")
         }
         val versions = advancement.requirementVersions
         if (versions.isEmpty()) add("$where: has no requirement versions")
@@ -212,4 +213,7 @@ object CatalogValidator {
         listOf(this) + children.flatMap { it.withDescendants() }
 
     private const val OFFICIAL_URL_PREFIX = "https://www.scouting.org/"
+
+    /** Official merit badges' pages. Test Lab pilots' pages are elsewhere, so they fail. */
+    private const val BADGE_URL_PREFIX = "${OFFICIAL_URL_PREFIX}merit-badges/"
 }
