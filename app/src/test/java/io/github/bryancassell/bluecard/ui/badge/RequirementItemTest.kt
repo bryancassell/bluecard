@@ -132,20 +132,29 @@ class RequirementItemTest {
         assertNull(item.completeCount)
     }
 
+    // Its own work counts as one more part, so the count never reads as done while it's left.
     @Test
     fun enoughSubRequirementsButNotOwnWork_isPartlyCompleted_countingNoMoreThanNeeded() {
         val item = ownWorkAndTwoOfThree.toItem(done("2a", "2b", "2c"), emptyMap())
 
         assertTrue(item.partlyCompleted)
-        assertEquals(CompleteCount(2, 2), item.completeCount)
+        assertEquals(CompleteCount(2, 3), item.completeCount)
     }
 
     @Test
-    fun ownWorkComplete_isPartlyCompleted_withNoCount() {
+    fun ownWorkComplete_isPartlyCompleted_countedAsOnePart() {
         val item = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
 
         assertTrue(item.partlyCompleted)
-        assertNull(item.completeCount)
+        assertEquals(CompleteCount(1, 3), item.completeCount)
+    }
+
+    @Test
+    fun ownWorkAndSomeSubRequirementsComplete_countsBoth() {
+        val all = ownWorkAndTwoOfThree.copy(requiredCount = null)
+        val item = all.toItem(done("2", "2a", "2b"), emptyMap())
+
+        assertEquals(CompleteCount(3, 4), item.completeCount)
     }
 
     @Test

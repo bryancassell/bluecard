@@ -661,7 +661,7 @@ class BadgeDetailScreenTest {
             .assert(hasText("(2 of 3 complete)"))
     }
 
-    // Only its own work, or a requirement further down, is complete.
+    // Only a requirement further down is complete.
     @Test
     fun partlyCompletedWithNoSubRequirementComplete_hasNoCount() {
         show(withPartlyCompleted("2", null))

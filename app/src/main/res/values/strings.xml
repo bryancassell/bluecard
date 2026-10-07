@@ -361,15 +361,17 @@
         <item quantity="one">%1$d merit badge</item>
         <item quantity="other">%1$d merit badges</item>
     </plurals>
-    <!-- On the row of a requirement that isn't complete yet, how many of the sub-requirements it
-         needs are, such as "(1 of 3 complete)". The quantity is the number complete. -->
+    <!-- On the row of a requirement that isn't complete yet, how many of the parts it needs are,
+         such as "(1 of 3 complete)". Its parts are the sub-requirements it needs, plus one for
+         any work it asks for besides them. The quantity is the number complete. -->
     <plurals name="requirement_complete_count">
         <item quantity="one">(%1$d of %2$d complete)</item>
         <item quantity="other">(%1$d of %2$d complete)</item>
     </plurals>
     <!-- requirement_choice and requirement_complete_count on one line, such as
          "Do 2 of 3 (1 of 2 complete)": 2 of its 3 sub-requirements are needed, and 1 of those 2
-         is complete. The quantity is the number complete. -->
+         is complete. When it asks for work besides them, that's one more part:
+         "Do 2 of 3 (1 of 3 complete)". The quantity is the number complete. -->
     <plurals name="requirement_choice_and_complete_count">
         <item quantity="one">Do %1$d of %2$d (%3$d of %4$d complete)</item>
         <item quantity="other">Do %1$d of %2$d (%3$d of %4$d complete)</item>

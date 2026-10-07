@@ -7,6 +7,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
+import io.github.bryancassell.bluecard.data.progress.fractionDone
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
@@ -51,8 +52,8 @@ data class RequirementItem(
      */
     val partlyCompleted: Boolean = false,
     /**
-     * How many of the sub-requirements it needs are complete, while it's [partlyCompleted] and
-     * at least one is, or null.
+     * How many of the parts it needs are complete, while it's [partlyCompleted] and at least one
+     * is, or null. Its parts are the sub-requirements it needs and its [ownWork], if any.
      */
     val completeCount: CompleteCount? = null,
     /**
@@ -76,7 +77,10 @@ data class OwnWork(val summary: String, val completed: Boolean)
 /** "Do [required] of [of]" sub-requirements. */
 data class Choice(val required: Int, val of: Int)
 
-/** [complete] of the [needed] sub-requirements a requirement needs are complete. */
+/**
+ * [complete] of the [needed] parts a requirement needs are complete: the sub-requirements it
+ * needs, plus one for its own work, if any.
+ */
 data class CompleteCount(val complete: Int, val needed: Int)
 
 /**
@@ -119,13 +123,21 @@ fun Requirement.toItem(
     )
 }
 
-/** How many of the children it needs are complete, or null if none are. */
+/**
+ * How many of the children it needs are complete, plus its own work, if any, as one more part,
+ * as [fractionDone] counts them, or null if none are. Counting the own work keeps the count from
+ * reading as done, such as "6 of 6", while it's left.
+ */
 private fun Requirement.completeCount(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,
     earnedBadges: EarnedBadges
 ): CompleteCount? {
-    val complete = children.count { it.completion(progress, trackerEntries, earnedBadges) != null }
-    // More than it needs are complete only while its own work isn't.
-    return if (complete == 0) null else CompleteCount(minOf(complete, neededCount), neededCount)
+    val completeChildren =
+        children.count { it.completion(progress, trackerEntries, earnedBadges) != null }
+    val ownWorkParts = if (ownWork == null) 0 else 1
+    val ownWorkComplete = if (ownWork != null && progress[number]?.completed == true) 1 else 0
+    // More children than it needs are complete only while its own work isn't.
+    val complete = minOf(completeChildren, neededCount) + ownWorkComplete
+    return if (complete == 0) null else CompleteCount(complete, neededCount + ownWorkParts)
 }
