@@ -38,21 +38,14 @@ fun Requirement.fractionDone(
                 .sortedDescending()
                 .take(needed)
                 .sum()
-            if (ownWork == null) {
-                childrenDone / needed
-            } else {
-                (childrenDone + progress.markedDone(number)) / (needed + 1)
-            }
+            withOwnWork(childrenDone, needed, progress)
         }
 
-        rowCount != null -> {
-            val rowsDone = filledRows(trackerEntries[number].orEmpty(), rowCount).size.toFloat()
-            if (ownWork == null) {
-                rowsDone / rowCount
-            } else {
-                (rowsDone + progress.markedDone(number)) / (rowCount + 1)
-            }
-        }
+        rowCount != null -> withOwnWork(
+            filledRows(trackerEntries[number].orEmpty(), rowCount).size.toFloat(),
+            rowCount,
+            progress
+        )
 
         else -> 0f
     }
@@ -99,6 +92,16 @@ fun MeritBadge.fractionDoneWhileInProgress(progress: BadgeProgressDetails?): Flo
     if (progress == null || status(progress) != BadgeStatus.InProgress) return null
     return requirementsVersionFor(progress)?.let { progress.fractionDone(it) }
 }
+
+/**
+ * How much is done with [done] of its [parts] done, and one more part for its
+ * [own work][Requirement.ownWork], if it has any.
+ */
+private fun Requirement.withOwnWork(
+    done: Float,
+    parts: Int,
+    progress: Map<String, RequirementProgress>
+): Float = if (ownWork == null) done / parts else (done + progress.markedDone(number)) / (parts + 1)
 
 /** 1 if the scout marked requirement [number] complete, otherwise 0. */
 private fun Map<String, RequirementProgress>.markedDone(number: String): Float =

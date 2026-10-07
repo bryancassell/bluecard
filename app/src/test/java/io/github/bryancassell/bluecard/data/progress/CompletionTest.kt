@@ -225,6 +225,23 @@ class CompletionTest {
     private val ownWorkAndWeeks = weeks.copy(ownWork = "Sum up the weeks.")
 
     @Test
+    fun needsEveryRow_onlyWithoutChildrenAndWithFixedRows_withOwnWorkOrNot() {
+        assertTrue(weeks.needsEveryRow)
+        assertTrue(ownWorkAndWeeks.needsEveryRow)
+        assertFalse(log.needsEveryRow)
+        assertFalse(allOf.copy(tracker = weeks.tracker).needsEveryRow)
+    }
+
+    @Test
+    fun hasEveryRow_onceEachRowItNeedsIsFilledIn() {
+        assertFalse(ownWorkAndWeeks.hasEveryRow(entriesOf(row("5", 1), row("5", 3))))
+        assertTrue(ownWorkAndWeeks.hasEveryRow(entriesOf(row("5", 1), row("5", 2), row("5", 3))))
+        // Its children complete it, so it doesn't need its rows.
+        val parent = allOf.copy(tracker = weeks.tracker)
+        assertFalse(parent.hasEveryRow(entriesOf(row("2", 1), row("2", 2), row("2", 3))))
+    }
+
+    @Test
     fun fixedRowsAndOwnWork_incompleteUntilBothAreDone() {
         val allRows = entriesOf(row("5", 1, day(1)), row("5", 2, day(4)), row("5", 3, day(2)))
         assertNull(ownWorkAndWeeks.completion(progressOf(), allRows))

@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.data.progress.needsEveryRow
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
@@ -127,10 +128,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
         /** Its saved entry; null for a new one or a row not filled in. */
         val entryId: Long?,
         val saved: Map<String, String>,
-        /**
-         * Whether its requirement needs every row filled in: it has no children, and the tracker
-         * has a fixed number of rows. It may need its own work too.
-         */
+        /** Whether its requirement needs every row filled in ([needsEveryRow]). */
         val needsEveryRow: Boolean
     ) {
         /** The row it fills in a tracker with a fixed number of rows, or null in a log. */
@@ -194,7 +192,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
             row.number,
             row.entryId,
             saved,
-            requirement.children.isEmpty() && tracker.rowCount != null
+            requirement.needsEveryRow
         )
     }
 

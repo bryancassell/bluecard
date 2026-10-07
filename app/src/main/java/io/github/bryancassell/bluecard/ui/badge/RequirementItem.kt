@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
+import io.github.bryancassell.bluecard.data.progress.hasEveryRow
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
 
@@ -114,13 +115,12 @@ fun Requirement.toItem(
     } else {
         null
     }
-    val trackerCount = tracker?.count(trackerEntries[number].orEmpty())
     // Still needed with every sub-requirement it needs complete, or with none and every row of
     // its tracker filled in, so its own work isn't.
-    val onlyOwnWorkLeft = if (children.isNotEmpty()) {
-        completeCount != null && completeCount.complete == completeCount.needed
+    val onlyOwnWorkLeft = stillNeeded && if (children.isNotEmpty()) {
+        completeCount?.let { it.complete == it.needed } == true
     } else {
-        stillNeeded && trackerCount?.rowCount?.let { it == trackerCount.recorded } == true
+        hasEveryRow(trackerEntries)
     }
     return RequirementItem(
         number = number,
@@ -128,7 +128,7 @@ fun Requirement.toItem(
         choice = choiceCount?.let { Choice(it, children.size) },
         completed = completed,
         markedByHand = isMarkedByHand,
-        tracker = trackerCount,
+        tracker = tracker?.count(trackerEntries[number].orEmpty()),
         notNeeded = notNeeded,
         notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },

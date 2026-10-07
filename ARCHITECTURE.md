@@ -806,8 +806,9 @@ At a high level. The exact fields are in the code.
     when the badge is started), started date, counselor (name, phone, email, all
     optional), and the date it was marked completed on a prior date, if any.
   - `RequirementProgress`: badge ID, requirement number, whether it is complete
-    (or, for a requirement completed by its fixed-row tracker, whether the scout
-    gave its completion date), completion date (optional), notes (`comment`,
+    (or, for a requirement with own work, whether that's complete, and for one
+    completed by its fixed-row tracker alone, whether the scout gave its
+    completion date), completion date (optional), notes (`comment`,
     optional), and, for a rank's requirement, who signed off on it
     (`signedOffBy`, optional).
   - `TrackerEntry`: an ID that only grows, badge ID, requirement number, the row
@@ -1003,7 +1004,7 @@ Requirement detail read every badge's and rank's progress
 row can un-earn ranks too, so Tracker entry asks `noLongerEarned` as well, and
 shares its dialog's sentence (`withUnearnedRanks` in `ClearProgress.kt`). It
 follows every badge's and rank's progress only for a saved row of a requirement
-that `completesFromRows`, the only kind whose deletion can un-earn one, and
+that `needsEveryRow`, the only kind whose deletion can un-earn one, and
 otherwise reads its own badge's progress once, with its form. Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a

@@ -21,12 +21,23 @@ val Requirement.isMarkedByHand: Boolean
     get() = children.isEmpty() && tracker?.rowCount == null && meritBadges == null
 
 /**
- * Whether this requirement is complete once every row of its tracker is filled in: it has no
- * children or [own work][Requirement.ownWork], and its tracker has a fixed number of rows. The
- * scout can give the date it was completed on, as for one they mark by hand ([completion]).
+ * Whether this requirement needs every row of its tracker filled in: it has no children, and its
+ * tracker has a fixed number of rows. It may need its [own work][Requirement.ownWork] too.
  */
-val Requirement.completesFromRows: Boolean
-    get() = children.isEmpty() && ownWork == null && tracker?.rowCount != null
+val Requirement.needsEveryRow: Boolean get() = children.isEmpty() && tracker?.rowCount != null
+
+/**
+ * Whether this requirement is complete once every row of its tracker is filled in: it
+ * [needsEveryRow] and has no [own work][Requirement.ownWork]. The scout can give the date it was
+ * completed on, as for one they mark by hand ([completion]).
+ */
+val Requirement.completesFromRows: Boolean get() = needsEveryRow && ownWork == null
+
+/** Whether every row of its tracker is filled in, for a requirement that [needsEveryRow]. */
+fun Requirement.hasEveryRow(trackerEntries: Map<String, List<TrackerEntry>>): Boolean {
+    val rowCount = tracker?.rowCount?.takeIf { needsEveryRow } ?: return false
+    return rowsCompletion(trackerEntries[number].orEmpty(), rowCount) != null
+}
 
 /**
  * Whether a requirement is complete, from the scout's recorded progress and tracker entries
@@ -65,13 +76,9 @@ fun Requirement.completion(
 
         rowCount != null -> {
             val byRows = rowsCompletion(trackerEntries[number].orEmpty(), rowCount) ?: return null
-            if (ownWork == null) {
-                // The scout gives the date as they mark a requirement by hand, but it doesn't
-                // complete this one.
-                markedCompletion(progress) ?: byRows
-            } else {
-                markedCompletion(progress)
-            }
+            // The scout gives the date as they mark a requirement by hand. It completes this one
+            // only as its own work, if it has any.
+            markedCompletion(progress) ?: byRows.takeIf { ownWork == null }
         }
 
         else -> markedCompletion(progress)
