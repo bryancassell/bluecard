@@ -34,7 +34,6 @@ import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
@@ -798,11 +797,10 @@ class TrackerEntryScreenTest {
         fieldWithoutScrolling("Place").performImeAction()
         repeat(2) { composeTestRule.mainClock.advanceTimeByFrame() }
         // Save is still behind the keyboard, so the scroll hasn't ended.
-        val keyboardTop =
-            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - OnScreenKeyboard.HEIGHT
         assertTrue(
             "The scroll ended before the test could stop it partway",
-            composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot().bottom > keyboardTop
+            composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot().bottom >
+                keyboard.top()
         )
     }
 

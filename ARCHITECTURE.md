@@ -1131,10 +1131,9 @@ test still exports and imports through the real one.
   Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
   graphics measure every character as 1px wide. Robolectric shows no keyboard,
   so a test of what stays above it moves one as a phone does
-  (`OnScreenKeyboard` in `testing/`). Once the field's focus has
-  settled, it sends the page's view the keyboard's final insets, then its
-  insets frame by frame through the platform's `WindowInsetsAnimation`
-  events. A keyboard that appears in one step doesn't show the behavior that
+  (`OnScreenKeyboard` in `testing/`). It sends the page's view the keyboard's
+  final insets, then its insets frame by frame through the platform's
+  `WindowInsetsAnimation` events. A keyboard that appears in one step doesn't show the behavior that
   depends on frames, such as the page following the cursor. With its default
   graphics, Robolectric shows a page out of touch mode, where buttons can take
   focus (native graphics start in touch mode). So a test of where focus goes

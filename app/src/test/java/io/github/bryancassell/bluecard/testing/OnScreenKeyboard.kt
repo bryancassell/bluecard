@@ -84,12 +84,16 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
         .setVisible(WindowInsets.Type.ime(), height > 0)
         .build()
 
+    /** Where the top edge of a keyboard [keyboardHeight] tall is on the page. */
+    fun top(keyboardHeight: Dp = HEIGHT): Dp =
+        rule.onRoot().getUnclippedBoundsInRoot().bottom - keyboardHeight
+
     /**
      * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall. Unclipped
      * bounds are needed for this: the page clips what's behind the keyboard.
      */
     fun assertAbove(bounds: DpRect, keyboardHeight: Dp = HEIGHT) {
-        val keyboardTop = rule.onRoot().getUnclippedBoundsInRoot().bottom - keyboardHeight
+        val keyboardTop = top(keyboardHeight)
         assertTrue(
             "$bounds isn't between the top of the page and the keyboard at $keyboardTop",
             bounds.top >= 0.dp && bounds.bottom <= keyboardTop
