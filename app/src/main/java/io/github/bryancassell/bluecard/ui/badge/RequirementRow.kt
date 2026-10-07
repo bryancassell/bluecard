@@ -100,12 +100,19 @@ private fun RequirementRow(
     )
     // Its lines under the summary, all but "Not needed".
     val lines = buildList {
-        val stillToDo = item.stillToDo?.let { stringResource(R.string.requirement_still_to_do, it) }
-        choiceAndCountLabel(item.choice, item.completeCount)?.let { add(it) }
+        val count = listOfNotNull(choiceAndCountLabel(item.choice, item.completeCount))
+        val trackerLines = item.tracker?.let { trackerProgressLabels(it) }.orEmpty()
+        val stillToDo = listOfNotNull(
+            item.stillToDo?.let { stringResource(R.string.requirement_still_to_do, it) }
+        )
         // Under the count it's what's left of: its sub-requirements', or else its tracker's.
-        if (item.completeCount != null) stillToDo?.let { add(it) }
-        item.tracker?.let { addAll(trackerProgressLabels(it)) }
-        if (item.completeCount == null) stillToDo?.let { add(it) }
+        addAll(
+            if (item.completeCount != null) {
+                count + stillToDo + trackerLines
+            } else {
+                count + trackerLines + stillToDo
+            }
+        )
         item.meritBadges?.let {
             add(meritBadgesCountLabel(it))
             add(eagleRequiredCountLabel(it))

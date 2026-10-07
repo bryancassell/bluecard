@@ -115,13 +115,10 @@ fun Requirement.toItem(
     } else {
         null
     }
-    // Still needed with every sub-requirement it needs complete, or with none and every row of
-    // its tracker filled in, so its own work isn't.
-    val onlyOwnWorkLeft = stillNeeded && if (children.isNotEmpty()) {
-        completeCount?.let { it.complete == it.needed } == true
-    } else {
-        hasEveryRow(trackerEntries)
-    }
+    // Still needed with enough sub-requirements complete, or every row of its tracker filled in,
+    // so its own work isn't.
+    val onlyOwnWorkLeft = ownWork != null && stillNeeded &&
+        (hasEnoughChildren(progress, trackerEntries, earnedBadges) || hasEveryRow(trackerEntries))
     return RequirementItem(
         number = number,
         summary = summary,

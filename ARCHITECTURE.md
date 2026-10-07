@@ -863,9 +863,9 @@ requirements had a checkbox, becomes the date the scout gave
 
 A requirement with a fixed-row tracker and own work stores only the own work,
 as a requirement with children does, so its rows get no date of their own: the
-own work's date is the requirement's. Two dates would have needed a new column,
-with a migration and a new export format, and two dates on one page, while the
-own work is usually the step after the rows, such as summing them up.
+own work's date is the requirement's. A date for the rows as well would have
+needed a new column, with a migration and a new export format, while the own
+work is usually the step after the rows, such as summing them up.
 
 A rank's requirement that asks for merit badges (`Requirement.meritBadges`,
 such as Star 3's six, at least four of them Eagle-required) is the only
@@ -1374,7 +1374,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
-| [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format, and one date on its page; a row's date is only when it was typed in |
+| [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format; a row's date is only when it was typed in |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
 | [Rank sign-off](#ranks) | A nullable `requirement_progress` column that only a rank's requirement fills, saved with the notes in one write | No new table; the notes' one Save can't save one field and fail the other |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |

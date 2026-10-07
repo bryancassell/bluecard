@@ -712,6 +712,42 @@ class BadgeDetailScreenTest {
             .assert(!hasText("complete", substring = true))
     }
 
+    // Under the sub-requirements' count it's what's left of, not the tracker's.
+    @Test
+    fun subRequirementsAndTrackerWithOnlyItsOwnWorkLeft_saysWhatsStillToDoUnderTheirCount() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "2") {
+                        it.copy(
+                            completed = false,
+                            partlyCompleted = true,
+                            completeCount = CompleteCount(2, 2),
+                            tracker = TrackerCount(2, null, "sessions"),
+                            ownWork = OwnWork("Share what you learned.", completed = false),
+                            stillToDo = "Share what you learned."
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        val texts = row("Do two of these.")
+            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
+        assertEquals(
+            listOf(
+                "2",
+                "Do two of these.",
+                "Do 2 of 3 (2 of 2 complete)",
+                "Still to do: Share what you learned.",
+                "2 sessions"
+            ),
+            texts
+        )
+    }
+
     // Under the rows' count, as under a count of sub-requirements.
     @Test
     fun everyRowFilledInWithOnlyItsOwnWorkLeft_saysWhatsStillToDo() {

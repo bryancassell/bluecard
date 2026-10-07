@@ -36,7 +36,7 @@ val Requirement.completesFromRows: Boolean get() = needsEveryRow && ownWork == n
 /** Whether every row of its tracker is filled in, for a requirement that [needsEveryRow]. */
 fun Requirement.hasEveryRow(trackerEntries: Map<String, List<TrackerEntry>>): Boolean {
     val rowCount = tracker?.rowCount?.takeIf { needsEveryRow } ?: return false
-    return rowsCompletion(trackerEntries[number].orEmpty(), rowCount) != null
+    return filledRows(trackerEntries[number].orEmpty(), rowCount).size == rowCount
 }
 
 /**
