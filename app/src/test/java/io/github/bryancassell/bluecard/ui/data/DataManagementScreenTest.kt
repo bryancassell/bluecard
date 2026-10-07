@@ -21,7 +21,6 @@ import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -181,13 +180,14 @@ class DataManagementScreenTest {
     fun edit_tellsScreenReadersWhatItEdits() {
         show()
 
+        // Only one: TalkBack would also read a second, such as one set on the button as well.
         editProfileButton()
+            .assertContentDescriptionEquals("Edit name and unit")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
         // TalkBack reads the button's parts in turn, so the description has to be the text's
         // own: one beside the text was read and then "Edit" again after it.
         composeTestRule
             .onNodeWithText("Edit", useUnmergedTree = true)
-            .assertTextEquals("Edit")
             .assertContentDescriptionEquals("Edit name and unit")
     }
 
