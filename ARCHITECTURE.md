@@ -24,6 +24,7 @@ own documentation says so, and each such claim links to the page.
   - [Navigation](#navigation)
   - [Double taps](#double-taps)
   - [Language and layout direction](#language-and-layout-direction)
+  - [Screen reader labels](#screen-reader-labels)
   - [Theme](#theme)
 - [Data layer](#data-layer)
   - [Repositories](#repositories)
@@ -437,6 +438,17 @@ both taps of a double tap can reach it.
   wraps it with
   [`BidiFormatter.unicodeWrap`](https://developer.android.com/training/basics/supporting-devices/languages#FormatText);
   code outside Compose uses `text.typedText(text, locale)`.
+
+### Screen reader labels
+
+- **A label that replaces a button's text goes on the `Text` inside it**, as a
+  `contentDescription` in its semantics, not on the button's modifier
+  ([#166](https://github.com/bryancassell/bluecard/issues/166)). Compose gives
+  TalkBack the button's parts in turn, so a description on the button became a
+  part of its own: TalkBack read "Edit name and unit. Edit. Button". On the
+  text, it replaces the text's label. Tests of such a label check the `Text`
+  node in the unmerged tree, and that the button has only one description: the
+  merged node has the description wherever it's set.
 
 ### Theme
 
@@ -1329,6 +1341,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
+| [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text is set on the `Text` inside it | TalkBack read one set on the button and then the text too |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
