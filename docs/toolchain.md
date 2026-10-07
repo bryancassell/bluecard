@@ -284,11 +284,11 @@ emulator, and point `adb` at it if a phone is also connected.
    release build unsigned, and only publishing signs it with the release key
    (see [Publishing a test release](#publishing-a-test-release)). A debug
    install has the same application ID, so uninstall it first to start from a
-   fresh install.
+   fresh install. `BUILD_TOOLS` is the newest stable build tools; preview
+   versions have a "-" in their name.
 
    ```sh
    ./gradlew assembleRelease
-   # The newest stable build tools; preview versions have a "-" in their name.
    BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -v -e - | sort -V | tail -1)"
    "$BUILD_TOOLS/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
        --out app/build/outputs/apk/release/app-release.apk \
@@ -318,9 +318,9 @@ the source names, with the mapping file that the build wrote:
 Each release build writes a new mapping file, so retrace before building
 again. Testers can't see a stack trace, so to retrace a crash a tester
 reports, reproduce it with their release's APK and use the mapping file
-attached to that release. `retrace` comes with the Android SDK Command-line Tools, which the
-Standard setup doesn't install: add them in Android Studio's **SDK Manager →
-SDK Tools → Android SDK Command-line Tools (latest)**.
+attached to that release. `retrace` comes with the Android SDK Command-line
+Tools, which the Standard setup doesn't install: add them in Android Studio's
+**SDK Manager → SDK Tools → Android SDK Command-line Tools (latest)**.
 
 ## Publishing a test release
 
@@ -344,47 +344,63 @@ has to uninstall and install again, losing their data unless they export it
 first.
 
 1. Create the key, once for the project. `keytool` asks for the password.
+   The `chmod` commands make the key readable only by you.
 
    ```sh
-   mkdir -p ~/keys
+   mkdir -p ~/keys && chmod 700 ~/keys
    keytool -genkeypair -keystore ~/keys/bluecard-release.p12 -storetype PKCS12 \
        -alias bluecard -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=BlueCard"
+   chmod 600 ~/keys/bluecard-release.p12
    ```
 
    On another machine, copy `bluecard-release.p12` from the backup into
-   `~/keys` instead. Either way, make it readable only by you:
-   `chmod 700 ~/keys && chmod 600 ~/keys/bluecard-release.p12`. Anyone can read the certificate's name (`CN=BlueCard`) from the APK, so it
-   names the app rather than a person.
+   `~/keys` in place of the `keytool` command. Anyone can read the
+   certificate's name (`CN=BlueCard`) from the APK, so it names the app rather
+   than a person.
 
 2. Save the keystore file and its password together in a password manager.
    Keep the password only there, not in a file that a build could read.
 
 ### Publishing a release
 
+Run steps 2 to 5 in one terminal, since they share shell variables. The code
+blocks have no comments, because zsh doesn't treat `#` as a comment when you
+paste commands into it.
+
 1. Unless no release has used them yet, raise `versionCode` by 1 and set
    `versionName` in `app/build.gradle.kts`, in a pull request. Android won't
    update an app to a lower `versionCode`, and a new one for each release
    tells the builds apart.
-2. Once it's merged, build the APK from `main` with no uncommitted changes,
-   since the APK records the commit it was built from.
+2. Once it's merged, build the APK from `main`. The build only runs if `main`
+   has no uncommitted changes and matches `origin/main`, so the commit tagged
+   later is exactly what was built.
 
    ```sh
-   git switch main && git pull --ff-only
-   git status -sb  # Should print only "## main...origin/main".
-   ./gradlew assembleRelease
+   git switch main && git pull --ff-only &&
+       [ -z "$(git status --porcelain)" ] &&
+       [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] &&
+       COMMIT=$(git rev-parse HEAD) &&
+       ./gradlew assembleRelease
    ```
 
 3. Sign it with the release key, with `BUILD_TOOLS` set as in step 1 of
-   [Checking a release build](#checking-a-release-build). `apksigner` asks
-   for the key's password. The commands end by printing "Signed with the
-   release key." only if the APK's certificate has the release key's SHA-256
-   digest.
+   [Checking a release build](#checking-a-release-build). The first command
+   prints the APK's `versionCode` and `versionName`: check they're the new
+   ones. The R8 mapping file is saved beside the signed APK, so a later build
+   can't replace it. `apksigner` asks for the key's password, and the commands
+   end by printing "Signed with the release key." only if the APK's
+   certificate has the release key's SHA-256 digest.
 
    ```sh
-   APK=app/build/outputs/apk/release/app-release.apk
-   rm -f "$APK"
+   OUT=app/build/outputs
+   UNSIGNED="$OUT/apk/release/app-release-unsigned.apk"
+   "$BUILD_TOOLS/aapt2" dump badging "$UNSIGNED" | head -1 | cut -d " " -f 3-4
+   VERSION=$("$BUILD_TOOLS/aapt2" dump badging "$UNSIGNED" | sed -n "s/^package: .* versionName='\([^']*\)'.*/\1/p")
+   APK="$OUT/bluecard-${VERSION:?}.apk"
+   MAPPING="$OUT/bluecard-$VERSION-mapping.txt"
+   rm -f "$APK" && cp "$OUT/mapping/release/mapping.txt" "$MAPPING" &&
    "$BUILD_TOOLS/apksigner" sign --ks ~/keys/bluecard-release.p12 --ks-key-alias bluecard \
-       --out "$APK" app/build/outputs/apk/release/app-release-unsigned.apk &&
+       --out "$APK" "$UNSIGNED" &&
    "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" |
        grep -q "certificate SHA-256 digest: d1fe1f136ba0b07f8bc43a62dd193dea3f3f8474b1a7586aed4537e55248abff" &&
        echo "Signed with the release key."
@@ -398,42 +414,30 @@ first.
    adb install "$APK"
    ```
 
-   From the second release on, also check an update the way testers get one:
-   install the previous release, record some progress, then install this one
-   over it. The progress should still be there.
+   From the second release on, also check an update the way testers get one.
+   Set `PREVIOUS` to the previous release's `versionName`, and install that
+   release:
 
    ```sh
-   PREVIOUS=0.1.0  # The previous release's versionName.
+   PREVIOUS=0.1.0
    gh release download "v$PREVIOUS" --pattern '*.apk' --dir app/build/previous --clobber
    adb uninstall io.github.bryancassell.bluecard
    adb install "app/build/previous/bluecard-$PREVIOUS.apk"
-   # Record some progress in the app, then:
-   adb install -r "$APK"
    ```
 
-5. Read the version and commit from the APK, and check they're the ones you
-   expect.
+   Record some progress in the app, then install this release over it with
+   `adb install -r "$APK"`. The progress should still be there.
+
+5. Tag the commit that was built, and publish the release with the APK and
+   its mapping file. `gh` asks for a title and release notes: say what's new
+   and what to try.
 
    ```sh
-   VERSION=$("$BUILD_TOOLS/aapt2" dump badging "$APK" | sed -n "s/^package: .* versionName='\([^']*\)'.*/\1/p")
-   COMMIT=$(unzip -p "$APK" META-INF/version-control-info.textproto | sed -n 's/^ *revision: "\(.*\)"$/\1/p')
-   echo "v$VERSION at $COMMIT"
+   git tag "v${VERSION:?}" "${COMMIT:?}" && git push origin "v$VERSION" &&
+       gh release create "v$VERSION" --verify-tag --prerelease "$APK" "$MAPPING"
    ```
 
-6. Tag that commit, then publish the release with the APK and its R8 mapping
-   file. `gh` asks for a title and release notes: say what's new and what to
-   try.
-
-   ```sh
-   git tag "v${VERSION:?}" "${COMMIT:?}" && git push origin "v$VERSION"
-   OUT=app/build/outputs
-   cp "$APK" "$OUT/bluecard-$VERSION.apk"
-   cp "$OUT/mapping/release/mapping.txt" "$OUT/bluecard-$VERSION-mapping.txt"
-   gh release create "v$VERSION" --verify-tag --prerelease \
-       "$OUT/bluecard-$VERSION.apk" "$OUT/bluecard-$VERSION-mapping.txt"
-   ```
-
-7. Send testers the release's link. They install the APK by opening it on
+6. Send testers the release's link. They install the APK by opening it on
    their phone, and allow their browser to install apps when Android asks. To
    update, they install the next release's APK over the old one, which keeps
    their data.

@@ -1150,11 +1150,11 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   [Sign your app](https://developer.android.com/studio/publish/app-signing)
   keeps the password in a properties file that Gradle reads, where every build
   on the machine, and malware that collects such files, could read it too.
-  This doesn't stop code running as the developer from tampering with the
-  tools that sign; only a separate account or machine would. Contributors and
-  CI build the same
-  unsigned APK, so `./gradlew build` works for anyone. If CI signs later, it
-  can run `apksigner` the same way.
+  This doesn't stop code running as the developer, such as a build of another
+  branch, from tampering with the APK that gets signed or the tools that sign
+  it; only a separate account or machine would. Contributors and CI build the
+  same unsigned APK, so `./gradlew build` works for anyone. If CI signs later,
+  it can run `apksigner` the same way.
 - **The release key is RSA 4096 in a PKCS12 keystore, valid for 10,000
   days.** Sign your app asks for at least 25 years. For a `minSdk` of 24 or
   higher, `apksigner` signs with APK Signature Scheme v2, which every Android
