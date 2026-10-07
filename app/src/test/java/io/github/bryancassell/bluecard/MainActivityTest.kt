@@ -1743,6 +1743,41 @@ class MainActivityTest {
         campingRow().assertDoesNotExist()
     }
 
+    // Opens a new night on Camping 1's tracker and types in it, without saving.
+    private fun typeAnUnsavedNight() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        weatherField().performTextInput("Rained all night.")
+        composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun backGesture_released_onAPageWithChanges_asksAndLeavesThePageWhereItWas() {
+        typeAnUnsavedNight()
+        val fieldAtRest = weatherField().getBoundsInRoot()
+
+        val gesture = swipeHalfwayBack()
+        discardDialog().assertDoesNotExist()
+        scenario.onActivity { gesture.backCompleted() }
+
+        discardDialog().assertIsDisplayed()
+        assertEquals(fieldAtRest, weatherField().getBoundsInRoot())
+        // The requirement's page isn't drawn under it.
+        composeTestRule.onNodeWithText("0 nights").assertDoesNotExist()
+    }
+
+    @Test
+    fun backGesture_cancelled_onAPageWithChanges_neitherAsksNorClosesThePage() {
+        typeAnUnsavedNight()
+
+        val gesture = swipeHalfwayBack()
+        scenario.onActivity { gesture.backCancelled() }
+
+        discardDialog().assertDoesNotExist()
+        assertFieldText("Weather", "Rained all night.")
+    }
+
     @Test
     fun twoBacksBeforeTheNextFrame_stopAtHome() {
         launchWithProfile()
