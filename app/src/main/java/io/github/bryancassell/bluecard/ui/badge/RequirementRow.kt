@@ -155,12 +155,13 @@ private fun trackerProgressLabels(count: TrackerCount): List<String> {
 
 /**
  * A requirement's number in a box, like the boxes on the blue card: outlined until part of the
- * requirement is complete, then tinted light blue and outlined in Scouting America Blue with a
- * half-filled circle on its top end corner, then filled in Scouting America Blue with a check
- * there once all of it is complete, or filled in grey once it's no longer needed. The mark on the
- * corner tells the states apart by more than color. It's [minWidth] wide, room for the widest
- * number in its list, but still widens to fit its own number if that measures wider. It grows
- * taller with the font size. The marks are drawn only: its row reads the state.
+ * requirement is complete, then tinted (primaryContainer) and outlined in primary with a
+ * half-filled circle on its top end corner, then filled in primary with a check there once all of
+ * it is complete, or filled in the highest surface once it's no longer needed. In light mode
+ * that's light blue, Scouting America Blue and grey; in dark mode navy, Pale Blue and Dark Blue.
+ * The mark on the corner tells the states apart by more than color. It's [minWidth] wide, room
+ * for the widest number in its list, but still widens to fit its own number if that measures
+ * wider. It grows taller with the font size. The marks are drawn only: its row reads the state.
  */
 @Composable
 private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
@@ -214,8 +215,8 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
                     // Over the corner. offset, unlike absoluteOffset, mirrors right-to-left.
                     .offset(x = 7.dp, y = (-7).dp)
                     .size(20.dp)
-                    // A blue circle under a smaller white one, rather than a border over a
-                    // white one, so no white shows at its edge over the blue box.
+                    // A primary circle under a smaller onPrimary one, rather than a border over an
+                    // onPrimary one, so no onPrimary shows at its edge over the primary box.
                     .background(colors.primary, CircleShape)
                     .padding(2.dp)
                     .background(colors.onPrimary, CircleShape)

@@ -53,11 +53,7 @@ fun StatusCard(
             .testTag(STATUS_CARD_TAG),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceBright,
-            // Material finds a container's content color by matching its value against the
-            // scheme's colors. In the dark scheme surfaceBright is also surfaceVariant, which it
-            // checks first, so it would give onSurfaceVariant.
-            contentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = MaterialTheme.colorScheme.surfaceBright
         )
     ) {
         Column(Modifier.padding(top = 16.dp, bottom = 12.dp)) {

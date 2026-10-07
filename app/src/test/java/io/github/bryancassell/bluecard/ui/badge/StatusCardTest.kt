@@ -13,8 +13,8 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
 /**
- * Checks that a status card's text is body text in light and dark mode. Its container is the
- * dark scheme's surfaceVariant color too, which Material would give secondary text.
+ * Checks that a status card's text is body text in light and dark mode. Material picks it from
+ * the card's color, and would give secondary text if that color were also surfaceVariant's.
  */
 @RunWith(AndroidJUnit4::class)
 class StatusCardTest {

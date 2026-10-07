@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.contentColorFor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import org.junit.Assert.assertEquals
@@ -140,6 +141,19 @@ class BlueCardColorSchemeTest {
     @Test
     fun outline_onEverySurface_meetsNonTextContrast() {
         assertAllMeet(3f) { onEverySurface("outline" to outline) }
+    }
+
+    // Material gives a container whose color matches a role that role's content color, and
+    // checks surfaceVariant before the surface containers. A card gets body text only if no
+    // other surface shares surfaceVariant's color.
+    @Test
+    fun surfaces_getOnSurfaceContent() {
+        val failures = schemes.flatMap { (schemeName, scheme) ->
+            scheme.surfaces().filterKeys { it != "surfaceVariant" }.mapNotNull { (name, color) ->
+                "$schemeName $name".takeIf { scheme.contentColorFor(color) != scheme.onSurface }
+            }
+        }
+        assertTrue("Not onSurface: $failures", failures.isEmpty())
     }
 
     // The status card uses it to stand out from the page: white in light mode, rather than the

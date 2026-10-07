@@ -14,7 +14,7 @@ import org.robolectric.annotation.GraphicsMode
 /**
  * How a requirement's row looks in each state, which screen readers can't tell apart from
  * its semantics: the number's box outlined, tinted, filled with a check, or filled in grey. Each
- * test checks its row against a reference image in `src/test/screenshots`.
+ * test checks its rows against a reference image in `src/test/screenshots`.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -25,59 +25,65 @@ class RequirementRowScreenshotTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private fun capture(item: RequirementItem) {
+    private fun capture(vararg items: RequirementItem) {
         composeTestRule.setContent {
-            BlueCardTheme { RequirementRows(items = listOf(item), onOpen = {}) }
+            BlueCardTheme { RequirementRows(items = items.toList(), onOpen = {}) }
         }
         composeTestRule.onRoot().captureRoboImage()
     }
 
-    @Test
-    fun notCompleted() = capture(
-        RequirementItem(
-            "3",
-            "Plan an overnight trek and find your way with a topo map.",
-            Choice(1, 3),
-            completed = false,
-            markedByHand = false
-        )
+    private val notCompletedItem = RequirementItem(
+        "3",
+        "Plan an overnight trek and find your way with a topo map.",
+        Choice(1, 3),
+        completed = false,
+        markedByHand = false
+    )
+
+    private val completedItem = RequirementItem(
+        "2",
+        "Learn Leave No Trace and the Outdoor Code, and plan to follow them.",
+        null,
+        completed = true,
+        markedByHand = true
+    )
+
+    private val partlyCompletedItem = RequirementItem(
+        "3",
+        "Plan an overnight trek and find your way with a topo map.",
+        Choice(2, 3),
+        completed = false,
+        markedByHand = false,
+        partlyCompleted = true,
+        completeCount = CompleteCount(1, 2)
+    )
+
+    private val notNeededItem = RequirementItem(
+        "3b",
+        "Use a GPS receiver.",
+        null,
+        completed = false,
+        markedByHand = true,
+        notNeeded = true
     )
 
     @Test
-    fun completed() = capture(
-        RequirementItem(
-            "2",
-            "Learn Leave No Trace and the Outdoor Code, and plan to follow them.",
-            null,
-            completed = true,
-            markedByHand = true
-        )
-    )
+    fun notCompleted() = capture(notCompletedItem)
 
     @Test
-    fun partlyCompleted() = capture(
-        RequirementItem(
-            "3",
-            "Plan an overnight trek and find your way with a topo map.",
-            Choice(2, 3),
-            completed = false,
-            markedByHand = false,
-            partlyCompleted = true,
-            completeCount = CompleteCount(1, 2)
-        )
-    )
+    fun completed() = capture(completedItem)
 
     @Test
-    fun notNeeded() = capture(
-        RequirementItem(
-            "3b",
-            "Use a GPS receiver.",
-            null,
-            completed = false,
-            markedByHand = true,
-            notNeeded = true
-        )
-    )
+    fun partlyCompleted() = capture(partlyCompletedItem)
+
+    @Test
+    fun notNeeded() = capture(notNeededItem)
+
+    // Every state in dark mode, where the boxes are navy, Pale Blue and Dark Blue.
+    @Test
+    @Config(qualifiers = "+night")
+    fun everyState_darkMode() =
+        capture(notCompletedItem, partlyCompletedItem, completedItem, notNeededItem)
 
     // The box widens to fit the number.
     @Test

@@ -465,19 +465,17 @@ both taps of a double tap can reach it.
   which must match each scheme's `background`), a dark window theme, and the
   splash screen's white system bar icons. Once the app draws,
   `enableEdgeToEdge()` picks the bar icons from dark mode.
-- **Pick a color role that works in both schemes.** In the dark scheme, the
-  higher surface containers are lighter than the page, not darker. For
-  example, the status card uses `surfaceBright`, the brightest surface in both
-  schemes (white in light mode, Dark Blue in dark mode).
-  `surfaceContainerLowest` is white in light mode too, but darker than the page
-  in dark mode.
-- **Set a container's content color** when its color is also another role's.
-  Material picks a container's content color by matching its value against
-  the scheme's roles in a fixed order, and both schemes reuse colors: the dark
-  scheme's `surfaceBright` is also its `surfaceVariant`, which gives
-  `onSurfaceVariant`, so the status card sets `onSurface` itself.
-- **`BlueCardColorSchemeTest` checks the PRD's contrast rule** for every text
-  color on every surface, in both schemes.
+- **Pick a color role that works in both schemes.** In the dark scheme the
+  surface containers are lighter than the page, and `surfaceContainerLowest`
+  is darker. A container that should stand out from the page, such as the
+  status card, uses `surfaceBright`, the brightest surface in both.
+- **No surface shares `surfaceVariant`'s color.** Material picks a container's
+  content color by matching its color against the scheme's, and checks
+  `surfaceVariant` before the surface containers. A card sharing its color
+  would get `onSurfaceVariant` text.
+- **`BlueCardColorSchemeTest` checks both schemes:** the PRD's contrast rule
+  for every text color on every surface, that `surfaceBright` is the brightest
+  surface, and that every other surface gets `onSurface` text.
 
 ## Data layer
 

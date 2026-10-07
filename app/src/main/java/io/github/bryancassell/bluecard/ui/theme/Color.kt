@@ -17,6 +17,9 @@ import androidx.compose.ui.graphics.Color
  * - `surfaceBright` is white rather than `background`, so it's the brightest surface, as in the
  *   dark scheme. The status card on Badge detail and Rank detail uses it to stand out from the
  *   page.
+ * - `surfaceVariant` keeps Material's own color, not a tint, so no surface shares it. Material
+ *   gives a container whose color matches `surfaceVariant` `onSurfaceVariant` text, so a card on
+ *   `surfaceContainerHighest` would otherwise get secondary text.
  * - `error` is Material's default red. Scouting America Red, #CE1126, is below 4.5:1 on the
  *   darker surfaces.
  *
@@ -41,7 +44,7 @@ internal val BlueCardLightColorScheme = lightColorScheme(
     onBackground = Color(0xFF1A1B20),
     surface = Color(0xFFEAF1FE),
     onSurface = Color(0xFF1A1B20),
-    surfaceVariant = Color(0xFFD4DAE7),
+    surfaceVariant = Color(0xFFDFE2EF),
     onSurfaceVariant = Color(0xFF434751),
     surfaceTint = Color(0xFF003F87),
     inverseSurface = Color(0xFF2F3035),
@@ -87,6 +90,9 @@ internal val BlueCardLightColorScheme = lightColorScheme(
  * - The background and surfaces are Scouting America Dark Blue, #003366, and darker shades of
  *   it. Dark Blue is the highest, so every text color meets WCAG AA on all of them
  *   (BlueCardColorSchemeTest checks each pair).
+ * - `surfaceVariant` is the neutral variant palette's tone 20: a color no surface shares, as in
+ *   the light scheme, and no lighter than Dark Blue. Material's tone 30 is below 4.5:1 for Pale
+ *   Blue text.
  *
  * `background` is also `R.color.background` in `values-night`, for the window and splash screen.
  */
@@ -108,7 +114,7 @@ internal val BlueCardDarkColorScheme = darkColorScheme(
     onBackground = Color(0xFFE2E2E9),
     surface = Color(0xFF00132D),
     onSurface = Color(0xFFE2E2E9),
-    surfaceVariant = Color(0xFF003366),
+    surfaceVariant = Color(0xFF2C303A),
     onSurfaceVariant = Color(0xFFC3C6D2),
     surfaceTint = Color(0xFF9AB3D5),
     inverseSurface = Color(0xFFE2E2E9),
