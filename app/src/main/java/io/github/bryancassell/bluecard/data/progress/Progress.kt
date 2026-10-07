@@ -63,6 +63,9 @@ const val COUNSELOR_PHONE_MAX_LENGTH = 50
 /** No email address is longer than 254 characters. */
 const val COUNSELOR_EMAIL_MAX_LENGTH = 254
 
+/** Plenty for the name, and maybe the position, of who signed off on a rank's requirement. */
+const val SIGNED_OFF_BY_MAX_LENGTH = 100
+
 /** Plenty for notes on a requirement ([RequirementProgress.comment]). */
 const val NOTES_MAX_LENGTH = 2_000
 
@@ -112,7 +115,9 @@ data class RequirementProgress(
      * The scout's notes on the requirement. The page called them a comment before it called
      * them Notes (#127); the code and database kept the name, so the rename needed no migration.
      */
-    val comment: String? = null
+    val comment: String? = null,
+    /** For a rank's requirement, who signed off on it, such as the Scoutmaster (#248). */
+    val signedOffBy: String? = null
 )
 
 /**

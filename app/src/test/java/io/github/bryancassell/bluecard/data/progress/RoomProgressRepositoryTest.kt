@@ -167,7 +167,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun replaceAllThatFailsPartWay_leavesProgressAsItWas() = runTest {
         repository.startBadge("archery", start.requirementsVersion, start.startedDate)
-        repository.setRequirementComment("archery", "1", "Bows", start)
+        repository.setRequirementSignOffAndComment("archery", "1", null, "Bows", start)
         val before = repository.observeAllProgress().first()
         failRequirementWrites()
         val camping = BadgeProgressDetails(
@@ -239,7 +239,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
         val writes = (1..20).map { i ->
             launch(start = CoroutineStart.UNDISPATCHED) {
-                repository.setRequirementComment("archery", "1", "Draft $i", start)
+                repository.setRequirementSignOffAndComment("archery", "1", null, "Draft $i", start)
             }
         }
         dispatcher.release()

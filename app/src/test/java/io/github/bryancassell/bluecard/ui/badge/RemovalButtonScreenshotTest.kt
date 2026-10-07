@@ -54,9 +54,10 @@ class RemovalButtonScreenshotTest {
                             completedDate = today,
                             children = emptyList(),
                             tracker = null,
-                            commentChanged = false,
+                            textChanged = false,
                             canClear = true
                         ),
+                        signedOffBy = TextFieldState(),
                         comment = TextFieldState(),
                         onOpenRequirement = {},
                         onOpenTrackerEntry = { _, _ -> },
@@ -64,7 +65,7 @@ class RemovalButtonScreenshotTest {
                         onCompletedChange = {},
                         onCompletedDateChange = {},
                         today = { today },
-                        onSaveComment = {},
+                        onSave = {},
                         onClear = {},
                         onDiscard = {},
                         onSaveFailureShown = {}

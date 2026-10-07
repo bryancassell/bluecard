@@ -44,8 +44,15 @@ sealed interface RequirementDetailUiState {
          * completed, which count toward it, in name order. Null for any other requirement.
          */
         val earnedBadges: List<EarnedBadge>? = null,
-        /** Whether the comment field differs from the saved comment, so it can be saved. */
-        val commentChanged: Boolean,
+        /**
+         * Whether it has a field for who signed off on it, as a rank's requirement does, which
+         * saves with the comment.
+         */
+        val hasSignOffField: Boolean = false,
+        /**
+         * Whether the sign-off or comment field differs from what's saved, so they can be saved.
+         */
+        val textChanged: Boolean,
         /**
          * Whether anything is recorded for this requirement or one under it, which the scout can
          * clear.

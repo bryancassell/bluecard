@@ -744,6 +744,13 @@ works on.
   badges the scout has completed, not from anything recorded on the rank
   ([Completion](#completion)), so `standings` takes the scout's
   `EarnedBadges`.
+- **Only a rank's requirement records who signed off on it**
+  (`RequirementProgress.signedOffBy`,
+  [#248](https://github.com/bryancassell/bluecard/issues/248)). It's a column
+  of the shared table that a badge's requirement leaves null, which import
+  checks (see [`PRD.md`](PRD.md#design-decisions) for why only ranks have it).
+  It's saved with the notes in one write (`setRequirementSignOffAndComment`),
+  so their one Save can't save one and fail the other.
 - **Time in rank** (`Requirement.monthsInRank`, `data/progress/TimeInRank.kt`)
   is counted from the date `standings` gives the rank below, so it agrees with
   Rank detail about when that rank was earned. Like a tracker's total, it's
@@ -767,7 +774,8 @@ At a high level. The exact fields are in the code.
   - `RequirementProgress`: badge ID, requirement number, whether it is complete
     (or, for a requirement completed by its fixed-row tracker, whether the scout
     gave its completion date), completion date (optional), notes (`comment`,
-    optional).
+    optional), and, for a rank's requirement, who signed off on it
+    (`signedOffBy`, optional).
   - `TrackerEntry`: an ID that only grows, badge ID, requirement number, the row
     it fills in a tracker with a fixed number of rows (null in a log), the date
     it was first saved, and the row's values keyed by the catalog's column IDs,
@@ -883,10 +891,11 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 - **Recording anything starts the badge or rank**, on the requirements version
   its pages show until then (the newest), dated today (`badgeStart` in
   `data/progress/BadgeVersion.kt`). There's no separate "start" step.
-  `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry`,
-  `setCounselor` and `setCompletedOnPriorDate` take a `BadgeStart`, and
-  `ProgressRepository` starts the badge in the same transaction as the write,
-  so a save that fails doesn't leave the badge started. Other functions that
+  `markRequirementCompleted`, `setRequirementSignOffAndComment`,
+  `addTrackerEntry`, `setCounselor` and `setCompletedOnPriorDate` take a
+  `BadgeStart`, and `ProgressRepository` starts the badge in the same
+  transaction as the write, so a save that fails doesn't leave the badge
+  started. Other functions that
   record progress should take one when a screen first calls them.
 - **The repository cleans up what the scout types:** it trims spaces around
   each value and drops blank ones (`normalizedText`, `normalizedTrackerValues`,
@@ -969,6 +978,16 @@ it before changing anything, since import replaces all current data (see
   know. So does raising a field's length limit, which import holds a file to.
   A file's version is read first, since a newer format may lay the rest out
   differently.
+- **Import still reads older format versions,** so exports made before a
+  format change keep importing, without what was added since. Version 2 added
+  a requirement's sign-off
+  ([#248](https://github.com/bryancassell/bluecard/issues/248)), so a version
+  1 file is read with `explicitNulls = false` (`backupJsonV1`): a missing field
+  that can be null reads as null, and a sign-off in one is rejected. That also
+  takes a version 1 file missing another such field, which only a hand-edited
+  file could be, as a smaller cost than a reader of its own: a class for the
+  old layout leaves the serialization plugin's constructor and encoder for it
+  untested, and a tree of each requirement can overflow the stack.
 - **Import checks the whole file before it changes anything:** that it's JSON
   in this format, and that it holds only what this version of the app could
   have recorded. Each badge or rank, and its requirements version, must be in
@@ -976,14 +995,16 @@ it before changing anything, since import replaces all current data (see
   so a file with one the catalog doesn't have is reported as from a newer
   version too. Each requirement, tracker row and column must be in that
   version, each tracker entry must have a value, a date or number column must
-  hold a date or number, and no text can be longer than its field takes, so
-  none is cut short when the scout edits it.
+  hold a date or number, only a rank's requirement can have a sign-off, and no
+  text can be longer than its field takes, so none is cut short when the scout
+  edits it.
 - **Import cleans up text as the app does when the scout saves it,** rather
   than rejecting a file for it ([`PRD.md`](PRD.md#design-decisions)): it's
   trimmed, and each line break in single-line text (the name, unit number,
-  counselor's fields and a tracker's text columns) is replaced with a space, as
-  its field replaces them (see [Text fields](#text-fields)). Length limits apply
-  to the text as it's stored. A number column's value must then be a number, so
+  counselor's fields, a requirement's sign-off and a tracker's text columns)
+  is replaced with a space, as its field replaces them (see
+  [Text fields](#text-fields)). Length limits apply to the text as it's
+  stored. A number column's value must then be a number, so
   even a lone "." is rejected, though saving leaves one out: the field never
   saves one, and dropping it without dropping other non-numbers would take a
   rule of its own ([#233](https://github.com/bryancassell/bluecard/issues/233)).
@@ -1205,10 +1226,32 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
 
 ## Debug builds
 
-Debug builds point out mistakes while the app is in use. Release builds have
-neither of these tools. [`docs/toolchain.md`](docs/toolchain.md#debug-tools)
-says where to see what they report.
+Debug builds install as their own app, next to a release build. They also run
+two tools that point out mistakes while the app is in use, StrictMode and
+LeakCanary, which release builds don't have.
+[`docs/toolchain.md`](docs/toolchain.md#debug-tools) says where to see what
+they report.
 
+- **Debug builds have their own application ID,
+  `io.github.bryancassell.bluecard.debug`**
+  ([#245](https://github.com/bryancassell/bluecard/issues/245)), from
+  `applicationIdSuffix` in `app/build.gradle.kts`, as in
+  [Configure build variants](https://developer.android.com/build/build-variants#build-types).
+  A test release is signed with the release key and a debug build with the
+  machine's debug key, and Android won't update an app from an APK signed with
+  a different key. With one ID, installing either build on a phone with the
+  other meant uninstalling it, which deletes its data. Now the two install side
+  by side, each with its own data and backup.
+  - **Names that must be unique on the phone, such as a content provider's
+    authority, are built from the application ID**: `${applicationId}` in the
+    manifest and `context.packageName` in code, as the report FileProvider's
+    authority is in both. Two installed apps can't declare the same authority,
+    so a fixed one would stop the two builds installing side by side.
+  - **The launcher name is "BlueCard Debug", on an orange icon** in place of
+    the blue one, from `app/src/debug/res/values`. Launchers cut the name to
+    about "BlueCard De…", so the color is what tells the icons apart at a
+    glance. Themed icons are monochrome, so with those on, only the name
+    differs.
 - **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)**
   is turned on in `BlueCardApplication` when the app is debuggable, as in
   [Now in Android](https://github.com/android/nowinandroid/blob/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/NiaApplication.kt).
@@ -1274,6 +1317,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
+| [Rank sign-off](#ranks) | A nullable `requirement_progress` column that only a rank's requirement fills, saved with the notes in one write | No new table; the notes' one Save can't save one field and fail the other |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
 | [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. On Google Play, crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own |
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes, and testers of GitHub builds report them by hand | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
@@ -1282,9 +1326,11 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
+| [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
+| [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |

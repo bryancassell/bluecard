@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BlueCard</string>
+    <string name="app_name" translatable="false">BlueCard</string>
     <!-- The language of these strings, as a BCP 47 tag, such as "en". Lists and numbers inside
          a string, such as the badges in an Eagle group, are formatted in this language, and
          plurals follow its rules, so a sentence never mixes two. Each translation sets its
@@ -125,6 +125,12 @@
     <!-- Label of the field for the scout's notes about a requirement. -->
     <string name="requirement_comment">Notes</string>
     <string name="requirement_save_comment">Save notes</string>
+    <!-- Label of the field for who signed off on a rank's requirement, such as the Scoutmaster,
+         above the notes. -->
+    <string name="requirement_signed_off_by">Signed off by</string>
+    <!-- In place of requirement_save_comment on a rank's requirement, where the button saves who
+         signed off on it and the notes. -->
+    <string name="requirement_save">Save</string>
     <!-- Button that closes a dialog asking to confirm removing something, such as a tracker
          row, without removing it. -->
     <string name="confirm_dialog_cancel">Cancel</string>
@@ -135,6 +141,9 @@
     <!-- The same, on a requirement's page, where the checkbox and date save straight away and
          only the notes wait for their Save button. -->
     <string name="discard_changes_message_notes">Your changes to the notes haven\'t been saved.</string>
+    <!-- The same, on a rank's requirement, where who signed off on it waits for the notes' Save
+         button too. -->
+    <string name="discard_changes_message_sign_off_and_notes">Your changes to the sign-off and notes haven\'t been saved.</string>
     <string name="discard_changes_confirm">Discard</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
@@ -169,6 +178,10 @@
          saving them. -->
     <string name="requirement_clear_message_with_unsaved_notes">What you recorded for it will be removed, along with unsaved changes to its notes.</string>
     <string name="requirement_clear_message_with_children_and_unsaved_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its notes.</string>
+    <!-- In place of the two above on a rank's requirement, which also has a field for who signed
+         off on it. -->
+    <string name="requirement_clear_message_with_unsaved_sign_off_and_notes">What you recorded for it will be removed, along with unsaved changes to its sign-off and notes.</string>
+    <string name="requirement_clear_message_with_children_and_unsaved_sign_off_and_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its sign-off and notes.</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
          rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
     <string name="tracker_count">%1$d %2$s</string>
@@ -329,6 +342,8 @@
     <string name="report_requirements">Requirements</string>
     <!-- A requirement's official number and our summary of it, such as "4b. Cook a meal." -->
     <string name="report_requirement">%1$s. %2$s</string>
+    <!-- Label of who signed off on a rank's requirement, as on its page. -->
+    <string name="report_signed_off_by">Signed off by</string>
     <!-- Label of the scout's notes about a requirement, as on its page. -->
     <string name="report_comment">Notes</string>
     <!-- A label and its value, such as "Phone: 555-0100" or, in a tracker row,

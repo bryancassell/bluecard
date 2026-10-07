@@ -93,13 +93,16 @@ class RoomProgressRepository @Inject constructor(
         date: LocalDate?
     ) = writing { dao.updateCompletedFromRowsDate(badgeId, number, rowCount, date) }
 
-    override suspend fun setRequirementComment(
+    override suspend fun setRequirementSignOffAndComment(
         badgeId: String,
         number: String,
+        signedOffBy: String?,
         comment: String?,
         start: BadgeStart
     ): Unit = afterStarting(badgeId, start) {
-        dao.updateRequirement(badgeId, number) { it.copy(comment = normalizedText(comment)) }
+        dao.updateRequirement(badgeId, number) {
+            it.copy(signedOffBy = normalizedText(signedOffBy), comment = normalizedText(comment))
+        }
     }
 
     override suspend fun addTrackerEntry(

@@ -186,14 +186,14 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun markRequirementNotCompleted_removesDateButKeepsComment() = test {
-        repository.setRequirementComment(BADGE, "1", "Hiked with my troop.", badgeStart)
+    fun markRequirementNotCompleted_removesDateButKeepsSignOffAndComment() = test {
+        repository.setRequirementSignOffAndComment(BADGE, "1", "Pat", "With my troop.", badgeStart)
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
 
         repository.markRequirementNotCompleted(BADGE, "1")
 
         assertEquals(
-            RequirementProgress(BADGE, "1", comment = "Hiked with my troop."),
+            RequirementProgress(BADGE, "1", comment = "With my troop.", signedOffBy = "Pat"),
             requirement("1")
         )
     }
@@ -211,7 +211,7 @@ abstract class ProgressRepositoryContract {
 
     @Test
     fun setRequirementCompletedDate_doesNothingUnlessCompleted() = test {
-        repository.setRequirementComment(BADGE, "1", "Not done yet.", badgeStart)
+        repository.setRequirementSignOffAndComment(BADGE, "1", null, "Not done yet.", badgeStart)
         val before = progress()
 
         repository.setRequirementCompletedDate(BADGE, "1", day)
@@ -224,7 +224,7 @@ abstract class ProgressRepositoryContract {
 
     @Test
     fun setCompletedFromRowsDate_marksItOnTheDateOrNone_andKeepsTheComment() = test {
-        repository.setRequirementComment(BADGE, "2a", "Weekly.", badgeStart)
+        repository.setRequirementSignOffAndComment(BADGE, "2a", null, "Weekly.", badgeStart)
         saveRow("2a", 1, mapOf("income" to "10"))
         saveRow("2a", 2, mapOf("income" to "20"))
 
@@ -254,27 +254,46 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
-    fun setRequirementComment_trimsSpacesAroundIt() = test {
-        repository.setRequirementComment(BADGE, "1", "  Done at camp.\n", badgeStart)
+    fun setRequirementSignOffAndComment_trimsSpacesAroundEach() = test {
+        repository.setRequirementSignOffAndComment(BADGE, "1", " Pat\n", " At camp.\n", badgeStart)
 
-        assertEquals("Done at camp.", requirement("1")?.comment)
+        assertEquals("Pat", requirement("1")?.signedOffBy)
+        assertEquals("At camp.", requirement("1")?.comment)
     }
 
     @Test
-    fun setRequirementComment_keepsCompletion_andBlankRemovesIt() = test {
+    fun setRequirementSignOffAndComment_keepsCompletion_andBlankRemovesEach() = test {
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
 
-        repository.setRequirementComment(BADGE, "1", "Done at camp.", badgeStart)
-        assertEquals(RequirementProgress(BADGE, "1", true, day, "Done at camp."), requirement("1"))
+        repository.setRequirementSignOffAndComment(BADGE, "1", "Pat", "At camp.", badgeStart)
+        assertEquals(
+            RequirementProgress(BADGE, "1", true, day, "At camp.", signedOffBy = "Pat"),
+            requirement("1")
+        )
 
-        repository.setRequirementComment(BADGE, "1", "  ", badgeStart)
+        repository.setRequirementSignOffAndComment(BADGE, "1", "  ", "At camp.", badgeStart)
+        assertEquals(RequirementProgress(BADGE, "1", true, day, "At camp."), requirement("1"))
+
+        repository.setRequirementSignOffAndComment(BADGE, "1", "Pat", null, badgeStart)
+        assertEquals(
+            RequirementProgress(BADGE, "1", true, day, signedOffBy = "Pat"),
+            requirement("1")
+        )
+
+        repository.setRequirementSignOffAndComment(BADGE, "1", null, "  ", badgeStart)
         assertEquals(RequirementProgress(BADGE, "1", true, day), requirement("1"))
     }
 
     @Test
     fun recordingWithStart_startsAnUnstartedBadge() = test {
         repository.markRequirementCompleted(UNSTARTED, "1", day, BadgeStart(version, day))
-        repository.setRequirementComment(OTHER, "1", "Next week.", BadgeStart(version, day))
+        repository.setRequirementSignOffAndComment(
+            OTHER,
+            "1",
+            "Pat",
+            "Next week.",
+            BadgeStart(version, day)
+        )
         repository.addTrackerEntry(
             FOURTH,
             "4",
@@ -292,7 +311,7 @@ abstract class ProgressRepositoryContract {
         )
         assertEquals(BadgeProgress(OTHER, version, day), progress(OTHER)!!.badge)
         assertEquals(
-            listOf(RequirementProgress(OTHER, "1", comment = "Next week.")),
+            listOf(RequirementProgress(OTHER, "1", comment = "Next week.", signedOffBy = "Pat")),
             progress(OTHER)!!.requirements
         )
         assertEquals(BadgeProgress(FOURTH, version, day), progress(FOURTH)!!.badge)
@@ -315,7 +334,7 @@ abstract class ProgressRepositoryContract {
         val later = BadgeStart(LocalDate.of(2027, 1, 1), day)
 
         repository.markRequirementCompleted(BADGE, "1", day, later)
-        repository.setRequirementComment(BADGE, "2", "Hi", later)
+        repository.setRequirementSignOffAndComment(BADGE, "2", null, "Hi", later)
         repository.addTrackerEntry(BADGE, "7a", null, mapOf("minutes" to "30"), day, later)
         repository.setCounselor(BADGE, Counselor(name = "Pat"), later)
         repository.setCompletedOnPriorDate(BADGE, day, later)
@@ -430,8 +449,8 @@ abstract class ProgressRepositoryContract {
     @Test
     fun clearRequirements_removesOnlyThoseRequirements_andTheBadgeStaysStarted() = test {
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
-        repository.setRequirementComment(BADGE, "7", "Picked 7a and 7b.", badgeStart)
-        repository.setRequirementComment(BADGE, "7a", "Week 1 went well.", badgeStart)
+        repository.setRequirementSignOffAndComment(BADGE, "7", "Pat", "Picked 7a.", badgeStart)
+        repository.setRequirementSignOffAndComment(BADGE, "7a", null, "Week 1.", badgeStart)
         addLogEntry("7a", mapOf("minutes" to "30"))
         addLogEntry("7b", mapOf("mile" to "9:30"))
         addLogEntry("8", mapOf("pushups" to "20"))
@@ -612,8 +631,9 @@ abstract class ProgressRepositoryContract {
             "setCompletedFromRowsDate" to {
                 unwritable.setCompletedFromRowsDate(BADGE, "2a", rowCount = 2, day)
             },
-            "setRequirementComment" to
-                { unwritable.setRequirementComment(BADGE, "1", "Hi", badgeStart) },
+            "setRequirementSignOffAndComment" to {
+                unwritable.setRequirementSignOffAndComment(BADGE, "1", "Pat", "Hi", badgeStart)
+            },
             "addTrackerEntry" to {
                 val values = mapOf("minutes" to "30")
                 unwritable.addTrackerEntry(BADGE, "7a", null, values, day, badgeStart)

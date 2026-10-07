@@ -994,7 +994,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun reportToShare_opensShareSheetWithIt_once() {
-        val report = Uri.parse("content://io.github.bryancassell.bluecard.reports/camping.pdf")
+        val report = Uri.parse("content://reports/camping.pdf")
         show(completed.copy(reportToShare = report))
         composeTestRule.waitForIdle()
 

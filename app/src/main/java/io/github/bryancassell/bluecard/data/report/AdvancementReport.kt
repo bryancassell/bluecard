@@ -78,6 +78,8 @@ data class ReportRequirement(
      * requirements. The screens say so too.
      */
     val notRecorded: Boolean,
+    /** For a rank's requirement, who signed off on it, or null. */
+    val signedOffBy: String?,
     val comment: String?,
     /** Its tracker, or null if it has none. */
     val tracker: ReportTracker?,
@@ -203,6 +205,7 @@ private fun RequirementsVersion.reportRequirements(
             notRecorded = completedOnPriorDate &&
                 stillNeeded &&
                 !hasPartDone(recorded, entries, earnedBadges),
+            signedOffBy = recorded[number]?.signedOffBy,
             comment = recorded[number]?.comment,
             tracker = tracker?.toReport(entries[number].orEmpty()),
             meritBadges = meritBadges?.let {

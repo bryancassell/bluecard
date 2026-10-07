@@ -143,7 +143,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                         )
                     },
                     onOpenBadge = { navigate(BadgeDetail(it)) },
-                    // Once the scout discards an unsaved comment.
+                    // Once the scout discards an unsaved comment or sign-off.
                     onClose = { backStack.closeIfOnTop(key) }
                 )
             }

@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
@@ -89,7 +90,13 @@ class BackupFormatTest {
             summary = "Our summary.",
             officialUrl = "https://www.scouting.org/tenderfoot/",
             requirementVersions = listOf(
-                RequirementsVersion(version, listOf(Requirement("1a", "Pack for a campout.")))
+                RequirementsVersion(
+                    version,
+                    listOf(
+                        Requirement("1a", "Pack for a campout."),
+                        Requirement("1b", "Spend a night camping.")
+                    )
+                )
             )
         )
     )
@@ -125,12 +132,19 @@ class BackupFormatTest {
         emptyList()
     )
 
-    private val backup = Backup(Profile("Alex Scout", "Troop 12"), listOf(camping, swimming))
+    private val tenderfoot = BadgeProgressDetails(
+        BadgeProgress("tenderfoot", version, started),
+        listOf(RequirementProgress("tenderfoot", "1a", true, day, signedOffBy = "Mr. Rivera")),
+        emptyList()
+    )
+
+    private val backup =
+        Backup(Profile("Alex Scout", "Troop 12"), listOf(camping, swimming, tenderfoot))
 
     /** [backup] in the export format. */
     private val exportJson = """
         {
-          "formatVersion": 1,
+          "formatVersion": 2,
           "profile": { "name": "Alex Scout", "unitNumber": "Troop 12" },
           "badges": [
             {
@@ -140,9 +154,15 @@ class BackupFormatTest {
               "counselor": { "name": "Pat Lee", "phone": null, "email": "pat@example.com" },
               "completedOnPriorDate": null,
               "requirements": [
-                { "number": "4b", "completed": true, "completedDate": "2026-04-15", "notes": "Pitched a tent." },
-                { "number": "5", "completed": true, "completedDate": null, "notes": null },
-                { "number": "6", "completed": false, "completedDate": null, "notes": "Next trip." }
+                {
+                  "number": "4b",
+                  "completed": true,
+                  "completedDate": "2026-04-15",
+                  "notes": "Pitched a tent.",
+                  "signedOffBy": null
+                },
+                { "number": "5", "completed": true, "completedDate": null, "notes": null, "signedOffBy": null },
+                { "number": "6", "completed": false, "completedDate": null, "notes": "Next trip.", "signedOffBy": null }
               ],
               "trackerEntries": [
                 { "requirementNumber": "9a", "rowNumber": null, "addedDate": null, "values": { "nights": "1" } },
@@ -162,6 +182,60 @@ class BackupFormatTest {
               "counselor": null,
               "completedOnPriorDate": "2026-04-15",
               "requirements": [],
+              "trackerEntries": []
+            },
+            {
+              "badgeId": "tenderfoot",
+              "requirementsVersion": "2026-01-01",
+              "startedDate": "2026-03-01",
+              "counselor": null,
+              "completedOnPriorDate": null,
+              "requirements": [
+                {
+                  "number": "1a",
+                  "completed": true,
+                  "completedDate": "2026-04-15",
+                  "notes": null,
+                  "signedOffBy": "Mr. Rivera"
+                }
+              ],
+              "trackerEntries": []
+            }
+          ]
+        }
+    """.trimIndent()
+
+    /**
+     * An export in format version 1, from before requirements had a sign-off, with a badge's and
+     * a rank's requirement.
+     */
+    private val version1Json = """
+        {
+          "formatVersion": 1,
+          "profile": { "name": "Alex Scout", "unitNumber": "Troop 12" },
+          "badges": [
+            {
+              "badgeId": "camping",
+              "requirementsVersion": "2026-01-01",
+              "startedDate": "2026-03-01",
+              "counselor": { "name": "Pat Lee", "phone": null, "email": "pat@example.com" },
+              "completedOnPriorDate": null,
+              "requirements": [
+                { "number": "4b", "completed": true, "completedDate": "2026-04-15", "notes": "Pitched a tent." }
+              ],
+              "trackerEntries": [
+                { "requirementNumber": "9b", "rowNumber": 2, "addedDate": "2026-04-15", "values": { "place": "Lake" } }
+              ]
+            },
+            {
+              "badgeId": "tenderfoot",
+              "requirementsVersion": "2026-01-01",
+              "startedDate": "2026-03-01",
+              "counselor": null,
+              "completedOnPriorDate": null,
+              "requirements": [
+                { "number": "1a", "completed": true, "completedDate": "2026-04-15", "notes": "At camp." }
+              ],
               "trackerEntries": []
             }
           ]
@@ -201,9 +275,60 @@ class BackupFormatTest {
     }
 
     @Test
+    fun decodeBackup_ofAVersion1Export_readsItWithoutSignOffs() {
+        val camping = BadgeProgressDetails(
+            camping.badge,
+            listOf(RequirementProgress("camping", "4b", true, day, comment = "Pitched a tent.")),
+            listOf(TrackerEntry(0, "camping", "9b", rowNumber = 2, mapOf("place" to "Lake"), day))
+        )
+        val tenderfoot = tenderfoot.copy(
+            requirements = listOf(
+                RequirementProgress("tenderfoot", "1a", true, day, comment = "At camp.")
+            )
+        )
+
+        assertEquals(
+            valid(Backup(Profile("Alex Scout", "Troop 12"), listOf(camping, tenderfoot))),
+            decode(version1Json)
+        )
+    }
+
+    // Version 1 had no sign-off, and its fields that can't be null are required.
+    @Test
+    fun decodeBackup_ofAVersion1Export_withASignOff_aFieldMissing_orOfTheWrongKind_isInvalid() {
+        val changes = listOf(
+            """"notes": "At camp."""" to """"notes": "At camp.", "signedOffBy": "Mr. Rivera"""",
+            """"number": "1a", """ to "",
+            """"completed": true, "completedDate": "2026-04-15", "notes": "At camp."""" to
+                """"completed": null, "completedDate": "2026-04-15", "notes": "At camp."""",
+            """"formatVersion": 1,""" to """"formatVersion": 1, "exportedOn": "2026-10-01","""
+        )
+        for ((from, to) in changes) {
+            val file = version1Json.replaceFirst(from, to)
+            check(file != version1Json) { "No $from in the file" }
+
+            assertEquals("With $to", BackupReadResult.Invalid, decode(file))
+        }
+    }
+
+    // As its requirements' sign-off is (backupJsonV1).
+    @Test
+    fun decodeBackup_ofAVersion1Export_readsAMissingFieldThatCanBeNullAsNull() {
+        val file = version1Json.replaceFirst(""", "notes": "At camp."""", "")
+        check(file != version1Json)
+
+        val read = decode(file) as BackupReadResult.Valid
+
+        assertEquals(
+            listOf(RequirementProgress("tenderfoot", "1a", true, day)),
+            read.backup.progress.single { it.badge.badgeId == "tenderfoot" }.requirements
+        )
+    }
+
+    @Test
     fun decodeBackup_withNoBadges_hasNoProgress() {
         val json = """
-            { "formatVersion": 1, "profile": { "name": "Alex", "unitNumber": "12" }, "badges": [] }
+            { "formatVersion": 2, "profile": { "name": "Alex", "unitNumber": "12" }, "badges": [] }
         """
 
         assertEquals(valid(Backup(Profile("Alex", "12"), emptyList())), decode(json))
@@ -227,7 +352,7 @@ class BackupFormatTest {
     fun decodeBackup_fromANewerFormat_isNewerFormat() {
         assertEquals(
             BackupReadResult.NewerFormat,
-            decode("""{ "formatVersion": 2, "scout": "Alex" }""")
+            decode("""{ "formatVersion": 3, "scout": "Alex" }""")
         )
     }
 
@@ -257,15 +382,20 @@ class BackupFormatTest {
 
         assertEquals(
             BackupReadResult.Invalid,
-            decode("""{ "formatVersion": 1, "profile": $deep, "badges": [] }""")
+            decode("""{ "formatVersion": 2, "profile": $deep, "badges": [] }""")
         )
         assertEquals(
             BackupReadResult.Invalid,
-            decode("""{ "other": $deep, "formatVersion": 1 }""")
+            decode("""{ "other": $deep, "formatVersion": 2 }""")
         )
         assertEquals(
             BackupReadResult.NewerFormat,
-            decode("""{ "other": $deep, "formatVersion": 2 }""")
+            decode("""{ "other": $deep, "formatVersion": 3 }""")
+        )
+        // A version 1 file is read with a Json of its own (backupJsonV1).
+        assertEquals(
+            BackupReadResult.Invalid,
+            decode(version1Json.replaceFirst(""""notes": "At camp."""", """"notes": $deep"""))
         )
     }
 
@@ -281,6 +411,7 @@ class BackupFormatTest {
             """{ "formatVersion": 0 }""",
             """{ "formatVersion": 1.5 }""",
             """{ "formatVersion": 1 }""",
+            """{ "formatVersion": 2 }""",
             // Cut off part way.
             exportJson.take(exportJson.length / 2)
         )
@@ -294,7 +425,8 @@ class BackupFormatTest {
         val changes = listOf(
             // Every field is required, even one that can be null.
             """"completedOnPriorDate": null,""" to "",
-            """"formatVersion": 1,""" to """"formatVersion": 1, "exportedOn": "2026-10-01",""",
+            """, "signedOffBy": null""" to "",
+            """"formatVersion": 2,""" to """"formatVersion": 2, "exportedOn": "2026-10-01",""",
             """"completed": false""" to """"completed": null""",
             """"requirements": []""" to """"requirements": {}""",
             """"startedDate": "2026-03-01"""" to """"startedDate": "2026-02-30"""",
@@ -321,6 +453,15 @@ class BackupFormatTest {
         }
         fun withCounselor(counselor: Counselor) =
             withCamping { it.copy(badge = it.badge.copy(counselor = counselor)) }
+        fun withSignOff(signedOffBy: String) = backup.copy(
+            progress = listOf(
+                tenderfoot.copy(
+                    requirements = listOf(
+                        RequirementProgress("tenderfoot", "1a", signedOffBy = signedOffBy)
+                    )
+                )
+            )
+        )
         val backups = mapOf(
             "two of a badge" to backup.copy(progress = listOf(camping, swimming, camping)),
             "two of a requirement" to withRequirement(RequirementProgress("camping", "5")),
@@ -329,6 +470,11 @@ class BackupFormatTest {
             "a blank requirement number" to withRequirement(RequirementProgress("camping", "")),
             "a date on a requirement not completed" to
                 withRequirement(RequirementProgress("camping", "7", false, day)),
+            // Only a rank's requirement page has the field.
+            "a sign-off on a badge's requirement" to
+                withRequirement(RequirementProgress("camping", "7", signedOffBy = "Pat")),
+            "a blank sign-off on a badge's requirement" to
+                withRequirement(RequirementProgress("camping", "7", signedOffBy = " ")),
             "two entries in a row" to withEntry("9b", 2, mapOf("place" to "Hill")),
             "row 0" to withEntry("9b", 0, mapOf("place" to "Hill")),
             "a row past the tracker's rows" to withEntry("9b", 4, mapOf("place" to "Hill")),
@@ -374,6 +520,7 @@ class BackupFormatTest {
             "long notes" to withRequirement(
                 RequirementProgress("camping", "7", comment = tooLong(NOTES_MAX_LENGTH))
             ),
+            "a long sign-off" to withSignOff(tooLong(SIGNED_OFF_BY_MAX_LENGTH)),
             "a long tracker note" to
                 withEntry("9a", null, mapOf("note" to tooLong(TRACKER_TEXT_MAX_LENGTH))),
             "a long multi-line tracker note" to
@@ -418,6 +565,17 @@ class BackupFormatTest {
                         RequirementProgress("camping", "7", comment = longest(NOTES_MAX_LENGTH))
                     ),
                     listOf(TrackerEntry(0, "camping", "9a", null, values))
+                ),
+                BadgeProgressDetails(
+                    BadgeProgress("tenderfoot", version, started),
+                    listOf(
+                        RequirementProgress(
+                            "tenderfoot",
+                            "1a",
+                            signedOffBy = longest(SIGNED_OFF_BY_MAX_LENGTH)
+                        )
+                    ),
+                    emptyList()
                 )
             )
         )
@@ -467,6 +625,11 @@ class BackupFormatTest {
                     TrackerEntry(0, "camping", "9b", 1, mapOf("place" to place))
                 )
             )
+        fun withSignOff(signedOffBy: String) = tenderfoot.copy(
+            requirements = listOf(
+                RequirementProgress("tenderfoot", "1a", signedOffBy = signedOffBy)
+            )
+        )
         val withLineBreaks = Backup(
             Profile("Alex\nScout", "Troop\r\n12"),
             listOf(
@@ -474,7 +637,8 @@ class BackupFormatTest {
                     Counselor("Pat\nLee", "555\n123-4567", "pat\u2028lee@example.com"),
                     note = "Rain\nall night\u0085",
                     place = "Pine\nLake"
-                )
+                ),
+                withSignOff("Mr.\nRivera")
             )
         )
         val withSpaces = Backup(
@@ -484,7 +648,8 @@ class BackupFormatTest {
                     Counselor("Pat Lee", "555 123-4567", "pat lee@example.com"),
                     note = "Rain all night",
                     place = "Pine Lake"
-                )
+                ),
+                withSignOff("Mr. Rivera")
             )
         )
 
@@ -544,6 +709,14 @@ class BackupFormatTest {
                     BadgeProgress("swimming", version, started, Counselor(" ", "", " ")),
                     emptyList(),
                     emptyList()
+                ),
+                BadgeProgressDetails(
+                    BadgeProgress("tenderfoot", version, started),
+                    listOf(
+                        RequirementProgress("tenderfoot", "1a", signedOffBy = " Mr. Rivera "),
+                        RequirementProgress("tenderfoot", "1b", signedOffBy = "  ")
+                    ),
+                    emptyList()
                 )
             )
         )
@@ -558,6 +731,14 @@ class BackupFormatTest {
                 BadgeProgressDetails(
                     BadgeProgress("swimming", version, started),
                     emptyList(),
+                    emptyList()
+                ),
+                BadgeProgressDetails(
+                    BadgeProgress("tenderfoot", version, started),
+                    listOf(
+                        RequirementProgress("tenderfoot", "1a", signedOffBy = "Mr. Rivera"),
+                        RequirementProgress("tenderfoot", "1b")
+                    ),
                     emptyList()
                 )
             )

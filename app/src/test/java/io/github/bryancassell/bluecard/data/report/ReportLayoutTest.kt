@@ -54,6 +54,7 @@ class ReportLayoutTest {
         summary: String,
         completion: Completion? = null,
         comment: String? = null,
+        signedOffBy: String? = null,
         requiredCount: Int? = null,
         notNeeded: Boolean = false,
         notRecorded: Boolean = false,
@@ -67,6 +68,7 @@ class ReportLayoutTest {
         completion = completion,
         notNeeded = notNeeded,
         notRecorded = notRecorded,
+        signedOffBy = signedOffBy,
         comment = comment,
         tracker = tracker,
         meritBadges = meritBadges,
@@ -233,6 +235,33 @@ class ReportLayoutTest {
         assertEquals(
             "Counted as earned with Life",
             status(rankReport(completion = null, earnedWith = "Life"))
+        )
+    }
+
+    @Test
+    fun ranksRequirement_saysWhoSignedOffOnIt_aboveItsNotes() {
+        val lines = layOut(
+            rankReport(
+                listOf(
+                    requirement(
+                        "1",
+                        "Earn Scout.",
+                        Completion(LocalDate.of(2026, 4, 1)),
+                        comment = "At the troop meeting.",
+                        signedOffBy = "Mr. Rivera"
+                    )
+                )
+            )
+        ).single().lines
+
+        val title = lines.indexOf("1. Earn Scout.")
+        assertEquals(
+            listOf(
+                "Completed on Apr 1, 2026",
+                "Signed off by: Mr. Rivera",
+                "Notes: At the troop meeting."
+            ),
+            lines.subList(title + 1, title + 4)
         )
     }
 

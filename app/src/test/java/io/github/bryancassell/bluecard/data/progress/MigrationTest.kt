@@ -107,6 +107,46 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun migrate3To4_keepsRequirementProgress_withoutASignOff() = runTest {
+        helper.createDatabase(DATABASE, 3).use {
+            it.execSQL(
+                """
+                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
+                VALUES ('scout', '2026-01-01', '2026-03-01')
+                """
+            )
+            it.execSQL(
+                """
+                INSERT INTO requirement_progress
+                    (badgeId, requirementNumber, completed, completedDate, comment)
+                VALUES ('scout', '1a', 1, '2026-03-02', 'At the first meeting.')
+                """
+            )
+        }
+
+        helper.runMigrationsAndValidate(DATABASE, 4, true).close()
+
+        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        try {
+            val progress = database.progressDao().observe("scout").first()!!
+            assertEquals(
+                listOf(
+                    RequirementProgress(
+                        "scout",
+                        "1a",
+                        completed = true,
+                        completedDate = LocalDate.of(2026, 3, 2),
+                        comment = "At the first meeting."
+                    )
+                ),
+                progress.requirements
+            )
+        } finally {
+            database.close()
+        }
+    }
+
     private companion object {
         const val DATABASE = "migration-test.db"
     }

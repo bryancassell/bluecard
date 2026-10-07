@@ -55,6 +55,7 @@ class PdfDocumentWriterTest {
                 completion = Completion(LocalDate.of(2026, 4, 1)),
                 notNeeded = false,
                 notRecorded = false,
+                signedOffBy = null,
                 comment = "A comment on requirement $it, ".repeat(it % 5 + 1),
                 tracker = ReportTracker(
                     log,

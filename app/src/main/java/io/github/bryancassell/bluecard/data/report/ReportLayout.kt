@@ -168,6 +168,9 @@ private class ReportComposer(private val resources: Resources) {
             else -> completionText(requirement.completion)
         }
         add(Style.Body, status, indent)
+        requirement.signedOffBy?.let {
+            addLabeled(R.string.report_signed_off_by, typed(it), indent)
+        }
         requirement.comment?.let { addLabeled(R.string.report_comment, typed(it), indent) }
         requirement.tracker?.let { add(it, indent) }
         requirement.meritBadges?.let { add(it, indent) }

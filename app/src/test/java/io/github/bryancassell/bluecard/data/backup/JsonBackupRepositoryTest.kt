@@ -187,7 +187,13 @@ class JsonBackupRepositoryTest {
     @Before
     fun recordProgress() = runTest {
         progressRepository.markRequirementCompleted("camping", "4b", day, start)
-        progressRepository.setRequirementComment("camping", "6", "Next trip.", start)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "6",
+            null,
+            "Next trip.",
+            start
+        )
         progressRepository.addTrackerEntry(
             "camping",
             "9a",
@@ -305,7 +311,7 @@ class JsonBackupRepositoryTest {
 
     @Test
     fun readBackup_ofANewerExport_isNewerFormat() = runTest {
-        val read = repository.readBackup(document("""{ "formatVersion": 2 }""").first)
+        val read = repository.readBackup(document("""{ "formatVersion": 3 }""").first)
 
         assertEquals(BackupReadResult.NewerFormat, read)
     }
@@ -416,7 +422,7 @@ class JsonBackupRepositoryTest {
         val exporting = roomProgressRepository()
         exporting.markRequirementCompleted("camping", "4b", day, start)
         exporting.markRequirementCompleted("camping", "5", null, start)
-        exporting.setRequirementComment("camping", "6", "Next trip.", start)
+        exporting.setRequirementSignOffAndComment("camping", "6", null, "Next trip.", start)
         exporting.setCounselor(
             "camping",
             Counselor("Pat Lee", "555-0100", "pat@example.com"),
