@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +70,7 @@ import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
+import kotlinx.coroutines.flow.filterIsInstance
 
 /** Connects the Tracker entry screen to its ViewModel. */
 @Composable
@@ -304,9 +306,15 @@ private fun KeepInViewWhileFocused(
         WindowInsets.ime.getBottom(density) != WindowInsets.imeAnimationTarget.getBottom(density)
     // The viewport's height when the keyboard last stopped, and whether the last request is
     // unfinished: still running, or cut short by a change here, such as the keyboard starting to
-    // move. Read only by the effect, so changing them doesn't recompose.
+    // move. Read only by the effects, so changing them doesn't recompose.
     var settledViewportHeight by remember { mutableIntStateOf(viewportHeight) }
     var requestUnfinished by remember { mutableStateOf(false) }
+    // The scout's drag counts as scrolling away, even while the keyboard is still moving and no
+    // request runs. Every start is seen, even of a drag that ends before the next frame.
+    val dragStarts = remember(scrollState) {
+        scrollState.interactionSource.interactions.filterIsInstance<DragInteraction.Start>()
+    }
+    LaunchedEffect(dragStarts) { dragStarts.collect { requestUnfinished = false } }
     // Asks again each time one changes, which cancels the request before.
     LaunchedEffect(hasFocus, height, viewportHeight, keyboardMoving) {
         // While a request runs, the page stops following the cursor as the keyboard shrinks the
@@ -322,8 +330,9 @@ private fun KeepInViewWhileFocused(
         requestUnfinished =
             hasFocus && height <= viewportHeight && (!viewportGrew || requestUnfinished)
         if (requestUnfinished) {
-            // Returns once the request is done, and also when the scout's drag stops it, which
-            // counts as scrolling away. It throws only when this effect is cancelled.
+            // Returns once the request is done, and also when another scroll stops it, such as
+            // the scout's drag or a screen reader's scroll. It throws only when this effect is
+            // cancelled.
             requester.bringIntoView()
             requestUnfinished = false
         }

@@ -197,9 +197,9 @@ class TrackerEntryScreenTest {
     /**
      * Moves the keyboard's top edge as the system does: it sends the page its final insets, then
      * the insets of each frame of the animation. It starts at once, even while the page is still
-     * scrolling.
+     * scrolling, and runs [midway] halfway through, as the scout can act while it moves.
      */
-    private fun moveKeyboard(from: Dp, to: Dp) {
+    private fun moveKeyboard(from: Dp, to: Dp, midway: () -> Unit = {}) {
         val (start, end) = with(composeTestRule.density) { from.roundToPx() to to.roundToPx() }
         val animation = WindowInsetsAnimation(WindowInsets.Type.ime(), null, 250)
         val bounds = WindowInsetsAnimation.Bounds(
@@ -222,6 +222,7 @@ class TrackerEntryScreenTest {
                     listOf(animation)
                 )
             }
+            if (frame == KEYBOARD_FRAMES / 2) midway()
         }
         composeTestRule.runOnUiThread { view.dispatchWindowInsetsAnimationEnd(animation) }
         composeTestRule.mainClock.autoAdvance = true
@@ -791,13 +792,7 @@ class TrackerEntryScreenTest {
     @Test
     fun keyboardGettingShorterAfterScoutStoppedTheScroll_leavesThePageWhereItIs() {
         startScrollingToLastNumberField()
-        val page = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
-        composeTestRule.onNode(page).performTouchInput {
-            down(center)
-            // With no frame in between, so the drag starts before the short scroll ends.
-            moveBy(Offset(0f, 100f), delayMillis = 0)
-            up()
-        }
+        dragPageDown()
         composeTestRule.mainClock.autoAdvance = true
         val heading = composeTestRule.onNodeWithText("Session 3")
         val scrolledTo = heading.getUnclippedBoundsInRoot()
@@ -807,10 +802,28 @@ class TrackerEntryScreenTest {
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
 
+    // The keyboard stopped the scroll to the last field, and the scout dragged the page while the
+    // keyboard was still moving.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun scoutDraggingWhileKeyboardGetsShorter_leavesThePageWhereItIs() {
+        startScrollingToLastNumberField()
+        val heading = composeTestRule.onNodeWithText("Session 3")
+        lateinit var scrolledTo: DpRect
+
+        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT) {
+            dragPageDown()
+            scrolledTo = heading.getUnclippedBoundsInRoot()
+        }
+
+        assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
+    }
+
     /**
      * Moves with Next from a text field to the last field, a number, as in Bird Study 8a(1), with
      * the keyboard open. It stops the clock partway through the scroll that brings that field and
-     * Save into view.
+     * Save into view, and leaves it stopped: the test moves it on, as [moveKeyboard] does.
      */
     private fun startScrollingToLastNumberField() {
         val place = TrackerColumn("place", "Place", TrackerColumnType.TEXT)
@@ -823,6 +836,17 @@ class TrackerEntryScreenTest {
         composeTestRule.mainClock.autoAdvance = false
         fieldWithoutScrolling("Place").performImeAction()
         repeat(2) { composeTestRule.mainClock.advanceTimeByFrame() }
+    }
+
+    /** Drags the page toward its top, as the scout does to check an earlier field. */
+    private fun dragPageDown() {
+        val page = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
+        composeTestRule.onNode(page).performTouchInput {
+            down(center)
+            // With no frame in between, so the drag starts before a short scroll ends.
+            moveBy(Offset(0f, 100f), delayMillis = 0)
+            up()
+        }
     }
 
     @Test
