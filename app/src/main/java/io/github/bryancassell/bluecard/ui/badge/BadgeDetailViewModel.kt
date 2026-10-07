@@ -54,7 +54,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
      * The page as worked out from the catalog and progress, before [uiState] adds the date just
      * unmarked and the report.
      */
-    private val badge: Flow<BadgeDetailUiState> = combine(
+    private val page: Flow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
             val catalog = catalogRepository.getBadges()
@@ -94,7 +94,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
     }
 
     val uiState: StateFlow<BadgeDetailUiState> = combine(
-        badge,
+        page,
         savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null),
         report.reportToShare,
         report.failure
