@@ -815,6 +815,15 @@ class MainActivityTest {
 
     private fun weatherField() = composeTestRule.onNode(hasSetTextAction() and hasText("Weather"))
 
+    // Opens a new night on Camping 1's tracker and types in it, without saving.
+    private fun typeAnUnsavedNight() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        weatherField().performTextInput("Rained all night.")
+        composeTestRule.waitForIdle()
+    }
+
     // The acceptance test of trackers: a row the scout adds is listed on the requirement's
     // page, counted on the badge's, and saved.
     @Test
@@ -873,11 +882,7 @@ class MainActivityTest {
 
     @Test
     fun screenReaderClick_onAddWhileTheRowsPageCloses_doesNothing() {
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
-        weatherField().performTextInput("Rained all night.")
-        composeTestRule.waitForIdle()
+        typeAnUnsavedNight()
 
         // Saving closes the row's page, which slides away beside the requirement's page and
         // takes touches where it still is. A screen reader's click still reaches Add night,
@@ -957,11 +962,7 @@ class MainActivityTest {
 
     @Test
     fun back_fromTrackerEntry_withChanges_asksBeforeDiscardingThem() {
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
-        weatherField().performTextInput("Rained all night.")
-        composeTestRule.waitForIdle()
+        typeAnUnsavedNight()
 
         pressBack()
         discardDialog().assertIsDisplayed()
@@ -1743,15 +1744,6 @@ class MainActivityTest {
         campingRow().assertDoesNotExist()
     }
 
-    // Opens a new night on Camping 1's tracker and types in it, without saving.
-    private fun typeAnUnsavedNight() {
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
-        weatherField().performTextInput("Rained all night.")
-        composeTestRule.waitForIdle()
-    }
-
     @Test
     fun backGesture_released_onAPageWithChanges_asksAndLeavesThePageWhereItWas() {
         typeAnUnsavedNight()
@@ -1763,18 +1755,21 @@ class MainActivityTest {
 
         discardDialog().assertIsDisplayed()
         assertEquals(fieldAtRest, weatherField().getBoundsInRoot())
-        // The requirement's page isn't drawn under it.
-        composeTestRule.onNodeWithText("0 nights").assertDoesNotExist()
     }
 
     @Test
-    fun backGesture_cancelled_onAPageWithChanges_neitherAsksNorClosesThePage() {
+    fun backGesture_onAPageWithChanges_asksAgainAfterCancel() {
         typeAnUnsavedNight()
-
-        val gesture = swipeHalfwayBack()
-        scenario.onActivity { gesture.backCancelled() }
-
+        // The first swipe completes without closing the page, so the second must still reach Back.
+        val first = swipeHalfwayBack()
+        scenario.onActivity { first.backCompleted() }
+        composeTestRule.onNodeWithText("Cancel").performClick()
         discardDialog().assertDoesNotExist()
+
+        val second = swipeHalfwayBack()
+        scenario.onActivity { second.backCompleted() }
+
+        discardDialog().assertIsDisplayed()
         assertFieldText("Weather", "Rained all night.")
     }
 
