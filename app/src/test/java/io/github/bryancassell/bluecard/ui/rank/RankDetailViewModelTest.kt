@@ -285,6 +285,57 @@ class RankDetailViewModelTest {
     }
 
     @Test
+    fun rankWithNothingRecorded_isntStarted() = runTest {
+        val viewModel = viewModel("second-class")
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().started)
+    }
+
+    // As after Unmark, which keeps the rank's progress, with nothing done.
+    @Test
+    fun rankWithProgressRecorded_andNothingDone_isStarted() = runTest {
+        progressRepository.setCompletedOnPriorDate("second-class", day, rankStart)
+        progressRepository.removeCompletedOnPriorDate("second-class")
+        val viewModel = viewModel("second-class")
+        startCollecting(viewModel)
+
+        assertTrue(viewModel.ready().requirements.none { it.completed || it.partlyCompleted })
+        assertTrue(viewModel.ready().started)
+    }
+
+    // As Star is by badges the scout has completed, before anything is recorded for it.
+    @Test
+    fun rankWithNothingRecorded_withBadgesCountingTowardIt_isStarted() = runTest {
+        val earn = Requirement("2", "Earn two badges.", meritBadges = MeritBadgesNeeded(2, 0))
+        catalogRepository.badges = listOf(
+            MeritBadge(
+                id = "camping",
+                name = "Camping",
+                summary = "Our summary of Camping.",
+                officialUrl = "https://www.scouting.org/merit-badges/camping/",
+                eagleRequired = true,
+                requirementVersions = emptyList()
+            )
+        )
+        catalogRepository.ranks = listOf(
+            rank("scout", "Scout"),
+            rank("tenderfoot", "Tenderfoot").copy(
+                requirementVersions = listOf(
+                    RequirementsVersion(newest, listOf(Requirement("1", "First."), earn))
+                )
+            )
+        )
+        progressRepository.setCompletedOnPriorDate("camping", today, rankStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().canClear)
+        assertEquals(listOf(false, true), viewModel.ready().requirements.map { it.partlyCompleted })
+        assertTrue(viewModel.ready().started)
+    }
+
+    @Test
     fun markEarned_onARankNotStarted_startsItAndEarnsIt() = runTest {
         val viewModel = viewModel()
         startCollecting(viewModel)

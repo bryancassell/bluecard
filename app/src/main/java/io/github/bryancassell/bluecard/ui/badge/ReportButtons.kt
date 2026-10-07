@@ -58,10 +58,7 @@ fun ReportButtons(
     }
 }
 
-/**
- * A button for the report, outlined as the official link is, so a badge's Eagle-required tag
- * stays the only filled shape on its page.
- */
+/** A button for the report, outlined as the official link is. */
 @Composable
 private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
     OutlinedButton(

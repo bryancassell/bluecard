@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import android.net.Uri
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -24,13 +26,19 @@ sealed interface BadgeDetailUiState {
         val requirements: List<RequirementItem>,
         /** The scout's merit badge counselor, or null if they haven't entered one. */
         val counselor: Counselor? = null,
-        /** Whether the badge is complete, so its report can be shared or saved. */
-        val completed: Boolean = false,
+        /** How far the scout has got with the badge, as every screen says ([MeritBadge.status]). */
+        val status: BadgeStatus = BadgeStatus.NotStarted,
         /**
          * The date the scout marked the badge completed on, without recording its requirements,
          * or null if they haven't.
          */
         val completedOnPriorDate: LocalDate? = null,
+        /**
+         * The date the badge was completed on: the date it was marked completed on, or the date
+         * its requirements were completed on, for one complete from them. Null unless it's
+         * [completed], or for one with a requirement it needed completed with no date.
+         */
+        val completedOn: LocalDate? = null,
         /**
          * The date the badge was marked completed on before the scout unmarked it on this page,
          * which Mark completed's picker opens at, or null.
@@ -49,7 +57,10 @@ sealed interface BadgeDetailUiState {
         val reportFailure: TaskFailure? = null,
         /** The badge's progress couldn't be cleared, and the scout hasn't been told yet. */
         val saveFailure: TaskFailure? = null
-    ) : BadgeDetailUiState
+    ) : BadgeDetailUiState {
+        /** Whether the badge is complete, so its report can be shared or saved. */
+        val completed: Boolean get() = status == BadgeStatus.Completed
+    }
 
     /**
      * The catalog doesn't have the badge or its requirements version ([advancementRequirements]).

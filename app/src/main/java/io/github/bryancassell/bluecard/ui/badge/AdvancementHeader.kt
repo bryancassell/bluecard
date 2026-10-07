@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
@@ -43,14 +42,13 @@ internal const val OFFICIAL_LINK_ICON_TAG = "officialLinkIcon"
  * The top of a badge's or rank's page: its [name], a bar for how much is done, [fractionDone]
  * from 0 to 1, if it shows one, a [tag] such as whether it's Eagle-required, its [summary], and a
  * link to its official page, [officialUrl], which opens in the browser with [startOtherApp].
- * Screen readers hear the bar with "In progress" when it's [inProgress], as on the item's row in
- * a list, and with only how much is done otherwise.
+ * Screen readers hear only how much the bar says is done: the page's status card says whether
+ * it's in progress, so the bar doesn't say it too, as it does on the item's row in a list.
  */
 @Composable
 fun AdvancementHeader(
     name: String,
     fractionDone: Float?,
-    inProgress: Boolean,
     summary: String,
     officialUrl: String,
     startOtherApp: OtherAppStarter,
@@ -68,15 +66,10 @@ fun AdvancementHeader(
             modifier = Modifier.semantics { heading() }
         )
         fractionDone?.let {
-            val inProgressLabel = stringResource(R.string.badges_in_progress)
             val percentDone = percentDoneDescription(it)
-            // Read as on the row: TalkBack says "40% done. In progress".
             BadgeProgressBar(
                 fractionDone = it,
-                modifier = Modifier.semantics {
-                    if (inProgress) contentDescription = inProgressLabel
-                    stateDescription = percentDone
-                }
+                modifier = Modifier.semantics { stateDescription = percentDone }
             )
         }
         tag?.invoke()

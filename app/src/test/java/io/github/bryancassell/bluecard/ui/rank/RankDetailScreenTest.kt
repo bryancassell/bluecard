@@ -22,7 +22,6 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -104,7 +103,7 @@ class RankDetailScreenTest {
         status = RankStatus.NotEarned
     )
     private val inProgress = ready.copy(status = RankStatus.InProgress, fractionDone = 0.4f)
-    private val started = ready.copy(fractionDone = 0.25f, canClear = true)
+    private val started = ready.copy(fractionDone = 0.25f, canClear = true, started = true)
     private val marked = ready.copy(
         status = RankStatus.Earned,
         earnedOnPriorDate = LocalDate.of(2025, 8, 1),
@@ -254,14 +253,16 @@ class RankDetailScreenTest {
         assertEquals("https://www.scouting.org/tenderfoot.pdf", started?.dataString)
     }
 
+    // The status card says it's in progress, so screen readers don't hear it twice.
     @Test
-    fun inProgress_showsHowMuchIsDone_readAsOnTheRanksRow() {
+    fun inProgress_showsHowMuchIsDone_andTheStatusCardSaysInProgress() {
         show(inProgress)
 
         composeTestRule.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo(0.4f, 0f..1f)))
             .assertIsDisplayed()
-            .assert(hasContentDescription("In progress"))
             .assert(hasStateDescription("40% done"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+        text("In progress").performScrollTo().assertIsDisplayed()
     }
 
     // Only the lowest rank not earned is in progress.
@@ -294,6 +295,31 @@ class RankDetailScreenTest {
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
         text("OK").assertDoesNotExist()
+    }
+
+    @Test
+    fun rankNotStarted_saysSo_andAsksWhetherItsAlreadyEarned_aboveMarkEarned() {
+        show(ready)
+
+        val tops = listOf("Not started", "Already earned Tenderfoot?", "Mark earned").map(::topOf)
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun nextRankToEarn_saysInProgress() {
+        show(inProgress)
+
+        text("In progress").performScrollTo().assertIsDisplayed()
+        text("Already earned Tenderfoot?").performScrollTo().assertIsDisplayed()
+    }
+
+    // Only the next rank to earn is in progress, as on Ranks.
+    @Test
+    fun startedRank_thatIsntNextToEarn_saysStarted() {
+        show(started)
+
+        text("Started").performScrollTo().assertIsDisplayed()
+        text("In progress").assertDoesNotExist()
     }
 
     @Test
@@ -390,13 +416,16 @@ class RankDetailScreenTest {
 
         val tops = listOf("Earned once Scout is earned", "Mark earned").map(::topOf)
         assertEquals(tops.sorted(), tops)
+        // Waiting on Scout says why it isn't earned, in place of its status and the question.
+        text("Started").assertDoesNotExist()
+        text("Already earned Tenderfoot?").assertDoesNotExist()
         text("Mark earned").performScrollTo().performClick()
         pickDay("May 10, 2026")
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
     }
 
     @Test
-    fun rankNotWaiting_saysNothingAboveMarkEarned() {
+    fun rankNotWaiting_doesntSayWhatItsWaitingOn() {
         show(started)
 
         composeTestRule.onNode(hasText("Earned once", substring = true)).assertDoesNotExist()
@@ -407,6 +436,7 @@ class RankDetailScreenTest {
         show(earned)
 
         text("Mark earned").assertDoesNotExist()
+        text("Already earned Tenderfoot?").assertDoesNotExist()
         text("Add date").assertDoesNotExist()
         text("Unmark").assertDoesNotExist()
     }
