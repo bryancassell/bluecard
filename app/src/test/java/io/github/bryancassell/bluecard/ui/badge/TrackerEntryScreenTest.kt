@@ -18,8 +18,6 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertContentDescriptionEquals
-import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
@@ -53,6 +51,7 @@ import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
@@ -174,18 +173,6 @@ class TrackerEntryScreenTest {
         composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
     private fun button(text: String) = composeTestRule.onNodeWithText(text).performScrollTo()
-
-    /** Asserts that screen readers read the button with [text] as [description], and only once. */
-    private fun assertReadOnceAs(text: String, description: String) {
-        // Only one: TalkBack would also read a second, such as one set on the button as well.
-        composeTestRule.onNodeWithContentDescription(description)
-            .assertContentDescriptionEquals(description)
-            .assertHasClickAction()
-        // TalkBack reads the button's parts in turn, so the description has to be the text's
-        // own: one beside the text was read and then the text again after it.
-        composeTestRule.onNodeWithText(text, useUnmergedTree = true)
-            .assertContentDescriptionEquals(description)
-    }
 
     /** Where the focused field's cursor is: the view reports it as its focused area. */
     private fun cursorBounds(): DpRect {
@@ -549,9 +536,9 @@ class TrackerEntryScreenTest {
         )
 
         // Each starts with the button's text, as WCAG 2.5.3 recommends for voice control users.
-        assertReadOnceAs("Add date", "Add date: Start")
-        assertReadOnceAs("Change date", "Change date: End")
-        assertReadOnceAs("Remove date", "Remove date: End")
+        composeTestRule.assertButtonReadOnceAs("Add date", "Add date: Start")
+        composeTestRule.assertButtonReadOnceAs("Change date", "Change date: End")
+        composeTestRule.assertButtonReadOnceAs("Remove date", "Remove date: End")
         composeTestRule.onNodeWithContentDescription("Remove date: End").performClick()
 
         assertEquals(listOf<Pair<String, LocalDate?>>("end" to null), dateChanges)
