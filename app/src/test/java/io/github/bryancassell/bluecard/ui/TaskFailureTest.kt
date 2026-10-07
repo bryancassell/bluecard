@@ -4,19 +4,18 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import java.io.IOException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
@@ -123,17 +122,19 @@ class TaskFailureTest {
     // TalkBack reads each snackbar's message from the live region Material gives it, including
     // one that replaces another still showing, when it skips the pane title (#234).
     @Test
-    fun snackbar_thatReplacesAnotherStillShowing_isAPoliteLiveRegion() {
+    fun snackbar_thatReplacesAnotherStillShowing_isANewPoliteLiveRegion() {
         var failure by mutableStateOf(TaskFailure())
         composeTestRule.setContent { TaskFailureSnackbarHost(failure, message, onShown = {}) }
-        val messageInLiveRegion = hasText(message) and hasAnyAncestor(
-            SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
-        )
-        composeTestRule.onNode(messageInLiveRegion).assertIsDisplayed()
+        val messageInLiveRegion = hasText(message) and hasAnyAncestor(isPoliteLiveRegion)
+        val first = composeTestRule.onNode(messageInLiveRegion).assertIsDisplayed()
+            .fetchSemanticsNode().id
 
         failure = TaskFailure()
 
-        composeTestRule.onNode(messageInLiveRegion).assertIsDisplayed()
+        val second = composeTestRule.onNode(messageInLiveRegion).assertIsDisplayed()
+            .fetchSemanticsNode().id
+        // A new snackbar, not the first one still showing.
+        assertNotEquals(first, second)
     }
 
     @Test

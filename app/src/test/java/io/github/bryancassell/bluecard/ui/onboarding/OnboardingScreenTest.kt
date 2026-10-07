@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -27,6 +28,7 @@ import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
@@ -136,7 +138,8 @@ class OnboardingScreenTest {
         val failure = TaskFailure()
         showFilledIn(saveFailure = failure)
 
-        saveFailedMessage().assertIsDisplayed()
+        // In a snackbar's live region, so screen readers hear it (#234).
+        saveFailedMessage().assertIsDisplayed().assert(hasAnyAncestor(isPoliteLiveRegion))
         field("Name").assertIsEnabled()
         field("Unit number").assertIsEnabled()
         saveButton().assertIsEnabled()
