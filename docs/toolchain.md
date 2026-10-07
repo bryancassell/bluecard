@@ -280,21 +280,19 @@ R8), or a library that uses reflection or ships keep rules the app relies on:
 kotlinx.serialization, Hilt, Room or DataStore. As with backup, use an
 emulator, and point `adb` at it if a phone is also connected.
 
-1. Build the release APK. On a machine with the release key (see
-   [Publishing a test release](#publishing-a-test-release)), the build signs
-   it. Anywhere else it's unsigned, so sign it with the debug key. A debug
+1. Build the release APK and sign it with the debug key. Gradle leaves the
+   release build unsigned, and only publishing signs it with the release key
+   (see [Publishing a test release](#publishing-a-test-release)). A debug
    install has the same application ID, so uninstall it first to start from a
    fresh install.
 
    ```sh
    ./gradlew assembleRelease
-   # Without the release key only: sign the APK with the debug key.
    # The newest stable build tools; preview versions have a "-" in their name.
    BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -v -e - | sort -V | tail -1)"
    "$BUILD_TOOLS/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
        --out app/build/outputs/apk/release/app-release.apk \
        app/build/outputs/apk/release/app-release-unsigned.apk
-   # Then install it.
    adb uninstall io.github.bryancassell.bluecard
    adb install app/build/outputs/apk/release/app-release.apk
    ```
@@ -318,8 +316,9 @@ A crash's stack trace shows R8's short names. `retrace` turns them back into
 the source names, with the mapping file that the build wrote:
 `retrace app/build/outputs/mapping/release/mapping.txt <stack trace file>`.
 Each release build writes a new mapping file, so retrace before building
-again. A tester's crash needs the mapping file attached to the release they
-installed. `retrace` comes with the Android SDK Command-line Tools, which the
+again. Testers can't see a stack trace, so to retrace a crash a tester
+reports, reproduce it with their release's APK and use the mapping file
+attached to that release. `retrace` comes with the Android SDK Command-line Tools, which the
 Standard setup doesn't install: add them in Android Studio's **SDK Manager →
 SDK Tools → Android SDK Command-line Tools (latest)**.
 
@@ -327,9 +326,15 @@ SDK Tools → Android SDK Command-line Tools (latest)**.
 
 Friends and family test BlueCard with APKs from the repository's
 [Releases](https://github.com/bryancassell/bluecard/releases) page, published
-as pre-releases and signed with BlueCard's release key (see
+as pre-releases. Gradle builds the APK unsigned, and `apksigner` signs it with
+BlueCard's release key, asking for the key's password (see
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)). Only a machine with the
 release key can publish one.
+
+[Android developer verification](https://developer.android.com/developer-verification)
+reaches the US in 2027. From then on, register the package name and the
+release key's certificate, or testers need Android's advanced flow to install
+the app. A free limited distribution account covers up to 20 devices.
 
 ### Setting up the release key
 
@@ -339,8 +344,7 @@ has to uninstall and install again, losing their data unless they export it
 first.
 
 1. Create the key, once for the project. On another machine, restore it from
-   the backup instead. `keytool` asks for the password. Gradle reads a `\` in
-   it as an escape, so leave that character out.
+   the backup instead. `keytool` asks for the password.
 
    ```sh
    mkdir -p -m 700 ~/keys
@@ -352,21 +356,14 @@ first.
    names the app rather than a person.
 
 2. Save the keystore file and its password together in a password manager.
-3. Point Gradle at the key. Add these lines to `~/.gradle/gradle.properties`,
-   creating it if needed, with the keystore's full path, since Gradle doesn't
-   expand `~`. Then make the file readable only by you:
-   `chmod 600 ~/.gradle/gradle.properties`.
-
-   ```properties
-   bluecardReleaseKeystore=/Users/<you>/keys/bluecard-release.p12
-   bluecardReleaseKeystorePassword=<password>
-   ```
+   Keep the password only there, not in a file that a build could read.
 
 ### Publishing a release
 
 1. Unless no release has used them yet, raise `versionCode` by 1 and set
-   `versionName` in `app/build.gradle.kts`, in a pull request. Android only
-   installs an update with a higher `versionCode`.
+   `versionName` in `app/build.gradle.kts`, in a pull request. Android won't
+   update an app to a lower `versionCode`, and a new one for each release
+   tells the builds apart.
 2. Once it's merged, build the APK from `main` with no uncommitted changes,
    since the APK records the commit it was built from.
 
@@ -376,33 +373,62 @@ first.
    ./gradlew assembleRelease
    ```
 
-3. Check that the release key signed it. The digest printed should be
+3. Sign it with the release key, with `BUILD_TOOLS` set as in step 1 of
+   [Checking a release build](#checking-a-release-build). `apksigner` asks
+   for the key's password, then the digest it prints should be
    `788055ef2f3302814555b1e3e9e09eea837dd85955df352b9a9246e1e5ae452e`.
 
    ```sh
-   # The newest stable build tools; preview versions have a "-" in their name.
-   BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -v -e - | sort -V | tail -1)"
-   "$BUILD_TOOLS/apksigner" verify --print-certs \
-       app/build/outputs/apk/release/app-release.apk | grep "certificate SHA-256"
+   APK=app/build/outputs/apk/release/app-release.apk
+   "$BUILD_TOOLS/apksigner" sign --ks ~/keys/bluecard-release.p12 --ks-key-alias bluecard \
+       --out "$APK" app/build/outputs/apk/release/app-release-unsigned.apk
+   "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | grep "certificate SHA-256"
    ```
 
-4. Install it on an emulator and go through steps 2 and 3 of
+4. Install it fresh on an emulator and go through steps 2 and 3 of
    [Checking a release build](#checking-a-release-build).
-5. Tag the commit, then publish the release with the APK and its R8 mapping
+
+   ```sh
+   adb uninstall io.github.bryancassell.bluecard
+   adb install "$APK"
+   ```
+
+   From the second release on, also check an update the way testers get one:
+   install the previous release, record some progress, then install this one
+   over it. The progress should still be there.
+
+   ```sh
+   PREVIOUS=0.1.0  # The previous release's versionName.
+   gh release download "v$PREVIOUS" --pattern '*.apk' --dir app/build/previous --clobber
+   adb uninstall io.github.bryancassell.bluecard
+   adb install "app/build/previous/bluecard-$PREVIOUS.apk"
+   # Record some progress in the app, then:
+   adb install -r "$APK"
+   ```
+
+5. Read the version and commit from the APK, and check they're the ones you
+   expect.
+
+   ```sh
+   VERSION=$("$BUILD_TOOLS/aapt2" dump badging "$APK" | sed -n "s/^package: .* versionName='\([^']*\)'.*/\1/p")
+   COMMIT=$(unzip -p "$APK" META-INF/version-control-info.textproto | sed -n 's/^ *revision: "\(.*\)"$/\1/p')
+   echo "v$VERSION at $COMMIT"
+   ```
+
+6. Tag that commit, then publish the release with the APK and its R8 mapping
    file. `gh` asks for a title and release notes: say what's new and what to
    try.
 
    ```sh
-   VERSION=0.1.0  # The versionName.
-   git tag "v$VERSION" && git push origin "v$VERSION"
+   git tag "v$VERSION" "$COMMIT" && git push origin "v$VERSION"
    OUT=app/build/outputs
-   cp "$OUT/apk/release/app-release.apk" "$OUT/bluecard-$VERSION.apk"
+   cp "$APK" "$OUT/bluecard-$VERSION.apk"
    cp "$OUT/mapping/release/mapping.txt" "$OUT/bluecard-$VERSION-mapping.txt"
    gh release create "v$VERSION" --verify-tag --prerelease \
        "$OUT/bluecard-$VERSION.apk" "$OUT/bluecard-$VERSION-mapping.txt"
    ```
 
-6. Send testers the release's link. They install the APK by opening it on
+7. Send testers the release's link. They install the APK by opening it on
    their phone, and allow their browser to install apps when Android asks. To
    update, they install the next release's APK over the old one, which keeps
    their data.
