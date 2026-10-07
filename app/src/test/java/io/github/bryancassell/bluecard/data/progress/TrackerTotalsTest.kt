@@ -47,7 +47,8 @@ class TrackerTotalsTest {
         assertEquals(BigDecimal("30"), storedNumber("٣٠"))
     }
 
-    // A value imported from a backup can be any text.
+    // Import rejects these, but one stored while a catalog edited during development had the
+    // column as text can be any text.
     @Test
     fun storedNumber_isNullForTextThatIsntANumber() {
         assertNull(storedNumber(""))
