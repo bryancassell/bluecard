@@ -20,6 +20,9 @@
     <string name="profile_unit_number">Unit number</string>
     <string name="profile_required">Required</string>
     <string name="onboarding_save">Get started</string>
+    <!-- Below Onboarding's Get started button. The app uses Scouting America's terms, such as
+         "Merit Badge", so it says it isn't Scouting America's. -->
+    <string name="onboarding_not_affiliated">BlueCard is an independent app. It isn\'t affiliated with or endorsed by Scouting America.</string>
     <string name="home_unit">Unit: %1$s</string>
     <!-- Above the scout's rank on Home's rank card. -->
     <string name="home_rank_title">Your rank</string>
