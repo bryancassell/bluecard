@@ -788,6 +788,44 @@ class BadgeDetailScreenTest {
         composeTestRule.onNodeWithText("OK").assertDoesNotExist()
     }
 
+    private fun topOf(text: String) =
+        composeTestRule.onNodeWithText(text).fetchSemanticsNode().positionInRoot.y
+
+    @Test
+    fun badgeNotStarted_saysSo_andAsksWhetherItsAlreadyCompleted_aboveMarkCompleted() {
+        show(ready)
+
+        val tops = listOf("Not started", "Already completed this badge?", "Mark completed")
+            .map(::topOf)
+        assertEquals(tops.sorted(), tops)
+    }
+
+    // As on Badges, where it has a bar.
+    @Test
+    fun badgeInProgress_saysSo() {
+        show(ready.copy(fractionDone = 0.4f))
+
+        composeTestRule.onNodeWithText("In progress").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Not started").assertDoesNotExist()
+    }
+
+    @Test
+    fun badgeCompleteFromItsRequirements_saysWhen() {
+        show(completed.copy(completedOn = LocalDate.of(2026, 4, 15)))
+
+        composeTestRule.onNodeWithText("Completed on Apr 15, 2026").performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Already completed this badge?").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Change date").assertDoesNotExist()
+    }
+
+    @Test
+    fun badgeCompleteFromItsRequirements_withoutADate_saysCompleted() {
+        show(completed)
+
+        composeTestRule.onNodeWithText("Completed").performScrollTo().assertIsDisplayed()
+    }
+
     @Test
     fun markCompleted_isBetweenOfficialLinkAndCounselor() {
         show(ready)
@@ -838,6 +876,7 @@ class BadgeDetailScreenTest {
         show(marked)
 
         composeTestRule.onNodeWithText("Mark completed").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Already completed this badge?").assertDoesNotExist()
         val tops = listOf(
             "Official requirements",
             "Completed on Aug 1, 2025",

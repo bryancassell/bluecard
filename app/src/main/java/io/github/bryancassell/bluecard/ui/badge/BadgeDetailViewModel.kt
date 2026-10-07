@@ -61,6 +61,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
         val found = catalog.advancementRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.advancement
+        val completion = progress?.completion(found.version)
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,
@@ -68,8 +69,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
-            completed = progress?.completion(found.version) != null,
+            completed = completion != null,
             completedOnPriorDate = progress?.badge?.completedOnPriorDate,
+            completedOn = completion?.date,
             fractionDone = badge.fractionDoneWhileInProgress(progress),
             canClear = progress != null,
             reportToShare = reportToShare,

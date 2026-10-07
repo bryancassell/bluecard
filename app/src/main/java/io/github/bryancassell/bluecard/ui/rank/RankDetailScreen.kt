@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.ui.rank
 
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,11 +34,14 @@ import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badge.AdvancementHeader
 import io.github.bryancassell.bluecard.ui.badge.ClearProgress
 import io.github.bryancassell.bluecard.ui.badge.EditableDate
-import io.github.bryancassell.bluecard.ui.badge.PickDateButton
+import io.github.bryancassell.bluecard.ui.badge.MarkDoneLines
 import io.github.bryancassell.bluecard.ui.badge.ReportButtons
 import io.github.bryancassell.bluecard.ui.badge.RequirementRows
 import io.github.bryancassell.bluecard.ui.badge.ShareReport
+import io.github.bryancassell.bluecard.ui.badge.StatusCard
+import io.github.bryancassell.bluecard.ui.badge.StatusLine
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
+import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
@@ -171,18 +175,9 @@ private fun RankDetails(
             inProgress = uiState.status == RankStatus.InProgress,
             startOtherApp = startOtherApp
         )
-        // Outside the header's column, so its text buttons line up with the page's text.
-        EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned)
-        if (uiState.status == RankStatus.Earned) {
-            ReportButtons(
-                reportFileName(LocalResources.current, ReportKind.Rank, uiState.name),
-                onShareReport,
-                onSaveReport,
-                startOtherApp,
-                // None above: what's above leaves room under it, as Change date and Add date's
-                // touch areas do, or as "Earned on" does to match them.
-                Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            )
+        val fileName = reportFileName(LocalResources.current, ReportKind.Rank, uiState.name)
+        EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) { modifier ->
+            ReportButtons(fileName, onShareReport, onSaveReport, startOtherApp, modifier)
         }
         Text(
             text = stringResource(R.string.badge_detail_requirements),
@@ -210,82 +205,95 @@ private fun RankDetails(
 }
 
 /**
- * How the rank is earned, under the official link:
- * - While it isn't earned, a button to mark it earned on a date the scout picks, up to [today],
- *   without recording its requirements ([onMark]), under the rank it's waiting on, if its
- *   requirements are complete.
+ * The rank's [StatusCard], which says how it's earned:
+ * - While it isn't earned, its status ([notEarnedStatus]), with a button to mark it earned on a
+ *   date the scout picks, up to [today], without recording its requirements ([onMark]). If its
+ *   requirements are complete, the rank it's waiting on, in place of its status.
  * - Once it's marked, the date, with buttons to change it ([onMark]) or unmark the rank
  *   ([onUnmark]).
  * - For a rank that counts as earned only with a rank above it, says so, with a button to give
  *   it a date of its own ([onMark]).
  * - For a rank earned from its requirements, the date they were completed on.
  *
- * Each picker opens at the date the scout just unmarked, if any, or at today. Its text buttons'
- * touch areas are taller than they look, so they need no padding of their own to keep it apart
- * from what's above and below.
+ * Each picker opens at the date the scout just unmarked, if any, or at today. Once it's earned,
+ * the [reportButtons] follow, laid out with the modifier they're given.
  */
 @Composable
 private fun EarnedStatus(
     uiState: RankDetailUiState.Ready,
     today: () -> LocalDate,
     onMark: (date: LocalDate) -> Unit,
-    onUnmark: () -> Unit
+    onUnmark: () -> Unit,
+    reportButtons: @Composable (Modifier) -> Unit
 ) {
     val date = uiState.earnedOnPriorDate
     val formatter = rememberCompletionDateFormatter()
-    // Its text, unlike a button's, sits at the top of its space.
-    val dateModifier = Modifier.padding(top = 16.dp)
-    when {
-        date != null -> EditableDate(
-            text = stringResource(R.string.rank_detail_earned_on, formatter.format(date)),
-            date = date,
-            today = today,
-            onDateChange = { if (it == null) onUnmark() else onMark(it) },
-            modifier = dateModifier,
-            removeText = R.string.badge_detail_unmark_completed
-        )
+    StatusCard {
+        when {
+            date != null -> EditableDate(
+                text = stringResource(R.string.rank_detail_earned_on, formatter.format(date)),
+                date = date,
+                today = today,
+                onDateChange = { if (it == null) onUnmark() else onMark(it) },
+                removeText = R.string.badge_detail_unmark_completed,
+                textStyle = statusLineStyle
+            )
 
-        uiState.earnedWith != null -> EditableDate(
-            text = stringResource(R.string.rank_detail_earned_with, uiState.earnedWith),
-            date = null,
-            today = today,
-            // Without a date, it can only be picked.
-            onDateChange = { it?.let(onMark) },
-            modifier = dateModifier,
-            suggested = uiState.unmarkedDate
-        )
+            uiState.earnedWith != null -> EditableDate(
+                text = stringResource(R.string.rank_detail_earned_with, uiState.earnedWith),
+                date = null,
+                today = today,
+                // Without a date, it can only be picked.
+                onDateChange = { it?.let(onMark) },
+                suggested = uiState.unmarkedDate,
+                textStyle = statusLineStyle
+            )
 
-        uiState.status != RankStatus.Earned -> Column {
-            uiState.waitingOn?.let {
-                StatusText(stringResource(R.string.rank_detail_waiting_on, it))
-            }
-            PickDateButton(
-                text = stringResource(R.string.rank_detail_mark_earned),
+            uiState.status != RankStatus.Earned -> MarkDoneLines(
+                status = uiState.waitingOn
+                    ?.let { stringResource(R.string.rank_detail_waiting_on, it) }
+                    ?: stringResource(notEarnedStatus(uiState)),
+                // The rank it's waiting on says why it isn't earned, so there's no need to ask.
+                prompt = if (uiState.waitingOn == null) {
+                    stringResource(R.string.rank_detail_mark_earned_prompt, uiState.name)
+                } else {
+                    null
+                },
+                markText = stringResource(R.string.rank_detail_mark_earned),
                 // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
                 initial = uiState.unmarkedDate,
                 today = today,
-                onPick = onMark,
-                // Lines the button's text up with the page's.
-                modifier = Modifier.padding(horizontal = 4.dp)
+                onMark = onMark
+            )
+
+            // Earned from its requirements.
+            else -> StatusLine(
+                uiState.earnedOn?.let {
+                    stringResource(R.string.rank_detail_earned_on, formatter.format(it))
+                } ?: stringResource(R.string.rank_detail_earned)
             )
         }
-
-        // Earned from its requirements. Room under it, as a button would leave.
-        else -> StatusText(
-            text = uiState.earnedOn?.let {
-                stringResource(R.string.rank_detail_earned_on, formatter.format(it))
-            } ?: stringResource(R.string.rank_detail_earned),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        if (uiState.status == RankStatus.Earned) {
+            reportButtons(
+                Modifier.padding(
+                    start = 16.dp,
+                    // Under Change date or Add date, whose touch area already leaves room below
+                    // its text.
+                    top = if (date == null && uiState.earnedWith == null) 8.dp else 0.dp,
+                    end = 16.dp
+                )
+            )
+        }
     }
 }
 
-/** A line about how the rank is earned, styled as [EditableDate]'s. */
-@Composable
-private fun StatusText(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)
-    )
+/**
+ * The status of a rank that isn't earned: "In progress" for the next rank to earn, as on Ranks,
+ * or else "Started" once it has a bar, or "Not started".
+ */
+@StringRes
+private fun notEarnedStatus(uiState: RankDetailUiState.Ready): Int = when {
+    uiState.status == RankStatus.InProgress -> R.string.badges_in_progress
+    uiState.fractionDone != null -> R.string.rank_detail_started
+    else -> R.string.badge_detail_not_started
 }

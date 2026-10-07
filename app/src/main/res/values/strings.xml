@@ -243,8 +243,18 @@
          badge completed on it without recording its requirements, as for a badge earned before
          using BlueCard. -->
     <string name="badge_detail_mark_completed">Mark completed</string>
-    <!-- The date a badge was marked completed on, such as "Completed on Apr 15, 2025". -->
+    <!-- Above Mark completed on a badge's page, while it isn't complete. -->
+    <string name="badge_detail_mark_completed_prompt">Already completed this badge?</string>
+    <!-- First line on the page of a badge or rank with nothing recorded for it, above Mark
+         completed or Mark earned. -->
+    <string name="badge_detail_not_started">Not started</string>
+    <!-- The date a badge was completed on: the date it was marked completed on, or for one
+         complete from its requirements, the date they were completed on, such as "Completed on
+         Apr 15, 2025". -->
     <string name="badge_detail_completed_on">Completed on %1$s</string>
+    <!-- On the page of a badge complete from its requirements, in place of "Completed on <date>"
+         when a requirement it needed was completed with no date. -->
+    <string name="badge_detail_completed">Completed</string>
     <!-- Button under the date a badge was marked completed on, or a rank earned on, which
          undoes the mark. -->
     <string name="badge_detail_unmark_completed">Unmark</string>
@@ -252,6 +262,12 @@
          earned on it without recording its requirements, as for a rank earned before using
          BlueCard. Every rank below it then counts as earned too. -->
     <string name="rank_detail_mark_earned">Mark earned</string>
+    <!-- Above Mark earned on a rank's page, while it isn't earned, with the rank's name, such as
+         "Already earned Tenderfoot?". -->
+    <string name="rank_detail_mark_earned_prompt">Already earned %1$s?</string>
+    <!-- First line on the page of a rank that's started but isn't the next rank to earn, above
+         Mark earned. Only the next rank is "In progress", as on Ranks. -->
+    <string name="rank_detail_started">Started</string>
     <!-- The date a rank was marked earned on, or for one earned from its requirements, the date
          they were completed on, such as "Earned on Apr 15, 2025". -->
     <string name="rank_detail_earned_on">Earned on %1$s</string>
@@ -262,9 +278,9 @@
     <!-- On the page of a rank earned from its requirements, in place of "Earned on <date>" when
          a requirement it needed was completed with no date. -->
     <string name="rank_detail_earned">Earned</string>
-    <!-- Above Mark earned on the page of a rank whose requirements are all complete, with the
-         name of the rank below it, which has to be earned first, such as "Earned once
-         Tenderfoot is earned". -->
+    <!-- First line, above Mark earned, on the page of a rank whose requirements are all
+         complete, with the name of the rank below it, which has to be earned first, such as
+         "Earned once Tenderfoot is earned". -->
     <string name="rank_detail_waiting_on">Earned once %1$s is earned</string>
     <!-- Buttons on a completed badge's page and an earned rank's, for its report: a PDF of
          everything the scout recorded for it. Share opens Android's share sheet; Save asks

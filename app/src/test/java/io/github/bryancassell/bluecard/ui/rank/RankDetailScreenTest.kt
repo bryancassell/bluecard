@@ -297,6 +297,31 @@ class RankDetailScreenTest {
     }
 
     @Test
+    fun rankNotStarted_saysSo_andAsksWhetherItsAlreadyEarned_aboveMarkEarned() {
+        show(ready)
+
+        val tops = listOf("Not started", "Already earned Tenderfoot?", "Mark earned").map(::topOf)
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun nextRankToEarn_saysInProgress() {
+        show(inProgress)
+
+        text("In progress").performScrollTo().assertIsDisplayed()
+        text("Already earned Tenderfoot?").performScrollTo().assertIsDisplayed()
+    }
+
+    // Only the next rank to earn is in progress, as on Ranks.
+    @Test
+    fun startedRank_thatIsntNextToEarn_saysStarted() {
+        show(started)
+
+        text("Started").performScrollTo().assertIsDisplayed()
+        text("In progress").assertDoesNotExist()
+    }
+
+    @Test
     fun markEarned_isBetweenOfficialLinkAndRequirements() {
         show(ready)
 
@@ -390,13 +415,16 @@ class RankDetailScreenTest {
 
         val tops = listOf("Earned once Scout is earned", "Mark earned").map(::topOf)
         assertEquals(tops.sorted(), tops)
+        // Waiting on Scout says why it isn't earned, in place of its status and the question.
+        text("Started").assertDoesNotExist()
+        text("Already earned Tenderfoot?").assertDoesNotExist()
         text("Mark earned").performScrollTo().performClick()
         pickDay("May 10, 2026")
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
     }
 
     @Test
-    fun rankNotWaiting_saysNothingAboveMarkEarned() {
+    fun rankNotWaiting_doesntSayWhatItsWaitingOn() {
         show(started)
 
         composeTestRule.onNode(hasText("Earned once", substring = true)).assertDoesNotExist()
@@ -407,6 +435,7 @@ class RankDetailScreenTest {
         show(earned)
 
         text("Mark earned").assertDoesNotExist()
+        text("Already earned Tenderfoot?").assertDoesNotExist()
         text("Add date").assertDoesNotExist()
         text("Unmark").assertDoesNotExist()
     }

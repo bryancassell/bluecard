@@ -32,6 +32,12 @@ sealed interface BadgeDetailUiState {
          */
         val completedOnPriorDate: LocalDate? = null,
         /**
+         * The date the badge was completed on: the date it was marked completed on, or the date
+         * its requirements were completed on, for one complete from them. Null for one that isn't
+         * complete, or one with a requirement it needed completed with no date.
+         */
+        val completedOn: LocalDate? = null,
+        /**
          * The date the badge was marked completed on before the scout unmarked it on this page,
          * which Mark completed's picker opens at, or null.
          */

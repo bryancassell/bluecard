@@ -406,6 +406,26 @@ class BadgeDetailViewModelTest {
         startCollecting(viewModel)
 
         assertTrue(viewModel.ready().completed)
+        assertEquals(day, viewModel.ready().completedOn)
+    }
+
+    @Test
+    fun badgeCompleteFromItsRequirements_isCompletedOnTheDateTheyWere() = runTest {
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+
+        completeChess()
+
+        assertEquals(day, viewModel.ready().completedOn)
+    }
+
+    @Test
+    fun badgeNotComplete_hasNoCompletionDate() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().completedOn)
     }
 
     @Test
