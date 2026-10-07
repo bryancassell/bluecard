@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.data.progress.storedNumber
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import java.time.LocalDate
 import kotlinx.serialization.DeserializationStrategy
@@ -70,7 +71,7 @@ fun encodeBackup(backup: Backup): String =
  * - Each badge or rank is listed once, and each of its requirements once.
  * - Each requirement and tracker column is in its badge's or rank's requirements version.
  * - A tracker entry fills one of its tracker's rows, which no other entry fills, or none in a
- *   log, and a date column holds a date.
+ *   log. A date column holds a date, and a number column a number.
  * - The name and unit number aren't blank, and no text is longer than its field takes (such as
  *   [NOTES_MAX_LENGTH]), so none is cut short when the scout edits it.
  *
@@ -273,7 +274,10 @@ private fun TrackerColumnType.takes(value: String) = when (this) {
 
     TrackerColumnType.MULTILINE_TEXT -> value.length <= TRACKER_MULTILINE_TEXT_MAX_LENGTH
 
-    TrackerColumnType.NUMBER -> value.length <= TRACKER_NUMBER_MAX_LENGTH
+    // The field takes digits with at most one decimal separator, and a number without a digit
+    // isn't saved, so what's stored is a number as storedNumber reads it.
+    TrackerColumnType.NUMBER ->
+        value.length <= TRACKER_NUMBER_MAX_LENGTH && storedNumber(value) != null
 
     // Chosen with a date picker, and stored as YYYY-MM-DD.
     TrackerColumnType.DATE -> storedDate(value) != null

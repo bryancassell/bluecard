@@ -348,7 +348,7 @@ class TrackerEntryViewModelTest {
 
     @Test
     fun savedNumberWithoutADigit_isNoChange_untilTheRowIsEdited() = runTest {
-        // As an import can bring.
+        // As saved while a catalog edited during development had the column as text.
         val id = addSession(mapOf("activity" to "Run", "minutes" to "."))
         val viewModel = viewModel(entryId = id)
         startCollecting(viewModel)

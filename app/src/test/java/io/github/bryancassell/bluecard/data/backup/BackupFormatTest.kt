@@ -340,6 +340,13 @@ class BackupFormatTest {
             "an entry in a column the tracker doesn't have" to
                 withEntry("9a", null, mapOf("weather" to "Rain")),
             "a date column without a date" to withEntry("9a", null, mapOf("date" to "May 2")),
+            "a number column with letters" to withEntry("9a", null, mapOf("nights" to "two")),
+            "a number column with a line break" to
+                withEntry("9a", null, mapOf("nights" to "1\n2")),
+            "a number column with two decimal separators" to
+                withEntry("9a", null, mapOf("nights" to "1.2.3")),
+            "a number column without a digit" to withEntry("9a", null, mapOf("nights" to ".")),
+            "a negative number" to withEntry("9a", null, mapOf("nights" to "-3")),
             "a blank name" to backup.copy(profile = Profile(" ", "Troop 12")),
             "a blank unit number" to backup.copy(profile = Profile("Alex", "")),
             "a long name" to
@@ -364,7 +371,7 @@ class BackupFormatTest {
                     mapOf("details" to tooLong(TRACKER_MULTILINE_TEXT_MAX_LENGTH))
                 ),
             "a long tracker number" to
-                withEntry("9a", null, mapOf("nights" to tooLong(TRACKER_NUMBER_MAX_LENGTH)))
+                withEntry("9a", null, mapOf("nights" to "1".repeat(TRACKER_NUMBER_MAX_LENGTH + 1)))
         )
         for ((name, invalid) in backups) {
             val read = decode(encodeBackup(invalid))
@@ -388,7 +395,7 @@ class BackupFormatTest {
         val values = mapOf(
             "note" to longest(TRACKER_TEXT_MAX_LENGTH),
             "details" to longest(TRACKER_MULTILINE_TEXT_MAX_LENGTH),
-            "nights" to longest(TRACKER_NUMBER_MAX_LENGTH)
+            "nights" to "1".repeat(TRACKER_NUMBER_MAX_LENGTH)
         )
         val longestBackup = Backup(
             Profile(longest(PROFILE_NAME_MAX_LENGTH), longest(UNIT_NUMBER_MAX_LENGTH)),
@@ -404,6 +411,20 @@ class BackupFormatTest {
         )
 
         assertEquals(valid(longestBackup), decode(encodeBackup(longestBackup)))
+    }
+
+    @Test
+    fun decodeBackup_keepsEachNumberTheFieldTakes_asTyped() {
+        // Digits of any script, with a decimal separator from any keyboard, anywhere.
+        val numbers = listOf("12", "1.5", "1,5", "۱۲٫۵", "٣٠", ".5", "2.")
+        val entries = numbers.mapIndexed { index, number ->
+            TrackerEntry(index.toLong(), "camping", "9a", null, mapOf("nights" to number))
+        }
+        val withNumbers = backup.copy(
+            progress = listOf(camping.copy(trackerEntries = entries), swimming)
+        )
+
+        assertEquals(valid(withNumbers.asImported()), decode(encodeBackup(withNumbers)))
     }
 
     @Test

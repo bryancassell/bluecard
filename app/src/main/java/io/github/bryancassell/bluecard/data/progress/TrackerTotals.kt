@@ -14,7 +14,8 @@ val DECIMAL_SEPARATORS = setOf('.', ',', '\u066B')
 /**
  * A number column's stored value as a number, or null if it isn't one. The scout types digits of
  * any script, with at most one decimal separator ([DECIMAL_SEPARATORS]), and it's stored as
- * typed, but a value imported from a backup can be any text.
+ * typed. Import holds a backup to the same rule, but a value from elsewhere may not be a number,
+ * such as one stored while a catalog edited during development had the column as text.
  */
 fun storedNumber(text: String): BigDecimal? {
     val digits = text.map { char ->
