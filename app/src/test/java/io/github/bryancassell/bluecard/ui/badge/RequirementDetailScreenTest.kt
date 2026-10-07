@@ -264,10 +264,15 @@ class RequirementDetailScreenTest {
     private fun completedCheckbox() =
         composeTestRule.onNode(hasText("Completed") and isToggleable()).performScrollTo()
 
-    private fun commentField() =
-        composeTestRule.onNode(hasSetTextAction() and hasText("Notes")).performScrollTo()
+    private fun commentField() = commentFieldWithoutScrolling().performScrollTo()
 
-    private fun saveCommentButton() = composeTestRule.onNodeWithText("Save notes").performScrollTo()
+    /** The notes field, wherever the page has it. */
+    private fun commentFieldWithoutScrolling() =
+        composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
+
+    private fun saveCommentButton() = saveCommentButtonWithoutScrolling().performScrollTo()
+
+    private fun saveCommentButtonWithoutScrolling() = composeTestRule.onNodeWithText("Save notes")
 
     private fun signOffField() =
         composeTestRule.onNode(hasSetTextAction() and hasText("Signed off by")).performScrollTo()
@@ -1261,13 +1266,8 @@ class RequirementDetailScreenTest {
         commentField().performClick()
         keyboard.open()
 
-        keyboard.assertAbove(
-            composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
-                .getUnclippedBoundsInRoot()
-        )
-        keyboard.assertAbove(
-            composeTestRule.onNodeWithText("Save notes").getUnclippedBoundsInRoot()
-        )
+        keyboard.assertAbove(commentFieldWithoutScrolling().getUnclippedBoundsInRoot())
+        keyboard.assertAbove(saveCommentButtonWithoutScrolling().getUnclippedBoundsInRoot())
     }
 
     @Test
@@ -1337,6 +1337,22 @@ class RequirementDetailScreenTest {
         signOffField().assert(hasImeAction(ImeAction.Next)).performClick().performImeAction()
 
         commentField().assertIsFocused()
+    }
+
+    // On a rank's requirement, Next from the sign-off is how the scout reaches the notes.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun nextIntoComment_withKeyboardOpen_commentAndSaveShowAboveIt() {
+        show(rankLeaf.copy(canClear = true))
+        signOffField().performClick()
+        keyboard.open()
+
+        signOffField().performImeAction()
+
+        commentFieldWithoutScrolling().assertIsFocused()
+        keyboard.assertAbove(commentFieldWithoutScrolling().getUnclippedBoundsInRoot())
+        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
     @Test
