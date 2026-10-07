@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -148,13 +149,16 @@ fun TrackerEntryScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TrackerEntryHeader(uiState)
+                    val lastTextColumnId =
+                        uiState.columns.lastOrNull { it.type != TrackerColumnType.DATE }?.id
                     val trackerField: @Composable (TrackerColumn) -> Unit = { column ->
                         TrackerField(
                             column = column,
                             field = fields.getValue(column.id),
                             date = uiState.dates[column.id],
                             today = today,
-                            onDateChange = { onDateChange(column.id, it) }
+                            onDateChange = { onDateChange(column.id, it) },
+                            lastTextField = column.id == lastTextColumnId
                         )
                     }
                     uiState.columns.dropLast(1).forEach { column ->
@@ -212,7 +216,9 @@ private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = TRACKER_N
 
 /**
  * The field for one column: a date with a picker, or a text field for text or a number. A
- * multi-line text field is drawn like the requirement notes field.
+ * multi-line text field is drawn like the requirement notes field, and its keyboard keeps Enter
+ * for a new line. A one-line field's keyboard has Next, or Done on the [lastTextField]. Next
+ * moves to the next text field, past a date's buttons, which can't take focus in touch mode.
  */
 @Composable
 private fun TrackerField(
@@ -220,8 +226,10 @@ private fun TrackerField(
     field: TextFieldState,
     date: LocalDate?,
     today: () -> LocalDate,
-    onDateChange: (LocalDate?) -> Unit
+    onDateChange: (LocalDate?) -> Unit,
+    lastTextField: Boolean
 ) {
+    val oneLineImeAction = if (lastTextField) ImeAction.Done else ImeAction.Next
     when (column.type) {
         TrackerColumnType.DATE -> Column {
             Text(
@@ -245,6 +253,8 @@ private fun TrackerField(
             textStyle = typedTextFieldStyle(),
             label = { Text(column.label) },
             inputTransformation = NumberLimit,
+            // Merged with NumberInput's options, so the keyboard stays decimal.
+            keyboardOptions = KeyboardOptions(imeAction = oneLineImeAction),
             lineLimits = TextFieldLineLimits.SingleLine,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
         )
@@ -257,7 +267,8 @@ private fun TrackerField(
                 label = { Text(column.label) },
                 inputTransformation = if (multiline) MultilineTextLimit else TextLimit,
                 keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = if (multiline) ImeAction.Default else oneLineImeAction
                 ),
                 lineLimits = if (multiline) {
                     TextFieldLineLimits.MultiLine(minHeightInLines = 3)
