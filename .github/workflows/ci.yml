@@ -65,9 +65,13 @@ jobs:
           distribution: temurin
           java-version: 25
 
+      # Reads Build's Gradle cache but never writes it. Both jobs ask for the same
+      # cache key and only the first save wins, so this job, which finishes first
+      # and downloads less, would otherwise replace Build's cache on main.
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-provider: basic
+          cache-read-only: true
 
       # Lets the emulator use hardware virtualization; without it, it's too slow to boot.
       - name: Enable KVM
@@ -76,18 +80,16 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Built before the emulator starts, so the two don't compete for the runner's memory.
-      - run: ./gradlew assembleDebug assembleDebugAndroidTest
-
-      # Gradle downloads the system image, then starts the managed emulator, runs
-      # app/src/androidTest and shuts it down. The runner has no GPU, so the
-      # emulator draws in software.
+      # Gradle builds the app and test APKs and downloads the system image, then
+      # starts the managed emulator, runs app/src/androidTest and shuts it down.
+      # The runner has no GPU, so the emulator draws in software.
       - run: >-
           ./gradlew pixel6Api37DebugAndroidTest
           -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
+      # Also after a timeout, which cancels the job instead of failing it.
       - uses: actions/upload-artifact@v7
-        if: failure()
+        if: failure() || cancelled()
         with:
           name: instrumented-test-reports
           path: |

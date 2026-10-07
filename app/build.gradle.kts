@@ -72,9 +72,13 @@ android {
                     device = "Pixel 6"
                     sdkVersion = 37
                     systemImageSource = "google"
-                    // AGP can't tell the page size of an API 37 image, so it warns on every build
-                    // unless the device says which one it wants.
-                    pageAlignment = ManagedVirtualDevice.PageAlignment.FORCE_4KB_PAGES
+                    // The app's AndroidX native libraries must load with 16 KB pages, which Play
+                    // requires from Android 15 on.
+                    pageAlignment = ManagedVirtualDevice.PageAlignment.FORCE_16KB_PAGES
+                    // The computer's own ABI, so the emulator runs without translation: arm64 on
+                    // Apple silicon, x86_64 on CI's runners. AGP 10 defaults to arm64-v8a.
+                    testedAbi =
+                        if (System.getProperty("os.arch") == "aarch64") "arm64-v8a" else "x86_64"
                 }
             }
         }

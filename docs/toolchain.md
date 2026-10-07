@@ -44,7 +44,7 @@ Run these from the repository root.
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
 | `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. Its application ID is `io.github.bryancassell.bluecard.debug`, so it installs next to a release build (see [`ARCHITECTURE.md`](../ARCHITECTURE.md#debug-builds)). |
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
-| `./gradlew pixel6Api37DebugAndroidTest` | Runs instrumented tests on the emulator CI uses, which Gradle downloads, starts and shuts down. |
+| `./gradlew pixel6Api37DebugAndroidTest` | Runs instrumented tests on an API 37 emulator that Gradle downloads, starts and shuts down, as CI does. |
 | `./gradlew clean` | Deletes build outputs. Rarely needed; the build knows what changed. |
 
 ## How the pieces fit together
@@ -165,10 +165,11 @@ Dependabot proposes those updates instead.
 
 To run instrumented tests, create a virtual device once in Android Studio
 (**Device Manager → Create Virtual Device**), start it, then run
-`./gradlew connectedAndroidTest`. Or run them the way CI does with
-`./gradlew pixel6Api37DebugAndroidTest`: Gradle downloads the system image the
-first time, then starts its own emulator for the run, with no window, and shuts
-it down afterwards.
+`./gradlew connectedAndroidTest`. Or let Gradle manage the emulator, as CI
+does, with `./gradlew pixel6Api37DebugAndroidTest`: it downloads the API 37
+system image for your computer's architecture the first time, then starts its
+own emulator for the run, with no window, and shuts it down afterwards. CI's
+runners use the x86_64 image; an Apple silicon Mac uses the arm64 one.
 
 ## Testing rules the build enforces
 
