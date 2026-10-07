@@ -47,12 +47,14 @@ data class AdvancementRequirements<out A : Advancement>(
 
     /**
      * Whether the scout has recorded anything for a requirement numbered in [numbers]: its
-     * completion, comment or tracker entries. That includes a date they gave one that's complete
-     * once its tracker's rows are, which doesn't show while a row is deleted but is kept.
+     * completion, sign-off, comment or tracker entries. That includes a date they gave one that's
+     * complete once its tracker's rows are, which doesn't show while a row is deleted but is kept.
      */
     fun hasRecorded(numbers: Collection<String>): Boolean = numbers.any { number ->
-        recorded[number]?.let { it.completed || it.comment != null } == true ||
-            number in trackerEntries
+        val progress = recorded[number]
+        val marked = progress != null &&
+            (progress.completed || progress.signedOffBy != null || progress.comment != null)
+        marked || number in trackerEntries
     }
 
     /**

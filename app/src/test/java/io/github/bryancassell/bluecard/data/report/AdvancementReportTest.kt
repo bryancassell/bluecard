@@ -418,8 +418,16 @@ class AdvancementReportTest {
         id: String,
         number: String,
         date: LocalDate?,
-        comment: String? = null
-    ) = RequirementProgress(id, number, completed = true, completedDate = date, comment)
+        comment: String? = null,
+        signedOffBy: String? = null
+    ) = RequirementProgress(
+        id,
+        number,
+        completed = true,
+        completedDate = date,
+        comment,
+        signedOffBy
+    )
 
     /** A badge marked completed on [date], which counts toward a rank's merit badges. */
     private fun badgeCompleted(id: String, date: LocalDate) = BadgeProgressDetails(
@@ -514,7 +522,15 @@ class AdvancementReportTest {
             "tenderfoot",
             rankProgress(
                 "tenderfoot",
-                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 1), "At camp.")),
+                listOf(
+                    rankCompleted(
+                        "tenderfoot",
+                        "1",
+                        LocalDate.of(2026, 4, 1),
+                        "At camp.",
+                        signedOffBy = "Mr. Rivera"
+                    )
+                ),
                 markedOn = LocalDate.of(2026, 6, 1)
             )
         )!!
@@ -522,6 +538,7 @@ class AdvancementReportTest {
         val pitch = report.requirement("1")
         assertEquals(Completion(LocalDate.of(2026, 4, 1)), pitch.completion)
         assertEquals("At camp.", pitch.comment)
+        assertEquals("Mr. Rivera", pitch.signedOffBy)
         assertNull(pitch.meritBadges)
     }
 

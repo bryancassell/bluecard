@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
@@ -42,7 +43,8 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * One requirement of a badge or rank and its sub-requirements, with the scout's progress:
- * whether it's complete and when, their comment on it, and its tracker.
+ * whether it's complete and when, who signed off on it, for a rank's, their comment on it, and its
+ * tracker.
  */
 @HiltViewModel(assistedFactory = RequirementDetailViewModel.Factory::class)
 class RequirementDetailViewModel @AssistedInject constructor(
@@ -51,11 +53,17 @@ class RequirementDetailViewModel @AssistedInject constructor(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
-    // Keeps an unsaved comment, and the date to bring back to an unchecked requirement, if the
-    // system stops the app in the background.
+    // Keeps an unsaved sign-off and comment, and the date to bring back to an unchecked
+    // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    private val fields = StoredTextFields(savedStateHandle, COMMENT)
+    private val fields = StoredTextFields(savedStateHandle, SIGNED_OFF_BY, COMMENT)
+
+    /**
+     * The text of the field for who signed off on the requirement, which only a rank's
+     * requirement shows. It starts as [comment] does.
+     */
+    val signedOffBy = fields[SIGNED_OFF_BY]
 
     /**
      * The comment field's text, which the field edits directly. It starts as the saved comment
@@ -75,7 +83,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     /**
      * The requirement as recorded, or null if the badge's or rank's requirements don't have it.
-     * It's built when the catalog or progress changes, not on each keystroke in the comment.
+     * It's built when the catalog or progress changes, not on each keystroke in its fields.
      */
     private val recorded = flow {
         val catalog = catalogRepository.getAdvancements()
@@ -128,6 +136,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 timeInRank = standings?.timeInRank(advancementId, requirement),
                 earnedBadges = requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
+                hasSignOffField = found.advancement is Rank,
+                signedOffBy = recorded?.signedOffBy,
                 comment = recorded?.comment,
                 numbersWithin = numbersWithin,
                 hasRecorded = found.hasRecorded(numbersWithin)
@@ -144,6 +154,10 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val tracker: TrackerItem?,
         val timeInRank: TimeInRank?,
         val earnedBadges: List<EarnedBadge>?,
+        /** Whether it has a field for who signed off on it, as a rank's requirement does. */
+        val hasSignOffField: Boolean,
+        /** Who signed off on it, as saved. */
+        val signedOffBy: String?,
         /** The saved comment. */
         val comment: String?,
         /** The numbers of this requirement and of every one under it. */
@@ -161,12 +175,17 @@ class RequirementDetailViewModel @AssistedInject constructor(
     val uiState: StateFlow<RequirementDetailUiState> = combine(
         recorded,
         // Works the state out again as the scout types.
-        snapshotFlow { comment.text.toString() },
+        snapshotFlow { signedOffBy.text.toString() to comment.text.toString() },
         saves.failure
     ) { recorded, _, saveFailure ->
         if (recorded == null) return@combine RequirementDetailUiState.Unavailable
-        fields.loadOnce { mapOf(COMMENT to recorded.comment) }
-        shown?.let { followSavedComment(before = it.comment, saved = recorded.comment) }
+        fields.loadOnce {
+            mapOf(SIGNED_OFF_BY to recorded.signedOffBy, COMMENT to recorded.comment)
+        }
+        shown?.let {
+            followSaved(signedOffBy, before = it.signedOffBy, saved = recorded.signedOffBy)
+            followSaved(comment, before = it.comment, saved = recorded.comment)
+        }
         shown = recorded
         RequirementDetailUiState.Ready(
             advancementName = recorded.advancementName,
@@ -177,7 +196,8 @@ class RequirementDetailViewModel @AssistedInject constructor(
             tracker = recorded.tracker,
             timeInRank = recorded.timeInRank,
             earnedBadges = recorded.earnedBadges,
-            commentChanged = normalizedText(comment.text.toString()) != recorded.comment,
+            hasSignOffField = recorded.hasSignOffField,
+            textChanged = edits(recorded).isNotEmpty(),
             canClear = recorded.hasRecorded,
             saveFailure = saveFailure
         )
@@ -212,50 +232,68 @@ class RequirementDetailViewModel @AssistedInject constructor(
         }
     }
 
-    /** Saves the comment field as this requirement's comment. An empty one removes it. */
-    fun saveComment() {
-        val text = comment.text.toString()
+    /**
+     * Saves the sign-off field, for a rank's requirement, and the comment field, as this
+     * requirement's. An empty one removes it.
+     */
+    fun save() {
+        // The button shows only once the page has.
+        val signOffText = signedOffBy.text.toString().takeIf { shown?.hasSignOffField == true }
+        val commentText = comment.text.toString()
         saves.launch {
-            progressRepository.setRequirementComment(
+            progressRepository.setRequirementSignOffAndComment(
                 advancementId,
                 number,
-                text,
+                signOffText,
+                commentText,
                 catalogRepository.getAdvancements().badgeStart(advancementId, today())
             )
         }
     }
 
     /**
-     * Shows the [saved] comment in the comment field when it changes from [before] without the
-     * scout typing it, as when it's cleared, unless the field has an unsaved edit. It's done as
-     * the change is shown, so the field is never a frame behind it.
+     * The fields that differ from what's [recorded], each with its text: only those it shows, as
+     * [save] saves only those.
      */
-    private fun followSavedComment(before: String?, saved: String?) {
-        if (saved == before || normalizedText(comment.text.toString()) != before) return
-        showComment(saved)
+    private fun edits(recorded: RecordedRequirement): List<Pair<TextFieldState, String>> =
+        listOfNotNull(
+            (signedOffBy to recorded.signedOffBy).takeIf { recorded.hasSignOffField },
+            comment to recorded.comment
+        ).mapNotNull { (field, saved) ->
+            field.text.toString().takeIf { normalizedText(it) != saved }?.let { field to it }
+        }
+
+    /**
+     * Shows the [saved] text in [field] when it changes from [before] without the scout typing
+     * it, as when it's cleared, unless the field has an unsaved edit. It's done as the change is
+     * shown, so the field is never a frame behind it.
+     */
+    private fun followSaved(field: TextFieldState, before: String?, saved: String?) {
+        if (saved == before || normalizedText(field.text.toString()) != before) return
+        show(field, saved)
     }
 
     /**
-     * Puts [text] in the comment field, in a snapshot of its own, so the field has changed
-     * before uiState next reads it.
+     * Puts [text] in [field], in a snapshot of its own, so the field has changed before uiState
+     * next reads it.
      */
-    private fun showComment(text: String?) {
-        Snapshot.withMutableSnapshot { comment.setTextAndPlaceCursorAtEnd(text.orEmpty()) }
+    private fun show(field: TextFieldState, text: String?) {
+        Snapshot.withMutableSnapshot { field.setTextAndPlaceCursorAtEnd(text.orEmpty()) }
     }
 
     /**
-     * Clears everything recorded for this requirement and every one under it. Without an
-     * unsaved edit, the comment field follows the comment as it's cleared ([followSavedComment]).
-     * An unsaved edit is discarded once the clear is saved, unless the scout changed it while it
-     * was being saved, as that came after. A clear that fails keeps it.
+     * Clears everything recorded for this requirement and every one under it. A field without an
+     * unsaved edit follows what it shows as it's cleared ([followSaved]). An unsaved edit is
+     * discarded once the clear is saved, unless the scout changed it while it was being saved, as
+     * that came after. A clear that fails keeps it.
      */
     fun clear() {
         // The button shows only once the page has.
         val shown = shown ?: return
-        val edit = comment.text.toString().takeIf { normalizedText(it) != shown.comment }
+        val edits = edits(shown)
         saves.launch {
             recorder.clear(shown.numbersWithin)
-            if (edit != null && comment.text.toString() == edit) showComment(null)
+            edits.forEach { (field, edit) -> if (field.text.toString() == edit) show(field, null) }
         }
     }
 
@@ -276,6 +314,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
     }
 
     private companion object {
+        const val SIGNED_OFF_BY = "signedOffBy"
         const val COMMENT = "comment"
     }
 }

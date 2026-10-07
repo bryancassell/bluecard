@@ -206,6 +206,17 @@ class AdvancementRequirementsTest {
     }
 
     @Test
+    fun hasRecorded_aSignOff() {
+        val progress = startedOn(newest.effectiveDate).copy(
+            requirements = listOf(RequirementProgress("camping", "1", signedOffBy = "Pat"))
+        )
+        val found = catalog.advancementRequirements("camping", progress)!!
+
+        assertTrue(found.hasRecorded(listOf("1")))
+        assertFalse(found.hasRecorded(listOf("2")))
+    }
+
+    @Test
     fun numbersWithin_isTheRequirementAndEveryOneUnderIt() {
         assertEquals(listOf("2", "2a", "2b", "2b(1)"), newest.find("2")!!.numbersWithin())
         assertEquals(listOf("1"), newest.find("1")!!.numbersWithin())

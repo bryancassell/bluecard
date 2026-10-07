@@ -6,11 +6,16 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 // Each version's schema is in app/schemas/, and MigrationTest checks each migration.
-// Version 2 added TrackerEntry.rowNumber, and version 3 TrackerEntry.addedDate.
+// Version 2 added TrackerEntry.rowNumber, version 3 TrackerEntry.addedDate, and version 4
+// RequirementProgress.signedOffBy.
 @Database(
     entities = [BadgeProgress::class, RequirementProgress::class, TrackerEntry::class],
-    version = 3,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)]
+    version = 4,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4)
+    ]
 )
 @TypeConverters(Converters::class)
 abstract class BlueCardDatabase : RoomDatabase() {

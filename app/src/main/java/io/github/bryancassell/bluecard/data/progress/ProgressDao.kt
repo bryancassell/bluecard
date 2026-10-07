@@ -76,7 +76,7 @@ interface ProgressDao {
 
     /**
      * Marks requirement [number] completed on [date], or with no date, in a single transaction,
-     * if each of its tracker's [rowCount] rows has an entry. Its comment stays.
+     * if each of its tracker's [rowCount] rows has an entry. Its sign-off and comment stay.
      */
     @Transaction
     suspend fun updateCompletedFromRowsDate(
@@ -139,7 +139,7 @@ interface ProgressDao {
     @Query("DELETE FROM tracker_entry WHERE id = :id")
     suspend fun deleteTrackerEntry(id: Long)
 
-    /** Clears the requirements' dates, comments and tracker entries. */
+    /** Clears the requirements' dates, sign-offs, comments and tracker entries. */
     @Transaction
     suspend fun deleteRequirements(badgeId: String, numbers: Collection<String>) {
         deleteRequirementProgress(badgeId, numbers)

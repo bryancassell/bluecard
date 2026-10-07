@@ -169,17 +169,20 @@ class RequirementDetailViewModelTest {
      * Can save the ViewModel's state and restore it into a new one, as when the system stops
      * the app.
      */
-    private fun scenario(number: String, catalog: CatalogRepository = catalogRepository) =
-        viewModelScenario {
-            RequirementDetailViewModel(
-                "camping",
-                number,
-                catalog,
-                progressRepository,
-                clock,
-                createSavedStateHandle()
-            )
-        }
+    private fun scenario(
+        number: String,
+        catalog: CatalogRepository = catalogRepository,
+        advancementId: String = "camping"
+    ) = viewModelScenario {
+        RequirementDetailViewModel(
+            advancementId,
+            number,
+            catalog,
+            progressRepository,
+            clock,
+            createSavedStateHandle()
+        )
+    }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -256,7 +259,7 @@ class RequirementDetailViewModelTest {
                     )
                 ),
                 tracker = null,
-                commentChanged = false,
+                textChanged = false,
                 canClear = false,
                 saveFailure = null
             ),
@@ -520,12 +523,19 @@ class RequirementDetailViewModelTest {
             badgeStart
         )
 
-    private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
-        .first()?.requirements?.singleOrNull { it.requirementNumber == number }
+    private suspend fun recorded(number: String, advancementId: String = "camping") =
+        progressRepository.observeProgress(advancementId)
+            .first()?.requirements?.singleOrNull { it.requirementNumber == number }
 
     /** Types into the comment field, as the scout does. */
     private fun RequirementDetailViewModel.typeComment(text: String) {
         comment.setTextAndPlaceCursorAtEnd(text)
+        Snapshot.sendApplyNotifications()
+    }
+
+    /** Types into the field for who signed off on the requirement, as the scout does. */
+    private fun RequirementDetailViewModel.typeSignOff(text: String) {
+        signedOffBy.setTextAndPlaceCursorAtEnd(text)
         Snapshot.sendApplyNotifications()
     }
 
@@ -691,9 +701,10 @@ class RequirementDetailViewModelTest {
     @Test
     fun comment_startsAsSavedComment() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment(
+        progressRepository.setRequirementSignOffAndComment(
             "camping",
             "1",
+            null,
             "Planned it with my patrol.",
             badgeStart
         )
@@ -701,7 +712,7 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
 
         assertEquals("Planned it with my patrol.", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
@@ -711,21 +722,21 @@ class RequirementDetailViewModelTest {
         assertEquals("", viewModel.comment.text.toString())
 
         viewModel.typeComment("Planned it with my patrol.")
-        assertTrue(viewModel.ready().commentChanged)
+        assertTrue(viewModel.ready().textChanged)
 
-        viewModel.saveComment()
+        viewModel.save()
 
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
         assertEquals("Planned it with my patrol.", recorded("1")?.comment)
     }
 
     @Test
-    fun saveComment_onUnstartedBadge_startsItWithoutCompletingTheRequirement() = runTest {
+    fun save_onUnstartedBadge_startsItWithoutCompletingTheRequirement() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
         viewModel.typeComment("Next week.")
 
-        viewModel.saveComment()
+        viewModel.save()
 
         assertEquals(
             BadgeProgress("camping", newest, today),
@@ -848,12 +859,12 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun saveComment_onUnstartedRank_startsIt() = runTest {
+    fun save_onUnstartedRank_startsIt() = runTest {
         val viewModel = viewModel("1a", advancementId = "tenderfoot")
         startCollecting(viewModel)
         viewModel.typeComment("Next week.")
 
-        viewModel.saveComment()
+        viewModel.save()
 
         val progress = progressRepository.observeProgress("tenderfoot").first()!!
         assertEquals(BadgeProgress("tenderfoot", newest, today), progress.badge)
@@ -864,26 +875,27 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun saveComment_trimsSpaces_andOnlySpacesAreNoChange() = runTest {
+    fun save_trimsSpaces_andOnlySpacesAreNoChange() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
 
         viewModel.typeComment("   ")
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
 
         viewModel.typeComment("  Done at camp.  ")
-        viewModel.saveComment()
+        viewModel.save()
 
         assertEquals("Done at camp.", recorded("1")?.comment)
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
-    fun saveComment_empty_removesIt() = runTest {
+    fun save_empty_removesIt() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment(
+        progressRepository.setRequirementSignOffAndComment(
             "camping",
             "1",
+            null,
             "Planned it with my patrol.",
             badgeStart
         )
@@ -891,11 +903,11 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
 
         viewModel.typeComment("")
-        assertTrue(viewModel.ready().commentChanged)
-        viewModel.saveComment()
+        assertTrue(viewModel.ready().textChanged)
+        viewModel.save()
 
         assertNull(recorded("1")?.comment)
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
@@ -904,7 +916,7 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
 
         viewModel.typeComment("Chose 2a and 2c.")
-        viewModel.saveComment()
+        viewModel.save()
 
         assertEquals(
             RequirementProgress("camping", "2", comment = "Chose 2a and 2c."),
@@ -921,13 +933,19 @@ class RequirementDetailViewModelTest {
         viewModel.setCompleted(true)
 
         assertEquals("Not saved yet.", viewModel.comment.text.toString())
-        assertTrue(viewModel.ready().commentChanged)
+        assertTrue(viewModel.ready().textChanged)
     }
 
     @Test
     fun unsavedComment_isRestoredFromSavedState() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         scenario("1").use { scenario ->
             startCollecting(scenario.viewModel)
             scenario.viewModel.typeComment("Saved, then edited.")
@@ -937,7 +955,7 @@ class RequirementDetailViewModelTest {
             startCollecting(restored)
 
             assertEquals("Saved, then edited.", restored.comment.text.toString())
-            assertTrue(restored.ready().commentChanged)
+            assertTrue(restored.ready().textChanged)
         }
     }
 
@@ -961,7 +979,13 @@ class RequirementDetailViewModelTest {
     @Test
     fun appStoppedBeforeTheCommentLoads_loadsTheSavedCommentAgain() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         scenario("1").use { scenario ->
             // Nothing has collected uiState, so the saved comment hasn't loaded.
             assertEquals("", scenario.viewModel.comment.text.toString())
@@ -971,14 +995,20 @@ class RequirementDetailViewModelTest {
             startCollecting(restored)
 
             assertEquals("Saved.", restored.comment.text.toString())
-            assertFalse(restored.ready().commentChanged)
+            assertFalse(restored.ready().textChanged)
         }
     }
 
     @Test
     fun anotherValueUnderTheCommentKey_loadsTheSavedComment() = runTest {
         progressRepository.startBadge("camping", newest, started)
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         // A value keepText didn't keep.
         val viewModel = RequirementDetailViewModel(
             "camping",
@@ -991,7 +1021,148 @@ class RequirementDetailViewModelTest {
         startCollecting(viewModel)
 
         assertEquals("Saved.", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
+    }
+
+    @Test
+    fun badgesRequirement_hasNoSignOffField() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        assertFalse(viewModel.ready().hasSignOffField)
+    }
+
+    // Its field doesn't show, so whatever it holds isn't saved.
+    @Test
+    fun save_onABadgesRequirement_savesNoSignOff() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeSignOff("Pat")
+        viewModel.typeComment("At camp.")
+
+        viewModel.save()
+
+        assertEquals(RequirementProgress("camping", "1", comment = "At camp."), recorded("1"))
+        assertFalse(viewModel.ready().textChanged)
+    }
+
+    @Test
+    fun ranksRequirement_hasASignOffField_thatStartsAsSaved() = runTest {
+        progressRepository.setRequirementSignOffAndComment(
+            "tenderfoot",
+            "1a",
+            "Mr. Rivera",
+            "At camp.",
+            BadgeStart(newest, started)
+        )
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+
+        assertTrue(viewModel.ready().hasSignOffField)
+        assertEquals("Mr. Rivera", viewModel.signedOffBy.text.toString())
+        assertEquals("At camp.", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().textChanged)
+    }
+
+    @Test
+    fun signOff_edited_isChanged_untilSavedWithTheComment() = runTest {
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+
+        viewModel.typeSignOff("  Mr. Rivera ")
+        assertTrue(viewModel.ready().textChanged)
+        viewModel.typeComment("At camp.")
+        viewModel.save()
+
+        assertEquals(
+            RequirementProgress(
+                "tenderfoot",
+                "1a",
+                comment = "At camp.",
+                signedOffBy = "Mr. Rivera"
+            ),
+            recorded("1a", "tenderfoot")
+        )
+        assertFalse(viewModel.ready().textChanged)
+    }
+
+    @Test
+    fun signOff_empty_removesIt_andKeepsTheComment() = runTest {
+        progressRepository.setRequirementSignOffAndComment(
+            "tenderfoot",
+            "1a",
+            "Mr. Rivera",
+            "At camp.",
+            BadgeStart(newest, started)
+        )
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+
+        viewModel.typeSignOff(" ")
+        assertTrue(viewModel.ready().textChanged)
+        viewModel.save()
+
+        assertEquals(
+            RequirementProgress("tenderfoot", "1a", comment = "At camp."),
+            recorded("1a", "tenderfoot")
+        )
+        assertFalse(viewModel.ready().textChanged)
+    }
+
+    @Test
+    fun unsavedSignOff_isRestoredFromSavedState() = runTest {
+        scenario("1a", advancementId = "tenderfoot").use { scenario ->
+            startCollecting(scenario.viewModel)
+            scenario.viewModel.typeSignOff("Mr. Rivera")
+
+            scenario.recreate()
+            val restored = scenario.viewModel
+            startCollecting(restored)
+
+            assertEquals("Mr. Rivera", restored.signedOffBy.text.toString())
+            assertTrue(restored.ready().textChanged)
+        }
+    }
+
+    @Test
+    fun clear_emptiesTheSignOffField_andDiscardsAnUnsavedEdit() = runTest {
+        progressRepository.setRequirementSignOffAndComment(
+            "tenderfoot",
+            "1a",
+            "Mr. Rivera",
+            "At camp.",
+            BadgeStart(newest, started)
+        )
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+        assertTrue(viewModel.ready().canClear)
+        viewModel.typeComment("At camp, edited.")
+
+        viewModel.clear()
+
+        assertNull(recorded("1a", "tenderfoot"))
+        assertEquals("", viewModel.signedOffBy.text.toString())
+        assertEquals("", viewModel.comment.text.toString())
+        assertFalse(viewModel.ready().textChanged)
+    }
+
+    @Test
+    fun clear_discardsAnUnsavedSignOff() = runTest {
+        progressRepository.markRequirementCompleted(
+            "tenderfoot",
+            "1a",
+            day,
+            BadgeStart(newest, started)
+        )
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+        viewModel.typeSignOff("Mr. Rivera")
+
+        viewModel.clear()
+
+        assertNull(recorded("1a", "tenderfoot"))
+        assertEquals("", viewModel.signedOffBy.text.toString())
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
@@ -1028,17 +1199,17 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
-    fun saveComment_whenSaveFails_reportsIt_andKeepsTheEdit() = runTest {
+    fun save_whenSaveFails_reportsIt_andKeepsTheEdit() = runTest {
         val viewModel = viewModel("1")
         startCollecting(viewModel)
         viewModel.typeComment("Not saved yet.")
         progressRepository.failSaves = true
 
-        viewModel.saveComment()
+        viewModel.save()
 
         assertNotNull(viewModel.ready().saveFailure)
         assertEquals("Not saved yet.", viewModel.comment.text.toString())
-        assertTrue(viewModel.ready().commentChanged)
+        assertTrue(viewModel.ready().textChanged)
     }
 
     @Test
@@ -1068,7 +1239,13 @@ class RequirementDetailViewModelTest {
     @Test
     fun clear_removesWhatsRecordedForItAndThoseUnderIt_andNothingElse() = runTest {
         progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
-        progressRepository.setRequirementComment("camping", "2", "Chose 2a and 2c.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "2",
+            null,
+            "Chose 2a and 2c.",
+            badgeStart
+        )
         progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
         progressRepository.markRequirementCompleted("camping", "2b(1)", day, badgeStart)
         progressRepository.addTrackerEntry(
@@ -1108,7 +1285,13 @@ class RequirementDetailViewModelTest {
 
     @Test
     fun clear_thenCheckingStraightAway_keepsTheCheck() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         val viewModel = viewModel("1", slowCatalog)
         startCollecting(viewModel)
         advanceUntilIdle()
@@ -1124,7 +1307,13 @@ class RequirementDetailViewModelTest {
 
     @Test
     fun clear_thenLeavingThePage_stillClears() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         scenario("1", slowCatalog).use { scenario ->
             startCollecting(scenario.viewModel)
             advanceUntilIdle()
@@ -1139,7 +1328,13 @@ class RequirementDetailViewModelTest {
 
     @Test
     fun clear_emptiesTheCommentField() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         val viewModel = viewModel("1")
         startCollecting(viewModel)
 
@@ -1147,12 +1342,18 @@ class RequirementDetailViewModelTest {
 
         assertNull(recorded("1"))
         assertEquals("", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
     fun clear_discardsAnUnsavedEdit() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         val viewModel = viewModel("1")
         startCollecting(viewModel)
         viewModel.typeComment("Saved, then edited.")
@@ -1161,7 +1362,7 @@ class RequirementDetailViewModelTest {
 
         assertNull(recorded("1"))
         assertEquals("", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
@@ -1175,7 +1376,7 @@ class RequirementDetailViewModelTest {
 
         assertNull(recorded("1"))
         assertEquals("", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     private val clearSaved = CompletableDeferred<Unit>()
@@ -1190,7 +1391,13 @@ class RequirementDetailViewModelTest {
 
     @Test
     fun clear_whileBeingSaved_keepsTheUnsavedEdit_untilItIsSaved() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         val viewModel = viewModel("1", progress = slowClears)
         startCollecting(viewModel)
         viewModel.typeComment("Saved, then edited.")
@@ -1198,18 +1405,24 @@ class RequirementDetailViewModelTest {
         viewModel.clear()
 
         assertEquals("Saved, then edited.", viewModel.comment.text.toString())
-        assertTrue(viewModel.ready().commentChanged)
+        assertTrue(viewModel.ready().textChanged)
         clearSaved.complete(Unit)
         advanceUntilIdle()
 
         assertNull(recorded("1"))
         assertEquals("", viewModel.comment.text.toString())
-        assertFalse(viewModel.ready().commentChanged)
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test
     fun clear_keepsWhatsTypedWhileItIsBeingSaved() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         val viewModel = viewModel("1", progress = slowClears)
         startCollecting(viewModel)
         viewModel.typeComment("Saved, then edited.")
@@ -1221,12 +1434,18 @@ class RequirementDetailViewModelTest {
 
         assertNull(recorded("1"))
         assertEquals("Typed after Clear.", viewModel.comment.text.toString())
-        assertTrue(viewModel.ready().commentChanged)
+        assertTrue(viewModel.ready().textChanged)
     }
 
     @Test
     fun clear_whenSaveFails_reportsIt_andKeepsTheUnsavedEdit() = runTest {
-        progressRepository.setRequirementComment("camping", "1", "Saved.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "1",
+            null,
+            "Saved.",
+            badgeStart
+        )
         val viewModel = viewModel("1")
         startCollecting(viewModel)
         viewModel.typeComment("Saved, then edited.")
@@ -1237,7 +1456,7 @@ class RequirementDetailViewModelTest {
         assertNotNull(viewModel.ready().saveFailure)
         assertEquals("Saved.", recorded("1")?.comment)
         assertEquals("Saved, then edited.", viewModel.comment.text.toString())
-        assertTrue(viewModel.ready().commentChanged)
+        assertTrue(viewModel.ready().textChanged)
         assertTrue(viewModel.ready().canClear)
     }
 

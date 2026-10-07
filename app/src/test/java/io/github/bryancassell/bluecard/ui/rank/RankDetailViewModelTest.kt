@@ -495,7 +495,13 @@ class RankDetailViewModelTest {
     fun clear_removesEverythingRecordedForTheRank_andNothingElse() = runTest {
         complete("scout", "1", "2")
         complete("tenderfoot", "1")
-        progressRepository.setRequirementComment("tenderfoot", "2", "Hiked.", rankStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "tenderfoot",
+            "2",
+            null,
+            "Hiked.",
+            rankStart
+        )
         progressRepository.setCompletedOnPriorDate("tenderfoot", day, rankStart)
         val scoutBefore = progressRepository.observeProgress("scout").first()
         val viewModel = viewModel()

@@ -164,7 +164,7 @@ class PdfReportRepositoryTest {
         val start = BadgeStart(newest, LocalDate.of(2026, 3, 1))
         progressRepository.markRequirementCompleted("chess", "1a", LocalDate.of(2026, 4, 1), start)
         progressRepository.markRequirementCompleted("chess", "1b", LocalDate.of(2026, 4, 2), start)
-        progressRepository.setRequirementComment("chess", "1c", "Next week.", start)
+        progressRepository.setRequirementSignOffAndComment("chess", "1c", null, "Next week.", start)
     }
 
     private fun Uri.read(): String =
@@ -235,9 +235,10 @@ class PdfReportRepositoryTest {
     @Test
     fun createReportToShare_again_replacesTheBadgesFile() = runTest {
         repository.createReportToShare("chess")
-        progressRepository.setRequirementComment(
+        progressRepository.setRequirementSignOffAndComment(
             "chess",
             "1c",
+            null,
             "Taught my brother.",
             BadgeStart(newest, today)
         )
@@ -256,9 +257,10 @@ class PdfReportRepositoryTest {
         val earlier = repository.createReportToShare("chess")!!
         val written = pdfWriter.lastWritten
         context.contentResolver.openInputStream(earlier)!!.use { reading ->
-            progressRepository.setRequirementComment(
+            progressRepository.setRequirementSignOffAndComment(
                 "chess",
                 "1c",
+                null,
                 "Taught my brother.",
                 BadgeStart(newest, today)
             )
