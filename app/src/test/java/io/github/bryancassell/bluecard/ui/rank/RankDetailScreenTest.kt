@@ -22,7 +22,6 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -103,6 +102,8 @@ class RankDetailScreenTest {
         ),
         status = RankStatus.NotEarned
     )
+    private val notStarted =
+        ready.copy(requirements = ready.requirements.map { it.copy(completed = false) })
     private val inProgress = ready.copy(status = RankStatus.InProgress, fractionDone = 0.4f)
     private val started = ready.copy(fractionDone = 0.25f, canClear = true)
     private val marked = ready.copy(
@@ -254,14 +255,16 @@ class RankDetailScreenTest {
         assertEquals("https://www.scouting.org/tenderfoot.pdf", started?.dataString)
     }
 
+    // The status card says it's in progress, so screen readers don't hear it twice.
     @Test
-    fun inProgress_showsHowMuchIsDone_readAsOnTheRanksRow() {
+    fun inProgress_showsHowMuchIsDone_andTheStatusCardSaysInProgress() {
         show(inProgress)
 
         composeTestRule.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo(0.4f, 0f..1f)))
             .assertIsDisplayed()
-            .assert(hasContentDescription("In progress"))
             .assert(hasStateDescription("40% done"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+        text("In progress").performScrollTo().assertIsDisplayed()
     }
 
     // Only the lowest rank not earned is in progress.
@@ -298,7 +301,7 @@ class RankDetailScreenTest {
 
     @Test
     fun rankNotStarted_saysSo_andAsksWhetherItsAlreadyEarned_aboveMarkEarned() {
-        show(ready)
+        show(notStarted)
 
         val tops = listOf("Not started", "Already earned Tenderfoot?", "Mark earned").map(::topOf)
         assertEquals(tops.sorted(), tops)
@@ -319,6 +322,24 @@ class RankDetailScreenTest {
 
         text("Started").performScrollTo().assertIsDisplayed()
         text("In progress").assertDoesNotExist()
+    }
+
+    // As for Star with badges the scout has completed: they count toward it before anything is
+    // recorded for it, so "Not started" would contradict its requirement's row.
+    @Test
+    fun rankWithNothingRecorded_withARequirementPartlyDone_saysStarted() {
+        val badges = RequirementItem(
+            "3",
+            "Earn 6 merit badges.",
+            null,
+            false,
+            markedByHand = false,
+            partlyCompleted = true
+        )
+        show(notStarted.copy(requirements = listOf(badges)))
+
+        text("Started").performScrollTo().assertIsDisplayed()
+        text("Not started").assertDoesNotExist()
     }
 
     @Test

@@ -5,15 +5,9 @@ import android.view.View
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
@@ -30,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -136,41 +129,13 @@ private fun PickDateButton(
 }
 
 /**
- * Mark completed or Mark earned, labeled [text]: a tonal button with a calendar icon that asks
- * for a date as [PickDateButton] does. As a text button, it looked like a caption, not something
- * to tap ([#247](https://github.com/bryancassell/bluecard/issues/247)).
- */
-@Composable
-fun MarkOnDateButton(
-    text: String,
-    initial: LocalDate?,
-    today: () -> LocalDate,
-    onPick: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    PickDate(initial, today, onPick) { onClick ->
-        FilledTonalButton(
-            onClick = onClick,
-            modifier = modifier,
-            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
-        ) {
-            Icon(
-                painterResource(R.drawable.ic_event_available),
-                contentDescription = null,
-                modifier = Modifier.size(ButtonDefaults.IconSize)
-            )
-            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-            Text(text)
-        }
-    }
-}
-
-/**
  * Shows the [button] that asks for a date something was done on, and the picker while it's
- * asking, as [PickDateButton] describes.
+ * asking. The picker starts at [initial], or at [today] without one, and gives [onPick] the date
+ * picked. Dates after [today] can't be picked. It's read as the picker opens, so a page left open
+ * past midnight offers the new day.
  */
 @Composable
-private fun PickDate(
+internal fun PickDate(
     initial: LocalDate?,
     today: () -> LocalDate,
     onPick: (LocalDate) -> Unit,

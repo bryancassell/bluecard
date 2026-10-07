@@ -169,8 +169,6 @@ private fun BadgeDetails(
         AdvancementHeader(
             name = uiState.name,
             fractionDone = uiState.fractionDone,
-            // A badge shows its bar only while it's in progress.
-            inProgress = true,
             summary = uiState.summary,
             officialUrl = uiState.officialUrl,
             startOtherApp = startOtherApp,
@@ -178,9 +176,14 @@ private fun BadgeDetails(
                 { EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter())) }
             }
         )
-        val fileName = reportFileName(LocalResources.current, ReportKind.MeritBadge, uiState.name)
         CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) { modifier ->
-            ReportButtons(fileName, onShareReport, onSaveReport, startOtherApp, modifier)
+            ReportButtons(
+                reportFileName(LocalResources.current, ReportKind.MeritBadge, uiState.name),
+                onShareReport,
+                onSaveReport,
+                startOtherApp,
+                modifier
+            )
         }
         CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
         Text(
@@ -209,9 +212,10 @@ private fun BadgeDetails(
 
 /**
  * The badge's [StatusCard]:
- * - While it isn't complete, "In progress", as on Badges, or "Not started", with a button to mark
- *   it completed on a date the scout picks, up to [today], without recording its requirements
- *   ([onMark]). Its picker opens at the date the scout just unmarked, if any, or at today.
+ * - While it isn't complete, "In progress" once it's started, as on Badges, or "Not started",
+ *   with a button to mark it completed on a date the scout picks, up to [today], without
+ *   recording its requirements ([onMark]). Its picker opens at the date the scout just
+ *   unmarked, if any, or at today.
  * - Once it's marked, the date, with buttons to change it ([onMark]) or unmark the badge
  *   ([onUnmark]).
  * - For a badge complete from its requirements, the date they were completed on.
@@ -239,19 +243,18 @@ private fun CompletionStatus(
                 textStyle = statusLineStyle
             )
 
-            uiState.completed -> StatusLine(
+            uiState.completed -> DoneStatusLine(
                 uiState.completedOn?.let {
                     stringResource(R.string.badge_detail_completed_on, formatter.format(it))
-                } ?: stringResource(R.string.badge_detail_completed)
+                } ?: stringResource(R.string.badges_completed)
             )
 
             else -> MarkDoneLines(
-                // A badge has a bar only while it's in progress.
                 status = stringResource(
-                    if (uiState.fractionDone == null) {
-                        R.string.badge_detail_not_started
-                    } else {
+                    if (uiState.canClear) {
                         R.string.badges_in_progress
+                    } else {
+                        R.string.badge_detail_not_started
                     }
                 ),
                 prompt = stringResource(R.string.badge_detail_mark_completed_prompt),
@@ -263,22 +266,14 @@ private fun CompletionStatus(
             )
         }
         if (uiState.completed) {
-            reportButtons(
-                Modifier.padding(
-                    start = 16.dp,
-                    // Under Change date, whose touch area already leaves room below its text.
-                    top = if (date == null) 8.dp else 0.dp,
-                    end = 16.dp
-                )
-            )
+            reportButtons(Modifier.padding(horizontal = 16.dp))
         }
     }
 }
 
 /**
  * Says the badge is Eagle-required, as a filled tag. Its small corners keep it from looking like
- * the buttons near it, which are fully rounded, and it's darker than Mark completed, the page's
- * other filled shape, which sits on the status card. A long label wraps inside it.
+ * the buttons near it, which are fully rounded. A long label wraps inside it.
  */
 @Composable
 private fun EagleTag(label: String) {

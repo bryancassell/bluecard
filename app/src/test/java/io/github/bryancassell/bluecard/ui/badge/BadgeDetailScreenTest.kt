@@ -204,6 +204,13 @@ class BadgeDetailScreenTest {
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
 
+    /**
+     * Where the text's node starts down the page. Every part of the page is laid out, on screen
+     * or not, so these give their order.
+     */
+    private fun topOf(text: String) =
+        composeTestRule.onNodeWithText(text).fetchSemanticsNode().positionInRoot.y
+
     /** A day in the date picker, such as "May 20, 2026". */
     private fun pickerDay(date: String) =
         composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
@@ -248,9 +255,7 @@ class BadgeDetailScreenTest {
         show(ready)
 
         // Every row is laid out, on screen or not, so their positions give their order.
-        val tops = listOf("Plan a campout.", "Do two of these.", "Keep a camping log.").map {
-            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
-        }
+        val tops = listOf("Plan a campout.", "Do two of these.", "Keep a camping log.").map(::topOf)
         assertEquals(tops.sorted(), tops)
     }
 
@@ -268,13 +273,15 @@ class BadgeDetailScreenTest {
         assertTrue((bar.top + bar.bottom) / 2 in nameBottom..eagleTop)
     }
 
+    // The status card says it's in progress, so screen readers don't hear it twice.
     @Test
-    fun inProgress_barReadsAsOnTheBadgesRow() {
-        show(ready.copy(fractionDone = 0.4f))
+    fun inProgress_barReadsHowMuchIsDone_andTheStatusCardSaysInProgress() {
+        show(ready.copy(fractionDone = 0.4f, canClear = true))
 
         composeTestRule.onNode(fortyPercentBar)
-            .assert(hasContentDescription("In progress"))
             .assert(hasStateDescription("40% done"))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+        composeTestRule.onNodeWithText("In progress").assertIsDisplayed()
     }
 
     @Test
@@ -464,9 +471,12 @@ class BadgeDetailScreenTest {
         show(ready.copy(counselor = counselor))
 
         // Every part is laid out, on screen or not, so their positions give their order.
-        val tops = listOf("Official requirements", "Counselor", "Pat Lee", "Requirements").map {
-            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
-        }
+        val tops = listOf(
+            "Official requirements",
+            "Counselor",
+            "Pat Lee",
+            "Requirements"
+        ).map(::topOf)
         assertEquals(tops.sorted(), tops)
     }
 
@@ -771,7 +781,10 @@ class BadgeDetailScreenTest {
 
     private val completed = ready.copy(completed = true)
 
-    private val marked = completed.copy(completedOnPriorDate = LocalDate.of(2025, 8, 1))
+    private val marked = completed.copy(
+        completedOnPriorDate = LocalDate.of(2025, 8, 1),
+        completedOn = LocalDate.of(2025, 8, 1)
+    )
 
     @Test
     fun incompleteBadge_canBeMarkedCompleted_onADayUpToToday() {
@@ -788,9 +801,6 @@ class BadgeDetailScreenTest {
         composeTestRule.onNodeWithText("OK").assertDoesNotExist()
     }
 
-    private fun topOf(text: String) =
-        composeTestRule.onNodeWithText(text).fetchSemanticsNode().positionInRoot.y
-
     @Test
     fun badgeNotStarted_saysSo_andAsksWhetherItsAlreadyCompleted_aboveMarkCompleted() {
         show(ready)
@@ -800,22 +810,30 @@ class BadgeDetailScreenTest {
         assertEquals(tops.sorted(), tops)
     }
 
-    // As on Badges, where it has a bar.
+    // Once it's started, as on Badges.
     @Test
     fun badgeInProgress_saysSo() {
-        show(ready.copy(fractionDone = 0.4f))
+        show(ready.copy(fractionDone = 0.4f, canClear = true))
 
         composeTestRule.onNodeWithText("In progress").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Not started").assertDoesNotExist()
     }
 
     @Test
-    fun badgeCompleteFromItsRequirements_saysWhen() {
+    fun badgeCompleteFromItsRequirements_saysWhen_aboveItsReport() {
         show(completed.copy(completedOn = LocalDate.of(2026, 4, 15)))
 
         composeTestRule.onNodeWithText("Completed on Apr 15, 2026").performScrollTo()
             .assertIsDisplayed()
+        val tops = listOf(
+            "Official requirements",
+            "Completed on Apr 15, 2026",
+            "Share report",
+            "Counselor"
+        ).map(::topOf)
+        assertEquals(tops.sorted(), tops)
         composeTestRule.onNodeWithText("Already completed this badge?").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Mark completed").assertDoesNotExist()
         composeTestRule.onNodeWithText("Change date").assertDoesNotExist()
     }
 
@@ -830,9 +848,7 @@ class BadgeDetailScreenTest {
     fun markCompleted_isBetweenOfficialLinkAndCounselor() {
         show(ready)
 
-        val tops = listOf("Official requirements", "Mark completed", "Counselor").map {
-            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
-        }
+        val tops = listOf("Official requirements", "Mark completed", "Counselor").map(::topOf)
         assertEquals(tops.sorted(), tops)
     }
 
@@ -883,7 +899,7 @@ class BadgeDetailScreenTest {
             "Change date",
             "Share report",
             "Counselor"
-        ).map { composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y }
+        ).map(::topOf)
         assertEquals(tops.sorted(), tops)
     }
 
@@ -949,9 +965,7 @@ class BadgeDetailScreenTest {
     fun reportButtons_areBetweenOfficialLinkAndCounselor() {
         show(completed)
 
-        val tops = listOf("Official requirements", "Share report", "Counselor").map {
-            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
-        }
+        val tops = listOf("Official requirements", "Share report", "Counselor").map(::topOf)
         assertEquals(tops.sorted(), tops)
     }
 
@@ -1081,9 +1095,7 @@ class BadgeDetailScreenTest {
     fun clearButton_isLastOnThePage() {
         show(startedBadge.copy(counselor = counselor))
 
-        val tops = listOf("Counselor", "Do all of these.", "Clear progress").map {
-            composeTestRule.onNodeWithText(it).fetchSemanticsNode().positionInRoot.y
-        }
+        val tops = listOf("Counselor", "Do all of these.", "Clear progress").map(::topOf)
         assertEquals(tops.sorted(), tops)
     }
 

@@ -33,13 +33,13 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badge.AdvancementHeader
 import io.github.bryancassell.bluecard.ui.badge.ClearProgress
+import io.github.bryancassell.bluecard.ui.badge.DoneStatusLine
 import io.github.bryancassell.bluecard.ui.badge.EditableDate
 import io.github.bryancassell.bluecard.ui.badge.MarkDoneLines
 import io.github.bryancassell.bluecard.ui.badge.ReportButtons
 import io.github.bryancassell.bluecard.ui.badge.RequirementRows
 import io.github.bryancassell.bluecard.ui.badge.ShareReport
 import io.github.bryancassell.bluecard.ui.badge.StatusCard
-import io.github.bryancassell.bluecard.ui.badge.StatusLine
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -171,13 +171,16 @@ private fun RankDetails(
             fractionDone = uiState.fractionDone,
             summary = uiState.summary,
             officialUrl = uiState.officialUrl,
-            // Only the lowest rank not earned is in progress, as on Ranks.
-            inProgress = uiState.status == RankStatus.InProgress,
             startOtherApp = startOtherApp
         )
-        val fileName = reportFileName(LocalResources.current, ReportKind.Rank, uiState.name)
         EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) { modifier ->
-            ReportButtons(fileName, onShareReport, onSaveReport, startOtherApp, modifier)
+            ReportButtons(
+                reportFileName(LocalResources.current, ReportKind.Rank, uiState.name),
+                onShareReport,
+                onSaveReport,
+                startOtherApp,
+                modifier
+            )
         }
         Text(
             text = stringResource(R.string.badge_detail_requirements),
@@ -267,33 +270,30 @@ private fun EarnedStatus(
             )
 
             // Earned from its requirements.
-            else -> StatusLine(
+            else -> DoneStatusLine(
                 uiState.earnedOn?.let {
                     stringResource(R.string.rank_detail_earned_on, formatter.format(it))
                 } ?: stringResource(R.string.rank_detail_earned)
             )
         }
         if (uiState.status == RankStatus.Earned) {
-            reportButtons(
-                Modifier.padding(
-                    start = 16.dp,
-                    // Under Change date or Add date, whose touch area already leaves room below
-                    // its text.
-                    top = if (date == null && uiState.earnedWith == null) 8.dp else 0.dp,
-                    end = 16.dp
-                )
-            )
+            reportButtons(Modifier.padding(horizontal = 16.dp))
         }
     }
 }
 
 /**
  * The status of a rank that isn't earned: "In progress" for the next rank to earn, as on Ranks,
- * or else "Started" once it has a bar, or "Not started".
+ * or else "Started" once anything counts toward it, or "Not started". Badges the scout has
+ * completed count toward Star, Life and Eagle before anything is recorded for them, so a rank
+ * with none of its own progress can still have a requirement complete or partly done.
  */
 @StringRes
 private fun notEarnedStatus(uiState: RankDetailUiState.Ready): Int = when {
     uiState.status == RankStatus.InProgress -> R.string.badges_in_progress
-    uiState.fractionDone != null -> R.string.rank_detail_started
+
+    uiState.canClear || uiState.requirements.any { it.completed || it.partlyCompleted } ->
+        R.string.rank_detail_started
+
     else -> R.string.badge_detail_not_started
 }

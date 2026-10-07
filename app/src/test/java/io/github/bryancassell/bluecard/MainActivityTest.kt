@@ -756,9 +756,9 @@ class MainActivityTest {
 
         pressBack()
 
-        // The page keeps its place, scrolled down to the requirement.
-        composeTestRule.onNodeWithText("Our summary of Camping.").performScrollTo()
-            .assertIsDisplayed()
+        // Back on Badge detail, where it was left: scrolled down to the requirement.
+        composeTestRule.onNodeWithText("Second.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertExists()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
@@ -985,9 +985,10 @@ class MainActivityTest {
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
 
-        // The page keeps its place, scrolled down to the requirement.
-        composeTestRule.onNodeWithText("Our summary of Camping.").performScrollTo()
-            .assertIsDisplayed()
+        // Back on Badge detail, where it was left: scrolled down to the requirement.
+        composeTestRule.onNodeWithText("First.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertExists()
+        composeTestRule.onNodeWithText("Requirement 1").assertDoesNotExist()
         assertEquals(
             RequirementProgress("camping", "1", true, today, null),
             runBlocking { recorded("1") }
@@ -1558,9 +1559,11 @@ class MainActivityTest {
         tapTwiceInOneFrame("Second.")
         pressBack()
 
-        // The page keeps its place, scrolled down to the requirement.
-        composeTestRule.onNodeWithText("Our summary of Camping.").performScrollTo()
-            .assertIsDisplayed()
+        // Back on Badge detail, where it was left: scrolled down to the requirement. A second
+        // copy of its page would still show.
+        composeTestRule.onNodeWithText("Second.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Our summary of Camping.").assertExists()
+        composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
     @Test

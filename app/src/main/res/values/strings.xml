@@ -252,9 +252,6 @@
          complete from its requirements, the date they were completed on, such as "Completed on
          Apr 15, 2025". -->
     <string name="badge_detail_completed_on">Completed on %1$s</string>
-    <!-- On the page of a badge complete from its requirements, in place of "Completed on <date>"
-         when a requirement it needed was completed with no date. -->
-    <string name="badge_detail_completed">Completed</string>
     <!-- Button under the date a badge was marked completed on, or a rank earned on, which
          undoes the mark. -->
     <string name="badge_detail_unmark_completed">Unmark</string>
@@ -265,8 +262,9 @@
     <!-- Above Mark earned on a rank's page, while it isn't earned, with the rank's name, such as
          "Already earned Tenderfoot?". -->
     <string name="rank_detail_mark_earned_prompt">Already earned %1$s?</string>
-    <!-- First line on the page of a rank that's started but isn't the next rank to earn, above
-         Mark earned. Only the next rank is "In progress", as on Ranks. -->
+    <!-- First line on the page of a rank that isn't the next rank to earn, above Mark earned,
+         once it's started or something counts toward it, such as merit badges the scout has
+         completed. Only the next rank is "In progress", as on Ranks. -->
     <string name="rank_detail_started">Started</string>
     <!-- The date a rank was marked earned on, or for one earned from its requirements, the date
          they were completed on, such as "Earned on Apr 15, 2025". -->
