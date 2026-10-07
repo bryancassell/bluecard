@@ -114,6 +114,17 @@ class RequirementDetailViewModelTest {
                             Requirement("5b", "Your stove.")
                         ),
                         ownWork = "Pack your gear."
+                    ),
+                    Requirement(
+                        "6",
+                        "Save for two weeks, then compare them.",
+                        ownWork = "Compare the two weeks.",
+                        tracker = TrackerDefinition(
+                            listOf(TrackerColumn("saved", "Saved", TrackerColumnType.NUMBER)),
+                            "week",
+                            "weeks",
+                            rowCount = 2
+                        )
                     )
                 )
             ),
@@ -513,10 +524,42 @@ class RequirementDetailViewModelTest {
         assertEquals(today, viewModel.ready().completedDate)
     }
 
-    private suspend fun saveWeek(rowNumber: Int, addedDate: LocalDate) =
+    @Test
+    fun fixedRowsAndOwnWork_completeOnceBothAreDone_onTheOwnWorksDate() = runTest {
+        val viewModel = viewModel("6")
+        startCollecting(viewModel)
+        assertFalse(viewModel.ready().requirement.completesFromRows)
+        saveWeek(1, today, number = "6")
+        saveWeek(2, today, number = "6")
+        assertFalse(viewModel.ready().requirement.completed)
+        assertNull(viewModel.ready().rowsCompletedDate)
+
+        viewModel.setCompleted(true)
+        assertTrue(viewModel.ready().requirement.completed)
+        assertEquals(today, viewModel.ready().completedDate)
+
+        // Earlier than the rows were saved, as when they're copied from paper.
+        viewModel.setCompletedDate(started)
+        assertEquals(started, viewModel.ready().completedDate)
+    }
+
+    @Test
+    fun fixedRowsAndOwnWork_theOwnWorksDateChanges_beforeEveryRowIsFilledIn() = runTest {
+        val viewModel = viewModel("6")
+        startCollecting(viewModel)
+        viewModel.setCompleted(true)
+
+        viewModel.setCompletedDate(started)
+
+        assertEquals(OwnWork("Compare the two weeks.", true), viewModel.ready().requirement.ownWork)
+        assertEquals(started, viewModel.ready().completedDate)
+        assertFalse(viewModel.ready().requirement.completed)
+    }
+
+    private suspend fun saveWeek(rowNumber: Int, addedDate: LocalDate, number: String = "4") =
         progressRepository.addTrackerEntry(
             "camping",
-            "4",
+            number,
             rowNumber,
             mapOf("saved" to "5"),
             addedDate,

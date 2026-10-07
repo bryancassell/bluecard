@@ -669,8 +669,8 @@ totals).
 - **Completion doesn't read totals.** It reads only what the scout marked and
   which rows are filled in, so a total is only a guide
   ([#193](https://github.com/bryancassell/bluecard/issues/193)). A fixed-row
-  tracker can't have a total, because its rows complete it and its row shows
-  how many are filled in.
+  tracker can't have a total, because its requirement needs every row and its
+  row shows how many are filled in.
 - **Numbers are stored as the scout typed them**: digits of any script, with a
   point, a comma or the Arabic decimal separator, whichever their keyboard
   offers (`DECIMAL_SEPARATORS`). So they're read with `storedNumber` when
@@ -823,16 +823,20 @@ requirement progress, tracker entries and the catalog:
 - A requirement with children is complete when enough of them are, even if it
   also has a tracker. One that also asks for work of its own (`ownWork` in the
   catalog) needs the scout to mark that complete too. One without children but
-  with a fixed-row tracker is complete when every row has an entry. A rank's
-  requirement that asks for merit badges is complete once the scout has
-  completed enough of them (below). Any other requirement, including one with
-  a log, is complete when the scout marked it complete.
+  with a fixed-row tracker is complete when every row has an entry, and its own
+  work, if any, is marked complete. A rank's requirement that asks for merit
+  badges is complete once the scout has completed enough of them (below). Any
+  other requirement, including one with a log, is complete when the scout
+  marked it complete.
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
 - The completion date is when the last requirement or own work it needed was
   completed, or the prior date for a badge marked that way. A requirement with a
   fixed-row tracker is completed on the date the scout gave it, if they gave
-  one, or else on the date its last row was first saved.
+  one, or else on the date its last row was first saved. One that also has own
+  work is completed on the date the scout gave that, because a row's date is
+  only when it was typed in, which can be long after the work
+  ([#229](https://github.com/bryancassell/bluecard/issues/229)).
 - A requirement has part done (`hasPartDone`) once anything in it that the scout
   records is: its own work, a requirement under it at any depth, a row of a
   tracker on it or under it, or a badge that counts toward the merit badges it
@@ -855,6 +859,12 @@ export format. A mark left from before
 [#105](https://github.com/bryancassell/bluecard/issues/105), when these
 requirements had a checkbox, becomes the date the scout gave
 ([#116](https://github.com/bryancassell/bluecard/issues/116)).
+
+A requirement with a fixed-row tracker and own work stores only the own work,
+as a requirement with children does, so its rows get no date of their own: the
+own work's date is the requirement's. Two dates would have needed a new column,
+with a migration and a new export format, and two dates on one page, while the
+own work is usually the step after the rows, such as summing them up.
 
 A rank's requirement that asks for merit badges (`Requirement.meritBadges`,
 such as Star 3's six, at least four of them Eagle-required) is the only
@@ -1363,6 +1373,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
+| [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format, and one date on its page; a row's date is only when it was typed in |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
 | [Rank sign-off](#ranks) | A nullable `requirement_progress` column that only a rank's requirement fills, saved with the notes in one write | No new table; the notes' one Save can't save one field and fail the other |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |

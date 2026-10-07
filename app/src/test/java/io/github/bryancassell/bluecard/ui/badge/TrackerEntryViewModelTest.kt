@@ -795,6 +795,27 @@ class TrackerEntryViewModelTest {
         assertEquals(listOf("Scout", "Star"), viewModel.ready().unearnedByDelete)
     }
 
+    // Scout's requirement with work of its own besides its rows, which counts on them too.
+    @Test
+    fun fixedRow_ofARequirementWithOwnWork_deleteUnearnsItsRank() = runTest {
+        earnScoutAndStar()
+        val ownWork = Requirement(
+            "1",
+            "Track two weeks, then compare them.",
+            ownWork = "Compare the two weeks.",
+            tracker = TrackerDefinition(weekColumns, "week", "weeks", rowCount = 2)
+        )
+        val scoutWithOwnWork = scout.copy(
+            requirementVersions = listOf(RequirementsVersion(newest, listOf(ownWork)))
+        )
+        catalogRepository.ranks = listOf(scoutWithOwnWork, star)
+        progressRepository.markRequirementCompleted("scout", "1", today, badgeStart)
+        val viewModel = viewModel(number = "1", rowNumber = 1, advancementId = "scout")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Scout", "Star"), viewModel.ready().unearnedByDelete)
+    }
+
     // With no progress to delete it from.
     @Test
     fun fixedRowNotFilledIn_ofABadgeNotStarted_deleteUnearnsNothing() = runTest {

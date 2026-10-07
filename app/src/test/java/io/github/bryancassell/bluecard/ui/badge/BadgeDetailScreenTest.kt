@@ -712,6 +712,40 @@ class BadgeDetailScreenTest {
             .assert(!hasText("complete", substring = true))
     }
 
+    // Under the rows' count, as under a count of sub-requirements.
+    @Test
+    fun everyRowFilledInWithOnlyItsOwnWorkLeft_saysWhatsStillToDo() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "3") {
+                        it.copy(
+                            partlyCompleted = true,
+                            tracker = TrackerCount(12, 12, "nights"),
+                            ownWork = OwnWork("Compare the nights.", completed = false),
+                            stillToDo = "Compare the nights."
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        val texts = row("Keep a camping log.")
+            .assert(hasStateDescription("In progress"))
+            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
+        assertEquals(
+            listOf(
+                "3",
+                "Keep a camping log.",
+                "12 of 12 nights",
+                "Still to do: Compare the nights."
+            ),
+            texts
+        )
+    }
+
     @Test
     fun requirementWithTracker_showsHowMuchIsFilledIn() {
         show(ready)

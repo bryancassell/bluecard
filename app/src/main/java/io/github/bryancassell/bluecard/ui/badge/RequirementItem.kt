@@ -43,7 +43,10 @@ data class RequirementItem(
      * requirements.
      */
     val notRecorded: Boolean = false,
-    /** The work it asks for besides its sub-requirements, or null if it asks for none. */
+    /**
+     * The work it asks for besides its sub-requirements or its tracker's rows, or null if it asks
+     * for none.
+     */
     val ownWork: OwnWork? = null,
     /**
      * Whether part of it is done, though it isn't complete and is still needed: its own work, a
@@ -57,8 +60,9 @@ data class RequirementItem(
     val completeCount: CompleteCount? = null,
     /**
      * Our summary of its [ownWork] while that's all that's left of it: it's still needed and
-     * every sub-requirement it needs is complete. Otherwise null. It stays on a badge marked
-     * completed on a prior date, where it says what was never recorded.
+     * every sub-requirement it needs is complete, or every row of its tracker is filled in.
+     * Otherwise null. It stays on a badge marked completed on a prior date, where it says what
+     * was never recorded.
      */
     val stillToDo: String? = null,
     /**
@@ -74,8 +78,9 @@ data class RequirementItem(
 )
 
 /**
- * Work a requirement asks for besides its sub-requirements ([Requirement.ownWork]), which the
- * scout marks complete by hand: our [summary] of it, and whether it's [completed].
+ * Work a requirement asks for besides its sub-requirements or its tracker's rows
+ * ([Requirement.ownWork]), which the scout marks complete by hand: our [summary] of it, and
+ * whether it's [completed].
  */
 data class OwnWork(val summary: String, val completed: Boolean)
 
@@ -109,24 +114,27 @@ fun Requirement.toItem(
     } else {
         null
     }
+    val trackerCount = tracker?.count(trackerEntries[number].orEmpty())
+    // Still needed with every sub-requirement it needs complete, or with none and every row of
+    // its tracker filled in, so its own work isn't.
+    val onlyOwnWorkLeft = if (children.isNotEmpty()) {
+        completeCount != null && completeCount.complete == completeCount.needed
+    } else {
+        stillNeeded && trackerCount?.rowCount?.let { it == trackerCount.recorded } == true
+    }
     return RequirementItem(
         number = number,
         summary = summary,
         choice = choiceCount?.let { Choice(it, children.size) },
         completed = completed,
         markedByHand = isMarkedByHand,
-        tracker = tracker?.count(trackerEntries[number].orEmpty()),
+        tracker = trackerCount,
         notNeeded = notNeeded,
         notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = partlyCompleted,
         completeCount = completeCount,
-        // Still needed with every sub-requirement it needs complete, so its own work isn't.
-        stillToDo = if (completeCount != null && completeCount.complete == completeCount.needed) {
-            ownWork
-        } else {
-            null
-        },
+        stillToDo = ownWork?.takeIf { onlyOwnWorkLeft },
         completesFromRows = completesFromRows,
         meritBadges = meritBadges?.let(earnedBadges::toward)
     )

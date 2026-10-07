@@ -397,9 +397,10 @@
         <item quantity="one">Do %1$d of %2$d (%3$d of %4$d complete)</item>
         <item quantity="other">Do %1$d of %2$d (%3$d of %4$d complete)</item>
     </plurals>
-    <!-- Under requirement_complete_count or requirement_choice_and_complete_count, on the row of
-         a requirement whose sub-requirements are complete enough but whose own work isn't: our
-         summary of that work, such as
+    <!-- On the row of a requirement whose sub-requirements are complete enough, or whose
+         tracker's rows are all filled in, but whose own work isn't, under the count of them
+         (requirement_complete_count, requirement_choice_and_complete_count or
+         tracker_count_of): our summary of that work, such as
          "Still to do: Share what you learned with your counselor." -->
     <string name="requirement_still_to_do">Still to do: %1$s</string>
     <!-- Under the summary on the page of a rank's requirement that asks for time in the rank

@@ -142,6 +142,17 @@ class FractionDoneTest {
     }
 
     @Test
+    fun fixedRowsAndOwnWork_countTheOwnWorkAsOneMorePart() {
+        val ownWorkAndWeeks = weeks.copy(ownWork = "Sum up the weeks.")
+        val allRows = entriesOf(row("5", 1), row("5", 2), row("5", 3), row("5", 4))
+        assertEquals(0.2f, ownWorkAndWeeks.fractionDone(progressOf(done("5")), emptyMap()))
+        val twoRows = entriesOf(row("5", 1), row("5", 3))
+        assertEquals(0.6f, ownWorkAndWeeks.fractionDone(progressOf(done("5")), twoRows))
+        assertEquals(0.8f, ownWorkAndWeeks.fractionDone(emptyMap(), allRows))
+        assertEquals(1f, ownWorkAndWeeks.fractionDone(progressOf(done("5")), allRows))
+    }
+
+    @Test
     fun fixedRows_ignoreRowsOutsideTheTracker() {
         // Only a catalog edited during development could leave row 9 in a four-row tracker.
         assertEquals(0.25f, weeks.fractionDone(emptyMap(), entriesOf(row("5", 1), row("5", 9))))
@@ -216,7 +227,8 @@ class FractionDoneTest {
             weeks,
             log,
             nestedTwice,
-            childrenAndTracker
+            childrenAndTracker,
+            weeks.copy(number = "9", ownWork = "Sum up the weeks.")
         )
         val partOfEach = listOf(row("5", 1), row("5", 2), row("6", null)) +
             (1..4).map { row("8", it) }
@@ -225,14 +237,16 @@ class FractionDoneTest {
             // Part of each, and requirement 8's tracker full while its children aren't.
             progressOf(done("1"), done("2a"), done("3a"), done("7a(1)"), done("8a")) to
                 partOfEach.groupBy { it.requirementNumber },
-            // Enough children for requirement 4, but not its own work.
+            // Enough children for requirement 4, but not its own work, and requirement 9's rows
+            // but not its own work.
             progressOf(done("3a"), done("3b"), done("7a(1)"), done("7a(2)"), done("7b")) to
-                entriesOf(),
+                (1..4).map { row("9", it) }.groupBy { it.requirementNumber },
             // Everything.
             progressOf(
                 done("1"), done("2a"), done("2b"), done("3b"), done("3c"), done("4"), done("6"),
-                done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b")
-            ) to (1..4).map { row("5", it) }.groupBy { it.requirementNumber }
+                done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b"), done("9")
+            ) to (1..4).flatMap { listOf(row("5", it), row("9", it)) }
+                .groupBy { it.requirementNumber }
         )
         for (requirement in requirements) {
             for ((progress, entries) in recorded) {

@@ -200,7 +200,7 @@ format as a badge's.
 | `children` | No | Sub-requirements, in official order. |
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
 | `tracker` | No | For requirements that need repeated entries, such as a weekly log. See below. |
-| `ownWork` | No | For a requirement with `children` that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are. Add it for any ask no child covers, including a closing step such as discussing what you did with your counselor. Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). The `summary` still describes the whole requirement. |
+| `ownWork` | No | For a requirement with `children`, or with a `tracker` with a `rowCount` and no children, that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are, or every row is filled in. Add it for any ask no child or row covers, including a closing step such as discussing what you did with your counselor, or summing up two weeks of rows (Competitive Gaming 3b). Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). A requirement with rows is completed on the date the scout gives its own work, since rows are often typed in long after the work, so word work done before the rows to end with them: `"Set a baseline, then make and carry out a plan to cut your household's food waste."`, not `"Make a plan…"`. When the other work could come in any order, such as an explanation that isn't about the rows (Bird Study 7's what songs are for), use a log instead, whose checkbox dates the requirement once all of it is done. Leave it out for only showing the rows to your counselor (Hiking 5's reports), who sees them when signing off. A log can't have it, since the scout checks off a log's requirement. The `summary` still describes the whole requirement. |
 | `monthsInRank` | No | Only on a rank's requirement that asks for months in the rank below, such as Star 1's four months as a First Class Scout: how many months, at least 1. Its page shows the date the scout becomes eligible, counted from when they earned the rank below, but the scout still checks it off. The lowest rank can't have it, since no rank is below it. See [Rank](#rank) for which requirements have it. |
 | `meritBadges` | No | Only on a rank's requirement that asks for merit badges, such as Star 3's six, at least four of them Eagle-required: `{"total": 6, "eagleRequired": 4}`, the badges needed in all and how many of them must be Eagle-required, each at least 1. Every Eagle-required badge counts toward `eagleRequired`, unless it has `"eagleGroupsCountOnce": true`: then only one badge of each `eagleGroup` does, and the group's others count only toward `total`. Set that where the official text lets the scout choose only one badge of each either-or choice. The requirement is complete once the scout has completed enough badges, so they don't check it off, and it can't have `children` or a `tracker`. See [Rank](#rank) for which requirements have it. |
 
@@ -234,7 +234,7 @@ Example, a log of exercise sessions:
 In a log, a `number` column whose values add up to an amount the requirement
 asks for, such as hours of service, can have a `total`. A tracker with a
 `rowCount` can't have one: its requirement shows how many rows are filled in,
-which complete it. The requirement then shows the
+and needs all of them. The requirement then shows the
 column's values added up against it, such as "4.5 of 6 hours": on its row in
 place of how many rows there are, and on its page and in the report under that
 count. It's only a guide: the scout still checks the requirement
@@ -292,7 +292,7 @@ It checks that:
 - every version has requirements, and requirement numbers are unique within it;
 - every requirement has a number and a summary, `requiredCount` is between 1
   and the number of children, and `ownWork` is only set, and not blank, on a
-  requirement with children;
+  requirement with children or a tracker with a `rowCount`;
 - `monthsInRank` is at least 1, and only on a requirement of a rank other than
   the lowest;
 - `meritBadges` is only on a rank's requirement with no children or tracker,

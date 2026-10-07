@@ -118,7 +118,9 @@ object CatalogValidator {
             }
         }
         requirement.ownWork?.let { ownWork ->
-            if (requirement.children.isEmpty()) add("$where: ownWork but it has no children")
+            if (requirement.children.isEmpty() && requirement.tracker?.rowCount == null) {
+                add("$where: ownWork but it has no children or fixed-row tracker")
+            }
             if (ownWork.isBlank()) add("$where: ownWork is blank")
         }
         requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }

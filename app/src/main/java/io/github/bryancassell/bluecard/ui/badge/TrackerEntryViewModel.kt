@@ -23,7 +23,6 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.badgeStart
-import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
@@ -128,8 +127,11 @@ class TrackerEntryViewModel @AssistedInject constructor(
         /** Its saved entry; null for a new one or a row not filled in. */
         val entryId: Long?,
         val saved: Map<String, String>,
-        /** Whether its requirement is complete once every row is filled in. */
-        val completesFromRows: Boolean
+        /**
+         * Whether its requirement needs every row filled in: it has no children, and the tracker
+         * has a fixed number of rows. It may need its own work too.
+         */
+        val needsEveryRow: Boolean
     ) {
         /** The row it fills in a tracker with a fixed number of rows, or null in a log. */
         val rowNumber: Int? get() = tracker.rowCount?.let { shownNumber }
@@ -192,18 +194,18 @@ class TrackerEntryViewModel @AssistedInject constructor(
             row.number,
             row.entryId,
             saved,
-            requirement.completesFromRows
+            requirement.children.isEmpty() && tracker.rowCount != null
         )
     }
 
     /**
      * The names of the ranks deleting [row]'s saved entry would un-earn, for the Delete dialog.
-     * Only a saved row of a requirement that completes from its rows can un-earn any: a log's
+     * Only a saved row of a requirement that needs every row filled in can un-earn any: a log's
      * rows don't complete its requirement. Unlike the form, they follow the scout's progress, as
      * Clear progress's do, so a write that lands after the page loads doesn't leave them wrong.
      */
     private fun unearnedByDelete(catalog: List<Advancement>, row: LoadedRow): Flow<List<String>> {
-        val id = row.entryId?.takeIf { row.completesFromRows } ?: return flowOf(emptyList())
+        val id = row.entryId?.takeIf { row.needsEveryRow } ?: return flowOf(emptyList())
         val ranks = catalog.filterIsInstance<Rank>()
         val badges = catalog.filterIsInstance<MeritBadge>()
         return progressRepository.observeAllProgress().map { all ->

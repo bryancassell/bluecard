@@ -994,6 +994,7 @@
                 {
                   "number": "4a",
                   "summary": "For each site, locate it on a map, tell how archaeologists learned of it, what it reveals and why that matters to archaeologists and people today; then compare the sites' ages.",
+                  "ownWork": "Compare how old the five sites are.",
                   "tracker": {
                     "columns": [
                       {
@@ -1028,7 +1029,8 @@
                       }
                     ],
                     "rowLabel": "site",
-                    "rowLabelPlural": "sites"
+                    "rowLabelPlural": "sites",
+                    "rowCount": 5
                   }
                 },
                 {
@@ -5209,6 +5211,7 @@
                 {
                   "number": "1d",
                   "summary": "Research five turning points in the esports industry since 1990, including key tournaments, technology and organizations, and discuss what you found.",
+                  "ownWork": "Discuss your five turning points with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5306,6 +5309,7 @@
                 {
                   "number": "3b",
                   "summary": "Log your daily gaming time for two weeks, then sum up what you found.",
+                  "ownWork": "Sum up your two weeks of gaming time.",
                   "tracker": {
                     "columns": [
                       {
@@ -5320,12 +5324,14 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
                   "number": "3c",
                   "summary": "Over the same two weeks, log your daily physical activity and compare it with the CDC's advice of an hour of moderate-to-vigorous activity a day for ages 6–17.",
+                  "ownWork": "Compare your two weeks of activity with the CDC's advice.",
                   "tracker": {
                     "columns": [
                       {
@@ -5345,12 +5351,14 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
                   "number": "3d",
                   "summary": "Over the same two weeks, log your daily sleep and compare it with the CDC's advice: 9–12 hours for ages 6–12 and 8–10 hours for ages 13–18.",
+                  "ownWork": "Compare your two weeks of sleep with the CDC's advice.",
                   "tracker": {
                     "columns": [
                       {
@@ -5365,7 +5373,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
@@ -5779,7 +5788,8 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Track your activity and calorie needs for five days.",
+                  "summary": "Track your activity and calorie needs for five days, then plan a day's meals with your counselor.",
+                  "ownWork": "With your counselor, plan a day of meals for yourself using MyPlate.",
                   "tracker": {
                     "columns": [
                       {
@@ -6819,6 +6829,7 @@
                 {
                   "number": "4c",
                   "summary": "Write down all you eat over three days, circle the items with sugars that plaque can turn into acid, and list snacks to avoid for healthy teeth.",
+                  "ownWork": "List snacks to avoid for healthy teeth.",
                   "tracker": {
                     "columns": [
                       {
@@ -6838,7 +6849,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 3
                   }
                 }
               ]
@@ -7263,6 +7275,7 @@
                 {
                   "number": "5c",
                   "summary": "With permission for online research, list 10 myths about people with disabilities and the facts, share it with your counselor, and present it to a Cub Scout pack or group.",
+                  "ownWork": "Share your list with your counselor, then present it to a Cub Scout pack or other group.",
                   "tracker": {
                     "columns": [
                       {
@@ -7277,7 +7290,8 @@
                       }
                     ],
                     "rowLabel": "myth",
-                    "rowLabelPlural": "myths"
+                    "rowLabelPlural": "myths",
+                    "rowCount": 10
                   }
                 }
               ]
@@ -8993,7 +9007,8 @@
             },
             {
               "number": "3",
-              "summary": "Do at least five chores for 90 days and keep a record.",
+              "summary": "Do at least five chores for 90 days, keep a record, and discuss how they affected your family.",
+              "ownWork": "Discuss with your counselor how your chores affected your family.",
               "tracker": {
                 "columns": [
                   {
@@ -10068,6 +10083,7 @@
                 {
                   "number": "5b",
                   "summary": "Make and mount bird feeders, and each day for two weeks note which kinds of birds visit.",
+                  "ownWork": "Make and mount bird feeders, and keep checking them through your two weeks of records.",
                   "tracker": {
                     "columns": [
                       {
@@ -10082,7 +10098,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
@@ -10639,6 +10656,7 @@
                 {
                   "number": "1a",
                   "summary": "Analyze and compare four games from different media, and discuss what you like and dislike.",
+                  "ownWork": "Discuss what you liked and disliked in each game with your counselor, and chart how they compare.",
                   "tracker": {
                     "columns": [
                       {
@@ -10678,7 +10696,8 @@
                       }
                     ],
                     "rowLabel": "game",
-                    "rowLabelPlural": "games"
+                    "rowLabelPlural": "games",
+                    "rowCount": 4
                   }
                 },
                 {
@@ -13218,6 +13237,7 @@
             {
               "number": "3",
               "summary": "With help from your counselor or a nursery, choose five shrubs, five trees and a ground cover that grow locally and differ in shape, size and texture, then show pictures or samples to a group and explain how you'd use and care for each.",
+              "ownWork": "Show pictures or samples of your plants to a group, and explain how you'd use and care for each.",
               "tracker": {
                 "columns": [
                   {
@@ -13242,7 +13262,8 @@
                   }
                 ],
                 "rowLabel": "plant",
-                "rowLabelPlural": "plants"
+                "rowLabelPlural": "plants",
+                "rowCount": 11
               }
             },
             {
@@ -14162,6 +14183,7 @@
             {
               "number": "2",
               "summary": "Mark five mines on a state or regional map showing major cities, highways, rivers and railroads; find what each produces and whether it's surface or underground, and discuss how those resources are used.",
+              "ownWork": "Mark the mines on your map, and discuss with your counselor how their resources are used.",
               "tracker": {
                 "columns": [
                   {
@@ -14186,7 +14208,8 @@
                   }
                 ],
                 "rowLabel": "mine",
-                "rowLabelPlural": "mines"
+                "rowLabelPlural": "mines",
+                "rowCount": 5
               }
             },
             {
@@ -15553,6 +15576,7 @@
                 {
                   "number": "7c",
                   "summary": "Make a Secchi disk; for five days in a row, four times daily, log water temperatures at three depths, turbidity, air temperature, clouds and waves; graph and compare temperatures.",
+                  "ownWork": "Make a Secchi disk for your readings, then graph them and tell how water temperature follows air temperature.",
                   "tracker": {
                     "columns": [
                       {
@@ -15597,7 +15621,8 @@
                       }
                     ],
                     "rowLabel": "reading",
-                    "rowLabelPlural": "readings"
+                    "rowLabelPlural": "readings",
+                    "rowCount": 20
                   }
                 },
                 {
@@ -22747,7 +22772,8 @@
                 },
                 {
                   "number": "3c",
-                  "summary": "Plan to cut your household's food waste, and track it for two weeks.",
+                  "summary": "Set a baseline, plan to cut your household's food waste, and track it for two weeks.",
+                  "ownWork": "Set a baseline, then make and carry out a plan to cut your household's food waste.",
                   "tracker": {
                     "columns": [
                       {
@@ -23135,6 +23161,7 @@
             {
               "number": "1",
               "summary": "See or read three full-length plays, not on TV, video or film; review each, discuss its plot, and if you watched it, comment on the acting and staging.",
+              "ownWork": "Discuss each play's plot with your counselor, and the acting and staging of any you saw.",
               "tracker": {
                 "columns": [
                   {
@@ -23159,7 +23186,8 @@
                   }
                 ],
                 "rowLabel": "play",
-                "rowLabelPlural": "plays"
+                "rowLabelPlural": "plays",
+                "rowCount": 3
               }
             },
             {
@@ -23828,6 +23856,7 @@
                 {
                   "number": "10a",
                   "summary": "Build a wind vane, anemometer, rain gauge or hygrometer; log the weather at a set time daily for a week.",
+                  "ownWork": "Build a wind vane, anemometer, rain gauge or hygrometer, and use it for your week of readings.",
                   "tracker": {
                     "columns": [
                       {
@@ -23877,7 +23906,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 7
                   }
                 },
                 {

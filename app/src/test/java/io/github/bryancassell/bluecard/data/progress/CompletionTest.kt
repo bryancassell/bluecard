@@ -199,6 +199,7 @@ class CompletionTest {
         assertFalse(allOf.isMarkedByHand)
         assertFalse(ownWorkAndTwoOf.isMarkedByHand)
         assertFalse(weeks.isMarkedByHand)
+        assertFalse(ownWorkAndWeeks.isMarkedByHand)
         assertFalse(meritBadges.isMarkedByHand)
     }
 
@@ -212,11 +213,41 @@ class CompletionTest {
     }
 
     @Test
-    fun isCompleteFromRows_onlyWithoutChildrenAndWithFixedRows() {
+    fun isCompleteFromRows_onlyWithoutChildrenOrOwnWorkAndWithFixedRows() {
         assertTrue(weeks.completesFromRows)
         assertFalse(leaf("1").completesFromRows)
         assertFalse(log.completesFromRows)
         assertFalse(allOf.copy(tracker = weeks.tracker).completesFromRows)
+        assertFalse(ownWorkAndWeeks.completesFromRows)
+    }
+
+    // Requirement 5 with a summary to write once its three weeks are tracked.
+    private val ownWorkAndWeeks = weeks.copy(ownWork = "Sum up the weeks.")
+
+    @Test
+    fun fixedRowsAndOwnWork_incompleteUntilBothAreDone() {
+        val allRows = entriesOf(row("5", 1, day(1)), row("5", 2, day(4)), row("5", 3, day(2)))
+        assertNull(ownWorkAndWeeks.completion(progressOf(), allRows))
+        val twoRows = entriesOf(row("5", 1, day(1)), row("5", 3, day(2)))
+        assertNull(ownWorkAndWeeks.completion(progressOf(done("5", day(5))), twoRows))
+
+        assertEquals(
+            Completion(day(5)),
+            ownWorkAndWeeks.completion(progressOf(done("5", day(5))), allRows)
+        )
+    }
+
+    // The rows' dates are when they were typed in, which can be long after the work.
+    @Test
+    fun fixedRowsAndOwnWork_areCompleteOnTheOwnWorksDate() {
+        val allRows = entriesOf(row("5", 1, day(7)), row("5", 2, day(9)), row("5", 3, day(8)))
+        assertEquals(
+            Completion(day(3)),
+            ownWorkAndWeeks.completion(progressOf(done("5", day(3))), allRows)
+        )
+        // The scout removed the date.
+        assertEquals(Completion(null), ownWorkAndWeeks.completion(progressOf(done("5")), allRows))
+        assertNull(ownWorkAndWeeks.rowsCompletedDate(allRows))
     }
 
     @Test
@@ -319,6 +350,7 @@ class CompletionTest {
     @Test
     fun hasPartDone_onceItsOwnWorkIsMarkedComplete() {
         assertTrue(ownWorkAndTwoOf.hasPartDone(progressOf(done("3")), entriesOf()))
+        assertTrue(ownWorkAndWeeks.hasPartDone(progressOf(done("5")), entriesOf()))
     }
 
     // Left from an older catalog, a mark on a requirement the scout can't mark by hand isn't

@@ -13,7 +13,8 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
  *   [own work][Requirement.ownWork], if any. Each needed child counts by how much of it is done;
  *   when only some are needed, the furthest along of them count. Its tracker, if any, doesn't
  *   count, as it doesn't for completion.
- * - One without children but with a tracker with a fixed number of rows counts its filled rows.
+ * - One without children but with a tracker with a fixed number of rows has a part for each row,
+ *   plus one for its own work, if any.
  * - A rank's requirement that asks for merit badges counts the badges needed that the scout's
  *   [earnedBadges] give it ([MeritBadgeCredit.counted]).
  * - Any other requirement is marked complete by hand ([isMarkedByHand]), so it has no parts.
@@ -44,8 +45,14 @@ fun Requirement.fractionDone(
             }
         }
 
-        rowCount != null ->
-            filledRows(trackerEntries[number].orEmpty(), rowCount).size.toFloat() / rowCount
+        rowCount != null -> {
+            val rowsDone = filledRows(trackerEntries[number].orEmpty(), rowCount).size.toFloat()
+            if (ownWork == null) {
+                rowsDone / rowCount
+            } else {
+                (rowsDone + progress.markedDone(number)) / (rowCount + 1)
+            }
+        }
 
         else -> 0f
     }
