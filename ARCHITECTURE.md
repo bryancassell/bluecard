@@ -307,19 +307,22 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   Compose's default focus order, which skips buttons in touch mode, so a
   tracker entry's Next goes past a date's buttons to the next text field
   ([#182](https://github.com/bryancassell/bluecard/issues/182)).
-- **A tracker entry's last field and its Save button scroll into view
-  together** (`KeepInViewWhileFocused` in `ui/badge/TrackerEntryScreen.kt`).
-  As the keyboard opens, Compose keeps only a focused field's cursor in view,
-  which can leave the Save button under the field behind the keyboard
-  ([#172](https://github.com/bryancassell/bluecard/issues/172)). They're
+- **A page's last field and its Save button scroll into view together**
+  (`KeepInViewWhileFocused` in `ui/KeepInViewWhileFocused.kt`), on a tracker
+  entry and for a requirement's notes. As the keyboard opens, Compose keeps
+  only a focused field's cursor in view, which can leave the Save button under
+  the field behind the keyboard
+  ([#172](https://github.com/bryancassell/bluecard/issues/172),
+  [#178](https://github.com/bryancassell/bluecard/issues/178)). They're
   brought into view together only when they fit, so a field too tall for both
   still keeps its cursor in view. They're also brought into view only once the
   keyboard has stopped moving: while a request runs, Compose stops following
   the cursor, and a phone showed a tall field's cursor left behind the
   keyboard. When the keyboard stops with the viewport grown, they're asked for
-  only to finish a request it cut short, so a number pad shorter than the
-  letters doesn't leave Save behind it
-  ([#244](https://github.com/bryancassell/bluecard/issues/244)), and the page
+  only to finish a request it cut short, or one owed since focus came in while
+  it moved, so a number pad shorter than the letters doesn't leave Save behind
+  it ([#244](https://github.com/bryancassell/bluecard/issues/244),
+  [#253](https://github.com/bryancassell/bluecard/issues/253)), and the page
   isn't pulled back after the scout scrolled away. Telling that the keyboard
   is moving takes
   `WindowInsets.imeAnimationTarget`, which is `@ExperimentalLayoutApi`, so this
@@ -1128,7 +1131,7 @@ test still exports and imports through the real one.
   Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
   graphics measure every character as 1px wide. Robolectric shows no keyboard,
   so a test of what stays above it moves one as a phone does
-  (`openKeyboard` in `TrackerEntryScreenTest`). Once the field's focus has
+  (`OnScreenKeyboard` in `testing/`). Once the field's focus has
   settled, it sends the page's view the keyboard's final insets, then its
   insets frame by frame through the platform's `WindowInsetsAnimation`
   events. A keyboard that appears in one step doesn't show the behavior that

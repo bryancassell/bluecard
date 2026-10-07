@@ -1,11 +1,7 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.graphics.Insets
 import android.graphics.Rect
 import android.text.InputType
-import android.view.View
-import android.view.WindowInsets
-import android.view.WindowInsetsAnimation
 import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -17,7 +13,6 @@ import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -48,7 +43,6 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -56,6 +50,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
+import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -103,7 +99,7 @@ class TrackerEntryScreenTest {
     private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     /** Records what the page asks of the on-screen keyboard. */
-    private val keyboard = object : SoftwareKeyboardController {
+    private val keyboardController = object : SoftwareKeyboardController {
         var hides = 0
 
         override fun show() {}
@@ -113,8 +109,7 @@ class TrackerEntryScreenTest {
         }
     }
 
-    /** The page's view, which the keyboard's insets are sent to. */
-    private lateinit var view: View
+    private val keyboard = OnScreenKeyboard(composeTestRule)
 
     /** Tells the page whether the scout is touching the screen or using a hardware keyboard. */
     private lateinit var inputModeManager: InputModeManager
@@ -151,20 +146,21 @@ class TrackerEntryScreenTest {
     ) {
         uiState = state
         composeTestRule.setContent {
-            view = LocalView.current
             inputModeManager = LocalInputModeManager.current
-            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
-                back.Content {
-                    TrackerEntryScreen(
-                        uiState = uiState,
-                        fields = fields,
-                        onDateChange = { columnId, date -> dateChanges += columnId to date },
-                        today = { today },
-                        onSave = { saves++ },
-                        onDelete = { deletes++ },
-                        onClose = { closes++ },
-                        onSaveFailureShown = { saveFailuresShown += it }
-                    )
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboardController) {
+                keyboard.Content {
+                    back.Content {
+                        TrackerEntryScreen(
+                            uiState = uiState,
+                            fields = fields,
+                            onDateChange = { columnId, date -> dateChanges += columnId to date },
+                            today = { today },
+                            onSave = { saves++ },
+                            onDelete = { deletes++ },
+                            onClose = { closes++ },
+                            onSaveFailureShown = { saveFailuresShown += it }
+                        )
+                    }
                 }
             }
         }
@@ -179,77 +175,10 @@ class TrackerEntryScreenTest {
 
     private fun button(text: String) = composeTestRule.onNodeWithText(text).performScrollTo()
 
-    /**
-     * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
-     * after the page has handled the focus change.
-     */
-    private fun openKeyboard() {
-        composeTestRule.waitForIdle()
-        moveKeyboard(from = 0.dp, to = KEYBOARD_HEIGHT)
-    }
-
-    /** Closes the keyboard, as the scout does with Back while a field keeps focus. */
-    private fun closeKeyboard() {
-        composeTestRule.waitForIdle()
-        moveKeyboard(from = KEYBOARD_HEIGHT, to = 0.dp)
-    }
-
-    /**
-     * Moves the keyboard's top edge as the system does: it sends the page its final insets, then
-     * the insets of each frame of the animation. It starts at once, even while the page is still
-     * scrolling, and runs [midway] halfway through, as the scout can act while it moves.
-     */
-    private fun moveKeyboard(from: Dp, to: Dp, midway: () -> Unit = {}) {
-        val (start, end) = with(composeTestRule.density) { from.roundToPx() to to.roundToPx() }
-        val animation = WindowInsetsAnimation(WindowInsets.Type.ime(), null, 250)
-        val bounds = WindowInsetsAnimation.Bounds(
-            Insets.NONE,
-            Insets.of(0, 0, 0, maxOf(start, end))
-        )
-        composeTestRule.mainClock.autoAdvance = false
-        composeTestRule.runOnUiThread {
-            view.dispatchWindowInsetsAnimationPrepare(animation)
-            view.dispatchApplyWindowInsets(keyboardInsets(end))
-            view.dispatchWindowInsetsAnimationStart(animation, bounds)
-        }
-        for (frame in 1..KEYBOARD_FRAMES) {
-            composeTestRule.mainClock.advanceTimeByFrame()
-            composeTestRule.runOnUiThread {
-                animation.fraction = frame.toFloat() / KEYBOARD_FRAMES
-                val height = start + (end - start) * frame / KEYBOARD_FRAMES
-                view.dispatchWindowInsetsAnimationProgress(
-                    keyboardInsets(height),
-                    listOf(animation)
-                )
-            }
-            if (frame == KEYBOARD_FRAMES / 2) midway()
-        }
-        composeTestRule.runOnUiThread { view.dispatchWindowInsetsAnimationEnd(animation) }
-        composeTestRule.mainClock.autoAdvance = true
-    }
-
-    private fun keyboardInsets(height: Int): WindowInsets = WindowInsets.Builder()
-        .setInsets(WindowInsets.Type.ime(), Insets.of(0, 0, 0, height))
-        .setVisible(WindowInsets.Type.ime(), height > 0)
-        .build()
-
-    /**
-     * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall. Unclipped
-     * bounds are needed for this: the page clips what's behind the keyboard.
-     */
-    private fun assertAboveKeyboard(bounds: DpRect, keyboardHeight: Dp = KEYBOARD_HEIGHT) {
-        val keyboardTop =
-            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - keyboardHeight
-        assertTrue(
-            "$bounds isn't between the top of the page and the keyboard at $keyboardTop",
-            bounds.top >= 0.dp && bounds.bottom <= keyboardTop
-        )
-    }
-
     /** Where the focused field's cursor is: the view reports it as its focused area. */
     private fun cursorBounds(): DpRect {
         val rect = Rect()
-        composeTestRule.runOnIdle { view.getFocusedRect(rect) }
+        composeTestRule.runOnIdle { keyboard.view.getFocusedRect(rect) }
         return with(composeTestRule.density) {
             DpRect(rect.left.toDp(), rect.top.toDp(), rect.right.toDp(), rect.bottom.toDp())
         }
@@ -416,7 +345,7 @@ class TrackerEntryScreenTest {
         field("Activity").performClick()
 
         val editorInfo = EditorInfo()
-        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+        composeTestRule.runOnIdle { keyboard.view.onCreateInputConnection(editorInfo) }
 
         assertEquals(
             InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
@@ -434,7 +363,7 @@ class TrackerEntryScreenTest {
         field("Minutes").performClick()
 
         val editorInfo = EditorInfo()
-        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+        composeTestRule.runOnIdle { keyboard.view.onCreateInputConnection(editorInfo) }
 
         assertEquals(
             InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
@@ -464,7 +393,7 @@ class TrackerEntryScreenTest {
         field("Notes").performClick()
 
         val editorInfo = EditorInfo()
-        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+        composeTestRule.runOnIdle { keyboard.view.onCreateInputConnection(editorInfo) }
 
         assertEquals(
             InputType.TYPE_TEXT_FLAG_MULTI_LINE,
@@ -528,7 +457,7 @@ class TrackerEntryScreenTest {
 
         field("Count").assert(hasImeAction(ImeAction.Done)).performClick().performImeAction()
 
-        assertEquals(1, keyboard.hides)
+        assertEquals(1, keyboardController.hides)
     }
 
     // A field above a last date has no text field to move to.
@@ -545,7 +474,7 @@ class TrackerEntryScreenTest {
 
         field("Species").assert(hasImeAction(ImeAction.Done)).performClick().performImeAction()
 
-        assertEquals(1, keyboard.hides)
+        assertEquals(1, keyboardController.hides)
     }
 
     @Test
@@ -677,10 +606,10 @@ class TrackerEntryScreenTest {
         show(newEntry)
 
         fieldWithoutScrolling("Notes").performClick()
-        openKeyboard()
+        keyboard.open()
 
-        assertAboveKeyboard(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
-        assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -689,13 +618,13 @@ class TrackerEntryScreenTest {
     fun nextIntoLastField_withKeyboardOpen_fieldAndSaveShowAboveIt() {
         show(newEntry)
         fieldWithoutScrolling("Minutes").performClick()
-        openKeyboard()
+        keyboard.open()
 
         fieldWithoutScrolling("Minutes").performImeAction()
 
         fieldWithoutScrolling("Notes").assertIsFocused()
-        assertAboveKeyboard(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
-        assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -704,11 +633,11 @@ class TrackerEntryScreenTest {
     fun lastFieldGrowingAsScoutTypes_saveStaysAboveKeyboard() {
         show(newEntry)
         fieldWithoutScrolling("Notes").performClick()
-        openKeyboard()
+        keyboard.open()
 
         fieldWithoutScrolling("Notes").performTextInput("Ran 2 miles\nSwam\nStretched\nRested\n")
 
-        assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
     // Higher fields scroll into view as before, as far as their cursor, without pulling the page
@@ -720,9 +649,9 @@ class TrackerEntryScreenTest {
         show(newEntry)
 
         fieldWithoutScrolling("Activity").performClick()
-        openKeyboard()
+        keyboard.open()
 
-        assertAboveKeyboard(cursorBounds())
+        keyboard.assertAbove(cursorBounds())
     }
 
     // Too tall to show with Save above the keyboard, so the page keeps the cursor in view as the
@@ -736,9 +665,9 @@ class TrackerEntryScreenTest {
         show(newEntry, fields + ("notes" to notes))
 
         fieldWithoutScrolling("Notes").requestFocus()
-        openKeyboard()
+        keyboard.open()
 
-        assertAboveKeyboard(cursorBounds())
+        keyboard.assertAbove(cursorBounds())
     }
 
     // With the last field still focused, the scout scrolled up to check an earlier one. Closing
@@ -756,11 +685,11 @@ class TrackerEntryScreenTest {
             fields + more.associate { it.id to TextFieldState() }
         )
         field("Notes").performClick()
-        openKeyboard()
+        keyboard.open()
         val heading = composeTestRule.onNodeWithText("Session 3").performScrollTo()
         val scrolledTo = heading.getUnclippedBoundsInRoot()
 
-        closeKeyboard()
+        keyboard.close()
 
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
@@ -773,13 +702,13 @@ class TrackerEntryScreenTest {
     fun keyboardGettingShorterWhileLastFieldScrollsIntoView_fieldAndSaveShowAboveIt() {
         startScrollingToLastNumberField()
 
-        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT)
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT)
 
-        assertAboveKeyboard(
+        keyboard.assertAbove(
             fieldWithoutScrolling("Minutes").getUnclippedBoundsInRoot(),
             NUMBER_PAD_HEIGHT
         )
-        assertAboveKeyboard(
+        keyboard.assertAbove(
             composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot(),
             NUMBER_PAD_HEIGHT
         )
@@ -797,7 +726,7 @@ class TrackerEntryScreenTest {
         val heading = composeTestRule.onNodeWithText("Session 3")
         val scrolledTo = heading.getUnclippedBoundsInRoot()
 
-        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT)
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT)
 
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
@@ -812,7 +741,7 @@ class TrackerEntryScreenTest {
         val heading = composeTestRule.onNodeWithText("Session 3")
         lateinit var scrolledTo: DpRect
 
-        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT) {
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT) {
             dragPageDown()
             scrolledTo = heading.getUnclippedBoundsInRoot()
         }
@@ -820,25 +749,57 @@ class TrackerEntryScreenTest {
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
 
-    /**
-     * Moves with Next from a text field to the last field, a number, as in Bird Study 8a(1), with
-     * the keyboard open. It stops the clock partway through the scroll that brings that field and
-     * Save into view, and leaves it stopped: the test moves it on, as [moveKeyboard] does.
-     */
-    private fun startScrollingToLastNumberField() {
+    // The keyboard was still getting shorter when focus reached the last field, so the page put
+    // off bringing the field and Save into view until it stopped. The page had grown by then, which
+    // left Save behind the keyboard (#253).
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun focusReachingLastFieldWhileKeyboardGetsShorter_fieldAndSaveShowAboveIt() {
+        showWithLastNumberField()
+        fieldWithoutScrolling("Place").performClick()
+        keyboard.open()
+        // The field shows, so taking focus doesn't scroll the page, but Save is behind the keyboard.
+        fieldWithoutScrolling("Minutes").performScrollTo()
+
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT) {
+            fieldWithoutScrolling("Minutes").requestFocus()
+        }
+
+        keyboard.assertAbove(
+            fieldWithoutScrolling("Minutes").getUnclippedBoundsInRoot(),
+            NUMBER_PAD_HEIGHT
+        )
+        keyboard.assertAbove(
+            composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot(),
+            NUMBER_PAD_HEIGHT
+        )
+    }
+
+    /** Shows a tracker whose last field is a number, Minutes, under a text field, Place. */
+    private fun showWithLastNumberField() {
         val place = TrackerColumn("place", "Place", TrackerColumnType.TEXT)
         show(
             newEntry.copy(columns = columns.take(2) + place + columns[2]),
             fields + (place.id to TextFieldState())
         )
+    }
+
+    /**
+     * Moves with Next from a text field to the last field, a number, as in Bird Study 8a(1), with
+     * the keyboard open. It stops the clock partway through the scroll that brings that field and
+     * Save into view, and leaves it stopped: the test moves it on, as [OnScreenKeyboard.move] does.
+     */
+    private fun startScrollingToLastNumberField() {
+        showWithLastNumberField()
         fieldWithoutScrolling("Place").performClick()
-        openKeyboard()
+        keyboard.open()
         composeTestRule.mainClock.autoAdvance = false
         fieldWithoutScrolling("Place").performImeAction()
         repeat(2) { composeTestRule.mainClock.advanceTimeByFrame() }
         // Save is still behind the keyboard, so the scroll hasn't ended.
         val keyboardTop =
-            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - KEYBOARD_HEIGHT
+            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - OnScreenKeyboard.HEIGHT
         assertTrue(
             "The scroll ended before the test could stop it partway",
             composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot().bottom > keyboardTop
@@ -915,16 +876,7 @@ class TrackerEntryScreenTest {
     }
 
     private companion object {
-        /** A small phone's screen, less its system bars. */
-        const val SMALL_PHONE = "w360dp-h560dp"
-
-        /** About as tall as a phone's keyboard. */
-        val KEYBOARD_HEIGHT = 300.dp
-
         /** A number pad shorter than the letters keyboard, as some keyboards have. */
         val NUMBER_PAD_HEIGHT = 260.dp
-
-        /** About how many frames a keyboard takes to open or close. */
-        const val KEYBOARD_FRAMES = 15
     }
 }

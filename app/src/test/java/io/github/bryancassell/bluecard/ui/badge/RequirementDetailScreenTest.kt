@@ -50,6 +50,8 @@ import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
+import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -83,6 +85,7 @@ class RequirementDetailScreenTest {
     private var discards = 0
     private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<TaskFailure>()
+    private val keyboard = OnScreenKeyboard(composeTestRule)
     private val signedOffBy = TextFieldState()
     private val comment = TextFieldState()
 
@@ -229,24 +232,26 @@ class RequirementDetailScreenTest {
     private fun show(state: RequirementDetailUiState) {
         uiState = state
         composeTestRule.setContent {
-            back.Content {
-                RequirementDetailScreen(
-                    uiState = uiState,
-                    signedOffBy = signedOffBy,
-                    comment = comment,
-                    onOpenRequirement = { openedRequirements += it },
-                    onOpenTrackerEntry = { entryId, rowNumber ->
-                        openedTrackerEntries += entryId to rowNumber
-                    },
-                    onOpenBadge = { openedBadges += it },
-                    onCompletedChange = { completedChanges += it },
-                    onCompletedDateChange = { dateChanges += it },
-                    today = { today },
-                    onSave = { saves++ },
-                    onClear = { clears++ },
-                    onDiscard = { discards++ },
-                    onSaveFailureShown = { saveFailuresShown += it }
-                )
+            keyboard.Content {
+                back.Content {
+                    RequirementDetailScreen(
+                        uiState = uiState,
+                        signedOffBy = signedOffBy,
+                        comment = comment,
+                        onOpenRequirement = { openedRequirements += it },
+                        onOpenTrackerEntry = { entryId, rowNumber ->
+                            openedTrackerEntries += entryId to rowNumber
+                        },
+                        onOpenBadge = { openedBadges += it },
+                        onCompletedChange = { completedChanges += it },
+                        onCompletedDateChange = { dateChanges += it },
+                        today = { today },
+                        onSave = { saves++ },
+                        onClear = { clears++ },
+                        onDiscard = { discards++ },
+                        onSaveFailureShown = { saveFailuresShown += it }
+                    )
+                }
             }
         }
     }
@@ -1242,6 +1247,26 @@ class RequirementDetailScreenTest {
         assertEquals("a".repeat(1_990) + "b".repeat(10), comment.text.toString())
         commentField().assert(
             SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 2_000)
+        )
+    }
+
+    // Seen on a phone: the page scrolled only far enough to show the cursor, leaving Save notes
+    // under the field behind the keyboard (#178).
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForComment_commentAndSaveShowAboveIt() {
+        show(withLog.copy(canClear = true))
+
+        commentField().performClick()
+        keyboard.open()
+
+        keyboard.assertAbove(
+            composeTestRule.onNode(hasSetTextAction() and hasText("Notes"))
+                .getUnclippedBoundsInRoot()
+        )
+        keyboard.assertAbove(
+            composeTestRule.onNodeWithText("Save notes").getUnclippedBoundsInRoot()
         )
     }
 
