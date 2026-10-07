@@ -292,6 +292,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   replaces a pasted line break with a space (`LineBreaksAsSpaces`). Number
   fields instead chain `NumberInput`, which rejects a line break, with their
   `TextLengthLimit`.
+- **The keyboard's action key moves through a page's fields.** On a page with
+  more than one field, each one-line field sets `ImeAction.Next`, and the last
+  text field `ImeAction.Done`; a multi-line field keeps Enter. Next uses
+  Compose's default focus order, which skips buttons in touch mode, so a
+  tracker entry's Next goes past a date's buttons to the next text field
+  ([#182](https://github.com/bryancassell/bluecard/issues/182)).
 - **A tracker entry's last field and its Save button scroll into view
   together** (`KeepInViewWhileFocused` in `ui/badge/TrackerEntryScreen.kt`).
   As the keyboard opens, Compose keeps only a focused field's cursor in view,
@@ -1078,7 +1084,11 @@ test still exports and imports through the real one.
   settled, it sends the page's view the keyboard's final insets, then its
   insets frame by frame through the platform's `WindowInsetsAnimation`
   events. A keyboard that appears in one step doesn't show the behavior that
-  depends on frames, such as the page following the cursor.
+  depends on frames, such as the page following the cursor. Robolectric also
+  shows a page out of touch mode, where buttons can take focus, so a test of
+  where focus goes on a phone sets touch mode in a rule that runs before the
+  compose rule opens the page's window (`touchMode` in
+  `TrackerEntryScreenTest`).
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally
