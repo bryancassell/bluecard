@@ -815,7 +815,7 @@ class MainActivityTest {
 
     private fun weatherField() = composeTestRule.onNode(hasSetTextAction() and hasText("Weather"))
 
-    // Opens a new night on Camping 1's tracker and types in it, without saving.
+    // Launches the app, opens a new night on Camping 1's tracker and types in it, without saving.
     private fun typeAnUnsavedNight() {
         openCamping()
         composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
@@ -1667,13 +1667,17 @@ class MainActivityTest {
         assertTrue(homeMoving.left < homeAtRest.left)
     }
 
-    /** Starts a back gesture from [edge], and holds it halfway across. */
+    /**
+     * Starts a back gesture from [edge], and holds it halfway across. A phone sends every gesture
+     * through one input, so a later swipe can pass the [input] an earlier one returned.
+     */
     private fun swipeHalfwayBack(
-        edge: Int = NavigationEvent.EDGE_LEFT
+        edge: Int = NavigationEvent.EDGE_LEFT,
+        input: DirectNavigationEventInput? = null
     ): DirectNavigationEventInput {
-        val gesture = DirectNavigationEventInput()
+        val gesture = input ?: DirectNavigationEventInput()
         scenario.onActivity {
-            it.navigationEventDispatcher.addInput(gesture)
+            if (input == null) it.navigationEventDispatcher.addInput(gesture)
             gesture.backStarted(NavigationEvent(edge, progress = 0f))
             gesture.backProgressed(NavigationEvent(edge, progress = 0.5f))
         }
@@ -1761,13 +1765,13 @@ class MainActivityTest {
     fun backGesture_onAPageWithChanges_asksAgainAfterCancel() {
         typeAnUnsavedNight()
         // The first swipe completes without closing the page, so the second must still reach Back.
-        val first = swipeHalfwayBack()
-        scenario.onActivity { first.backCompleted() }
+        val gesture = swipeHalfwayBack()
+        scenario.onActivity { gesture.backCompleted() }
         composeTestRule.onNodeWithText("Cancel").performClick()
         discardDialog().assertDoesNotExist()
 
-        val second = swipeHalfwayBack()
-        scenario.onActivity { second.backCompleted() }
+        swipeHalfwayBack(input = gesture)
+        scenario.onActivity { gesture.backCompleted() }
 
         discardDialog().assertIsDisplayed()
         assertFieldText("Weather", "Rained all night.")
