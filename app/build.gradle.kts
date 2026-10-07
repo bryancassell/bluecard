@@ -68,7 +68,8 @@ android {
     // MigrationTestHelper reads each database version's schema from assets. The Room plugin
     // adds the schemas to instrumented tests' assets only, and migration tests run locally,
     // where Robolectric reads the debug build's assets. So debug builds carry the schemas too;
-    // release builds don't.
+    // release builds don't. Nothing makes merging assets wait for Room to copy a new database
+    // version's schema here, so the first test run after a version bump can miss it (#96).
     sourceSets.getByName("debug").assets.directories.add("$projectDir/schemas")
 
     testCoverage {
