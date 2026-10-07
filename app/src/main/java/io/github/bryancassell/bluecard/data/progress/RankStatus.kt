@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import java.time.LocalDate
 
@@ -119,3 +120,20 @@ fun List<Rank>.standings(
         )
     }
 }
+
+/**
+ * The ranks earned with the scout's progress [now] that wouldn't be with the progress [after] a
+ * change, such as clearing a badge or a rank, in the order they're earned. Both are keyed by
+ * badge or rank ID. The [badges] completed in each count toward ranks that ask for merit badges,
+ * so changing a badge can change which ranks are earned.
+ */
+fun List<Rank>.noLongerEarned(
+    badges: List<MeritBadge>,
+    now: Map<String, BadgeProgressDetails>,
+    after: Map<String, BadgeProgressDetails>
+): List<Rank> = standings(now, badges.earnedBadges(now))
+    .zip(standings(after, badges.earnedBadges(after)))
+    .filter { (standingNow, standingAfter) ->
+        standingNow.status == RankStatus.Earned && standingAfter.status != RankStatus.Earned
+    }
+    .map { (standingNow) -> standingNow.rank }

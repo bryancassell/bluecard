@@ -828,6 +828,15 @@ class MainActivityTest {
 
     private fun weatherField() = composeTestRule.onNode(hasSetTextAction() and hasText("Weather"))
 
+    // Launches the app, opens a new night on Camping 1's tracker and types in it, without saving.
+    private fun typeAnUnsavedNight() {
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
+        weatherField().performTextInput("Rained all night.")
+        composeTestRule.waitForIdle()
+    }
+
     // The acceptance test of trackers: a row the scout adds is listed on the requirement's
     // page, counted on the badge's, and saved.
     @Test
@@ -886,11 +895,7 @@ class MainActivityTest {
 
     @Test
     fun screenReaderClick_onAddWhileTheRowsPageCloses_doesNothing() {
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
-        weatherField().performTextInput("Rained all night.")
-        composeTestRule.waitForIdle()
+        typeAnUnsavedNight()
 
         // Saving closes the row's page, which slides away beside the requirement's page and
         // takes touches where it still is. A screen reader's click still reaches Add night,
@@ -970,11 +975,7 @@ class MainActivityTest {
 
     @Test
     fun back_fromTrackerEntry_withChanges_asksBeforeDiscardingThem() {
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
-        weatherField().performTextInput("Rained all night.")
-        composeTestRule.waitForIdle()
+        typeAnUnsavedNight()
 
         pressBack()
         discardDialog().assertIsDisplayed()
@@ -1679,13 +1680,17 @@ class MainActivityTest {
         assertTrue(homeMoving.left < homeAtRest.left)
     }
 
-    /** Starts a back gesture from [edge], and holds it halfway across. */
+    /**
+     * Starts a back gesture from [edge], and holds it halfway across. A phone sends every gesture
+     * through one input, so a later swipe can pass the [input] an earlier one returned.
+     */
     private fun swipeHalfwayBack(
-        edge: Int = NavigationEvent.EDGE_LEFT
+        edge: Int = NavigationEvent.EDGE_LEFT,
+        input: DirectNavigationEventInput? = null
     ): DirectNavigationEventInput {
-        val gesture = DirectNavigationEventInput()
+        val gesture = input ?: DirectNavigationEventInput()
         scenario.onActivity {
-            it.navigationEventDispatcher.addInput(gesture)
+            if (input == null) it.navigationEventDispatcher.addInput(gesture)
             gesture.backStarted(NavigationEvent(edge, progress = 0f))
             gesture.backProgressed(NavigationEvent(edge, progress = 0.5f))
         }
@@ -1754,6 +1759,35 @@ class MainActivityTest {
         assertTrue(homeMoving.left < homeAtRest.left)
         assertEquals(homeAtRest, home().getBoundsInRoot())
         campingRow().assertDoesNotExist()
+    }
+
+    @Test
+    fun backGesture_released_onAPageWithChanges_asksAndLeavesThePageWhereItWas() {
+        typeAnUnsavedNight()
+        val fieldAtRest = weatherField().getBoundsInRoot()
+
+        val gesture = swipeHalfwayBack()
+        discardDialog().assertDoesNotExist()
+        scenario.onActivity { gesture.backCompleted() }
+
+        discardDialog().assertIsDisplayed()
+        assertEquals(fieldAtRest, weatherField().getBoundsInRoot())
+    }
+
+    @Test
+    fun backGesture_onAPageWithChanges_asksAgainAfterCancel() {
+        typeAnUnsavedNight()
+        // The first swipe completes without closing the page, so the second must still reach Back.
+        val gesture = swipeHalfwayBack()
+        scenario.onActivity { gesture.backCompleted() }
+        composeTestRule.onNodeWithText("Cancel").performClick()
+        discardDialog().assertDoesNotExist()
+
+        swipeHalfwayBack(input = gesture)
+        scenario.onActivity { gesture.backCompleted() }
+
+        discardDialog().assertIsDisplayed()
+        assertFieldText("Weather", "Rained all night.")
     }
 
     @Test

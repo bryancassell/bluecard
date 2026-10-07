@@ -18,7 +18,6 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
@@ -52,6 +51,7 @@ import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
@@ -535,9 +535,11 @@ class TrackerEntryScreenTest {
             fields = dateColumns.associate { it.id to TextFieldState() }
         )
 
-        composeTestRule.onNodeWithContentDescription("Start: Add date").assertHasClickAction()
-        composeTestRule.onNodeWithContentDescription("End: Change date").assertHasClickAction()
-        composeTestRule.onNodeWithContentDescription("End: Remove date").performClick()
+        // Each starts with the button's text, as WCAG 2.5.3 recommends for voice control users.
+        composeTestRule.assertButtonReadOnceAs("Add date", "Add date: Start")
+        composeTestRule.assertButtonReadOnceAs("Change date", "Change date: End")
+        composeTestRule.assertButtonReadOnceAs("Remove date", "Remove date: End")
+        composeTestRule.onNodeWithContentDescription("Remove date: End").performClick()
 
         assertEquals(listOf<Pair<String, LocalDate?>>("end" to null), dateChanges)
     }

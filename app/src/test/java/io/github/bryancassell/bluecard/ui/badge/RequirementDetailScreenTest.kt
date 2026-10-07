@@ -1109,6 +1109,17 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Add date").assertDoesNotExist()
     }
 
+    // Only a tracker row's date buttons name their date: this page is about one date.
+    @Test
+    fun completedLeafWithDate_dateButtonsReadOnlyTheirText() {
+        show(completedLeaf)
+
+        listOf("Change date", "Remove date").forEach {
+            composeTestRule.onNodeWithText(it)
+                .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+        }
+    }
+
     @Test
     fun completedLeafWithoutDate_offersToAddOne() {
         show(completedLeaf.copy(completedDate = null))
@@ -1500,6 +1511,28 @@ class RequirementDetailScreenTest {
             .onNodeWithText(
                 "What you recorded for it and the requirements under it will be removed, " +
                     "along with unsaved changes to its sign-off and notes."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun clear_ofARequirementRanksCountOn_namesTheRanksThatWontCountAsEarned() {
+        show(
+            ready.copy(
+                hasSignOffField = true,
+                textChanged = true,
+                canClear = true,
+                unearnedByClear = listOf("Tenderfoot", "Second Class")
+            )
+        )
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it and the requirements under it will be removed, " +
+                    "along with unsaved changes to its sign-off and notes. Tenderfoot and " +
+                    "Second Class will no longer count as earned."
             )
             .assertIsDisplayed()
     }

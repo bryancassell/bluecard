@@ -10,9 +10,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
+import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -86,14 +86,10 @@ class RankDetailViewModel @AssistedInject constructor(
             unearnedByClear = if (progress == null) {
                 emptyList()
             } else {
-                // The other ranks earned now that wouldn't be once this one is cleared.
-                standings.zip(ranks.standings(progressById - rankId, earnedBadges))
-                    .filter { (now, cleared) ->
-                        now.rank.id != rankId &&
-                            now.status == RankStatus.Earned &&
-                            cleared.status != RankStatus.Earned
-                    }
-                    .map { (now) -> now.rank.name }
+                // The others, since the dialog is about clearing this one.
+                ranks.noLongerEarned(badges, progressById, progressById - rankId)
+                    .filter { it.id != rankId }
+                    .map { it.name }
             },
             saveFailure = saveFailure
         )

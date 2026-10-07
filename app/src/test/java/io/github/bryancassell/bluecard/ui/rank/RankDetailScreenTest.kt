@@ -579,7 +579,7 @@ class RankDetailScreenTest {
         text("Clear progress").performScrollTo().performClick()
 
         text(
-            "What you recorded for it will be removed, and Scout, Tenderfoot, and Second Class " +
+            "What you recorded for it will be removed. Scout, Tenderfoot, and Second Class " +
                 "will no longer count as earned."
         ).assertIsDisplayed()
     }

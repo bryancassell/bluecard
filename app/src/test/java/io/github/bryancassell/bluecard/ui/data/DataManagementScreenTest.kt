@@ -13,11 +13,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -34,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -180,15 +176,7 @@ class DataManagementScreenTest {
     fun edit_tellsScreenReadersWhatItEdits() {
         show()
 
-        // Only one: TalkBack would also read a second, such as one set on the button as well.
-        editProfileButton()
-            .assertContentDescriptionEquals("Edit name and unit")
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
-        // TalkBack reads the button's parts in turn, so the description has to be the text's
-        // own: one beside the text was read and then "Edit" again after it.
-        composeTestRule
-            .onNodeWithText("Edit", useUnmergedTree = true)
-            .assertContentDescriptionEquals("Edit name and unit")
+        composeTestRule.assertButtonReadOnceAs("Edit", "Edit name and unit")
     }
 
     // The file picker takes a moment to cover BlueCard. A tap on Edit that reached it then would
