@@ -175,7 +175,7 @@ class DataManagementScreenTest {
     }
 
     // Moving from control to control, a screen reader user doesn't hear the heading above it.
-    // What they hear starts with "Edit", so a voice control user can still say "Tap Edit".
+    // What they hear starts with "Edit", as WCAG 2.5.3 recommends for voice control users.
     @Test
     fun edit_tellsScreenReadersWhatItEdits() {
         show()

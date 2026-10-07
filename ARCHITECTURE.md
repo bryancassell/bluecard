@@ -446,9 +446,9 @@ both taps of a double tap can reach it.
   ([#166](https://github.com/bryancassell/bluecard/issues/166)). Compose gives
   TalkBack the button's parts in turn, so a description on the button became a
   part of its own: TalkBack read "Edit name and unit. Edit. Button". On the
-  text, it replaces the text's label. A test finds the text with
-  `useUnmergedTree = true` and checks its description, because the merged node
-  has both either way.
+  text, it replaces the text's label. Tests of such a label check the `Text`
+  node in the unmerged tree, and that the button has only one description: the
+  merged node has the description wherever it's set.
 
 ### Theme
 

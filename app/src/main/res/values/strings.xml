@@ -220,7 +220,7 @@
     <string name="data_management_profile_description">Change your name or unit number.</string>
     <string name="data_management_profile_edit">Edit</string>
     <!-- For screen readers, the Edit button with what it edits. Starts with the button's
-         text, so voice control users can still say "Tap Edit". -->
+         text, as WCAG 2.5.3 recommends for voice control users. -->
     <string name="data_management_profile_edit_description">Edit name and unit</string>
     <!-- Export saves the scout's name, unit number and all their progress to a file they
          choose; import replaces all of it with what's in a file they exported. -->
