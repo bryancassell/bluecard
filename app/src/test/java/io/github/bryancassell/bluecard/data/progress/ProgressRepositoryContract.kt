@@ -557,6 +557,73 @@ abstract class ProgressRepositoryContract {
     }
 
     @Test
+    fun merge_addsUnstartedBadges_replacesThoseItsToReplace_andKeepsTheRest() = test {
+        // BADGE, OTHER and THIRD are started, and the merge has OTHER, THIRD and FOURTH.
+        repository.markRequirementCompleted(BADGE, "1", day, badgeStart)
+        repository.markRequirementCompleted(OTHER, "1", day, badgeStart)
+        addLogEntry("7a", mapOf("minutes" to "30"), badgeId = THIRD)
+        val other = BadgeProgressDetails(
+            BadgeProgress(OTHER, version, laterDay),
+            listOf(RequirementProgress(OTHER, "2", comment = "From the file")),
+            emptyList()
+        )
+        val third = BadgeProgressDetails(
+            BadgeProgress(THIRD, version, laterDay, Counselor(name = "Pat")),
+            emptyList(),
+            listOf(
+                TrackerEntry(
+                    badgeId = THIRD,
+                    requirementNumber = "9a",
+                    rowNumber = 1,
+                    values = mapOf("nights" to "2"),
+                    addedDate = laterDay
+                )
+            )
+        )
+        val fourth = BadgeProgressDetails(
+            BadgeProgress(FOURTH, version, started, completedOnPriorDate = laterDay),
+            emptyList(),
+            emptyList()
+        )
+        val before = repository.observeAllProgress().first().associateBy { it.badge.badgeId }
+
+        repository.merge(listOf(other, third, fourth), replacing = setOf(THIRD))
+
+        // Without the tracker entries' new IDs.
+        val stored = repository.observeAllProgress().first().associateBy { it.badge.badgeId }
+            .mapValues { (_, details) ->
+                details.copy(trackerEntries = details.trackerEntries.map { it.copy(id = 0) })
+            }
+        assertEquals(
+            mapOf(
+                BADGE to before.getValue(BADGE),
+                OTHER to before.getValue(OTHER),
+                THIRD to third,
+                FOURTH to fourth
+            ),
+            stored
+        )
+    }
+
+    @Test
+    fun merge_givesTrackerEntriesNewIds_inTheOrderTheyreListed() = test {
+        val earlier = addLogEntry("7a", mapOf("minutes" to "30"))
+        // IDs that would put the log out of order, and clash with the entry already there.
+        val log = listOf(earlier + 2 to "first", earlier + 1 to "second", earlier to "third")
+            .map { (id, note) -> TrackerEntry(id, OTHER, "7a", values = mapOf("note" to note)) }
+
+        repository.merge(
+            listOf(BadgeProgressDetails(BadgeProgress(OTHER, version, started), emptyList(), log)),
+            replacing = emptySet()
+        )
+
+        val entries = progress(OTHER)!!.trackerEntries.sortedBy { it.id }
+        assertEquals(listOf("first", "second", "third"), entries.map { it.values["note"] })
+        assertTrue(entries.all { it.id > earlier })
+        assertEquals(listOf(mapOf("minutes" to "30")), trackerValues("7a"))
+    }
+
+    @Test
     fun observeProgress_emitsWhenProgressChanges() = test {
         val flow = repository.observeProgress(BADGE)
         flow.first { it != null }
@@ -642,7 +709,8 @@ abstract class ProgressRepositoryContract {
             "clearRequirements" to { unwritable.clearRequirements(BADGE, listOf("1")) },
             "clearBadge" to { unwritable.clearBadge(BADGE) },
             "clearAll" to { unwritable.clearAll() },
-            "replaceAll" to { unwritable.replaceAll(emptyList()) }
+            "replaceAll" to { unwritable.replaceAll(emptyList()) },
+            "merge" to { unwritable.merge(emptyList(), emptySet()) }
         )
         for ((name, write) in writes) {
             val error = runCatching { write() }.exceptionOrNull()

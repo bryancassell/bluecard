@@ -5,10 +5,19 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.backup.BackupReadResult
 import io.github.bryancassell.bluecard.data.backup.FakeBackupRepository
+import io.github.bryancassell.bluecard.data.backup.FakeBackupRepository.Merge
+import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
@@ -40,12 +49,30 @@ class DataManagementViewModelTest {
     private val today = LocalDate.of(2026, 10, 1)
     private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
+    private val version = LocalDate.of(2026, 1, 1)
+    private val badgeStart = BadgeStart(version, LocalDate.of(2026, 3, 1))
+
     private val backupRepository = FakeBackupRepository()
+    private val catalogRepository = FakeCatalogRepository(
+        badges = listOf(
+            MeritBadge(
+                id = "camping",
+                name = "Camping",
+                summary = "Our summary of Camping.",
+                officialUrl = "https://www.scouting.org/merit-badges/camping/",
+                requirementVersions = listOf(
+                    RequirementsVersion(version, listOf(Requirement("1", "First.")))
+                )
+            )
+        )
+    )
+    private val profile = Profile("Sam Scout", "Crew 7")
+    private val profileRepository = FakeProfileRepository(profile)
     private val progressRepository = FakeProgressRepository()
 
     private val destination = Uri.parse("content://documents/document/new-export")
     private val export = Uri.parse("content://documents/document/export")
-    private val backup = Backup(Profile("Sam Scout", "Crew 7"), emptyList())
+    private val backup = Backup(profile, emptyList())
 
     /**
      * Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
@@ -54,7 +81,13 @@ class DataManagementViewModelTest {
      * https://developer.android.com/kotlin/coroutines/test#statein
      */
     private fun TestScope.viewModel(progress: ProgressRepository = progressRepository) =
-        DataManagementViewModel(backupRepository, progress, clock).also { viewModel ->
+        DataManagementViewModel(
+            backupRepository,
+            catalogRepository,
+            profileRepository,
+            progress,
+            clock
+        ).also { viewModel ->
             backgroundScope.launch(mainDispatcherRule.testDispatcher) {
                 viewModel.uiState.collect {}
             }
@@ -62,11 +95,26 @@ class DataManagementViewModelTest {
 
     private fun DataManagementViewModel.messageKind() = uiState.value.message?.kind
 
-    /** A view model that has read [export], an export the scout chose to import. */
-    private fun TestScope.viewModelWithFileToImport() = viewModel().apply {
-        backupRepository.files[export] = BackupReadResult.Valid(backup)
+    /** A view model that has read [export], an export of [file] the scout chose to import. */
+    private fun TestScope.viewModelWithFileToImport(file: Backup = backup) = viewModel().apply {
+        backupRepository.files[export] = BackupReadResult.Valid(file)
         read(export)
     }
+
+    /**
+     * An export with the profile [named] and Camping started, with its requirement completed,
+     * which differs from the phone's Camping once the phone has it started.
+     */
+    private fun fileWithCamping(named: String = profile.name) = Backup(
+        Profile(named, profile.unitNumber),
+        listOf(
+            BadgeProgressDetails(
+                BadgeProgress("camping", version, badgeStart.startedDate),
+                listOf(RequirementProgress("camping", "1", completed = true)),
+                emptyList()
+            )
+        )
+    )
 
     @Test
     fun uiState_startsWithNothingUnderWay() = runTest {
@@ -139,7 +187,7 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun read_ofAnExport_asksTheScoutToConfirmImportingIt() = runTest {
+    fun read_ofAnExport_asksTheScoutWhetherToMergeOrReplace() = runTest {
         val viewModel = viewModelWithFileToImport()
 
         assertEquals(backup, viewModel.uiState.value.backupToImport)
@@ -195,10 +243,10 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun confirmImport_importsTheFile_andSaysSo() = runTest {
+    fun replace_replacesTheScoutsDataWithTheFile_andSaysSo() = runTest {
         val viewModel = viewModelWithFileToImport()
 
-        viewModel.confirmImport()
+        viewModel.replace()
 
         assertEquals(listOf(backup), backupRepository.imported)
         assertNull(viewModel.uiState.value.backupToImport)
@@ -206,12 +254,12 @@ class DataManagementViewModelTest {
     }
 
     @Test
-    fun confirmImport_isWorkingUntilItsDone() = runTest {
+    fun replace_isWorkingUntilItsDone() = runTest {
         val viewModel = viewModelWithFileToImport()
         val importing = CompletableDeferred<Unit>()
         backupRepository.working = importing
 
-        viewModel.confirmImport()
+        viewModel.replace()
         // The dialog closes as the import starts.
         assertNull(viewModel.uiState.value.backupToImport)
         assertTrue(viewModel.uiState.value.working)
@@ -220,23 +268,23 @@ class DataManagementViewModelTest {
         assertFalse(viewModel.uiState.value.working)
     }
 
-    // A double tap on Replace.
+    // A double tap on Replace all.
     @Test
-    fun confirmImport_twice_importsOnce() = runTest {
+    fun replace_twice_importsOnce() = runTest {
         val viewModel = viewModelWithFileToImport()
 
-        viewModel.confirmImport()
-        viewModel.confirmImport()
+        viewModel.replace()
+        viewModel.replace()
 
         assertEquals(listOf(backup), backupRepository.imported)
     }
 
     @Test
-    fun confirmImport_whenItCantBeSaved_saysSo() = runTest {
+    fun replace_whenItCantBeSaved_saysSo() = runTest {
         val viewModel = viewModelWithFileToImport()
         backupRepository.failSaves = true
 
-        viewModel.confirmImport()
+        viewModel.replace()
 
         assertEquals(Kind.ImportFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
@@ -247,10 +295,164 @@ class DataManagementViewModelTest {
         val viewModel = viewModelWithFileToImport()
 
         viewModel.cancelImport()
-        viewModel.confirmImport()
+        viewModel.replace()
 
         assertNull(viewModel.uiState.value.backupToImport)
         assertEquals(emptyList<Backup>(), backupRepository.imported)
+    }
+
+    // Twice too, as a double tap on Merge.
+    @Test
+    fun merge_withNothingToChoose_mergesStraightAway_andSaysSo() = runTest {
+        val file = fileWithCamping()
+        val viewModel = viewModelWithFileToImport(file)
+
+        viewModel.merge()
+        viewModel.merge()
+
+        assertEquals(
+            listOf(Merge(file, emptySet(), profileFromFile = false)),
+            backupRepository.merged
+        )
+        assertNull(viewModel.uiState.value.backupToImport)
+        assertNull(viewModel.uiState.value.mergeChoices)
+        assertEquals(Kind.Merged, viewModel.messageKind())
+    }
+
+    @Test
+    fun merge_whereThePhoneAndTheFileDiffer_asksWhichToKeep_startingWithThePhones() = runTest {
+        progressRepository.startBadge("camping", version, badgeStart.startedDate)
+        val file = fileWithCamping(named = "Sam Lee")
+        val viewModel = viewModelWithFileToImport(file)
+
+        viewModel.merge()
+
+        assertEquals(
+            MergeChoices(
+                file,
+                ProfileChoice(profile, file.profile),
+                listOf(
+                    AdvancementChoice(
+                        "camping",
+                        "Camping",
+                        isRank = false,
+                        phone = ProgressSummary(done = false, fractionDone = 0f),
+                        file = ProgressSummary(done = true)
+                    )
+                )
+            ),
+            viewModel.uiState.value.mergeChoices
+        )
+        assertNull(viewModel.uiState.value.backupToImport)
+        assertEquals(emptyList<Merge>(), backupRepository.merged)
+    }
+
+    @Test
+    fun merge_whenTheScoutsDataCantBeRead_saysSo_andMergesNothing() = runTest {
+        val viewModel = viewModelWithFileToImport(fileWithCamping())
+        progressRepository.failLoads = true
+
+        viewModel.merge()
+
+        assertEquals(Kind.ImportFailed, viewModel.messageKind())
+        assertNull(viewModel.uiState.value.mergeChoices)
+        assertEquals(emptyList<Merge>(), backupRepository.merged)
+    }
+
+    /**
+     * A view model asking which to keep, the phone's or the [file]'s, for Camping, which the
+     * phone has started, and for the profile if they differ.
+     */
+    private suspend fun TestScope.viewModelChoosing(file: Backup): DataManagementViewModel {
+        progressRepository.startBadge("camping", version, badgeStart.startedDate)
+        return viewModelWithFileToImport(file).apply { merge() }
+    }
+
+    @Test
+    fun chooseProfileAndProgress_changeWhichToKeep() = runTest {
+        val viewModel = viewModelChoosing(fileWithCamping(named = "Sam Lee"))
+        fun choices() = viewModel.uiState.value.mergeChoices!!
+
+        viewModel.chooseProfile(fromFile = true)
+        viewModel.chooseProgress("camping", fromFile = true)
+
+        assertTrue(choices().profile!!.fromFile)
+        assertEquals(setOf("camping"), choices().fromFile)
+
+        viewModel.chooseProfile(fromFile = false)
+        viewModel.chooseProgress("camping", fromFile = false)
+
+        assertFalse(choices().profile!!.fromFile)
+        assertEquals(emptySet<String>(), choices().fromFile)
+    }
+
+    // Twice too, as a double tap on Merge.
+    @Test
+    fun confirmMerge_mergesAsTheScoutChose_andSaysSo() = runTest {
+        val file = fileWithCamping(named = "Sam Lee")
+        val viewModel = viewModelChoosing(file)
+        viewModel.chooseProgress("camping", fromFile = true)
+
+        viewModel.confirmMerge()
+        viewModel.confirmMerge()
+
+        assertEquals(
+            listOf(Merge(file, setOf("camping"), profileFromFile = false)),
+            backupRepository.merged
+        )
+        assertNull(viewModel.uiState.value.mergeChoices)
+        assertEquals(Kind.Merged, viewModel.messageKind())
+    }
+
+    @Test
+    fun confirmMerge_withTheFilesProfile_replacesTheProfile() = runTest {
+        val file = fileWithCamping(named = "Sam Lee")
+        val viewModel = viewModelChoosing(file)
+        viewModel.chooseProfile(fromFile = true)
+
+        viewModel.confirmMerge()
+
+        assertEquals(
+            listOf(Merge(file, emptySet(), profileFromFile = true)),
+            backupRepository.merged
+        )
+    }
+
+    @Test
+    fun confirmMerge_isWorkingUntilItsDone() = runTest {
+        val viewModel = viewModelChoosing(fileWithCamping(named = "Sam Lee"))
+        val merging = CompletableDeferred<Unit>()
+        backupRepository.working = merging
+
+        viewModel.confirmMerge()
+        // The dialog closes as the merge starts.
+        assertNull(viewModel.uiState.value.mergeChoices)
+        assertTrue(viewModel.uiState.value.working)
+        merging.complete(Unit)
+
+        assertFalse(viewModel.uiState.value.working)
+    }
+
+    @Test
+    fun confirmMerge_whenItCantBeSaved_saysSo() = runTest {
+        val viewModel = viewModelChoosing(fileWithCamping(named = "Sam Lee"))
+        backupRepository.failSaves = true
+
+        viewModel.confirmMerge()
+
+        assertEquals(Kind.ImportFailed, viewModel.messageKind())
+        assertFalse(viewModel.uiState.value.working)
+    }
+
+    @Test
+    fun cancelImport_whileChoosing_mergesNothing() = runTest {
+        val viewModel = viewModelChoosing(fileWithCamping(named = "Sam Lee"))
+
+        viewModel.cancelImport()
+        viewModel.confirmMerge()
+
+        assertNull(viewModel.uiState.value.mergeChoices)
+        assertEquals(emptyList<Merge>(), backupRepository.merged)
     }
 
     @Test

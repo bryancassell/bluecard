@@ -218,10 +218,22 @@ class FakeProgressRepository : ProgressRepository {
 
     override suspend fun replaceAll(progress: List<BadgeProgressDetails>) {
         checkCanSave()
-        badges.value = progress.associate { details ->
-            val entries = details.trackerEntries.map { it.copy(id = nextTrackerEntryId++) }
-            details.badge.badgeId to details.copy(trackerEntries = entries)
-        }
+        badges.value = withNewTrackerEntryIds(progress)
+    }
+
+    override suspend fun merge(progress: List<BadgeProgressDetails>, replacing: Set<String>) {
+        checkCanSave()
+        val kept = badges.value.keys - replacing
+        val added = withNewTrackerEntryIds(progress.filter { it.badge.badgeId !in kept })
+        badges.update { it + added }
+    }
+
+    /** [progress] by badge ID, with new tracker entry IDs in the order they're listed. */
+    private fun withNewTrackerEntryIds(
+        progress: List<BadgeProgressDetails>
+    ): Map<String, BadgeProgressDetails> = progress.associate { details ->
+        val entries = details.trackerEntries.map { it.copy(id = nextTrackerEntryId++) }
+        details.badge.badgeId to details.copy(trackerEntries = entries)
     }
 
     private fun checkCanSave() {

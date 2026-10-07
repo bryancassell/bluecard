@@ -171,6 +171,31 @@ interface ProgressDao {
     @Transaction
     suspend fun replaceAll(progress: List<BadgeProgressDetails>) {
         deleteAll()
+        insertAll(progress)
+    }
+
+    /**
+     * Adds each badge in [progress] that isn't started, and puts each one in [replacing] in
+     * place of the one started, in a single transaction. Other badges stay as they are. Tracker
+     * entries are inserted with new IDs, in the order they're listed.
+     */
+    @Transaction
+    suspend fun merge(progress: List<BadgeProgressDetails>, replacing: Set<String>) {
+        val kept = startedBadgeIds().toSet() - replacing
+        val added = progress.filter { it.badge.badgeId !in kept }
+        deleteBadges(added.map { it.badge.badgeId })
+        insertAll(added)
+    }
+
+    @Query("SELECT badgeId FROM badge_progress")
+    suspend fun startedBadgeIds(): List<String>
+
+    /** Deletes these badges' progress; their requirement progress and tracker entries cascade. */
+    @Query("DELETE FROM badge_progress WHERE badgeId IN (:badgeIds)")
+    suspend fun deleteBadges(badgeIds: Collection<String>)
+
+    /** Inserts [progress], giving its tracker entries new IDs in the order they're listed. */
+    suspend fun insertAll(progress: List<BadgeProgressDetails>) {
         insertBadges(progress.map { it.badge })
         insertRequirements(progress.flatMap { it.requirements })
         // An ID of 0 has Room generate one.

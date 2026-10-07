@@ -5,13 +5,13 @@ import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 
 /**
- * A [BackupRepository] for other features' tests. It records exports and imports instead of
- * making them, and reads files from [files].
+ * A [BackupRepository] for other features' tests. It records exports, imports and merges
+ * instead of making them, and reads files from [files].
  */
 class FakeBackupRepository : BackupRepository {
     /**
-     * When true, [exportBackup] and [importBackup] throw, as the real repository's do when the
-     * file or the scout's data can't be saved.
+     * When true, [exportBackup], [importBackup] and [mergeBackup] throw, as the real
+     * repository's do when the file or the scout's data can't be saved.
      */
     var failSaves = false
 
@@ -30,6 +30,9 @@ class FakeBackupRepository : BackupRepository {
     /** Each backup imported, in order. */
     val imported = mutableListOf<Backup>()
 
+    /** Each merge, in order. */
+    val merged = mutableListOf<Merge>()
+
     override suspend fun exportBackup(destination: Uri) {
         working?.await()
         if (failSaves) throw IOException("Save failed")
@@ -47,4 +50,17 @@ class FakeBackupRepository : BackupRepository {
         if (failSaves) throw IOException("Save failed")
         imported += backup
     }
+
+    override suspend fun mergeBackup(
+        backup: Backup,
+        fromFile: Set<String>,
+        profileFromFile: Boolean
+    ) {
+        working?.await()
+        if (failSaves) throw IOException("Save failed")
+        merged += Merge(backup, fromFile, profileFromFile)
+    }
+
+    /** A call to [mergeBackup]. */
+    data class Merge(val backup: Backup, val fromFile: Set<String>, val profileFromFile: Boolean)
 }

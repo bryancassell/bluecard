@@ -1010,8 +1010,9 @@ progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`,
 as Save report does (`data/Documents.kt`). Import reads one with
 `ActivityResultContracts.OpenDocument`, asking only for documents that can be
 opened as a file (`CATEGORY_OPENABLE`), checks the format version and validates
-it before changing anything, since import replaces all current data (see
-[`PRD.md`](PRD.md#design-decisions)).
+it before changing anything, since import can replace all current data (see
+[`PRD.md`](PRD.md#design-decisions)). Once it's checked, the scout chooses to
+merge it with their data or replace everything with it.
 
 - **Any change to the format needs a new format version**
   (`BACKUP_FORMAT_VERSION` in `data/backup/BackupFormat.kt`), even an added
@@ -1064,6 +1065,20 @@ it before changing anything, since import replaces all current data (see
   can't share a transaction. If replacing progress fails, nothing has changed;
   if saving the profile then fails, the progress is already the file's, and
   importing again replaces both.
+- **A merge takes whole badges and ranks from one side or the other**
+  ([#28](https://github.com/bryancassell/bluecard/issues/28)).
+  `ProgressRepository.merge` adds those in the file that aren't started and
+  replaces those the scout chose the file's for, in one transaction, then the
+  profile is saved if they chose the file's (`BackupRepository.mergeBackup`).
+  Which to ask about comes from `mergeConflicts` (`data/backup/Merge.kt`):
+  those started on both whose progress differs, ignoring order and tracker
+  entry IDs, which an import replaces. The export doesn't record when anything
+  changed, so a merge can't pick the newer side itself. Recording that would
+  take a database migration, a new format version and a record of what was
+  deleted, or progress cleared on one side would come back from the other.
+  Each side's summary is worked out from that side's progress alone
+  (`ui/data/MergeChoices.kt`). The choices are held in the ViewModel with the
+  file, not in saved state.
 - **The file has no tracker entry IDs.** Entries are listed in the order they
   were added, and an import gives them new IDs in that order, so each log keeps
   its order and IDs keep growing.

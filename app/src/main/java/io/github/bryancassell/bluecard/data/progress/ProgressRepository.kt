@@ -150,4 +150,12 @@ interface ProgressRepository {
      * keeps its order, and each is higher than any entry's before.
      */
     suspend fun replaceAll(progress: List<BadgeProgressDetails>)
+
+    /**
+     * Adds [progress] to the scout's, in one transaction, as a merge of an import does: each
+     * badge or rank in it that isn't started is added, and each in [replacing] replaces the
+     * scout's progress on it. The scout's progress on any other stays. [progress] is shaped,
+     * stored and given tracker entry IDs as [replaceAll] describes.
+     */
+    suspend fun merge(progress: List<BadgeProgressDetails>, replacing: Set<String>)
 }

@@ -228,22 +228,42 @@
          text, as WCAG 2.5.3 recommends for voice control users. -->
     <string name="data_management_profile_edit_description">Edit name and unit</string>
     <!-- Export saves the scout's name, unit number and all their progress to a file they
-         choose; import replaces all of it with what's in a file they exported. -->
+         choose; import merges a file they exported with it, or replaces all of it with the
+         file's. -->
     <string name="data_management_export_heading">Export data</string>
     <string name="data_management_export_description">Save your name, unit number and all your progress to a file.</string>
     <string name="data_management_export">Export</string>
     <string name="data_management_import_heading">Import data</string>
-    <string name="data_management_import_description">Replace everything on this phone with a file you exported.</string>
+    <string name="data_management_import_description">Merge a file you exported with what\'s on this phone, or replace everything with it.</string>
     <string name="data_management_import">Import</string>
     <!-- Shown when tapping Import, if no app on the phone can open files. -->
     <string name="data_management_no_file_opener">No app on this phone can open files.</string>
     <!-- The name the file picker suggests for an export, without its ".json" extension, with
          the date in YYYY-MM-DD form, such as "BlueCard export 2026-10-01". -->
     <string name="export_file_name">BlueCard export %1$s</string>
-    <!-- Asks before an import replaces everything, once the file is checked. -->
-    <string name="import_confirm_title">Replace all your data?</string>
-    <string name="import_confirm_message">Your name, unit number and all your progress will be replaced with the file\'s.</string>
-    <string name="import_confirm">Replace</string>
+    <!-- Asks, once a file to import is checked, whether to merge it with the scout's data or
+         replace all of it. Replace all is red, as it removes what the scout recorded. -->
+    <string name="import_choose_title">Import this file?</string>
+    <string name="import_choose_message">Merge adds the file\'s badges and ranks to yours, and asks which to keep where both have progress. Replace all replaces your name, unit number and all your progress with the file\'s.</string>
+    <string name="import_merge">Merge</string>
+    <string name="import_replace_all">Replace all</string>
+    <!-- A full-screen dialog that asks which to keep, the phone's or the file's, for each
+         thing a merge finds different on the two: the name and unit number, and each badge
+         and rank started on both. -->
+    <string name="merge_title">Merge</string>
+    <!-- What screen readers say for the X that closes the merge's dialog without merging. -->
+    <string name="merge_close">Close</string>
+    <string name="merge_confirm">Merge</string>
+    <string name="merge_message">This phone and the file are different here. Choose which to keep.</string>
+    <string name="merge_profile_heading">Name and unit</string>
+    <!-- The two choices for each, with what each holds below it. -->
+    <string name="merge_this_phone">This phone</string>
+    <string name="merge_the_file">The file</string>
+    <!-- Below the unit's choice, such as "Unit: Troop 12", as on Home. -->
+    <string name="merge_unit">Unit: %1$s</string>
+    <!-- Below a badge's or rank's choice, when the phone and the file have it on different
+         requirements, such as "Requirements effective Jan 1, 2026". -->
+    <string name="merge_requirements_version">Requirements effective %1$s</string>
     <!-- Shown briefly after an export or import, or when one couldn't be done. -->
     <string name="export_failed">Couldn\'t export. Try again.</string>
     <string name="import_read_failed">Couldn\'t open the file. Try again.</string>
@@ -251,6 +271,7 @@
     <string name="import_newer_format">This file is from a newer version of BlueCard. Update the app to import it.</string>
     <string name="import_failed">Couldn\'t import. Try again.</string>
     <string name="import_done">Data imported.</string>
+    <string name="merge_done">Data merged.</string>
     <!-- Clears the progress on every badge, including counselors, once the scout confirms.
          Their name and unit number stay. -->
     <string name="data_management_clear_heading">Clear all progress</string>
