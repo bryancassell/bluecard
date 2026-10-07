@@ -41,6 +41,15 @@ sealed interface TrackerEntryUiState {
         val hasSavedEntry: Boolean,
         /** Whether Delete can be used now: not while a save is under way. */
         val canDelete: Boolean,
+        /**
+         * The names of the ranks, in the order they're earned, that would no longer count as
+         * earned once the saved row is deleted, so the scout is told before deleting it. Deleting
+         * a fixed-row tracker's row can leave its requirement incomplete: for a rank's
+         * requirement, that un-earns its rank and those above it earned in order after it, and
+         * for a badge's, those with merit badge requirements the badge completes, and those above
+         * them.
+         */
+        val unearnedByDelete: List<String> = emptyList(),
         /** The entry was saved or deleted, so the screen closes. */
         val done: Boolean = false,
         /** Something couldn't be saved, and the scout hasn't been told yet. */

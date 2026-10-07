@@ -581,6 +581,38 @@ class TrackerEntryScreenTest {
     }
 
     @Test
+    fun delete_saysWhatItRemoves() {
+        show(savedEntry)
+
+        button("Delete").performClick()
+
+        composeTestRule
+            .onNodeWithText("What you entered in it will be removed.")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun delete_ofARowRanksCountOn_namesTheRanksThatWontCountAsEarned() {
+        show(
+            savedEntry.copy(
+                requirementNumber = "2",
+                rowTitle = "Week",
+                rowLabel = "week",
+                unearnedByDelete = listOf("Star", "Life")
+            )
+        )
+
+        button("Delete").performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you entered in it will be removed. Star and Life will no longer count " +
+                    "as earned."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun whileSaving_deleteIsShownButCantBeUsed() {
         show(savedEntry.copy(canDelete = false))
 

@@ -306,7 +306,10 @@ private fun TrackerEntryButtons(
     if (confirmingDelete) {
         ConfirmDialog(
             title = stringResource(R.string.tracker_entry_delete_title, uiState.rowLabel),
-            message = stringResource(R.string.tracker_entry_delete_message),
+            message = withUnearnedRanks(
+                stringResource(R.string.tracker_entry_delete_message),
+                uiState.unearnedByDelete
+            ),
             confirmLabel = stringResource(R.string.tracker_entry_delete),
             onConfirm = {
                 confirmingDelete = false

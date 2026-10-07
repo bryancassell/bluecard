@@ -761,8 +761,8 @@ works on.
   unmarking a rank undoes what its mark counted as earned. Every screen asks
   `standings` for a rank's status and bar, as they ask `BadgeStatus.kt` for a
   badge's, so they agree. A page that shows a rank reads every rank's progress
-  (`observeAllProgress`), not only its own, as does one that can clear what a
-  rank counts ([Clearing data](#clearing-data)).
+  (`observeAllProgress`), not only its own, as does one that can clear or
+  delete what a rank counts ([Clearing data](#clearing-data)).
 - **Merit badge requirements** (`Requirement.meritBadges`) complete from the
   badges the scout has completed, not from anything recorded on the rank
   ([Completion](#completion)), so `standings` takes the scout's
@@ -978,8 +978,12 @@ as earned, which all three pages ask `noLongerEarned`
 (`data/progress/RankStatus.kt`), so they agree. Clearing a badge or one of its
 requirements can leave a rank's merit badges short, so Badge detail and
 Requirement detail read every badge's and rank's progress
-(`observeAllProgress`), as Rank detail does. Clearing progress does not clear
-the profile.
+(`observeAllProgress`), as Rank detail does. Deleting a fixed-row tracker's
+row can un-earn ranks too, so Tracker entry asks `noLongerEarned` as well, and
+shares its dialog's sentence (`withUnearnedRanks` in `ClearProgress.kt`). It
+follows every badge's and rank's progress only for a saved row of a requirement
+that `completesFromRows`, the only kind whose deletion can un-earn one, and
+otherwise reads its own badge's progress once, with its form. Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a

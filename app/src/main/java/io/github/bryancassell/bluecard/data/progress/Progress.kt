@@ -215,3 +215,10 @@ fun BadgeProgressDetails.withoutRequirements(numbers: Collection<String>) = copy
     requirements = requirements.filterNot { it.requirementNumber in numbers },
     trackerEntries = trackerEntries.filterNot { it.requirementNumber in numbers }
 )
+
+/**
+ * This progress once tracker entry [id] is deleted, as [ProgressRepository.deleteTrackerEntry]
+ * deletes it.
+ */
+fun BadgeProgressDetails.withoutTrackerEntry(id: Long) =
+    copy(trackerEntries = trackerEntries.filterNot { it.id == id })
