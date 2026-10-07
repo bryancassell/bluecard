@@ -1135,6 +1135,12 @@ test still exports and imports through the real one.
 - **Migration tests** (`MigrationTest`) run locally too, with Room's
   `MigrationTestHelper`. Debug builds carry the schemas as assets for them
   (`app/build.gradle.kts`); release builds don't.
+  - After a database version bump, the first test run can merge assets
+    before Room writes the new schema, and `MigrationTest` fails. Run it
+    again. Room's schema copy declares no outputs, so Gradle can't order
+    other tasks after it or see the new file in the same build. Working
+    around that needed more build code than a rerun is worth
+    ([#96](https://github.com/bryancassell/bluecard/issues/96)).
 - **Damaged database tests** (`SetAsideDamagedDatabaseFactoryTest`) run
   locally too. Robolectric runs Android's SQLite code, which calls the
   corruption handler for a file that isn't a database, or one whose pages are
