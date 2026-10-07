@@ -182,7 +182,8 @@ class PdfReportRepositoryTest {
         val report = repository.createReportToShare("chess")!!
 
         assertEquals("content", report.scheme)
-        assertEquals("io.github.bryancassell.bluecard.reports", report.authority)
+        // Local tests run against the debug build, whose application ID ends in ".debug".
+        assertEquals("io.github.bryancassell.bluecard.debug.reports", report.authority)
         assertEquals(pdfWriter.lastWritten, report.read())
         val lines = pdfWriter.pages.single().flatMap { it.lines }
         assertEquals(

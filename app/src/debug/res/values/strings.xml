@@ -1,0 +1,4 @@
+<resources>
+    <!-- Tells a debug build apart from a release build installed next to it. -->
+    <string name="app_name" translatable="false">BlueCard Debug</string>
+</resources>
