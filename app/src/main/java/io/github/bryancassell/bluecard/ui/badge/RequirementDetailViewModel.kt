@@ -111,10 +111,10 @@ class RequirementDetailViewModel @AssistedInject constructor(
                     earnedBadges,
                     standings
                 )
-                Triple(found, standings, isRank)
+                found to standings
             }
         )
-    }.map { (found, standings, isRank) ->
+    }.map { (found, standings) ->
         found?.version?.find(number)?.let { requirement ->
             val recorded = found.recorded[number]
             val numbersWithin = requirement.numbersWithin()
@@ -136,7 +136,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                 timeInRank = standings?.timeInRank(advancementId, requirement),
                 earnedBadges = requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
-                hasSignOffField = isRank,
+                hasSignOffField = found.advancement is Rank,
                 signedOffBy = recorded?.signedOffBy,
                 comment = recorded?.comment,
                 numbersWithin = numbersWithin,
@@ -238,14 +238,14 @@ class RequirementDetailViewModel @AssistedInject constructor(
      */
     fun save() {
         // The button shows only once the page has.
-        val signedOffBy = signedOffBy.text.toString().takeIf { shown?.hasSignOffField == true }
-        val comment = comment.text.toString()
+        val signOffText = signedOffBy.text.toString().takeIf { shown?.hasSignOffField == true }
+        val commentText = comment.text.toString()
         saves.launch {
             progressRepository.setRequirementSignOffAndComment(
                 advancementId,
                 number,
-                signedOffBy,
-                comment,
+                signOffText,
+                commentText,
                 catalogRepository.getAdvancements().badgeStart(advancementId, today())
             )
         }

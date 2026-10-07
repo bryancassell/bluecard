@@ -22,7 +22,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -390,15 +389,16 @@ private fun TextFields(
     }
 }
 
+private val SignedOffByInput = singleLineInput(maxLength = SIGNED_OFF_BY_MAX_LENGTH)
+
 /** A one-line field for who signed off on a rank's requirement, such as the Scoutmaster. */
 @Composable
 private fun SignedOffByField(state: TextFieldState) {
-    val input = remember { singleLineInput(SIGNED_OFF_BY_MAX_LENGTH) }
     OutlinedTextField(
         state = state,
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(R.string.requirement_signed_off_by)) },
-        inputTransformation = input,
+        inputTransformation = SignedOffByInput,
         lineLimits = TextFieldLineLimits.SingleLine,
         // Next moves on to the notes.
         keyboardOptions = KeyboardOptions(

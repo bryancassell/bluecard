@@ -109,14 +109,15 @@ fun decodeBackup(json: String, catalog: List<Advancement>): BackupReadResult {
     }
     if (version == null || version < OLDEST_BACKUP_FORMAT_VERSION) return BackupReadResult.Invalid
     if (version > BACKUP_FORMAT_VERSION) return BackupReadResult.NewerFormat
+    // Version 1 had no sign-off.
+    val withoutSignOffs = version == 1L
     val file = try {
-        val format = if (version == 1L) backupJsonV1 else backupJson
+        val format = if (withoutSignOffs) backupJsonV1 else backupJson
         format.decodeFromString(BackupJson.serializer(), json)
     } catch (e: SerializationException) {
         return BackupReadResult.Invalid
     }
-    // Version 1 had no sign-off.
-    if (version == 1L && file.badges.any { it.requirements.any { it.signedOffBy != null } }) {
+    if (withoutSignOffs && file.badges.any { it.requirements.any { it.signedOffBy != null } }) {
         return BackupReadResult.Invalid
     }
     // A newer catalog can add badges, ranks and requirements versions without a new format
@@ -272,10 +273,10 @@ private fun RequirementJson.toProgress(
 ): RequirementProgress {
     requireValid(number in inVersion)
     requireValid(completed || completedDate == null)
+    // Only a rank's requirement page has the field, so a badge's never has one, even blank.
+    requireValid(isRank || signedOffBy == null)
     val notes = optionalText(notes, NOTES_MAX_LENGTH)
     val signedOffBy = singleLineText(signedOffBy, SIGNED_OFF_BY_MAX_LENGTH)
-    // Only a rank's requirement page has the field.
-    requireValid(isRank || signedOffBy == null)
     return RequirementProgress(badgeId, number, completed, completedDate, notes, signedOffBy)
 }
 

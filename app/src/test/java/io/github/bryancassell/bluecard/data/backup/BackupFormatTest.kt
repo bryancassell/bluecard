@@ -473,6 +473,8 @@ class BackupFormatTest {
             // Only a rank's requirement page has the field.
             "a sign-off on a badge's requirement" to
                 withRequirement(RequirementProgress("camping", "7", signedOffBy = "Pat")),
+            "a blank sign-off on a badge's requirement" to
+                withRequirement(RequirementProgress("camping", "7", signedOffBy = " ")),
             "two entries in a row" to withEntry("9b", 2, mapOf("place" to "Hill")),
             "row 0" to withEntry("9b", 0, mapOf("place" to "Hill")),
             "a row past the tracker's rows" to withEntry("9b", 4, mapOf("place" to "Hill")),

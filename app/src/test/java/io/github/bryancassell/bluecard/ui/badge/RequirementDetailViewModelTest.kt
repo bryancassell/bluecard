@@ -523,11 +523,8 @@ class RequirementDetailViewModelTest {
             badgeStart
         )
 
-    private suspend fun recorded(number: String) = progressRepository.observeProgress("camping")
-        .first()?.requirements?.singleOrNull { it.requirementNumber == number }
-
-    private suspend fun recordedOnTenderfoot(number: String) =
-        progressRepository.observeProgress("tenderfoot")
+    private suspend fun recorded(number: String, advancementId: String = "camping") =
+        progressRepository.observeProgress(advancementId)
             .first()?.requirements?.singleOrNull { it.requirementNumber == number }
 
     /** Types into the comment field, as the scout does. */
@@ -1035,6 +1032,19 @@ class RequirementDetailViewModelTest {
         assertFalse(viewModel.ready().hasSignOffField)
     }
 
+    // Its field doesn't show, so whatever it holds isn't saved.
+    @Test
+    fun save_onABadgesRequirement_savesNoSignOff() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+        viewModel.typeSignOff("Pat")
+        viewModel.typeComment("At camp.")
+
+        viewModel.save()
+
+        assertEquals(RequirementProgress("camping", "1", comment = "At camp."), recorded("1"))
+    }
+
     @Test
     fun ranksRequirement_hasASignOffField_thatStartsAsSaved() = runTest {
         progressRepository.setRequirementSignOffAndComment(
@@ -1070,7 +1080,7 @@ class RequirementDetailViewModelTest {
                 comment = "At camp.",
                 signedOffBy = "Mr. Rivera"
             ),
-            recordedOnTenderfoot("1a")
+            recorded("1a", "tenderfoot")
         )
         assertFalse(viewModel.ready().textChanged)
     }
@@ -1093,7 +1103,7 @@ class RequirementDetailViewModelTest {
 
         assertEquals(
             RequirementProgress("tenderfoot", "1a", comment = "At camp."),
-            recordedOnTenderfoot("1a")
+            recorded("1a", "tenderfoot")
         )
         assertFalse(viewModel.ready().textChanged)
     }
@@ -1129,7 +1139,7 @@ class RequirementDetailViewModelTest {
 
         viewModel.clear()
 
-        assertNull(recordedOnTenderfoot("1a"))
+        assertNull(recorded("1a", "tenderfoot"))
         assertEquals("", viewModel.signedOffBy.text.toString())
         assertEquals("", viewModel.comment.text.toString())
         assertFalse(viewModel.ready().textChanged)
@@ -1149,7 +1159,7 @@ class RequirementDetailViewModelTest {
 
         viewModel.clear()
 
-        assertNull(recordedOnTenderfoot("1a"))
+        assertNull(recorded("1a", "tenderfoot"))
         assertEquals("", viewModel.signedOffBy.text.toString())
         assertFalse(viewModel.ready().textChanged)
     }

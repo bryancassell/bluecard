@@ -745,12 +745,12 @@ works on.
 - **Only a rank's requirement records who signed off on it**
   (`RequirementProgress.signedOffBy`,
   [#248](https://github.com/bryancassell/bluecard/issues/248)). It's a column
-  of the shared table that a badge's requirement leaves null, since a badge's
-  counselor is recorded once, on the badge. Requirement detail shows the field
-  only for a rank, and import rejects a sign-off on a badge's requirement. It
-  saves with the notes in one write (`setRequirementSignOffAndComment`), so
-  their one Save can't save one and fail the other. Like the notes, it doesn't
-  affect completion.
+  of the shared table that a badge's requirement leaves null, which import
+  checks (see [`PRD.md`](PRD.md#design-decisions) for why only ranks have it).
+  The repository doesn't know a badge from a rank, so Requirement detail
+  passes null for a badge's. It's saved with the notes in one write
+  (`setRequirementSignOffAndComment`), so their one Save can't save one and
+  fail the other. Completion doesn't read it.
 - **Time in rank** (`Requirement.monthsInRank`, `data/progress/TimeInRank.kt`)
   is counted from the date `standings` gives the rank below, so it agrees with
   Rank detail about when that rank was earned. Like a tracker's total, it's
@@ -891,10 +891,11 @@ how screen readers hear the number of matches is in `BadgesScreen.kt`
 - **Recording anything starts the badge or rank**, on the requirements version
   its pages show until then (the newest), dated today (`badgeStart` in
   `data/progress/BadgeVersion.kt`). There's no separate "start" step.
-  `markRequirementCompleted`, `setRequirementComment`, `addTrackerEntry`,
-  `setCounselor` and `setCompletedOnPriorDate` take a `BadgeStart`, and
-  `ProgressRepository` starts the badge in the same transaction as the write,
-  so a save that fails doesn't leave the badge started. Other functions that
+  `markRequirementCompleted`, `setRequirementSignOffAndComment`,
+  `addTrackerEntry`, `setCounselor` and `setCompletedOnPriorDate` take a
+  `BadgeStart`, and `ProgressRepository` starts the badge in the same
+  transaction as the write, so a save that fails doesn't leave the badge
+  started. Other functions that
   record progress should take one when a screen first calls them.
 - **The repository cleans up what the scout types:** it trims spaces around
   each value and drops blank ones (`normalizedText`, `normalizedTrackerValues`,
