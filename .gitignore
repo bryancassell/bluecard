@@ -20,6 +20,7 @@ captures/
 # Signing keys
 *.jks
 *.keystore
+*.p12
 
 # Build outputs
 *.apk

@@ -26,6 +26,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release builds are signed with BlueCard's release key when these Gradle properties, set in
+    // ~/.gradle/gradle.properties, name it. Without them, as in CI, the release build is left
+    // unsigned. See ARCHITECTURE.md (Release build).
+    signingConfigs {
+        val keystore = providers.gradleProperty("bluecardReleaseKeystore").orNull
+        if (keystore != null) {
+            create("release") {
+                storeFile = file(keystore)
+                storePassword = providers.gradleProperty("bluecardReleaseKeystorePassword").get()
+                keyAlias = "bluecard"
+                // A PKCS12 keystore's key has the keystore's password.
+                keyPassword = storePassword
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // Record JaCoCo coverage data when local tests run.
@@ -40,6 +56,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 
