@@ -4,7 +4,12 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -113,6 +118,22 @@ class TaskFailureTest {
 
         composeTestRule.onNodeWithText(message).assertDoesNotExist()
         assertEquals(listOf(failure), shown)
+    }
+
+    // TalkBack reads each snackbar's message from the live region Material gives it, including
+    // one that replaces another still showing, when it skips the pane title (#234).
+    @Test
+    fun snackbar_thatReplacesAnotherStillShowing_isAPoliteLiveRegion() {
+        var failure by mutableStateOf(TaskFailure())
+        composeTestRule.setContent { TaskFailureSnackbarHost(failure, message, onShown = {}) }
+        val messageInLiveRegion = hasText(message) and hasAnyAncestor(
+            SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
+        )
+        composeTestRule.onNode(messageInLiveRegion).assertIsDisplayed()
+
+        failure = TaskFailure()
+
+        composeTestRule.onNode(messageInLiveRegion).assertIsDisplayed()
     }
 
     @Test

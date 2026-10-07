@@ -249,6 +249,7 @@ class OnboardingViewModelTest {
         fillIn()
         viewModel.save()
         val first = state.saveFailure
+        assertNotNull(first)
 
         // Before the screen has shown the first, as when the scout taps again while it shows.
         viewModel.save()

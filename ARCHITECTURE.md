@@ -218,11 +218,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   happen. Data management runs its import and clear as it runs its export,
   with its own messages in one snackbar, rather than with a `TaskRunner`.
 - **Screen readers hear each snackbar from its live region.** Material 3
-  (1.4.0) gives each snackbar a polite live region and the pane title "Alert".
-  TalkBack read every failed save on Onboarding, retries included
-  ([#234](https://github.com/bryancassell/bluecard/issues/234)), but skipped
-  "Alert" when a snackbar replaced one still showing, since the pane title
-  hadn't changed. So don't rely on a snackbar's pane title to announce it.
+  (1.4.0) gives each snackbar a polite live region and the pane title "Alert",
+  and composes each one as a new node. TalkBack read every failed save on
+  Onboarding, retries included
+  ([#234](https://github.com/bryancassell/bluecard/issues/234)): Compose sent a
+  subtree change from the new snackbar, and TalkBack reads a live region's text
+  on any change it's the source of. It skipped "Alert" when a snackbar replaced
+  one still showing, since the pane title hadn't changed, so don't rely on a
+  snackbar's pane title. That doesn't mean every new live-region node is
+  announced: a screen message composed in its own branch wasn't (below).
 - **A message that takes a screen's place is a live region composed while the
   screen loads** ([#69](https://github.com/bryancassell/bluecard/issues/69)),
   so screen readers announce it as it appears. `ScreenMessage`
