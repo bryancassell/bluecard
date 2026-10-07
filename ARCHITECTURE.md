@@ -1084,11 +1084,12 @@ test still exports and imports through the real one.
   settled, it sends the page's view the keyboard's final insets, then its
   insets frame by frame through the platform's `WindowInsetsAnimation`
   events. A keyboard that appears in one step doesn't show the behavior that
-  depends on frames, such as the page following the cursor. Robolectric also
-  shows a page out of touch mode, where buttons can take focus, so a test of
-  where focus goes on a phone sets touch mode in a rule that runs before the
-  compose rule opens the page's window (`touchMode` in
-  `TrackerEntryScreenTest`).
+  depends on frames, such as the page following the cursor. With its default
+  graphics, Robolectric shows a page out of touch mode, where buttons can take
+  focus (native graphics start in touch mode). So a test of where focus goes
+  on a phone sets touch mode in a rule that runs before the compose rule opens
+  the page's window (`touchMode` in `TrackerEntryScreenTest`), and a test of a
+  hardware keyboard asks for keyboard mode (`InputModeManager`).
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

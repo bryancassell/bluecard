@@ -12,6 +12,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -111,6 +114,9 @@ class TrackerEntryScreenTest {
     /** The page's view, which the keyboard's insets are sent to. */
     private lateinit var view: View
 
+    /** Tells the page whether the scout is touching the screen or using a hardware keyboard. */
+    private lateinit var inputModeManager: InputModeManager
+
     /** A new entry, with nothing in it yet. */
     private val newEntry = TrackerEntryUiState.Ready(
         advancementName = "Personal Fitness",
@@ -144,6 +150,7 @@ class TrackerEntryScreenTest {
         uiState = state
         composeTestRule.setContent {
             view = LocalView.current
+            inputModeManager = LocalInputModeManager.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 back.Content {
                     TrackerEntryScreen(
@@ -441,12 +448,23 @@ class TrackerEntryScreenTest {
         field("Notes").assertIsFocused()
     }
 
-    // Its keyboard's Enter starts a new line.
+    // Its keyboard keeps Enter, which starts a new line, in place of Next or Done.
     @Test
-    fun multilineTextField_hasNoNextOrDone() {
+    fun multilineTextField_asksForEnter() {
         show(newEntry)
+        field("Notes").performClick()
 
-        field("Notes").assert(hasImeAction(ImeAction.Default))
+        val editorInfo = EditorInfo()
+        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+
+        assertEquals(
+            InputType.TYPE_TEXT_FLAG_MULTI_LINE,
+            editorInfo.inputType and InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        )
+        assertEquals(
+            EditorInfo.IME_FLAG_NO_ENTER_ACTION,
+            editorInfo.imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION
+        )
     }
 
     // The scout taps a date's button when they're ready to pick the date.
@@ -465,6 +483,27 @@ class TrackerEntryScreenTest {
         field("Mammal").performClick().performImeAction()
 
         field("Time of day").assertIsFocused()
+    }
+
+    // Out of touch mode, so they can be reached without touching the screen.
+    @Test
+    fun next_withAHardwareKeyboard_stopsOnADatesButton() {
+        val columns = listOf(
+            TrackerColumn("mammal", "Mammal", TrackerColumnType.TEXT),
+            TrackerColumn("date", "Date", TrackerColumnType.DATE),
+            TrackerColumn("time", "Time of day", TrackerColumnType.TEXT)
+        )
+        show(
+            newEntry.copy(columns = columns),
+            fields = columns.associate { it.id to TextFieldState() }
+        )
+        composeTestRule.runOnIdle {
+            assertTrue(inputModeManager.requestInputMode(InputMode.Keyboard))
+        }
+
+        field("Mammal").requestFocus().performImeAction()
+
+        composeTestRule.onNode(hasText("Add date") and hasClickAction()).assertIsFocused()
     }
 
     @Test
@@ -645,6 +684,7 @@ class TrackerEntryScreenTest {
 
         fieldWithoutScrolling("Minutes").performImeAction()
 
+        fieldWithoutScrolling("Notes").assertIsFocused()
         assertAboveKeyboard(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
         assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }

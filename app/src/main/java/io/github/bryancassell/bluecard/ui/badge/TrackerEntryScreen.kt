@@ -149,8 +149,8 @@ fun TrackerEntryScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TrackerEntryHeader(uiState)
-                    val lastTextColumn =
-                        uiState.columns.lastOrNull { it.type != TrackerColumnType.DATE }
+                    val lastTextColumnId =
+                        uiState.columns.lastOrNull { it.type != TrackerColumnType.DATE }?.id
                     val trackerField: @Composable (TrackerColumn) -> Unit = { column ->
                         TrackerField(
                             column = column,
@@ -158,7 +158,7 @@ fun TrackerEntryScreen(
                             date = uiState.dates[column.id],
                             today = today,
                             onDateChange = { onDateChange(column.id, it) },
-                            lastTextField = column == lastTextColumn
+                            lastTextField = column.id == lastTextColumnId
                         )
                     }
                     uiState.columns.dropLast(1).forEach { column ->
