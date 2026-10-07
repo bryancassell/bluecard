@@ -836,6 +836,13 @@ class TrackerEntryScreenTest {
         composeTestRule.mainClock.autoAdvance = false
         fieldWithoutScrolling("Place").performImeAction()
         repeat(2) { composeTestRule.mainClock.advanceTimeByFrame() }
+        // Save is still behind the keyboard, so the scroll hasn't ended.
+        val keyboardTop =
+            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - KEYBOARD_HEIGHT
+        assertTrue(
+            "The scroll ended before the test could stop it partway",
+            composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot().bottom > keyboardTop
+        )
     }
 
     /** Drags the page toward its top, as the scout does to check an earlier field. */
