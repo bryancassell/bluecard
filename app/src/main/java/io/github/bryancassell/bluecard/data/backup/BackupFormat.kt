@@ -4,6 +4,7 @@ package io.github.bryancassell.bluecard.data.backup
 
 import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.LocalDateSerializer
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
@@ -18,6 +19,7 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
@@ -29,6 +31,7 @@ import io.github.bryancassell.bluecard.data.progress.storedNumber
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import java.time.LocalDate
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.UseSerializers
@@ -43,12 +46,22 @@ import kotlinx.serialization.json.Json
  * The format version this app writes, and the newest it reads. Any change to the format, even
  * an added field, needs a new version, so an older app rejects a file it can't read in full
  * rather than importing it without what it doesn't know. So does raising the longest text a
- * field takes (such as [NOTES_MAX_LENGTH]), which import holds a file to.
+ * field takes (such as [NOTES_MAX_LENGTH]), which import holds a file to. Version 2 added who
+ * signed off on a rank's requirement ([RequirementJson.signedOffBy]).
  */
-const val BACKUP_FORMAT_VERSION = 1
+const val BACKUP_FORMAT_VERSION = 2
+
+/** The oldest format version this app reads. */
+private const val OLDEST_BACKUP_FORMAT_VERSION = 1
 
 // Every field is required, nulls included, and unknown keys fail parsing, as in the catalog.
 private val backupJson = Json
+
+// The same for a version 1 file, except that a missing field that can be null reads as null, so
+// its requirements read without a sign-off, which it didn't have. explicitNulls is experimental,
+// so a change to it would fail the build when kotlinx.serialization is updated.
+@OptIn(ExperimentalSerializationApi::class)
+private val backupJsonV1 = Json { explicitNulls = false }
 
 // Reads only the format version, skipping the rest.
 private val formatVersionJson = Json { ignoreUnknownKeys = true }
@@ -68,6 +81,7 @@ fun encodeBackup(backup: Backup): String =
  * newer format, or with a badge, rank or requirements version that [catalog] doesn't have. It's
  * [BackupReadResult.Invalid] unless it holds only what the app could have recorded:
  * - Every date is a date, and only a completed requirement has one.
+ * - Only a rank's requirement has a sign-off.
  * - Each badge or rank is listed once, and each of its requirements once.
  * - Each requirement and tracker column is in its badge's or rank's requirements version.
  * - A tracker entry fills one of its tracker's rows, which no other entry fills, or none in a
@@ -80,6 +94,9 @@ fun encodeBackup(backup: Backup): String =
  * and a single-line text field's line breaks are spaces, as the field replaces them
  * ([lineBreaksAsSpaces]). A field's length limit applies to the text as it's stored.
  *
+ * A file in an older format version imports without what was added since, such as a version 1
+ * file without sign-offs.
+ *
  * The JSON is decoded as it's read, never into a tree of the whole file, so a large or deeply
  * nested file that isn't an export can't use up the app's memory or stack.
  */
@@ -90,18 +107,23 @@ fun decodeBackup(json: String, catalog: List<Advancement>): BackupReadResult {
     } catch (e: SerializationException) {
         return BackupReadResult.Invalid
     }
-    if (version == null || version < BACKUP_FORMAT_VERSION) return BackupReadResult.Invalid
+    if (version == null || version < OLDEST_BACKUP_FORMAT_VERSION) return BackupReadResult.Invalid
     if (version > BACKUP_FORMAT_VERSION) return BackupReadResult.NewerFormat
     val file = try {
-        backupJson.decodeFromString(BackupJson.serializer(), json)
+        val format = if (version == 1L) backupJsonV1 else backupJson
+        format.decodeFromString(BackupJson.serializer(), json)
     } catch (e: SerializationException) {
+        return BackupReadResult.Invalid
+    }
+    // Version 1 had no sign-off.
+    if (version == 1L && file.badges.any { it.requirements.any { it.signedOffBy != null } }) {
         return BackupReadResult.Invalid
     }
     // A newer catalog can add badges, ranks and requirements versions without a new format
     // version.
-    val versions = file.badges.map { it.versionIn(catalog) ?: return BackupReadResult.NewerFormat }
+    val started = file.badges.map { it.startedIn(catalog) ?: return BackupReadResult.NewerFormat }
     return try {
-        BackupReadResult.Valid(file.toBackup(versions))
+        BackupReadResult.Valid(file.toBackup(started))
     } catch (e: InvalidBackupException) {
         BackupReadResult.Invalid
     }
@@ -156,7 +178,8 @@ private class RequirementJson(
     val number: String,
     val completed: Boolean,
     val completedDate: LocalDate?,
-    val notes: String?
+    val notes: String?,
+    val signedOffBy: String?
 )
 
 @Serializable
@@ -179,7 +202,13 @@ private fun Backup.toJson() = BackupJson(
             counselor = badge.counselor?.let { CounselorJson(it.name, it.phone, it.email) },
             completedOnPriorDate = badge.completedOnPriorDate,
             requirements = details.requirements.map {
-                RequirementJson(it.requirementNumber, it.completed, it.completedDate, it.comment)
+                RequirementJson(
+                    it.requirementNumber,
+                    it.completed,
+                    it.completedDate,
+                    it.comment,
+                    it.signedOffBy
+                )
             },
             // IDs only grow, so this is the order each log lists its entries in.
             trackerEntries = details.trackerEntries.sortedBy { it.id }.map {
@@ -196,26 +225,29 @@ private fun requireValid(valid: Boolean) {
     if (!valid) throw InvalidBackupException()
 }
 
-/**
- * The requirements version in [catalog] that this badge or rank was started on, or null if none.
- */
-private fun BadgeJson.versionIn(catalog: List<Advancement>): RequirementsVersion? =
-    catalog.find { it.id == badgeId }
-        ?.requirementVersions
-        ?.find { it.effectiveDate == requirementsVersion }
+/** A badge or rank in the catalog, and the requirements version it was started on. */
+private class StartedOn(val advancement: Advancement, val version: RequirementsVersion)
 
-/** This file's backup, with each badge's requirements [versions], in the same order. */
-private fun BackupJson.toBackup(versions: List<RequirementsVersion>): Backup {
+/** What this badge or rank was started on in [catalog], or null if [catalog] doesn't have it. */
+private fun BadgeJson.startedIn(catalog: List<Advancement>): StartedOn? {
+    val advancement = catalog.find { it.id == badgeId } ?: return null
+    val version = advancement.requirementVersions.find { it.effectiveDate == requirementsVersion }
+    return version?.let { StartedOn(advancement, it) }
+}
+
+/** This file's backup, with what each badge was [started] on, in the same order. */
+private fun BackupJson.toBackup(started: List<StartedOn>): Backup {
     requireValid(badges.distinctBy { it.badgeId }.size == badges.size)
     val profile = Profile(
         requiredText(profile.name, PROFILE_NAME_MAX_LENGTH),
         requiredText(profile.unitNumber, UNIT_NUMBER_MAX_LENGTH)
     )
-    return Backup(profile, badges.zip(versions) { badge, version -> badge.toProgress(version) })
+    return Backup(profile, badges.zip(started) { badge, on -> badge.toProgress(on) })
 }
 
-private fun BadgeJson.toProgress(version: RequirementsVersion): BadgeProgressDetails {
-    val inVersion = version.requirementsByNumber()
+private fun BadgeJson.toProgress(started: StartedOn): BadgeProgressDetails {
+    val inVersion = started.version.requirementsByNumber()
+    val isRank = started.advancement is Rank
     requireValid(requirements.distinctBy { it.number }.size == requirements.size)
     val rows = trackerEntries.filter { it.rowNumber != null }
     requireValid(rows.distinctBy { it.requirementNumber to it.rowNumber }.size == rows.size)
@@ -228,19 +260,23 @@ private fun BadgeJson.toProgress(version: RequirementsVersion): BadgeProgressDet
     }
     return BadgeProgressDetails(
         BadgeProgress(badgeId, requirementsVersion, startedDate, counselor, completedOnPriorDate),
-        requirements.map { it.toProgress(badgeId, inVersion) },
+        requirements.map { it.toProgress(badgeId, inVersion, isRank) },
         trackerEntries.map { it.toEntry(badgeId, inVersion) }
     )
 }
 
 private fun RequirementJson.toProgress(
     badgeId: String,
-    inVersion: Map<String, Requirement>
+    inVersion: Map<String, Requirement>,
+    isRank: Boolean
 ): RequirementProgress {
     requireValid(number in inVersion)
     requireValid(completed || completedDate == null)
     val notes = optionalText(notes, NOTES_MAX_LENGTH)
-    return RequirementProgress(badgeId, number, completed, completedDate, notes)
+    val signedOffBy = singleLineText(signedOffBy, SIGNED_OFF_BY_MAX_LENGTH)
+    // Only a rank's requirement page has the field.
+    requireValid(isRank || signedOffBy == null)
+    return RequirementProgress(badgeId, number, completed, completedDate, notes, signedOffBy)
 }
 
 private fun TrackerEntryJson.toEntry(

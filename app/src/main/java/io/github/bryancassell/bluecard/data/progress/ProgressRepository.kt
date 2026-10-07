@@ -60,7 +60,7 @@ interface ProgressRepository {
     )
 
     /**
-     * Undoes completion and removes the completion date; the comment stays. Returns the
+     * Undoes completion and removes the completion date; the sign-off and comment stay. Returns the
      * requirement's progress from before, read in the same transaction, or null if nothing was
      * recorded for it, so a caller can bring its date back. Does nothing for a badge that isn't
      * started, as when its progress was cleared just before.
@@ -90,13 +90,15 @@ interface ProgressRepository {
     )
 
     /**
-     * Sets the requirement's comment, stored as [normalizedText]: null or blank removes it.
+     * Sets who signed off on the requirement, which only a rank's requirement has, and its
+     * comment, in a single write. Each is stored as [normalizedText]: null or blank removes it.
      * A badge that hasn't been started is started with [start], as in
      * [markRequirementCompleted].
      */
-    suspend fun setRequirementComment(
+    suspend fun setRequirementSignOffAndComment(
         badgeId: String,
         number: String,
+        signedOffBy: String?,
         comment: String?,
         start: BadgeStart
     )
@@ -127,8 +129,8 @@ interface ProgressRepository {
     suspend fun deleteTrackerEntry(id: Long)
 
     /**
-     * Clears the completion, date, comment and tracker entries of each requirement numbered in
-     * [numbers], in one transaction. The badge stays started.
+     * Clears the completion, date, sign-off, comment and tracker entries of each requirement
+     * numbered in [numbers], in one transaction. The badge stays started.
      */
     suspend fun clearRequirements(badgeId: String, numbers: Collection<String>)
 

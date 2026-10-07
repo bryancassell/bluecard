@@ -15,12 +15,14 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasImeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -30,10 +32,12 @@ import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
@@ -74,11 +78,12 @@ class RequirementDetailScreenTest {
     private val openedBadges = mutableListOf<String>()
     private val completedChanges = mutableListOf<Boolean>()
     private val dateChanges = mutableListOf<LocalDate?>()
-    private var commentsSaved = 0
+    private var saves = 0
     private var clears = 0
     private var discards = 0
     private val back = BackPresses()
     private val saveFailuresShown = mutableListOf<TaskFailure>()
+    private val signedOffBy = TextFieldState()
     private val comment = TextFieldState()
 
     /** A requirement with sub-requirements. */
@@ -111,7 +116,7 @@ class RequirementDetailScreenTest {
             )
         ),
         tracker = null,
-        commentChanged = false,
+        textChanged = false,
         canClear = false
     )
 
@@ -122,7 +127,7 @@ class RequirementDetailScreenTest {
         completedDate = null,
         children = emptyList(),
         tracker = null,
-        commentChanged = false,
+        textChanged = false,
         canClear = false
     )
 
@@ -227,6 +232,7 @@ class RequirementDetailScreenTest {
             back.Content {
                 RequirementDetailScreen(
                     uiState = uiState,
+                    signedOffBy = signedOffBy,
                     comment = comment,
                     onOpenRequirement = { openedRequirements += it },
                     onOpenTrackerEntry = { entryId, rowNumber ->
@@ -236,7 +242,7 @@ class RequirementDetailScreenTest {
                     onCompletedChange = { completedChanges += it },
                     onCompletedDateChange = { dateChanges += it },
                     today = { today },
-                    onSaveComment = { commentsSaved++ },
+                    onSave = { saves++ },
                     onClear = { clears++ },
                     onDiscard = { discards++ },
                     onSaveFailureShown = { saveFailuresShown += it }
@@ -257,6 +263,22 @@ class RequirementDetailScreenTest {
         composeTestRule.onNode(hasSetTextAction() and hasText("Notes")).performScrollTo()
 
     private fun saveCommentButton() = composeTestRule.onNodeWithText("Save notes").performScrollTo()
+
+    private fun signOffField() =
+        composeTestRule.onNode(hasSetTextAction() and hasText("Signed off by")).performScrollTo()
+
+    /** A rank's requirement without sub-requirements, which has a field for who signed off. */
+    private val rankLeaf = leaf.copy(
+        advancementName = "Tenderfoot",
+        requirement = RequirementItem(
+            "1a",
+            "Pack for a campout.",
+            null,
+            false,
+            markedByHand = true
+        ),
+        hasSignOffField = true
+    )
 
     private fun clearButton() = composeTestRule.onNodeWithText("Clear progress").performScrollTo()
 
@@ -1232,16 +1254,16 @@ class RequirementDetailScreenTest {
 
     @Test
     fun changedComment_isSaved() {
-        show(leaf.copy(commentChanged = true))
+        show(leaf.copy(textChanged = true))
 
         saveCommentButton().assertIsEnabled().performClick()
 
-        assertEquals(1, commentsSaved)
+        assertEquals(1, saves)
     }
 
     @Test
     fun back_withChangedComment_asksBeforeDiscardingIt() {
-        show(completedLeaf.copy(commentChanged = true))
+        show(completedLeaf.copy(textChanged = true))
 
         back.press(composeTestRule)
         // Only the notes: the checkbox and date are saved already.
@@ -1261,6 +1283,77 @@ class RequirementDetailScreenTest {
 
         assertEquals(1, back.closes)
         composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
+    }
+
+    @Test
+    fun badgesRequirement_hasNoSignOffField() {
+        show(leaf)
+
+        composeTestRule.onNodeWithText("Signed off by").assertDoesNotExist()
+    }
+
+    @Test
+    fun ranksRequirement_hasASignOffField_aboveTheNotes() {
+        show(rankLeaf)
+
+        signOffField().performTextInput("Mr. Rivera")
+
+        assertEquals("Mr. Rivera", signedOffBy.text.toString())
+        assertTrue(
+            signOffField().getUnclippedBoundsInRoot().bottom <=
+                commentField().getUnclippedBoundsInRoot().top
+        )
+    }
+
+    @Test
+    fun signOff_keyboardNext_movesToTheNotes() {
+        show(rankLeaf)
+
+        signOffField().assert(hasImeAction(ImeAction.Next)).performClick().performImeAction()
+
+        commentField().assertIsFocused()
+    }
+
+    @Test
+    fun signOff_isOneLine_withAPastedLineBreakAsASpace_andTrimsTextPast100Characters() {
+        show(rankLeaf)
+
+        signOffField().performTextInput("Mr. Rivera\nScoutmaster")
+        assertEquals("Mr. Rivera Scoutmaster", signedOffBy.text.toString())
+
+        signOffField().performTextInput("x".repeat(100))
+        assertEquals(100, signedOffBy.text.length)
+        signOffField().assert(SemanticsMatcher.expectValue(SemanticsProperties.MaxTextLength, 100))
+    }
+
+    // One button saves the sign-off and the notes, so it isn't "Save notes".
+    @Test
+    fun ranksRequirement_changed_isSavedWithSave() {
+        show(rankLeaf.copy(textChanged = true))
+
+        composeTestRule.onNodeWithText("Save notes").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Save").performScrollTo().assertIsEnabled().performClick()
+
+        assertEquals(1, saves)
+    }
+
+    @Test
+    fun ranksRequirement_unchanged_cannotBeSaved() {
+        show(rankLeaf)
+
+        composeTestRule.onNodeWithText("Save").performScrollTo().assertIsNotEnabled()
+    }
+
+    @Test
+    fun back_withChangesOnARanksRequirement_saysTheSignOffAndNotesArentSaved() {
+        show(rankLeaf.copy(textChanged = true))
+
+        back.press(composeTestRule)
+        composeTestRule.onNodeWithText("Your changes to the sign-off and notes haven't been saved.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, discards)
     }
 
     @Test
@@ -1316,7 +1409,7 @@ class RequirementDetailScreenTest {
 
     @Test
     fun clear_withUnsavedNotes_saysTheyAreDiscarded() {
-        show(completedLeaf.copy(commentChanged = true, canClear = true))
+        show(completedLeaf.copy(textChanged = true, canClear = true))
 
         clearButton().performClick()
 
@@ -1330,7 +1423,7 @@ class RequirementDetailScreenTest {
 
     @Test
     fun clear_onRequirementWithSubRequirements_withUnsavedNotes_saysBoth() {
-        show(ready.copy(commentChanged = true, canClear = true))
+        show(ready.copy(textChanged = true, canClear = true))
 
         clearButton().performClick()
 
@@ -1338,6 +1431,34 @@ class RequirementDetailScreenTest {
             .onNodeWithText(
                 "What you recorded for it and the requirements under it will be removed, " +
                     "along with unsaved changes to its notes."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun clear_onARanksRequirement_withUnsavedChanges_saysTheSignOffAndNotesAreDiscarded() {
+        show(rankLeaf.copy(textChanged = true, canClear = true))
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it will be removed, along with unsaved changes to its " +
+                    "sign-off and notes."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun clear_onARanksRequirementWithSubRequirements_withUnsavedChanges_saysAll() {
+        show(ready.copy(hasSignOffField = true, textChanged = true, canClear = true))
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it and the requirements under it will be removed, " +
+                    "along with unsaved changes to its sign-off and notes."
             )
             .assertIsDisplayed()
     }

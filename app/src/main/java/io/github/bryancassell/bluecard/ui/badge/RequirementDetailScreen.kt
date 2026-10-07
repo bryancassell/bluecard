@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -30,18 +31,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
+import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
 
@@ -63,6 +67,7 @@ fun RequirementDetailRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RequirementDetailScreen(
         uiState = uiState,
+        signedOffBy = viewModel.signedOffBy,
         comment = viewModel.comment,
         onOpenRequirement = onOpenRequirement,
         onOpenTrackerEntry = onOpenTrackerEntry,
@@ -70,7 +75,7 @@ fun RequirementDetailRoute(
         onCompletedChange = viewModel::setCompleted,
         onCompletedDateChange = viewModel::setCompletedDate,
         today = viewModel::today,
-        onSaveComment = viewModel::saveComment,
+        onSave = viewModel::save,
         onClear = viewModel::clear,
         onDiscard = onClose,
         onSaveFailureShown = viewModel::onSaveFailureShown,
@@ -82,17 +87,19 @@ fun RequirementDetailRoute(
  * A requirement's own page: whether it's complete, and when for one the scout marks complete or
  * one complete once its tracker's rows are, the same for its own work if it asks for some
  * besides its sub-requirements, its sub-requirements, its tracker, and the scout's [comment] on
- * it. A sub-requirement opens its own page in turn, and a tracker row opens the Tracker entry
- * page ([onOpenTrackerEntry]) with its entry's ID, if it has one, and its number. Adding a row to
- * a log opens it with neither. A rank's requirement that asks for merit badges lists the badges
- * the scout has completed, each of which opens its page ([onOpenBadge]). At the bottom, once
- * anything is recorded, the scout can clear it ([onClear]), with what's recorded for the
- * requirements under it. Back with unsaved changes to the comment asks first, then [onDiscard]
- * closes the page without saving them.
+ * it, below who it was [signedOffBy] for a rank's requirement. A sub-requirement opens its own
+ * page in turn, and a tracker row opens the Tracker entry page ([onOpenTrackerEntry]) with its
+ * entry's ID, if it has one, and its number. Adding a row to a log opens it with neither. A
+ * rank's requirement that asks for merit badges lists the badges the scout has completed, each
+ * of which opens its page ([onOpenBadge]). At the bottom, once anything is recorded, the scout
+ * can clear it ([onClear]), with what's recorded for the requirements under it. Back with
+ * unsaved changes to the sign-off or comment asks first, then [onDiscard] closes the page without
+ * saving them.
  */
 @Composable
 fun RequirementDetailScreen(
     uiState: RequirementDetailUiState,
+    signedOffBy: TextFieldState,
     comment: TextFieldState,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
@@ -100,16 +107,23 @@ fun RequirementDetailScreen(
     onCompletedChange: (Boolean) -> Unit,
     onCompletedDateChange: (LocalDate?) -> Unit,
     today: () -> LocalDate,
-    onSaveComment: () -> Unit,
+    onSave: () -> Unit,
     onClear: () -> Unit,
     onDiscard: () -> Unit,
     onSaveFailureShown: (TaskFailure) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val ready = uiState as? RequirementDetailUiState.Ready
     ConfirmDiscardOnBack(
-        changed = (uiState as? RequirementDetailUiState.Ready)?.commentChanged == true,
+        changed = ready?.textChanged == true,
         onDiscard = onDiscard,
-        message = stringResource(R.string.discard_changes_message_notes)
+        message = stringResource(
+            if (ready?.hasSignOffField == true) {
+                R.string.discard_changes_message_sign_off_and_notes
+            } else {
+                R.string.discard_changes_message_notes
+            }
+        )
     )
     when (uiState) {
         // One branch, so screen readers hear the message (see LoadingOrMessage).
@@ -127,7 +141,7 @@ fun RequirementDetailScreen(
             modifier = modifier
         )
 
-        // Ends the page above the keyboard, so the comment field can be scrolled into view.
+        // Ends the page above the keyboard, so the text fields can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 RequirementHeader(uiState.advancementName, uiState.requirement, uiState.timeInRank)
@@ -180,12 +194,18 @@ fun RequirementDetailScreen(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
-                CommentField(comment, uiState.commentChanged, onSaveComment)
+                TextFields(
+                    signedOffBy = signedOffBy.takeIf { uiState.hasSignOffField },
+                    comment = comment,
+                    changed = uiState.textChanged,
+                    onSave = onSave
+                )
                 if (uiState.canClear) {
                     ClearRequirement(
                         number = requirement.number,
                         hasChildren = uiState.children.isNotEmpty(),
-                        unsavedNotes = uiState.commentChanged,
+                        unsavedText = uiState.textChanged,
+                        hasSignOffField = uiState.hasSignOffField,
                         onClear = onClear
                     )
                 }
@@ -324,15 +344,24 @@ private fun CompletionDate(
 
 private val CommentLengthLimit = TextLengthLimit(maxLength = NOTES_MAX_LENGTH)
 
-/** The scout's comment on the requirement, saved when they choose. */
+/**
+ * Who [signedOffBy] on the requirement, unless it's null, as for a badge's requirement, and the
+ * scout's comment on it, saved together when they choose.
+ */
 @Composable
-private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -> Unit) {
+private fun TextFields(
+    signedOffBy: TextFieldState?,
+    comment: TextFieldState,
+    changed: Boolean,
+    onSave: () -> Unit
+) {
     val focusManager = LocalFocusManager.current
     Column(
         modifier = Modifier.padding(16.dp),
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        signedOffBy?.let { SignedOffByField(it) }
         OutlinedTextField(
             state = comment,
             textStyle = typedTextFieldStyle(),
@@ -350,33 +379,65 @@ private fun CommentField(comment: TextFieldState, changed: Boolean, onSave: () -
             },
             enabled = changed
         ) {
-            Text(stringResource(R.string.requirement_save_comment))
+            // With the sign-off, it saves more than the notes.
+            val label = if (signedOffBy != null) {
+                R.string.requirement_save
+            } else {
+                R.string.requirement_save_comment
+            }
+            Text(stringResource(label))
         }
     }
 }
 
+/** A one-line field for who signed off on a rank's requirement, such as the Scoutmaster. */
+@Composable
+private fun SignedOffByField(state: TextFieldState) {
+    val input = remember { singleLineInput(SIGNED_OFF_BY_MAX_LENGTH) }
+    OutlinedTextField(
+        state = state,
+        textStyle = typedTextFieldStyle(),
+        label = { Text(stringResource(R.string.requirement_signed_off_by)) },
+        inputTransformation = input,
+        lineLimits = TextFieldLineLimits.SingleLine,
+        // Next moves on to the notes.
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Words,
+            imeAction = ImeAction.Next
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
 /**
  * Clears what the scout recorded for the requirement, and for those under it if it
- * [hasChildren], once they confirm. The dialog warns that [unsavedNotes], changes to the notes
- * not saved yet, go too.
+ * [hasChildren], once they confirm. The dialog warns that [unsavedText], changes to its text
+ * fields not saved yet, go too: the sign-off and notes if it [hasSignOffField], or else the notes.
  */
 @Composable
 private fun ClearRequirement(
     number: String,
     hasChildren: Boolean,
-    unsavedNotes: Boolean,
+    unsavedText: Boolean,
+    hasSignOffField: Boolean,
     onClear: () -> Unit
 ) {
     ClearProgress(
         title = stringResource(R.string.requirement_clear_title, number),
         message = stringResource(
             when {
-                hasChildren && unsavedNotes ->
+                hasChildren && unsavedText && hasSignOffField ->
+                    R.string.requirement_clear_message_with_children_and_unsaved_sign_off_and_notes
+
+                hasChildren && unsavedText ->
                     R.string.requirement_clear_message_with_children_and_unsaved_notes
 
                 hasChildren -> R.string.requirement_clear_message_with_children
 
-                unsavedNotes -> R.string.requirement_clear_message_with_unsaved_notes
+                unsavedText && hasSignOffField ->
+                    R.string.requirement_clear_message_with_unsaved_sign_off_and_notes
+
+                unsavedText -> R.string.requirement_clear_message_with_unsaved_notes
 
                 else -> R.string.requirement_clear_message
             }

@@ -732,7 +732,13 @@ class BadgeDetailViewModelTest {
     @Test
     fun clear_removesEverythingRecordedForTheBadge_andNothingElse() = runTest {
         progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
-        progressRepository.setRequirementComment("camping", "2a", "Made chili.", badgeStart)
+        progressRepository.setRequirementSignOffAndComment(
+            "camping",
+            "2a",
+            null,
+            "Made chili.",
+            badgeStart
+        )
         progressRepository.addTrackerEntry(
             "camping",
             "3",
