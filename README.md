@@ -51,10 +51,9 @@ install Gradle, Kotlin or a separate JDK, but command-line builds need
 
 Then, from the repository root:
 
-```sh
-./gradlew build         # Builds the app and runs every check CI runs
-./gradlew installDebug  # Installs the debug app on a running emulator or phone
-```
+- `./gradlew build` builds the app and runs every check CI runs.
+- `./gradlew installDebug` installs the debug app on a running emulator or
+  phone.
 
 You can also open the project in Android Studio and run the `app` configuration.
 The other commands are listed in
