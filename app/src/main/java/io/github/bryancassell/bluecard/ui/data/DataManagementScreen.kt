@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -39,6 +38,7 @@ import io.github.bryancassell.bluecard.data.backup.exportFileName
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
+import io.github.bryancassell.bluecard.ui.readAs
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
 import java.time.LocalDate
@@ -207,15 +207,7 @@ private fun Section(
     Text(text = stringResource(description), style = MaterialTheme.typography.bodyMedium)
     val spoken = buttonDescription?.let { stringResource(it) }
     OutlinedButton(onClick = onClick, enabled = enabled, colors = colors) {
-        Text(
-            text = stringResource(button),
-            // On the text: TalkBack read one on the button, then the text after it.
-            modifier = if (spoken == null) {
-                Modifier
-            } else {
-                Modifier.semantics { contentDescription = spoken }
-            }
-        )
+        Text(text = stringResource(button), modifier = Modifier.readAs(spoken))
     }
 }
 

@@ -25,13 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.text.completionDateFormatter
+import io.github.bryancassell.bluecard.ui.readAs
 import io.github.bryancassell.bluecard.ui.stringsLocale
 import java.time.Instant
 import java.time.LocalDate
@@ -54,7 +53,7 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
  * to pick the date or remove it, labeled [removeText]. Without a date, the picker opens at
  * [suggested], if given, or else at [today]. Dates after [today] can't be picked. It's read as the
  * picker opens, so a page left open past midnight offers the new day. Screen readers
- * read the date's [label], if it has one, with each button, such as "Start: Add date", so the
+ * read the date's [label], if it has one, with each button, such as "Add date: Start", so the
  * buttons of a page with more than one date aren't all the same to them. The text is in
  * [textStyle].
  */
@@ -86,22 +85,20 @@ fun EditableDate(
             val pick = stringResource(pickText)
             PickDateButton(
                 text = pick,
+                description = label?.let { stringResource(R.string.labeled_date_button, pick, it) },
                 initial = date ?: suggested,
                 today = today,
-                onPick = onDateChange,
-                modifier = Modifier.readAs(
-                    label?.let { stringResource(R.string.labeled_date_button, it, pick) }
-                )
+                onPick = onDateChange
             )
             if (date != null) {
                 val remove = stringResource(removeText)
-                TextButton(
-                    onClick = { onDateChange(null) },
-                    modifier = Modifier.readAs(
-                        label?.let { stringResource(R.string.labeled_date_button, it, remove) }
+                TextButton(onClick = { onDateChange(null) }) {
+                    Text(
+                        text = remove,
+                        modifier = Modifier.readAs(
+                            label?.let { stringResource(R.string.labeled_date_button, remove, it) }
+                        )
                     )
-                ) {
-                    Text(remove)
                 }
             }
         }
@@ -109,21 +106,22 @@ fun EditableDate(
 }
 
 /**
- * A text button labeled [text] that asks for a date something was done on, starting at [initial],
- * or at [today] without one, and gives [onPick] the date picked. Dates after [today] can't be
- * picked. It's read as the picker opens, so a page left open past midnight offers the new day.
+ * A text button labeled [text], read as [description] by screen readers if it has one, that asks
+ * for a date something was done on, starting at [initial], or at [today] without one, and gives
+ * [onPick] the date picked. Dates after [today] can't be picked. It's read as the picker opens, so
+ * a page left open past midnight offers the new day.
  */
 @Composable
 private fun PickDateButton(
     text: String,
+    description: String?,
     initial: LocalDate?,
     today: () -> LocalDate,
-    onPick: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
+    onPick: (LocalDate) -> Unit
 ) {
     PickDate(initial, today, onPick) { onClick ->
-        TextButton(onClick = onClick, modifier = modifier) {
-            Text(text)
+        TextButton(onClick = onClick) {
+            Text(text = text, modifier = Modifier.readAs(description))
         }
     }
 }
@@ -156,10 +154,6 @@ internal fun PickDate(
         )
     }
 }
-
-/** Has screen readers read [description] in place of the element's text, unless it's null. */
-private fun Modifier.readAs(description: String?): Modifier =
-    if (description == null) this else semantics { contentDescription = description }
 
 /**
  * Asks for the date something was done on, such as when a requirement was completed, starting

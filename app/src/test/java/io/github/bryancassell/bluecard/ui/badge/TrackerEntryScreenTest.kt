@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -173,6 +174,18 @@ class TrackerEntryScreenTest {
         composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
     private fun button(text: String) = composeTestRule.onNodeWithText(text).performScrollTo()
+
+    /** Asserts that screen readers read the button with [text] as [description], and only once. */
+    private fun assertReadOnceAs(text: String, description: String) {
+        // Only one: TalkBack would also read a second, such as one set on the button as well.
+        composeTestRule.onNodeWithContentDescription(description)
+            .assertContentDescriptionEquals(description)
+            .assertHasClickAction()
+        // TalkBack reads the button's parts in turn, so the description has to be the text's
+        // own: one beside the text was read and then the text again after it.
+        composeTestRule.onNodeWithText(text, useUnmergedTree = true)
+            .assertContentDescriptionEquals(description)
+    }
 
     /** Where the focused field's cursor is: the view reports it as its focused area. */
     private fun cursorBounds(): DpRect {
@@ -535,9 +548,11 @@ class TrackerEntryScreenTest {
             fields = dateColumns.associate { it.id to TextFieldState() }
         )
 
-        composeTestRule.onNodeWithContentDescription("Start: Add date").assertHasClickAction()
-        composeTestRule.onNodeWithContentDescription("End: Change date").assertHasClickAction()
-        composeTestRule.onNodeWithContentDescription("End: Remove date").performClick()
+        // Each starts with the button's text, as WCAG 2.5.3 recommends for voice control users.
+        assertReadOnceAs("Add date", "Add date: Start")
+        assertReadOnceAs("Change date", "Change date: End")
+        assertReadOnceAs("Remove date", "Remove date: End")
+        composeTestRule.onNodeWithContentDescription("Remove date: End").performClick()
 
         assertEquals(listOf<Pair<String, LocalDate?>>("end" to null), dateChanges)
     }
