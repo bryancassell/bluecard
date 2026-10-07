@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
@@ -54,7 +55,8 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
  * [suggested], if given, or else at [today]. Dates after [today] can't be picked. It's read as the
  * picker opens, so a page left open past midnight offers the new day. Screen readers
  * read the date's [label], if it has one, with each button, such as "Start: Add date", so the
- * buttons of a page with more than one date aren't all the same to them.
+ * buttons of a page with more than one date aren't all the same to them. The text is in
+ * [textStyle].
  */
 @Composable
 fun EditableDate(
@@ -65,12 +67,13 @@ fun EditableDate(
     modifier: Modifier = Modifier,
     label: String? = null,
     @StringRes removeText: Int = R.string.requirement_remove_date,
-    suggested: LocalDate? = null
+    suggested: LocalDate? = null,
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium
 ) {
     Column(modifier) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
+            style = textStyle,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         // Lines the buttons' text up with the date's.
@@ -111,17 +114,35 @@ fun EditableDate(
  * picked. It's read as the picker opens, so a page left open past midnight offers the new day.
  */
 @Composable
-fun PickDateButton(
+private fun PickDateButton(
     text: String,
     initial: LocalDate?,
     today: () -> LocalDate,
     onPick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var picking by rememberSaveable { mutableStateOf(false) }
-    TextButton(onClick = { picking = true }, modifier = modifier) {
-        Text(text)
+    PickDate(initial, today, onPick) { onClick ->
+        TextButton(onClick = onClick, modifier = modifier) {
+            Text(text)
+        }
     }
+}
+
+/**
+ * Shows the [button] that asks for a date something was done on, and the picker while it's
+ * asking. The picker starts at [initial], or at [today] without one, and gives [onPick] the date
+ * picked. Dates after [today] can't be picked. It's read as the picker opens, so a page left open
+ * past midnight offers the new day.
+ */
+@Composable
+internal fun PickDate(
+    initial: LocalDate?,
+    today: () -> LocalDate,
+    onPick: (LocalDate) -> Unit,
+    button: @Composable (onClick: () -> Unit) -> Unit
+) {
+    var picking by rememberSaveable { mutableStateOf(false) }
+    button { picking = true }
     if (picking) {
         val latest = remember { today() }
         CompletionDatePickerDialog(

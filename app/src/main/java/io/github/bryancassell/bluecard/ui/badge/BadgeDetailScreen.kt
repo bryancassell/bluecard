@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadingOrMessage
@@ -169,8 +170,6 @@ private fun BadgeDetails(
         AdvancementHeader(
             name = uiState.name,
             fractionDone = uiState.fractionDone,
-            // A badge shows its bar only while it's in progress.
-            inProgress = true,
             summary = uiState.summary,
             officialUrl = uiState.officialUrl,
             startOtherApp = startOtherApp,
@@ -178,22 +177,12 @@ private fun BadgeDetails(
                 { EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter())) }
             }
         )
-        // Outside the header's column, so its text buttons line up with the page's text, as Add
-        // counselor's does.
-        CompletedOnPriorDate(uiState, today, onMarkCompleted, onUnmarkCompleted)
-        if (uiState.completed) {
+        CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) {
             ReportButtons(
                 reportFileName(LocalResources.current, ReportKind.MeritBadge, uiState.name),
                 onShareReport,
                 onSaveReport,
-                startOtherApp,
-                Modifier.padding(
-                    start = 16.dp,
-                    // Under Change date, whose touch area already leaves room below its text.
-                    top = if (uiState.completedOnPriorDate == null) 8.dp else 0.dp,
-                    end = 16.dp,
-                    bottom = 16.dp
-                )
+                startOtherApp
             )
         }
         CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
@@ -222,51 +211,66 @@ private fun BadgeDetails(
 }
 
 /**
- * While the badge isn't complete, a button to mark it completed on a date the scout picks, up to
- * [today], without recording its requirements ([onMark]). Its picker opens at the date the scout
- * just unmarked, if any, or at today. Once it's marked, the date, with
- * buttons to change it ([onMark]) or unmark the badge ([onUnmark]). Nothing for a badge complete
- * from its requirements alone.
+ * The badge's [StatusCard]:
+ * - While it isn't complete, "In progress" once it's started, as on Badges, or "Not started",
+ *   with a button to mark it completed on a date the scout picks, up to [today], without
+ *   recording its requirements ([onMark]). Its picker opens at the date the scout just
+ *   unmarked, if any, or at today.
+ * - Once it's marked, the date, with buttons to change it ([onMark]) or unmark the badge
+ *   ([onUnmark]).
+ * - For a badge complete from its requirements, the date they were completed on.
  *
- * Its text buttons' touch areas are taller than they look, so they need no padding of their own
- * to keep it apart from what's above and below.
+ * Once it's complete, the [reportButtons] follow.
  */
 @Composable
-private fun CompletedOnPriorDate(
+private fun CompletionStatus(
     uiState: BadgeDetailUiState.Ready,
     today: () -> LocalDate,
     onMark: (date: LocalDate) -> Unit,
-    onUnmark: () -> Unit
+    onUnmark: () -> Unit,
+    reportButtons: @Composable () -> Unit
 ) {
     val date = uiState.completedOnPriorDate
-    if (date != null) {
-        val formatter = rememberCompletionDateFormatter()
-        EditableDate(
-            text = stringResource(R.string.badge_detail_completed_on, formatter.format(date)),
-            date = date,
-            today = today,
-            onDateChange = { if (it == null) onUnmark() else onMark(it) },
-            // Its text, unlike a button's, sits at the top of its space.
-            modifier = Modifier.padding(top = 16.dp),
-            removeText = R.string.badge_detail_unmark_completed
-        )
-    } else if (!uiState.completed) {
-        PickDateButton(
-            text = stringResource(R.string.badge_detail_mark_completed),
-            // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
-            initial = uiState.unmarkedDate,
-            today = today,
-            onPick = onMark,
-            // Lines the button's text up with the page's, as for Add counselor.
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
+    val formatter = rememberCompletionDateFormatter()
+    StatusCard(reportButtons = reportButtons.takeIf { uiState.completed }) {
+        when {
+            date != null -> EditableDate(
+                text = stringResource(R.string.badge_detail_completed_on, formatter.format(date)),
+                date = date,
+                today = today,
+                onDateChange = { if (it == null) onUnmark() else onMark(it) },
+                removeText = R.string.badge_detail_unmark_completed,
+                textStyle = statusLineStyle
+            )
+
+            uiState.completed -> DoneStatusLine(
+                uiState.completedOn?.let {
+                    stringResource(R.string.badge_detail_completed_on, formatter.format(it))
+                } ?: stringResource(R.string.badges_completed)
+            )
+
+            else -> MarkDoneLines(
+                status = stringResource(
+                    if (uiState.status == BadgeStatus.InProgress) {
+                        R.string.badges_in_progress
+                    } else {
+                        R.string.badge_detail_not_started
+                    }
+                ),
+                prompt = stringResource(R.string.badge_detail_mark_completed_prompt),
+                markText = stringResource(R.string.badge_detail_mark_completed),
+                // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
+                initial = uiState.unmarkedDate,
+                today = today,
+                onMark = onMark
+            )
+        }
     }
 }
 
 /**
- * Says the badge is Eagle-required, as a filled tag. It's the only filled shape on the page, with
- * small corners, so it doesn't look like the buttons near it, which are outlined or plain text and
- * fully rounded. A long label wraps inside it.
+ * Says the badge is Eagle-required, as a filled tag. Its small corners keep it from looking like
+ * the buttons near it, which are fully rounded. A long label wraps inside it.
  */
 @Composable
 private fun EagleTag(label: String) {

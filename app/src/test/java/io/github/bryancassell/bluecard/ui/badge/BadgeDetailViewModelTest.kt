@@ -16,6 +16,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -377,6 +378,7 @@ class BadgeDetailViewModelTest {
         val viewModel = viewModel("chess")
         startCollecting(viewModel)
 
+        assertEquals(BadgeStatus.NotStarted, viewModel.ready().status)
         assertFalse(viewModel.ready().completed)
     }
 
@@ -396,6 +398,7 @@ class BadgeDetailViewModelTest {
         val viewModel = viewModel()
         startCollecting(viewModel)
 
+        assertEquals(BadgeStatus.InProgress, viewModel.ready().status)
         assertFalse(viewModel.ready().completed)
     }
 
@@ -406,6 +409,26 @@ class BadgeDetailViewModelTest {
         startCollecting(viewModel)
 
         assertTrue(viewModel.ready().completed)
+        assertEquals(day, viewModel.ready().completedOn)
+    }
+
+    @Test
+    fun badgeCompleteFromItsRequirements_isCompletedOnTheDateTheyWere() = runTest {
+        val viewModel = viewModel("chess")
+        startCollecting(viewModel)
+
+        completeChess()
+
+        assertEquals(day, viewModel.ready().completedOn)
+    }
+
+    @Test
+    fun badgeNotComplete_hasNoCompletionDate() = runTest {
+        progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().completedOn)
     }
 
     @Test

@@ -69,11 +69,12 @@ class RankDetailViewModel @AssistedInject constructor(
             ranks.advancementRequirementsAmong(rankId, progressById, earnedBadges, standings)
                 ?: return@combine RankDetailUiState.Unavailable
         val progress = progressById[rankId]
+        val requirements = found.version.requirements.map(found::item)
         RankDetailUiState.Ready(
             name = found.advancement.name,
             summary = found.advancement.summary,
             officialUrl = found.advancement.officialUrl,
-            requirements = found.version.requirements.map(found::item),
+            requirements = requirements,
             status = standing.status,
             fractionDone = standing.fractionDone,
             earnedOnPriorDate = progress?.badge?.completedOnPriorDate,
@@ -81,6 +82,7 @@ class RankDetailViewModel @AssistedInject constructor(
             earnedOn = standing.earnedOn,
             waitingOn = standing.waitingOn?.name,
             canClear = progress != null,
+            started = progress != null || requirements.any { it.completed || it.partlyCompleted },
             unearnedByClear = if (progress == null) {
                 emptyList()
             } else {
