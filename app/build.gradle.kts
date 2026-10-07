@@ -1,3 +1,5 @@
+import androidx.room.gradle.RoomSchemaCopyTask
+import androidx.room.gradle.RoomSimpleCopyTask
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.variant.ScopedArtifacts
 
@@ -64,12 +66,6 @@ android {
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
         }
     }
-
-    // MigrationTestHelper reads each database version's schema from assets. The Room plugin
-    // adds the schemas to instrumented tests' assets only, and migration tests run locally,
-    // where Robolectric reads the debug build's assets. So debug builds carry the schemas too;
-    // release builds don't.
-    sourceSets.getByName("debug").assets.directories.add("$projectDir/schemas")
 
     testCoverage {
         jacocoVersion = libs.versions.jacoco.get()
@@ -189,6 +185,22 @@ androidComponents {
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
             .use(jacocoDebugCoverageVerification)
             .toGet(ScopedArtifact.CLASSES, { coverageClassJars }, { coverageClassDirs })
+
+        // MigrationTestHelper reads each database version's schema from assets. The Room plugin
+        // adds the schemas to instrumented tests' assets only, and migration tests run locally,
+        // where Robolectric reads the debug build's assets. So debug builds carry the schemas
+        // too; release builds don't. They go through a copy task, as the Room plugin's own do,
+        // so that merging assets waits for Room to write a new database version's schema.
+        variant.sources.assets?.addGeneratedSourceDirectory(
+            tasks.register<RoomSimpleCopyTask>("copyRoomSchemasToDebugAssets") {
+                val roomSchemaCopy = tasks.named<RoomSchemaCopyTask>("copyRoomSchemas")
+                inputDirectory.set(roomSchemaCopy.flatMap { it.schemaDirectory })
+                // Room's copy declares no outputs, so the line above doesn't order this task
+                // after it. Room's copy runs whenever KSP does, after KSP.
+                mustRunAfter(roomSchemaCopy)
+            },
+            RoomSimpleCopyTask::outputDirectory
+        )
     }
 }
 
