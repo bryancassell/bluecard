@@ -444,9 +444,11 @@ both taps of a double tap can reach it.
 
 ### Screen reader labels
 
-- **A label that replaces a button's text goes on the `Text` inside it**, as a
-  `contentDescription` in its semantics, not on the button's modifier
-  ([#166](https://github.com/bryancassell/bluecard/issues/166)). Compose gives
+- **A label that replaces a button's text goes on the `Text` inside it**: the
+  button's content is a `ButtonText` (`ui/ButtonText.kt`), which sets it as the
+  text's `contentDescription`, never on the button's modifier
+  ([#166](https://github.com/bryancassell/bluecard/issues/166),
+  [#256](https://github.com/bryancassell/bluecard/issues/256)). Compose gives
   TalkBack the button's parts in turn, so a description on the button became a
   part of its own: TalkBack read "Edit name and unit. Edit. Button". On the
   text, it replaces the text's label. Tests of such a label check the `Text`

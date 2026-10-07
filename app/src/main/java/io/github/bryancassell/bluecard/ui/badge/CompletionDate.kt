@@ -25,13 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.text.completionDateFormatter
+import io.github.bryancassell.bluecard.ui.ButtonText
 import io.github.bryancassell.bluecard.ui.stringsLocale
 import java.time.Instant
 import java.time.LocalDate
@@ -54,9 +53,9 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
  * to pick the date or remove it, labeled [removeText]. Without a date, the picker opens at
  * [suggested], if given, or else at [today]. Dates after [today] can't be picked. It's read as the
  * picker opens, so a page left open past midnight offers the new day. Screen readers
- * read the date's [label], if it has one, with each button, such as "Start: Add date", so the
- * buttons of a page with more than one date aren't all the same to them. The text is in
- * [textStyle].
+ * read the date's [label], if it has one, after each button's text, such as "Add date: Week
+ * starting": moving from control to control, they don't hear a label shown above the date. The
+ * text is in [textStyle].
  */
 @Composable
 fun EditableDate(
@@ -83,48 +82,27 @@ fun EditableDate(
             } else {
                 R.string.requirement_change_date
             }
-            val pick = stringResource(pickText)
-            PickDateButton(
-                text = pick,
-                initial = date ?: suggested,
-                today = today,
-                onPick = onDateChange,
-                modifier = Modifier.readAs(
-                    label?.let { stringResource(R.string.labeled_date_button, it, pick) }
-                )
-            )
+            PickDate(date ?: suggested, today, onDateChange) { onClick ->
+                DateButton(stringResource(pickText), label, onClick)
+            }
             if (date != null) {
-                val remove = stringResource(removeText)
-                TextButton(
-                    onClick = { onDateChange(null) },
-                    modifier = Modifier.readAs(
-                        label?.let { stringResource(R.string.labeled_date_button, it, remove) }
-                    )
-                ) {
-                    Text(remove)
-                }
+                DateButton(stringResource(removeText), label) { onDateChange(null) }
             }
         }
     }
 }
 
 /**
- * A text button labeled [text] that asks for a date something was done on, starting at [initial],
- * or at [today] without one, and gives [onPick] the date picked. Dates after [today] can't be
- * picked. It's read as the picker opens, so a page left open past midnight offers the new day.
+ * A text button labeled [text] for a date, which screen readers read with the date's [label] after
+ * it, if it has one.
  */
 @Composable
-private fun PickDateButton(
-    text: String,
-    initial: LocalDate?,
-    today: () -> LocalDate,
-    onPick: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    PickDate(initial, today, onPick) { onClick ->
-        TextButton(onClick = onClick, modifier = modifier) {
-            Text(text)
-        }
+private fun DateButton(text: String, label: String?, onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        ButtonText(
+            text = text,
+            description = label?.let { stringResource(R.string.labeled_date_button, text, it) }
+        )
     }
 }
 
@@ -156,10 +134,6 @@ internal fun PickDate(
         )
     }
 }
-
-/** Has screen readers read [description] in place of the element's text, unless it's null. */
-private fun Modifier.readAs(description: String?): Modifier =
-    if (description == null) this else semantics { contentDescription = description }
 
 /**
  * Asks for the date something was done on, such as when a requirement was completed, starting

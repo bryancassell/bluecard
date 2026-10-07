@@ -119,8 +119,9 @@
     <string name="requirement_add_date">Add date</string>
     <string name="requirement_change_date">Change date</string>
     <string name="requirement_remove_date">Remove date</string>
-    <!-- For screen readers, a date's button with the label of the date it's for, then the
-         button's text, such as "Start: Add date" in a tracker row. -->
+    <!-- For screen readers, a date's button: its text, then the label of the date it's for,
+         such as "Add date: Week starting" in a tracker row. Starts with the button's text, as
+         WCAG 2.5.3 recommends for voice control users. -->
     <string name="labeled_date_button">%1$s: %2$s</string>
     <!-- Label of the field for the scout's notes about a requirement. -->
     <string name="requirement_comment">Notes</string>

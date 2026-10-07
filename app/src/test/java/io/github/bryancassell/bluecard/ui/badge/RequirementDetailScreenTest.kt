@@ -1109,6 +1109,17 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Add date").assertDoesNotExist()
     }
 
+    // Only a tracker row's date buttons name their date: this page is about one date.
+    @Test
+    fun completedLeafWithDate_dateButtonsReadOnlyTheirText() {
+        show(completedLeaf)
+
+        listOf("Change date", "Remove date").forEach {
+            composeTestRule.onNodeWithText(it)
+                .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+        }
+    }
+
     @Test
     fun completedLeafWithoutDate_offersToAddOne() {
         show(completedLeaf.copy(completedDate = null))
