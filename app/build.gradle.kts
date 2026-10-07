@@ -63,6 +63,21 @@ android {
         unitTests.all {
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
         }
+        // TRIAL (#14): Gradle Managed Devices candidates for the CI emulator job.
+        managedDevices {
+            localDevices {
+                create("api36Atd") {
+                    device = "Pixel 6"
+                    sdkVersion = 36
+                    systemImageSource = "aosp-atd"
+                }
+                create("api37Google") {
+                    device = "Pixel 6"
+                    sdkVersion = 37
+                    systemImageSource = "google"
+                }
+            }
+        }
     }
 
     // MigrationTestHelper reads each database version's schema from assets. The Room plugin
