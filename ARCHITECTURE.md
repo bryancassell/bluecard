@@ -215,9 +215,14 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   [Handle ViewModel events](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
   which says ViewModel events "should always result in a UI state update". The
   screen keeps showing what's stored, so a change that failed visibly didn't
-  happen. Onboarding predates this and shows its own message under its button.
-  Data management runs its import and clear as it runs its export, with its own
-  messages in one snackbar, rather than with a `TaskRunner`.
+  happen. Data management runs its import and clear as it runs its export,
+  with its own messages in one snackbar, rather than with a `TaskRunner`.
+- **Screen readers hear each snackbar from its live region.** Material 3
+  (1.4.0) gives each snackbar a polite live region and the pane title "Alert".
+  TalkBack read every failed save on Onboarding, retries included
+  ([#234](https://github.com/bryancassell/bluecard/issues/234)), but skipped
+  "Alert" when a snackbar replaced one still showing, since the pane title
+  hadn't changed. So don't rely on a snackbar's pane title to announce it.
 - **A message that takes a screen's place is a live region composed while the
   screen loads** ([#69](https://github.com/bryancassell/bluecard/issues/69)),
   so screen readers announce it as it appears. `ScreenMessage`
@@ -232,8 +237,6 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   seen (`sendSemanticsPropertyChangeEvents` in
   `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
   message composed as a new node, as in its own branch, isn't announced.
-  Onboarding's save-failed message, under its button, is composed empty the
-  same way.
   - **Live regions are what Android points to.** When Android 16 deprecated
     `announceForAccessibility`, its
     [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)

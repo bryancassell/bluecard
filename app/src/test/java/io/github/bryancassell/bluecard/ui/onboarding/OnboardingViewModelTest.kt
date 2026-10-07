@@ -21,6 +21,8 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -218,16 +220,18 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun save_whenItFails_showsFailedAndAllowsRetry() = runTest {
+    fun save_whenItFails_reportsItAndAllowsRetry() = runTest {
         repository.failSaves = true
         startCollecting()
         fillIn()
         viewModel.save()
 
-        assertEquals(SaveStatus.Failed, state.saveStatus)
+        val failure = state.saveFailure
+        assertNotNull(failure)
+        assertEquals(SaveStatus.Editing, state.saveStatus)
         assertTrue(state.canEdit)
         assertTrue(state.canSave)
-        val log = ShadowLog.getLogsForTag("Onboarding").single()
+        val log = ShadowLog.getLogsForTag("TaskFailure").single()
         assertEquals(Log.WARN, log.type)
         assertTrue(log.throwable is IOException)
 
@@ -236,5 +240,35 @@ class OnboardingViewModelTest {
 
         assertEquals(SaveStatus.Saved, state.saveStatus)
         assertEquals(Profile("Alex Scout", "123"), repository.observeProfile().first())
+    }
+
+    @Test
+    fun save_whenItFailsAgain_reportsANewFailure() = runTest {
+        repository.failSaves = true
+        startCollecting()
+        fillIn()
+        viewModel.save()
+        val first = state.saveFailure
+
+        // Before the screen has shown the first, as when the scout taps again while it shows.
+        viewModel.save()
+
+        val second = state.saveFailure
+        assertNotNull(second)
+        assertNotSame(first, second)
+        assertEquals(SaveStatus.Editing, state.saveStatus)
+    }
+
+    @Test
+    fun saveFailureShown_clearsIt() = runTest {
+        repository.failSaves = true
+        startCollecting()
+        fillIn()
+        viewModel.save()
+
+        viewModel.onSaveFailureShown(state.saveFailure!!)
+
+        assertNull(state.saveFailure)
+        assertTrue(state.canSave)
     }
 }

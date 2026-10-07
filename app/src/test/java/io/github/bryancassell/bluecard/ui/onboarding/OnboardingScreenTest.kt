@@ -6,15 +6,13 @@ import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -29,8 +27,8 @@ import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
+import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -45,6 +43,7 @@ class OnboardingScreenTest {
     private val name = TextFieldState()
     private val unitNumber = TextFieldState()
     private var saves = 0
+    private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     /** Records what the screen asks of the on-screen keyboard. */
     private val keyboard = object : SoftwareKeyboardController {
@@ -60,11 +59,7 @@ class OnboardingScreenTest {
     // The view that hosts the screen, which connects the keyboard to the focused field.
     private lateinit var view: View
 
-    /** The UI state shown, which a test can change after [show]. */
-    private var uiState by mutableStateOf<OnboardingUiState>(OnboardingUiState())
-
-    private fun show(state: OnboardingUiState) {
-        uiState = state
+    private fun show(uiState: OnboardingUiState) {
         composeTestRule.setContent {
             view = LocalView.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
@@ -72,16 +67,20 @@ class OnboardingScreenTest {
                     uiState = uiState,
                     name = name,
                     unitNumber = unitNumber,
-                    onSave = { saves++ }
+                    onSave = { saves++ },
+                    onSaveFailureShown = { saveFailuresShown += it }
                 )
             }
         }
     }
 
-    private fun showFilledIn(saveStatus: SaveStatus = SaveStatus.Editing) {
+    private fun showFilledIn(
+        saveStatus: SaveStatus = SaveStatus.Editing,
+        saveFailure: TaskFailure? = null
+    ) {
         name.setTextAndPlaceCursorAtEnd("Alex Scout")
         unitNumber.setTextAndPlaceCursorAtEnd("123")
-        show(OnboardingUiState(saveStatus, isComplete = true))
+        show(OnboardingUiState(saveStatus, isComplete = true, saveFailure = saveFailure))
     }
 
     // Matches on EditableText, not the SetText action, which disabled fields don't have.
@@ -133,22 +132,21 @@ class OnboardingScreenTest {
     }
 
     @Test
-    fun failed_showsMessageAndAllowsRetry() {
-        showFilledIn(SaveStatus.Failed)
+    fun saveFailed_showsMessageAndAllowsRetry_thenReportsItShown() {
+        val failure = TaskFailure()
+        showFilledIn(saveFailure = failure)
 
-        saveFailedMessage().assertExists()
+        saveFailedMessage().assertIsDisplayed()
         field("Name").assertIsEnabled()
         field("Unit number").assertIsEnabled()
         saveButton().assertIsEnabled()
-    }
+        assertEquals(emptyList<TaskFailure>(), saveFailuresShown)
 
-    @Test
-    fun failed_isAnnouncedWhenItAppears() {
-        showFilledIn()
+        // A short snackbar shows for 4 seconds.
+        composeTestRule.mainClock.advanceTimeBy(5_000)
 
-        composeTestRule.assertAnnouncedWhenShown("Couldn't save. Try again.") {
-            uiState = OnboardingUiState(SaveStatus.Failed, isComplete = true)
-        }
+        saveFailedMessage().assertDoesNotExist()
+        assertEquals(listOf(failure), saveFailuresShown)
     }
 
     @Test

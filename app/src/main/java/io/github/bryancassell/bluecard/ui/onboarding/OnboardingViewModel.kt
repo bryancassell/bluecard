@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
-import android.util.Log
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -8,15 +7,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.ui.TaskFailure
+import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.textFieldState
-import java.io.IOException
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
@@ -32,10 +31,13 @@ class OnboardingViewModel @Inject constructor(
 
     private val saveStatus = MutableStateFlow(SaveStatus.Editing)
 
+    private val saves = TaskRunner(viewModelScope)
+
     val uiState: StateFlow<OnboardingUiState> = combine(
         snapshotFlow { name.text.toString() },
         snapshotFlow { unitNumber.text.toString() },
         saveStatus,
+        saves.failure,
         ::uiStateOf
     ).stateIn(
         viewModelScope,
@@ -54,27 +56,38 @@ class OnboardingViewModel @Inject constructor(
         if (!currentUiState().canSave) return
         val profile = Profile(name.text.toString().trim(), unitNumber.text.toString().trim())
         saveStatus.value = SaveStatus.Saving
-        viewModelScope.launch {
-            saveStatus.value = try {
+        saves.launch {
+            try {
                 profileRepository.saveProfile(profile)
-                SaveStatus.Saved
-            } catch (e: IOException) {
-                // The app reports caught exceptions nowhere else, so logcat and bug reports
-                // are the only way to tell why saving failed.
-                Log.w(TAG, "Couldn't save the profile", e)
-                SaveStatus.Failed
+                saveStatus.value = SaveStatus.Saved
+            } finally {
+                // A save that failed unlocks the form, so the scout can try again.
+                if (saveStatus.value == SaveStatus.Saving) saveStatus.value = SaveStatus.Editing
             }
         }
     }
 
-    /** What [uiState] shows once it catches up with the fields' current text. */
-    private fun currentUiState() = uiStateOf(name.text, unitNumber.text, saveStatus.value)
+    /** The scout has been told about [failure]. */
+    fun onSaveFailureShown(failure: TaskFailure) {
+        saves.onShown(failure)
+    }
 
-    private fun uiStateOf(name: CharSequence, unitNumber: CharSequence, saveStatus: SaveStatus) =
-        OnboardingUiState(saveStatus, isComplete = name.isNotBlank() && unitNumber.isNotBlank())
+    /** What [uiState] shows once it catches up with the fields' current text. */
+    private fun currentUiState() =
+        uiStateOf(name.text, unitNumber.text, saveStatus.value, saves.failure.value)
+
+    private fun uiStateOf(
+        name: CharSequence,
+        unitNumber: CharSequence,
+        saveStatus: SaveStatus,
+        saveFailure: TaskFailure?
+    ) = OnboardingUiState(
+        saveStatus,
+        isComplete = name.isNotBlank() && unitNumber.isNotBlank(),
+        saveFailure = saveFailure
+    )
 
     private companion object {
-        const val TAG = "Onboarding"
         const val NAME = "name"
         const val UNIT_NUMBER = "unit_number"
     }
