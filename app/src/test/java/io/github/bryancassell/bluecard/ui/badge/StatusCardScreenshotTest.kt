@@ -18,9 +18,9 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * How a badge's or rank's status card looks, which semantics can't show: a white card on the
- * page, with a tonal Mark completed or Mark earned button and its calendar icon. Checked against
- * reference images in `src/test/screenshots`.
+ * How a badge's or rank's status card looks, which semantics can't show: a card of the theme's
+ * brightest surface, white in light mode, with a tonal Mark completed or Mark earned button and
+ * its calendar icon. Checked against reference images in `src/test/screenshots`.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -42,6 +42,13 @@ class StatusCardScreenshotTest {
 
     @Test
     fun badgeInProgress() = capture(
+        badge.copy(status = BadgeStatus.InProgress, fractionDone = 0.25f, canClear = true)
+    )
+
+    // Dark Blue, the dark scheme's brightest surface.
+    @Test
+    @Config(qualifiers = "+night")
+    fun badgeInProgress_darkMode() = capture(
         badge.copy(status = BadgeStatus.InProgress, fractionDone = 0.25f, canClear = true)
     )
 

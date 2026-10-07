@@ -2,16 +2,15 @@
 <resources>
     <!--
         Window theme once the splash screen (Theme.BlueCard.Starting in splash.xml)
-        is dismissed; the app's real theme is BlueCardTheme in Kotlin. It's light in
-        dark mode too, like BlueCardTheme, and its background is BlueCardTheme's, so no
-        other color shows before the first frame or behind the app, such as in
-        split-screen.
+        is dismissed; the app's real theme is BlueCardTheme in Kotlin. Its background is
+        BlueCardTheme's, in light and dark mode, so no other color shows before the first
+        frame or behind the app, such as in split-screen.
     -->
     <style name="Theme.BlueCard" parent="Base.Theme.BlueCard">
         <item name="android:windowBackground">@color/background</item>
         <item name="android:colorBackground">@color/background</item>
     </style>
 
-    <!-- values-night-v29/themes.xml changes this in dark mode. -->
+    <!-- values-night/themes.xml makes this dark in dark mode. -->
     <style name="Base.Theme.BlueCard" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

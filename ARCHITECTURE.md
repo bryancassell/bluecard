@@ -455,16 +455,29 @@ both taps of a double tap can reach it.
 
 ### Theme
 
-- **Material 3** components, themed by `BlueCardTheme` with one light color
-  scheme (`BlueCardColorScheme` in `ui/theme/Color.kt`), as
-  [`PRD.md`](PRD.md#design-decisions)'s Colors row chooses.
-- **Don't follow dark mode** until the app has a dark scheme
-  ([#108](https://github.com/bryancassell/bluecard/issues/108)).
-  `isSystemInDarkTheme()` still reports the system's dark mode, and `-night`
-  resources still apply in it. Nothing but the window theme should use either:
-  it would put dark-mode colors, images or bar icons on the light app.
+- **Material 3** components, themed by `BlueCardTheme` with a light and a dark
+  color scheme (`BlueCardLightColorScheme` and `BlueCardDarkColorScheme` in
+  `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
+  chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
+  takes no colors from the wallpaper (no dynamic color).
+- **Before Compose draws**, the window theme and splash screen follow dark mode
+  through `values-night`: the dark scheme's background (`@color/background`,
+  which must match each scheme's `background`), a dark window theme, and the
+  splash screen's white system bar icons. Once the app draws,
+  `enableEdgeToEdge()` picks the bar icons from dark mode.
+- **Pick a color role that works in both schemes.** In the dark scheme, the
+  higher surface containers are lighter than the page, not darker. For
+  example, the status card uses `surfaceBright`, the brightest surface in both
+  schemes (white in light mode, Dark Blue in dark mode).
+  `surfaceContainerLowest` is white in light mode too, but darker than the page
+  in dark mode.
+- **Set a container's content color** when its color is also another role's.
+  Material picks a container's content color by matching its value against
+  the scheme's roles in a fixed order, and both schemes reuse colors: the dark
+  scheme's `surfaceBright` is also its `surfaceVariant`, which gives
+  `onSurfaceVariant`, so the status card sets `onSurface` itself.
 - **`BlueCardColorSchemeTest` checks the PRD's contrast rule** for every text
-  color on every surface.
+  color on every surface, in both schemes.
 
 ## Data layer
 

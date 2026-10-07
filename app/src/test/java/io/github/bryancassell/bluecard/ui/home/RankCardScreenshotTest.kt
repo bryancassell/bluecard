@@ -37,6 +37,11 @@ class RankCardScreenshotTest {
     @Test
     fun everyRankEarned() = capture(earned = 7)
 
+    // Pale Blue, with Scouting America Blue for its quieter text and the ranks still to earn.
+    @Test
+    @Config(qualifiers = "+night")
+    fun rankInProgress_darkMode() = capture(earned = 2, fractionDone = 0.35f)
+
     // The trail runs from right to left, as the rest of the card does.
     @Test
     fun rankInProgress_rightToLeft() =

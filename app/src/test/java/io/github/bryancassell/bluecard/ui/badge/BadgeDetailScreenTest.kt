@@ -63,7 +63,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
-import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
+import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -342,7 +342,7 @@ class BadgeDetailScreenTest {
 
         // The text's top-left corner is clear of its letters, so it shows what's behind them.
         val pixels = composeTestRule.onNodeWithText("Eagle-required").captureToImage().toPixelMap()
-        assertEquals(BlueCardColorScheme.primaryFixedDim, pixels[0, 0])
+        assertEquals(BlueCardLightColorScheme.primaryFixedDim, pixels[0, 0])
     }
 
     // At twice the font size on a narrow phone, a group's label needs several lines.
