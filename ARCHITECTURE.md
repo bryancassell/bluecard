@@ -973,13 +973,11 @@ it before changing anything, since import replaces all current data (see
   saves one, and dropping it without dropping other non-numbers would take a
   rule of its own ([#233](https://github.com/bryancassell/bluecard/issues/233)).
   A tracker entry with no value left once cleaned up is rejected too, rather
-  than dropped: Save is off while a row's fields are all empty, and dropping it
-  would change the file's data unseen
-  ([#239](https://github.com/bryancassell/bluecard/issues/239)). Only a
-  development build can export one: a row saved before its field replaced
-  pasted line breaks ([#155](https://github.com/bryancassell/bluecard/pull/155))
-  whose only value is a next line (U+0085), which `trim()` keeps but import
-  makes a space.
+  than dropped ([#239](https://github.com/bryancassell/bluecard/issues/239)).
+  Only a development build can export one: a row saved before its field
+  replaced pasted line breaks
+  ([#155](https://github.com/bryancassell/bluecard/pull/155)) whose only value
+  is a next line (U+0085), which `trim()` keeps but import makes a space.
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.
