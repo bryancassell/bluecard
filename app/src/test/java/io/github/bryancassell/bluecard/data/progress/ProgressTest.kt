@@ -83,4 +83,17 @@ class ProgressTest {
             progress.withoutRequirements(listOf("2a", "2b"))
         )
     }
+
+    @Test
+    fun withoutTrackerEntry_dropsIt_andKeepsTheRest() {
+        val day = LocalDate.of(2026, 4, 15)
+        val badge = BadgeProgress("camping", day, day)
+        val requirement = RequirementProgress("camping", "1", completed = true)
+        val progress = BadgeProgressDetails(badge, listOf(requirement), listOf(entry(1), entry(2)))
+
+        assertEquals(
+            BadgeProgressDetails(badge, listOf(requirement), listOf(entry(1))),
+            progress.withoutTrackerEntry(2)
+        )
+    }
 }

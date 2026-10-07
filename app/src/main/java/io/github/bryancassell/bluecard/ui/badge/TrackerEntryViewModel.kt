@@ -26,6 +26,7 @@ import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.data.progress.withoutTrackerEntry
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
@@ -163,8 +164,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
     }
 
     /**
-     * Finds the row, and fills in the fields. Null if the requirements the badge or rank uses
-     * don't have the tracker, or the tracker doesn't have the row.
+     * Finds the row, fills in the fields, and works out which ranks deleting the row would
+     * un-earn, from every badge's and rank's progress ([all]). Null if the requirements the badge
+     * or rank uses don't have the tracker, or the tracker doesn't have the row.
      */
     private fun load(catalog: List<Advancement>, all: List<BadgeProgressDetails>): LoadedRow? {
         val byId = all.associateBy { it.badge.badgeId }
@@ -180,16 +182,14 @@ class TrackerEntryViewModel @AssistedInject constructor(
         } ?: return null
         val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
         loadFields(tracker.columns, saved)
-        // Only a fixed-row tracker's row can un-earn ranks: a log's rows don't complete its
+        // Only a fixed-row tracker's saved row can un-earn ranks: a log's rows don't complete its
         // requirement.
-        val unearnedByDelete = progress?.takeIf { row.entryId != null }?.let { badge ->
-            val deleted =
-                badge.copy(trackerEntries = badge.trackerEntries.filterNot { it.id == row.entryId })
+        val unearnedByDelete = row.entryId?.takeIf { tracker.rowCount != null }?.let { id ->
             catalog.filterIsInstance<Rank>()
                 .noLongerEarned(
                     catalog.filterIsInstance<MeritBadge>(),
                     byId,
-                    byId + (advancementId to deleted)
+                    byId + (advancementId to byId.getValue(advancementId).withoutTrackerEntry(id))
                 )
                 .map { it.name }
         }.orEmpty()

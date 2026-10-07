@@ -979,10 +979,10 @@ as earned, which all three pages ask `noLongerEarned`
 requirements can leave a rank's merit badges short, so Badge detail and
 Requirement detail read every badge's and rank's progress
 (`observeAllProgress`), as Rank detail does. Deleting a fixed-row tracker's
-row can leave its requirement incomplete too, so Tracker entry's Delete dialog
-names the ranks it would un-earn with the same sentence (`withUnearnedRanks` in
-`ClearProgress.kt`), from every badge's and rank's progress, read once with the
-row. Clearing progress does not clear the profile.
+row can un-earn ranks too, so Tracker entry asks `noLongerEarned` as well, from
+every badge's and rank's progress read once with the row, as the page reads its
+form, and shares its dialog's sentence (`withUnearnedRanks` in
+`ClearProgress.kt`). Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a

@@ -782,6 +782,15 @@ class TrackerEntryViewModelTest {
         assertEquals(listOf("Scout", "Star"), viewModel.ready().unearnedByDelete)
     }
 
+    // With no progress to delete it from.
+    @Test
+    fun fixedRowNotFilledIn_ofABadgeNotStarted_deleteUnearnsNothing() = runTest {
+        val viewModel = viewModel(number = "2", rowNumber = 1)
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByDelete)
+    }
+
     // A log's rows don't complete its requirement, which keeps its checkbox.
     @Test
     fun logEntry_deleteUnearnsNothing() = runTest {
