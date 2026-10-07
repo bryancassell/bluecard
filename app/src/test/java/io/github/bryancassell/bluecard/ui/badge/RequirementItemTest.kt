@@ -165,6 +165,18 @@ class RequirementItemTest {
         assertNull(notNeeded.stillToDo)
     }
 
+    // It says what was never recorded, as the row's count still does.
+    @Test
+    fun onBadgeCompletedOnPriorDate_ownWorkIsStillToDo() {
+        val item = ownWorkAndTwoOfThree.toItem(
+            done("2a", "2c"),
+            emptyMap(),
+            advancementCompletedOnPriorDate = true
+        )
+
+        assertEquals("Pack your gear.", item.stillToDo)
+    }
+
     @Test
     fun ownWorkComplete_isPartlyCompleted_withNoCount() {
         val item = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())

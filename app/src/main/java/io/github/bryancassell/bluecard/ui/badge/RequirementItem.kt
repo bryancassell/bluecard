@@ -57,7 +57,8 @@ data class RequirementItem(
     val completeCount: CompleteCount? = null,
     /**
      * Our summary of its [ownWork] while that's all that's left of it: it's still needed and
-     * enough of its sub-requirements are complete ([hasEnoughChildren]). Otherwise null.
+     * every sub-requirement it needs is complete. Otherwise null. It stays on a badge marked
+     * completed on a prior date, where it says what was never recorded.
      */
     val stillToDo: String? = null,
     /**
@@ -103,6 +104,11 @@ fun Requirement.toItem(
     val notNeeded = partOfHasEnough && !completed
     val stillNeeded = !completed && !notNeeded
     val partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries, earnedBadges)
+    val completeCount = if (stillNeeded) {
+        completeCount(progress, trackerEntries, earnedBadges)
+    } else {
+        null
+    }
     return RequirementItem(
         number = number,
         summary = summary,
@@ -114,14 +120,12 @@ fun Requirement.toItem(
         notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = partlyCompleted,
-        completeCount = if (stillNeeded) {
-            completeCount(progress, trackerEntries, earnedBadges)
+        completeCount = completeCount,
+        // Still needed with every sub-requirement it needs complete, so its own work isn't.
+        stillToDo = if (completeCount != null && completeCount.complete == completeCount.needed) {
+            ownWork
         } else {
             null
-        },
-        // Still needed with enough sub-requirements complete, so its own work isn't.
-        stillToDo = ownWork?.takeIf {
-            stillNeeded && hasEnoughChildren(progress, trackerEntries, earnedBadges)
         },
         completesFromRows = completesFromRows,
         meritBadges = meritBadges?.let(earnedBadges::toward)
