@@ -28,6 +28,9 @@ android {
 
     buildTypes {
         debug {
+            // Installs next to a release build, which is signed with another key.
+            // See ARCHITECTURE.md (Debug builds).
+            applicationIdSuffix = ".debug"
             // Record JaCoCo coverage data when local tests run.
             enableUnitTestCoverage = true
         }

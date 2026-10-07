@@ -1205,10 +1205,24 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
 
 ## Debug builds
 
-Debug builds point out mistakes while the app is in use. Release builds have
-neither of these tools. [`docs/toolchain.md`](docs/toolchain.md#debug-tools)
-says where to see what they report.
+Debug builds install as their own app, and point out mistakes while the app is
+in use with two tools that release builds don't have.
+[`docs/toolchain.md`](docs/toolchain.md#debug-tools) says where to see what
+they report.
 
+- **Debug builds have their own application ID,
+  `io.github.bryancassell.bluecard.debug`, and launcher name, "BlueCard
+  Debug"** ([#245](https://github.com/bryancassell/bluecard/issues/245)). The
+  ID comes from `applicationIdSuffix` in `app/build.gradle.kts`, as in
+  [Configure build variants](https://developer.android.com/build/build-variants#build-types),
+  and the name from `src/debug/res/values/strings.xml`. A test release is
+  signed with the release key and a debug build with the machine's debug key,
+  and Android won't update an app from an APK signed with a different key.
+  With one ID, installing either build on a phone with the other meant
+  uninstalling it, which deletes its data. Now the two install side by side,
+  each with its own data and backup. The report FileProvider's authority
+  follows the application ID, both in the manifest and in
+  `PdfReportRepository`.
 - **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)**
   is turned on in `BlueCardApplication` when the app is debuggable, as in
   [Now in Android](https://github.com/android/nowinandroid/blob/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/NiaApplication.kt).
@@ -1287,4 +1301,5 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
+| [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug" | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The name tells the two apart |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |

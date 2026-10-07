@@ -42,7 +42,7 @@ Run these from the repository root.
 | `./gradlew createDebugUnitTestCoverageReport` | Writes an HTML coverage report for local tests to `app/build/reports/coverage/test/debug/index.html`. |
 | `./gradlew lint` | Runs Android lint. Reports are in `app/build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
-| `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. |
+| `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. It's named "BlueCard Debug", with the application ID `io.github.bryancassell.bluecard.debug`, so it installs next to a release build. |
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
 | `./gradlew clean` | Deletes build outputs. Rarely needed; the build knows what changed. |
 
@@ -233,8 +233,8 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    adb shell bmgr enable true
    adb shell bmgr transport com.android.localtransport/.LocalTransport
    adb shell settings put secure backup_local_transport_parameters 'is_encrypted=true'
-   adb shell bmgr backupnow io.github.bryancassell.bluecard
-   adb shell pm uninstall --user 0 io.github.bryancassell.bluecard
+   adb shell bmgr backupnow io.github.bryancassell.bluecard.debug
+   adb shell pm uninstall --user 0 io.github.bryancassell.bluecard.debug
    adb install -t app/build/outputs/apk/debug/app-debug.apk
    ```
 
@@ -246,7 +246,7 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    is back.
 
    ```sh
-   adb shell run-as io.github.bryancassell.bluecard find . -type f
+   adb shell run-as io.github.bryancassell.bluecard.debug find . -type f
    ```
 
 5. Put back the settings you noted in step 1: select the transport that was
@@ -281,10 +281,10 @@ emulator, and point `adb` at it if a phone is also connected.
 
 1. Build the release APK and sign it with the debug key. Gradle leaves the
    release build unsigned, and only publishing signs it with the release key
-   (see [Publishing a test release](#publishing-a-test-release)). A debug
-   install has the same application ID, so uninstall it first to start from a
-   fresh install. `BUILD_TOOLS` is the newest stable build tools; preview
-   versions have a "-" in their name.
+   (see [Publishing a test release](#publishing-a-test-release)). Uninstall
+   any release build already installed, to start from a fresh install. A debug
+   build has its own application ID, so it can stay. `BUILD_TOOLS` is the
+   newest stable build tools; preview versions have a "-" in their name.
 
    ```sh
    ./gradlew assembleRelease
