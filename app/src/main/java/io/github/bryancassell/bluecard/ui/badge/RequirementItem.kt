@@ -56,6 +56,12 @@ data class RequirementItem(
      */
     val completeCount: CompleteCount? = null,
     /**
+     * Our summary of its [ownWork] while that's all that's left of it: it's still needed and
+     * every sub-requirement it needs is complete. Otherwise null. It stays on a badge marked
+     * completed on a prior date, where it says what was never recorded.
+     */
+    val stillToDo: String? = null,
+    /**
      * Whether it's complete once every row of its tracker is filled in ([completesFromRows]).
      * Its page then has the date it was completed on, which the scout can change.
      */
@@ -98,6 +104,11 @@ fun Requirement.toItem(
     val notNeeded = partOfHasEnough && !completed
     val stillNeeded = !completed && !notNeeded
     val partlyCompleted = stillNeeded && hasPartDone(progress, trackerEntries, earnedBadges)
+    val completeCount = if (stillNeeded) {
+        completeCount(progress, trackerEntries, earnedBadges)
+    } else {
+        null
+    }
     return RequirementItem(
         number = number,
         summary = summary,
@@ -109,8 +120,10 @@ fun Requirement.toItem(
         notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
         partlyCompleted = partlyCompleted,
-        completeCount = if (stillNeeded) {
-            completeCount(progress, trackerEntries, earnedBadges)
+        completeCount = completeCount,
+        // Still needed with every sub-requirement it needs complete, so its own work isn't.
+        stillToDo = if (completeCount != null && completeCount.complete == completeCount.needed) {
+            ownWork
         } else {
             null
         },

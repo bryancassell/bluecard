@@ -672,6 +672,35 @@ class BadgeDetailScreenTest {
             .assert(hasText("(2 of 3 complete)"))
     }
 
+    @Test
+    fun partlyCompletedWithOnlyItsOwnWorkLeft_saysWhatsStillToDo() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "2") {
+                        it.copy(
+                            completed = false,
+                            partlyCompleted = true,
+                            completeCount = CompleteCount(2, 2),
+                            ownWork = OwnWork(
+                                "Share what you learned with your counselor.",
+                                completed = false
+                            ),
+                            stillToDo = "Share what you learned with your counselor."
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        row("Do two of these.")
+            .assert(hasStateDescription("In progress"))
+            .assert(hasText("Do 2 of 3 (2 of 2 complete)"))
+            .assert(hasText("Still to do: Share what you learned with your counselor."))
+    }
+
     // Only its own work, or a requirement further down, is complete.
     @Test
     fun partlyCompletedWithNoSubRequirementComplete_hasNoCount() {

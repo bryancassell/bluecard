@@ -140,6 +140,43 @@ class RequirementItemTest {
         assertEquals(CompleteCount(2, 2), item.completeCount)
     }
 
+    // Only its own work is left, so the row says what that is.
+    @Test
+    fun enoughSubRequirementsButNotOwnWork_hasItsOwnWorkStillToDo() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap())
+
+        assertEquals("Pack your gear.", item.stillToDo)
+    }
+
+    @Test
+    fun subRequirementsStillNeeded_haveNothingStillToDo() {
+        assertNull(ownWorkAndTwoOfThree.toItem(emptyMap(), emptyMap()).stillToDo)
+        assertNull(ownWorkAndTwoOfThree.toItem(done("2a"), emptyMap()).stillToDo)
+        assertNull(ownWorkAndTwoOfThree.toItem(done("2", "2a"), emptyMap()).stillToDo)
+    }
+
+    @Test
+    fun completeOrNotNeeded_hasNothingStillToDo() {
+        val complete = ownWorkAndTwoOfThree.toItem(done("2", "2a", "2c"), emptyMap())
+        val notNeeded =
+            ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap(), partOfHasEnough = true)
+
+        assertNull(complete.stillToDo)
+        assertNull(notNeeded.stillToDo)
+    }
+
+    // It says what was never recorded, as the row's count still does.
+    @Test
+    fun onBadgeCompletedOnPriorDate_ownWorkIsStillToDo() {
+        val item = ownWorkAndTwoOfThree.toItem(
+            done("2a", "2c"),
+            emptyMap(),
+            advancementCompletedOnPriorDate = true
+        )
+
+        assertEquals("Pack your gear.", item.stillToDo)
+    }
+
     @Test
     fun ownWorkComplete_isPartlyCompleted_withNoCount() {
         val item = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
