@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -684,6 +685,120 @@ class TrackerEntryViewModelTest {
 
         assertEquals(1, entries().size)
         assertFalse(viewModel.ready().done)
+    }
+
+    // Earned once its fixed-row tracker's two rows are filled in.
+    private val scout = Rank(
+        id = "scout",
+        name = "Scout",
+        summary = "Our summary of Scout.",
+        officialUrl = "https://www.scouting.org/scout/",
+        requirementVersions = listOf(
+            RequirementsVersion(
+                newest,
+                listOf(
+                    Requirement(
+                        "1",
+                        "Track two weeks.",
+                        tracker = TrackerDefinition(weekColumns, "week", "weeks", rowCount = 2)
+                    )
+                )
+            )
+        )
+    )
+
+    // Above Scout, needing one badge, such as Personal Fitness.
+    private val star = Rank(
+        id = "star",
+        name = "Star",
+        summary = "Our summary of Star.",
+        officialUrl = "https://www.scouting.org/star/",
+        requirementVersions = listOf(
+            RequirementsVersion(
+                newest,
+                listOf(Requirement("1", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 0)))
+            )
+        )
+    )
+
+    /**
+     * Scout earned from its tracker, and Star from Personal Fitness, complete with requirement
+     * 2's three weeks filled in. Returns the ID of Personal Fitness's one 7a session.
+     */
+    private suspend fun earnScoutAndStar(): Long {
+        catalogRepository.ranks = listOf(scout, star)
+        for (row in 1..2) {
+            progressRepository.addTrackerEntry(
+                "scout",
+                "1",
+                row,
+                mapOf("income" to "10"),
+                today,
+                badgeStart
+            )
+        }
+        progressRepository.startBadge("star", newest, started)
+        progressRepository.markRequirementCompleted("personal-fitness", "1", today, badgeStart)
+        for (row in 1..3) {
+            progressRepository.addTrackerEntry(
+                "personal-fitness",
+                "2",
+                row,
+                mapOf("income" to "10"),
+                today,
+                badgeStart
+            )
+        }
+        progressRepository.markRequirementCompleted("personal-fitness", "7a", today, badgeStart)
+        return addSession(mapOf("activity" to "Run"))
+    }
+
+    @Test
+    fun fixedRow_ofABadgeRanksCount_deleteUnearnsThem() = runTest {
+        earnScoutAndStar()
+        val viewModel = viewModel(number = "2", rowNumber = 2)
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Star"), viewModel.ready().unearnedByDelete)
+    }
+
+    @Test
+    fun fixedRow_ofABadgeMarkedCompleted_deleteUnearnsNothing() = runTest {
+        earnScoutAndStar()
+        progressRepository.setCompletedOnPriorDate("personal-fitness", today, badgeStart)
+        val viewModel = viewModel(number = "2", rowNumber = 2)
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByDelete)
+    }
+
+    // Its own rank too, which the dialog doesn't otherwise mention.
+    @Test
+    fun fixedRow_ofARank_deleteUnearnsItsRank_andThoseEarnedAfterIt() = runTest {
+        earnScoutAndStar()
+        val viewModel = viewModel(number = "1", rowNumber = 1, advancementId = "scout")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Scout", "Star"), viewModel.ready().unearnedByDelete)
+    }
+
+    // A log's rows don't complete its requirement, which keeps its checkbox.
+    @Test
+    fun logEntry_deleteUnearnsNothing() = runTest {
+        val session = earnScoutAndStar()
+        val viewModel = viewModel(entryId = session)
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByDelete)
+    }
+
+    @Test
+    fun newLogEntry_deleteUnearnsNothing() = runTest {
+        earnScoutAndStar()
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByDelete)
     }
 
     @Test

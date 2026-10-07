@@ -13,6 +13,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
@@ -21,6 +23,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -85,9 +88,10 @@ class TrackerEntryViewModel @AssistedInject constructor(
     private var loaded: LoadedRow? = null
 
     val uiState: StateFlow<TrackerEntryUiState> = flow {
+        // Every badge's and rank's progress, to tell which ranks deleting the row would un-earn.
         val row = loaded ?: load(
             catalogRepository.getAdvancements(),
-            progressRepository.observeProgress(advancementId).first()
+            progressRepository.observeAllProgress().first()
         )?.also { loaded = it }
         if (row == null) {
             emit(TrackerEntryUiState.Unavailable)
@@ -117,7 +121,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
         val shownNumber: Int,
         /** Its saved entry; null for a new one or a row not filled in. */
         val entryId: Long?,
-        val saved: Map<String, String>
+        val saved: Map<String, String>,
+        /** The ranks deleting its saved entry would un-earn ([TrackerEntryUiState.Ready]). */
+        val unearnedByDelete: List<String>
     ) {
         /** The row it fills in a tracker with a fixed number of rows, or null in a log. */
         val rowNumber: Int? get() = tracker.rowCount?.let { shownNumber }
@@ -150,6 +156,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,
+            unearnedByDelete = row.unearnedByDelete,
             done = done,
             saveFailure = saveFailure
         )
@@ -159,7 +166,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
      * Finds the row, and fills in the fields. Null if the requirements the badge or rank uses
      * don't have the tracker, or the tracker doesn't have the row.
      */
-    private fun load(catalog: List<Advancement>, progress: BadgeProgressDetails?): LoadedRow? {
+    private fun load(catalog: List<Advancement>, all: List<BadgeProgressDetails>): LoadedRow? {
+        val byId = all.associateBy { it.badge.badgeId }
+        val progress = byId[advancementId]
         val found = catalog.advancementRequirements(advancementId, progress) ?: return null
         val tracker = found.version.find(number)?.tracker ?: return null
         val entries = found.trackerEntries[number].orEmpty()
@@ -171,7 +180,27 @@ class TrackerEntryViewModel @AssistedInject constructor(
         } ?: return null
         val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
         loadFields(tracker.columns, saved)
-        return LoadedRow(found.advancement.name, tracker, row.number, row.entryId, saved)
+        // Only a fixed-row tracker's row can un-earn ranks: a log's rows don't complete its
+        // requirement.
+        val unearnedByDelete = progress?.takeIf { row.entryId != null }?.let { badge ->
+            val deleted =
+                badge.copy(trackerEntries = badge.trackerEntries.filterNot { it.id == row.entryId })
+            catalog.filterIsInstance<Rank>()
+                .noLongerEarned(
+                    catalog.filterIsInstance<MeritBadge>(),
+                    byId,
+                    byId + (advancementId to deleted)
+                )
+                .map { it.name }
+        }.orEmpty()
+        return LoadedRow(
+            found.advancement.name,
+            tracker,
+            row.number,
+            row.entryId,
+            saved,
+            unearnedByDelete
+        )
     }
 
     /**
