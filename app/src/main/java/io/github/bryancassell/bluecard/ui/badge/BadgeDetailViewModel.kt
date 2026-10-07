@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -49,7 +50,11 @@ class BadgeDetailViewModel @AssistedInject constructor(
     private val report = ReportTasks(viewModelScope, reportRepository, badgeId)
     private val saves = TaskRunner(viewModelScope)
 
-    val uiState: StateFlow<BadgeDetailUiState> = combine(
+    /**
+     * The page as worked out from the catalog and progress, before [uiState] adds the date just
+     * unmarked and the report.
+     */
+    private val badge: Flow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
             val catalog = catalogRepository.getBadges()
@@ -58,10 +63,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
         // Every badge's and rank's, since the badges the scout has completed decide which ranks
         // clearing this one would un-earn.
         progressRepository.observeAllProgress(),
-        report.reportToShare,
-        report.failure,
         saves.failure
-    ) { (catalog, eagleGroups, ranks), allProgress, reportToShare, reportFailure, saveFailure ->
+    ) { (catalog, eagleGroups, ranks), allProgress, saveFailure ->
         val progressById = allProgress.associateBy { it.badge.badgeId }
         val progress = progressById[badgeId]
         val found = catalog.advancementRequirements(badgeId, progress)
@@ -86,13 +89,27 @@ class BadgeDetailViewModel @AssistedInject constructor(
                 ranks.noLongerEarned(catalog, progressById, progressById - badgeId)
                     .map { it.name }
             },
-            reportToShare = reportToShare,
-            reportFailure = reportFailure,
             saveFailure = saveFailure
         )
-    }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
-        val unmarkedDate = dateFromEpochDay(unmarked)
-        if (state is BadgeDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
+    }
+
+    val uiState: StateFlow<BadgeDetailUiState> = combine(
+        badge,
+        savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null),
+        report.reportToShare,
+        report.failure
+    ) { state, unmarked, reportToShare, reportFailure ->
+        // Combined after, so remembering a date or sharing a report doesn't work out again which
+        // ranks clearing the badge would un-earn.
+        if (state is BadgeDetailUiState.Ready) {
+            state.copy(
+                unmarkedDate = dateFromEpochDay(unmarked),
+                reportToShare = reportToShare,
+                reportFailure = reportFailure
+            )
+        } else {
+            state
+        }
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 

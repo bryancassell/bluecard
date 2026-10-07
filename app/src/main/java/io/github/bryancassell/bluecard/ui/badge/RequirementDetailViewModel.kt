@@ -112,6 +112,11 @@ class RequirementDetailViewModel @AssistedInject constructor(
                 found?.version?.find(number)?.let { requirement ->
                     val recorded = found.recorded[number]
                     val numbersWithin = requirement.numbersWithin()
+                    val hasRecorded = found.hasRecorded(numbersWithin)
+                    // The progress the clear would leave, worked out only while there's
+                    // something to clear.
+                    val cleared = byId[advancementId]?.takeIf { hasRecorded }
+                        ?.let { byId + (advancementId to it.withoutRequirements(numbersWithin)) }
                     RecordedRequirement(
                         advancementName = found.advancement.name,
                         requirement = found.item(requirement),
@@ -139,11 +144,11 @@ class RequirementDetailViewModel @AssistedInject constructor(
                         signedOffBy = recorded?.signedOffBy,
                         comment = recorded?.comment,
                         numbersWithin = numbersWithin,
-                        hasRecorded = found.hasRecorded(numbersWithin),
-                        unearnedByClear = byId[advancementId]?.let { progress ->
-                            val cleared = progress.withoutRequirements(numbersWithin)
-                            ranks.noLongerEarned(badges, byId, byId + (advancementId to cleared))
-                        }.orEmpty().map { it.name }
+                        hasRecorded = hasRecorded,
+                        unearnedByClear = cleared
+                            ?.let { ranks.noLongerEarned(badges, byId, it) }
+                            .orEmpty()
+                            .map { it.name }
                     )
                 }
             }

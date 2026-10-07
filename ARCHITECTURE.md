@@ -957,10 +957,9 @@ it too, opened by Back (see [Navigation](#navigation)). Badge detail and
 Requirement detail share their Clear progress button and its dialog
 (`ui/badge/ClearProgress.kt`) with Rank detail, which clears a rank as Badge
 detail clears a badge. The dialog names the ranks the clear would stop counting
-as earned (`noLongerEarned` in `data/progress/RankStatus.kt`), worked out from
-the standings with the progress as it is and as the clear would leave it, with
-the completed badges worked out again, since clearing a badge or one of its
-requirements can leave a rank's merit badges short. So Badge detail and
+as earned, which all three pages ask `noLongerEarned`
+(`data/progress/RankStatus.kt`), so they agree. Clearing a badge or one of its
+requirements can leave a rank's merit badges short, so Badge detail and
 Requirement detail read every badge's and rank's progress
 (`observeAllProgress`), as Rank detail does. Clearing progress does not clear
 the profile.
