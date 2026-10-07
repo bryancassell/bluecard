@@ -66,7 +66,7 @@ The other commands are listed in
 |---|---|
 | [`PRD.md`](PRD.md) | What the app does, and the decisions about how it looks and behaves |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the app is built, and the conventions new code follows |
-| [`docs/toolchain.md`](docs/toolchain.md) | Machine setup, build commands, the testing rules the build checks, CI, and the backup and release-build checks done by hand |
+| [`docs/toolchain.md`](docs/toolchain.md) | Machine setup, build commands, the testing rules the build checks, CI, the backup and release-build checks done by hand, and publishing test releases |
 | [`docs/catalog.md`](docs/catalog.md) | How to write the catalog's merit badges, ranks and requirements |
 
 ## Disclaimer

@@ -258,13 +258,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
     when it has to merge a pane title into a parent, which happens only with a
     screen reader on.
 - **Any other exception is a bug and still crashes the app.** The app has no
-  crash reporting of its own, so a crash is the only way a bug reaches the
-  developer without a scout reporting it: BlueCard is published on Google Play,
-  whose [Android vitals](https://developer.android.com/topic/performance/vitals)
-  reports crashes from users who allow it, but not caught exceptions. Each
+  crash reporting of its own. Once BlueCard is on Google Play, a crash is the
+  only way a bug reaches the developer without a scout reporting it:
+  [Android vitals](https://developer.android.com/topic/performance/vitals)
+  reports crashes from users who allow it, but not caught exceptions. Testers
+  of the GitHub test builds report crashes by hand (see
+  [Release build](#release-build)). Each
   caught load or save failure is logged with `Log.w`, so logcat and bug reports
   show which data failed and why.
-- **Android vitals is the only crash reporting**
+- **Android vitals is the only automatic crash reporting**
   ([#63](https://github.com/bryancassell/bluecard/issues/63)). It needs no code
   in the app. A tool that sends reports automatically, such as Firebase
   Crashlytics or ACRA over HTTP, needs the `INTERNET` permission, which
@@ -1172,6 +1174,34 @@ Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
   mapping file that AGP puts in the app bundle
   ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
   so it needs no separate upload.
+- **Gradle leaves the release build unsigned. Publishing signs it with
+  `apksigner`, which asks for the release key's password.** The password never
+  reaches a Gradle build, which runs third-party plugins and the code of
+  whatever branch is checked out, Dependabot's included.
+  [Sign your app](https://developer.android.com/studio/publish/app-signing)
+  keeps the password in a properties file that Gradle reads, where every build
+  on the machine, and malware that collects such files, could read it too.
+  This doesn't stop code running as the developer, such as a build of another
+  branch, from tampering with the APK that gets signed or the tools that sign
+  it; only a separate account or machine would. Contributors and CI build the
+  same unsigned APK, so `./gradlew build` works for anyone. If CI signs later,
+  it can run `apksigner` the same way.
+- **The release key is RSA 4096 in a PKCS12 keystore, valid for 10,000
+  days.** Sign your app asks for at least 25 years. For a `minSdk` of 24 or
+  higher, `apksigner` signs with APK Signature Scheme v2, which every Android
+  version BlueCard supports checks, and v3, without a v1 signature.
+- **Test builds are GitHub pre-releases**
+  ([#238](https://github.com/bryancassell/bluecard/issues/238)), for friends
+  and family to test without a Google Play Console account.
+  [`docs/toolchain.md`](docs/toolchain.md#publishing-a-test-release) says how
+  to publish one. Android vitals only reports crashes from Play installs, so
+  testers report crashes by hand. Each release carries its R8 mapping file,
+  to retrace a crash reproduced with that release.
+- **Moving to Google Play means choosing the app signing key.** Play App
+  Signing can generate a key of its own, which Play recommends, but Android
+  won't update an app from an APK signed with a different key: testers would
+  export their data, uninstall, install from Play and import. Play can take
+  BlueCard's release key instead, so testers update in place.
 
 ## Debug builds
 
@@ -1245,8 +1275,8 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
-| [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. Crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own |
-| [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
+| [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. On Google Play, crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own |
+| [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes, and testers of GitHub builds report them by hand | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
 | [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
@@ -1256,4 +1286,5 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
+| [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |
