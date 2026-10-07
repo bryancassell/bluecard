@@ -54,14 +54,15 @@ class WindowThemeTest {
         color(R.style.Theme_BlueCard_Starting, SplashScreenR.attr.windowSplashScreenBackground)
 
     // On Android 8 to 11 the splash screen stays up in a window drawn from its theme until the
-    // profile loads. The window reads a "light" bar, one with dark icons, as false if unset.
-    private fun assertSplashScreenHasDarkSystemBarIcons(darkIcons: Boolean) {
+    // profile loads. A "light" bar is one with dark icons, and the window reads it as false if
+    // unset.
+    private fun assertSplashScreenSystemBarIcons(dark: Boolean) {
         assertEquals(
-            darkIcons,
+            dark,
             flag(R.style.Theme_BlueCard_Starting, android.R.attr.windowLightStatusBar) ?: false
         )
         assertEquals(
-            darkIcons,
+            dark,
             flag(R.style.Theme_BlueCard_Starting, android.R.attr.windowLightNavigationBar) ?: false
         )
     }
@@ -112,13 +113,26 @@ class WindowThemeTest {
     @Test
     @Config(sdk = [30], qualifiers = "notnight")
     fun android11_lightMode_splashScreen_hasDarkSystemBarIcons() {
-        assertSplashScreenHasDarkSystemBarIcons(true)
+        assertSplashScreenSystemBarIcons(dark = true)
     }
 
     @Test
     @Config(sdk = [30], qualifiers = "night")
     fun android11_darkMode_splashScreen_hasLightSystemBarIcons() {
-        assertSplashScreenHasDarkSystemBarIcons(false)
+        assertSplashScreenSystemBarIcons(dark = false)
+    }
+
+    // From Android 13, core-splashscreen's theme sets the navigation bar's itself.
+    @Test
+    @Config(sdk = [36], qualifiers = "notnight")
+    fun android13AndLater_lightMode_splashScreen_hasDarkSystemBarIcons() {
+        assertSplashScreenSystemBarIcons(dark = true)
+    }
+
+    @Test
+    @Config(sdk = [36], qualifiers = "night")
+    fun android13AndLater_darkMode_splashScreen_hasLightSystemBarIcons() {
+        assertSplashScreenSystemBarIcons(dark = false)
     }
 
     // The window theme follows dark mode as BlueCardTheme does, so Android's own popups, such as

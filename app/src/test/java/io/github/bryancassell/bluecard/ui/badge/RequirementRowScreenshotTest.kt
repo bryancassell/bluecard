@@ -13,8 +13,9 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * How a requirement's row looks in each state, which screen readers can't tell apart from
- * its semantics: the number's box outlined, tinted, filled with a check, or filled in grey. Each
- * test checks its rows against a reference image in `src/test/screenshots`.
+ * its semantics: the number's box outlined, tinted, filled with a check, or filled in the highest
+ * surface (grey in light mode, Dark Blue in dark mode). Each test checks its rows against a
+ * reference image in `src/test/screenshots`.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
