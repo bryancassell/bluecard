@@ -967,7 +967,10 @@ it before changing anything, since import replaces all current data (see
   trimmed, and each line break in single-line text (the name, unit number,
   counselor's fields and a tracker's text columns) is replaced with a space, as
   its field replaces them (see [Text fields](#text-fields)). Length limits apply
-  to the text as it's stored.
+  to the text as it's stored. A number column's value must then be a number, so
+  even a lone "." is rejected, though saving leaves one out: the field never
+  saves one, and dropping it without dropping other non-numbers would take a
+  rule of its own ([#233](https://github.com/bryancassell/bluecard/issues/233)).
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.

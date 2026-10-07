@@ -606,7 +606,7 @@ class RequirementDetailScreenTest {
     @Test
     fun logEntry_showsALineBreakInAValueAsASpace() {
         val values = listOf(
-            // Only an import can store a line break in single-line text (#156).
+            // As saved before the field replaced pasted line breaks (#155).
             TrackerValue(TrackerColumnType.TEXT, "Push-ups\nand sit-ups"),
             TrackerValue(TrackerColumnType.MULTILINE_TEXT, "3 sets of 10\nFelt good")
         )
