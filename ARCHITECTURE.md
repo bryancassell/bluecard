@@ -626,8 +626,11 @@ totals).
 - **Numbers are stored as the scout typed them**: digits of any script, with a
   point, a comma or the Arabic decimal separator, whichever their keyboard
   offers (`DECIMAL_SEPARATORS`). So they're read with `storedNumber` when
-  they're added up, and a value that isn't a number, which an import can bring,
-  isn't counted. They're added as `BigDecimal`, so 0.1 and 0.2 hours make 0.3.
+  they're added up, and import rejects a file with a value `storedNumber` can't
+  read ([#233](https://github.com/bryancassell/bluecard/issues/233)). One
+  stored while a catalog edited during development had the column as text may
+  not be a number, and isn't counted. They're added as `BigDecimal`, so 0.1 and
+  0.2 hours make 0.3.
 
 ### Requirement versions
 
@@ -957,14 +960,17 @@ it before changing anything, since import replaces all current data (see
   the catalog: a newer app's catalog can add some without a new format version,
   so a file with one the catalog doesn't have is reported as from a newer
   version too. Each requirement, tracker row and column must be in that
-  version, and no text longer than its field takes, so none is cut short when
-  the scout edits it.
+  version, a date or number column must hold a date or number, and no text can
+  be longer than its field takes, so none is cut short when the scout edits it.
 - **Import cleans up text as the app does when the scout saves it,** rather
   than rejecting a file for it ([`PRD.md`](PRD.md#design-decisions)): it's
   trimmed, and each line break in single-line text (the name, unit number,
   counselor's fields and a tracker's text columns) is replaced with a space, as
   its field replaces them (see [Text fields](#text-fields)). Length limits apply
-  to the text as it's stored.
+  to the text as it's stored. A number column's value must then be a number, so
+  even a lone "." is rejected, though saving leaves one out: the field never
+  saves one, and dropping it without dropping other non-numbers would take a
+  rule of its own ([#233](https://github.com/bryancassell/bluecard/issues/233)).
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.

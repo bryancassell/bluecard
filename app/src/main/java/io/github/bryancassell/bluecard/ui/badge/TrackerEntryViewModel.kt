@@ -213,8 +213,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
 
     /**
      * Whether [stored], the values to save ([valuesToSave]), differ from [row]'s saved values
-     * as the fields would save them. So a saved value they'd leave out, such as a number
-     * without a digit from an import, isn't a change until the scout edits the row.
+     * as the fields would save them. So a saved value they'd leave out, such as a lone "."
+     * saved while a catalog edited during development had the column as text, isn't a change
+     * until the scout edits the row.
      */
     private fun differsFromSaved(row: LoadedRow, stored: Map<String, String>): Boolean =
         stored != valuesToSave(row, row.saved)
