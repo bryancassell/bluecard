@@ -23,10 +23,12 @@ import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
+import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.timeInRank
+import io.github.bryancassell.bluecard.data.progress.withoutRequirements
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -89,17 +91,13 @@ class RequirementDetailViewModel @AssistedInject constructor(
         val catalog = catalogRepository.getAdvancements()
         val ranks = catalog.filterIsInstance<Rank>()
         val badges = catalog.filterIsInstance<MeritBadge>()
-        // A rank's page reads every rank's progress, because a rank above it can count it as
-        // earned, and its time in rank counts from the rank below. It reads every badge's too,
-        // which its requirements that ask for merit badges count. A badge's reads only its own.
+        // Every badge's and rank's progress, to tell which ranks clearing the requirement would
+        // un-earn. A rank's page needs them anyway: a rank above it can count it as earned, its
+        // time in rank counts from the rank below, and its requirements that ask for merit
+        // badges count the badges.
         val isRank = ranks.any { it.id == advancementId }
-        val progress = if (isRank) {
-            progressRepository.observeAllProgress()
-        } else {
-            progressRepository.observeProgress(advancementId).map { listOfNotNull(it) }
-        }
         emitAll(
-            progress.map { all ->
+            progressRepository.observeAllProgress().map { all ->
                 val byId = all.associateBy { it.badge.badgeId }
                 val earnedBadges = if (isRank) badges.earnedBadges(byId) else EarnedBadges.None
                 val standings = if (isRank) ranks.standings(byId, earnedBadges) else null
@@ -111,38 +109,50 @@ class RequirementDetailViewModel @AssistedInject constructor(
                     earnedBadges,
                     standings
                 )
-                found to standings
+                found?.version?.find(number)?.let { requirement ->
+                    val recorded = found.recorded[number]
+                    val numbersWithin = requirement.numbersWithin()
+                    val hasRecorded = found.hasRecorded(numbersWithin)
+                    // The progress the clear would leave, worked out only while there's
+                    // something to clear.
+                    val cleared = byId[advancementId]?.takeIf { hasRecorded }
+                        ?.let { byId + (advancementId to it.withoutRequirements(numbersWithin)) }
+                    RecordedRequirement(
+                        advancementName = found.advancement.name,
+                        requirement = found.item(requirement),
+                        // For one complete from its rows or from badges, the date it was
+                        // completed on: for the former, the one the scout gave, if any.
+                        completedDate = if (requirement.completesFromRows ||
+                            requirement.meritBadges != null
+                        ) {
+                            requirement.completion(
+                                found.recorded,
+                                found.trackerEntries,
+                                found.earnedBadges
+                            )?.date
+                        } else {
+                            recorded?.completedDate
+                        },
+                        rowsCompletedDate = requirement.rowsCompletedDate(found.trackerEntries),
+                        children = requirement.children.map(found::item),
+                        tracker =
+                            requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
+                        timeInRank = standings?.timeInRank(advancementId, requirement),
+                        earnedBadges =
+                            requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
+                        hasSignOffField = found.advancement is Rank,
+                        signedOffBy = recorded?.signedOffBy,
+                        comment = recorded?.comment,
+                        numbersWithin = numbersWithin,
+                        hasRecorded = hasRecorded,
+                        unearnedByClear = cleared
+                            ?.let { ranks.noLongerEarned(badges, byId, it) }
+                            .orEmpty()
+                            .map { it.name }
+                    )
+                }
             }
         )
-    }.map { (found, standings) ->
-        found?.version?.find(number)?.let { requirement ->
-            val recorded = found.recorded[number]
-            val numbersWithin = requirement.numbersWithin()
-            RecordedRequirement(
-                advancementName = found.advancement.name,
-                requirement = found.item(requirement),
-                // For one complete from its rows or from badges, the date it was completed on:
-                // for the former, the one the scout gave, if any.
-                completedDate = if (requirement.completesFromRows ||
-                    requirement.meritBadges != null
-                ) {
-                    requirement.completion(found.recorded, found.trackerEntries, found.earnedBadges)
-                        ?.date
-                } else {
-                    recorded?.completedDate
-                },
-                rowsCompletedDate = requirement.rowsCompletedDate(found.trackerEntries),
-                children = requirement.children.map(found::item),
-                tracker = requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
-                timeInRank = standings?.timeInRank(advancementId, requirement),
-                earnedBadges = requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
-                hasSignOffField = found.advancement is Rank,
-                signedOffBy = recorded?.signedOffBy,
-                comment = recorded?.comment,
-                numbersWithin = numbersWithin,
-                hasRecorded = found.hasRecorded(numbersWithin)
-            )
-        }
     }
 
     private class RecordedRequirement(
@@ -163,7 +173,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
         /** The numbers of this requirement and of every one under it. */
         val numbersWithin: List<String>,
         /** Whether anything is recorded for them, for the scout to clear. */
-        val hasRecorded: Boolean
+        val hasRecorded: Boolean,
+        /** The ranks clearing them would un-earn ([RequirementDetailUiState.Ready]). */
+        val unearnedByClear: List<String>
     )
 
     /**
@@ -199,6 +211,7 @@ class RequirementDetailViewModel @AssistedInject constructor(
             hasSignOffField = recorded.hasSignOffField,
             textChanged = edits(recorded).isNotEmpty(),
             canClear = recorded.hasRecorded,
+            unearnedByClear = recorded.unearnedByClear,
             saveFailure = saveFailure
         )
     }.catchLoadFailure(RequirementDetailUiState.LoadFailed).stateIn(

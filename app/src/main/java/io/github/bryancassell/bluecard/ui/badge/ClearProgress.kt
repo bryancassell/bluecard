@@ -13,16 +13,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
+import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 
 /**
  * Clears what the scout recorded ([onClear]) once they confirm, in a dialog with [title] and
- * [message]. Red, and last on its page, so it isn't tapped by mistake.
+ * [message], followed by the names of the ranks clearing it would un-earn ([unearnedRanks]), if
+ * any. Red, and last on its page, so it isn't tapped by mistake.
  */
 @Composable
 fun ClearProgress(
     title: String,
     message: String,
+    unearnedRanks: List<String>,
     onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -38,7 +41,15 @@ fun ClearProgress(
     if (confirming) {
         ConfirmDialog(
             title = title,
-            message = message,
+            message = if (unearnedRanks.isEmpty()) {
+                message
+            } else {
+                stringResource(
+                    R.string.clear_message_unearns,
+                    message,
+                    rememberBadgeNameListFormatter().format(unearnedRanks)
+                )
+            },
             confirmLabel = stringResource(R.string.clear_progress_confirm),
             onConfirm = {
                 confirming = false

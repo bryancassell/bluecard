@@ -13,6 +13,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
+import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -23,6 +24,7 @@ import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import java.time.Clock
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -48,17 +50,23 @@ class BadgeDetailViewModel @AssistedInject constructor(
     private val report = ReportTasks(viewModelScope, reportRepository, badgeId)
     private val saves = TaskRunner(viewModelScope)
 
-    val uiState: StateFlow<BadgeDetailUiState> = combine(
+    /**
+     * The page as worked out from the catalog and progress, before [uiState] adds the date just
+     * unmarked and the report.
+     */
+    private val page: Flow<BadgeDetailUiState> = combine(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
             val catalog = catalogRepository.getBadges()
-            emit(catalog to catalog.eagleGroups())
+            emit(Triple(catalog, catalog.eagleGroups(), catalogRepository.getRanks()))
         },
-        progressRepository.observeProgress(badgeId),
-        report.reportToShare,
-        report.failure,
+        // Every badge's and rank's, since the badges the scout has completed decide which ranks
+        // clearing this one would un-earn.
+        progressRepository.observeAllProgress(),
         saves.failure
-    ) { (catalog, eagleGroups), progress, reportToShare, reportFailure, saveFailure ->
+    ) { (catalog, eagleGroups, ranks), allProgress, saveFailure ->
+        val progressById = allProgress.associateBy { it.badge.badgeId }
+        val progress = progressById[badgeId]
         val found = catalog.advancementRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.advancement
@@ -75,13 +83,33 @@ class BadgeDetailViewModel @AssistedInject constructor(
             completedOn = completion?.date,
             fractionDone = badge.fractionDoneWhileInProgress(progress),
             canClear = progress != null,
-            reportToShare = reportToShare,
-            reportFailure = reportFailure,
+            unearnedByClear = if (progress == null) {
+                emptyList()
+            } else {
+                ranks.noLongerEarned(catalog, progressById, progressById - badgeId)
+                    .map { it.name }
+            },
             saveFailure = saveFailure
         )
-    }.combine(savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null)) { state, unmarked ->
-        val unmarkedDate = dateFromEpochDay(unmarked)
-        if (state is BadgeDetailUiState.Ready) state.copy(unmarkedDate = unmarkedDate) else state
+    }
+
+    val uiState: StateFlow<BadgeDetailUiState> = combine(
+        page,
+        savedStateHandle.getStateFlow<Any?>(UNMARKED_DATE, null),
+        report.reportToShare,
+        report.failure
+    ) { state, unmarked, reportToShare, reportFailure ->
+        // Combined after, so remembering a date or sharing a report doesn't work out again which
+        // ranks clearing the badge would un-earn.
+        if (state is BadgeDetailUiState.Ready) {
+            state.copy(
+                unmarkedDate = dateFromEpochDay(unmarked),
+                reportToShare = reportToShare,
+                reportFailure = reportFailure
+            )
+        } else {
+            state
+        }
     }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 

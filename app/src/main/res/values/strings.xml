@@ -158,16 +158,17 @@
          Clear all's dialog on Data management uses too. -->
     <string name="clear_progress">Clear progress</string>
     <string name="clear_progress_confirm">Clear</string>
+    <!-- A clear dialog's message, %1$s, such as "What you recorded for it will be removed.",
+         with the ranks that clearing means no longer count as earned, such as Star once a badge
+         it counts is cleared, and the ranks earned after it. %2$s lists them in the
+         strings_language, such as "Star and Life". -->
+    <string name="clear_message_unearns">%1$s %2$s will no longer count as earned.</string>
     <!-- Asks before a badge's or rank's progress is cleared, with its name, such as "Clear
          progress on Camping?" -->
     <string name="badge_detail_clear_title">Clear progress on %1$s?</string>
     <string name="badge_detail_clear_message">What you recorded for it will be removed.</string>
     <!-- In place of the one above when the scout has entered the badge's counselor. -->
     <string name="badge_detail_clear_message_with_counselor">What you recorded for it will be removed, including its counselor.</string>
-    <!-- In place of badge_detail_clear_message on a rank's page, when clearing it means other
-         ranks no longer count as earned, since ranks are earned in order. %1$s lists them in the
-         strings_language, such as "Scout, Tenderfoot, and Second Class". -->
-    <string name="rank_detail_clear_message_unearns">What you recorded for it will be removed, and %1$s will no longer count as earned.</string>
     <!-- Asks before a requirement's progress is cleared, with its official number, such as
          "Clear progress on requirement 4b?" -->
     <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>

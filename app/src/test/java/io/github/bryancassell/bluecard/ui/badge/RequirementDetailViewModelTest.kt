@@ -1236,6 +1236,76 @@ class RequirementDetailViewModelTest {
         assertTrue(viewModel.ready().canClear)
     }
 
+    // Above Tenderfoot, needing one badge, such as Chess.
+    private val star = Rank(
+        id = "star",
+        name = "Star",
+        summary = "Our summary of Star.",
+        officialUrl = "https://www.scouting.org/star/",
+        requirementVersions = listOf(
+            RequirementsVersion(
+                newest,
+                listOf(Requirement("1", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 0)))
+            )
+        )
+    )
+
+    // Complete once its one requirement is.
+    private val chess = MeritBadge(
+        id = "chess",
+        name = "Chess",
+        summary = "Our summary of Chess.",
+        officialUrl = "https://www.scouting.org/merit-badges/chess/",
+        requirementVersions = listOf(RequirementsVersion(newest, listOf(Requirement("1", "Play."))))
+    )
+
+    /** Tenderfoot and Star earned, Star from Chess. */
+    private suspend fun earnTenderfootAndStar() {
+        catalogRepository.badges = listOf(camping, chess)
+        catalogRepository.ranks = listOf(tenderfoot, star)
+        progressRepository.markRequirementCompleted("tenderfoot", "1a", day, badgeStart)
+        progressRepository.startBadge("star", newest, started)
+        progressRepository.markRequirementCompleted("chess", "1", day, badgeStart)
+    }
+
+    @Test
+    fun badgesRequirement_clearUnearnsTheRanksTheBadgeCompletes() = runTest {
+        earnTenderfootAndStar()
+        val viewModel = viewModel("1", advancementId = "chess")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Star"), viewModel.ready().unearnedByClear)
+    }
+
+    @Test
+    fun badgesRequirement_ofABadgeMarkedCompleted_clearUnearnsNothing() = runTest {
+        earnTenderfootAndStar()
+        progressRepository.setCompletedOnPriorDate("chess", day, badgeStart)
+        val viewModel = viewModel("1", advancementId = "chess")
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByClear)
+    }
+
+    // Its own rank too, which the dialog doesn't otherwise mention.
+    @Test
+    fun ranksRequirement_clearUnearnsItsRank_andThoseEarnedAfterIt() = runTest {
+        earnTenderfootAndStar()
+        val viewModel = viewModel("1a", advancementId = "tenderfoot")
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Tenderfoot", "Star"), viewModel.ready().unearnedByClear)
+    }
+
+    @Test
+    fun requirementNotStarted_clearUnearnsNothing() = runTest {
+        earnTenderfootAndStar()
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByClear)
+    }
+
     @Test
     fun clear_removesWhatsRecordedForItAndThoseUnderIt_andNothingElse() = runTest {
         progressRepository.markRequirementCompleted("camping", "1", day, badgeStart)

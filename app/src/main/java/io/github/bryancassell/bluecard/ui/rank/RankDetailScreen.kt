@@ -42,7 +42,6 @@ import io.github.bryancassell.bluecard.ui.badge.ShareReport
 import io.github.bryancassell.bluecard.ui.badge.StatusCard
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
-import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
 
@@ -192,14 +191,8 @@ private fun RankDetails(
         if (uiState.canClear) {
             ClearProgress(
                 title = stringResource(R.string.badge_detail_clear_title, uiState.name),
-                message = if (uiState.unearnedByClear.isEmpty()) {
-                    stringResource(R.string.badge_detail_clear_message)
-                } else {
-                    stringResource(
-                        R.string.rank_detail_clear_message_unearns,
-                        rememberBadgeNameListFormatter().format(uiState.unearnedByClear)
-                    )
-                },
+                message = stringResource(R.string.badge_detail_clear_message),
+                unearnedRanks = uiState.unearnedByClear,
                 onClear = onClear
             )
         }

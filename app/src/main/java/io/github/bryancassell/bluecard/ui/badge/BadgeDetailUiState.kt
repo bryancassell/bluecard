@@ -49,6 +49,12 @@ sealed interface BadgeDetailUiState {
         /** Whether the badge is started, so its progress can be cleared. */
         val canClear: Boolean = false,
         /**
+         * The ranks, in the order they're earned, that count as earned now but wouldn't once the
+         * badge's progress is cleared, so the scout is told before clearing: those with merit
+         * badge requirements it completes, and those above them earned in order after them.
+         */
+        val unearnedByClear: List<String> = emptyList(),
+        /**
          * The badge's report, once it's ready to share, until the screen has opened the share
          * sheet with it.
          */

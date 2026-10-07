@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
@@ -35,13 +36,13 @@ class RankStatusTest {
     private val ranks = listOf(scout, tenderfoot, secondClass, firstClass)
 
     private fun progress(
-        rank: Rank,
+        advancement: Advancement,
         vararg done: String,
         startedOn: LocalDate = version,
         earnedOnPriorDate: LocalDate? = null
-    ) = rank.id to BadgeProgressDetails(
-        BadgeProgress(rank.id, startedOn, day, completedOnPriorDate = earnedOnPriorDate),
-        done.map { RequirementProgress(rank.id, it, completed = true, completedDate = day) },
+    ) = advancement.id to BadgeProgressDetails(
+        BadgeProgress(advancement.id, startedOn, day, completedOnPriorDate = earnedOnPriorDate),
+        done.map { RequirementProgress(advancement.id, it, completed = true, completedDate = day) },
         emptyList()
     )
 
@@ -315,6 +316,55 @@ class RankStatusTest {
             standings.map { it.earnedWith }
         )
         assertEquals(List(4) { RankStatus.Earned }, standings.map { it.status })
+    }
+
+    // An Eagle-required badge, complete once its one requirement is.
+    private val camping = MeritBadge(
+        "camping",
+        "Camping",
+        "Camp.",
+        "https://www.scouting.org/",
+        true,
+        null,
+        listOf(RequirementsVersion(version, listOf(Requirement("1", "Camp."))))
+    )
+    private val life = rank("life")
+
+    @Test
+    fun noLongerEarned_withoutABadge_isTheRankItCompletes_andThoseEarnedAfterIt() {
+        val now = mapOf(
+            progress(scout, "1", "2"),
+            progress(star, "1"),
+            progress(life, "1", "2"),
+            progress(camping, "1")
+        )
+
+        assertEquals(
+            listOf(star, life),
+            listOf(scout, star, life).noLongerEarned(listOf(camping), now, now - camping.id)
+        )
+    }
+
+    @Test
+    fun noLongerEarned_leavesOutRanksARankAboveCountsAsEarned() {
+        val now = mapOf(
+            progress(scout, "1", "2"),
+            progress(star, "1"),
+            progress(life, earnedOnPriorDate = day),
+            progress(camping, "1")
+        )
+
+        assertEquals(
+            emptyList<Rank>(),
+            listOf(scout, star, life).noLongerEarned(listOf(camping), now, now - camping.id)
+        )
+    }
+
+    @Test
+    fun noLongerEarned_leavesOutRanksThatArentEarned() {
+        val now = mapOf(progress(scout, "1", "2"), progress(tenderfoot, "1"))
+
+        assertEquals(listOf(scout), ranks.noLongerEarned(emptyList(), now, now - scout.id))
     }
 
     @Test

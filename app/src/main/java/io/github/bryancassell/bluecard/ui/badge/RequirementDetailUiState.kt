@@ -58,6 +58,13 @@ sealed interface RequirementDetailUiState {
          * clear.
          */
         val canClear: Boolean,
+        /**
+         * The ranks, in the order they're earned, that count as earned now but wouldn't once
+         * this requirement's progress is cleared, so the scout is told before clearing: for a
+         * rank's requirement, its rank and those above it earned in order after it, and for a
+         * badge's, those with merit badge requirements the badge completes, and those above them.
+         */
+        val unearnedByClear: List<String> = emptyList(),
         /** Something the scout recorded couldn't be saved, and they haven't been told yet. */
         val saveFailure: TaskFailure? = null
     ) : RequirementDetailUiState
