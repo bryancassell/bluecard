@@ -182,9 +182,8 @@ class PdfReportRepositoryTest {
         val report = repository.createReportToShare("chess")!!
 
         assertEquals("content", report.scheme)
-        // The app's own FileProvider, whose authority differs between debug and release builds.
-        val provider = context.packageManager.resolveContentProvider(report.authority!!, 0)!!
-        assertEquals(FileProvider::class.java.name, provider.name)
+        // Local tests run against the debug build, whose application ID ends in ".debug".
+        assertEquals("io.github.bryancassell.bluecard.debug.reports", report.authority)
         assertEquals(pdfWriter.lastWritten, report.read())
         val lines = pdfWriter.pages.single().flatMap { it.lines }
         assertEquals(

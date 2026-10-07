@@ -42,7 +42,7 @@ Run these from the repository root.
 | `./gradlew createDebugUnitTestCoverageReport` | Writes an HTML coverage report for local tests to `app/build/reports/coverage/test/debug/index.html`. |
 | `./gradlew lint` | Runs Android lint. Reports are in `app/build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
-| `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. It's named "BlueCard Debug", with the application ID `io.github.bryancassell.bluecard.debug`, so it installs next to a release build. |
+| `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. It's named "BlueCard Debug", with an orange icon. Its application ID, `io.github.bryancassell.bluecard.debug`, lets it install next to a release build. |
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
 | `./gradlew clean` | Deletes build outputs. Rarely needed; the build knows what changed. |
 
@@ -261,11 +261,12 @@ settings. If a phone is also connected, point `adb` at the emulator first with
 Device-to-device transfer, used when setting up a new phone from an old one,
 follows the `<device-transfer>` rules. To check it, use the
 [`test_d2d.sh` script](https://developer.android.com/identity/data/testingbackup#TestingTransfer)
-from the same page, on an emulator with a Google Play system image. The script
-switches back to the Google backup transport before reinstalling, because that
-transport performs the restore; if it's skipped, logcat shows "Can't restore
-from D2d Transport". Its cleanup selects that transport again but leaves backup
-on, so turn backup off afterwards if it was off in step 1.
+from the same page, on an emulator with a Google Play system image, with the
+debug app's package: `test_d2d.sh io.github.bryancassell.bluecard.debug`. The
+script switches back to the Google backup transport before reinstalling,
+because that transport performs the restore; if it's skipped, logcat shows
+"Can't restore from D2d Transport". Its cleanup selects that transport again
+but leaves backup on, so turn backup off afterwards if it was off in step 1.
 
 ## Checking a release build
 

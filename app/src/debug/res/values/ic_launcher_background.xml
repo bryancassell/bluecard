@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Orange in place of the release build's blue, so the two installs' icons, and their
+         splash screens, look different. Themed icons are monochrome, so with those on, only the
+         name differs. -->
+    <color name="ic_launcher_background">#BF360C</color>
+</resources>
