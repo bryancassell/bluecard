@@ -7,7 +7,8 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithText
 
-private val isPoliteLiveRegion =
+/** A polite live region, which screen readers announce when it changes. */
+val isPoliteLiveRegion =
     SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
 
 private val isHidden = SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
