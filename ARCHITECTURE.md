@@ -638,6 +638,13 @@ way.
   per-requirement anchors, so requirement links go to the badge page.
   scouting.org has no page for each rank, so a rank's URL is its requirements
   PDF, the official wording a scout would otherwise look up.
+- **The links are made without Scouting America's permission.** Its
+  [terms of use](https://www.scouting.org/legal/terms-and-conditions/)
+  (unchanged since January 2015 as of September 2026) say users may not "Link
+  to this Site, including linking to the home page or any other page on the
+  Site, without our express permission." The app only opens the official page
+  in the browser and copies none of its content, so BlueCard accepts that risk
+  rather than asking ([#26](https://github.com/bryancassell/bluecard/issues/26)).
 
 ### Trackers
 
@@ -1344,6 +1351,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
+| [Official links](#content-and-links) | Badges and ranks link to scouting.org without asking Scouting America's permission | The terms of use, read literally, forbid linking without permission, but a link only opens the page in the browser and copies none of its content, so the risk is accepted |
 | [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
