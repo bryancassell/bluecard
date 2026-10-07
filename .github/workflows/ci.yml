@@ -51,3 +51,45 @@ jobs:
             app/build/reports/
             app/build/test-results/
             app/build/outputs/roborazzi/
+
+  instrumented-tests:
+    name: Instrumented tests
+    runs-on: ubuntu-latest
+    # Emulator jobs on GitHub's runners sometimes hang instead of failing.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      # Lets the emulator use hardware virtualization; without it, it's too slow to boot.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Built before the emulator starts, so the two don't compete for the runner's memory.
+      - run: ./gradlew assembleDebug assembleDebugAndroidTest
+
+      # Gradle downloads the system image, then starts the managed emulator, runs
+      # app/src/androidTest and shuts it down. The runner has no GPU, so the
+      # emulator draws in software.
+      - run: >-
+          ./gradlew pixel6Api37DebugAndroidTest
+          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: instrumented-test-reports
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/

@@ -58,6 +58,7 @@ own documentation says so, and each such claim links to the page.
   - [Room and migration tests](#room-and-migration-tests)
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
+  - [Instrumented tests in CI](#instrumented-tests-in-ci)
   - [Coverage](#coverage)
 - [Release build](#release-build)
 - [Debug builds](#debug-builds)
@@ -1201,13 +1202,30 @@ test still exports and imports through the real one.
   closed!" (checked with Robolectric 4.17). Local tests check the layout and
   drawing with Robolectric's native graphics (`ReportLayoutTest`), and
   `PdfReportRepositoryTest` uses a fake PDF writer. An instrumented test
-  (`PdfDocumentWriterTest`) writes a real PDF and reads it back; run it on an
-  emulator with `./gradlew connectedAndroidTest`. CI has no emulator, so it
-  doesn't run there.
+  (`PdfDocumentWriterTest`) writes a real PDF and reads it back, in CI and
+  with `./gradlew connectedAndroidTest` (see
+  [Instrumented tests in CI](#instrumented-tests-in-ci)).
 - **Backup tests:** `BackupFormatTest` pins the export format and checks each
   of import's rules. `JsonBackupRepositoryTest` writes and reads documents
   through a test documents provider, and checks that an export imported into an
   empty Room database restores the same data.
+
+### Instrumented tests in CI
+
+CI's **Instrumented tests** job runs `app/src/androidTest` on a Gradle Managed
+Device: a Pixel 6 emulator on API 37 with the Google APIs image, defined in
+`app/build.gradle.kts`. AGP downloads the image, starts the emulator, runs the
+tests and shuts it down, and the same task runs locally.
+
+- **API 37, the target SDK.** The lighter Automated Test Device images go up to
+  API 36 only (checked October 2026). The tests need API 35 or higher anyway:
+  `PdfRenderer` reads a page's text from Android 15 on.
+- **Gradle Managed Devices, not `reactivecircus/android-emulator-runner`.** That
+  action couldn't boot any API 37 image: in #14's trial its emulator was still
+  booting after 20 minutes, and its maintainers report the same. The managed
+  device booted the same image and ran the tests in about 3 minutes.
+- The job downloads the 2.2 GB system image on every run. Caching it, or an
+  emulator snapshot, is #5.
 
 ### Coverage
 

@@ -1,4 +1,5 @@
 import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.dsl.ManagedVirtualDevice
 import com.android.build.api.variant.ScopedArtifacts
 
 plugins {
@@ -63,18 +64,17 @@ android {
         unitTests.all {
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
         }
-        // TRIAL (#14): Gradle Managed Devices candidates for the CI emulator job.
+        // The emulator that runs instrumented tests in CI, on the target SDK. Gradle downloads its
+        // system image and starts and stops it: ./gradlew pixel6Api37DebugAndroidTest.
         managedDevices {
             localDevices {
-                create("api36Atd") {
-                    device = "Pixel 6"
-                    sdkVersion = 36
-                    systemImageSource = "aosp-atd"
-                }
-                create("api37Google") {
+                create("pixel6Api37") {
                     device = "Pixel 6"
                     sdkVersion = 37
                     systemImageSource = "google"
+                    // AGP can't tell the page size of an API 37 image, so it warns on every build
+                    // unless the device says which one it wants.
+                    pageAlignment = ManagedVirtualDevice.PageAlignment.FORCE_4KB_PAGES
                 }
             }
         }
