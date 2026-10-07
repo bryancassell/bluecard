@@ -302,9 +302,11 @@ private fun KeepInViewWhileFocused(
     val density = LocalDensity.current
     val keyboardMoving =
         WindowInsets.ime.getBottom(density) != WindowInsets.imeAnimationTarget.getBottom(density)
-    // The viewport's height when the keyboard last stopped. Read only by the effect, so changing
-    // it doesn't recompose.
+    // The viewport's height when the keyboard last stopped, and whether the last request is
+    // unfinished: still running, or cut short by a change here, such as the keyboard starting to
+    // move. Read only by the effect, so changing them doesn't recompose.
     var settledViewportHeight by remember { mutableIntStateOf(viewportHeight) }
+    var requestUnfinished by remember { mutableStateOf(false) }
     // Asks again each time one changes, which cancels the request before.
     LaunchedEffect(hasFocus, height, viewportHeight, keyboardMoving) {
         // While a request runs, the page stops following the cursor as the keyboard shrinks the
@@ -312,10 +314,19 @@ private fun KeepInViewWhileFocused(
         // keyboard.
         if (keyboardMoving) return@LaunchedEffect
         // A viewport that grew, as when the keyboard closes, can't have hidden them. Asking then
-        // would pull the page back to them after the scout has scrolled away.
+        // would pull the page back to them after the scout has scrolled away. An unfinished
+        // request is still asked for: a keyboard that got shorter partway through it, as a
+        // number pad can, would otherwise leave Save behind the keyboard.
         val viewportGrew = viewportHeight > settledViewportHeight
         settledViewportHeight = viewportHeight
-        if (hasFocus && height <= viewportHeight && !viewportGrew) requester.bringIntoView()
+        requestUnfinished =
+            hasFocus && height <= viewportHeight && (!viewportGrew || requestUnfinished)
+        if (requestUnfinished) {
+            // Returns once the request is done, and also when the scout's drag stops it, which
+            // counts as scrolling away. It throws only when this effect is cancelled.
+            requester.bringIntoView()
+            requestUnfinished = false
+        }
     }
     Column(
         modifier = Modifier
