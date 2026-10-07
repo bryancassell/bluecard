@@ -13,9 +13,15 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -167,6 +173,22 @@ class DataManagementScreenTest {
         editProfileButton().performClick()
 
         assertEquals(1, profileEdits)
+    }
+
+    // Moving from control to control, a screen reader user doesn't hear the heading above it.
+    // What they hear starts with "Edit", so a voice control user can still say "Tap Edit".
+    @Test
+    fun edit_tellsScreenReadersWhatItEdits() {
+        show()
+
+        editProfileButton()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+        // TalkBack reads the button's parts in turn, so the description has to be the text's
+        // own: one beside the text was read and then "Edit" again after it.
+        composeTestRule
+            .onNodeWithText("Edit", useUnmergedTree = true)
+            .assertTextEquals("Edit")
+            .assertContentDescriptionEquals("Edit name and unit")
     }
 
     // The file picker takes a moment to cover BlueCard. A tap on Edit that reached it then would

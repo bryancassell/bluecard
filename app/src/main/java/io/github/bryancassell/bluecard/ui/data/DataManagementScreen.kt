@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -115,6 +116,8 @@ fun DataManagementScreen(
                 heading = R.string.data_management_profile_heading,
                 description = R.string.data_management_profile_description,
                 button = R.string.data_management_profile_edit,
+                // Screen reader users moving from control to control don't hear the heading.
+                buttonDescription = R.string.data_management_profile_edit_description,
                 enabled = !uiState.working,
                 // Through the screen's OtherAppStarter, so a tap just after Export or Import
                 // doesn't open the page under the file picker.
@@ -180,7 +183,10 @@ fun DataManagementScreen(
     }
 }
 
-/** A heading, what it does, and a button that does it. */
+/**
+ * A heading, what it does, and a button that does it. Screen readers read [buttonDescription]
+ * in place of the button's text, unless it's null.
+ */
 @Composable
 private fun Section(
     @StringRes heading: Int,
@@ -188,7 +194,8 @@ private fun Section(
     @StringRes button: Int,
     enabled: Boolean,
     onClick: () -> Unit,
-    colors: ButtonColors = ButtonDefaults.outlinedButtonColors()
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    @StringRes buttonDescription: Int? = null
 ) {
     Text(
         text = stringResource(heading),
@@ -198,8 +205,17 @@ private fun Section(
             .semantics { heading() }
     )
     Text(text = stringResource(description), style = MaterialTheme.typography.bodyMedium)
+    val spoken = buttonDescription?.let { stringResource(it) }
     OutlinedButton(onClick = onClick, enabled = enabled, colors = colors) {
-        Text(stringResource(button))
+        Text(
+            text = stringResource(button),
+            // On the text: TalkBack read one on the button, then the text after it.
+            modifier = if (spoken == null) {
+                Modifier
+            } else {
+                Modifier.semantics { contentDescription = spoken }
+            }
+        )
     }
 }
 
