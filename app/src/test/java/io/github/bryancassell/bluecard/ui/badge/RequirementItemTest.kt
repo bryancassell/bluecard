@@ -132,29 +132,45 @@ class RequirementItemTest {
         assertNull(item.completeCount)
     }
 
-    // Its own work counts as one more part, so the count never reads as done while it's left.
     @Test
     fun enoughSubRequirementsButNotOwnWork_isPartlyCompleted_countingNoMoreThanNeeded() {
         val item = ownWorkAndTwoOfThree.toItem(done("2a", "2b", "2c"), emptyMap())
 
         assertTrue(item.partlyCompleted)
-        assertEquals(CompleteCount(2, 3), item.completeCount)
+        assertEquals(CompleteCount(2, 2), item.completeCount)
+    }
+
+    // Only its own work is left, so the row says what that is.
+    @Test
+    fun enoughSubRequirementsButNotOwnWork_hasItsOwnWorkStillToDo() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap())
+
+        assertEquals("Pack your gear.", item.stillToDo)
     }
 
     @Test
-    fun ownWorkComplete_isPartlyCompleted_countedAsOnePart() {
+    fun subRequirementsStillNeeded_haveNothingStillToDo() {
+        assertNull(ownWorkAndTwoOfThree.toItem(emptyMap(), emptyMap()).stillToDo)
+        assertNull(ownWorkAndTwoOfThree.toItem(done("2a"), emptyMap()).stillToDo)
+        assertNull(ownWorkAndTwoOfThree.toItem(done("2", "2a"), emptyMap()).stillToDo)
+    }
+
+    @Test
+    fun completeOrNotNeeded_hasNothingStillToDo() {
+        val complete = ownWorkAndTwoOfThree.toItem(done("2", "2a", "2c"), emptyMap())
+        val notNeeded =
+            ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap(), partOfHasEnough = true)
+
+        assertNull(complete.stillToDo)
+        assertNull(notNeeded.stillToDo)
+    }
+
+    @Test
+    fun ownWorkComplete_isPartlyCompleted_withNoCount() {
         val item = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
 
         assertTrue(item.partlyCompleted)
-        assertEquals(CompleteCount(1, 3), item.completeCount)
-    }
-
-    @Test
-    fun ownWorkAndSomeSubRequirementsComplete_countsBoth() {
-        val all = ownWorkAndTwoOfThree.copy(requiredCount = null)
-        val item = all.toItem(done("2", "2a", "2b"), emptyMap())
-
-        assertEquals(CompleteCount(3, 4), item.completeCount)
+        assertNull(item.completeCount)
     }
 
     @Test

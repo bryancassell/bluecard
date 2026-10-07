@@ -76,11 +76,11 @@ fun RequirementRows(
 /**
  * A requirement's row, which opens its page: its number, in a box that's tinted once part of it
  * is complete and filled in once all of it is, its summary, "Do N of M" when only some
- * sub-requirements are needed, how many of those it needs are complete, with its own work as one
- * more, how far along its tracker is ([TrackerProgress]), how many merit badges count toward it,
- * for one that asks for them, and "Not needed" when it no longer is. Screen readers read
- * "Completed", "In progress", "Not completed", "Not recorded" or "Not needed" as its state. The
- * scout marks a requirement complete on its page.
+ * sub-requirements are needed, how many of those it needs are complete, what's still to do once
+ * only its own work is left, how far along its tracker is ([TrackerProgress]), how many merit
+ * badges count toward it, for one that asks for them, and "Not needed" when it no longer is.
+ * Screen readers read "Completed", "In progress", "Not completed", "Not recorded" or "Not needed"
+ * as its state. The scout marks a requirement complete on its page.
  */
 @Composable
 private fun RequirementRow(
@@ -102,6 +102,7 @@ private fun RequirementRow(
         leadingContent = { RequirementNumber(item, numberWidth) },
         headlineContent = { Text(item.summary) },
         supportingContent = if (choiceAndCount == null &&
+            item.stillToDo == null &&
             item.tracker == null &&
             item.meritBadges == null &&
             !item.notNeeded
@@ -111,6 +112,9 @@ private fun RequirementRow(
             {
                 Column {
                     choiceAndCount?.let { Text(it) }
+                    item.stillToDo?.let {
+                        Text(stringResource(R.string.requirement_still_to_do, it))
+                    }
                     item.tracker?.let { TrackerProgress(it) }
                     item.meritBadges?.let {
                         Text(meritBadgesCountLabel(it))
