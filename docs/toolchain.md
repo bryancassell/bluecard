@@ -250,13 +250,12 @@ settings. If a phone is also connected, point `adb` at the emulator first with
    ```
 
 5. Put back the settings you noted in step 1: select the transport that was
-   marked `*`, remove the test transport's settings, and turn backup off again
-   if it was off.
+   marked `*`, and remove the test transport's settings. If backup was off,
+   turn it off again with `adb shell bmgr enable false`.
 
    ```sh
    adb shell bmgr transport <transport noted in step 1>
    adb shell settings delete secure backup_local_transport_parameters
-   adb shell bmgr enable false   # only if backup was off in step 1
    ```
 
 Device-to-device transfer, used when setting up a new phone from an old one,
