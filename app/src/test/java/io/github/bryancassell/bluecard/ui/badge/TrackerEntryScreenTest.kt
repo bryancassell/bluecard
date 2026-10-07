@@ -593,7 +593,14 @@ class TrackerEntryScreenTest {
 
     @Test
     fun delete_ofARowRanksCountOn_namesTheRanksThatWontCountAsEarned() {
-        show(savedEntry.copy(unearnedByDelete = listOf("Star", "Life")))
+        show(
+            savedEntry.copy(
+                requirementNumber = "2",
+                rowTitle = "Week",
+                rowLabel = "week",
+                unearnedByDelete = listOf("Star", "Life")
+            )
+        )
 
         button("Delete").performClick()
 

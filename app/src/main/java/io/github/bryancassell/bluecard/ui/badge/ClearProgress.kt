@@ -63,7 +63,7 @@ fun withUnearnedRanks(message: String, unearnedRanks: List<String>): String =
         message
     } else {
         stringResource(
-            R.string.clear_message_unearns,
+            R.string.removal_message_unearns,
             message,
             rememberBadgeNameListFormatter().format(unearnedRanks)
         )

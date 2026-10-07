@@ -762,6 +762,19 @@ class TrackerEntryViewModelTest {
         assertEquals(listOf("Star"), viewModel.ready().unearnedByDelete)
     }
 
+    // As when a write from the page before lands after this one loads.
+    @Test
+    fun fixedRow_whenProgressChanges_deleteUnearnsWhatItNowWould() = runTest {
+        earnScoutAndStar()
+        val viewModel = viewModel(number = "2", rowNumber = 2)
+        startCollecting(viewModel)
+        assertEquals(listOf("Star"), viewModel.ready().unearnedByDelete)
+
+        progressRepository.setCompletedOnPriorDate("personal-fitness", today, badgeStart)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByDelete)
+    }
+
     @Test
     fun fixedRow_ofABadgeMarkedCompleted_deleteUnearnsNothing() = runTest {
         earnScoutAndStar()

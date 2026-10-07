@@ -159,12 +159,11 @@
          Clear all's dialog on Data management uses too. -->
     <string name="clear_progress">Clear progress</string>
     <string name="clear_progress_confirm">Clear</string>
-    <!-- A clear dialog's message, %1$s, such as "What you recorded for it will be removed.",
-         with the ranks that clearing means no longer count as earned, such as Star once a badge
-         it counts is cleared, and the ranks earned after it. %2$s lists them in the
-         strings_language, such as "Star and Life". A tracker row's Delete dialog uses it too,
-         with tracker_entry_delete_message. -->
-    <string name="clear_message_unearns">%1$s %2$s will no longer count as earned.</string>
+    <!-- A clear or delete dialog's message, %1$s, such as "What you recorded for it will be
+         removed.", with the ranks that clearing or deleting means no longer count as earned, such
+         as Star once a badge it counts is cleared, and the ranks earned after it. %2$s lists them
+         in the strings_language, such as "Star and Life". -->
+    <string name="removal_message_unearns">%1$s %2$s will no longer count as earned.</string>
     <!-- Asks before a badge's or rank's progress is cleared, with its name, such as "Clear
          progress on Camping?" -->
     <string name="badge_detail_clear_title">Clear progress on %1$s?</string>
