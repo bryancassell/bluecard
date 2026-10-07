@@ -315,11 +315,10 @@ class BackupFormatTest {
             backup.copy(progress = listOf(change(camping), swimming))
         fun withRequirement(requirement: RequirementProgress) =
             withCamping { it.copy(requirements = it.requirements + requirement) }
-        fun withEntry(number: String, rowNumber: Int?, values: Map<String, String> = mapOf()) =
-            withCamping {
-                val entry = TrackerEntry(9, "camping", number, rowNumber, values)
-                it.copy(trackerEntries = it.trackerEntries + entry)
-            }
+        fun withEntry(number: String, rowNumber: Int?, values: Map<String, String>) = withCamping {
+            val entry = TrackerEntry(9, "camping", number, rowNumber, values)
+            it.copy(trackerEntries = it.trackerEntries + entry)
+        }
         fun withCounselor(counselor: Counselor) =
             withCamping { it.copy(badge = it.badge.copy(counselor = counselor)) }
         val backups = mapOf(
@@ -336,14 +335,20 @@ class BackupFormatTest {
             "a fixed-row tracker's entry without a row" to
                 withEntry("9b", null, mapOf("place" to "Hill")),
             "a log's entry with a row" to withEntry("9a", 1, mapOf("nights" to "1")),
-            "a log's entry without values" to withEntry("9a", null),
+            "a log's entry without values" to withEntry("9a", null, mapOf()),
             "a log's entry with only blank values" to
                 withEntry("9a", null, mapOf("nights" to " ", "note" to "\n", "details" to "\t")),
-            "a fixed-row tracker's entry without values" to withEntry("9b", 1),
+            "a fixed-row tracker's entry without values" to withEntry("9b", 1, mapOf()),
             "a fixed-row tracker's entry with only a blank value" to
                 withEntry("9b", 1, mapOf("place" to "  ")),
-            "an entry for a requirement without a tracker" to withEntry("5", null),
-            "an entry for a requirement not in the version" to withEntry("8", null),
+            // Saved before the field replaced pasted line breaks (#155). trim() doesn't remove
+            // U+0085, so the entry is empty only once its line break is a space.
+            "a fixed-row tracker's entry with only a line break" to
+                withEntry("9b", 1, mapOf("place" to "\u0085")),
+            "an entry for a requirement without a tracker" to
+                withEntry("5", null, mapOf("nights" to "1")),
+            "an entry for a requirement not in the version" to
+                withEntry("8", null, mapOf("nights" to "1")),
             "an entry in a column the tracker doesn't have" to
                 withEntry("9a", null, mapOf("weather" to "Rain")),
             "a date column without a date" to withEntry("9a", null, mapOf("date" to "May 2")),

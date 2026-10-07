@@ -71,7 +71,8 @@ fun encodeBackup(backup: Backup): String =
  * - Each badge or rank is listed once, and each of its requirements once.
  * - Each requirement and tracker column is in its badge's or rank's requirements version.
  * - A tracker entry fills one of its tracker's rows, which no other entry fills, or none in a
- *   log. It has a value once trimmed. A date column holds a date, and a number column a number.
+ *   log. It has a value once cleaned up. A date column holds a date, and a number column a
+ *   number.
  * - The name and unit number aren't blank, and no text is longer than its field takes (such as
  *   [NOTES_MAX_LENGTH]), so none is cut short when the scout edits it.
  *
