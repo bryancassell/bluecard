@@ -967,8 +967,9 @@ it before changing anything, since import replaces all current data (see
   the catalog: a newer app's catalog can add some without a new format version,
   so a file with one the catalog doesn't have is reported as from a newer
   version too. Each requirement, tracker row and column must be in that
-  version, a date or number column must hold a date or number, and no text can
-  be longer than its field takes, so none is cut short when the scout edits it.
+  version, each tracker entry must have a value, a date or number column must
+  hold a date or number, and no text can be longer than its field takes, so
+  none is cut short when the scout edits it.
 - **Import cleans up text as the app does when the scout saves it,** rather
   than rejecting a file for it ([`PRD.md`](PRD.md#design-decisions)): it's
   trimmed, and each line break in single-line text (the name, unit number,
@@ -978,6 +979,12 @@ it before changing anything, since import replaces all current data (see
   even a lone "." is rejected, though saving leaves one out: the field never
   saves one, and dropping it without dropping other non-numbers would take a
   rule of its own ([#233](https://github.com/bryancassell/bluecard/issues/233)).
+  A tracker entry with no value left once cleaned up is rejected too, rather
+  than dropped ([#239](https://github.com/bryancassell/bluecard/issues/239)).
+  Only a development build can export one: a row saved before its field
+  replaced pasted line breaks
+  ([#155](https://github.com/bryancassell/bluecard/pull/155)) whose only value
+  is a next line (U+0085), which `trim()` keeps but import makes a space.
 - **The file is decoded as it's read, never into a tree of the whole file,**
   and its size is capped, so a large or deeply nested file picked by mistake
   can't use up the app's memory or stack.
