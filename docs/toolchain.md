@@ -343,16 +343,17 @@ installed, so every test release needs this one. If it's lost, every tester
 has to uninstall and install again, losing their data unless they export it
 first.
 
-1. Create the key, once for the project. On another machine, restore it from
-   the backup instead. `keytool` asks for the password.
+1. Create the key, once for the project. `keytool` asks for the password.
 
    ```sh
-   mkdir -p -m 700 ~/keys
+   mkdir -p ~/keys
    keytool -genkeypair -keystore ~/keys/bluecard-release.p12 -storetype PKCS12 \
        -alias bluecard -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=BlueCard"
    ```
 
-   Anyone can read the certificate's name (`CN=BlueCard`) from the APK, so it
+   On another machine, copy `bluecard-release.p12` from the backup into
+   `~/keys` instead. Either way, make it readable only by you:
+   `chmod 700 ~/keys && chmod 600 ~/keys/bluecard-release.p12`. Anyone can read the certificate's name (`CN=BlueCard`) from the APK, so it
    names the app rather than a person.
 
 2. Save the keystore file and its password together in a password manager.
@@ -368,21 +369,25 @@ first.
    since the APK records the commit it was built from.
 
    ```sh
-   git switch main && git pull
-   git status --short  # Should print nothing.
+   git switch main && git pull --ff-only
+   git status -sb  # Should print only "## main...origin/main".
    ./gradlew assembleRelease
    ```
 
 3. Sign it with the release key, with `BUILD_TOOLS` set as in step 1 of
    [Checking a release build](#checking-a-release-build). `apksigner` asks
-   for the key's password, then the digest it prints should be
-   `788055ef2f3302814555b1e3e9e09eea837dd85955df352b9a9246e1e5ae452e`.
+   for the key's password. The commands end by printing "Signed with the
+   release key." only if the APK's certificate has the release key's SHA-256
+   digest.
 
    ```sh
    APK=app/build/outputs/apk/release/app-release.apk
+   rm -f "$APK"
    "$BUILD_TOOLS/apksigner" sign --ks ~/keys/bluecard-release.p12 --ks-key-alias bluecard \
-       --out "$APK" app/build/outputs/apk/release/app-release-unsigned.apk
-   "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | grep "certificate SHA-256"
+       --out "$APK" app/build/outputs/apk/release/app-release-unsigned.apk &&
+   "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" |
+       grep -q "certificate SHA-256 digest: 788055ef2f3302814555b1e3e9e09eea837dd85955df352b9a9246e1e5ae452e" &&
+       echo "Signed with the release key."
    ```
 
 4. Install it fresh on an emulator and go through steps 2 and 3 of
@@ -420,7 +425,7 @@ first.
    try.
 
    ```sh
-   git tag "v$VERSION" "$COMMIT" && git push origin "v$VERSION"
+   git tag "v${VERSION:?}" "${COMMIT:?}" && git push origin "v$VERSION"
    OUT=app/build/outputs
    cp "$APK" "$OUT/bluecard-$VERSION.apk"
    cp "$OUT/mapping/release/mapping.txt" "$OUT/bluecard-$VERSION-mapping.txt"
