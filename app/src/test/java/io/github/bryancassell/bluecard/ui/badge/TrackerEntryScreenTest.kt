@@ -395,6 +395,24 @@ class TrackerEntryScreenTest {
     }
 
     @Test
+    fun textField_asksForSentenceCapitalizationWithNext() {
+        show(newEntry)
+        field("Activity").performClick()
+
+        val editorInfo = EditorInfo()
+        composeTestRule.runOnIdle { view.onCreateInputConnection(editorInfo) }
+
+        assertEquals(
+            InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
+            editorInfo.inputType and InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        )
+        assertEquals(
+            EditorInfo.IME_ACTION_NEXT,
+            editorInfo.imeOptions and EditorInfo.IME_MASK_ACTION
+        )
+    }
+
+    @Test
     fun numberField_asksForTheDecimalKeyboardWithNext() {
         show(newEntry)
         field("Minutes").performClick()
@@ -450,7 +468,7 @@ class TrackerEntryScreenTest {
     }
 
     @Test
-    fun done_onTheLastField_closesTheKeyboard() {
+    fun doneKey_onTheLastField_closesTheKeyboard() {
         val columns = listOf(
             TrackerColumn("species", "Species", TrackerColumnType.TEXT),
             TrackerColumn("count", "Count", TrackerColumnType.NUMBER)
@@ -467,7 +485,7 @@ class TrackerEntryScreenTest {
 
     // A field above a last date has no text field to move to.
     @Test
-    fun lastFieldAboveADate_hasDone() {
+    fun doneKey_onTheLastFieldAboveADate_closesTheKeyboard() {
         val columns = listOf(
             TrackerColumn("species", "Species", TrackerColumnType.TEXT),
             TrackerColumn("date", "Date", TrackerColumnType.DATE)
@@ -477,7 +495,9 @@ class TrackerEntryScreenTest {
             fields = columns.associate { it.id to TextFieldState() }
         )
 
-        field("Species").assert(hasImeAction(ImeAction.Done))
+        field("Species").assert(hasImeAction(ImeAction.Done)).performClick().performImeAction()
+
+        assertEquals(1, keyboard.hides)
     }
 
     @Test
@@ -610,6 +630,20 @@ class TrackerEntryScreenTest {
 
         fieldWithoutScrolling("Notes").performClick()
         openKeyboard()
+
+        assertAboveKeyboard(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
+        assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+    }
+
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun nextIntoLastField_withKeyboardOpen_fieldAndSaveShowAboveIt() {
+        show(newEntry)
+        fieldWithoutScrolling("Minutes").performClick()
+        openKeyboard()
+
+        fieldWithoutScrolling("Minutes").performImeAction()
 
         assertAboveKeyboard(fieldWithoutScrolling("Notes").getUnclippedBoundsInRoot())
         assertAboveKeyboard(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
