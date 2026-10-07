@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.platform.LocalInputModeManager
@@ -43,6 +44,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
@@ -181,23 +183,29 @@ class TrackerEntryScreenTest {
      * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
      * after the page has handled the focus change.
      */
-    private fun openKeyboard() = moveKeyboard(from = 0.dp, to = KEYBOARD_HEIGHT)
+    private fun openKeyboard() {
+        composeTestRule.waitForIdle()
+        moveKeyboard(from = 0.dp, to = KEYBOARD_HEIGHT)
+    }
 
     /** Closes the keyboard, as the scout does with Back while a field keeps focus. */
-    private fun closeKeyboard() = moveKeyboard(from = KEYBOARD_HEIGHT, to = 0.dp)
+    private fun closeKeyboard() {
+        composeTestRule.waitForIdle()
+        moveKeyboard(from = KEYBOARD_HEIGHT, to = 0.dp)
+    }
 
     /**
      * Moves the keyboard's top edge as the system does: it sends the page its final insets, then
-     * the insets of each frame of the animation.
+     * the insets of each frame of the animation. It starts at once, even while the page is still
+     * scrolling, and runs [midway] halfway through, as the scout can act while it moves.
      */
-    private fun moveKeyboard(from: Dp, to: Dp) {
+    private fun moveKeyboard(from: Dp, to: Dp, midway: () -> Unit = {}) {
         val (start, end) = with(composeTestRule.density) { from.roundToPx() to to.roundToPx() }
         val animation = WindowInsetsAnimation(WindowInsets.Type.ime(), null, 250)
         val bounds = WindowInsetsAnimation.Bounds(
             Insets.NONE,
             Insets.of(0, 0, 0, maxOf(start, end))
         )
-        composeTestRule.waitForIdle()
         composeTestRule.mainClock.autoAdvance = false
         composeTestRule.runOnUiThread {
             view.dispatchWindowInsetsAnimationPrepare(animation)
@@ -214,6 +222,7 @@ class TrackerEntryScreenTest {
                     listOf(animation)
                 )
             }
+            if (frame == KEYBOARD_FRAMES / 2) midway()
         }
         composeTestRule.runOnUiThread { view.dispatchWindowInsetsAnimationEnd(animation) }
         composeTestRule.mainClock.autoAdvance = true
@@ -225,12 +234,12 @@ class TrackerEntryScreenTest {
         .build()
 
     /**
-     * Checks that [bounds] are on the page above the keyboard. Unclipped bounds are needed for
-     * this: the page clips what's behind the keyboard.
+     * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall. Unclipped
+     * bounds are needed for this: the page clips what's behind the keyboard.
      */
-    private fun assertAboveKeyboard(bounds: DpRect) {
+    private fun assertAboveKeyboard(bounds: DpRect, keyboardHeight: Dp = KEYBOARD_HEIGHT) {
         val keyboardTop =
-            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - KEYBOARD_HEIGHT
+            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - keyboardHeight
         assertTrue(
             "$bounds isn't between the top of the page and the keyboard at $keyboardTop",
             bounds.top >= 0.dp && bounds.bottom <= keyboardTop
@@ -756,6 +765,97 @@ class TrackerEntryScreenTest {
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
 
+    // Some keyboards have a number pad shorter than their letters. Coming up partway through the
+    // scroll to the last field, it stopped the scroll and left Save behind it (#244).
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardGettingShorterWhileLastFieldScrollsIntoView_fieldAndSaveShowAboveIt() {
+        startScrollingToLastNumberField()
+
+        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT)
+
+        assertAboveKeyboard(
+            fieldWithoutScrolling("Minutes").getUnclippedBoundsInRoot(),
+            NUMBER_PAD_HEIGHT
+        )
+        assertAboveKeyboard(
+            composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot(),
+            NUMBER_PAD_HEIGHT
+        )
+    }
+
+    // The scout stopped the scroll to the last field by dragging the page, so the page stays where
+    // they left it, as when they scroll away once it's done.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardGettingShorterAfterScoutStoppedTheScroll_leavesThePageWhereItIs() {
+        startScrollingToLastNumberField()
+        dragPageDown()
+        composeTestRule.mainClock.autoAdvance = true
+        val heading = composeTestRule.onNodeWithText("Session 3")
+        val scrolledTo = heading.getUnclippedBoundsInRoot()
+
+        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT)
+
+        assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
+    }
+
+    // The keyboard stopped the scroll to the last field, and the scout dragged the page while the
+    // keyboard was still moving.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun scoutDraggingWhileKeyboardGetsShorter_leavesThePageWhereItIs() {
+        startScrollingToLastNumberField()
+        val heading = composeTestRule.onNodeWithText("Session 3")
+        lateinit var scrolledTo: DpRect
+
+        moveKeyboard(from = KEYBOARD_HEIGHT, to = NUMBER_PAD_HEIGHT) {
+            dragPageDown()
+            scrolledTo = heading.getUnclippedBoundsInRoot()
+        }
+
+        assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
+    }
+
+    /**
+     * Moves with Next from a text field to the last field, a number, as in Bird Study 8a(1), with
+     * the keyboard open. It stops the clock partway through the scroll that brings that field and
+     * Save into view, and leaves it stopped: the test moves it on, as [moveKeyboard] does.
+     */
+    private fun startScrollingToLastNumberField() {
+        val place = TrackerColumn("place", "Place", TrackerColumnType.TEXT)
+        show(
+            newEntry.copy(columns = columns.take(2) + place + columns[2]),
+            fields + (place.id to TextFieldState())
+        )
+        fieldWithoutScrolling("Place").performClick()
+        openKeyboard()
+        composeTestRule.mainClock.autoAdvance = false
+        fieldWithoutScrolling("Place").performImeAction()
+        repeat(2) { composeTestRule.mainClock.advanceTimeByFrame() }
+        // Save is still behind the keyboard, so the scroll hasn't ended.
+        val keyboardTop =
+            composeTestRule.onRoot().getUnclippedBoundsInRoot().bottom - KEYBOARD_HEIGHT
+        assertTrue(
+            "The scroll ended before the test could stop it partway",
+            composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot().bottom > keyboardTop
+        )
+    }
+
+    /** Drags the page toward its top, as the scout does to check an earlier field. */
+    private fun dragPageDown() {
+        val page = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
+        composeTestRule.onNode(page).performTouchInput {
+            down(center)
+            // With no frame in between, so the drag starts before a short scroll ends.
+            moveBy(Offset(0f, 100f), delayMillis = 0)
+            up()
+        }
+    }
+
     @Test
     fun back_withChangesThatCantBeSaved_asksBeforeDiscardingThem() {
         // As with every field of a saved entry emptied, which Delete removes instead.
@@ -820,6 +920,9 @@ class TrackerEntryScreenTest {
 
         /** About as tall as a phone's keyboard. */
         val KEYBOARD_HEIGHT = 300.dp
+
+        /** A number pad shorter than the letters keyboard, as some keyboards have. */
+        val NUMBER_PAD_HEIGHT = 260.dp
 
         /** About how many frames a keyboard takes to open or close. */
         const val KEYBOARD_FRAMES = 15
