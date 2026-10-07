@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.ui.LoadingOrMessage
@@ -176,13 +177,12 @@ private fun BadgeDetails(
                 { EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter())) }
             }
         )
-        CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) { modifier ->
+        CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) {
             ReportButtons(
                 reportFileName(LocalResources.current, ReportKind.MeritBadge, uiState.name),
                 onShareReport,
                 onSaveReport,
-                startOtherApp,
-                modifier
+                startOtherApp
             )
         }
         CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
@@ -220,7 +220,7 @@ private fun BadgeDetails(
  *   ([onUnmark]).
  * - For a badge complete from its requirements, the date they were completed on.
  *
- * Once it's complete, the [reportButtons] follow, laid out with the modifier they're given.
+ * Once it's complete, the [reportButtons] follow.
  */
 @Composable
 private fun CompletionStatus(
@@ -228,11 +228,11 @@ private fun CompletionStatus(
     today: () -> LocalDate,
     onMark: (date: LocalDate) -> Unit,
     onUnmark: () -> Unit,
-    reportButtons: @Composable (Modifier) -> Unit
+    reportButtons: @Composable () -> Unit
 ) {
     val date = uiState.completedOnPriorDate
     val formatter = rememberCompletionDateFormatter()
-    StatusCard {
+    StatusCard(reportButtons = reportButtons.takeIf { uiState.completed }) {
         when {
             date != null -> EditableDate(
                 text = stringResource(R.string.badge_detail_completed_on, formatter.format(date)),
@@ -251,7 +251,7 @@ private fun CompletionStatus(
 
             else -> MarkDoneLines(
                 status = stringResource(
-                    if (uiState.canClear) {
+                    if (uiState.status == BadgeStatus.InProgress) {
                         R.string.badges_in_progress
                     } else {
                         R.string.badge_detail_not_started
@@ -264,9 +264,6 @@ private fun CompletionStatus(
                 today = today,
                 onMark = onMark
             )
-        }
-        if (uiState.completed) {
-            reportButtons(Modifier.padding(horizontal = 16.dp))
         }
     }
 }

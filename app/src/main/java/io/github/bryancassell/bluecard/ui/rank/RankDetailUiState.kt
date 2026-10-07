@@ -56,6 +56,12 @@ sealed interface RankDetailUiState {
         /** Whether the rank is started, so its progress can be cleared. */
         val canClear: Boolean = false,
         /**
+         * Whether anything counts toward the rank: it's started, or a requirement is complete or
+         * partly done, as one asking for merit badges can be from badges the scout has completed
+         * before anything is recorded for the rank.
+         */
+        val started: Boolean = false,
+        /**
          * The other ranks, in the order they're earned, that count as earned now but wouldn't
          * once this rank's progress is cleared, so the scout is told before clearing: those its
          * mark counts as earned, and those above it earned in order after it.

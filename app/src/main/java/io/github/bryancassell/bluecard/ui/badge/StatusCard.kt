@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -36,10 +37,14 @@ internal const val STATUS_CARD_TAG = "statusCard"
  *
  * Each line pads its own sides, as on the page, so a text button's text lines up with the card's
  * text. Its last line is always a button, whose touch area leaves room under it, so the card
- * leaves less.
+ * leaves less. The [reportButtons], if given, for a badge or rank that's done, come last.
  */
 @Composable
-fun StatusCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun StatusCard(
+    modifier: Modifier = Modifier,
+    reportButtons: (@Composable () -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Card(
         modifier = modifier
             .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
@@ -50,7 +55,10 @@ fun StatusCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         )
     ) {
-        Column(Modifier.padding(top = 16.dp, bottom = 12.dp), content = content)
+        Column(Modifier.padding(top = 16.dp, bottom = 12.dp)) {
+            content()
+            reportButtons?.let { Box(Modifier.padding(horizontal = 16.dp)) { it() } }
+        }
     }
 }
 
@@ -83,7 +91,7 @@ fun DoneStatusLine(text: String) {
  * ([onMark]). The picker opens at [initial], if given, or at today.
  */
 @Composable
-fun MarkDoneLines(
+fun ColumnScope.MarkDoneLines(
     status: String,
     prompt: String?,
     markText: String,

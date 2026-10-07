@@ -57,6 +57,7 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
@@ -276,7 +277,7 @@ class BadgeDetailScreenTest {
     // The status card says it's in progress, so screen readers don't hear it twice.
     @Test
     fun inProgress_barReadsHowMuchIsDone_andTheStatusCardSaysInProgress() {
-        show(ready.copy(fractionDone = 0.4f, canClear = true))
+        show(ready.copy(status = BadgeStatus.InProgress, fractionDone = 0.4f, canClear = true))
 
         composeTestRule.onNode(fortyPercentBar)
             .assert(hasStateDescription("40% done"))
@@ -779,7 +780,7 @@ class BadgeDetailScreenTest {
         assertEquals(listOf("20"), openedRequirements)
     }
 
-    private val completed = ready.copy(completed = true)
+    private val completed = ready.copy(status = BadgeStatus.Completed)
 
     private val marked = completed.copy(
         completedOnPriorDate = LocalDate.of(2025, 8, 1),
@@ -813,7 +814,7 @@ class BadgeDetailScreenTest {
     // Once it's started, as on Badges.
     @Test
     fun badgeInProgress_saysSo() {
-        show(ready.copy(fractionDone = 0.4f, canClear = true))
+        show(ready.copy(status = BadgeStatus.InProgress, fractionDone = 0.4f, canClear = true))
 
         composeTestRule.onNodeWithText("In progress").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Not started").assertDoesNotExist()

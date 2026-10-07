@@ -102,10 +102,8 @@ class RankDetailScreenTest {
         ),
         status = RankStatus.NotEarned
     )
-    private val notStarted =
-        ready.copy(requirements = ready.requirements.map { it.copy(completed = false) })
     private val inProgress = ready.copy(status = RankStatus.InProgress, fractionDone = 0.4f)
-    private val started = ready.copy(fractionDone = 0.25f, canClear = true)
+    private val started = ready.copy(fractionDone = 0.25f, canClear = true, started = true)
     private val marked = ready.copy(
         status = RankStatus.Earned,
         earnedOnPriorDate = LocalDate.of(2025, 8, 1),
@@ -301,7 +299,7 @@ class RankDetailScreenTest {
 
     @Test
     fun rankNotStarted_saysSo_andAsksWhetherItsAlreadyEarned_aboveMarkEarned() {
-        show(notStarted)
+        show(ready)
 
         val tops = listOf("Not started", "Already earned Tenderfoot?", "Mark earned").map(::topOf)
         assertEquals(tops.sorted(), tops)
@@ -322,24 +320,6 @@ class RankDetailScreenTest {
 
         text("Started").performScrollTo().assertIsDisplayed()
         text("In progress").assertDoesNotExist()
-    }
-
-    // As for Star with badges the scout has completed: they count toward it before anything is
-    // recorded for it, so "Not started" would contradict its requirement's row.
-    @Test
-    fun rankWithNothingRecorded_withARequirementPartlyDone_saysStarted() {
-        val badges = RequirementItem(
-            "3",
-            "Earn 6 merit badges.",
-            null,
-            false,
-            markedByHand = false,
-            partlyCompleted = true
-        )
-        show(notStarted.copy(requirements = listOf(badges)))
-
-        text("Started").performScrollTo().assertIsDisplayed()
-        text("Not started").assertDoesNotExist()
     }
 
     @Test

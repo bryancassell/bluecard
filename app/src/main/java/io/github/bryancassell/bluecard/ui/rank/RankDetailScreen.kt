@@ -173,13 +173,12 @@ private fun RankDetails(
             officialUrl = uiState.officialUrl,
             startOtherApp = startOtherApp
         )
-        EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) { modifier ->
+        EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) {
             ReportButtons(
                 reportFileName(LocalResources.current, ReportKind.Rank, uiState.name),
                 onShareReport,
                 onSaveReport,
-                startOtherApp,
-                modifier
+                startOtherApp
             )
         }
         Text(
@@ -219,7 +218,7 @@ private fun RankDetails(
  * - For a rank earned from its requirements, the date they were completed on.
  *
  * Each picker opens at the date the scout just unmarked, if any, or at today. Once it's earned,
- * the [reportButtons] follow, laid out with the modifier they're given.
+ * the [reportButtons] follow.
  */
 @Composable
 private fun EarnedStatus(
@@ -227,11 +226,11 @@ private fun EarnedStatus(
     today: () -> LocalDate,
     onMark: (date: LocalDate) -> Unit,
     onUnmark: () -> Unit,
-    reportButtons: @Composable (Modifier) -> Unit
+    reportButtons: @Composable () -> Unit
 ) {
     val date = uiState.earnedOnPriorDate
     val formatter = rememberCompletionDateFormatter()
-    StatusCard {
+    StatusCard(reportButtons = reportButtons.takeIf { uiState.status == RankStatus.Earned }) {
         when {
             date != null -> EditableDate(
                 text = stringResource(R.string.rank_detail_earned_on, formatter.format(date)),
@@ -276,24 +275,17 @@ private fun EarnedStatus(
                 } ?: stringResource(R.string.rank_detail_earned)
             )
         }
-        if (uiState.status == RankStatus.Earned) {
-            reportButtons(Modifier.padding(horizontal = 16.dp))
-        }
     }
 }
 
 /**
  * The status of a rank that isn't earned: "In progress" for the next rank to earn, as on Ranks,
- * or else "Started" once anything counts toward it, or "Not started". Badges the scout has
- * completed count toward Star, Life and Eagle before anything is recorded for them, so a rank
- * with none of its own progress can still have a requirement complete or partly done.
+ * or else "Started" once anything counts toward it ([RankDetailUiState.Ready.started]), or "Not
+ * started".
  */
 @StringRes
 private fun notEarnedStatus(uiState: RankDetailUiState.Ready): Int = when {
     uiState.status == RankStatus.InProgress -> R.string.badges_in_progress
-
-    uiState.canClear || uiState.requirements.any { it.completed || it.partlyCompleted } ->
-        R.string.rank_detail_started
-
+    uiState.started -> R.string.rank_detail_started
     else -> R.string.badge_detail_not_started
 }

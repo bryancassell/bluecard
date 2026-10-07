@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
+import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.rank.RankDetailScreen
@@ -40,12 +41,14 @@ class StatusCardScreenshotTest {
     )
 
     @Test
-    fun badgeInProgress() = capture(badge.copy(fractionDone = 0.25f, canClear = true))
+    fun badgeInProgress() = capture(
+        badge.copy(status = BadgeStatus.InProgress, fractionDone = 0.25f, canClear = true)
+    )
 
     @Test
     fun badgeMarkedCompleted() = capture(
         badge.copy(
-            completed = true,
+            status = BadgeStatus.Completed,
             completedOnPriorDate = LocalDate.of(2025, 8, 1),
             completedOn = LocalDate.of(2025, 8, 1),
             canClear = true

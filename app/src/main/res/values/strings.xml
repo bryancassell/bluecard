@@ -245,8 +245,9 @@
     <string name="badge_detail_mark_completed">Mark completed</string>
     <!-- Above Mark completed on a badge's page, while it isn't complete. -->
     <string name="badge_detail_mark_completed_prompt">Already completed this badge?</string>
-    <!-- First line on the page of a badge or rank with nothing recorded for it, above Mark
-         completed or Mark earned. -->
+    <!-- First line, above Mark completed or Mark earned, on the page of a badge with nothing
+         recorded for it, or of a rank with nothing counting toward it that isn't the next rank
+         to earn. -->
     <string name="badge_detail_not_started">Not started</string>
     <!-- The date a badge was completed on: the date it was marked completed on, or for one
          complete from its requirements, the date they were completed on, such as "Completed on

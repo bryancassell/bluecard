@@ -13,6 +13,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
+import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -69,7 +70,7 @@ class BadgeDetailViewModel @AssistedInject constructor(
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
-            completed = completion != null,
+            status = badge.status(progress),
             completedOnPriorDate = progress?.badge?.completedOnPriorDate,
             completedOn = completion?.date,
             fractionDone = badge.fractionDoneWhileInProgress(progress),
