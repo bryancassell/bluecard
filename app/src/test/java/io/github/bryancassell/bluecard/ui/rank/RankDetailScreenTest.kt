@@ -475,9 +475,7 @@ class RankDetailScreenTest {
 
     @Test
     fun reportToShare_opensShareSheetWithIt_once() {
-        val report = Uri.parse(
-            "content://io.github.bryancassell.bluecard.debug.reports/tenderfoot.pdf"
-        )
+        val report = Uri.parse("content://reports/tenderfoot.pdf")
         show(marked.copy(reportToShare = report))
         composeTestRule.waitForIdle()
 

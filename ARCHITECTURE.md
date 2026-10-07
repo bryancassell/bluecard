@@ -1227,10 +1227,10 @@ they report.
     authority is in both. Two installed apps can't declare the same authority,
     so a fixed one would stop the two builds installing side by side.
   - **The launcher name is "BlueCard Debug", on an orange icon** in place of
-    the blue one, from `src/debug/res/values`. Launchers cut the name to about
-    "BlueCard De…", so the color is what tells the icons apart at a glance.
-    The color also sets the splash screen's icon background. Themed icons are
-    monochrome, so with those on, only the name differs.
+    the blue one, from `app/src/debug/res/values`. Launchers cut the name to
+    about "BlueCard De…", so the color is what tells the icons apart at a
+    glance. Themed icons are monochrome, so with those on, only the name
+    differs.
 - **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)**
   is turned on in `BlueCardApplication` when the app is debuggable, as in
   [Now in Android](https://github.com/android/nowinandroid/blob/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/NiaApplication.kt).

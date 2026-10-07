@@ -42,7 +42,7 @@ Run these from the repository root.
 | `./gradlew createDebugUnitTestCoverageReport` | Writes an HTML coverage report for local tests to `app/build/reports/coverage/test/debug/index.html`. |
 | `./gradlew lint` | Runs Android lint. Reports are in `app/build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
-| `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. It's named "BlueCard Debug", with an orange icon. Its application ID, `io.github.bryancassell.bluecard.debug`, lets it install next to a release build. |
+| `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. Its application ID is `io.github.bryancassell.bluecard.debug`, so it installs next to a release build (see [`ARCHITECTURE.md`](../ARCHITECTURE.md#debug-builds)). |
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
 | `./gradlew clean` | Deletes build outputs. Rarely needed; the build knows what changed. |
 
