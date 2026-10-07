@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
+import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
@@ -142,7 +144,8 @@ fun RequirementDetailScreen(
 
         // Ends the page above the keyboard, so the text fields can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
-            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            val scrollState = rememberScrollState()
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                 RequirementHeader(uiState.advancementName, uiState.requirement, uiState.timeInRank)
                 val requirement = uiState.requirement
                 // Its own work is stored as the requirement's own progress, like one marked by
@@ -197,7 +200,8 @@ fun RequirementDetailScreen(
                     signedOffBy = signedOffBy.takeIf { uiState.hasSignOffField },
                     comment = comment,
                     changed = uiState.textChanged,
-                    onSave = onSave
+                    onSave = onSave,
+                    scrollState = scrollState
                 )
                 if (uiState.canClear) {
                     ClearRequirement(
@@ -345,46 +349,54 @@ private val CommentLengthLimit = TextLengthLimit(maxLength = NOTES_MAX_LENGTH)
 
 /**
  * Who [signedOffBy] on the requirement, unless it's null, as for a badge's requirement, and the
- * scout's comment on it, saved together when they choose.
+ * scout's comment on it, saved together when they choose. While the comment has focus, it and
+ * Save are kept in view in the page's [scrollState].
  */
 @Composable
 private fun TextFields(
     signedOffBy: TextFieldState?,
     comment: TextFieldState,
     changed: Boolean,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    scrollState: ScrollState
 ) {
     val focusManager = LocalFocusManager.current
     Column(
-        modifier = Modifier.padding(16.dp),
-        horizontalAlignment = Alignment.End,
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         signedOffBy?.let { SignedOffByField(it) }
-        OutlinedTextField(
-            state = comment,
-            textStyle = typedTextFieldStyle(),
-            label = { Text(stringResource(R.string.requirement_comment)) },
-            inputTransformation = CommentLengthLimit,
-            lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Button(
-            onClick = {
-                onSave()
-                // Done editing: closes the keyboard.
-                focusManager.clearFocus()
-            },
-            enabled = changed
-        ) {
-            // With the sign-off, it saves more than the notes.
-            val label = if (signedOffBy != null) {
-                R.string.requirement_save
-            } else {
-                R.string.requirement_save_comment
+        // Keeps Save above the keyboard while the scout types in the comment.
+        KeepInViewWhileFocused(scrollState) {
+            OutlinedTextField(
+                state = comment,
+                textStyle = typedTextFieldStyle(),
+                label = { Text(stringResource(R.string.requirement_comment)) },
+                inputTransformation = CommentLengthLimit,
+                lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(
+                onClick = {
+                    onSave()
+                    // Done editing: closes the keyboard.
+                    focusManager.clearFocus()
+                },
+                enabled = changed,
+                // Here, not on the Column, so the page's margin under Save comes into view with it.
+                modifier = Modifier.align(Alignment.End).padding(bottom = 16.dp)
+            ) {
+                // With the sign-off, it saves more than the notes.
+                val label = if (signedOffBy != null) {
+                    R.string.requirement_save
+                } else {
+                    R.string.requirement_save_comment
+                }
+                Text(stringResource(label))
             }
-            Text(stringResource(label))
         }
     }
 }
