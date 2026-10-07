@@ -13,6 +13,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
+import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -52,13 +53,17 @@ class BadgeDetailViewModel @AssistedInject constructor(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
             val catalog = catalogRepository.getBadges()
-            emit(catalog to catalog.eagleGroups())
+            emit(Triple(catalog, catalog.eagleGroups(), catalogRepository.getRanks()))
         },
-        progressRepository.observeProgress(badgeId),
+        // Every badge's and rank's, since the badges the scout has completed decide which ranks
+        // clearing this one would un-earn.
+        progressRepository.observeAllProgress(),
         report.reportToShare,
         report.failure,
         saves.failure
-    ) { (catalog, eagleGroups), progress, reportToShare, reportFailure, saveFailure ->
+    ) { (catalog, eagleGroups, ranks), allProgress, reportToShare, reportFailure, saveFailure ->
+        val progressById = allProgress.associateBy { it.badge.badgeId }
+        val progress = progressById[badgeId]
         val found = catalog.advancementRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.advancement
@@ -75,6 +80,12 @@ class BadgeDetailViewModel @AssistedInject constructor(
             completedOn = completion?.date,
             fractionDone = badge.fractionDoneWhileInProgress(progress),
             canClear = progress != null,
+            unearnedByClear = if (progress == null) {
+                emptyList()
+            } else {
+                ranks.noLongerEarned(catalog, progressById, progressById - badgeId)
+                    .map { it.name }
+            },
             reportToShare = reportToShare,
             reportFailure = reportFailure,
             saveFailure = saveFailure

@@ -204,6 +204,7 @@ private fun BadgeDetails(
                         R.string.badge_detail_clear_message_with_counselor
                     }
                 ),
+                unearnedRanks = uiState.unearnedByClear,
                 onClear = onClear
             )
         }

@@ -203,13 +203,7 @@ class FakeProgressRepository : ProgressRepository {
     override suspend fun clearRequirements(badgeId: String, numbers: Collection<String>) {
         checkCanSave()
         if (badgeId !in badges.value) return
-        updateBadge(badgeId) { details ->
-            details.copy(
-                requirements = details.requirements.filterNot { it.requirementNumber in numbers },
-                trackerEntries =
-                    details.trackerEntries.filterNot { it.requirementNumber in numbers }
-            )
-        }
+        updateBadge(badgeId) { it.withoutRequirements(numbers) }
     }
 
     override suspend fun clearBadge(badgeId: String) {

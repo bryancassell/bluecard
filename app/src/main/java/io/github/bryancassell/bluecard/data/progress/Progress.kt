@@ -206,3 +206,12 @@ data class BadgeProgressDetails(
     @Relation(parentColumn = "badgeId", entityColumn = "badgeId")
     val trackerEntries: List<TrackerEntry>
 )
+
+/**
+ * This progress once the requirements numbered in [numbers] are cleared, as
+ * [ProgressRepository.clearRequirements] clears them: without their progress or tracker entries.
+ */
+fun BadgeProgressDetails.withoutRequirements(numbers: Collection<String>) = copy(
+    requirements = requirements.filterNot { it.requirementNumber in numbers },
+    trackerEntries = trackerEntries.filterNot { it.requirementNumber in numbers }
+)

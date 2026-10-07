@@ -65,4 +65,22 @@ class ProgressTest {
 
         assertEquals(listOf(nights to "2", place to "Bear Mountain"), campouts.columnValues(entry))
     }
+
+    @Test
+    fun withoutRequirements_dropsTheirProgressAndEntries_andKeepsTheRest() {
+        val day = LocalDate.of(2026, 4, 15)
+        val badge = BadgeProgress("camping", day, day, counselor = Counselor("Pat Lee"))
+        val kept = RequirementProgress("camping", "1", completed = true, comment = "Kept.")
+        val keptEntry = entry(1)
+        val progress = BadgeProgressDetails(
+            badge,
+            listOf(kept, RequirementProgress("camping", "2a", completed = true)),
+            listOf(keptEntry, entry(2).copy(requirementNumber = "2b"))
+        )
+
+        assertEquals(
+            BadgeProgressDetails(badge, listOf(kept), listOf(keptEntry)),
+            progress.withoutRequirements(listOf("2a", "2b"))
+        )
+    }
 }

@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
@@ -750,6 +751,42 @@ class BadgeDetailViewModelTest {
         startCollecting(viewModel)
 
         assertTrue(viewModel.ready().canClear)
+    }
+
+    // The lowest rank here, needing one Eagle-required badge, such as Camping.
+    private val star = Rank(
+        id = "star",
+        name = "Star",
+        summary = "Our summary of Star.",
+        officialUrl = "https://www.scouting.org/star/",
+        requirementVersions = listOf(
+            RequirementsVersion(
+                newest,
+                listOf(Requirement("1", "Earn a badge.", meritBadges = MeritBadgesNeeded(1, 1)))
+            )
+        )
+    )
+
+    @Test
+    fun completedBadge_clearUnearnsTheRanksItCompletes() = runTest {
+        catalogRepository.ranks = listOf(star)
+        progressRepository.startBadge("star", newest, started)
+        progressRepository.setCompletedOnPriorDate("camping", day, badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(listOf("Star"), viewModel.ready().unearnedByClear)
+    }
+
+    @Test
+    fun badgeNotComplete_clearUnearnsNothing() = runTest {
+        catalogRepository.ranks = listOf(star)
+        progressRepository.startBadge("star", newest, started)
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals(emptyList<String>(), viewModel.ready().unearnedByClear)
     }
 
     @Test

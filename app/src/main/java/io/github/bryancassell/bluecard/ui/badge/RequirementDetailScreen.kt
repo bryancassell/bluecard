@@ -205,6 +205,7 @@ fun RequirementDetailScreen(
                         hasChildren = uiState.children.isNotEmpty(),
                         unsavedText = uiState.textChanged,
                         hasSignOffField = uiState.hasSignOffField,
+                        unearnedRanks = uiState.unearnedByClear,
                         onClear = onClear
                     )
                 }
@@ -413,6 +414,7 @@ private fun SignedOffByField(state: TextFieldState) {
  * Clears what the scout recorded for the requirement, and for those under it if it
  * [hasChildren], once they confirm. The dialog warns that [unsavedText], changes to its text
  * fields not saved yet, go too: the sign-off and notes if it [hasSignOffField], or else the notes.
+ * It names the ranks clearing would un-earn ([unearnedRanks]).
  */
 @Composable
 private fun ClearRequirement(
@@ -420,6 +422,7 @@ private fun ClearRequirement(
     hasChildren: Boolean,
     unsavedText: Boolean,
     hasSignOffField: Boolean,
+    unearnedRanks: List<String>,
     onClear: () -> Unit
 ) {
     ClearProgress(
@@ -442,6 +445,7 @@ private fun ClearRequirement(
                 else -> R.string.requirement_clear_message
             }
         ),
+        unearnedRanks = unearnedRanks,
         onClear = onClear
     )
 }

@@ -1464,6 +1464,28 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun clear_ofARequirementRanksCountOn_namesTheRanksThatWontCountAsEarned() {
+        show(
+            ready.copy(
+                hasSignOffField = true,
+                textChanged = true,
+                canClear = true,
+                unearnedByClear = listOf("Tenderfoot", "Second Class")
+            )
+        )
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it and the requirements under it will be removed, " +
+                    "along with unsaved changes to its sign-off and notes. Tenderfoot and " +
+                    "Second Class will no longer count as earned."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun clear_cancel_clearsNothing() {
         show(completedLeaf.copy(canClear = true))
 

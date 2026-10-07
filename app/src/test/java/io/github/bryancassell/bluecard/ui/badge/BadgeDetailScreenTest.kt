@@ -1127,6 +1127,20 @@ class BadgeDetailScreenTest {
     }
 
     @Test
+    fun clear_ofABadgeRanksCountOn_namesTheRanksThatWontCountAsEarned() {
+        show(startedBadge.copy(counselor = counselor, unearnedByClear = listOf("Star", "Life")))
+
+        clearButton().performClick()
+
+        composeTestRule
+            .onNodeWithText(
+                "What you recorded for it will be removed, including its counselor. Star and " +
+                    "Life will no longer count as earned."
+            )
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun clear_cancel_clearsNothing() {
         show(startedBadge)
 
