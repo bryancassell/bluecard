@@ -35,10 +35,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.backup.exportFileName
+import io.github.bryancassell.bluecard.ui.ButtonText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
-import io.github.bryancassell.bluecard.ui.readAs
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
 import java.time.LocalDate
@@ -205,9 +205,11 @@ private fun Section(
             .semantics { heading() }
     )
     Text(text = stringResource(description), style = MaterialTheme.typography.bodyMedium)
-    val spoken = buttonDescription?.let { stringResource(it) }
     OutlinedButton(onClick = onClick, enabled = enabled, colors = colors) {
-        Text(text = stringResource(button), modifier = Modifier.readAs(spoken))
+        ButtonText(
+            text = stringResource(button),
+            description = buttonDescription?.let { stringResource(it) }
+        )
     }
 }
 
