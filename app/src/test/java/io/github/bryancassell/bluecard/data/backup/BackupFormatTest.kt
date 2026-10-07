@@ -330,11 +330,18 @@ class BackupFormatTest {
             "a blank requirement number" to withRequirement(RequirementProgress("camping", "")),
             "a date on a requirement not completed" to
                 withRequirement(RequirementProgress("camping", "7", false, day)),
-            "two entries in a row" to withEntry("9b", 2),
-            "row 0" to withEntry("9b", 0),
-            "a row past the tracker's rows" to withEntry("9b", 4),
-            "a fixed-row tracker's entry without a row" to withEntry("9b", null),
-            "a log's entry with a row" to withEntry("9a", 1),
+            "two entries in a row" to withEntry("9b", 2, mapOf("place" to "Hill")),
+            "row 0" to withEntry("9b", 0, mapOf("place" to "Hill")),
+            "a row past the tracker's rows" to withEntry("9b", 4, mapOf("place" to "Hill")),
+            "a fixed-row tracker's entry without a row" to
+                withEntry("9b", null, mapOf("place" to "Hill")),
+            "a log's entry with a row" to withEntry("9a", 1, mapOf("nights" to "1")),
+            "a log's entry without values" to withEntry("9a", null),
+            "a log's entry with only blank values" to
+                withEntry("9a", null, mapOf("nights" to " ", "note" to "\n", "details" to "\t")),
+            "a fixed-row tracker's entry without values" to withEntry("9b", 1),
+            "a fixed-row tracker's entry with only a blank value" to
+                withEntry("9b", 1, mapOf("place" to "  ")),
             "an entry for a requirement without a tracker" to withEntry("5", null),
             "an entry for a requirement not in the version" to withEntry("8", null),
             "an entry in a column the tracker doesn't have" to
