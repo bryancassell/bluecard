@@ -3,17 +3,24 @@
     <!--
         MainActivity's launch theme: the splash screen, from androidx core-splashscreen so
         it looks the same on Android 8 to 11 as on 12+. installSplashScreen() switches to
-        postSplashScreenTheme. Its background is set, not left to follow dark mode, so it
-        matches the app's. Its system bar icons are dark to show on that background, as
-        MainActivity keeps them once the app draws. Android 8.0 can't make the navigation
-        bar's icons dark, so there they stay white until the app draws.
+        postSplashScreenTheme. Its background is set, not left to the library's, so it
+        matches the app's in light and dark mode.
     -->
-    <style name="Theme.BlueCard.Starting" parent="Theme.SplashScreen.IconBackground">
+    <style name="Theme.BlueCard.Starting" parent="Base.Theme.BlueCard.Starting">
         <item name="windowSplashScreenBackground">@color/background</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
         <item name="postSplashScreenTheme">@style/Theme.BlueCard</item>
+    </style>
+
+    <!--
+        Dark system bar icons, to show on the light background, as MainActivity keeps them
+        once the app draws. Android 8.0 can't make the navigation bar's icons dark, so there
+        they stay white until the app draws. values-night/splash.xml leaves the icons white
+        in dark mode.
+    -->
+    <style name="Base.Theme.BlueCard.Starting" parent="Theme.SplashScreen.IconBackground">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
     </style>
 </resources>

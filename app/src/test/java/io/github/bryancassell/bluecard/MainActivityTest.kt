@@ -90,6 +90,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -583,17 +584,29 @@ class MainActivityTest {
         assertHomeBackAtCamping()
     }
 
-    // BlueCardTheme is light in dark mode too, so the system bars keep dark icons, which show
-    // on its light background.
-    @Config(qualifiers = "night")
+    // The system bars' icons follow dark mode, as BlueCardTheme does, so they show on its
+    // background: dark on the light scheme, and light on the dark one.
+    @Config(qualifiers = "notnight")
     @Test
-    fun inDarkMode_systemBarIconsAreDark() {
+    fun inLightMode_systemBarIconsAreDark() {
         launchWithProfile()
 
         scenario.onActivity {
             val insetsController = WindowCompat.getInsetsController(it.window, it.window.decorView)
             assertTrue(insetsController.isAppearanceLightStatusBars)
             assertTrue(insetsController.isAppearanceLightNavigationBars)
+        }
+    }
+
+    @Config(qualifiers = "night")
+    @Test
+    fun inDarkMode_systemBarIconsAreLight() {
+        launchWithProfile()
+
+        scenario.onActivity {
+            val insetsController = WindowCompat.getInsetsController(it.window, it.window.decorView)
+            assertFalse(insetsController.isAppearanceLightStatusBars)
+            assertFalse(insetsController.isAppearanceLightNavigationBars)
         }
     }
 

@@ -457,16 +457,27 @@ both taps of a double tap can reach it.
 
 ### Theme
 
-- **Material 3** components, themed by `BlueCardTheme` with one light color
-  scheme (`BlueCardColorScheme` in `ui/theme/Color.kt`), as
-  [`PRD.md`](PRD.md#design-decisions)'s Colors row chooses.
-- **Don't follow dark mode** until the app has a dark scheme
-  ([#108](https://github.com/bryancassell/bluecard/issues/108)).
-  `isSystemInDarkTheme()` still reports the system's dark mode, and `-night`
-  resources still apply in it. Nothing but the window theme should use either:
-  it would put dark-mode colors, images or bar icons on the light app.
-- **`BlueCardColorSchemeTest` checks the PRD's contrast rule** for every text
-  color on every surface.
+- **Material 3** components, themed by `BlueCardTheme` with a light and a dark
+  color scheme (`BlueCardLightColorScheme` and `BlueCardDarkColorScheme` in
+  `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
+  chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
+  takes no colors from the wallpaper (no dynamic color).
+- **Before Compose draws**, the window theme and splash screen follow dark mode
+  through `values-night`: the dark scheme's background (`@color/background`,
+  which must match each scheme's `background`), a dark window theme, and the
+  splash screen's white system bar icons. Once the app draws,
+  `enableEdgeToEdge()` picks the bar icons from dark mode.
+- **Pick a color role that works in both schemes.** In the dark scheme the
+  surface containers are lighter than the page, and `surfaceContainerLowest`
+  is darker. A container that should stand out from the page, such as the
+  status card, uses `surfaceBright`, the brightest surface in both.
+- **No surface shares `surfaceVariant`'s color.** Material picks a container's
+  content color by matching its color against the scheme's, and checks
+  `surfaceVariant` before the surface containers. A card sharing its color
+  would get `onSurfaceVariant` text.
+- **`BlueCardColorSchemeTest` checks both schemes:** the PRD's contrast rule
+  for every text color on every surface, that `surfaceBright` is the brightest
+  surface, and that every other surface gets `onSurface` text.
 
 ## Data layer
 

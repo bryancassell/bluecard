@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The library's dark theme, whose white system bar icons show on the dark background. -->
+    <style name="Base.Theme.BlueCard.Starting" parent="Theme.SplashScreen.IconBackground" />
+</resources>
