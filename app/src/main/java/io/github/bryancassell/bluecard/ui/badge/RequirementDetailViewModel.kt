@@ -251,12 +251,17 @@ class RequirementDetailViewModel @AssistedInject constructor(
         }
     }
 
-    /** The fields that differ from what's [recorded], each with its text. */
+    /**
+     * The fields that differ from what's [recorded], each with its text: only those it shows, as
+     * [save] saves only those.
+     */
     private fun edits(recorded: RecordedRequirement): List<Pair<TextFieldState, String>> =
-        listOf(signedOffBy to recorded.signedOffBy, comment to recorded.comment)
-            .mapNotNull { (field, saved) ->
-                field.text.toString().takeIf { normalizedText(it) != saved }?.let { field to it }
-            }
+        listOfNotNull(
+            (signedOffBy to recorded.signedOffBy).takeIf { recorded.hasSignOffField },
+            comment to recorded.comment
+        ).mapNotNull { (field, saved) ->
+            field.text.toString().takeIf { normalizedText(it) != saved }?.let { field to it }
+        }
 
     /**
      * Shows the [saved] text in [field] when it changes from [before] without the scout typing

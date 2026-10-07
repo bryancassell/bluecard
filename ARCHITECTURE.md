@@ -747,10 +747,8 @@ works on.
   [#248](https://github.com/bryancassell/bluecard/issues/248)). It's a column
   of the shared table that a badge's requirement leaves null, which import
   checks (see [`PRD.md`](PRD.md#design-decisions) for why only ranks have it).
-  The repository doesn't know a badge from a rank, so Requirement detail
-  passes null for a badge's. It's saved with the notes in one write
-  (`setRequirementSignOffAndComment`), so their one Save can't save one and
-  fail the other. Completion doesn't read it.
+  It's saved with the notes in one write (`setRequirementSignOffAndComment`),
+  so their one Save can't save one and fail the other.
 - **Time in rank** (`Requirement.monthsInRank`, `data/progress/TimeInRank.kt`)
   is counted from the date `standings` gives the rank below, so it agrees with
   Rank detail about when that rank was earned. Like a tracker's total, it's

@@ -58,8 +58,9 @@ private const val OLDEST_BACKUP_FORMAT_VERSION = 1
 private val backupJson = Json
 
 // The same for a version 1 file, except that a missing field that can be null reads as null, so
-// its requirements read without a sign-off, which it didn't have. explicitNulls is experimental,
-// so a change to it would fail the build when kotlinx.serialization is updated.
+// its requirements read without a sign-off, which it didn't have. explicitNulls is experimental:
+// a kotlinx.serialization update that renames or removes it fails the build, and one that changes
+// what it does fails decodeBackup_ofAVersion1Export_readsItWithoutSignOffs.
 @OptIn(ExperimentalSerializationApi::class)
 private val backupJsonV1 = Json { explicitNulls = false }
 

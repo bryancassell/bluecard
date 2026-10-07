@@ -1043,6 +1043,7 @@ class RequirementDetailViewModelTest {
         viewModel.save()
 
         assertEquals(RequirementProgress("camping", "1", comment = "At camp."), recorded("1"))
+        assertFalse(viewModel.ready().textChanged)
     }
 
     @Test

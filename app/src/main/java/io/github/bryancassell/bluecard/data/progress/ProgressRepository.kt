@@ -90,8 +90,9 @@ interface ProgressRepository {
     )
 
     /**
-     * Sets who signed off on the requirement, which only a rank's requirement has, and its
-     * comment, in a single write. Each is stored as [normalizedText]: null or blank removes it.
+     * Sets who signed off on the requirement, and its comment, in a single write. Each is stored as
+     * [normalizedText]: null or blank removes it. Only a rank's requirement has a sign-off, which
+     * this doesn't check, so a caller passes null for a badge's: import rejects one.
      * A badge that hasn't been started is started with [start], as in
      * [markRequirementCompleted].
      */
