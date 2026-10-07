@@ -386,7 +386,7 @@ first.
    "$BUILD_TOOLS/apksigner" sign --ks ~/keys/bluecard-release.p12 --ks-key-alias bluecard \
        --out "$APK" app/build/outputs/apk/release/app-release-unsigned.apk &&
    "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" |
-       grep -q "certificate SHA-256 digest: 788055ef2f3302814555b1e3e9e09eea837dd85955df352b9a9246e1e5ae452e" &&
+       grep -q "certificate SHA-256 digest: d1fe1f136ba0b07f8bc43a62dd193dea3f3f8474b1a7586aed4537e55248abff" &&
        echo "Signed with the release key."
    ```
 
