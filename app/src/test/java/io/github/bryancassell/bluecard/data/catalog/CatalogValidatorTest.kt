@@ -575,6 +575,60 @@ class CatalogValidatorTest {
         )
     }
 
+    private fun hours(id: String, needed: Int, partOf: String? = null) = TrackerColumn(
+        id,
+        "Hours",
+        TrackerColumnType.NUMBER,
+        ColumnTotal(needed, "hour", "hours", partOf)
+    )
+
+    @Test
+    fun totalPartOfAnother() {
+        val life4 = tracker.copy(
+            columns = listOf(hours("hours", 6), hours("conservation-hours", 3, partOf = "hours"))
+        )
+        assertEquals(emptyList<String>(), errorsForRequirements(requirement.copy(tracker = life4)))
+
+        val bad = tracker.copy(
+            columns = listOf(
+                hours("hours", 6),
+                hours("more-than-whole", 7, partOf = "hours"),
+                hours("of-a-part", 1, partOf = "more-than-whole"),
+                hours("of-itself", 1, partOf = "of-itself"),
+                hours("of-no-total", 1, partOf = "minutes")
+            )
+        )
+        val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker"
+        assertEquals(
+            listOf(
+                "$where, column \"more-than-whole\": total needed is more than \"hours\"'s",
+                "$where, column \"of-a-part\": partOf \"more-than-whole\" is part of another total",
+                "$where, column \"of-itself\": partOf \"of-itself\" is part of another total",
+                "$where, column \"of-no-total\": partOf \"minutes\" isn't a column with a total"
+            ),
+            errorsForRequirements(requirement.copy(tracker = bad))
+        )
+    }
+
+    // The progress bar counts only one part of a total.
+    @Test
+    fun twoTotalsPartOfTheSameOne() {
+        val bad = tracker.copy(
+            columns = listOf(
+                hours("hours", 6),
+                hours("conservation-hours", 3, partOf = "hours"),
+                hours("outdoor-hours", 2, partOf = "hours")
+            )
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "more than one total is part of \"hours\""
+            ),
+            errorsForRequirements(requirement.copy(tracker = bad))
+        )
+    }
+
     @Test
     fun rowsNeededBelowOne() {
         assertEquals(

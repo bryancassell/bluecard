@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
@@ -184,6 +185,65 @@ class FractionDoneTest {
         assertEquals(0.75f, logOfThree.fractionDone(emptyMap(), fiveRows))
     }
 
+    // Requirement 6 again, asking for 6 hours of service, then as Life 4 asks for them: with at
+    // least 3 of them on conservation, which its hours include.
+    private fun hoursColumn(id: String, needed: Int, partOf: String? = null) = TrackerColumn(
+        id,
+        "Hours",
+        TrackerColumnType.NUMBER,
+        ColumnTotal(needed, "hour", "hours", partOf)
+    )
+    private val sixHours = log.copy(
+        tracker = TrackerDefinition(listOf(hoursColumn("hours", 6)), "project", "projects")
+    )
+    private val sixHoursThreeOnConservation = log.copy(
+        tracker = TrackerDefinition(
+            listOf(hoursColumn("hours", 6), hoursColumn("conservation", 3, partOf = "hours")),
+            "project",
+            "projects"
+        )
+    )
+
+    private fun project(hours: String, conservation: String = "0") = TrackerEntry(
+        0,
+        BADGE,
+        "6",
+        null,
+        mapOf("hours" to hours, "conservation" to conservation),
+        LocalDate.of(2026, 5, 1)
+    )
+
+    @Test
+    fun logWithATotal_countsEachUnitItNeedsAndMarkingIt() {
+        assertEquals(0f, sixHours.fractionDone(emptyMap(), emptyMap()))
+        val fourAndAHalf = entriesOf(project("3"), project("1.5"))
+        assertEquals(4.5f / 7, sixHours.fractionDone(emptyMap(), fourAndAHalf))
+        assertEquals(6f / 7, sixHours.fractionDone(emptyMap(), entriesOf(project("6"))))
+        assertEquals(1f, sixHours.fractionDone(progressOf(done("6")), fourAndAHalf))
+    }
+
+    @Test
+    fun logWithATotal_unitsPastTheAmountAddNothing() {
+        val nine = entriesOf(project("4"), project("5"))
+        assertEquals(6f / 7, sixHours.fractionDone(emptyMap(), nine))
+    }
+
+    @Test
+    fun logWithAPartOfATotal_countsTheUnitsThatGoTowardTheAmount() {
+        fun fractionDone(vararg projects: TrackerEntry) =
+            sixHoursThreeOnConservation.fractionDone(emptyMap(), entriesOf(*projects))
+
+        // 3 conservation hours still to do.
+        assertEquals(3f / 7, fractionDone(project("6")))
+        // 3 more hours of any kind still to do.
+        assertEquals(3f / 7, fractionDone(project("3", conservation = "3")))
+        // 1.5 conservation hours still to do.
+        assertEquals(4.5f / 7, fractionDone(project("3", conservation = "1.5"), project("1.5")))
+        assertEquals(6f / 7, fractionDone(project("3"), project("3", conservation = "3")))
+        // Conservation hours past the 3 count toward the rest.
+        assertEquals(6f / 7, fractionDone(project("6", conservation = "6")))
+    }
+
     @Test
     fun meritBadges_countTheBadgesNeededTheScoutHas() {
         // Six badges, four of them Eagle-required.
@@ -248,7 +308,15 @@ class FractionDoneTest {
             nestedTwice,
             childrenAndTracker,
             weeks.copy(number = "9", ownWork = "Sum up the weeks."),
-            log.copy(number = "10", tracker = log.tracker!!.copy(rowsNeeded = 2))
+            log.copy(number = "10", tracker = log.tracker!!.copy(rowsNeeded = 2)),
+            log.copy(
+                number = "11",
+                tracker = TrackerDefinition(
+                    listOf(income.single().copy(total = ColumnTotal(5, "dollar", "dollars"))),
+                    "week",
+                    "weeks"
+                )
+            )
         )
         val partOfEach = listOf(row("5", 1), row("5", 2), row("6", null), row("10", null)) +
             (1..4).map { row("8", it) }
@@ -258,15 +326,16 @@ class FractionDoneTest {
             progressOf(done("1"), done("2a"), done("3a"), done("7a(1)"), done("8a")) to
                 partOfEach.groupBy { it.requirementNumber },
             // Enough children for requirement 4, but not its own work, requirement 9's rows but
-            // not its own work, and more rows than requirement 10 needs, but not marked.
+            // not its own work, and more rows than requirement 10 needs and more income than 11
+            // needs, but neither marked.
             progressOf(done("3a"), done("3b"), done("7a(1)"), done("7a(2)"), done("7b")) to
-                ((1..4).map { row("9", it) } + List(3) { row("10", null) })
+                ((1..4).map { row("9", it) } + List(3) { row("10", null) } + row("11", null))
                     .groupBy { it.requirementNumber },
             // Everything.
             progressOf(
                 done("1"), done("2a"), done("2b"), done("3b"), done("3c"), done("4"), done("6"),
                 done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b"), done("9"),
-                done("10")
+                done("10"), done("11")
             ) to (1..4).flatMap { listOf(row("5", it), row("9", it)) }
                 .groupBy { it.requirementNumber }
         )

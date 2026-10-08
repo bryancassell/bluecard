@@ -1,9 +1,12 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import java.math.BigDecimal
 
 /**
  * How much of this requirement is done, from 0 to 1, from the scout's recorded progress and
@@ -20,6 +23,10 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
  *   ([TrackerDefinition.rowsNeeded]) has a part for each row it asks for, which rows past that
  *   number don't add to, plus one for checking it off. Checking it off completes it, so its rows
  *   alone never make it all done.
+ * - One without children but with a log with [totals][TrackerColumn.total] has a part for each
+ *   unit of the amount it asks for ([amountDone]), such as each of Star 4's 6 hours, which units
+ *   past that amount don't add to, plus one for checking it off, as for a log that asks for a
+ *   number of rows.
  * - A rank's requirement that asks for merit badges counts the badges needed that the scout's
  *   [earnedBadges] give it ([MeritBadgeCredit.counted]).
  * - Any other requirement is marked complete by hand ([isMarkedByHand]), so it has no parts.
@@ -56,9 +63,41 @@ fun Requirement.fractionDone(
         rowsNeeded != null ->
             minOf(trackerEntries[number].orEmpty().size, rowsNeeded).toFloat() / (rowsNeeded + 1)
 
-        else -> 0f
+        else -> tracker?.amountDone(trackerEntries[number].orEmpty())
+            ?.let { (done, needed) -> done.toFloat() / (needed + 1) }
+            ?: 0f
     }
 }
+
+/**
+ * How much of the amount its requirement asks for this log's [entries] make up, and that amount,
+ * such as 4.5 of 6 hours, or null if it has no [totals][TrackerColumn.total]. Each total counts
+ * its values added up, to at most the amount it needs. One that's [part of][ColumnTotal.partOf]
+ * another isn't counted itself, but that one counts no more than the part, to at most what the
+ * part needs, and the rest of its amount: Life 4's 6 hours with no conservation hours count as 3
+ * of 6, as its 3 conservation hours are still to do.
+ */
+private fun TrackerDefinition.amountDone(entries: List<TrackerEntry>): Pair<BigDecimal, Int>? {
+    val totals = columns.mapNotNull { column -> column.total?.let { column to it } }
+    val wholes = totals.filter { (_, total) -> total.partOf == null }
+    if (wholes.isEmpty()) return null
+    val done = wholes.sumOf { (column, total) ->
+        val counted = column.counted(total, entries)
+        val part = totals.find { (_, partTotal) -> partTotal.partOf == column.id }
+        if (part == null) {
+            counted
+        } else {
+            val (partColumn, partTotal) = part
+            val rest = (total.needed - partTotal.needed).toBigDecimal()
+            minOf(counted, partColumn.counted(partTotal, entries) + rest)
+        }
+    }
+    return done to wholes.sumOf { (_, total) -> total.needed }
+}
+
+/** This column's values added up over [entries], to at most the amount its [total] needs. */
+private fun TrackerColumn.counted(total: ColumnTotal, entries: List<TrackerEntry>): BigDecimal =
+    minOf(sumOver(entries), total.needed.toBigDecimal())
 
 /**
  * How much of a started badge or rank is done on [version] of its requirements, from 0 to 1: the

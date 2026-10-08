@@ -197,7 +197,13 @@ data class ColumnTotal(
     /** What the amount is counted in, in lowercase, such as "hour". */
     val label: String,
     /** [label] in the plural, such as "hours". */
-    val labelPlural: String
+    val labelPlural: String,
+    /**
+     * The id of the column whose total this amount is part of, such as Life 4's conservation
+     * hours, which its hours include, or null. The progress bar counts that total only as far as
+     * this part allows (data/progress/FractionDone.kt).
+     */
+    val partOf: String? = null
 ) {
     /**
      * What the amount is counted in, agreeing with the amount needed, as in "0.5 of 1 hour" or

@@ -202,6 +202,7 @@ object CatalogValidator {
                     addAll(validateTotal("$where, column \"${column.id}\"", column.type, it))
                 }
             }
+            addAll(validatePartsOf(where, tracker.columns))
             tracker.rowCount?.let { if (it < 1) add("$where: rowCount must be at least 1") }
             // A fixed-row tracker's row shows how many rows are filled in, which complete it.
             if (tracker.rowCount != null && tracker.columns.any { it.total != null }) {
@@ -230,6 +231,32 @@ object CatalogValidator {
         addAll(validateLowercaseLabel("$where: total label", total.label))
         addAll(validateLowercaseLabel("$where: total labelPlural", total.labelPlural))
     }
+
+    // The progress bar counts a total only as far as the one total that's part of it allows.
+    private fun validatePartsOf(where: String, columns: List<TrackerColumn>): List<String> =
+        buildList {
+            val totals = columns.mapNotNull { column -> column.total?.let { column.id to it } }
+                .toMap()
+            for ((id, total) in totals) {
+                val partOf = total.partOf ?: continue
+                val whole = totals[partOf]
+                when {
+                    whole == null ->
+                        add(
+                            "$where, column \"$id\": partOf \"$partOf\" isn't a column with a total"
+                        )
+
+                    whole.partOf != null ->
+                        add("$where, column \"$id\": partOf \"$partOf\" is part of another total")
+
+                    total.needed > whole.needed ->
+                        add("$where, column \"$id\": total needed is more than \"$partOf\"'s")
+                }
+            }
+            totals.values.mapNotNull { it.partOf }.duplicatesBy { it }.forEach {
+                add("$where: more than one total is part of \"$it\"")
+            }
+        }
 
     // Lowercase, because the app uses it inside sentences ("8 of 12 weeks", "4 of 6 hours") and
     // capitalizes a row label for titles ("Week 3").
