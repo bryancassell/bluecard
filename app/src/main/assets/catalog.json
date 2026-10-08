@@ -1937,7 +1937,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Observe at least 10 objects not seen in requirement 4 with binoculars or a telescope, discussing your plan and then your log with your counselor.",
+                  "summary": "Plan a binocular or telescope session of at least 10 objects not seen in requirement 4, finding each on a chart or app, and discuss your plan and then your log with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5181,7 +5181,7 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Name five major video game genres, explain what defines each, and give an example game.",
+                  "summary": "Name five major video game genres, define each, and give an example game.",
                   "tracker": {
                     "columns": [
                       {
@@ -6723,7 +6723,8 @@
                     },
                     {
                       "number": "6B(4)",
-                      "summary": "Take two trail rides each of 2, 5 and 8 miles, and report on them.",
+                      "summary": "On counselor-approved trails, take two rides each of 2, 5 and 8 miles, and report on them.",
+                      "ownWork": "Get your counselor's approval of the trails, then take your six rides.",
                       "tracker": {
                         "columns": [
                           {
@@ -11488,6 +11489,7 @@
                         {
                           "number": "4C(3)(b)",
                           "summary": "Identify 15 rocks and minerals with your counselor's help.",
+                          "ownWork": "Identify the 15 rocks and minerals with your counselor's help.",
                           "tracker": {
                             "columns": [
                               {
