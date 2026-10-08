@@ -1313,6 +1313,98 @@ class MainActivityTest {
         searchField().assertIsFocused()
     }
 
+    private fun notesField() = field("Notes")
+
+    /**
+     * Out of touch mode, types in a requirement's notes and saves them. Save closes the keyboard
+     * by clearing focus, and the requirement's page stays open.
+     */
+    private fun saveNotesOutOfTouchMode() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        notesField().performClick().performTextInput("Planned it with my patrol.")
+
+        composeTestRule.onNodeWithText("Save notes").performScrollTo().performClick()
+    }
+
+    // Otherwise, Android's View.clearFocus() asks the view to take focus again, and the page's
+    // first item, the Completed checkbox, took it.
+    @Test
+    fun saveNotes_outOfTouchMode_focusesNothing() {
+        saveNotesOutOfTouchMode()
+
+        assertNothingFocused()
+    }
+
+    @Test
+    fun tab_afterSavingNotes_movesFocusIntoThePage() {
+        saveNotesOutOfTouchMode()
+
+        press(Key.Tab)
+
+        completedCheckbox().assertIsFocused()
+    }
+
+    // Focus is now on the focus target around the pages, which Back mustn't stop at.
+    @Test
+    fun back_afterSavingNotes_leavesThePage() {
+        saveNotesOutOfTouchMode()
+        // pressBack() doesn't wait for Compose, so let the saved notes settle first.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        notesField().assertDoesNotExist()
+        composeTestRule.onNodeWithText("First.").assertExists()
+    }
+
+    /**
+     * Out of touch mode, presses Save on a page that closes once saved, and checks nothing on
+     * it takes focus as it goes: its first item did, and a field that takes focus opens the
+     * keyboard. [fieldOnThePage] shows the page is still there.
+     */
+    private fun saveOutOfTouchModeAndClose(fieldOnThePage: String) {
+        composeTestRule.onNodeWithText("Save").performScrollTo()
+        composeTestRule.mainClock.autoAdvance = false
+
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        // Before the page closes.
+        field(fieldOnThePage).assertExists()
+        assertNothingFocused()
+        composeTestRule.mainClock.autoAdvance = true
+        field(fieldOnThePage).assertDoesNotExist()
+        assertNothingFocused()
+    }
+
+    @Test
+    fun saveCounselor_outOfTouchMode_focusesNothingAsThePageCloses() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        openCamping()
+        composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
+        field("Email").performClick().performTextInput("pat@example.com")
+
+        saveOutOfTouchModeAndClose(fieldOnThePage = "Name")
+    }
+
+    @Test
+    fun saveNameAndUnit_outOfTouchMode_focusesNothingAsThePageCloses() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        openEditNameAndUnit()
+        field("Unit number").performClick().performTextReplacement("Crew 7")
+
+        saveOutOfTouchModeAndClose(fieldOnThePage = "Name")
+    }
+
+    @Test
+    fun saveTrackerRow_outOfTouchMode_focusesNothingAsThePageCloses() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        typeAnUnsavedNight()
+
+        saveOutOfTouchModeAndClose(fieldOnThePage = "Weather")
+    }
+
     @Test
     fun home_showsProgressAsSoonAsItChanges() {
         launchWithProfile()

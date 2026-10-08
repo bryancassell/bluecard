@@ -12,6 +12,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -191,10 +192,11 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         onBack = goBack
     )
     // A focus target around the pages, which takes input focus from a page that's left with it,
-    // so the page shown next doesn't get it. Otherwise, out of touch mode, Compose clears the
-    // view's focus as the focused item leaves composition, Android's View.clearFocus() asks the
-    // view to take focus again, and Compose gives it to the first item that can take it: on
-    // Badges, the search field, which opened the keyboard, and TalkBack followed it (#285).
+    // so the page shown next doesn't get it, and from a page that clears it. Otherwise, out of
+    // touch mode, Compose clears the view's focus as well, Android's View.clearFocus() asks the
+    // view to take focus again, and Compose gives it to the first item that can take it. As
+    // Badges was left, that was its search field, which opened the keyboard, and TalkBack
+    // followed it (#285). After Save on a requirement's page, it was the Completed checkbox (#297).
     val holder = remember { FocusRequester() }
     val page = remember { FocusRequester() }
     var hasFocus by remember { mutableStateOf(false) }
@@ -203,13 +205,14 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // the page, and Tab would stop on the holder as it starts on a page or wraps around.
     var isTakingFocus by remember { mutableStateOf(false) }
     var isHolding by remember { mutableStateOf(false) }
+    fun takeFocus() {
+        isTakingFocus = true
+        holder.requestFocus()
+        isTakingFocus = false
+    }
     // The page that's left is still composed as the next one comes in, with its item focused.
     LaunchedEffect(shownBackStack.last()) {
-        if (hasFocus) {
-            isTakingFocus = true
-            holder.requestFocus()
-            isTakingFocus = false
-        }
+        if (hasFocus) takeFocus()
     }
     NavDisplay(
         sceneState = sceneState,
@@ -224,7 +227,14 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 hasFocus = it.hasFocus
                 isHolding = it.isFocused
             }
-            .focusProperties { canFocus = isTakingFocus || isHolding }
+            .focusProperties {
+                canFocus = isTakingFocus || isHolding
+                // Save clears focus to close the keyboard, and Compose asks here first. Once focus
+                // has moved here, Compose leaves the view's focus alone. Tab clears focus too as
+                // it wraps around, going Next or Previous, and still reaches the page's first or
+                // last item.
+                onExit = { if (requestedFocusDirection == FocusDirection.Exit) takeFocus() }
+            }
             // An arrow key moves from it to the page's first item, as on a phone where nothing
             // is focused: Android then asks the view to take focus going down. Compose would
             // look only beside the holder. Tab, Enter and D-pad center move into the page by
