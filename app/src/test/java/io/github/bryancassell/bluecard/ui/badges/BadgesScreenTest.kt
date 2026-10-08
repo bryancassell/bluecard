@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
@@ -44,6 +45,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -629,6 +631,47 @@ class BadgesScreenTest {
 
         onScreenKeyboard.close()
         assertTrue(screenReadersGetHeading())
+    }
+
+    // The field matters more than the heading on a page this short, keyboard or not.
+    @Config(qualifiers = "w869dp-h107dp-land")
+    @Test
+    fun shortWindowWithoutKeyboard_leavesTheHeadingOut() {
+        show(BadgesUiState.Ready(badges))
+
+        composeTestRule.onNodeWithText("Merit badges").assertIsNotDisplayed()
+        searchField().assertHeightIsAtLeast(OutlinedTextFieldDefaults.MinHeight)
+    }
+
+    // On a page with just enough room for the heading, the field and a count on one line, the
+    // message that nothing matches takes two. The heading gave way to it, then came back a second
+    // after matches did, as the count screen readers hear caught up, so the field jumped up and
+    // down as the scout typed.
+    @Config(qualifiers = "w240dp-h175dp-land")
+    @Test
+    fun countThatWraps_leavesTheHeadingAndFieldWhereTheyAre() {
+        query.setTextAndPlaceCursorAtEnd("c")
+        show(BadgesUiState.Ready(badges.take(3)))
+        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        val fieldTop = searchField().getUnclippedBoundsInRoot().top
+
+        query.setTextAndPlaceCursorAtEnd("zoology")
+        uiState = BadgesUiState.NoMatches
+        assertEquals(2, lineCount(noMatchesMessage()))
+        assertEquals(fieldTop, searchField().getUnclippedBoundsInRoot().top)
+
+        query.setTextAndPlaceCursorAtEnd("c")
+        uiState = BadgesUiState.Ready(badges.take(3))
+        assertEquals(fieldTop, searchField().getUnclippedBoundsInRoot().top)
+        pauseTyping()
+        assertEquals(fieldTop, searchField().getUnclippedBoundsInRoot().top)
+        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+    }
+
+    private fun lineCount(text: SemanticsNodeInteraction): Int {
+        val layouts = mutableListOf<TextLayoutResult>()
+        text.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action!!(layouts)
+        return layouts.single().lineCount
     }
 
     // A phone in portrait has room for the heading, the field and the count above the keyboard.

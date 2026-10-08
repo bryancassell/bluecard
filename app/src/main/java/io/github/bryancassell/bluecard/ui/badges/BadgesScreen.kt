@@ -30,7 +30,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -43,6 +42,7 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,8 +106,14 @@ fun BadgesScreen(
  * A phone in landscape leaves the page 107dp above the keyboard. The heading kept 68dp of it,
  * squeezing the search field into a strip that hid what the scout typed, with no room for the
  * count (#308). With the heading left out, the field and count fit, and the heading comes back
- * when the keyboard closes. It's measured but not placed, so screen readers don't read it either:
- * Compose leaves unplaced nodes out of what it gives them.
+ * when the keyboard closes. It isn't placed, so screen readers don't read it either: Compose
+ * leaves unplaced nodes out of what it gives them.
+ *
+ * The rule takes [search]'s height with no line wrapped, which stays the same as the scout types.
+ * Its laid-out height doesn't: the field's label can wrap until the scout types, and the count's
+ * text can wrap, then change height again a second later as the count screen readers hear catches
+ * up (see MatchCount). The heading came and went with it, moving the field as the scout typed. On
+ * a page with just enough room, a line that wraps is cut off instead.
  */
 @Composable
 private fun HeadingSearchAndContent(
@@ -120,22 +126,17 @@ private fun HeadingSearchAndContent(
         contents = listOf(heading, search, content),
         modifier = modifier
     ) { (headingMeasurables, searchMeasurables, contentMeasurables), constraints ->
-        var spaceLeft = constraints.maxHeight
-        fun Measurable.measureIn(height: Int) =
-            measure(constraints.copy(minWidth = 0, minHeight = 0, maxHeight = height))
-
+        val headingHeight = headingMeasurables.sumOf { it.minIntrinsicHeight(constraints.maxWidth) }
+        val searchHeight = searchMeasurables.sumOf { it.minIntrinsicHeight(Constraints.Infinity) }
+        val showHeading = headingHeight + searchHeight <= constraints.maxHeight
+        val children = (if (showHeading) headingMeasurables else emptyList()) +
+            searchMeasurables + contentMeasurables
         // Each child gets the room the ones above it leave, as in a Column.
-        fun List<Measurable>.measureInSpaceLeft() =
-            map { child -> child.measureIn(spaceLeft).also { spaceLeft -= it.height } }
-
-        val searchPlaceables = searchMeasurables.measureInSpaceLeft()
-        val headingPlaceables = headingMeasurables.map { it.measureIn(constraints.maxHeight) }
-        val headingHeight = headingPlaceables.sumOf { it.height }
-        val showHeading = headingHeight <= spaceLeft
-        if (showHeading) spaceLeft -= headingHeight
-        val contentPlaceables = contentMeasurables.measureInSpaceLeft()
-        val placeables = (if (showHeading) headingPlaceables else emptyList()) +
-            searchPlaceables + contentPlaceables
+        var spaceLeft = constraints.maxHeight
+        val placeables = children.map { child ->
+            child.measure(constraints.copy(minWidth = 0, minHeight = 0, maxHeight = spaceLeft))
+                .also { spaceLeft -= it.height }
+        }
         // As big as what it places, as a Column is.
         layout(
             width = (placeables.maxOfOrNull { it.width } ?: 0).coerceAtLeast(constraints.minWidth),
