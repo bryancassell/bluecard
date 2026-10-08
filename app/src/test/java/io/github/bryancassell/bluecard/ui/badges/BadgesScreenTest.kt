@@ -7,6 +7,7 @@ import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -97,7 +98,8 @@ class BadgesScreenTest {
         uiState = state
         composeTestRule.setContent {
             view = LocalView.current
-            readouts?.listenTo(view)
+            // Before the first layout, whose events Compose sends after the frame.
+            SideEffect { readouts?.listenTo(view) }
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 BadgesScreen(uiState = uiState, query = query, onOpenBadge = { openedBadges += it })
             }
@@ -161,16 +163,20 @@ class BadgesScreenTest {
     private val accessibilityEventsSent = 500L
 
     /**
-     * Waits [milliseconds] a millisecond at a time, running the work posted to the main thread as
-     * it goes, as a phone does between frames. Compose sends accessibility events from posted
-     * work, which can run before the next frame shows the rest of a change.
+     * Waits at least [milliseconds] a frame at a time, running the work posted to the main thread
+     * between frames, as a phone does. Compose sends accessibility events from posted work, which
+     * can run before the next frame composes the rest of a change.
      */
     private fun waitRunningPostedWork(milliseconds: Long) {
-        composeTestRule.mainClock.autoAdvance = false
-        repeat(milliseconds.toInt()) {
-            composeTestRule.mainClock.advanceTimeBy(1)
+        val clock = composeTestRule.mainClock
+        val autoAdvance = clock.autoAdvance
+        clock.autoAdvance = false
+        val end = clock.currentTime + milliseconds
+        while (clock.currentTime < end) {
+            clock.advanceTimeByFrame()
             shadowOf(Looper.getMainLooper()).idle()
         }
+        clock.autoAdvance = autoAdvance
     }
 
     private val many = (1..200).map {
@@ -657,6 +663,25 @@ class BadgesScreenTest {
         announcedCount().assert(hasText("4 merit badges"))
     }
 
+    // Clearing a search saved with the screen, as when the scout comes back from a badge, is the
+    // count's first change, which makes it a live region.
+    @Test
+    fun clearSearch_asTheCountsFirstChange_readsOutNewCountWithoutWaiting() {
+        query.setTextAndPlaceCursorAtEnd("chess")
+        val readouts = LiveRegionReadouts()
+        show(BadgesUiState.Ready(badges.take(1)), readouts)
+        composeTestRule.mainClock.autoAdvance = false
+
+        clearButton().performClick()
+        catchUp()
+        // The ViewModel lists every badge again a moment later.
+        uiState = BadgesUiState.Ready(badges)
+        // Less than the typing pause.
+        waitRunningPostedWork(accessibilityEventsSent)
+
+        assertEquals(listOf("4 merit badges"), readouts.sinceLastCall().distinct())
+    }
+
     // A count the scout typed but hadn't paused to hear isn't announced once they clear it.
     @Test
     fun clearSearch_beforeCountIsAnnounced_skipsClearedCount() {
@@ -697,8 +722,8 @@ class BadgesScreenTest {
         announcedCount().assert(hasText("3 merit badges"))
     }
 
-    // Once the catalog loads, the count is new on the screen, so screen readers don't
-    // announce it, and there's no reason to wait.
+    // Once the catalog loads, the count isn't a live region until it changes, so screen
+    // readers don't announce it, and there's no reason to wait.
     @Test
     fun count_appearsWithoutWaiting_whenBadgesLoad() {
         show(BadgesUiState.Loading)

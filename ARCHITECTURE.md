@@ -244,6 +244,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   seen (`sendSemanticsPropertyChangeEvents` in
   `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
   message composed as a new node, as in its own branch, isn't announced.
+  Compose also reports a node's first layout as a change to it, which TalkBack
+  reads in a live region (see [Live regions](#live-regions)), so this and the
+  cases below that aren't announced are being checked again in
+  [#281](https://github.com/bryancassell/bluecard/issues/281).
   - **Live regions are what Android points to.** When Android 16 deprecated
     `announceForAccessibility`, its
     [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
@@ -470,22 +474,22 @@ both taps of a double tap can reach it.
   reads a live region on any change it's the source of, whatever changed and
   whether or not it's on screen yet (`EventTypeWindowContentChangedFeedbackRule`
   in TalkBack's source). That's how each new snackbar is read (see
-  [Load and save failures](#load-and-save-failures)). The count on Badges was a
-  polite live region from the start, so TalkBack read it as Badges opened or
-  came back from a badge, and the heading waited about 2 seconds behind it,
-  since new speech can't cut off a polite live region
-  ([#278](https://github.com/bryancassell/bluecard/issues/278)). It now gets
-  its live region in the same update as its first new count, and keeps it
-  (`MatchCount` in `BadgesScreen.kt`). Whether `ScreenMessage` needs the same
-  is [#281](https://github.com/bryancassell/bluecard/issues/281).
+  [Load and save failures](#load-and-save-failures)). A polite live region
+  read as its screen appears holds back the screen's heading, since new speech
+  can't cut it off: Badges' count held it back by about 2 seconds
+  ([#278](https://github.com/bryancassell/bluecard/issues/278), `MatchCount`
+  in `BadgesScreen.kt`). Whether `ScreenMessage` and the import dialog's
+  `UnearnedRanks` need the same is
+  [#281](https://github.com/bryancassell/bluecard/issues/281).
 - **Set a live region from a value read while composing, not from a state read
   in the `semantics` block.** Compose updates a `semantics` block as soon as a
   state it reads changes, before the next frame composes the new text. TalkBack
   read out the old count then, before the new one.
 - **In local tests, `LiveRegionReadouts` (`testing/LiveRegion.kt`) lists what
   TalkBack would read out**, looking at each event's source as it's sent. To
-  see the state between a change and the next frame, wait a millisecond at a
-  time and idle the main looper in between, as `BadgesScreenTest` does.
+  see the state between a change and the next frame, wait a frame at a time
+  and idle the main looper in between, as `BadgesScreenTest` does: Robolectric
+  otherwise runs the next frame before Compose's posted accessibility check.
 
 ### Theme
 
