@@ -6,6 +6,8 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.MaterialTheme
@@ -177,7 +179,11 @@ fun CompletionDatePickerDialog(
                 }
             }
         ) {
-            DatePicker(state = state)
+            // On a short window, such as a phone's in landscape, the dialog is shorter than the
+            // picker. Material would then clip the month's first and last weeks, leaving days
+            // under 48dp tall or hidden (#282), so the picker scrolls instead, as Material's own
+            // sample does.
+            DatePicker(state = state, modifier = Modifier.verticalScroll(rememberScrollState()))
         }
     }
 }

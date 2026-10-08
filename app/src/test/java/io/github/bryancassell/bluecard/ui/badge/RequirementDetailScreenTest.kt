@@ -11,11 +11,13 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -36,9 +38,12 @@ import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.toSize
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -51,7 +56,6 @@ import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
-import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
@@ -306,6 +310,15 @@ class RequirementDetailScreenTest {
     // A day in the date picker, which reads each day as its full date.
     private fun pickerDay(date: String) =
         composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
+
+    /**
+     * Asserts none of the node is clipped, as a picker's day must not be to keep its 48dp touch
+     * target. assertIsDisplayed passes once any of it shows.
+     */
+    private fun SemanticsNodeInteraction.assertIsWhollyDisplayed() = apply {
+        val node = fetchSemanticsNode()
+        assertEquals(node.size.toSize(), node.boundsInRoot.size)
+    }
 
     @Test
     fun loading_showsProgressOnly() {
@@ -775,7 +788,6 @@ class RequirementDetailScreenTest {
             .assertIsDisplayed()
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_changeDate_picksAnotherDay() {
         show(weeksFilledIn)
@@ -800,7 +812,6 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(null), dateChanges)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_withoutDate_offerToAddOne_openingAtTheRowsDate() {
         show(weeksFilledIn.copy(completedDate = null))
@@ -816,7 +827,6 @@ class RequirementDetailScreenTest {
     }
 
     // As when a row was saved before database version 3, which recorded no date.
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_withoutDateOrRowsDate_addDateOpensAtToday() {
         show(weeksFilledIn.copy(completedDate = null, rowsCompletedDate = null))
@@ -1205,7 +1215,6 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(null), dateChanges)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_picksAnotherDay() {
         show(completedLeaf)
@@ -1222,7 +1231,6 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("OK").assertDoesNotExist()
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_opensAtToday() {
         show(completedLeaf.copy(completedDate = null))
@@ -1233,7 +1241,6 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_doesNotOfferFutureDates() {
         show(completedLeaf.copy(completedDate = null))
@@ -1244,7 +1251,6 @@ class RequirementDetailScreenTest {
         pickerDay("May 21, 2026").assertIsNotEnabled()
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(completedLeaf.copy(completedDate = null))
@@ -1257,7 +1263,6 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_onAPageOpenPastMidnight_offersTheNewDay() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 18)))
@@ -1272,7 +1277,6 @@ class RequirementDetailScreenTest {
     }
 
     // As when it was recorded while the device's clock was ahead.
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_ofADateAfterToday_opensAtToday() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 22)))
@@ -1286,7 +1290,6 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_cancel_changesNothing() {
         show(completedLeaf)
@@ -1297,6 +1300,28 @@ class RequirementDetailScreenTest {
 
         assertEquals(emptyList<LocalDate?>(), dateChanges)
         composeTestRule.onNodeWithText("Cancel").assertDoesNotExist()
+    }
+
+    // A phone in landscape, where the picker is taller than the dialog: Material leaves room for
+    // six weeks in every month. November 2025 fills them, with its first day alone in the first
+    // week and its last day alone in the sixth.
+    @Config(qualifiers = "w891dp-h411dp-land")
+    @Test
+    fun datePicker_onAShortWindow_scrollsToEveryDay() {
+        show(completedLeaf.copy(completedDate = LocalDate.of(2025, 11, 12)))
+
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        pickerDay("November 1, 2025").assertIsWhollyDisplayed()
+        pickerDay("November 30, 2025").assertIsNotDisplayed()
+        // performScrollTo would scroll only the months, which scroll sideways.
+        composeTestRule.onNode(
+            hasAnyAncestor(isDialog()) and
+                SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
+        ).performTouchInput { swipeUp() }
+        pickerDay("November 30, 2025").assertIsWhollyDisplayed().performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        assertEquals(listOf<LocalDate?>(LocalDate.of(2025, 11, 30)), dateChanges)
     }
 
     @Test

@@ -17,14 +17,6 @@ import org.robolectric.config.ConfigurationRegistry
 import org.robolectric.shadows.ShadowBuild
 
 /**
- * A screen tall enough for Material's date picker to give each day a 48dp touch target, for every
- * test that opens it: a small phone's. On Robolectric's default screen (320x470dp), a month that
- * spans six weeks gives each day 47dp. On a short window, such as a phone's in landscape, the
- * app's picker has the same problem (#282).
- */
-const val DATE_PICKER_SCREEN = "w360dp-h560dp"
-
-/**
  * Runs Google's Accessibility Test Framework (ATF) checks on every window, dialogs included,
  * before each click, scroll, touch, key or text input the test performs, and again on the state
  * the test ends in. Compose runs them before those actions only: a semantics action, a focus
