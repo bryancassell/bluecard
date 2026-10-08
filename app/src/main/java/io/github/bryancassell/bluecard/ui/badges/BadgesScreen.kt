@@ -34,7 +34,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.liveRegion
@@ -131,7 +133,21 @@ fun BadgesScreen(
                     uiState.badges.map { it.id },
                     saver = LazyListState.Saver
                 ) { LazyListState() }
-                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                val badgeCount = uiState.badges.size
+                LazyColumn(
+                    state = listState,
+                    // Screen readers say how many badges the list has. LazyColumn's count
+                    // can stay the old list state's after each new set of matches above:
+                    // LazyLayoutSemanticsModifierNode.update() takes a new state without
+                    // invalidating semantics (Compose 1.12.1). Compose applies a modifier's
+                    // semantics after LazyColumn's own, so this count is the one screen
+                    // readers get.
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .semantics {
+                            collectionInfo = CollectionInfo(rowCount = badgeCount, columnCount = 1)
+                        }
+                ) {
                     items(uiState.badges, key = { it.id }) { badge ->
                         BadgeRow(
                             badge = badge,

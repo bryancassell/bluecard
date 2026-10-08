@@ -26,6 +26,7 @@ own documentation says so, and each such claim links to the page.
   - [Language and layout direction](#language-and-layout-direction)
   - [Screen reader labels](#screen-reader-labels)
   - [Live regions](#live-regions)
+  - [Lists](#lists)
   - [Theme](#theme)
 - [Data layer](#data-layer)
   - [Repositories](#repositories)
@@ -525,6 +526,19 @@ both taps of a double tap can reach it.
   see the state between a change and the next frame, wait a frame at a time
   and idle the main looper in between, as `BadgesScreenTest` does: Robolectric
   otherwise runs the next frame before Compose's posted accessibility check.
+
+### Lists
+
+- **A lazy list given a new `LazyListState` while it stays on screen sets its
+  own `collectionInfo`** from the items it shows. TalkBack reads that size as
+  focus enters the list ("In list. 6 items"). `LazyColumn`'s semantics node
+  takes a new state without invalidating semantics
+  (`LazyLayoutSemanticsModifierNode.update()`, Compose 1.12.1), so its count
+  can stay the old state's: on Badges, which gives each new set of matches a
+  new state, TalkBack kept hearing the full catalog's size after a search
+  ([#304](https://github.com/bryancassell/bluecard/issues/304)). A list that
+  keeps one state, such as Ranks, keeps Compose's count, which follows its
+  items.
 
 ### Theme
 
