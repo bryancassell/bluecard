@@ -1,4 +1,5 @@
 import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.dsl.ManagedVirtualDevice
 import com.android.build.api.variant.ScopedArtifacts
 
 plugins {
@@ -62,6 +63,25 @@ android {
         // Other flags from https://robolectric.org/getting-started/ may be needed later.
         unitTests.all {
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
+        }
+        // The emulator that runs instrumented tests in CI, on the target SDK. Gradle downloads its
+        // system image and starts and stops it: ./gradlew pixel6Api37DebugAndroidTest.
+        managedDevices {
+            localDevices {
+                create("pixel6Api37") {
+                    device = "Pixel 6"
+                    sdkVersion = 37
+                    systemImageSource = "google"
+                    // The app's AndroidX native libraries must load with 16 KB pages, which Play
+                    // requires from Android 15 on.
+                    pageAlignment = ManagedVirtualDevice.PageAlignment.FORCE_16KB_PAGES
+                    // The computer's own ABI, so the emulator runs without translation: arm64 on
+                    // Apple silicon, x86_64 on CI's runners. AGP 10 defaults to arm64-v8a. AGP 9.4.1's
+                    // setup task still warns that testedAbi isn't set, since it doesn't read it.
+                    testedAbi =
+                        if (System.getProperty("os.arch") == "aarch64") "arm64-v8a" else "x86_64"
+                }
+            }
         }
     }
 

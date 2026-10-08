@@ -58,6 +58,7 @@ own documentation says so, and each such claim links to the page.
   - [Room and migration tests](#room-and-migration-tests)
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
+  - [Instrumented tests in CI](#instrumented-tests-in-ci)
   - [Coverage](#coverage)
 - [Release build](#release-build)
 - [Debug builds](#debug-builds)
@@ -1201,13 +1202,37 @@ test still exports and imports through the real one.
   closed!" (checked with Robolectric 4.17). Local tests check the layout and
   drawing with Robolectric's native graphics (`ReportLayoutTest`), and
   `PdfReportRepositoryTest` uses a fake PDF writer. An instrumented test
-  (`PdfDocumentWriterTest`) writes a real PDF and reads it back; run it on an
-  emulator with `./gradlew connectedAndroidTest`. CI has no emulator, so it
-  doesn't run there.
+  (`PdfDocumentWriterTest`) writes a real PDF and reads it back, in CI and
+  with `./gradlew connectedAndroidTest` (see
+  [Instrumented tests in CI](#instrumented-tests-in-ci)).
 - **Backup tests:** `BackupFormatTest` pins the export format and checks each
   of import's rules. `JsonBackupRepositoryTest` writes and reads documents
   through a test documents provider, and checks that an export imported into an
   empty Room database restores the same data.
+
+### Instrumented tests in CI
+
+CI's **Instrumented tests** job runs `app/src/androidTest` on a Gradle Managed
+Device: a Pixel 6 emulator on API 37 with the Google APIs image and 16 KB
+pages, defined in `app/build.gradle.kts`. AGP downloads the image, starts the
+emulator, runs the tests and shuts it down. The same task runs locally, with
+the image for the computer's own ABI.
+
+- **API 37, the target SDK.** The lighter Automated Test Device images go up to
+  API 36 only (checked October 2026). The tests need API 35 or higher anyway:
+  `PdfRenderer` reads a page's text from Android 15 on.
+- **16 KB pages.** The app ships AndroidX native libraries, and Google Play
+  requires apps targeting Android 15 or higher to support 16 KB pages. Google's
+  later API 37 images (37.1 and 37.2) come only with 16 KB pages.
+- **Gradle Managed Devices, not `reactivecircus/android-emulator-runner`.** That
+  action couldn't boot any API 37 image: in #14's trial its emulator was still
+  booting after 20 minutes, and its maintainers report the same. A managed
+  device booted API 37 and ran the tests in about 3 minutes.
+- **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
+  every job the same key, and only the first job to save it wins, so any other
+  job sets `cache-read-only: true`.
+- The job downloads the emulator and the system image on every run. Caching
+  them is #5.
 
 ### Coverage
 
@@ -1377,8 +1402,9 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
-| [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
-| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
+| [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on an emulator by an instrumented test, outside the coverage check | `PdfDocument` doesn't run under Robolectric |
+| [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with the Google APIs image and 16 KB pages, in its own required CI job | Tests on the target SDK and on the page size Play requires. The emulator action used before couldn't boot API 37 images, and the lighter test images stop at API 36 |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI's emulator runs only the debug build's instrumented tests, and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |
