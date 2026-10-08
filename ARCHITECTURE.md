@@ -712,10 +712,9 @@ totals).
 - **The progress bar counts a total's units, with the check-off as one more
   part** (`data/progress/FractionDone.kt`), as it counts a log's rows below,
   so the amount can't fill the requirement's share before it's complete
-  ([#292](https://github.com/bryancassell/bluecard/issues/292)). A total
-  that's part of another (`ColumnTotal.partOf`, Life 4's conservation hours)
-  isn't counted itself but limits that one to the units that go toward its
-  amount. The catalog names the part, because the app can't tell from the
+  ([#292](https://github.com/bryancassell/bluecard/issues/292)). A total can
+  be part of another (`ColumnTotal.partOf`, Life 4's conservation hours within
+  its hours). The catalog names the part, because the app can't tell from the
   numbers whether one column's values are included in another's. The catalog
   test keeps a log to one total and its part, since the bar can't add up
   different units, and keeps totals off a requirement with children, whose

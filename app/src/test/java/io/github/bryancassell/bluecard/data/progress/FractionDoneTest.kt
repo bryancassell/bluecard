@@ -324,6 +324,22 @@ class FractionDoneTest {
                     "week",
                     "weeks"
                 )
+            ),
+            log.copy(
+                number = "12",
+                tracker = TrackerDefinition(
+                    listOf(
+                        income.single().copy(total = ColumnTotal(5, "dollar", "dollars")),
+                        TrackerColumn(
+                            "tips",
+                            "Tips (included in Income)",
+                            TrackerColumnType.NUMBER,
+                            ColumnTotal(2, "dollar", "dollars", partOf = "income")
+                        )
+                    ),
+                    "week",
+                    "weeks"
+                )
             )
         )
         val partOfEach = listOf(row("5", 1), row("5", 2), row("6", null), row("10", null)) +
@@ -334,16 +350,18 @@ class FractionDoneTest {
             progressOf(done("1"), done("2a"), done("3a"), done("7a(1)"), done("8a")) to
                 partOfEach.groupBy { it.requirementNumber },
             // Enough children for requirement 4, but not its own work, requirement 9's rows but
-            // not its own work, and more rows than requirement 10 needs and more income than 11
-            // needs, but neither marked.
+            // not its own work, and more rows than requirement 10 needs and more income and tips
+            // than 11 and 12 need, but none of them marked.
             progressOf(done("3a"), done("3b"), done("7a(1)"), done("7a(2)"), done("7b")) to
-                ((1..4).map { row("9", it) } + List(3) { row("10", null) } + row("11", null))
-                    .groupBy { it.requirementNumber },
+                (
+                    (1..4).map { row("9", it) } + List(3) { row("10", null) } + row("11", null) +
+                        row("12", null).copy(values = mapOf("income" to "10", "tips" to "10"))
+                    ).groupBy { it.requirementNumber },
             // Everything.
             progressOf(
                 done("1"), done("2a"), done("2b"), done("3b"), done("3c"), done("4"), done("6"),
                 done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b"), done("9"),
-                done("10"), done("11")
+                done("10"), done("11"), done("12")
             ) to (1..4).flatMap { listOf(row("5", it), row("9", it)) }
                 .groupBy { it.requirementNumber }
         )

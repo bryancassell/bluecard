@@ -61,26 +61,32 @@ fun Requirement.fractionDone(
         )
 
         rowsNeeded != null ->
-            minOf(trackerEntries[number].orEmpty().size, rowsNeeded).toFloat() / (rowsNeeded + 1)
+            beforeCheckOff(trackerEntries[number].orEmpty().size.toFloat(), rowsNeeded)
 
         else -> tracker?.amountDone(trackerEntries[number].orEmpty())
-            ?.let { (done, needed) -> done.toFloat() / (needed + 1) }
+            ?.let { (done, needed) -> beforeCheckOff(done.toFloat(), needed) }
             ?: 0f
     }
 }
 
 /**
- * How much of the amount its requirement asks for this log's [entries] make up, to at most that
- * amount, and the amount, such as 4.5 of 6 hours, or null if it has no
- * [total][TrackerColumn.total]. A log has one total, and at most one more that's
- * [part of][ColumnTotal.partOf] it (docs/catalog.md). Then the total counts no more than the
- * part and the rest of its amount: Life 4's 6 hours with no conservation hours count as 3 of 6,
- * as its 3 conservation hours are still to do.
+ * How much is done with [done] of the [needed] rows or units a log's requirement asks for, which
+ * any past that number don't add to, and one more part for checking it off.
+ */
+private fun beforeCheckOff(done: Float, needed: Int): Float =
+    minOf(done, needed.toFloat()) / (needed + 1)
+
+/**
+ * How much of the amount its requirement asks for this log's [entries] make up, such as 4.5 of
+ * 6 hours, and the amount, or null if it has no [total][TrackerColumn.total]. A log has one
+ * total, and at most one more that's [part of][ColumnTotal.partOf] it (docs/catalog.md). Then the
+ * total counts no more than the part and the rest of its amount: Life 4's 6 hours with no
+ * conservation hours count as 3, as its 3 conservation hours are still to do.
  */
 private fun TrackerDefinition.amountDone(entries: List<TrackerEntry>): Pair<BigDecimal, Int>? {
     val totals = columns.mapNotNull { column -> column.total?.let { column to it } }
     val (column, total) = totals.find { it.second.partOf == null } ?: return null
-    val done = minOf(column.sumOver(entries), total.needed.toBigDecimal())
+    val done = column.sumOver(entries)
     val (partColumn, partTotal) = totals.find { it.second.partOf == column.id }
         ?: return done to total.needed
     val rest = (total.needed - partTotal.needed).toBigDecimal()

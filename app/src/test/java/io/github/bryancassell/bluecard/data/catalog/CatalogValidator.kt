@@ -244,7 +244,7 @@ object CatalogValidator {
         buildList {
             val totals = columns.mapNotNull { column -> column.total?.let { column.id to it } }
                 .toMap()
-            if (totals.values.count { it.partOf == null } > 1) {
+            if (columns.mapNotNull { it.total }.count { it.partOf == null } > 1) {
                 add("$where: has more than one total that isn't part of another")
             }
             for ((id, total) in totals) {
