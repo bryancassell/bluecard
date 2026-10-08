@@ -1,11 +1,14 @@
 package io.github.bryancassell.bluecard.ui.home
 
+import android.view.View
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -14,8 +17,12 @@ import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -25,10 +32,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -94,9 +104,13 @@ class HomeScreenTest {
     /** The UI state shown, which a test can change after [show]. */
     private var uiState by mutableStateOf<HomeUiState>(HomeUiState.Loading)
 
+    /** The view [show] composes into. */
+    private lateinit var view: View
+
     private fun show(state: HomeUiState) {
         uiState = state
         composeTestRule.setContent {
+            view = LocalView.current
             HomeScreen(
                 uiState = uiState,
                 onOpenBadge = { openedBadges += it },
@@ -134,7 +148,37 @@ class HomeScreenTest {
         it.config.getOrNull(SemanticsActions.OnClick)?.label == "open rank"
     }
 
-    private fun rankCard() = composeTestRule.onNode(hasText("Your rank") and isHeading())
+    private fun rankCard() =
+        composeTestRule.onNode(hasContentDescription("Your rank", substring = true) and isHeading())
+
+    /**
+     * The rank card in the unmerged tree, which keeps the card's parts although screen readers
+     * don't get them.
+     */
+    private val isRankCard = isHeading() and hasAnyDescendant(hasText("Your rank"))
+
+    /** Text drawn on the rank card. */
+    private fun drawn(text: String) = composeTestRule
+        .onNode(hasText(text) and hasAnyAncestor(isRankCard), useUnmergedTree = true)
+
+    /**
+     * What TalkBack reads as [node], found in the unmerged tree, when none of its parts is a stop
+     * of its own: its own description or text, then each part's in turn, since a description
+     * doesn't replace its parts' (#166). It leaves out the parts Compose doesn't give TalkBack,
+     * and those it marks as not visible to the user, such as parts scrolled off screen (#305).
+     * Parts come in the semantics tree's order, where TalkBack sorts them by position. Turn on a
+     * screen reader first, so Compose answers as it does for TalkBack.
+     */
+    private fun spokenLabel(node: SemanticsNode): String {
+        val provider = view.accessibilityNodeProvider
+        fun labels(node: SemanticsNode): List<CharSequence> {
+            val info = provider.createAccessibilityNodeInfo(node.id)
+            if (info == null || !info.isVisibleToUser) return emptyList()
+            return listOfNotNull(info.contentDescription ?: info.text) +
+                node.children.flatMap(::labels)
+        }
+        return labels(node).joinToString(". ")
+    }
 
     @Test
     fun loading_showsProgressAndNoProfile() {
@@ -201,12 +245,16 @@ class HomeScreenTest {
         show(noProgress)
 
         rankCard()
-            .assert(hasText("None yet"))
-            .assert(hasText("0 of 7 ranks earned"))
-            .assert(hasText("Next: Scout"))
-            .assert(hasText("In progress"))
+            .assert(
+                hasContentDescription(
+                    "Your rank. None yet. 0 of 7 ranks earned. Next: Scout. In progress"
+                )
+            )
             .assert(hasStateDescription("0% done"))
             .assertIsDisplayed()
+        drawn("None yet").assertIsDisplayed()
+        drawn("Next: Scout").assertIsDisplayed()
+        drawn("In progress").assertIsDisplayed()
     }
 
     // Screen readers hear the card as one heading: the rank, how many ranks are earned, and the
@@ -216,12 +264,17 @@ class HomeScreenTest {
         show(withProgress)
 
         rankCard()
-            .assert(hasText("Tenderfoot"))
-            .assert(hasText("2 of 7 ranks earned"))
-            .assert(hasText("Next: Second Class"))
-            .assert(hasText("In progress"))
+            .assert(
+                hasContentDescription(
+                    "Your rank. Tenderfoot. 2 of 7 ranks earned. Next: Second Class. In progress"
+                )
+            )
             .assert(hasStateDescription("40% done"))
             .assertIsDisplayed()
+        drawn("Your rank").assertIsDisplayed()
+        drawn("Tenderfoot").assertIsDisplayed()
+        drawn("Next: Second Class").assertIsDisplayed()
+        drawn("In progress").assertIsDisplayed()
     }
 
     // The names under the trail's ends would read as ranks of their own.
@@ -229,7 +282,8 @@ class HomeScreenTest {
     fun trailsEndNames_arentRead() {
         show(withProgress)
 
-        rankCard().assert(!hasText("Scout")).assert(!hasText("Eagle Scout"))
+        rankCard().assert(!hasContentDescription("Scout", substring = true))
+        composeTestRule.onAllNodes(hasText("Scout") or hasText("Eagle Scout")).assertCountEquals(0)
     }
 
     // As for a rank whose requirements version isn't in the catalog.
@@ -238,7 +292,7 @@ class HomeScreenTest {
         show(withProgress.copy(ranks = ranks(earned = 2, fractionDone = null)))
 
         rankCard()
-            .assert(hasText("Next: Second Class"))
+            .assert(hasContentDescription("Next: Second Class", substring = true))
             .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
     }
 
@@ -247,12 +301,15 @@ class HomeScreenTest {
         show(withProgress.copy(ranks = ranks(earned = 7)))
 
         rankCard()
-            .assert(hasText("Eagle Scout"))
-            .assert(hasText("7 of 7 ranks earned"))
-            .assert(hasText("Every rank earned"))
-            .assert(!hasText("In progress"))
+            .assert(
+                hasContentDescription(
+                    "Your rank. Eagle Scout. 7 of 7 ranks earned. Every rank earned"
+                )
+            )
             .assert(!hasClickAction())
             .assertIsDisplayed()
+        drawn("Every rank earned").assertIsDisplayed()
+        drawn("In progress").assertDoesNotExist()
         composeTestRule.onAllNodes(opensRank).assertCountEquals(0)
     }
 
@@ -261,7 +318,7 @@ class HomeScreenTest {
     fun noRanks_showsNoRankCard() {
         show(withProgress.copy(ranks = emptyList()))
 
-        text("Your rank").assertDoesNotExist()
+        rankCard().assertDoesNotExist()
         text("Your merit badges").assertIsDisplayed()
     }
 
@@ -277,6 +334,46 @@ class HomeScreenTest {
         assertTrue(card.bottom < summary.top)
         assertTrue(card.left > screen.left)
         assertTrue(card.right < screen.right)
+    }
+
+    /**
+     * Scrolls Home until only the rank card's [lastLine] shows, and returns what TalkBack reads
+     * as the card. TalkBack can focus the card like that, as when Home comes back scrolled down,
+     * and doesn't scroll it into view first.
+     */
+    private fun readRankCardWithOnlyItsLastLineShown(lastLine: String): String {
+        val card = composeTestRule.onNode(isRankCard, useUnmergedTree = true)
+        val scrollBy = with(composeTestRule.density) {
+            (card.getUnclippedBoundsInRoot().bottom - 40.dp).toPx()
+        }
+        composeTestRule.onNode(hasScrollAction())
+            .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, scrollBy) }
+        assertTrue(drawn("Your rank").getUnclippedBoundsInRoot().bottom < 0.dp)
+        assertTrue(drawn(lastLine).getUnclippedBoundsInRoot().bottom > 0.dp)
+        return spokenLabel(card.fetchSemanticsNode())
+    }
+
+    @Test
+    fun rankCard_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        show(withBadgesInProgress)
+
+        assertEquals(
+            "Your rank. Tenderfoot. 2 of 7 ranks earned. Next: Second Class. In progress",
+            readRankCardWithOnlyItsLastLineShown("Next: Second Class")
+        )
+    }
+
+    // Not clickable, so nothing merges into it.
+    @Test
+    fun everyRankEarned_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        show(withBadgesInProgress.copy(ranks = ranks(earned = 7)))
+
+        assertEquals(
+            "Your rank. Eagle Scout. 7 of 7 ranks earned. Every rank earned",
+            readRankCardWithOnlyItsLastLineShown("Every rank earned")
+        )
     }
 
     @Test

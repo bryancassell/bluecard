@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -20,6 +21,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -259,6 +261,10 @@ class MainActivityTest {
     // field that holds the same name.
     private fun home() = composeTestRule.onNode(isHeading() and hasText("Alex Scout"))
 
+    /** Home's rank card, read with [part] in its label. */
+    private fun rankCard(part: String) =
+        composeTestRule.onNode(hasContentDescription(part, substring = true) and isHeading())
+
     // Home's Ranks button, rather than the Ranks screen's title.
     private fun ranksButton() = composeTestRule.onNode(hasText("Ranks") and hasClickAction())
 
@@ -287,9 +293,12 @@ class MainActivityTest {
     }
 
     /** Taps twice before the next frame, before the first tap's screen change starts. */
-    private fun tapTwiceInOneFrame(text: String) {
+    private fun tapTwiceInOneFrame(text: String) =
+        tapTwiceInOneFrame(composeTestRule.onNodeWithText(text))
+
+    private fun tapTwiceInOneFrame(node: SemanticsNodeInteraction) {
         // Let the screen finish appearing before stopping the clock.
-        val node = composeTestRule.onNodeWithText(text).assertIsDisplayed()
+        node.assertIsDisplayed()
         composeTestRule.mainClock.autoAdvance = false
         node.performClick()
         node.performClick()
@@ -1612,7 +1621,7 @@ class MainActivityTest {
     fun openRankInProgress_fromHome_showsRankDetail_andBackReturnsHome() {
         launchWithProfile()
 
-        composeTestRule.onNode(hasText("Your rank") and hasText("Next: Scout")).performClick()
+        rankCard("Next: Scout").performClick()
 
         home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Our summary of Scout.").assertIsDisplayed()
@@ -1631,9 +1640,8 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
         pressBack()
 
-        composeTestRule.onNode(
-            hasText("Your rank") and hasText("Scout") and hasText("Next: Tenderfoot")
-        ).assertIsDisplayed()
+        rankCard("Your rank. Scout. 1 of 2 ranks earned. Next: Tenderfoot. In progress")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -1707,7 +1715,7 @@ class MainActivityTest {
     fun doubleTap_onRankInProgress_opensItOnce() {
         launchWithProfile()
 
-        tapTwiceInOneFrame("Next: Scout")
+        tapTwiceInOneFrame(rankCard("Next: Scout"))
         pressBack()
 
         home().assertIsDisplayed()

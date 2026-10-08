@@ -32,6 +32,9 @@
     <string name="home_next_rank">Next: %1$s</string>
     <!-- On Home's rank card in place of home_next_rank, once the scout has earned every rank. -->
     <string name="home_every_rank_earned">Every rank earned</string>
+    <!-- Between the parts of Home's rank card as screen readers read it, such as
+         "Your rank. Tenderfoot. 2 of 7 ranks earned". The quotes keep its space. -->
+    <string name="home_rank_card_separator">". "</string>
     <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
     <string name="home_badges_title">Your merit badges</string>
     <string name="home_eagle_title">Eagle-required</string>

@@ -38,6 +38,17 @@ fun SemanticsNodeInteractionsProvider.assertAnnouncedWhenShown(message: String, 
     onNodeWithText(message).assert(isPoliteLiveRegion and !isHidden).assert(wasHiddenBefore)
 }
 
+/** Turns on a screen reader, as far as Compose can tell. Call it before setting the content. */
+fun turnOnScreenReader() {
+    val accessibilityManager = ApplicationProvider.getApplicationContext<Context>()
+        .getSystemService(AccessibilityManager::class.java)
+    shadowOf(accessibilityManager).apply {
+        setEnabled(true)
+        setTouchExplorationEnabled(true)
+        setEnabledAccessibilityServiceList(listOf(AccessibilityServiceInfo()))
+    }
+}
+
 /**
  * Turns on a screen reader, as far as Compose can tell, and lists what TalkBack would read out
  * from live regions: the text of each live region that's the source of a content change. TalkBack
@@ -50,13 +61,7 @@ class LiveRegionReadouts {
     private var listeningTo: View? = null
 
     init {
-        val accessibilityManager = ApplicationProvider.getApplicationContext<Context>()
-            .getSystemService(AccessibilityManager::class.java)
-        shadowOf(accessibilityManager).apply {
-            setEnabled(true)
-            setTouchExplorationEnabled(true)
-            setEnabledAccessibilityServiceList(listOf(AccessibilityServiceInfo()))
-        }
+        turnOnScreenReader()
     }
 
     /**
