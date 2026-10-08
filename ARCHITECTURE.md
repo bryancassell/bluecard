@@ -716,10 +716,11 @@ unique within a requirements version. Progress is stored against the badge ID,
 its version and the requirement number; because switching versions starts
 requirement progress fresh, numbers only need to be unique within one version.
 
-The only numbers the catalog adds are ranks' parents that the official PDFs
-leave out, such as Scout `1` above `1a`–`1f`, so that ranks nest like badges
-([#286](https://github.com/bryancassell/bluecard/issues/286)). Their lettered
-requirements already imply them, so the numbers still match the PDF.
+A rank's parent that the official PDF leaves out, such as Scout `1` above
+`1a`–`1f`, is numbered too, so ranks nest like badges
+([#286](https://github.com/bryancassell/bluecard/issues/286)). Like an option's
+letter (Cycling `6B`), its number comes from the official text: here, from the
+lettered requirements that imply it.
 
 ### Shipping and authoring
 

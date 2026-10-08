@@ -107,14 +107,15 @@ object CatalogValidator {
                 )
             }
         val all = version.requirements.flatMap { it.withDescendants() }
-        all.forEach { parent ->
+        // A digit would make it another number: "10" isn't under "1".
+        all.filter { it.number.isNotBlank() }.forEach { parent ->
             parent.children
-                .filter { it.number.isNotBlank() && !it.number.startsWith(parent.number) }
+                .filter { it.number.isNotBlank() && !it.number.isUnder(parent.number) }
                 .forEach {
                     add(
                         "$where, requirement \"${it.number}\": " +
                             "is under \"${parent.number}\", so its number must start with " +
-                            "\"${parent.number}\""
+                            "\"${parent.number}\", not followed by a digit"
                     )
                 }
         }
@@ -232,6 +233,9 @@ object CatalogValidator {
     /** The keys that more than one of these items has. */
     private fun <T, K> List<T>.duplicatesBy(key: (T) -> K): Set<K> =
         groupBy(key).filterValues { it.size > 1 }.keys
+
+    private fun String.isUnder(parent: String): Boolean =
+        startsWith(parent) && getOrNull(parent.length)?.isDigit() != true
 
     private fun Requirement.withDescendants(): List<Requirement> =
         listOf(this) + children.flatMap { it.withDescendants() }

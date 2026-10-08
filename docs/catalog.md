@@ -295,7 +295,8 @@ It checks that:
   `eagleGroup` is only set on Eagle-required badges;
 - every version has requirements, requirement numbers are unique within it,
   top-level numbers are whole numbers, such as `1` but not `1a`, and each
-  sub-requirement's number starts with its parent's, such as `2a` under `2`;
+  sub-requirement's number starts with its parent's, not followed by a digit,
+  such as `2a` under `2` but not `20`;
 - every requirement has a number and a summary, `requiredCount` is between 1
   and the number of children, and `ownWork` is only set, and not blank, on a
   requirement with children or a tracker with a `rowCount`;

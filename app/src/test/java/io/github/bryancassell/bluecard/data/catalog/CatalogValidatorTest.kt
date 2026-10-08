@@ -260,14 +260,15 @@ class CatalogValidatorTest {
             summary = "Parent.",
             children = listOf(
                 Requirement(number = "2a", summary = "Its own."),
-                Requirement(number = "3a", summary = "Another's.")
+                Requirement(number = "3a", summary = "Another's."),
+                Requirement(number = "20", summary = "Starts with 2 but is another number.")
             )
         )
+        val where = "badge \"first-aid\", version 2026-01-01, requirement"
+        val mustStartWith2 = "is under \"2\", so its number must start with \"2\", " +
+            "not followed by a digit"
         assertEquals(
-            listOf(
-                "badge \"first-aid\", version 2026-01-01, requirement \"3a\": " +
-                    "is under \"2\", so its number must start with \"2\""
-            ),
+            listOf("$where \"3a\": $mustStartWith2", "$where \"20\": $mustStartWith2"),
             errorsForRequirements(parent)
         )
     }
@@ -280,9 +281,14 @@ class CatalogValidatorTest {
             children = listOf(Requirement(number = "  ", summary = "Blank child."))
         )
         val where = "badge \"first-aid\", version 2026-01-01, requirement"
+        val blankParent = Requirement(
+            number = " ",
+            summary = "Blank.",
+            children = listOf(Requirement(number = "1a", summary = "Under a blank parent."))
+        )
         assertEquals(
             listOf("$where \" \": number is blank", "$where \"  \": number is blank"),
-            errorsForRequirements(Requirement(number = " ", summary = "Blank."), parent)
+            errorsForRequirements(blankParent, parent)
         )
     }
 

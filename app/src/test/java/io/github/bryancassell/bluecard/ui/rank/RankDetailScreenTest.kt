@@ -96,9 +96,9 @@ class RankDetailScreenTest {
         summary = "Our summary of Tenderfoot.",
         officialUrl = "https://www.scouting.org/tenderfoot.pdf",
         requirements = listOf(
-            RequirementItem("1a", "Pack for a campout.", null, true, markedByHand = true),
-            RequirementItem("1b", "Sleep in a tent.", null, false, markedByHand = true),
-            RequirementItem("2a", "Cook a meal.", null, false, markedByHand = true)
+            RequirementItem("1", "Pack for a campout.", null, true, markedByHand = true),
+            RequirementItem("2", "Sleep in a tent.", null, false, markedByHand = true),
+            RequirementItem("3", "Cook a meal.", null, false, markedByHand = true)
         ),
         status = RankStatus.NotEarned
     )
@@ -239,7 +239,7 @@ class RankDetailScreenTest {
         }
 
         assertEquals(tops.sorted(), tops)
-        assertEquals(listOf("1a", "1b", "2a"), openedRequirements)
+        assertEquals(listOf("1", "2", "3"), openedRequirements)
     }
 
     @Test

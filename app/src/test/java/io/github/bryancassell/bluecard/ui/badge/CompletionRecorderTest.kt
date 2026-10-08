@@ -88,14 +88,14 @@ class CompletionRecorderTest {
                 summary = "Our summary of Tenderfoot.",
                 officialUrl = "https://www.scouting.org/tenderfoot/",
                 requirementVersions = listOf(
-                    RequirementsVersion(newest, listOf(Requirement("1a", "Pack for a campout.")))
+                    RequirementsVersion(newest, listOf(Requirement("1", "Pack for a campout.")))
                 )
             )
         )
 
         CompletionRecorder(
             "tenderfoot",
-            "1a",
+            "1",
             catalogRepository,
             progressRepository,
             clock,
@@ -105,7 +105,7 @@ class CompletionRecorderTest {
         val progress = progressRepository.observeProgress("tenderfoot").first()
         assertEquals(BadgeProgress("tenderfoot", newest, today), progress?.badge)
         assertEquals(
-            listOf(RequirementProgress("tenderfoot", "1a", true, today)),
+            listOf(RequirementProgress("tenderfoot", "1", true, today)),
             progress?.requirements
         )
     }
