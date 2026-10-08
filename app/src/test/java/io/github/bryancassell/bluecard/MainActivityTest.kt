@@ -6,12 +6,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
@@ -20,17 +23,21 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -50,6 +57,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -1143,6 +1151,166 @@ class MainActivityTest {
         pressBack()
 
         home().assertIsDisplayed()
+    }
+
+    private fun searchField() = field("Search merit badges")
+
+    private fun assertNothingFocused() =
+        composeTestRule.onAllNodes(isFocused()).assertCountEquals(0)
+
+    private fun press(key: Key) = composeTestRule.onRoot().performKeyInput { pressKey(key) }
+
+    /**
+     * Out of touch mode, gives Badges' search field focus and goes Back to Home. A phone is out
+     * of touch mode after a key press, and stays so while TalkBack is on, since its gestures
+     * don't touch the app. Robolectric starts out of touch mode anyway; this says so for the tests.
+     */
+    private fun leaveBadgesWithSearchFocused() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        searchField().performClick().assertIsFocused()
+
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    private fun reopenBadgesAfterSearchHadFocus() {
+        leaveBadgesWithSearchFocused()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+    }
+
+    @Test
+    fun back_fromBadgesWithSearchFocused_outOfTouchMode_focusesNothingOnHome() {
+        leaveBadgesWithSearchFocused()
+
+        assertNothingFocused()
+    }
+
+    @Test
+    fun reopenBadges_afterSearchHadFocus_outOfTouchMode_focusesNothing() {
+        leaveBadgesWithSearchFocused()
+
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        assertNothingFocused()
+    }
+
+    // A Home item that took focus here would pass it to Badges' first item as Home went.
+    @Test
+    fun tab_whilePagesSlide_movesFocusIntoTheArrivingPage() {
+        leaveBadgesWithSearchFocused()
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        // Partway through the slide, with Home still drawn.
+        composeTestRule.mainClock.advanceTimeBy(100)
+        home().assertExists()
+
+        press(Key.Tab)
+
+        searchField().assertIsFocused()
+    }
+
+    // Each arrow key goes to the page's first item, as on a phone where nothing is focused.
+    // Robolectric's keys go straight to Compose, so a test there can't show the phone's way.
+    @Test
+    fun downKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionDown)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun upKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionUp)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun leftKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionLeft)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun rightKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionRight)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun enter_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.Enter)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun tab_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.Tab)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun shiftTab_afterAFocusedPageLeft_focusesThePagesLastItem() {
+        reopenBadgesAfterSearchHadFocus()
+
+        composeTestRule.onRoot().performKeyInput {
+            withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) }
+        }
+
+        // Camping, the catalog's only badge.
+        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsFocused()
+    }
+
+    @Test
+    fun back_afterFocusMovesIntoThePageShown_leavesIt() {
+        reopenBadgesAfterSearchHadFocus()
+        press(Key.Tab)
+        searchField().assertIsFocused()
+
+        pressBack()
+
+        home().assertIsDisplayed()
+    }
+
+    @Test
+    fun tab_whenNothingHasHadFocus_focusesThePagesFirstItem() {
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+
+        press(Key.Tab)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun tab_fromThePagesLastItem_wrapsAroundToItsFirst() {
+        reopenBadgesAfterSearchHadFocus()
+        press(Key.Tab)
+        // Camping, the catalog's only badge, is the last item.
+        press(Key.Tab)
+
+        press(Key.Tab)
+
+        searchField().assertIsFocused()
     }
 
     @Test
