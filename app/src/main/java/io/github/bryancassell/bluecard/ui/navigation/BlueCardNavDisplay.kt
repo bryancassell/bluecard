@@ -17,6 +17,11 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -219,14 +224,14 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 hasFocus = it.hasFocus
                 isHolding = it.isFocused
             }
-            .focusProperties {
-                canFocus = isTakingFocus || isHolding
-                // The arrow keys move from it into the page, as they do when nothing is
-                // focused. Tab, Enter and D-pad center do so by themselves.
-                up = page
-                down = page
-                left = page
-                right = page
+            .focusProperties { canFocus = isTakingFocus || isHolding }
+            // An arrow key moves from it to the page's first item, as on a phone where nothing
+            // is focused: Android then asks the view to take focus going down. Compose would
+            // look only beside the holder. Tab, Enter and D-pad center move into the page by
+            // themselves.
+            .onKeyEvent {
+                isHolding && it.type == KeyEventType.KeyDown && it.key in ArrowKeys &&
+                    page.requestFocus()
             }
             .focusTarget()
             .focusRequester(page)
@@ -239,6 +244,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         popTransitionSpec = { closePage() }
     )
 }
+
+private val ArrowKeys =
+    setOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight)
 
 /**
  * Whether the scenes show different back stacks, not one with pages added or removed, as when
