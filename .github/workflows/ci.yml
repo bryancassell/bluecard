@@ -80,12 +80,40 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Gradle builds the app and test APKs and downloads the system image, then
-      # starts the managed emulator, runs app/src/androidTest and shuts it down.
-      # The runner has no GPU, so the emulator draws in software.
+      # Restores the emulator, the system image, the managed AVD with its boot
+      # snapshot, and the adb key the snapshot trusts. Gradle then skips the
+      # downloads and the cold boot that makes the snapshot. AGP never updates
+      # an installed emulator or image, so they stay at the cached versions:
+      # change the version at the end of the key to get newer ones, and change
+      # the key whenever the device in app/build.gradle.kts changes.
+      - uses: actions/cache/restore@v6
+        id: managed-device-cache
+        with: &managed-device-cache
+          key: managed-device-pixel6Api37-google_apis_ps16k-x86_64-v1
+          path: |
+            /usr/local/lib/android/sdk/emulator
+            /usr/local/lib/android/sdk/system-images/android-37.0/google_apis_ps16k/x86_64
+            ~/.android/avd/gradle-managed
+            ~/.android/adbkey*
+
+      # Gradle builds the app and test APKs and, on a cache miss, downloads the
+      # emulator and system image and boots the emulator once to save a snapshot.
+      # Then it starts the emulator from the snapshot, runs app/src/androidTest
+      # and shuts it down. The runner has no GPU, so the emulator draws in software.
       - run: >-
           ./gradlew pixel6Api37DebugAndroidTest
           -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+
+      # Only pushes to main save the cache, as with the Gradle cache. Pull requests
+      # read main's entry instead of each saving a copy, which would push the
+      # Gradle caches out of the repository's 10 GB. Saved only after the tests
+      # pass.
+      # TEMPORARY: this branch saves too, to measure a cache hit before merging.
+      - uses: actions/cache/save@v6
+        if: >-
+          (github.ref == 'refs/heads/main' || github.head_ref == 'feature/5-cache-emulator')
+          && steps.managed-device-cache.outputs.cache-hit != 'true'
+        with: *managed-device-cache
 
       # Also after a timeout, which cancels the job instead of failing it.
       - uses: actions/upload-artifact@v7
