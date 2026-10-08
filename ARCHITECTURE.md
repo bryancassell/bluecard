@@ -760,11 +760,10 @@ screens and the report agree.
   share before it's complete. The catalog test keeps it off a requirement with
   children, whose children decide the bar, and off a log with a total, whose
   row shows the total instead.
-- **The row's "Still to do" line reads the bar's measure**
-  (`Requirement.hasEnoughLogged`, sharing `loggedTowardNumber` with
-  `fractionDone`), for rows and totals alike
-  ([#293](https://github.com/bryancassell/bluecard/issues/293)). So Life 4's
-  line waits for its conservation hours, as its bar does.
+- **The row's "Still to do" line uses the bar's measure**
+  (`Requirement.hasEnoughLogged`), for rows and totals alike, so the line and
+  the bar can't disagree on when a log has its number
+  ([#293](https://github.com/bryancassell/bluecard/issues/293)).
 
 ### Requirement versions
 

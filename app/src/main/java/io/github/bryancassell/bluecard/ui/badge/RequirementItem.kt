@@ -68,10 +68,10 @@ data class RequirementItem(
      */
     val stillToDo: String? = null,
     /**
-     * Whether checking it off is all that's left, once the rest of it is done: it's still needed
-     * and its log has the number of rows or the amount it asks for ([hasEnoughLogged]), which
-     * don't complete it. It stays on a badge marked completed on a prior date, as [stillToDo]
-     * does.
+     * Whether its row says to check it off once all of it is done: it's still needed, the scout
+     * marks it complete by hand, and its log has the number of rows or the amount it asks for
+     * ([hasEnoughLogged]). Those don't complete it, as it may ask for more, such as Tenderfoot
+     * 6b's plan. It stays on a badge marked completed on a prior date, as [stillToDo] does.
      */
     val checkOffLeft: Boolean = false,
     /**
@@ -140,7 +140,7 @@ fun Requirement.toItem(
         partlyCompleted = partlyCompleted,
         completeCount = completeCount,
         stillToDo = ownWork?.takeIf { onlyOwnWorkLeft },
-        checkOffLeft = stillNeeded && hasEnoughLogged(trackerEntries),
+        checkOffLeft = isMarkedByHand && stillNeeded && hasEnoughLogged(trackerEntries),
         completesFromRows = completesFromRows,
         meritBadges = meritBadges?.let(earnedBadges::toward)
     )

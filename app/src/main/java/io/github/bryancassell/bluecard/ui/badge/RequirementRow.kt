@@ -104,14 +104,7 @@ private fun RequirementRow(
         val trackerLines = item.tracker?.let { trackerProgressLabels(it) }.orEmpty()
         val stillToDo = listOfNotNull(
             item.stillToDo?.let { stringResource(R.string.requirement_still_to_do, it) },
-            if (item.checkOffLeft) {
-                stringResource(
-                    R.string.requirement_still_to_do,
-                    stringResource(R.string.requirement_check_off_left)
-                )
-            } else {
-                null
-            }
+            if (item.checkOffLeft) stringResource(R.string.requirement_check_off_left) else null
         )
         // Under the count it's what's left of: its sub-requirements', or else its tracker's.
         addAll(
