@@ -31,7 +31,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -135,15 +134,18 @@ private fun HeadingSearchAndContent(
         val showHeading = headingHeight <= spaceLeft
         if (showHeading) spaceLeft -= headingHeight
         val contentPlaceables = contentMeasurables.measureInSpaceLeft()
-        layout(constraints.maxWidth, constraints.maxHeight) {
+        val placeables = (if (showHeading) headingPlaceables else emptyList()) +
+            searchPlaceables + contentPlaceables
+        // As big as what it places, as a Column is.
+        layout(
+            width = (placeables.maxOfOrNull { it.width } ?: 0).coerceAtLeast(constraints.minWidth),
+            height = placeables.sumOf { it.height }.coerceAtLeast(constraints.minHeight)
+        ) {
             var y = 0
-            fun List<Placeable>.placeInColumn() = forEach {
+            placeables.forEach {
                 it.placeRelative(0, y)
                 y += it.height
             }
-            if (showHeading) headingPlaceables.placeInColumn()
-            searchPlaceables.placeInColumn()
-            contentPlaceables.placeInColumn()
         }
     }
 }

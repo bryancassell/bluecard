@@ -58,6 +58,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -591,14 +592,8 @@ class BadgesScreenTest {
         onScreenKeyboard.open(OnScreenKeyboard.LANDSCAPE_HEIGHT)
 
         searchField().assertHeightIsAtLeast(OutlinedTextFieldDefaults.MinHeight)
-        onScreenKeyboard.assertAbove(
-            searchField().getUnclippedBoundsInRoot(),
-            OnScreenKeyboard.LANDSCAPE_HEIGHT
-        )
-        onScreenKeyboard.assertAbove(
-            shownCount().getUnclippedBoundsInRoot(),
-            OnScreenKeyboard.LANDSCAPE_HEIGHT
-        )
+        onScreenKeyboard.assertAbove(searchField().getUnclippedBoundsInRoot())
+        onScreenKeyboard.assertAbove(shownCount().getUnclippedBoundsInRoot())
         composeTestRule.onNodeWithText("Merit badges").assertIsNotDisplayed()
     }
 
@@ -609,9 +604,31 @@ class BadgesScreenTest {
         searchField().performClick()
         onScreenKeyboard.open(OnScreenKeyboard.LANDSCAPE_HEIGHT)
 
-        onScreenKeyboard.close(OnScreenKeyboard.LANDSCAPE_HEIGHT)
+        onScreenKeyboard.close()
 
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+    }
+
+    // The heading is left out by not placing it, and Compose doesn't give screen readers a node it
+    // hasn't placed, so TalkBack can't move to a heading that isn't shown.
+    @Config(qualifiers = PHONE_IN_LANDSCAPE)
+    @Test
+    fun headingLeftOutInLandscape_isLeftOutForScreenReadersToo() {
+        show(BadgesUiState.Ready(badges))
+        val heading = composeTestRule.onNodeWithText("Merit badges").fetchSemanticsNode().id
+
+        // With no screen reader on, Compose gives an empty node for one it leaves out, not null.
+        fun screenReadersGetHeading() = composeTestRule.runOnIdle {
+            view.accessibilityNodeProvider
+                .createAccessibilityNodeInfo(heading)?.text?.toString() == "Merit badges"
+        }
+
+        searchField().performClick()
+        onScreenKeyboard.open(OnScreenKeyboard.LANDSCAPE_HEIGHT)
+        assertFalse(screenReadersGetHeading())
+
+        onScreenKeyboard.close()
+        assertTrue(screenReadersGetHeading())
     }
 
     // A phone in portrait has room for the heading, the field and the count above the keyboard.

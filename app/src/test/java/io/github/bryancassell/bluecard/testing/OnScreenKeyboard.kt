@@ -39,21 +39,23 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
         content()
     }
 
+    /** How tall [open] last opened the keyboard. */
+    private var openHeight = HEIGHT
+
     /**
      * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
      * after the page has handled the focus change. It ends [height] tall.
      */
     fun open(height: Dp = HEIGHT) {
+        openHeight = height
         rule.waitForIdle()
         move(from = 0.dp, to = height)
     }
 
-    /**
-     * Closes the keyboard, [height] tall, as the scout does with Back while a field keeps focus.
-     */
-    fun close(height: Dp = HEIGHT) {
+    /** Closes the keyboard, as the scout does with Back while a field keeps focus. */
+    fun close() {
         rule.waitForIdle()
-        move(from = height, to = 0.dp)
+        move(from = openHeight, to = 0.dp)
     }
 
     /**
@@ -92,15 +94,19 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
         .setVisible(WindowInsets.Type.ime(), height > 0)
         .build()
 
-    /** Where the top edge of a keyboard [keyboardHeight] tall is on the page. */
-    fun top(keyboardHeight: Dp = HEIGHT): Dp =
+    /**
+     * Where the top edge of a keyboard [keyboardHeight] tall is on the page, by default the one
+     * [open] opened.
+     */
+    fun top(keyboardHeight: Dp = openHeight): Dp =
         rule.onRoot().getUnclippedBoundsInRoot().bottom - keyboardHeight
 
     /**
-     * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall. Unclipped
-     * bounds are needed for this: the page clips what's behind the keyboard.
+     * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall, by default the
+     * one [open] opened. Unclipped bounds are needed for this: the page clips what's behind the
+     * keyboard.
      */
-    fun assertAbove(bounds: DpRect, keyboardHeight: Dp = HEIGHT) {
+    fun assertAbove(bounds: DpRect, keyboardHeight: Dp = openHeight) {
         val keyboardTop = top(keyboardHeight)
         assertTrue(
             "$bounds isn't between the top of the page and the keyboard at $keyboardTop",
