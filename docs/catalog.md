@@ -65,7 +65,7 @@ Examples from the catalog (compare them with the official pages):
 |---|---|---|
 | Canoeing 3a | Identify the main parts of a canoe. | Reworded: the first draft was the official sentence with one word changed, and this says it just as naturally. |
 | Citizenship in the Community 1 | Discuss what good citizenship looks like in your community. | Reworded: the first draft carried over an 11-word official clause that's easy to say other ways. |
-| Citizenship in the Nation 7c | Tour a federal facility. | Fine, though it's the official sentence: any other wording reads worse. |
+| Citizenship in the Nation 7c | Tour a federal facility, and explain what you saw and how it serves the community and nation. | Fine, though it starts with the official sentence: any other wording of that part reads worse. |
 | First Aid 3g | Immersion foot, frostnip, frostbite and ice burns. | Fine: the official list of names. |
 | Environmental Science 1 | Explain environmental science in your own words and how it helps. | Fine: a name and a common phrase from the official text, in a sentence of our own. |
 
@@ -121,8 +121,8 @@ lists in 6.
               "summary": "Look ahead at fitness in your future.",
               "requiredCount": 1,
               "children": [
-                { "number": "8a", "summary": "Explore careers in fitness and study one closely." },
-                { "number": "8b", "summary": "Explore how fitness could become a lifelong hobby." }
+                { "number": "8a", "summary": "Explore careers in fitness, study one closely, and discuss what you found and whether it interests you." },
+                { "number": "8b", "summary": "Explore how fitness could become a lifelong hobby, discuss what you learned, and share your goals for it." }
               ]
             }
           ]
@@ -204,7 +204,7 @@ format as a badge's.
 | `children` | No | Sub-requirements, in official order. |
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
 | `tracker` | No | For requirements that need repeated entries, such as a weekly log. See below. |
-| `ownWork` | No | For a requirement with `children`, or with a `tracker` with a `rowCount` and no children, that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are, or every row is filled in. Add it for any ask no child or row covers, including a closing step such as discussing what you did with your counselor, or summing up two weeks of rows (Competitive Gaming 3b). Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). A requirement with rows is completed on the date the scout gives its own work, since rows are often typed in long after the work, so word work done before the rows to end with them: `"Set a baseline, then make and carry out a plan to cut your household's food waste."`, not `"Make a plan…"`. When the other work could come in any order, such as an explanation that isn't about the rows (Bird Study 7's what songs are for), use a log instead, whose checkbox dates the requirement once all of it is done. On a requirement with rows, add it for any step that has the scout share, show, present, review, discuss, explain, describe, tell or state something, said to the counselor or not, even when it's the rows themselves (Hiking 5's "Share this with your counselor") or each row is what the scout tells (Cybersecurity 6a's three uses of encryption), and for the counselor's approval (Cycling 6B(4)'s trails) or help (Geology 4C(3)(b)'s identifying): otherwise typing in the rows would complete the requirement before the scout did it. Writing things down, such as listing, recording, naming or identifying, isn't such a step unless it's for the counselor (Coin Collecting 7a's "identify for your counselor"). A log can't have it, since the scout checks off a log's requirement. The `summary` still describes the whole requirement, including any step with the counselor. |
+| `ownWork` | No | For a requirement with `children`, or with a `tracker` with a `rowCount` and no children, that also asks for work of its own: our own one-line summary of just that work, such as `"Take a hunter education course or get a copy of your state's hunting laws."` for Shotgun Shooting 1g. The scout checks it off on the requirement's page, and the requirement is complete once it is and enough children are, or every row is filled in. Add it for any ask no child or row covers, including a closing step such as discussing what you did with your counselor, or summing up two weeks of rows (Competitive Gaming 3b). Leave it out when the requirement only introduces its children ("Do the following", "Discuss these with your counselor:"). A requirement with rows is completed on the date the scout gives its own work, since rows are often typed in long after the work, so word work done before the rows to end with them: `"Set a baseline, then make and carry out a plan to cut your household's food waste."`, not `"Make a plan…"`. When the other work could come in any order, such as an explanation that isn't about the rows (Bird Study 7's what songs are for), use a log instead, whose checkbox dates the requirement once all of it is done. On a requirement with rows, add it for any step that has the scout share, show, present, review, discuss, explain, describe, tell, state, demonstrate or report something, said to the counselor or not, even when it's the rows themselves (Hiking 5's "Share this with your counselor") or each row is what the scout tells (Cybersecurity 6a's three uses of encryption), and for the counselor's approval (Cycling 6B(4)'s trails) or help (Geology 4C(3)(b)'s identifying): otherwise typing in the rows would complete the requirement before the scout did it. Writing things down, such as listing, recording, naming, identifying or writing a report, isn't such a step unless it's for the counselor (Coin Collecting 7a's "identify for your counselor"), so Cycling 6A(2)'s report of its six rides needs none. A log can't have it, since the scout checks off a log's requirement. The `summary` still describes the whole requirement, including any step with the counselor. |
 | `monthsInRank` | No | Only on a rank's requirement that asks for months in the rank below, such as Star 1's four months as a First Class Scout: how many months, at least 1. Its page shows the date the scout becomes eligible, counted from when they earned the rank below, but the scout still checks it off. The lowest rank can't have it, since no rank is below it. See [Rank](#rank) for which requirements have it. |
 | `meritBadges` | No | Only on a rank's requirement that asks for merit badges, such as Star 3's six, at least four of them Eagle-required: `{"total": 6, "eagleRequired": 4}`, the badges needed in all and how many of them must be Eagle-required, each at least 1. Every Eagle-required badge counts toward `eagleRequired`, unless it has `"eagleGroupsCountOnce": true`: then only one badge of each `eagleGroup` does, and the group's others count only toward `total`. Set that where the official text lets the scout choose only one badge of each either-or choice. The requirement is complete once the scout has completed enough badges, so they don't check it off, and it can't have `children` or a `tracker`. See [Rank](#rank) for which requirements have it. |
 
@@ -321,12 +321,44 @@ each one with that section, not by the count: lists and common phrases make
 long matches in summaries that are fine, and rewording to avoid them makes
 summaries read awkwardly.
 
-It also can't check that a step with the counselor made it into the catalog,
-so reviewers check that too. Search the official text of each requirement you
-add or change for "counselor" and for share, show, present, review, discuss,
-explain, describe, tell and state. Each step you find belongs in the summary,
-and so does any approval or help from the counselor. On a requirement the app
-completes by itself, one with a `rowCount` or with `children`, each of them
-also needs `ownWork` or a child that covers it: Coin Collecting 7a's "identify
-for your counselor" was once left out of both, so typing in 20 coins completed
-it.
+It also can't check that a step with the counselor, or anyone else, made it
+into the catalog, so reviewers check that too. Search the official text of
+each requirement you add or change for "counselor" and for share, show,
+present, review, discuss, explain, describe, tell, state, demonstrate and
+report. Each step you find belongs in the summary, and so does any approval or
+help from the counselor. On a requirement the app completes by itself, one
+with a `rowCount` or with `children`, each of them also needs `ownWork` or a
+child that covers it: Coin Collecting 7a's "identify for your counselor" was
+once left out of both, so typing in 20 coins completed it.
+
+Write each step with a verb that has the scout say or show something, such as
+explain, describe, tell, discuss, share, show, present or review. A verb the
+scout could satisfy on paper isn't enough: "Compare automatic and standard
+transmissions." became "Explain how automatic and standard transmissions
+differ." (Automotive Maintenance 9b), and "Adjust the eyepiece…" became "Show
+how to adjust the eyepiece…" (Bird Study 3b). The verb is enough without "to
+your counselor" (Backpacking 5b: "Explain why drinking enough water on a trek
+matters."). Do name the counselor for their approval, help, guidance or
+supervision, or for work done with them, even an approval that covers only one
+choice (Emergency Preparedness 2c: "Using the pamphlet's checklist or one your
+counselor approves…"), and name anyone else a step is for, such as a troop, a
+family or the patrol leaders' council. Children that are only topics don't
+repeat a verb our parent summary already gives them, such as First Aid 3's
+wounds or Swimming 3's strokes ("Show five swimming strokes with good form."
+over "Back crawl."); otherwise each child names its own step.
+
+When a parent needs the counselor's approval, help, guidance or supervision, or
+work done with the counselor, no child covers it, so it gets `ownWork`, even
+when it applies to every child: "Get permission and your counselor's approval
+before you start." (Pulp and Paper 7's "With your parent or guardian's and
+counselor's approval, do ONE of the following"), "Before each hike, share a
+written plan with your counselor or a designee for approval." (Hiking 4), or
+"Use two kinds of floating aids your counselor provides." (Lifesaving 8). A
+step that is itself each child's work is different: under Cybersecurity 3's
+"Do the following and discuss each with your counselor", the children cover
+the discussing. Two other cases need no `ownWork`. One is a step someone else
+may do instead, which isn't a counselor step: Home Repairs 2's "Under the
+supervision of your parent, guardian, or counselor", Motorboating 5's "With
+your counselor or other adults on board", or Climbing 5's help from "the
+counselor or another Scout". The other is work done with the counselor when
+the children are that work, such as Cycling 6A(1)'s road safety test.
