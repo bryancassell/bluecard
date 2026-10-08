@@ -45,6 +45,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.time.LocalDate
@@ -53,13 +54,18 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowDialog
 import org.robolectric.shadows.ShadowToast
 
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class DataManagementScreenTest {
-    @get:Rule
+    @get:Rule(order = 0)
     val composeTestRule = createComposeRule()
+
+    @get:Rule(order = 1)
+    val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     private var profileEdits = 0
     private val exported = mutableListOf<Uri>()

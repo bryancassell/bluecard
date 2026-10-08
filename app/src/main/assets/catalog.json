@@ -25029,28 +25029,34 @@
           "effectiveDate": "2025-01-01",
           "requirements": [
             {
-              "number": "1a",
-              "summary": "Recite the Scout Oath, Scout Law, motto and slogan from memory and explain what they mean."
-            },
-            {
-              "number": "1b",
-              "summary": "Explain Scout spirit and describe how you've shown it by living the Oath, Law, motto and slogan."
-            },
-            {
-              "number": "1c",
-              "summary": "Show the Scout sign, salute and handshake, and explain when to use each."
-            },
-            {
-              "number": "1d",
-              "summary": "Explain what each part of the First Class badge stands for and why the badge matters."
-            },
-            {
-              "number": "1e",
-              "summary": "Recite the Outdoor Code, name the seven Leave No Trace principles, and explain how they differ."
-            },
-            {
-              "number": "1f",
-              "summary": "Recite the Pledge of Allegiance and explain what it means."
+              "number": "1",
+              "summary": "Learn what Scouts stand for, from the Oath and Law to the sign and badge.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Recite the Scout Oath, Scout Law, motto and slogan from memory and explain what they mean."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain Scout spirit and describe how you've shown it by living the Oath, Law, motto and slogan."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Show the Scout sign, salute and handshake, and explain when to use each."
+                },
+                {
+                  "number": "1d",
+                  "summary": "Explain what each part of the First Class badge stands for and why the badge matters."
+                },
+                {
+                  "number": "1e",
+                  "summary": "Recite the Outdoor Code, name the seven Leave No Trace principles, and explain how they differ."
+                },
+                {
+                  "number": "1f",
+                  "summary": "Recite the Pledge of Allegiance and explain what it means."
+                }
+              ]
             },
             {
               "number": "2",
@@ -25075,32 +25081,50 @@
               ]
             },
             {
-              "number": "3a",
-              "summary": "Explain the patrol method and the kinds of patrols your troop has."
+              "number": "3",
+              "summary": "Explain how patrols work and learn about your own patrol.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Explain the patrol method and the kinds of patrols your troop has."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Learn your patrol's name, emblem, flag and yell, and explain how they build patrol spirit."
+                }
+              ]
             },
             {
-              "number": "3b",
-              "summary": "Learn your patrol's name, emblem, flag and yell, and explain how they build patrol spirit."
-            },
-            {
-              "number": "4a",
-              "summary": "Show how to tie a square knot, two half-hitches and a taut-line hitch, and explain what each is for."
-            },
-            {
-              "number": "4b",
-              "summary": "Show rope care by whipping and fusing the ends of several kinds of rope."
+              "number": "4",
+              "summary": "Tie your first knots and learn to care for rope.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Show how to tie a square knot, two half-hitches and a taut-line hitch, and explain what each is for."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Show rope care by whipping and fusing the ends of several kinds of rope."
+                }
+              ]
             },
             {
               "number": "5",
               "summary": "Explain safe and responsible pocketknife use."
             },
             {
-              "number": "6a",
-              "summary": "With your parent or guardian, work through the exercises in How to Protect Your Children from Child Abuse: A Parent's Guide."
-            },
-            {
-              "number": "6b",
-              "summary": "With permission, watch the Personal Safety Awareness videos."
+              "number": "6",
+              "summary": "Learn about personal safety with your parent or guardian.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "With your parent or guardian, work through the exercises in How to Protect Your Children from Child Abuse: A Parent's Guide."
+                },
+                {
+                  "number": "6b",
+                  "summary": "With permission, watch the Personal Safety Awareness videos."
+                }
+              ]
             },
             {
               "number": "7",
@@ -25120,205 +25144,247 @@
           "effectiveDate": "2022-08-01",
           "requirements": [
             {
-              "number": "1a",
-              "summary": "Show your leader you're ready for an overnight campout: your gear, and how to pack and carry it."
+              "number": "1",
+              "summary": "Prepare for and go on an overnight campout, following outdoor ethics.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Show your leader you're ready for an overnight campout: your gear, and how to pack and carry it."
+                },
+                {
+                  "number": "1b",
+                  "summary": "Camp at least one night with your patrol or troop, in a tent you helped set up."
+                },
+                {
+                  "number": "1c",
+                  "summary": "Explain what you did on your campouts and outings to follow the Outdoor Code and Leave No Trace."
+                }
+              ]
             },
             {
-              "number": "1b",
-              "summary": "Camp at least one night with your patrol or troop, in a tent you helped set up."
+              "number": "2",
+              "summary": "Share cooking, cleanup and meals with your patrol on a campout.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Help cook a meal on your 1b campout, and explain why everyone in the patrol shares cooking and cleanup."
+                },
+                {
+                  "number": "2b",
+                  "summary": "On a campout, show how to safely wash the cookware, dishes and utensils from a meal."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Explain what a patrol gains by eating together."
+                }
+              ]
             },
             {
-              "number": "1c",
-              "summary": "Explain what you did on your campouts and outings to follow the Outdoor Code and Leave No Trace."
+              "number": "3",
+              "summary": "Put three knots to use, and handle a knife, saw and ax safely.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Show how to use a square knot for a real job."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Show how to use two half-hitches for a real job."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Show how to use a taut-line hitch for a real job."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Show how to care for, sharpen and use a knife, saw and ax, and describe when to use each."
+                }
+              ]
             },
             {
-              "number": "2a",
-              "summary": "Help cook a meal on your 1b campout, and explain why everyone in the patrol shares cooking and cleanup."
+              "number": "4",
+              "summary": "Learn first aid for common outdoor injuries and hazards, and pack a first-aid kit.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Show first aid for cuts and scrapes, blisters, minor burns or scalds, insect and tick bites or stings, venomous snakebite, nosebleed, frostbite, sunburn and choking."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Describe the common poisonous or hazardous plants, point out any growing near home or camp, and explain treatment for exposure."
+                },
+                {
+                  "number": "4c",
+                  "summary": "Explain how to prevent or lessen the injuries and exposures in 4a and 4b when outdoors."
+                },
+                {
+                  "number": "4d",
+                  "summary": "Put together a personal first-aid kit for campouts and hikes, and explain what each item is for."
+                }
+              ]
             },
             {
-              "number": "2b",
-              "summary": "On a campout, show how to safely wash the cookware, dishes and utensils from a meal."
+              "number": "5",
+              "summary": "Learn how to hike safely and responsibly, including what to do if you're lost.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how the buddy system keeps you safe, outdoors and at home, and use it on a troop or patrol outing."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Explain the steps to take if you're lost on a hike or campout."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Explain how to hike safely and responsibly along roads and cross-country, by day and by night."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Explain why to stay on trails or other durable surfaces, with examples from your outing."
+                }
+              ]
             },
             {
-              "number": "2c",
-              "summary": "Explain what a patrol gains by eating together."
-            },
-            {
-              "number": "3a",
-              "summary": "Show how to use a square knot for a real job."
-            },
-            {
-              "number": "3b",
-              "summary": "Show how to use two half-hitches for a real job."
-            },
-            {
-              "number": "3c",
-              "summary": "Show how to use a taut-line hitch for a real job."
-            },
-            {
-              "number": "3d",
-              "summary": "Show how to care for, sharpen and use a knife, saw and ax, and describe when to use each."
-            },
-            {
-              "number": "4a",
-              "summary": "Show first aid for cuts and scrapes, blisters, minor burns or scalds, insect and tick bites or stings, venomous snakebite, nosebleed, frostbite, sunburn and choking."
-            },
-            {
-              "number": "4b",
-              "summary": "Describe the common poisonous or hazardous plants, point out any growing near home or camp, and explain treatment for exposure."
-            },
-            {
-              "number": "4c",
-              "summary": "Explain how to prevent or lessen the injuries and exposures in 4a and 4b when outdoors."
-            },
-            {
-              "number": "4d",
-              "summary": "Put together a personal first-aid kit for campouts and hikes, and explain what each item is for."
-            },
-            {
-              "number": "5a",
-              "summary": "Explain how the buddy system keeps you safe, outdoors and at home, and use it on a troop or patrol outing."
-            },
-            {
-              "number": "5b",
-              "summary": "Explain the steps to take if you're lost on a hike or campout."
-            },
-            {
-              "number": "5c",
-              "summary": "Explain how to hike safely and responsibly along roads and cross-country, by day and by night."
-            },
-            {
-              "number": "5d",
-              "summary": "Explain why to stay on trails or other durable surfaces, with examples from your outing."
-            },
-            {
-              "number": "6a",
-              "summary": "Record your best pushups and situps or curl-ups in 60 seconds, back-saver sit-and-reach, and 1-mile walk/run time.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "pushups",
-                    "label": "Pushups",
-                    "type": "number"
-                  },
-                  {
-                    "id": "situps",
-                    "label": "Situps or curl-ups",
-                    "type": "number"
-                  },
-                  {
-                    "id": "sit-and-reach",
-                    "label": "Sit-and-reach",
-                    "type": "text"
-                  },
-                  {
-                    "id": "mile",
-                    "label": "1-mile time",
-                    "type": "text"
+              "number": "6",
+              "summary": "Test your fitness, practice for 30 days, then test again to show improvement.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Record your best pushups and situps or curl-ups in 60 seconds, back-saver sit-and-reach, and 1-mile walk/run time.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "pushups",
+                        "label": "Pushups",
+                        "type": "number"
+                      },
+                      {
+                        "id": "situps",
+                        "label": "Situps or curl-ups",
+                        "type": "number"
+                      },
+                      {
+                        "id": "sit-and-reach",
+                        "label": "Sit-and-reach",
+                        "type": "text"
+                      },
+                      {
+                        "id": "mile",
+                        "label": "1-mile time",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "try",
+                    "rowLabelPlural": "tries"
                   }
-                ],
-                "rowLabel": "try",
-                "rowLabelPlural": "tries"
-              }
-            },
-            {
-              "number": "6b",
-              "summary": "Make a plan to improve on each test in 6a, explain it, and keep an activity log for 30 days or more.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "activity",
-                    "label": "Activity",
-                    "type": "text"
-                  },
-                  {
-                    "id": "minutes",
-                    "label": "Minutes",
-                    "type": "number"
+                },
+                {
+                  "number": "6b",
+                  "summary": "Make a plan to improve on each test in 6a, explain it, and keep an activity log for 30 days or more.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "text"
+                      },
+                      {
+                        "id": "minutes",
+                        "label": "Minutes",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days"
                   }
-                ],
-                "rowLabel": "day",
-                "rowLabelPlural": "days"
-              }
-            },
-            {
-              "number": "6c",
-              "summary": "After 30 days of practice, retake the tests in 6a and improve on each, by any amount.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "pushups",
-                    "label": "Pushups",
-                    "type": "number"
-                  },
-                  {
-                    "id": "situps",
-                    "label": "Situps or curl-ups",
-                    "type": "number"
-                  },
-                  {
-                    "id": "sit-and-reach",
-                    "label": "Sit-and-reach",
-                    "type": "text"
-                  },
-                  {
-                    "id": "mile",
-                    "label": "1-mile time",
-                    "type": "text"
+                },
+                {
+                  "number": "6c",
+                  "summary": "After 30 days of practice, retake the tests in 6a and improve on each, by any amount.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "pushups",
+                        "label": "Pushups",
+                        "type": "number"
+                      },
+                      {
+                        "id": "situps",
+                        "label": "Situps or curl-ups",
+                        "type": "number"
+                      },
+                      {
+                        "id": "sit-and-reach",
+                        "label": "Sit-and-reach",
+                        "type": "text"
+                      },
+                      {
+                        "id": "mile",
+                        "label": "1-mile time",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "try",
+                    "rowLabelPlural": "tries"
                   }
-                ],
-                "rowLabel": "try",
-                "rowLabelPlural": "tries"
-              }
+                }
+              ]
             },
             {
-              "number": "7a",
-              "summary": "Show how to display, raise, lower and fold the U.S. flag correctly."
-            },
-            {
-              "number": "7b",
-              "summary": "Give one hour of service on Scoutmaster-approved projects, and explain how it relates to the Scout slogan and motto.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "hours",
-                    "label": "Hours",
-                    "type": "number",
-                    "total": {
-                      "needed": 1,
-                      "label": "hour",
-                      "labelPlural": "hours"
-                    }
-                  },
-                  {
-                    "id": "work",
-                    "label": "What you did",
-                    "type": "multiline-text"
+              "number": "7",
+              "summary": "Handle the U.S. flag correctly and give an hour of service.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Show how to display, raise, lower and fold the U.S. flag correctly."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Give one hour of service on Scoutmaster-approved projects, and explain how it relates to the Scout slogan and motto.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number",
+                        "total": {
+                          "needed": 1,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
+                      },
+                      {
+                        "id": "work",
+                        "label": "What you did",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "project",
+                    "rowLabelPlural": "projects"
                   }
-                ],
-                "rowLabel": "project",
-                "rowLabelPlural": "projects"
-              }
+                }
+              ]
             },
             {
               "number": "8",
@@ -25350,86 +25416,104 @@
           "effectiveDate": "2022-08-01",
           "requirements": [
             {
-              "number": "1a",
-              "summary": "Since joining, do five troop or patrol activities other than meetings, at least three outdoors, with two or more of those overnight in a tent or shelter you help put up.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "activity",
-                    "label": "Activity",
-                    "type": "text"
-                  },
-                  {
-                    "id": "place",
-                    "label": "Place",
-                    "type": "text"
-                  },
-                  {
-                    "id": "nights",
-                    "label": "Nights camped",
-                    "type": "number"
+              "number": "1",
+              "summary": "Go on troop and patrol outings, practice Leave No Trace and pick a campsite.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Since joining, do five troop or patrol activities other than meetings, at least three outdoors, with two or more of those overnight in a tent or shelter you help put up.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "text"
+                      },
+                      {
+                        "id": "place",
+                        "label": "Place",
+                        "type": "text"
+                      },
+                      {
+                        "id": "nights",
+                        "label": "Nights camped",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "activity",
+                    "rowLabelPlural": "activities"
                   }
-                ],
-                "rowLabel": "activity",
-                "rowLabelPlural": "activities"
-              }
+                },
+                {
+                  "number": "1b",
+                  "summary": "Recite the Leave No Trace principles from memory, and explain how you put them into practice on every outing."
+                },
+                {
+                  "number": "1c",
+                  "summary": "On one of your 1a campouts, choose a patrol site and propose it to your patrol leader, senior patrol leader or troop guide, explaining what makes a good site and tent spot."
+                }
+              ]
             },
             {
-              "number": "1b",
-              "summary": "Recite the Leave No Trace principles from memory, and explain how you put them into practice on every outing."
+              "number": "2",
+              "summary": "Build fires and use stoves safely, cook a camp meal, and tie two knots.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Explain when a fire, for cooking or otherwise, is and isn't a good idea."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Cut tinder, kindling and fuel wood for a cooking fire with a pocketknife, and a saw or ax if you need one."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show how to build a minimum-impact fire from your 2b wood at an approved place and time, light it if local rules allow, then after at least two minutes put it out and clean up the ashes."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Explain when to choose a lightweight stove or a propane stove, set one up and, if rules allow, light it, and explain stove safety."
+                },
+                {
+                  "number": "2e",
+                  "summary": "On a campout, plan and cook a hot breakfast or lunch based on MyPlate or the current USDA model, explain why nutrition matters, and show how to carry, store and prepare the food."
+                },
+                {
+                  "number": "2f",
+                  "summary": "Show how to tie a sheet bend and describe when you'd use it."
+                },
+                {
+                  "number": "2g",
+                  "summary": "Show how to tie a bowline and describe when you'd use it."
+                }
+              ]
             },
             {
-              "number": "1c",
-              "summary": "On one of your 1a campouts, choose a patrol site and propose it to your patrol leader, senior patrol leader or troop guide, explaining what makes a good site and tent spot."
-            },
-            {
-              "number": "2a",
-              "summary": "Explain when a fire, for cooking or otherwise, is and isn't a good idea."
-            },
-            {
-              "number": "2b",
-              "summary": "Cut tinder, kindling and fuel wood for a cooking fire with a pocketknife, and a saw or ax if you need one."
-            },
-            {
-              "number": "2c",
-              "summary": "Show how to build a minimum-impact fire from your 2b wood at an approved place and time, light it if local rules allow, then after at least two minutes put it out and clean up the ashes."
-            },
-            {
-              "number": "2d",
-              "summary": "Explain when to choose a lightweight stove or a propane stove, set one up and, if rules allow, light it, and explain stove safety."
-            },
-            {
-              "number": "2e",
-              "summary": "On a campout, plan and cook a hot breakfast or lunch based on MyPlate or the current USDA model, explain why nutrition matters, and show how to carry, store and prepare the food."
-            },
-            {
-              "number": "2f",
-              "summary": "Show how to tie a sheet bend and describe when you'd use it."
-            },
-            {
-              "number": "2g",
-              "summary": "Show how to tie a bowline and describe when you'd use it."
-            },
-            {
-              "number": "3a",
-              "summary": "Show how a compass works and how to orient a map, and point out five map symbols and tell what they mean."
-            },
-            {
-              "number": "3b",
-              "summary": "Navigate a 5-mile hike (or 10-mile bike ride) by map and compass, approved by your adult leader and parent or guardian. If getting around is hard for you, a trip can replace the hike."
-            },
-            {
-              "number": "3c",
-              "summary": "Explain the dangers and injuries you could face on the hike and how to avoid them."
-            },
-            {
-              "number": "3d",
-              "summary": "Show how to tell direction by day and by night without a compass or any electronics."
+              "number": "3",
+              "summary": "Read a map and compass, use them on a hike, and find direction without them.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Show how a compass works and how to orient a map, and point out five map symbols and tell what they mean."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Navigate a 5-mile hike (or 10-mile bike ride) by map and compass, approved by your adult leader and parent or guardian. If getting around is hard for you, a trip can replace the hike."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Explain the dangers and injuries you could face on the hike and how to avoid them."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Show how to tell direction by day and by night without a compass or any electronics."
+                }
+              ]
             },
             {
               "number": "4",
@@ -25452,123 +25536,153 @@
               }
             },
             {
-              "number": "5a",
-              "summary": "Explain how to keep a swim safe."
+              "number": "5",
+              "summary": "Learn water safety, pass the beginner swim test and practice rescues.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Explain how to keep a swim safe."
+                },
+                {
+                  "number": "5b",
+                  "summary": "Pass the Scouting America beginner test: a feetfirst jump into water too deep to stand in, 25 feet of swimming, a sharp turn and a swim back."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Show reaching rescues with an arm, a leg or an object, and throwing rescues with lines and objects."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Explain why to reach or throw rather than swim to a rescue, and how and why a swimming rescuer keeps clear of the victim."
+                }
+              ]
             },
             {
-              "number": "5b",
-              "summary": "Pass the Scouting America beginner test: a feetfirst jump into water too deep to stand in, 25 feet of swimming, a sharp turn and a swim back."
+              "number": "6",
+              "summary": "Learn first aid for more injuries and hurry cases, and how to handle emergencies.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Show first aid for an object in the eye, a warm-blooded animal's bite, splinter, nail and fishhook punctures, second-degree burns, heat exhaustion, shock, heatstroke, dehydration, hypothermia and hyperventilation."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Show the response to hurry cases: stopped breathing, stroke, severe bleeding and swallowed poison."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Explain how to prevent or lessen the injuries in 6a and 6b on a campout or hike."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain how to handle an emergency at home or in the backcountry, what counts as one, and what to tell responders."
+                },
+                {
+                  "number": "6e",
+                  "summary": "Explain what to do if you arrive at the scene of a vehicle crash."
+                }
+              ]
             },
             {
-              "number": "5c",
-              "summary": "Show reaching rescues with an arm, a leg or an object, and throwing rescues with lines and objects."
-            },
-            {
-              "number": "5d",
-              "summary": "Explain why to reach or throw rather than swim to a rescue, and how and why a swimming rescuer keeps clear of the victim."
-            },
-            {
-              "number": "6a",
-              "summary": "Show first aid for an object in the eye, a warm-blooded animal's bite, splinter, nail and fishhook punctures, second-degree burns, heat exhaustion, shock, heatstroke, dehydration, hypothermia and hyperventilation."
-            },
-            {
-              "number": "6b",
-              "summary": "Show the response to hurry cases: stopped breathing, stroke, severe bleeding and swallowed poison."
-            },
-            {
-              "number": "6c",
-              "summary": "Explain how to prevent or lessen the injuries in 6a and 6b on a campout or hike."
-            },
-            {
-              "number": "6d",
-              "summary": "Explain how to handle an emergency at home or in the backcountry, what counts as one, and what to tell responders."
-            },
-            {
-              "number": "6e",
-              "summary": "Explain what to do if you arrive at the scene of a vehicle crash."
-            },
-            {
-              "number": "7a",
-              "summary": "After Tenderfoot 6c, get at least 30 minutes of activity a day, five days a week, for four weeks, and log it.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "start",
-                    "label": "Week starting",
-                    "type": "date"
-                  },
-                  {
-                    "id": "activities",
-                    "label": "Activities",
-                    "type": "multiline-text"
+              "number": "7",
+              "summary": "Stay active for four weeks, and learn about the dangers of harmful habits.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "After Tenderfoot 6c, get at least 30 minutes of activity a day, five days a week, for four weeks, and log it.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "start",
+                        "label": "Week starting",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activities",
+                        "label": "Activities",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "week",
+                    "rowLabelPlural": "weeks",
+                    "rowCount": 4
                   }
-                ],
-                "rowLabel": "week",
-                "rowLabelPlural": "weeks",
-                "rowCount": 4
-              }
+                },
+                {
+                  "number": "7b",
+                  "summary": "Talk about what was hard and what went well in 7a, and set a goal and a plan to stay active every day."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Attend a program on the dangers of drugs, alcohol, tobacco and other harmful habits, talk it over with your family, explain the dangers of addiction, and tell an adult troop leader how the Oath and Law apply."
+                }
+              ]
             },
             {
-              "number": "7b",
-              "summary": "Talk about what was hard and what went well in 7a, and set a goal and a plan to stay active every day."
-            },
-            {
-              "number": "7c",
-              "summary": "Attend a program on the dangers of drugs, alcohol, tobacco and other harmful habits, talk it over with your family, explain the dangers of addiction, and tell an adult troop leader how the Oath and Law apply."
-            },
-            {
-              "number": "8a",
-              "summary": "Take part in a flag ceremony for your school, place of worship, chartered organization, community or a Scouting activity."
-            },
-            {
-              "number": "8b",
-              "summary": "Explain how to show respect for the U.S. flag."
-            },
-            {
-              "number": "8c",
-              "summary": "With your parent or guardian, set a goal to earn the price of something you want, write a plan, follow it (changing it if needed), and discuss how it went."
-            },
-            {
-              "number": "8d",
-              "summary": "Compare the item's price at three or more places to find the best deal, and after 8c decide whether to buy it, save some or all of the money, or use the money another way."
-            },
-            {
-              "number": "8e",
-              "summary": "Give two hours of service on Scoutmaster-approved projects, and explain how it relates to the Scout Oath.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "hours",
-                    "label": "Hours",
-                    "type": "number",
-                    "total": {
-                      "needed": 2,
-                      "label": "hour",
-                      "labelPlural": "hours"
-                    }
-                  },
-                  {
-                    "id": "work",
-                    "label": "What you did",
-                    "type": "multiline-text"
+              "number": "8",
+              "summary": "Honor the flag, earn and save toward a goal, and give two hours of service.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "Take part in a flag ceremony for your school, place of worship, chartered organization, community or a Scouting activity."
+                },
+                {
+                  "number": "8b",
+                  "summary": "Explain how to show respect for the U.S. flag."
+                },
+                {
+                  "number": "8c",
+                  "summary": "With your parent or guardian, set a goal to earn the price of something you want, write a plan, follow it (changing it if needed), and discuss how it went."
+                },
+                {
+                  "number": "8d",
+                  "summary": "Compare the item's price at three or more places to find the best deal, and after 8c decide whether to buy it, save some or all of the money, or use the money another way."
+                },
+                {
+                  "number": "8e",
+                  "summary": "Give two hours of service on Scoutmaster-approved projects, and explain how it relates to the Scout Oath.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number",
+                        "total": {
+                          "needed": 2,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
+                      },
+                      {
+                        "id": "work",
+                        "label": "What you did",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "project",
+                    "rowLabelPlural": "projects"
                   }
-                ],
-                "rowLabel": "project",
-                "rowLabelPlural": "projects"
-              }
+                }
+              ]
             },
             {
-              "number": "9a",
-              "summary": "Explain the three R's of personal safety and protection."
-            },
-            {
-              "number": "9b",
-              "summary": "Explain what bullying is and how to respond when someone bullies you or someone else."
+              "number": "9",
+              "summary": "Learn how to stay safe from abuse and bullying.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Explain the three R's of personal safety and protection."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Explain what bullying is and how to respond when someone bullies you or someone else."
+                }
+              ]
             },
             {
               "number": "10",
@@ -25596,225 +25710,279 @@
           "effectiveDate": "2022-08-01",
           "requirements": [
             {
-              "number": "1a",
-              "summary": "Since joining, do 10 troop or patrol activities other than meetings, at least six outdoors, with three or more of those overnight in a tent or shelter you help put up.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "activity",
-                    "label": "Activity",
-                    "type": "text"
-                  },
-                  {
-                    "id": "place",
-                    "label": "Place",
-                    "type": "text"
-                  },
-                  {
-                    "id": "nights",
-                    "label": "Nights camped",
-                    "type": "number"
+              "number": "1",
+              "summary": "Go on more troop and patrol outings, and explain how to protect the outdoors when camping.",
+              "children": [
+                {
+                  "number": "1a",
+                  "summary": "Since joining, do 10 troop or patrol activities other than meetings, at least six outdoors, with three or more of those overnight in a tent or shelter you help put up.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activity",
+                        "label": "Activity",
+                        "type": "text"
+                      },
+                      {
+                        "id": "place",
+                        "label": "Place",
+                        "type": "text"
+                      },
+                      {
+                        "id": "nights",
+                        "label": "Nights camped",
+                        "type": "number"
+                      }
+                    ],
+                    "rowLabel": "activity",
+                    "rowLabelPlural": "activities"
                   }
-                ],
-                "rowLabel": "activity",
-                "rowLabelPlural": "activities"
-              }
+                },
+                {
+                  "number": "1b",
+                  "summary": "Explain how camping can affect the land and other visitors, and how the Outdoor Code and Leave No Trace protect the outdoors."
+                }
+              ]
             },
             {
-              "number": "1b",
-              "summary": "Explain how camping can affect the land and other visitors, and how the Outdoor Code and Leave No Trace protect the outdoors."
+              "number": "2",
+              "summary": "Plan, budget and cook a campout's meals, and handle food safely.",
+              "children": [
+                {
+                  "number": "2a",
+                  "summary": "Help plan a breakfast, lunch and dinner, at least two of them cooked, for a 1a campout, and explain how the menu follows MyPlate or the current USDA model and meets the trip's nutritional needs."
+                },
+                {
+                  "number": "2b",
+                  "summary": "Budget the 2a menu for three or more youth, list the food amounts, and get the ingredients."
+                },
+                {
+                  "number": "2c",
+                  "summary": "Show the cookware and gear you'll need to cook and serve the 2a meals."
+                },
+                {
+                  "number": "2d",
+                  "summary": "Show how to handle and store fresh meat, dairy, eggs, vegetables and other perishables safely, and how to get rid of camp trash and waste water."
+                },
+                {
+                  "number": "2e",
+                  "summary": "Be the cook on a campout: oversee your helpers with the stove or fire, make the 2a meals, and supervise cleanup."
+                }
+              ]
             },
             {
-              "number": "2a",
-              "summary": "Help plan a breakfast, lunch and dinner, at least two of them cooked, for a 1a campout, and explain how the menu follows MyPlate or the current USDA model and meets the trip's nutritional needs."
+              "number": "3",
+              "summary": "Learn lashings and the hitches they use, and build a camp gadget.",
+              "children": [
+                {
+                  "number": "3a",
+                  "summary": "Discuss when lashings are and aren't a good choice."
+                },
+                {
+                  "number": "3b",
+                  "summary": "Show how to tie a timber hitch and a clove hitch."
+                },
+                {
+                  "number": "3c",
+                  "summary": "Show how to tie square, shear and diagonal lashings to join two or more poles or staves."
+                },
+                {
+                  "number": "3d",
+                  "summary": "Lash together a useful camp gadget or structure."
+                }
+              ]
             },
             {
-              "number": "2b",
-              "summary": "Budget the 2a menu for three or more youth, list the food amounts, and get the ingredients."
+              "number": "4",
+              "summary": "Navigate an orienteering course with map and compass, and a route with GPS.",
+              "children": [
+                {
+                  "number": "4a",
+                  "summary": "Finish an orienteering course of at least a mile with map and compass, measuring the height or width of objects along it."
+                },
+                {
+                  "number": "4b",
+                  "summary": "Show how to use a GPS unit or app, then use it to find where you are, pick a destination, plan the route and follow it there."
+                }
+              ]
             },
             {
-              "number": "2c",
-              "summary": "Show the cookware and gear you'll need to cook and serve the 2a meals."
-            },
-            {
-              "number": "2d",
-              "summary": "Show how to handle and store fresh meat, dairy, eggs, vegetables and other perishables safely, and how to get rid of camp trash and waste water."
-            },
-            {
-              "number": "2e",
-              "summary": "Be the cook on a campout: oversee your helpers with the stove or fire, make the 2a meals, and supervise cleanup."
-            },
-            {
-              "number": "3a",
-              "summary": "Discuss when lashings are and aren't a good choice."
-            },
-            {
-              "number": "3b",
-              "summary": "Show how to tie a timber hitch and a clove hitch."
-            },
-            {
-              "number": "3c",
-              "summary": "Show how to tie square, shear and diagonal lashings to join two or more poles or staves."
-            },
-            {
-              "number": "3d",
-              "summary": "Lash together a useful camp gadget or structure."
-            },
-            {
-              "number": "4a",
-              "summary": "Finish an orienteering course of at least a mile with map and compass, measuring the height or width of objects along it."
-            },
-            {
-              "number": "4b",
-              "summary": "Show how to use a GPS unit or app, then use it to find where you are, pick a destination, plan the route and follow it there."
-            },
-            {
-              "number": "5a",
-              "summary": "Identify at least 10 kinds of native plants near home or camp, or show evidence of them: fallen leaves or fruit, a collection you made, or your own photos.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "plant",
-                    "label": "Plant",
-                    "type": "text"
-                  },
-                  {
-                    "id": "how",
-                    "label": "How you identified it",
-                    "type": "text"
+              "number": "5",
+              "summary": "Identify native plants, and learn to forecast and prepare for dangerous weather.",
+              "children": [
+                {
+                  "number": "5a",
+                  "summary": "Identify at least 10 kinds of native plants near home or camp, or show evidence of them: fallen leaves or fruit, a collection you made, or your own photos.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "plant",
+                        "label": "Plant",
+                        "type": "text"
+                      },
+                      {
+                        "id": "how",
+                        "label": "How you identified it",
+                        "type": "text"
+                      }
+                    ],
+                    "rowLabel": "plant",
+                    "rowLabelPlural": "plants"
                   }
-                ],
-                "rowLabel": "plant",
-                "rowLabelPlural": "plants"
-              }
+                },
+                {
+                  "number": "5b",
+                  "summary": "Name two ways to get a forecast for an outing, and explain why forecasts matter when planning."
+                },
+                {
+                  "number": "5c",
+                  "summary": "Describe three or more natural signs that dangerous weather is coming, what it could lead to, and what to do."
+                },
+                {
+                  "number": "5d",
+                  "summary": "Describe the extreme weather you could meet outdoors in your area, and discuss how to judge the risk beforehand, plan around it, and prepare and respond."
+                }
+              ]
             },
             {
-              "number": "5b",
-              "summary": "Name two ways to get a forecast for an outing, and explain why forecasts matter when planning."
+              "number": "6",
+              "summary": "Pass the swimmer test and learn boating safety and a line rescue.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "Pass the Scouting America swimmer test."
+                },
+                {
+                  "number": "6b",
+                  "summary": "Explain how to keep a trip afloat safe."
+                },
+                {
+                  "number": "6c",
+                  "summary": "Name the main parts of a canoe, kayak or other boat, and of a paddle or oar."
+                },
+                {
+                  "number": "6d",
+                  "summary": "Explain how to position your body in boats of different types and sizes, and why it matters."
+                },
+                {
+                  "number": "6e",
+                  "summary": "With a helper and a practice victim about 30 feet out in deep water, show a line rescue as both tender and rescuer."
+                }
+              ]
             },
             {
-              "number": "5c",
-              "summary": "Describe three or more natural signs that dangerous weather is coming, what it could lead to, and what to do."
+              "number": "7",
+              "summary": "Learn more first aid and rescue skills, and prepare your home for emergencies.",
+              "children": [
+                {
+                  "number": "7a",
+                  "summary": "Show how to bandage a sprained ankle and injuries to the head, upper arm and collarbone."
+                },
+                {
+                  "number": "7b",
+                  "summary": "Show how to move a person out of a smoke-filled room and carry someone with a sprained ankle 25 yards or more, both alone and with a partner."
+                },
+                {
+                  "number": "7c",
+                  "summary": "Tell the five most common warning signs of a heart attack, and explain how CPR is done."
+                },
+                {
+                  "number": "7d",
+                  "summary": "Describe the utilities in your home or meeting place, their hazards, and how to respond to emergencies with them."
+                },
+                {
+                  "number": "7e",
+                  "summary": "Make a home emergency plan covering fire, storms, and power and water outages."
+                },
+                {
+                  "number": "7f",
+                  "summary": "Explain how to get safe drinking water in an emergency."
+                }
+              ]
             },
             {
-              "number": "5d",
-              "summary": "Describe the extreme weather you could meet outdoors in your area, and discuss how to judge the risk beforehand, plan around it, and prepare and respond."
-            },
-            {
-              "number": "6a",
-              "summary": "Pass the Scouting America swimmer test."
-            },
-            {
-              "number": "6b",
-              "summary": "Explain how to keep a trip afloat safe."
-            },
-            {
-              "number": "6c",
-              "summary": "Name the main parts of a canoe, kayak or other boat, and of a paddle or oar."
-            },
-            {
-              "number": "6d",
-              "summary": "Explain how to position your body in boats of different types and sizes, and why it matters."
-            },
-            {
-              "number": "6e",
-              "summary": "With a helper and a practice victim about 30 feet out in deep water, show a line rescue as both tender and rescuer."
-            },
-            {
-              "number": "7a",
-              "summary": "Show how to bandage a sprained ankle and injuries to the head, upper arm and collarbone."
-            },
-            {
-              "number": "7b",
-              "summary": "Show how to move a person out of a smoke-filled room and carry someone with a sprained ankle 25 yards or more, both alone and with a partner."
-            },
-            {
-              "number": "7c",
-              "summary": "Tell the five most common warning signs of a heart attack, and explain how CPR is done."
-            },
-            {
-              "number": "7d",
-              "summary": "Describe the utilities in your home or meeting place, their hazards, and how to respond to emergencies with them."
-            },
-            {
-              "number": "7e",
-              "summary": "Make a home emergency plan covering fire, storms, and power and water outages."
-            },
-            {
-              "number": "7f",
-              "summary": "Explain how to get safe drinking water in an emergency."
-            },
-            {
-              "number": "8a",
-              "summary": "After Second Class 7a, get at least 30 minutes of activity a day, five days a week, for four more weeks, and log it.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "start",
-                    "label": "Week starting",
-                    "type": "date"
-                  },
-                  {
-                    "id": "activities",
-                    "label": "Activities",
-                    "type": "multiline-text"
+              "number": "8",
+              "summary": "Stay active for four more weeks, and set a goal to keep it up.",
+              "children": [
+                {
+                  "number": "8a",
+                  "summary": "After Second Class 7a, get at least 30 minutes of activity a day, five days a week, for four more weeks, and log it.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "start",
+                        "label": "Week starting",
+                        "type": "date"
+                      },
+                      {
+                        "id": "activities",
+                        "label": "Activities",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "week",
+                    "rowLabelPlural": "weeks",
+                    "rowCount": 4
                   }
-                ],
-                "rowLabel": "week",
-                "rowLabelPlural": "weeks",
-                "rowCount": 4
-              }
+                },
+                {
+                  "number": "8b",
+                  "summary": "Talk about what was hard and what went well in 8a, and set a goal to stay active every day."
+                }
+              ]
             },
             {
-              "number": "8b",
-              "summary": "Talk about what was hard and what went well in 8a, and set a goal to stay active every day."
-            },
-            {
-              "number": "9a",
-              "summary": "Meet with someone your leader approves, such as an elected official, judge or teacher, to discuss a U.S. citizen's constitutional rights and duties."
-            },
-            {
-              "number": "9b",
-              "summary": "Look into a local environmental issue, share what you learn with your patrol or troop, and say what you or your community could do."
-            },
-            {
-              "number": "9c",
-              "summary": "Note the trash you make on an outing, then plan to reduce, recycle or repurpose what you bring on the next similar one, carry out the plan and compare."
-            },
-            {
-              "number": "9d",
-              "summary": "Give three hours of service on Scoutmaster-approved projects not used for Tenderfoot 7b or Second Class 8e, and explain how it relates to the Scout Law.",
-              "tracker": {
-                "columns": [
-                  {
-                    "id": "date",
-                    "label": "Date",
-                    "type": "date"
-                  },
-                  {
-                    "id": "hours",
-                    "label": "Hours",
-                    "type": "number",
-                    "total": {
-                      "needed": 3,
-                      "label": "hour",
-                      "labelPlural": "hours"
-                    }
-                  },
-                  {
-                    "id": "work",
-                    "label": "What you did",
-                    "type": "multiline-text"
+              "number": "9",
+              "summary": "Learn about citizenship and the environment, and give three hours of service.",
+              "children": [
+                {
+                  "number": "9a",
+                  "summary": "Meet with someone your leader approves, such as an elected official, judge or teacher, to discuss a U.S. citizen's constitutional rights and duties."
+                },
+                {
+                  "number": "9b",
+                  "summary": "Look into a local environmental issue, share what you learn with your patrol or troop, and say what you or your community could do."
+                },
+                {
+                  "number": "9c",
+                  "summary": "Note the trash you make on an outing, then plan to reduce, recycle or repurpose what you bring on the next similar one, carry out the plan and compare."
+                },
+                {
+                  "number": "9d",
+                  "summary": "Give three hours of service on Scoutmaster-approved projects not used for Tenderfoot 7b or Second Class 8e, and explain how it relates to the Scout Law.",
+                  "tracker": {
+                    "columns": [
+                      {
+                        "id": "date",
+                        "label": "Date",
+                        "type": "date"
+                      },
+                      {
+                        "id": "hours",
+                        "label": "Hours",
+                        "type": "number",
+                        "total": {
+                          "needed": 3,
+                          "label": "hour",
+                          "labelPlural": "hours"
+                        }
+                      },
+                      {
+                        "id": "work",
+                        "label": "What you did",
+                        "type": "multiline-text"
+                      }
+                    ],
+                    "rowLabel": "project",
+                    "rowLabelPlural": "projects"
                   }
-                ],
-                "rowLabel": "project",
-                "rowLabelPlural": "projects"
-              }
+                }
+              ]
             },
             {
               "number": "10",
@@ -25898,12 +26066,18 @@
               "monthsInRank": 4
             },
             {
-              "number": "6a",
-              "summary": "With your parent or guardian, work through the exercises in How to Protect Your Children from Child Abuse: A Parent's Guide."
-            },
-            {
-              "number": "6b",
-              "summary": "With permission, watch the Personal Safety Awareness videos."
+              "number": "6",
+              "summary": "Learn about personal safety with your parent or guardian.",
+              "children": [
+                {
+                  "number": "6a",
+                  "summary": "With your parent or guardian, work through the exercises in How to Protect Your Children from Child Abuse: A Parent's Guide."
+                },
+                {
+                  "number": "6b",
+                  "summary": "With permission, watch the Personal Safety Awareness videos."
+                }
+              ]
             },
             {
               "number": "7",

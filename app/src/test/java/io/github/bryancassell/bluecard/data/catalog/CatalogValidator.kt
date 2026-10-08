@@ -6,6 +6,7 @@ package io.github.bryancassell.bluecard.data.catalog
  */
 object CatalogValidator {
     private val idPattern = Regex("[a-z0-9]+(-[a-z0-9]+)*")
+    private val wholeNumber = Regex("[0-9]+")
 
     fun validate(catalog: Catalog): List<String> = buildList {
         if (catalog.formatVersion != CATALOG_FORMAT_VERSION) {
@@ -95,7 +96,29 @@ object CatalogValidator {
         rules: RequirementRules
     ): List<String> = buildList {
         if (version.requirements.isEmpty()) add("$where: has no requirements")
+        // Lettered requirements go under a numbered parent, even where the official text has none.
+        // A blank number is reported as blank, so it's skipped here.
+        version.requirements
+            .filter { it.number.isNotBlank() && !wholeNumber.matches(it.number) }
+            .forEach {
+                add(
+                    "$where, requirement \"${it.number}\": " +
+                        "is at the top level, so its number must be a whole number"
+                )
+            }
         val all = version.requirements.flatMap { it.withDescendants() }
+        // A digit would make it another number: "10" isn't under "1".
+        all.filter { it.number.isNotBlank() }.forEach { parent ->
+            parent.children
+                .filter { it.number.isNotBlank() && !it.number.isUnder(parent.number) }
+                .forEach {
+                    add(
+                        "$where, requirement \"${it.number}\": " +
+                            "is under \"${parent.number}\", so its number must start with " +
+                            "\"${parent.number}\", not followed by a digit"
+                    )
+                }
+        }
         all.duplicatesBy { it.number }.forEach {
             add("$where: requirement number \"$it\" is used more than once")
         }
@@ -210,6 +233,9 @@ object CatalogValidator {
     /** The keys that more than one of these items has. */
     private fun <T, K> List<T>.duplicatesBy(key: (T) -> K): Set<K> =
         groupBy(key).filterValues { it.size > 1 }.keys
+
+    private fun String.isUnder(parent: String): Boolean =
+        startsWith(parent) && getOrNull(parent.length)?.isDigit() != true
 
     private fun Requirement.withDescendants(): List<Requirement> =
         listOf(this) + children.flatMap { it.withDescendants() }

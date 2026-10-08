@@ -25,6 +25,7 @@ own documentation says so, and each such claim links to the page.
   - [Double taps](#double-taps)
   - [Language and layout direction](#language-and-layout-direction)
   - [Screen reader labels](#screen-reader-labels)
+  - [Live regions](#live-regions)
   - [Theme](#theme)
 - [Data layer](#data-layer)
   - [Repositories](#repositories)
@@ -243,6 +244,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   seen (`sendSemanticsPropertyChangeEvents` in
   `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
   message composed as a new node, as in its own branch, isn't announced.
+  Compose also reports a node's first layout as a change to it, which TalkBack
+  reads in a live region (see [Live regions](#live-regions)), so this and the
+  cases below that aren't announced are being checked again in
+  [#281](https://github.com/bryancassell/bluecard/issues/281).
   - **Live regions are what Android points to.** When Android 16 deprecated
     `announceForAccessibility`, its
     [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
@@ -459,6 +464,34 @@ both taps of a double tap can reach it.
   text, it replaces the text's label. Tests of such a label check the `Text`
   node in the unmerged tree, and that the button has only one description: the
   merged node has the description wherever it's set.
+
+### Live regions
+
+- **A live region that mustn't be read out as its screen appears becomes one
+  only when its text first changes.** Compose reports each change to a node's
+  size or position, its first layout included, as a change to that node
+  (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose
+  UI 1.12.1). TalkBack reads a live region on any change it's the source of,
+  whatever changed and whether or not it's on screen yet
+  (`EventTypeWindowContentChangedFeedbackRule` in TalkBack's source). So a live
+  region is read when it appears, and whenever it moves within its parent or
+  resizes. That's how each new snackbar is read (see
+  [Load and save failures](#load-and-save-failures)). A polite live region
+  read as its screen appears holds back the screen's heading, since new speech
+  can't cut it off: Badges' count held it back by about 2 seconds
+  ([#278](https://github.com/bryancassell/bluecard/issues/278), `MatchCount`
+  in `BadgesScreen.kt`). Whether `ScreenMessage` and the import dialog's
+  `UnearnedRanks` need the same is
+  [#281](https://github.com/bryancassell/bluecard/issues/281).
+- **Set a live region from a value read while composing, not from a state read
+  in the `semantics` block.** Compose updates a `semantics` block as soon as a
+  state it reads changes, before the next frame composes the new text. TalkBack
+  read out the old count then, before the new one.
+- **In local tests, `LiveRegionReadouts` (`testing/LiveRegion.kt`) lists what
+  TalkBack would read out**, looking at each event's source as it's sent. To
+  see the state between a change and the next frame, wait a frame at a time
+  and idle the main looper in between, as `BadgesScreenTest` does: Robolectric
+  otherwise runs the next frame before Compose's posted accessibility check.
 
 ### Theme
 
@@ -716,6 +749,12 @@ unique within a requirements version. Progress is stored against the badge ID,
 its version and the requirement number; because switching versions starts
 requirement progress fresh, numbers only need to be unique within one version.
 
+A rank's parent that the official PDF leaves out, such as Scout `1` above
+`1a`–`1f`, is numbered too, so ranks nest like badges
+([#286](https://github.com/bryancassell/bluecard/issues/286)). Like an option's
+letter (Cycling `6B`), its number comes from the official text: here, from the
+lettered requirements that imply it.
+
 ### Shipping and authoring
 
 - **The catalog is a JSON file bundled in `assets/`**, loaded into memory at
@@ -852,9 +891,11 @@ A requirement's own work is stored as that requirement's own
 `RequirementProgress`, as for one marked complete by hand, so it needs no new
 table. The catalog marks the requirements that have own work, rather than every
 requirement with children needing a check, because most only group their
-children. The work can't be a child of its own, because the catalog's numbers
-and nesting must match the official page
-([#143](https://github.com/bryancassell/bluecard/issues/143)).
+children. The work can't be a child of its own, because it would need a number
+the official page doesn't have
+([#143](https://github.com/bryancassell/bluecard/issues/143)), unlike a rank's
+added parent, whose number its lettered requirements imply
+([Requirement IDs](#requirement-ids)).
 
 The date the scout gives a requirement completed by its fixed-row tracker is
 stored the same way: `completed` with the date, or with none once they remove
@@ -1205,10 +1246,51 @@ test still exports and imports through the real one.
   `WindowInsetsAnimation` events. A keyboard that appears in one step doesn't show the behavior that
   depends on frames, such as the page following the cursor. With its default
   graphics, Robolectric shows a page out of touch mode, where buttons can take
-  focus (native graphics start in touch mode). So a test of where focus goes
-  on a phone sets touch mode in a rule that runs before the compose rule opens
-  the page's window (`touchMode` in `TrackerEntryScreenTest`), and a test of a
-  hardware keyboard asks for keyboard mode (`InputModeManager`).
+  focus. Native graphics start in touch mode, as a phone is while the scout
+  taps it, so a test of where focus goes on a phone uses them, as every
+  screen's tests do (below). A test of a hardware keyboard asks for keyboard
+  mode (`InputModeManager`).
+- **Each screen's and dialog's tests run Google's accessibility checks**
+  ([ATF](https://github.com/google/Accessibility-Test-Framework-for-Android))
+  on every window, dialogs included, before each click, scroll, touch, key or
+  text input and again on the state the test ends in. Compose doesn't run them
+  before a semantics action, a focus request, or replacing or clearing a
+  field's text. A control with no label for screen readers or a touch target
+  under 48dp fails the test, so it doesn't wait for someone to try the page
+  with TalkBack. The class applies the `AccessibilityChecks` rule
+  (`testing/`) inside its compose rule. Compose's own
+  `enableAccessibilityChecks()` checks nothing under Robolectric, where ATF
+  skips composables, so the rule works around that through a hook restricted
+  to Compose's own libraries
+  ([#196](https://github.com/bryancassell/bluecard/issues/196) compares the
+  options). The checks also need Robolectric's native graphics,
+  so these classes use them, and a test in them that reads pixels runs on SDK
+  36, as screenshot tests do. The workaround relies on details that aren't
+  public API, so `AccessibilityChecksTest` checks that each kind of problem
+  still fails a test. Native graphics and the checks added no measurable time
+  to the suite (checked with Compose UI 1.12.1, ATF 4.1.1 and Robolectric
+  4.17).
+  - **Only errors fail a test, and contrast isn't checked.** ATF checks
+    contrast only from screenshots, so the rule takes none. Taken in these
+    tests, they gave hundreds of warnings that weren't about the app's colors:
+    most screen tests use Material's default theme, and disabled buttons and
+    text partway through fading in were counted too. `BlueCardColorSchemeTest`
+    checks the app's colors instead ([Theme](#theme)).
+  - **Every test that opens the date picker uses a taller screen**
+    (`DATE_PICKER_SCREEN`). On Robolectric's default 320x470dp screen, a month
+    that spans six weeks gives each day a 47dp touch target. A short window,
+    such as a phone's in landscape, has the same problem in the app
+    ([#282](https://github.com/bryancassell/bluecard/issues/282)).
+  - **Navigation tests and other components' tests don't run them**, such as
+    `MainActivityTest`, `PageTransitionsTest` and the text field tests. What
+    they show is checked by the screens' and dialogs' own tests. Under native
+    graphics, launching `MainActivity` never finishes, because Robolectric
+    keeps drawing frames, and one of `PageTransitionsTest`'s frame-by-frame
+    checks fails.
+  - **Any other result that can't be fixed yet is suppressed** in the rule's
+    validator (`setSuppressingResultMatcher`), matching only that result, with
+    a comment linking its issue. The date picker's tests use a taller screen
+    instead (above), and #282 tracks the problem.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally
@@ -1259,8 +1341,22 @@ the image for the computer's own ABI.
 - **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
   every job the same key, and only the first job to save it wins, so any other
   job sets `cache-read-only: true`.
-- The job downloads the emulator and the system image on every run. Caching
-  them is #5.
+- **The emulator isn't cached** (#5). Every run, the setup task downloads the
+  emulator and the 2.1 GB system image and cold-boots the emulator to save a
+  snapshot, about 3 minutes that partly overlap building the APKs. #276
+  measured caching it in October 2026, with the Gradle cache restored:
+  - No cache: the job took about 4m10s.
+  - The emulator, image, AVD and snapshot (a 4.4 GB entry): about 3m50s,
+    since restoring took over a minute.
+  - Only the AVD and snapshot (2.5 GB), keyed by the installed emulator and
+    image versions: about 3m35s. The snapshot loaded on every runner CPU
+    tried.
+
+  Build takes about 6 minutes and runs at the same time, so neither made CI
+  finish sooner. Each would also use a quarter to almost half of the
+  repository's 10 GB of Actions cache, which the Gradle caches need. If Build
+  ever finishes before this job,
+  revisit the AVD-only cache, which is in #276's history.
 
 ### Coverage
 
@@ -1414,7 +1510,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
-| [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
+| [Requirement IDs](#requirement-ids) | A requirement's official number, or for a rank's parent the PDF leaves out, the number its lettered requirements imply; unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format; a row's date is only when it was typed in |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
@@ -1426,6 +1522,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
 | [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text is set on the `Text` inside it | TalkBack read one set on the button and then the text too |
+| [Live regions](#live-regions) | A live region that mustn't be read out as its screen appears becomes one with its first new text | Compose reports a node's first layout as a change, and TalkBack reads a live region on any change it's the source of. The count on Badges held back the heading by 2 seconds |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
@@ -1433,6 +1530,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on an emulator by an instrumented test, outside the coverage check | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with the Google APIs image and 16 KB pages, in its own required CI job | Tests on the target SDK and on the page size Play requires. The emulator action used before couldn't boot API 37 images, and the lighter test images stop at API 36 |
+| [Emulator cache in CI](#instrumented-tests-in-ci) | None: each run downloads the emulator and image and makes a new snapshot | Build takes longer than the instrumented tests job, so a cache doesn't make CI finish sooner, and it would take 2.5–4.4 GB of the 10 GB of Actions cache that the Gradle caches need |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI's emulator runs only the debug build's instrumented tests, and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |

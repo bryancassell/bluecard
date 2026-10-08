@@ -47,7 +47,7 @@ data class RankDetail(val rankId: String) : BlueCardNavKey
 @Serializable
 data object DataManagement : BlueCardNavKey
 
-/** A requirement of a badge or rank, by its official number, such as "4c". */
+/** A requirement of a badge or rank, by its catalog number, such as "4c". */
 @Serializable
 data class RequirementDetail(val advancementId: String, val number: String) : BlueCardNavKey
 
