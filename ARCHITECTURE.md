@@ -391,6 +391,24 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   drawn, a frame or more behind the back stack, so a quick Back would ask on a
   page sliding away, or close one with unsaved changes before it's drawn again.
 
+- **A page that's left with input focus doesn't hand it to the next one.**
+  Out of touch mode, Compose clears the view's focus as a focused item leaves
+  composition, Android's `View.clearFocus()` asks the view to take focus
+  again, and Compose gives it to the first item that can take it, on whichever
+  page is shown. Focus went from Badges' search field to a Home button, and
+  from there back to the search field, which opened the keyboard, and TalkBack
+  followed it ([#285](https://github.com/bryancassell/bluecard/issues/285)).
+  A phone leaves touch mode on a key press, such as Enter or Tab, and
+  TalkBack's gestures don't bring it back: only a touch that reaches the app
+  does. So when the page shown changes while one of its items has focus, a
+  focus target around the pages takes it (`BlueCardNavDisplay`). It can take
+  focus only until focus moves back into a page: Compose moves focus out to a
+  parent that can take it on Back (`FocusDirection.Exit`), so Back would stop
+  there rather than leave the page, and Tab would stop there as it starts on a
+  page or wraps around. Its `focusProperties` send the arrow keys into the
+  page, since Compose's arrow-key search from a focused parent looks only at
+  the parent's siblings; Tab moves in by itself.
+
 ### Double taps
 
 The other app or the next screen takes a moment to cover the one tapped, so
@@ -1504,6 +1522,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
+| [Focus between pages](#navigation) | A focus target around the pages takes input focus from a page that's left with it, and can take focus only until focus moves back into a page | Out of touch mode, Compose gave focus to the next page's first item, which opened the keyboard on Badges. A target that could always take focus would stop Back leaving a page, and be an empty stop for Tab |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>`, saved with the sealed interface's serializer, not `rememberNavBackStack` | No reflection, so R8 can't break saving the back stack and local tests cover it. The compiler rejects a key outside `BlueCardNavKey`, and `NavKeysTest` one missing `@Serializable`. Needs no experimental API, unlike registering keys in a `SavedStateConfiguration` with `subclassesOfSealed` |
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |

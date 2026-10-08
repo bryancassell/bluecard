@@ -2,12 +2,21 @@ package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.foundation.focusGroup
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusTarget
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -174,13 +183,53 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         sceneStrategies = listOf(SinglePaneSceneStrategy()),
         onBack = goBack
     )
+    // A focus target around the pages, which takes input focus from a page that's left with it,
+    // so the page shown next doesn't get it. Otherwise, out of touch mode, Compose clears the
+    // view's focus as the focused item leaves composition, Android's View.clearFocus() asks the
+    // view to take focus again, and Compose gives it to the first item that can take it: on
+    // Badges, the search field, which opened the keyboard, and TalkBack followed it (#285).
+    val holder = remember { FocusRequester() }
+    val page = remember { FocusRequester() }
+    var hasFocus by remember { mutableStateOf(false) }
+    // The holder can take focus only from then until focus moves back into a page. Compose moves
+    // focus out to a parent that can take it on Back, so Back wouldn't leave the page, and Tab
+    // would stop on the holder as it starts on a page or wraps around.
+    var canHold by remember { mutableStateOf(false) }
+    // The page that's left is still composed as the next one comes in, with its item focused.
+    LaunchedEffect(shownBackStack.last()) {
+        if (hasFocus) {
+            canHold = true
+            holder.requestFocus()
+        }
+    }
     NavDisplay(
         sceneState = sceneState,
         // Nothing reports a back swipe to this state, so NavDisplay never plays one.
         navigationEventState = rememberNavigationEventState(sceneState),
         // Pages slide past the sides of their area. Clip them to it, so they don't draw under
         // a navigation bar or cutout at the side.
-        modifier = modifier.clipToBounds(),
+        modifier = modifier
+            .clipToBounds()
+            .focusRequester(holder)
+            .onFocusChanged {
+                hasFocus = it.hasFocus
+                // Not whenever the holder isn't focused: as it takes focus from a page item,
+                // Compose reports it unfocused for a moment, and takes focus away from a node
+                // that can no longer take it.
+                if (it.hasFocus && !it.isFocused) canHold = false
+            }
+            .focusProperties {
+                canFocus = canHold
+                // The arrow keys move from it into the page, as they do when nothing is
+                // focused. Tab does so by itself.
+                up = page
+                down = page
+                left = page
+                right = page
+            }
+            .focusTarget()
+            .focusRequester(page)
+            .focusGroup(),
         transitionSpec = {
             // Neither back stack is a page of the other, so they crossfade, as NavDisplay
             // does by default.
