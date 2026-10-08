@@ -6,11 +6,13 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -22,9 +24,12 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -34,15 +39,21 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
+import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
+import io.github.bryancassell.bluecard.testing.PHONE_IN_LANDSCAPE
+import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.paragraphDirection
@@ -95,6 +106,8 @@ class BadgesScreenTest {
         }
     }
 
+    private val onScreenKeyboard = OnScreenKeyboard(composeTestRule)
+
     // Tests can change it after show(), as the ViewModel would.
     private var uiState by mutableStateOf<BadgesUiState>(BadgesUiState.Loading)
 
@@ -108,7 +121,13 @@ class BadgesScreenTest {
             // Before the first layout, whose events Compose sends after the frame.
             SideEffect { readouts?.listenTo(view) }
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
-                BadgesScreen(uiState = uiState, query = query, onOpenBadge = { openedBadges += it })
+                onScreenKeyboard.Content {
+                    BadgesScreen(
+                        uiState = uiState,
+                        query = query,
+                        onOpenBadge = { openedBadges += it }
+                    )
+                }
             }
         }
     }
@@ -559,6 +578,69 @@ class BadgesScreenTest {
         show(BadgesUiState.Ready(badges))
 
         noMatchesMessage().assertDoesNotExist()
+    }
+
+    // Seen on a phone in landscape: the heading kept its room, so the field was squeezed into a
+    // strip that hid what the scout typed, with no room left for the count (#308).
+    @Config(qualifiers = PHONE_IN_LANDSCAPE)
+    @Test
+    fun keyboardOpensInLandscape_fieldAndCountShowAboveIt_withoutTheHeading() {
+        show(BadgesUiState.Ready(badges))
+
+        searchField().performClick()
+        onScreenKeyboard.open(OnScreenKeyboard.LANDSCAPE_HEIGHT)
+
+        searchField().assertHeightIsAtLeast(OutlinedTextFieldDefaults.MinHeight)
+        onScreenKeyboard.assertAbove(
+            searchField().getUnclippedBoundsInRoot(),
+            OnScreenKeyboard.LANDSCAPE_HEIGHT
+        )
+        onScreenKeyboard.assertAbove(
+            shownCount().getUnclippedBoundsInRoot(),
+            OnScreenKeyboard.LANDSCAPE_HEIGHT
+        )
+        composeTestRule.onNodeWithText("Merit badges").assertIsNotDisplayed()
+    }
+
+    @Config(qualifiers = PHONE_IN_LANDSCAPE)
+    @Test
+    fun keyboardClosesInLandscape_headingComesBack() {
+        show(BadgesUiState.Ready(badges))
+        searchField().performClick()
+        onScreenKeyboard.open(OnScreenKeyboard.LANDSCAPE_HEIGHT)
+
+        onScreenKeyboard.close(OnScreenKeyboard.LANDSCAPE_HEIGHT)
+
+        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+    }
+
+    // A phone in portrait has room for the heading, the field and the count above the keyboard.
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensInPortrait_headingStays() {
+        show(BadgesUiState.Ready(badges))
+
+        searchField().performClick()
+        onScreenKeyboard.open()
+
+        composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
+        onScreenKeyboard.assertAbove(searchField().getUnclippedBoundsInRoot())
+        onScreenKeyboard.assertAbove(shownCount().getUnclippedBoundsInRoot())
+    }
+
+    // A right-to-left translation would be laid out right to left with no other change, so the
+    // heading starts at the right, as in a Column.
+    @Test
+    fun rightToLeftLayout_putsHeadingAtTheRight() {
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                BadgesScreen(BadgesUiState.Ready(badges), query = query, onOpenBadge = {})
+            }
+        }
+
+        val heading = composeTestRule.onNode(isHeading()).getBoundsInRoot()
+        val page = composeTestRule.onRoot().getBoundsInRoot()
+        assertEquals((page.right - 16.dp).value, heading.right.value, 0.5f)
     }
 
     // On a phone, a new field would lose focus and close the keyboard as the scout types.
