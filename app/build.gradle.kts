@@ -65,9 +65,7 @@ android {
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
         }
         // The emulator that runs instrumented tests in CI, on the target SDK. Gradle downloads its
-        // system image and starts and stops it: ./gradlew pixel6Api37DebugAndroidTest. CI caches
-        // this device's emulator, image and snapshot, so change the managed-device cache's key in
-        // .github/workflows/ci.yml when changing the device.
+        // system image and starts and stops it: ./gradlew pixel6Api37DebugAndroidTest.
         managedDevices {
             localDevices {
                 create("pixel6Api37") {
