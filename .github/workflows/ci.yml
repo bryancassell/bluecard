@@ -57,6 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     # Emulator jobs on GitHub's runners sometimes hang instead of failing.
     timeout-minutes: 30
+    # TEMPORARY: six copies land on different runners, to see which CPUs load the snapshot.
+    strategy:
+      fail-fast: false
+      matrix:
+        copy: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v7
 
@@ -110,7 +115,7 @@ jobs:
             -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
             2>&1 | tee gradle-info.log | grep -E --line-buffered '^> Task |BUILD |FAIL'
       - if: always()
-        run: grep -i -E 'snapshot|loadable|avd|emulator|qemu' gradle-info.log | cut -c1-300 | head -400
+        run: grep -E 'loadable|Loadable|snapshot|Snapshot|AVD creation' gradle-info.log | grep -v 'ClasspathEntrySnapshot|classpath snapshot' | cut -c1-300 | head -100
 
       # Only pushes to main save the cache, as with the Gradle cache. Pull requests
       # read main's entry instead of each saving a copy, which would push the
