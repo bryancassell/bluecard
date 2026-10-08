@@ -620,7 +620,7 @@ class RequirementDetailScreenTest {
         show(
             withLog.copy(
                 tracker = withLog.tracker?.copy(
-                    count = TrackerCount(2, null, "sessions", rowsNeeded = 10)
+                    count = TrackerCount(2, null, "sessions", outOf = 10)
                 )
             )
         )

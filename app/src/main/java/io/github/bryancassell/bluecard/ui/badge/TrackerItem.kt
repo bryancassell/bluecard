@@ -40,12 +40,9 @@ data class TrackerCount(
     val rows: String,
     /** Its columns that have a total ([totals]), in column order. */
     val totals: List<TrackerTotal> = emptyList(),
-    /** In a log, how many rows its requirement asks for, if the catalog says. */
-    val rowsNeeded: Int? = null
-) {
-    /** What [recorded] is out of, as in "8 of 12 weeks", or null to show it alone. */
-    val outOf: Int? get() = rowCount ?: rowsNeeded
-}
+    /** What [recorded] is out of ([TrackerDefinition.rowsOutOf]), or null to show it alone. */
+    val outOf: Int? = rowCount
+)
 
 /** One row of a tracker. */
 data class TrackerRow(
@@ -71,7 +68,7 @@ fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(
 /** How much of this tracker the [entries] recorded for its requirement fill in. */
 fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
     val recorded = rowCount?.let { count -> filledRows(entries, count).size } ?: entries.size
-    return TrackerCount(recorded, rowCount, rowsLabel(recorded), totals(entries), rowsNeeded)
+    return TrackerCount(recorded, rowCount, rowsLabel(recorded), totals(entries), rowsOutOf)
 }
 
 private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow> =

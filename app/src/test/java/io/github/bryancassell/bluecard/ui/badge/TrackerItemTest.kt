@@ -62,7 +62,7 @@ class TrackerItemTest {
 
         val item = atLeastThree.toItem(fourEntries)
 
-        assertEquals(TrackerCount(4, null, "sessions", rowsNeeded = 3), item.count)
+        assertEquals(TrackerCount(4, null, "sessions", outOf = 3), item.count)
         assertEquals(3, item.count.outOf)
         assertTrue(item.addsRows)
     }

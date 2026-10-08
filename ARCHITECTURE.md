@@ -718,22 +718,19 @@ totals).
   not be a number, and isn't counted. They're added as `BigDecimal`, so 0.1 and
   0.2 hours make 0.3.
 
-A log can also have the number of rows its requirement asks for, such as
-Second Class 4's at least 10 animals (`TrackerDefinition.rowsNeeded`). Its
-count is then out of that number, as a fixed-row tracker's is out of its rows
-(`rowsOutOf`), so the row, the page and the report show "6 of 10 animals"
-(PRD.md's Rows a log needs,
-[#284](https://github.com/bryancassell/bluecard/issues/284)).
+A log can also have the number of rows its requirement asks for
+(`TrackerDefinition.rowsNeeded`, PRD.md's Rows a log needs,
+[#284](https://github.com/bryancassell/bluecard/issues/284)). Every count of a
+tracker's rows is out of `rowsOutOf`, its fixed rows or that number, so the
+screens and the report agree.
 
-- **Completion doesn't read it either.** "At least N" requirements are logs so
-  the scout can record more than N, and some rows may not count, such as
-  Second Class 1a's activities that aren't outdoors, so the scout still checks
-  the requirement off.
-- **Its rows count toward the progress bar.** Each row up to the number is a
-  part, and checking the requirement off is one more
-  (`data/progress/FractionDone.kt`), as own work is on a fixed-row tracker.
-  Without that last part, the rows alone would fill the requirement's share of
-  the bar before it's complete.
+- **Completion doesn't read it either**, because some rows may not count, such
+  as Second Class 1a's activities that aren't outdoors.
+- **The progress bar counts its rows, with the check-off as one more part**
+  (`data/progress/FractionDone.kt`), so the rows can't fill the requirement's
+  share before it's complete. The catalog test keeps it off a requirement with
+  children, whose children decide the bar, and off a log with a total, whose
+  row shows the total instead.
 
 ### Requirement versions
 
