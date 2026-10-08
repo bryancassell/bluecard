@@ -238,6 +238,22 @@ class CatalogValidatorTest {
     }
 
     @Test
+    fun letteredTopLevelRequirement() {
+        val nested = Requirement(
+            number = "2",
+            summary = "Parent.",
+            children = listOf(Requirement(number = "2a", summary = "Nested, so it's fine."))
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1a\": " +
+                    "is at the top level, so its number must be a whole number"
+            ),
+            errorsForRequirements(Requirement(number = "1a", summary = "Has no parent."), nested)
+        )
+    }
+
+    @Test
     fun blankRequirementFields() {
         assertEquals(
             listOf(

@@ -7,6 +7,9 @@ package io.github.bryancassell.bluecard.data.catalog
 object CatalogValidator {
     private val idPattern = Regex("[a-z0-9]+(-[a-z0-9]+)*")
 
+    /** A blank number is reported on its own, so it doesn't fail this too. */
+    private val topLevelNumber = Regex("[0-9]*")
+
     fun validate(catalog: Catalog): List<String> = buildList {
         if (catalog.formatVersion != CATALOG_FORMAT_VERSION) {
             add("formatVersion is ${catalog.formatVersion}; this app reads $CATALOG_FORMAT_VERSION")
@@ -95,6 +98,13 @@ object CatalogValidator {
         rules: RequirementRules
     ): List<String> = buildList {
         if (version.requirements.isEmpty()) add("$where: has no requirements")
+        // Lettered requirements go under a numbered parent, even where the official text has none.
+        version.requirements.filterNot { topLevelNumber.matches(it.number) }.forEach {
+            add(
+                "$where, requirement \"${it.number}\": " +
+                    "is at the top level, so its number must be a whole number"
+            )
+        }
         val all = version.requirements.flatMap { it.withDescendants() }
         all.duplicatesBy { it.number }.forEach {
             add("$where: requirement number \"$it\" is used more than once")
