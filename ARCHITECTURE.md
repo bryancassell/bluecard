@@ -1167,10 +1167,12 @@ test still exports and imports through the real one.
   mode (`InputModeManager`).
 - **Each screen's and dialog's tests run Google's accessibility checks**
   ([ATF](https://github.com/google/Accessibility-Test-Framework-for-Android))
-  on every window, dialogs included, before every action and again on the
-  state the test ends in. A control with no label for screen readers or a
-  touch target under 48dp fails the test, so it doesn't wait for someone to
-  try the page with TalkBack. The class applies the `AccessibilityChecks` rule
+  on every window, dialogs included, before each click, scroll, touch, key or
+  text input and again on the state the test ends in. Compose doesn't run them
+  before a semantics action, a focus request, or replacing or clearing a
+  field's text. A control with no label for screen readers or a touch target
+  under 48dp fails the test, so it doesn't wait for someone to try the page
+  with TalkBack. The class applies the `AccessibilityChecks` rule
   (`testing/`) inside its compose rule. Compose's own
   `enableAccessibilityChecks()` checks nothing under Robolectric, where ATF
   skips composables, so the rule works around that through a hook restricted
@@ -1200,9 +1202,10 @@ test still exports and imports through the real one.
     graphics, launching `MainActivity` never finishes, because Robolectric
     keeps drawing frames, and one of `PageTransitionsTest`'s frame-by-frame
     checks fails.
-  - **A result that can't be fixed yet is suppressed** in the rule's
+  - **Any other result that can't be fixed yet is suppressed** in the rule's
     validator (`setSuppressingResultMatcher`), matching only that result, with
-    a comment linking its issue.
+    a comment linking its issue. The date picker's tests use a taller screen
+    instead (above), and #282 tracks the problem.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

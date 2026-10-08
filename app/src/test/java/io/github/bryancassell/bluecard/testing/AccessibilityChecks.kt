@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ComposeAccessibilityValidator
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityValidator
 import org.junit.rules.TestRule
@@ -17,16 +18,17 @@ import org.robolectric.shadows.ShadowBuild
 
 /**
  * A screen tall enough for Material's date picker to give each day a 48dp touch target, for every
- * test that opens it. On Robolectric's default screen (320x470dp), a month that spans six weeks
- * gives each day 47dp. On a short window, such as a phone's in landscape, the app's picker has the
- * same problem (#282).
+ * test that opens it: a small phone's. On Robolectric's default screen (320x470dp), a month that
+ * spans six weeks gives each day 47dp. On a short window, such as a phone's in landscape, the
+ * app's picker has the same problem (#282).
  */
-const val DATE_PICKER_SCREEN = SMALL_PHONE
+const val DATE_PICKER_SCREEN = "w360dp-h560dp"
 
 /**
  * Runs Google's Accessibility Test Framework (ATF) checks on every window, dialogs included,
- * before each action the test performs (click, scroll, text input and so on) and again on the
- * state the test ends in. They catch problems such as a control with no label for screen readers
+ * before each click, scroll, touch, key or text input the test performs, and again on the state
+ * the test ends in. Compose runs them before those actions only: a semantics action, a focus
+ * request, or replacing or clearing a field's text runs none. They catch problems such as a control with no label for screen readers
  * or a touch target smaller than 48dp, and fail the test with ATF's
  * `AccessibilityViewCheckException`. They take no screenshots, so ATF's contrast checks don't run.
  *
@@ -50,8 +52,10 @@ class AccessibilityChecks(private val composeTestRule: ComposeTestRule) : TestRu
             enableChecks()
             base.evaluate()
             // A test that only asserts has no action to check before, and nor does the state a
-            // test ends in.
-            composeTestRule.onAllNodes(isRoot()).tryPerformAccessibilityChecks()
+            // test ends in. Outside the compose rule, the page is gone and Compose would check
+            // nothing, so a missing page fails here.
+            composeTestRule.onAllNodes(isRoot()).onFirst().assertExists()
+                .tryPerformAccessibilityChecks()
         }
     }
 
@@ -59,9 +63,7 @@ class AccessibilityChecks(private val composeTestRule: ComposeTestRule) : TestRu
     // but restricted to Compose's own libraries, so a Compose update could change it.
     @Suppress("RestrictedApi")
     private fun enableChecks() {
-        val validator = AccessibilityValidator()
-            .setRunChecksFromRootView(true)
-            .setCaptureScreenshots(false)
+        val validator = AccessibilityValidator().setCaptureScreenshots(false)
         (composeTestRule as AndroidComposeTestRule<*, *>).setComposeAccessibilityValidator(
             object : ComposeAccessibilityValidator {
                 override fun check(view: View) {

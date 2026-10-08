@@ -21,11 +21,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheck
+import com.google.android.apps.common.testing.accessibility.framework.checks.SpeakableTextPresentCheck
+import com.google.android.apps.common.testing.accessibility.framework.checks.TouchTargetSizeCheck
 import com.google.android.apps.common.testing.accessibility.framework.integrations.espresso.AccessibilityViewCheckException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
-import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.Description
 import org.junit.runner.RunWith
 import org.junit.runners.model.Statement
@@ -39,34 +42,50 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class AccessibilityChecksTest {
-    @get:Rule
-    val composeTestRule = createComposeRule()
+    private val composeTestRule = createComposeRule()
 
-    /** Runs [test] under [AccessibilityChecks], as a screen's test is. */
-    private fun checked(test: () -> Unit) = AccessibilityChecks(composeTestRule).apply(
-        object : Statement() {
-            override fun evaluate() = test()
-        },
-        Description.EMPTY
-    ).evaluate()
+    /**
+     * Runs [test] with [AccessibilityChecks] inside [composeTestRule], as a screen's test class
+     * does, or outside it if [checksOutside].
+     */
+    private fun checked(checksOutside: Boolean = false, test: () -> Unit) {
+        val checks = AccessibilityChecks(composeTestRule)
+        val rules = if (checksOutside) {
+            RuleChain.outerRule(checks).around(composeTestRule)
+        } else {
+            RuleChain.outerRule(composeTestRule).around(checks)
+        }
+        rules.apply(
+            object : Statement() {
+                override fun evaluate() = test()
+            },
+            Description.EMPTY
+        ).evaluate()
+    }
+
+    /** Runs [test] and checks that it fails on [check]'s result, and only on that. */
+    private fun assertFailsOn(check: Class<out AccessibilityCheck>, test: () -> Unit) {
+        val failure = assertThrows(AccessibilityViewCheckException::class.java, test)
+        assertEquals(listOf(check), failure.results.map { it.sourceCheckClass })
+    }
 
     @Test
     fun controlWithNoLabel_fails() {
-        assertThrows(AccessibilityViewCheckException::class.java) {
+        assertFailsOn(SpeakableTextPresentCheck::class.java) {
             checked { composeTestRule.setContent { Control(label = null) } }
         }
     }
 
     @Test
     fun smallControl_fails() {
-        assertThrows(AccessibilityViewCheckException::class.java) {
+        assertFailsOn(TouchTargetSizeCheck::class.java) {
             checked { composeTestRule.setContent { Control(size = 10.dp) } }
         }
     }
 
     @Test
     fun problemInADialog_fails() {
-        assertThrows(AccessibilityViewCheckException::class.java) {
+        assertFailsOn(TouchTargetSizeCheck::class.java) {
             checked {
                 composeTestRule.setContent { Dialog(onDismissRequest = {}) { Control(10.dp) } }
             }
@@ -83,10 +102,29 @@ class AccessibilityChecksTest {
                     if (shown) Control(size = 10.dp)
                 }
             }
-            assertThrows(AccessibilityViewCheckException::class.java) {
+            assertFailsOn(TouchTargetSizeCheck::class.java) {
                 composeTestRule.onNodeWithText("Save").performClick()
             }
+            assertEquals("robolectric", Build.FINGERPRINT)
             shown = false
+        }
+    }
+
+    // Outside the compose rule, the page is gone when the test ends, so nothing would be checked.
+    @Test
+    fun checksOutsideTheComposeRule_fail() {
+        assertThrows(IllegalStateException::class.java) {
+            checked(checksOutside = true) {
+                composeTestRule.setContent { Button(onClick = {}) { Text("Save") } }
+            }
+        }
+    }
+
+    @GraphicsMode(GraphicsMode.Mode.LEGACY)
+    @Test
+    fun defaultGraphics_fail() {
+        assertThrows(IllegalStateException::class.java) {
+            checked { composeTestRule.setContent { Button(onClick = {}) { Text("Save") } } }
         }
     }
 
