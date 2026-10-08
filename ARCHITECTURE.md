@@ -25,6 +25,7 @@ own documentation says so, and each such claim links to the page.
   - [Double taps](#double-taps)
   - [Language and layout direction](#language-and-layout-direction)
   - [Screen reader labels](#screen-reader-labels)
+  - [Live regions](#live-regions)
   - [Theme](#theme)
 - [Data layer](#data-layer)
   - [Repositories](#repositories)
@@ -243,6 +244,10 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   seen (`sendSemanticsPropertyChangeEvents` in
   `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
   message composed as a new node, as in its own branch, isn't announced.
+  Compose also reports a node's first layout as a change to it, which TalkBack
+  reads in a live region (see [Live regions](#live-regions)), so this and the
+  cases below that aren't announced are being checked again in
+  [#281](https://github.com/bryancassell/bluecard/issues/281).
   - **Live regions are what Android points to.** When Android 16 deprecated
     `announceForAccessibility`, its
     [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
@@ -459,6 +464,34 @@ both taps of a double tap can reach it.
   text, it replaces the text's label. Tests of such a label check the `Text`
   node in the unmerged tree, and that the button has only one description: the
   merged node has the description wherever it's set.
+
+### Live regions
+
+- **A live region that mustn't be read out as its screen appears becomes one
+  only when its text first changes.** Compose reports each change to a node's
+  size or position, its first layout included, as a change to that node
+  (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose
+  UI 1.12.1). TalkBack reads a live region on any change it's the source of,
+  whatever changed and whether or not it's on screen yet
+  (`EventTypeWindowContentChangedFeedbackRule` in TalkBack's source). So a live
+  region is read when it appears, and whenever it moves within its parent or
+  resizes. That's how each new snackbar is read (see
+  [Load and save failures](#load-and-save-failures)). A polite live region
+  read as its screen appears holds back the screen's heading, since new speech
+  can't cut it off: Badges' count held it back by about 2 seconds
+  ([#278](https://github.com/bryancassell/bluecard/issues/278), `MatchCount`
+  in `BadgesScreen.kt`). Whether `ScreenMessage` and the import dialog's
+  `UnearnedRanks` need the same is
+  [#281](https://github.com/bryancassell/bluecard/issues/281).
+- **Set a live region from a value read while composing, not from a state read
+  in the `semantics` block.** Compose updates a `semantics` block as soon as a
+  state it reads changes, before the next frame composes the new text. TalkBack
+  read out the old count then, before the new one.
+- **In local tests, `LiveRegionReadouts` (`testing/LiveRegion.kt`) lists what
+  TalkBack would read out**, looking at each event's source as it's sent. To
+  see the state between a change and the next frame, wait a frame at a time
+  and idle the main looper in between, as `BadgesScreenTest` does: Robolectric
+  otherwise runs the next frame before Compose's posted accessibility check.
 
 ### Theme
 
@@ -1481,6 +1514,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
 | [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text is set on the `Text` inside it | TalkBack read one set on the button and then the text too |
+| [Live regions](#live-regions) | A live region that mustn't be read out as its screen appears becomes one with its first new text | Compose reports a node's first layout as a change, and TalkBack reads a live region on any change it's the source of. The count on Badges held back the heading by 2 seconds |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
 | [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
