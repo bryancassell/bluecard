@@ -524,8 +524,9 @@ request can merge:
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes about
-  as long as Build: about 3 minutes to build the app and test APKs, then about
-  3 to download the system image, boot the emulator and run the tests.
+  6 minutes, a little less than Build: Gradle builds the app and test APKs
+  while it downloads the emulator and system image, then boots the emulator
+  and runs the tests.
 
 When a job fails, its reports are attached to the run: lint and local test
 reports as `reports`, instrumented test reports as `instrumented-test-reports`.

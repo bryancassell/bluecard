@@ -76,7 +76,8 @@ android {
                     // requires from Android 15 on.
                     pageAlignment = ManagedVirtualDevice.PageAlignment.FORCE_16KB_PAGES
                     // The computer's own ABI, so the emulator runs without translation: arm64 on
-                    // Apple silicon, x86_64 on CI's runners. AGP 10 defaults to arm64-v8a.
+                    // Apple silicon, x86_64 on CI's runners. AGP 10 defaults to arm64-v8a. AGP 9.4.1's
+                    // setup task still warns that testedAbi isn't set, since it doesn't read it.
                     testedAbi =
                         if (System.getProperty("os.arch") == "aarch64") "arm64-v8a" else "x86_64"
                 }
