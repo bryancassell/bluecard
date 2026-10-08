@@ -17,7 +17,7 @@ updating AGP or a library that uses reflection.
 - [Devices](#devices): the AVDs, the settings varied on them, and how to start them
 - [Assignments](#assignments): which suites run on which device
 - [Coordinator instructions](#coordinator-instructions): the main session's steps
-- [Tester instructions](#tester-instructions): what each tester subagent follows
+- [Tester reference](#tester-reference): the seed, TalkBack and known issues, which testers read as needed
 - [Test suites](#test-suites): the test cases
 - [Filing issues](#filing-issues)
 - [Keeping the plan current](#keeping-the-plan-current)
@@ -37,18 +37,23 @@ else, say so:
   publishing: "…against app/build/outputs/bluecard-0.2.0.apk".
 - **Only some assignments,** such as to check a fix: "…, only A3 and A6".
 
-The run doesn't need anyone to watch it. The trial run in October 2026 took
-about 3 hours, with up to three testers at a time, and about 1.6 million
-tokens across its nine testers (90,000 to 250,000 each). Close Android Studio
-first if you can (see
+The run doesn't need anyone to watch it. Expect roughly 2 hours and 50
+million input tokens, almost all of them cache reads: each tester reads its
+context again on every call. That's an estimate from the trial run in
+October 2026, which took about 3 hours and 183 million input tokens, before
+assignments were split and testers got an agent of their own. Rerun that
+way, the trial's A1 and A7 took 75% fewer input tokens and a third less
+time. Close Android Studio first if you can (see
 [Starting and stopping an emulator](#starting-and-stopping-an-emulator)).
 
 The session that's asked is the **coordinator**. It builds or fetches the APK,
-starts a fresh emulator for each [assignment](#assignments), and hands each
-one to a **tester** subagent. A tester works through its suites on its own
-emulator and reports back in text, so the screenshots and UI dumps it reads
-stay out of the coordinator's context. The coordinator then merges the
-testers' findings, files an issue for each new bug, and ends with a run report.
+runs three emulators side by side, and hands each [assignment](#assignments),
+a suite or two, to a **tester**: a `qa-tester` subagent, whose instructions
+are in [`.claude/agents/qa-tester.md`](../.claude/agents/qa-tester.md). A
+tester works through its suites on its emulator and reports back in text, so
+the screenshots and UI dumps it reads stay out of the coordinator's context.
+The coordinator then merges the testers' findings, files an issue for each
+new bug, and ends with a run report.
 
 It tests the release build because R8 only shrinks the release build, and
 that's what scouts install. Release builds aren't debuggable, so the plan
@@ -154,23 +159,33 @@ read-only emulator forgets them when it stops.
 
 ## Assignments
 
-Each assignment is one tester, on one fresh emulator. Suites marked
+Each assignment is one tester on one emulator, and covers a suite or two, so
+no tester runs long: everything a tester has seen is read again on every step
+it takes, so a long tester costs far more than two short ones. Suites marked
 "smoke" run only their cases tagged **[smoke]**.
 
-| ID | AVD | Settings | Suites |
-|---|---|---|---|
-| A1 | `QA_Phone_API37` | Default | [ONB](#onb-onboarding-and-profile), [HOME](#home-home), [FIND](#find-browse-and-search), [BADGE](#badge-badge-page-and-counselor), [REQ](#req-recording-requirements), [TRK](#trk-trackers) |
-| A2 | `QA_Phone_API37` | Default | [DONE](#done-completing-a-badge-and-reports), [RANK](#rank-ranks), [CLR](#clr-clearing), [DATA](#data-export-and-import), [NAV](#nav-navigation-and-restoring-state) |
-| A3 | `QA_Small_API26` | Default, then largest text (1.3) | Every suite as smoke, then [WALK](#walk-every-screen) at default and at largest text |
-| A4 | `QA_Tablet_API37` | Landscape, then portrait | [WALK](#walk-every-screen) in each orientation, NAV-4 (rotation), then ONB, FIND, DONE and DATA as smoke, in landscape |
-| A5 | `QA_Foldable_API37` | Unfolded, then folded | [WALK](#walk-every-screen) unfolded, NAV-5 (folding), then FIND, REQ and TRK as smoke, folded |
-| A6 | `QA_Phone_API37` | Dark mode, then right-to-left language | [WALK](#walk-every-screen) in each, then FIND-1, FIND-2 and DONE-3 in the right-to-left language |
-| A7 | `QA_Phone_API37` | Largest text and display size, then landscape | [WALK](#walk-every-screen) in each, then TRK-1 and REQ-4 at the largest text |
-| A8 | `QA_Phone_API37` | TalkBack | [A11Y](#a11y-talkback) |
-| A9 | `QA_Phone_API37` | Default | [REL](#rel-release-and-data-safety) |
+The assignments come in three lanes, one per emulator. A lane's assignments
+run one after another on the same emulator, which is reset between them,
+until the lane moves to another AVD.
 
-Run A1, A2 and A3 first: they cover the most and the oldest Android, and a
-blocking bug found there is worth knowing before the rest.
+| Lane | ID | AVD | Settings | Suites |
+|---|---|---|---|---|
+| 1 | A1 | `QA_Phone_API37` | Default | [ONB](#onb-onboarding-and-profile), [HOME](#home-home), [FIND](#find-browse-and-search) |
+| 1 | A2 | `QA_Phone_API37` | Default | [BADGE](#badge-badge-page-and-counselor), [REQ](#req-recording-requirements), [TRK](#trk-trackers) |
+| 1 | A3 | `QA_Phone_API37` | Default | [DONE](#done-completing-a-badge-and-reports), [RANK](#rank-ranks) |
+| 1 | A4 | `QA_Phone_API37` | Default | [CLR](#clr-clearing), [DATA](#data-export-and-import) |
+| 1 | A5 | `QA_Phone_API37` | Default | [NAV](#nav-navigation-and-restoring-state) except NAV-5, [REL](#rel-release-and-data-safety) |
+| 1 | A6 | `QA_Phone_API37` | TalkBack | [A11Y](#a11y-talkback) |
+| 2 | A7 | `QA_Small_API26` | Default | Every suite except WALK and A11Y, as smoke |
+| 2 | A8 | `QA_Small_API26` | Default | [WALK](#walk-every-screen) |
+| 2 | A9 | `QA_Small_API26` | Largest text (1.3) | [WALK](#walk-every-screen) |
+| 2 | A10 | `QA_Tablet_API37` | Landscape | [WALK](#walk-every-screen), NAV-4 (rotation) |
+| 2 | A11 | `QA_Tablet_API37` | Portrait | [WALK](#walk-every-screen), then ONB, FIND, DONE and DATA as smoke |
+| 3 | A12 | `QA_Phone_API37` | Dark mode | [WALK](#walk-every-screen) |
+| 3 | A13 | `QA_Phone_API37` | Right-to-left language | [WALK](#walk-every-screen), then FIND-1, FIND-2 and DONE-3 |
+| 3 | A14 | `QA_Phone_API37` | Largest text and display size | [WALK](#walk-every-screen), then TRK-1 and REQ-4 |
+| 3 | A15 | `QA_Phone_API37` | Landscape | [WALK](#walk-every-screen) |
+| 3 | A16 | `QA_Foldable_API37` | Unfolded, then folded | [WALK](#walk-every-screen) unfolded, NAV-5 (folding), then FIND, REQ and TRK as smoke, folded |
 
 ## Coordinator instructions
 
@@ -188,7 +203,12 @@ triage.
    doesn't read `~/.zshrc`, and Gradle and `apksigner` need Java. Check that
    `cmdline-tools/latest/bin/avdmanager` exists, and stop and ask for the
    [one-time setup](#one-time-setup) if not. Check `gh auth status`.
-3. **The build under test.**
+3. **The tester agent.** Testers run as the `qa-tester` subagent,
+   `.claude/agents/qa-tester.md`, which holds their instructions, gives them
+   only the Bash and Read tools, and runs them at medium effort. Claude Code
+   loads agents when a session starts, so if the Agent tool doesn't offer
+   `qa-tester`, stop and ask for the session to be restarted.
+4. **The build under test.**
    - By default, build and sign the release APK of what's checked out, as
      step 1 of [Checking a release build](toolchain.md#checking-a-release-build)
      does, without its `adb` commands. Note the commit
@@ -198,51 +218,49 @@ triage.
      and the commit is the tag's.
    - Read the APK's version with
      `"$BUILD_TOOLS/aapt2" dump badging "$APK" | head -1`.
-4. **Static checks** (REL-4): run them now, since they need only the APK.
-5. **AVDs.** Create any that are missing.
-6. **Previous release.** `gh release list --limit 5`. If there's a release
-   older than the build under test, A9 tests updating from it; download its
+5. **Static checks** (REL-4): run them now, since they need only the APK.
+6. **AVDs.** Create any that are missing.
+7. **Previous release.** `gh release list --limit 5`. If there's a release
+   older than the build under test, A5 tests updating from it; download its
    APK into `$RUN_DIR/previous/`.
 
 ### 2. Run the assignments
 
-Keep up to three emulators running at once: each takes 1 to 2 GB of memory,
-and other sessions may be running emulators too. Check with `memory_pressure`
-before starting another, and run fewer if less than a third is free. For each assignment:
+Run the three lanes side by side, one emulator each. Each emulator takes 1 to
+2 GB of memory, and other sessions may be running emulators too: check with
+`memory_pressure` before starting one, and run fewer lanes if less than a
+third is free.
 
-1. Start a fresh emulator of its AVD on a free port, as in
-   [Starting and stopping an emulator](#starting-and-stopping-an-emulator).
-2. Install the build under test, and push the seed file:
+1. **Start the lane's emulator** on a free port, as in
+   [Starting and stopping an emulator](#starting-and-stopping-an-emulator),
+   then install the build under test and push the seed file:
 
    ```sh
    adb -s $SERIAL install "$APK"
    adb -s $SERIAL push scripts/qa/seed.json /sdcard/Download/bluecard-qa-seed.json
    ```
 
-3. Start a tester with the Agent tool (`general-purpose`, in the
-   background), with the prompt below filled in.
-4. When a tester reports back, save its report to `$RUN_DIR/<ID>/report.md`,
-   stop its emulator, and start the next assignment in its place.
+2. **Start a tester** for the lane's next assignment with the Agent tool:
+   `subagent_type: "qa-tester"`, in the background, with this prompt:
 
-The tester prompt:
+   ```text
+   Run assignment <ID> of docs/qa-test-plan.md.
+   - Emulator: <SERIAL> (<AVD>, Android <version>), with the build under test installed
+     (version <versionName>, <commit>) and the seed in /sdcard/Download.
+   - Settings: <settings from the Assignments table>.
+   - Suites: <suites from the Assignments table>.
+   - Run directory: <RUN_DIR>/<ID>/
+   ```
 
-```text
-You're a QA tester for BlueCard, running assignment <ID> of docs/qa-test-plan.md.
-
-- Emulator: <SERIAL> (<AVD>, Android <version>). It has booted, and the build under test is
-  installed: io.github.bryancassell.bluecard, version <versionName> (<commit>).
-- Settings to test with: <settings from the Assignments table>.
-- Suites: <suites from the Assignments table>.
-- Write everything, including screenshots, notes and any helper scripts, in <RUN_DIR>/<ID>/ only.
-
-Read these parts of docs/qa-test-plan.md, and only these: "Tester instructions", your AVD's
-row in "AVDs", "Settings varied on the devices" (unless your settings are the default), and
-the sections for your suites. Find their line numbers with: grep -n '^##' docs/qa-test-plan.md
-Then run your suites and report back as "Tester report" describes.
-```
+3. **When it reports back,** save its report to `$RUN_DIR/<ID>/report.md`.
+   If the lane's next assignment is on the same AVD, run
+   `scripts/qa/ui.py $SERIAL reset`, which puts back the default settings,
+   clears BlueCard and the logs, and leaves the app and the seed installed,
+   then start the next tester. Otherwise stop the emulator and start the
+   next AVD's.
 
 If a tester stops early, such as from a crash it can't get past, start a new
-tester for what's left, on a fresh emulator, and tell it what the first one
+tester for what's left, on a reset emulator, and tell it what the first one
 found.
 
 ### 3. Triage and file
@@ -253,12 +271,12 @@ When every tester has reported:
    one, noting every device and setting it was seen with. A bug seen only on
    one device or setting is a finding about that device or setting.
 2. **Confirm** each bug, unless its tester already reproduced it from a clean
-   start, or it's a crash with a stack trace. Start a tester on a fresh
+   start, or it's a crash with a stack trace. Start a `qa-tester` on a reset
    emulator with just its steps, and ask whether it happens, and whether it
    also happens on `QA_Phone_API37` with default settings.
 3. **Look for an existing issue** with a few searches of its key words:
    `gh issue list --state all --search "<words>" --limit 10`. Check the
-   open issues listed in the run report's known issues too.
+   open issues listed in [Known issues](#known-issues) too.
    - Already filed and open: don't file it again. Comment on the issue only
      if the run adds something, such as another device it happens on.
    - Filed and closed as fixed: it's a regression. File a new issue that
@@ -296,118 +314,12 @@ When every tester has reported:
    What testers found wrong or unclear in this plan, to fix in a pull request.
    ```
 
-## Tester instructions
+## Tester reference
 
-You're testing one assignment on one emulator. Work through your suites in
-order, judge each case against its expected result, and report back.
-
-### Rules
-
-- **Pass `-s <SERIAL>` to every `adb` command**, and give the serial to
-  `scripts/qa/ui.py`. Other emulators belong to other testers or sessions.
-- **Never run `adb kill-server` or `adb start-server`.** Every tester and
-  session shares the one adb server, and restarting it drops every
-  emulator's connection. If your device shows as offline for more than a
-  minute, run `adb reconnect offline`, which resets only devices that are
-  offline, and redo whatever was cut off.
-- **Don't file issues, comment on them, or change files in the repository.**
-  The coordinator files issues from your report.
-- **Write only in your run directory, `<RUN_DIR>/<ID>/`,** including any
-  helper scripts, and put your serial in their names. Testers run at the same
-  time, so a script with a common name in a shared scratchpad can be replaced
-  by another tester's and send your commands to their emulator.
-- **Read the screen as text first**, with `scripts/qa/ui.py <SERIAL> screen`.
-  Take a screenshot only to check how something looks, which text can't tell
-  you, and keep it small: `shot` scales to 540px wide by default, and
-  `--crop` cuts it to the part being checked.
-- **Use the app as a scout would:** tap what's on screen and type into
-  fields. Don't start the app's activities with `am start` or change its data
-  any other way.
-- **Don't stop at the first failure.** Note it, get the app back to a state
-  where the next case can run, and carry on. If the app crashes, reopen it
-  and carry on.
-
-### Driving the emulator
-
-`scripts/qa/ui.py` (Python 3, no packages to install) does most of it. Run
-`scripts/qa/ui.py <SERIAL> -h` for every command. Call it by its path: zsh
-doesn't split a command kept in a variable.
-
-The Bash tool's shell doesn't read `~/.zshrc`, so `adb` isn't on its PATH.
-Start each command that runs `adb` with
-`export PATH="$HOME/Library/Android/sdk/platform-tools:$PATH";`. `ui.py`
-finds adb by itself.
-
-| Task | Command |
-|---|---|
-| Open the app | `ui.py S launch`: opens it as a launcher does, and waits for it. `am start -n` would stack another copy of the activity on top instead. |
-| See what's on screen | `ui.py S screen`: the focused window, then each piece of text and each control, with its state (`[tap]`, `[checked]`, `[disabled]`, `[field]`…) and where it is. A control's label joins the text inside it with " \| ". |
-| Tap something | `ui.py S tap "Mark completed"`: ignores case, and takes a control whose label is exactly the text, else one starting with it, else one containing it, before a field holding that text (`--exact`, `--nth 2`, `--long`) |
-| Type | Tap the field, then `ui.py S type "Troop 42"`. ASCII only. |
-| Empty a field | Tap the field, then `ui.py S clear` |
-| Wait for something | `ui.py S wait "Data imported."` (`--gone`, `--timeout 20`) |
-| Scroll to something | `ui.py S scroll-to "Clear progress"` (`--up`) |
-| Keys | `ui.py S key BACK`, `key ENTER`, `key MOVE_END`, `key DEL --repeat 30` |
-| Screenshot | `ui.py S shot <RUN_DIR>/<ID>/home.png` (`--crop l,t,r,b`, `--width`) |
-| What did a tap open? | `ui.py S starts`: recent activity starts, with their intents. The log shortens a link to its host, so `starts` also lists the full web, phone and email links that apps are holding, such as the one Chrome keeps while it shows its first-run screens. |
-
-If `screen` can't read a screen, such as a web page, use a screenshot, or the
-Android CLI's `android layout --device=S` or
-`android screen capture --annotate`, in `$ANDROID_HOME/cmdline-tools/latest/bin`.
-
-Other things you'll need:
-
-- **Start from nothing:** `adb -s S shell pm clear io.github.bryancassell.bluecard`,
-  then `ui.py S launch`, which shows Onboarding.
-- **Start from the seed:** start from nothing, finish Onboarding with any name,
-  then Manage data → Import → `bluecard-qa-seed.json` → Replace all, and wait
-  for "Data imported.". The [seed](#the-seed) describes what you get.
-- **Wait, don't sleep:** after a tap that opens something, `ui.py S wait` for
-  text on the next screen. A page can take a moment, and the first launch
-  after a settings change takes longer.
-- **Check which app is in front:** `screen`'s first line names the focused
-  window. After a stray Back, it may be the launcher; open the app again.
-- **Below the fold:** on a seeded Home, Merit badges, Ranks and Manage data
-  are further down, so use `scroll-to` before tapping them. Home also keeps
-  its scroll position after an import.
-- **The keyboard:** the first time it opens on a fresh emulator, Gboard can
-  show a tip over the next field, such as "Tap to Google Search and more" on
-  API 26, or "Emoji and keyboard font size updated" after a text size change;
-  dismiss it first. Close the keyboard before swiping, or the swipe types into the field.
-- **Back with the keyboard up** only closes the keyboard. Where a case says
-  "press Back" while typing, press it twice.
-- **What `screen` can't show:** a requirement row's state (its number's box,
-  "Not needed") and progress bars. Use a cropped screenshot for those.
-- **System tips:** a fresh tablet or foldable may show a tooltip, such as "Tap
-  handle to access display options". Dismiss it, and don't report it.
-- **Crashes:** `adb -s S logcat -b crash -d | grep -B1 -A40 'Process: io.github.bryancassell.bluecard'`.
-  The crash log also has the emulator's own native crashes, such as
-  `uwb-service`; ignore those. Clear the log with `-c` before each suite, and
-  check it after. A crash in BlueCard is always a bug. The stack trace has
-  R8's short names; include it as it is.
-- **The app's warnings:**
-  `adb -s S logcat -d --pid=$(adb -s S shell pidof io.github.bryancassell.bluecard) '*:W' | tail -50`
-  shows the app's errors, and the load and save failures it logs.
-- **Dates:** the emulator's date is today's. Dates after today can't be
-  picked, by design.
-- **Animations** stay on: page slides are part of what's tested. `screen`
-  retries while the screen is animating.
-- **The system file picker:** on a fresh emulator it opens at Recent files,
-  which is empty: tap "Show roots", then Downloads, and it remembers Downloads
-  after that. Pick a file by tapping its name. If a tap doesn't pick it (seen
-  on API 30), use `key TAB`, `key DPAD_DOWN` and `key ENTER`. A saved file is
-  in `/sdcard/Download/`.
-- **Other apps on a fresh emulator** stop at their first-run screens: Chrome
-  at its welcome, Gmail at its tour, with no account. Check that the right app
-  opened with the right link, using `starts`, and go Back.
-- **Checking an animation or a flash** (ONB-4, NAV-6):
-  `adb -s S shell screenrecord --time-limit 5 /sdcard/qa.mp4` while doing it,
-  pull the file, and split it into frames with ffmpeg. If ffmpeg isn't
-  installed, `python3 -m venv --system-site-packages <RUN_DIR>/<ID>/venv` and
-  `<RUN_DIR>/<ID>/venv/bin/pip install imageio-ffmpeg` provide one
-  (`imageio_ffmpeg.get_ffmpeg_exe()`).
-- **A saved PDF:** `adb -s S pull "/sdcard/Download/<name>.pdf" <RUN_DIR>/<ID>/`,
-  then read it with the Read tool, which shows PDF pages.
+Testers follow [`.claude/agents/qa-tester.md`](../.claude/agents/qa-tester.md):
+the rules, how to drive the emulator with `scripts/qa/ui.py`, how to judge a
+case and the report's format. The sections here are the parts of the plan
+they print with `scripts/qa/plan_sections.py` when they need them.
 
 ### The seed
 
@@ -433,64 +345,9 @@ screen something to show. After importing it:
   as earned with Tenderfoot"; Second Class started, with sign-offs on 2a, 2b
   and 3, a 1a log entry and 1 of 4 rows in 7a.
 
-If Home doesn't show these after importing it, that's a bug: import must
-keep reading files in older format versions.
-
-### Judging a case
-
-Each case gives steps and what should happen. The details of how the app
-should look and behave are in [`PRD.md`](../PRD.md)'s Design decisions, and
-cases name the row to read, such as "PRD: Tracker totals". Read a row with
-`grep -n '^| Tracker totals' PRD.md`.
-
-A case **fails** when the app does something else, crashes, shows text cut
-off or hidden, or loses data. Anything else you notice that the PRD doesn't
-cover, such as an awkward layout, is an **observation**, not a failure. A
-case is **blocked** when an earlier failure keeps it from running.
-
-When a case fails:
-
-1. Do it again from a clean start (from nothing, or from the seed) to see
-   whether it happens every time. Note how often it happened.
-2. Save a cropped screenshot that shows it, and the crash log if there is one.
-3. Write down the shortest steps that show it, starting from nothing or from
-   the seed.
-
-Check the [known issues](#known-issues): a failure that matches one is
-reported as that issue, not as a new bug.
-
-### Tester report
-
-Report back with this, and nothing else. Keep it short: the coordinator reads
-nine of them.
-
-```markdown
-## <ID> on <AVD> (<settings>)
-
-| Case | Result | Note |
-|---|---|---|
-| ONB-1 | pass | |
-| ONB-2 | fail | Bug 1 |
-| HOME-3 | blocked | By bug 1 |
-| ... | | |
-
-### Bug 1: <what's wrong, in one line>
-- **Steps** (from nothing / from the seed): 1. … 2. … 3. …
-- **Expected:** … (PRD: <row>)
-- **Actual:** …
-- **How often:** every time (3 of 3) / once in 3 tries
-- **Seen with:** <device, Android version, settings>
-- **Evidence:** <RUN_DIR>/<ID>/<file>.png; crash log excerpt if any
-- **Known issue?** No / maybe #123
-
-### Observations
-- …
-
-### Plan problems
-- Anything in this plan that was wrong, unclear or didn't work as written,
-  such as a step that couldn't be done or an expected result the PRD
-  contradicts.
-```
+Start from it with `scripts/qa/ui.py S seed`. If Home doesn't show these
+after importing it, that's a bug: import must keep reading files in older
+format versions.
 
 ### TalkBack
 
@@ -525,20 +382,16 @@ focus on "Don't allow": `tb double-tap` dismisses it.
 Open issues a tester is likely to run into. Report a match as the issue, not
 as a new bug. The coordinator checks the full list.
 
-- [#297](https://github.com/bryancassell/bluecard/issues/297): out of touch
-  mode, Save can move focus to a page's first item.
 - [#299](https://github.com/bryancassell/bluecard/issues/299): on API 26, the
   Merge dialog's navigation bar buttons are white on its light page.
-- [#304](https://github.com/bryancassell/bluecard/issues/304): with TalkBack,
-  Badges announces the list's old size after a search changes it.
-- [#305](https://github.com/bryancassell/bluecard/issues/305): with TalkBack,
-  the rank card partly scrolled off screen is read without the rank.
 - [#306](https://github.com/bryancassell/bluecard/issues/306): at the largest
   text and display size, the date picker runs off the right edge.
 - [#307](https://github.com/bryancassell/bluecard/issues/307): at the largest
   text and display size, labels break mid-word, such as "Unmar" / "k".
 - [#308](https://github.com/bryancassell/bluecard/issues/308): in landscape,
   Badges' search field is squeezed behind the keyboard.
+- [#315](https://github.com/bryancassell/bluecard/issues/315): scrolled
+  pages draw under the status bar, over the clock and icons.
 - [#281](https://github.com/bryancassell/bluecard/issues/281): whether some
   messages are read out when a page is shown already showing them.
 - [#148](https://github.com/bryancassell/bluecard/issues/148): a
@@ -564,9 +417,10 @@ start.
   card ("None yet"), "You haven't started any merit badges yet.", and Merit
   badges, Ranks and Manage data.
 - **ONB-4 [smoke] The profile is kept.** Close the app (`am force-stop`),
-  and open it again while recording the screen (see "Checking an animation or
-  a flash"). → Home straight after the splash screen, with no frame of
-  Onboarding.
+  and open it again. → Home, with the name and unit. On `QA_Phone_API37`
+  with default settings only, also record the screen as it opens (see the
+  tester agent's "An animation or a flash"). → No frame of Onboarding
+  between the splash screen and Home.
 - **ONB-5 Editing the name and unit.** Manage data → Edit. → The "Name and
   unit" page, with both fields filled in. Change the unit to "Troop 7" and
   Save. → The page closes; Home shows "Unit: Troop 7". (PRD: Changing the name
@@ -711,12 +565,14 @@ Start from the seed.
   after it, the remaining campouts are numbered 1 to 3, and the total drops.
 - **TRK-5 [smoke] Fixed rows.** Hiking → 5. → Five rows, Hike 1 to Hike 5,
   three filled in, its own-work checkbox above them. Fill in Hikes 4 and 5. →
-  5 isn't complete until its own work is checked too; check it. → Complete,
-  dated as PRD: Completing a fixed-row tracker's requirement says. Delete
-  Hike 2. → The others keep their numbers, and 5 is no longer complete.
-- **TRK-6 Multi-line column.** Hiking 5, a row's Notes: type two lines. → The
-  field grows; on the requirement page the row's summary shows the line break
-  as a space.
+  5 isn't complete until its own work is checked too; check it, and change
+  its date to a day last week. → Complete, on that day: a fixed-row
+  tracker's requirement with own work takes the own work's date, not the
+  rows' (PRD: A requirement's own work). Delete Hike 2. → The others keep
+  their numbers, and 5 is no longer complete.
+- **TRK-6 Multi-line column.** Hiking 5, a row's Notes: type four lines. →
+  The field grows past its starting height; on the requirement page the row's
+  summary shows the line breaks as spaces.
 - **TRK-7 Unsaved row.** Start a new campout, type a place, press Back. →
   "Discard changes?"; Discard leaves no new row.
 
@@ -868,6 +724,8 @@ Start from the seed.
 
 Open every screen with the assignment's setting on, take one screenshot of
 each (more where a page scrolls), and look at it. Start from the seed.
+Screenshots at the default 360px wide are enough to see these problems; take
+a closer, cropped one only to make sure of one.
 
 On each screen, look for:
 
@@ -898,7 +756,7 @@ The screens, and how to reach them:
    Second Class 2a (Signed off by); Star 3 (merit badges).
 10. Data management; Edit name and unit.
 11. Dialogs: Clear progress on Camping, Discard changes on Edit counselor,
-    Import's Merge or Replace all.
+    and Import's Merge or Replace all, after picking the seed file.
 12. The merge dialog: change the unit number, check Camping 6a, then Manage
     data → Import → `bluecard-qa-seed.json` → Merge.
 13. The share sheet, from First Aid's Share report (not on API 26, which
@@ -956,7 +814,7 @@ in reading order; nothing is read twice in a row.
   `run-as` doesn't work on a release build, so skip the file list: open the
   app instead. → Home with the seed's data, without Onboarding.
 - **REL-3 [smoke] Crash log.** At the end, check the crash log for BlueCard,
-  as in [Driving the emulator](#driving-the-emulator). → No BlueCard crashes.
+  as the tester agent's instructions say. → No BlueCard crashes.
   (Every tester checks this; REL-3 is the record of it.)
 - **REL-4 Static checks** (the coordinator runs these on the APK):
   `"$BUILD_TOOLS/aapt2" dump permissions "$APK"`. → No
@@ -1016,4 +874,8 @@ the developer can decide.
 - **A fixed known issue** comes off [Known issues](#known-issues), and a new
   one likely to trip testers up goes on.
 - **A run that went wrong,** such as a tester confused by a step, is fixed
-  here in the same pull request as the run's findings, or its own.
+  here in the same pull request as the run's findings, or its own. How
+  testers work, as opposed to what they test, is in
+  `.claude/agents/qa-tester.md` and `scripts/qa/ui.py`.
+- **A long assignment** is split: a tester's cost grows with the square of
+  how many steps it takes.

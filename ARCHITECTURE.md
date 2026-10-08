@@ -931,9 +931,24 @@ It files an issue for each bug it finds.
 - **Testers are subagents, one emulator each,** reporting in text, so the
   coordinating session keeps the context to merge findings and check them
   against existing issues before filing.
+- **Testers are kept short and lean.** In the trial run, nine testers made
+  1,685 model calls that read 183 million input tokens, almost all of it
+  context read again on each call, against 65,000 output tokens. So each
+  assignment is a suite or two, since a tester's cost grows with the square
+  of its steps. Testers run as a project subagent,
+  `.claude/agents/qa-tester.md`, which holds their instructions and gives them
+  only Bash and Read, without CLAUDE.md, at medium effort: a general-purpose
+  subagent started each call with about 28,000 tokens of system prompt and
+  tool definitions; this one starts with about 7,000. `ui.py` gives them
+  checks that print only what's wrong (`expect`), and starts from the seed in
+  one command (`seed`). Rerun this way, the trial's A1 and A7 read 15 million
+  input tokens instead of 60 million, in 69 tester-minutes instead of 105.
 - **`scripts/qa/ui.py` drives the emulator** with `uiautomator dump` and
   `input`, and sends TalkBack's gestures through the emulator console, since
-  TalkBack ignores `input`.
+  TalkBack ignores `input`. The Android CLI's `android layout` reads the
+  screen in about 1 second, against 2 for `uiautomator dump`, but it doesn't
+  say whether a control is disabled, and the helper it leaves running on the
+  emulator stops `uiautomator` working.
 
 ## Release build
 

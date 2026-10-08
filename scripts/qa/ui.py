@@ -70,10 +70,12 @@ class Entry:
             flags.append("password")
         self.flags = flags
 
-    def __str__(self):
+    def describe(self, coords=False):
         flags = f" [{','.join(self.flags)}]" if self.flags else ""
         label = f'"{self.label}"' if self.label else "(no label)"
-        return f"{label}{flags} @{self.center[0]},{self.center[1]}"
+        return f"{label}{flags}" + (f" @{self.center[0]},{self.center[1]}" if coords else "")
+
+    __str__ = describe
 
 
 def own_label(node):
@@ -179,24 +181,27 @@ def screen_size(serial):
 
 # --- Commands --------------------------------------------------------------------------------
 
-def cmd_launch(args):
+def launch(serial, package=PACKAGE, timeout=15):
     """Opens the app as a launcher does, so it comes back to its task rather than starting another."""
     # monkey turns auto-rotate back on, so put back the orientation a test set.
-    rotation = {key: shell(args.serial, f"settings get system {key}").strip()
+    rotation = {key: shell(serial, f"settings get system {key}").strip()
                 for key in ("accelerometer_rotation", "user_rotation")}
     # The QA AVDs have no hardware keys, and monkey refuses to run while it may press them.
-    out = shell(args.serial, f"monkey -p {args.package} --pct-syskeys 0 -c android.intent.category.LAUNCHER 1",
-                check=False)
-    deadline = time.time() + args.timeout
-    while args.package not in focused_window(args.serial):
+    out = shell(serial, f"monkey -p {package} --pct-syskeys 0 -c android.intent.category.LAUNCHER 1", check=False)
+    deadline = time.time() + timeout
+    while package not in focused_window(serial):
         if time.time() > deadline:
-            sys.exit(f"{args.package} didn't come to the front. monkey said:\n{out.strip()}")
+            sys.exit(f"{package} didn't come to the front. monkey said:\n{out.strip()}")
         time.sleep(0.5)
     # monkey resets rotation as it finishes, which can be after the app comes up.
     time.sleep(1)
     for key, value in rotation.items():
         if value != "null":
-            shell(args.serial, f"settings put system {key} {value}")
+            shell(serial, f"settings put system {key} {value}")
+
+
+def cmd_launch(args):
+    launch(args.serial, args.package, args.timeout)
     print(f"opened {args.package}")
 
 
@@ -211,49 +216,90 @@ def cmd_screen(args):
     entries = read_screen(args.serial)
     print(f"window: {focused_window(args.serial)}")
     for entry in entries:
-        print(entry)
+        print(entry.describe(args.coords))
 
 
-def pick(args, entries):
+def pick(text, entries, exact=False, nth=1):
     usable = [e for e in entries if e.interactive and "disabled" not in e.flags]
     # A control comes before text alone with the same words, such as a button over a heading.
     # A field's label is the text typed in it, so any other control that matches, such as the
     # "Chess | In progress" row, comes before a search field holding "chess". A field is still
     # found by its hint, which nothing else has.
-    candidates = (find([e for e in usable if "field" not in e.flags], args.text, args.exact)
-                  or find([e for e in usable if "field" in e.flags], args.text, args.exact)
-                  or find(entries, args.text, args.exact))
+    candidates = (find([e for e in usable if "field" not in e.flags], text, exact)
+                  or find([e for e in usable if "field" in e.flags], text, exact)
+                  or find(entries, text, exact))
     if not candidates:
         return None, candidates
-    index = args.nth - 1
-    if index >= len(candidates):
-        sys.exit(f'only {len(candidates)} match "{args.text}": ' + "; ".join(map(str, candidates)))
-    return candidates[index], candidates
+    if nth > len(candidates):
+        sys.exit(f'only {len(candidates)} match "{text}": ' + "; ".join(map(str, candidates)))
+    return candidates[nth - 1], candidates
+
+
+def tap(serial, text, exact=False, nth=1, long=False):
+    """Taps the control or text matching TEXT, and returns a line saying what was tapped."""
+    entry, candidates = pick(text, read_screen(serial), exact, nth)
+    if entry is None:
+        sys.exit(f'nothing on screen matches "{text}". Run "screen" to see what is there.')
+    x, y = entry.center
+    shell(serial, f"input swipe {x} {y} {x} {y} 800" if long else f"input tap {x} {y}")
+    note = f" (match {nth} of {len(candidates)})" if len(candidates) > 1 else ""
+    return f"tapped {entry}{note}"
+
+
+def wait_for(serial, text, exact=False, gone=False, timeout=10):
+    deadline = time.time() + timeout
+    while True:
+        present = bool(find(read_screen(serial), text, exact))
+        if present != gone:
+            return f'"{text}" {"gone" if gone else "shown"}'
+        if time.time() > deadline:
+            sys.exit(f'timed out after {timeout}s waiting for "{text}" to {"go" if gone else "show"}')
+        time.sleep(0.5)
 
 
 def cmd_tap(args):
-    entry, candidates = pick(args, read_screen(args.serial))
-    if entry is None:
-        sys.exit(f'nothing on screen matches "{args.text}". Run "screen" to see what is there.')
-    x, y = entry.center
-    if args.long:
-        shell(args.serial, f"input swipe {x} {y} {x} {y} 800")
-    else:
-        shell(args.serial, f"input tap {x} {y}")
-    note = f" (match {args.nth} of {len(candidates)})" if len(candidates) > 1 else ""
-    print(f"tapped {entry}{note}")
+    line = tap(args.serial, args.text, args.exact, args.nth, args.long)
+    if args.then:
+        line += "; " + wait_for(args.serial, args.then, timeout=args.timeout)
+    print(line)
 
 
 def cmd_wait(args):
-    deadline = time.time() + args.timeout
-    while True:
-        present = bool(find(read_screen(args.serial), args.text, args.exact))
-        if present != args.gone:
-            print(f'"{args.text}" {"gone" if args.gone else "shown"}')
-            return
-        if time.time() > deadline:
-            sys.exit(f'timed out after {args.timeout}s waiting for "{args.text}" to {"go" if args.gone else "show"}')
-        time.sleep(0.5)
+    print(wait_for(args.serial, args.text, args.exact, args.gone, args.timeout))
+
+
+EXPECT_FLAGS = {"disabled", "enabled", "checked", "unchecked", "focused", "selected", "tap", "field"}
+
+
+def cmd_expect(args):
+    """Checks that each TEXT is on screen, in one read, and prints only what isn't as expected.
+
+    TEXT=flag (or TEXT=flag,flag) also checks the control's state, such as "Get started=disabled"
+    or "Completed=checked". With --gone, checks that each TEXT is not on screen.
+    """
+    entries = read_screen(args.serial)
+    problems = []
+    for item in args.items:
+        text, _, flag_text = item.rpartition("=")
+        flags = set(flag_text.split(","))
+        if not text or not flags <= EXPECT_FLAGS:
+            text, flags = item, set()
+        matches = find(entries, text, args.exact)
+        if args.gone:
+            if matches:
+                problems.append(f"still shown: {matches[0]}")
+            continue
+        if not matches:
+            problems.append(f'missing: "{text}"')
+            continue
+        def has(entry, flag):
+            return "disabled" not in entry.flags if flag == "enabled" else flag in entry.flags
+        if flags and not any(all(has(e, f) for f in flags) for e in matches):
+            problems.append(f"not {','.join(sorted(flags))}: " + "; ".join(map(str, matches[:3])))
+    if problems:
+        print("\n".join(problems))
+        sys.exit(1)
+    print(f"ok: all {len(args.items)} {'gone' if args.gone else 'as expected'}")
 
 
 def swipe(serial, direction, bounds=None):
@@ -277,34 +323,41 @@ def cmd_swipe(args):
     print(f"swiped {args.direction}")
 
 
-def cmd_scroll_to(args):
-    direction = "down" if args.up else "up"
+def scroll_to(serial, text, exact=False, up=False, max_swipes=15):
+    direction = "down" if up else "up"
     previous = None
-    for _ in range(args.max + 1):
-        entries = read_screen(args.serial)
-        matches = find(entries, args.text, args.exact)
+    for _ in range(max_swipes + 1):
+        entries = read_screen(serial)
+        matches = find(entries, text, exact)
         if matches:
-            print(f"found {matches[0]}")
-            return
+            return f"found {matches[0]}"
         labels = [e.label for e in entries]
         if labels == previous:
-            sys.exit(f'reached the end without finding "{args.text}"')
+            sys.exit(f'reached the end without finding "{text}"')
         previous = labels
         scrollables = [e for e in entries if "scroll" in e.flags]
         # The largest scrollable area is the page; smaller ones are rows such as the rank trail.
         area = max(scrollables, key=lambda e: (e.bounds[2] - e.bounds[0]) * (e.bounds[3] - e.bounds[1])).bounds \
             if scrollables else None
-        swipe(args.serial, direction, area)
+        swipe(serial, direction, area)
         time.sleep(0.6)
-    sys.exit(f'"{args.text}" not found after {args.max} swipes')
+    sys.exit(f'"{text}" not found after {max_swipes} swipes')
+
+
+def cmd_scroll_to(args):
+    print(scroll_to(args.serial, args.text, args.exact, args.up, args.max))
+
+
+def type_text(serial, text):
+    if not text.isascii():
+        sys.exit("adb's input text takes only ASCII. Paste other text through the clipboard instead.")
+    # input text reads %s as a space; the rest is quoted for the device's shell.
+    escaped = text.replace("%", "\\%").replace(" ", "%s").replace("'", "'\\''")
+    shell(serial, f"input text '{escaped}'")
 
 
 def cmd_type(args):
-    if not args.text.isascii():
-        sys.exit("adb's input text takes only ASCII. Paste other text through the clipboard instead.")
-    # input text reads %s as a space; the rest is quoted for the device's shell.
-    escaped = args.text.replace("%", "\\%").replace(" ", "%s").replace("'", "'\\''")
-    shell(args.serial, f"input text '{escaped}'")
+    type_text(args.serial, args.text)
     print(f"typed {args.text!r}")
 
 
@@ -358,6 +411,88 @@ def cmd_starts(args):
     links = [link for link in links if not link.endswith("...")]
     if links:
         print("full links in held intents: " + " ".join(links))
+
+
+# --- Starting states ------------------------------------------------------------------------
+
+SEED_FILE = "bluecard-qa-seed.json"
+
+
+def cmd_seed(args):
+    """Starts from the seed: clears the app, finishes Onboarding, and imports the seed with Replace all."""
+    s = args.serial
+    shell(s, f"pm clear {PACKAGE}")
+    launch(s)
+    wait_for(s, "Welcome to BlueCard", timeout=20)
+    # Each field is filled with the keyboard closed again after it: the first time the keyboard
+    # opens on API 26, a Gboard tip covers the next field, and the keyboard can cover Get started.
+    for field, text in (("Name", "QA Scout"), ("Unit number", "Troop 1")):
+        tap(s, field)
+        type_text(s, text)
+        shell(s, "input keyevent KEYCODE_BACK")
+    fields = [e.label for e in read_screen(s) if "field" in e.flags]
+    if fields != ["QA Scout", "Troop 1"]:
+        sys.exit(f"Onboarding's fields didn't take the text: {fields}")
+    tap(s, "Get started")
+    wait_for(s, "Your rank", timeout=15)
+    scroll_to(s, "Manage data", exact=True)
+    tap(s, "Manage data", exact=True)
+    wait_for(s, "Import data")
+    # At large text sizes the button is below the fold; "Import data", its heading, isn't it.
+    scroll_to(s, "Import", exact=True)
+    tap(s, "Import", exact=True)
+    deadline = time.time() + 15
+    while "documentsui" not in focused_window(s):
+        if time.time() > deadline:
+            sys.exit("the file picker didn't open")
+        time.sleep(0.5)
+    # A fresh emulator's file picker opens at Recent files, which is empty.
+    if not find(read_screen(s), SEED_FILE):
+        tap(s, "Show roots")
+        tap(s, "Downloads", exact=True)
+        wait_for(s, SEED_FILE)
+    # In landscape the picker shows a grid, where only the file's preview button is labeled.
+    if not [e for e in read_screen(s) if e.label.startswith(SEED_FILE)]:
+        tap(s, "List view", exact=True)
+        wait_for(s, SEED_FILE)
+    tap(s, SEED_FILE)
+    wait_for(s, "Replace all")
+    tap(s, "Replace all")
+    wait_for(s, "Data imported.")
+    shell(s, "input keyevent KEYCODE_BACK")
+    # Home comes back at the top, or scrolled to where Manage data was, so either shows it's Home.
+    deadline = time.time() + 10
+    while not any(find(read_screen(s), text, exact=True) for text in ("Manage data", "Your merit badges")):
+        if time.time() > deadline:
+            sys.exit("Home didn't come back after the import")
+        time.sleep(0.5)
+    print("seeded: Home shows the QA seed (see the plan's \"The seed\")")
+
+
+def cmd_reset(args):
+    """Puts the emulator back as it started, so the next tester can use it without a restart."""
+    s = args.serial
+    for command in [
+        "settings delete secure enabled_accessibility_services",
+        "settings put secure accessibility_enabled 0",
+        "settings put system font_scale 1.0",
+        "wm density reset",
+        "cmd uimode night no",
+        "settings put system user_rotation 0",
+        "settings put system accelerometer_rotation 1",
+        "cmd locale set-device-locale en-US",    # API 34 and higher.
+        "cmd device_state state reset",          # Foldables.
+        f"pm clear {PACKAGE}",
+        "am force-stop com.android.chrome",
+        "am force-stop com.google.android.gm",
+        # Files a tester saved, such as exports and reports, but not the seed.
+        f"cd /sdcard/Download && ls | grep -vx '{SEED_FILE}' | while read f; do rm -rf \"$f\"; done",
+        "logcat -c",
+        "logcat -b crash -c",
+        "input keyevent KEYCODE_HOME",
+    ]:
+        shell(s, command, check=False)
+    print("reset: default settings, BlueCard cleared, Downloads holds only the seed, logs cleared")
 
 
 # --- TalkBack --------------------------------------------------------------------------------
@@ -439,7 +574,8 @@ def main():
     p.add_argument("--package", default=PACKAGE)
     p.add_argument("--timeout", type=float, default=15)
 
-    sub.add_parser("screen", help="list what's on screen: text, controls and where to tap them")
+    p = sub.add_parser("screen", help="list what's on screen: text and controls, with their state")
+    p.add_argument("--coords", action="store_true", help="also give where each is, for adb input commands")
 
     def matching(p):
         p.add_argument("text", help="text or screen reader label to match, ignoring case")
@@ -449,6 +585,14 @@ def main():
     matching(p)
     p.add_argument("--nth", type=int, default=1, help="tap the Nth match")
     p.add_argument("--long", action="store_true", help="long-press instead")
+    p.add_argument("--then", help="then wait until this text shows, as on the next page")
+    p.add_argument("--timeout", type=float, default=10, help="how long --then waits")
+
+    p = sub.add_parser("expect", help="check that each TEXT (or TEXT=disabled, =checked…) is on screen; "
+                                      "prints only what isn't")
+    p.add_argument("items", nargs="+", metavar="TEXT")
+    p.add_argument("--exact", action="store_true", help="match whole labels")
+    p.add_argument("--gone", action="store_true", help="check that each TEXT is not on screen")
 
     p = sub.add_parser("wait", help="wait until TEXT shows, or with --gone, until it's gone")
     matching(p)
@@ -475,11 +619,14 @@ def main():
 
     p = sub.add_parser("shot", help="save a screenshot, optionally cropped and scaled down")
     p.add_argument("out")
-    p.add_argument("--crop", help="left,top,right,bottom in screen pixels")
-    p.add_argument("--width", type=int, default=540, help="scale to this width (0 keeps full size)")
+    p.add_argument("--crop", help="left,top,right,bottom in the screen's pixels, as screen --coords gives them")
+    p.add_argument("--width", type=int, default=360, help="scale to this width (0 keeps full size)")
 
     p = sub.add_parser("starts", help="list recent activity starts, such as a link opening the browser")
     p.add_argument("--last", type=int, default=5)
+
+    sub.add_parser("seed", help="start from the seed: clear the app, finish Onboarding, import the seed")
+    sub.add_parser("reset", help="put the emulator back to default settings with BlueCard cleared")
 
     p = sub.add_parser("talkback", help="turn TalkBack on or off")
     p.add_argument("state", choices=["on", "off"])
@@ -496,7 +643,8 @@ def main():
     if args.command == "tb" and args.gesture == "tap" and args.y is None:
         parser.error("tb tap needs X and Y")
     {
-        "launch": cmd_launch, "clear": cmd_clear, "screen": cmd_screen, "tap": cmd_tap, "wait": cmd_wait, "scroll-to": cmd_scroll_to,
+        "launch": cmd_launch, "clear": cmd_clear, "screen": cmd_screen, "tap": cmd_tap, "expect": cmd_expect,
+        "wait": cmd_wait, "scroll-to": cmd_scroll_to, "seed": cmd_seed, "reset": cmd_reset,
         "swipe": cmd_swipe, "type": cmd_type, "key": cmd_key, "shot": cmd_shot, "starts": cmd_starts,
         "talkback": cmd_talkback, "tb": cmd_tb_gesture, "tb-speech": cmd_tb_speech,
     }[args.command](args)
