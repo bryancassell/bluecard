@@ -261,8 +261,12 @@ class BadgesScreenTest {
 
         query.setTextAndPlaceCursorAtEnd("c")
         uiState = BadgesUiState.Ready(badges.take(3))
-
         list().assert(isListOf(3))
+
+        // Each keystroke gives the list a new size.
+        query.setTextAndPlaceCursorAtEnd("ch")
+        uiState = BadgesUiState.Ready(badges.subList(1, 2))
+        list().assert(isListOf(1))
     }
 
     @Test

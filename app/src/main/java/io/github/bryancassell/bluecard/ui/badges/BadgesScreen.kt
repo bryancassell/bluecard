@@ -133,16 +133,18 @@ fun BadgesScreen(
                     uiState.badges.map { it.id },
                     saver = LazyListState.Saver
                 ) { LazyListState() }
+                val badgeCount = uiState.badges.size
                 LazyColumn(
                     state = listState,
-                    // Screen readers say how many badges the list has. LazyColumn's own count
-                    // keeps the size the list first had, after a search changes it (Compose
-                    // 1.12.1), so the list gives its size itself.
+                    // Screen readers say how many badges the list has. LazyColumn counts the
+                    // items of the list state it was first given, and doesn't recount when
+                    // given a new one, as each new set of matches does above (Compose 1.12.1).
+                    // Compose applies a modifier's semantics after LazyColumn's own, so this
+                    // count is the one screen readers get.
                     modifier = Modifier
                         .fillMaxSize()
                         .semantics {
-                            collectionInfo =
-                                CollectionInfo(rowCount = uiState.badges.size, columnCount = 1)
+                            collectionInfo = CollectionInfo(rowCount = badgeCount, columnCount = 1)
                         }
                 ) {
                     items(uiState.badges, key = { it.id }) { badge ->
