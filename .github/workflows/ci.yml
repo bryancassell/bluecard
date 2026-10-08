@@ -57,11 +57,13 @@ jobs:
     runs-on: ubuntu-latest
     # Emulator jobs on GitHub's runners sometimes hang instead of failing.
     timeout-minutes: 30
-    # TEMPORARY: six copies land on different runners, to see which CPUs load the snapshot.
+    # TEMPORARY: three copies without an emulator cache and three that cache only
+    # the managed AVD and its snapshot, to compare them on the same commit.
     strategy:
       fail-fast: false
       matrix:
-        copy: [1, 2, 3, 4, 5, 6]
+        cache: [none, avd]
+        copy: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
 
@@ -85,19 +87,15 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Restores the emulator, the system image, the managed AVD with its boot
-      # snapshot, and the adb key the snapshot trusts. Gradle then skips the
-      # downloads and the cold boot that makes the snapshot. AGP never updates
-      # an installed emulator or image, so they stay at the cached versions:
-      # change the version at the end of the key to get newer ones, and change
-      # the key whenever the device in app/build.gradle.kts changes.
+      # TEMPORARY (experiment): restores the newest saved AVD and snapshot. Its
+      # key names the emulator and image versions it was made with.
       - uses: actions/cache/restore@v6
-        id: managed-device-cache
-        with: &managed-device-cache
-          key: managed-device-pixel6Api37-google_apis_ps16k-x86_64-v1
+        if: matrix.cache == 'avd'
+        id: avd-cache
+        with:
+          key: managed-device-avd-pixel6Api37
+          restore-keys: managed-device-avd-pixel6Api37-
           path: |
-            /usr/local/lib/android/sdk/emulator
-            /usr/local/lib/android/sdk/system-images/android-37.0/google_apis_ps16k/x86_64
             ~/.android/avd/gradle-managed
             ~/.android/adbkey*
 
@@ -117,16 +115,24 @@ jobs:
       - if: always()
         run: grep -E 'loadable|Loadable|snapshot|Snapshot|AVD creation' gradle-info.log | grep -v 'ClasspathEntrySnapshot|classpath snapshot' | cut -c1-300 | head -100
 
-      # Only pushes to main save the cache, as with the Gradle cache. Pull requests
-      # read main's entry instead of each saving a copy, which would push the
-      # Gradle caches out of the repository's 10 GB. Saved only after the tests
-      # pass.
-      # TEMPORARY: this branch saves too, to measure a cache hit before merging.
+      # TEMPORARY (experiment): saves the AVD under the versions Gradle installed,
+      # when they differ from the restored entry's.
+      - id: avd-key
+        if: matrix.cache == 'avd'
+        run: |
+          sdk=/usr/local/lib/android/sdk
+          emulator=$(sed -n 's/^Pkg.Revision=//p' $sdk/emulator/source.properties)
+          image=$(sed -n 's/^Pkg.Revision=//p' $sdk/system-images/android-37.0/google_apis_ps16k/x86_64/source.properties)
+          echo "key=managed-device-avd-pixel6Api37-emulator-$emulator-image-$image" | tee -a "$GITHUB_OUTPUT"
       - uses: actions/cache/save@v6
         if: >-
-          (github.ref == 'refs/heads/main' || github.head_ref == 'feature/5-cache-emulator')
-          && steps.managed-device-cache.outputs.cache-hit != 'true'
-        with: *managed-device-cache
+          matrix.cache == 'avd'
+          && steps.avd-cache.outputs.cache-matched-key != steps.avd-key.outputs.key
+        with:
+          key: ${{ steps.avd-key.outputs.key }}
+          path: |
+            ~/.android/avd/gradle-managed
+            ~/.android/adbkey*
 
       # Also after a timeout, which cancels the job instead of failing it.
       - uses: actions/upload-artifact@v7
