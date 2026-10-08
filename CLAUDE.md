@@ -1,5 +1,7 @@
 The product requirements document for this project is in PRD.md
 
+The QA test plan for releases is in docs/qa-test-plan.md. When asked to run QA on a release or a build, follow it.
+
 The architecture design for this project is in ARCHITECTURE.md. Read its table of contents first, then only the sections you need. Follow it for new features, and update it in the same PR when a design decision changes.
 
 ## What goes where

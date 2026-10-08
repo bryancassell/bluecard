@@ -138,7 +138,8 @@ it.
 │   ├── workflows/ci.yml        Continuous integration
 │   └── dependabot.yml          Weekly dependency update pull requests
 ├── scripts/
-│   └── check-test-rules.sh     Testing-rule checks run by the build
+│   ├── check-test-rules.sh     Testing-rule checks run by the build
+│   └── qa/                     Emulator helper and seed data for the QA test plan
 ├── gradle.properties           Gradle and Android build settings
 ├── gradle/
 │   ├── libs.versions.toml      Version catalog
@@ -307,6 +308,10 @@ R8), or a library that uses reflection or ships keep rules the app relies on:
 kotlinx.serialization, Hilt, Room or DataStore. As with backup, use an
 emulator, and point `adb` at it if a phone is also connected.
 
+Before a release, the [QA test plan](qa-test-plan.md) makes this check on
+several emulators, with every journey; Claude runs it. The steps below are the
+quick check by hand.
+
 1. Build the release APK and sign it with the debug key. Gradle leaves the
    release build unsigned, and only publishing signs it with the release key
    (see [Publishing a test release](#publishing-a-test-release)). Uninstall
@@ -456,8 +461,14 @@ paste commands into it.
        echo "Signed with the release key."
    ```
 
-4. Install it fresh on an emulator and go through steps 2 and 3 of
-   [Checking a release build](#checking-a-release-build).
+4. Ask Claude to run the [QA test plan](qa-test-plan.md) against the signed
+   APK: "Run the QA test plan in docs/qa-test-plan.md against
+   app/build/outputs/bluecard-<version>.apk". It tests a fresh install and,
+   from the second release on, an update from the previous release, and files
+   an issue for each bug. Decide which must be fixed before publishing.
+
+   To check by hand instead, install it fresh on an emulator and go through
+   steps 2 and 3 of [Checking a release build](#checking-a-release-build).
 
    ```sh
    adb uninstall io.github.bryancassell.bluecard
