@@ -21,7 +21,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -40,6 +39,7 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import java.time.LocalDate
@@ -153,11 +153,9 @@ class RankDetailScreenTest {
     private fun row(summary: String) = text(summary).performScrollTo()
 
     /** A day in the date picker, such as "May 20, 2026". */
-    private fun pickerDay(date: String) =
-        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
 
     private fun pickDay(date: String) {
-        pickerDay(date).performClick()
+        composeTestRule.pickerDay(date).performClick()
         text("OK").performClick()
     }
 
@@ -298,8 +296,8 @@ class RankDetailScreenTest {
 
         text("Mark earned").performScrollTo().performClick()
         // It opens at today.
-        pickerDay("May 20, 2026").assert(isSelected)
-        pickerDay("May 21, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 20, 2026").assert(isSelected)
+        composeTestRule.pickerDay("May 21, 2026").assertIsNotEnabled()
         pickDay("May 10, 2026")
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
@@ -347,7 +345,7 @@ class RankDetailScreenTest {
         show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
 
         text("Mark earned").performScrollTo().performClick()
-        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
         text("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
@@ -372,7 +370,7 @@ class RankDetailScreenTest {
         text("Mark earned").assertDoesNotExist()
 
         text("Change date").performScrollTo().performClick()
-        pickerDay("August 1, 2025").assert(isSelected)
+        composeTestRule.pickerDay("August 1, 2025").assert(isSelected)
         pickDay("August 5, 2025")
         assertEquals(listOf(LocalDate.of(2025, 8, 5)), marks)
 
@@ -390,7 +388,7 @@ class RankDetailScreenTest {
         text("Unmark").assertDoesNotExist()
 
         text("Add date").performScrollTo().performClick()
-        pickerDay("May 20, 2026").assert(isSelected)
+        composeTestRule.pickerDay("May 20, 2026").assert(isSelected)
         pickDay("May 10, 2026")
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
@@ -405,7 +403,7 @@ class RankDetailScreenTest {
 
         text("Add date").performScrollTo().performClick()
 
-        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
     }
 
     @Test

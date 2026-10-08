@@ -60,6 +60,7 @@ import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
 import io.github.bryancassell.bluecard.testing.paragraphDirection
+import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -306,10 +307,6 @@ class RequirementDetailScreenTest {
 
     private fun confirmClear() =
         composeTestRule.onNode(hasText("Clear") and hasAnyAncestor(isDialog())).performClick()
-
-    // A day in the date picker, which reads each day as its full date.
-    private fun pickerDay(date: String) =
-        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
 
     @Test
     fun loading_showsProgressOnly() {
@@ -786,10 +783,10 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText("Change date").performClick()
         // It opens at the date shown, not the rows' date.
-        pickerDay(
+        composeTestRule.pickerDay(
             "April 15, 2026"
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
-        pickerDay("April 10, 2026").performClick()
+        composeTestRule.pickerDay("April 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 10)), dateChanges)
@@ -811,7 +808,7 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText("No completion date").assertIsDisplayed()
         composeTestRule.onNodeWithText("Add date").performClick()
-        pickerDay(
+        composeTestRule.pickerDay(
             "April 12, 2026"
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         composeTestRule.onNodeWithText("OK").performClick()
@@ -1215,10 +1212,10 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         // It opens at the current date.
-        pickerDay(
+        composeTestRule.pickerDay(
             "April 15, 2026"
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
-        pickerDay("April 10, 2026").performClick()
+        composeTestRule.pickerDay("April 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 10)), dateChanges)
@@ -1242,8 +1239,8 @@ class RequirementDetailScreenTest {
 
         composeTestRule.onNodeWithText("Add date").performScrollTo().performClick()
 
-        pickerDay("May 20, 2026").assertIsEnabled()
-        pickerDay("May 21, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 20, 2026").assertIsEnabled()
+        composeTestRule.pickerDay("May 21, 2026").assertIsNotEnabled()
     }
 
     @Config(qualifiers = DATE_PICKER_SCREEN)
@@ -1253,7 +1250,7 @@ class RequirementDetailScreenTest {
         today = LocalDate.of(2026, 5, 21)
 
         composeTestRule.onNodeWithText("Add date").performScrollTo().performClick()
-        pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
@@ -1266,8 +1263,8 @@ class RequirementDetailScreenTest {
         today = LocalDate.of(2026, 5, 21)
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        pickerDay("May 22, 2026").assertIsNotEnabled()
-        pickerDay("May 21, 2026").performClick()
+        composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 21, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
@@ -1280,7 +1277,7 @@ class RequirementDetailScreenTest {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 22)))
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        pickerDay(
+        composeTestRule.pickerDay(
             "May 20, 2026"
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         composeTestRule.onNodeWithText("OK").performClick()
@@ -1294,7 +1291,7 @@ class RequirementDetailScreenTest {
         show(completedLeaf)
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        pickerDay("April 10, 2026").performClick()
+        composeTestRule.pickerDay("April 10, 2026").performClick()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertEquals(emptyList<LocalDate?>(), dateChanges)
@@ -1310,14 +1307,14 @@ class RequirementDetailScreenTest {
         show(completedLeaf.copy(completedDate = LocalDate.of(2025, 11, 12)))
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        pickerDay("November 1, 2025").assertIsWhollyDisplayed()
-        pickerDay("November 30, 2025").assertIsNotDisplayed()
+        composeTestRule.pickerDay("November 1, 2025").assertIsWhollyDisplayed()
+        composeTestRule.pickerDay("November 30, 2025").assertIsNotDisplayed()
         // performScrollTo would scroll only the months, which scroll sideways.
         composeTestRule.onNode(
             hasAnyAncestor(isDialog()) and
                 SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
         ).performTouchInput { swipeUp() }
-        pickerDay("November 30, 2025").assertIsWhollyDisplayed().performClick()
+        composeTestRule.pickerDay("November 30, 2025").assertIsWhollyDisplayed().performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf<LocalDate?>(LocalDate.of(2025, 11, 30)), dateChanges)

@@ -54,6 +54,7 @@ import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.paragraphDirection
+import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -177,10 +178,6 @@ class TrackerEntryScreenTest {
             DpRect(rect.left.toDp(), rect.top.toDp(), rect.right.toDp(), rect.bottom.toDp())
         }
     }
-
-    // A day in the date picker, which reads each day as its full date.
-    private fun pickerDay(date: String) =
-        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
 
     @Test
     fun loading_showsProgressOnly() {
@@ -477,11 +474,11 @@ class TrackerEntryScreenTest {
         show(newEntry)
 
         button("Add date").performClick()
-        pickerDay(
+        composeTestRule.pickerDay(
             "May 20, 2026"
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
-        pickerDay("May 21, 2026").assertIsNotEnabled()
-        pickerDay("May 11, 2026").performClick()
+        composeTestRule.pickerDay("May 21, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 11, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(
@@ -497,7 +494,7 @@ class TrackerEntryScreenTest {
         today = LocalDate.of(2026, 5, 21)
 
         button("Add date").performClick()
-        pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(
@@ -513,7 +510,7 @@ class TrackerEntryScreenTest {
 
         composeTestRule.onNodeWithText("Apr 15, 2026").assertIsDisplayed()
         button("Change date").performClick()
-        pickerDay(
+        composeTestRule.pickerDay(
             "April 15, 2026"
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         composeTestRule.onNodeWithText("Cancel").performClick()

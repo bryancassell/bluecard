@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -30,8 +30,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,9 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -183,57 +185,72 @@ fun CompletionDatePickerDialog(
             modifier = Modifier.wrapContentHeight(),
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            BoxWithConstraints {
-                val calendarFits = maxWidth >= CalendarWidth
+            BoxWithConstraints(contentAlignment = Alignment.Center) {
+                // In pixels, as the calendar is laid out, so it shows whenever it fits.
+                val calendarFits =
+                    constraints.maxWidth >= with(LocalDensity.current) { CalendarWidth.roundToPx() }
                 val state = rememberDatePickerState(
                     initialSelectedDateMillis = initial.coerceAtMost(today).toPickerMillis(),
                     selectableDates = remember(today) { NotAfter(today) },
                     initialDisplayMode = if (calendarFits) DisplayMode.Picker else DisplayMode.Input
                 )
-                // The calendar comes back after the window changes size, as when the phone turns
-                // or is folded with it showing, and may no longer fit.
-                LaunchedEffect(calendarFits) {
-                    if (!calendarFits) state.displayMode = DisplayMode.Input
-                }
-                // Material focuses the field, opening the keyboard, when it's given this. It's
-                // given once the calendar has shown, so the field takes focus when the scout
-                // switches to typing, not when the picker opens to typing or comes back typing
-                // after the window changes size.
-                var calendarShown by remember { mutableStateOf(false) }
-                if (state.displayMode == DisplayMode.Picker) calendarShown = true
-                val focusRequester = remember { FocusRequester() }
-                Surface(
-                    modifier = if (calendarFits) {
-                        Modifier.width(CalendarWidth)
-                    } else {
-                        Modifier
-                            .padding(horizontal = 16.dp)
-                            .fillMaxWidth()
-                    },
-                    shape = DatePickerDefaults.shape,
-                    color = DatePickerDefaults.colors().containerColor,
-                    tonalElevation = DatePickerDefaults.TonalElevation
-                ) {
-                    Column(verticalArrangement = Arrangement.SpaceBetween) {
-                        // On a short window, such as a phone's in landscape, the dialog is
-                        // shorter than the picker. Material would then clip the month's first
-                        // and last weeks, leaving days under 48dp tall or hidden (#282), so the
-                        // picker scrolls instead, as Material's own sample does, and the buttons
-                        // stay below it.
-                        Box(Modifier.weight(1f, fill = false)) {
-                            DatePicker(
-                                state = state,
-                                modifier = Modifier.verticalScroll(rememberScrollState()),
-                                showModeToggle = calendarFits,
-                                focusRequester = focusRequester.takeIf {
-                                    calendarFits && calendarShown
-                                }
-                            )
-                        }
-                        DatePickerButtons(state, onConfirm, onDismiss)
-                    }
+                if (!calendarFits && state.displayMode == DisplayMode.Picker) {
+                    // The calendar comes back after the window changes size, as when the phone
+                    // turns or is folded with it showing, and may no longer fit. Nothing shows
+                    // until the picker switches to typing, so it isn't drawn squeezed first.
+                    SideEffect { state.displayMode = DisplayMode.Input }
+                } else {
+                    DatePickerSurface(state, calendarFits, maxWidth, onConfirm, onDismiss)
                 }
             }
+        }
+    }
+}
+
+/**
+ * The dialog's surface, as Material's DatePickerDialog draws it, with the picker for [state] and
+ * its buttons. It's as wide as the calendar where it [calendarFits], and otherwise
+ * [windowWidth] less a margin each side, where the scout types the date.
+ */
+@Composable
+private fun DatePickerSurface(
+    state: DatePickerState,
+    calendarFits: Boolean,
+    windowWidth: Dp,
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    // Material focuses the field, opening the keyboard, when it's given this. It's given once
+    // the calendar has shown, so the field takes focus when the scout switches to typing, not
+    // when the picker opens to typing or comes back typing after the window changes size. It's
+    // set while composing, before it's read: set a frame later, from a SideEffect, it didn't
+    // reach the field when the scout switched from the calendar back to typing.
+    var calendarShown by remember { mutableStateOf(false) }
+    if (state.displayMode == DisplayMode.Picker) calendarShown = true
+    val focusRequester = remember { FocusRequester() }
+    Surface(
+        // Sized rather than padded, so a tap in the margin is outside the dialog and closes it.
+        modifier = Modifier
+            .width(if (calendarFits) CalendarWidth else windowWidth - 32.dp)
+            .heightIn(max = MaxHeight),
+        shape = DatePickerDefaults.shape,
+        color = DatePickerDefaults.colors().containerColor,
+        tonalElevation = DatePickerDefaults.TonalElevation
+    ) {
+        Column(verticalArrangement = Arrangement.SpaceBetween) {
+            // On a short window, such as a phone's in landscape, the dialog is shorter than the
+            // picker. Material would then clip the month's first and last weeks, leaving days
+            // under 48dp tall or hidden (#282), so the picker scrolls instead, as Material's own
+            // sample does, and the buttons stay below it.
+            Box(Modifier.weight(1f, fill = false)) {
+                DatePicker(
+                    state = state,
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    showModeToggle = calendarFits,
+                    focusRequester = focusRequester.takeIf { calendarFits && calendarShown }
+                )
+            }
+            DatePickerButtons(state, onConfirm, onDismiss)
         }
     }
 }
@@ -244,9 +261,13 @@ fun CompletionDatePickerDialog(
  */
 private val CalendarWidth = 360.dp
 
+/** Material's DatePickerDialog's greatest height, whose constant is also internal. */
+private val MaxHeight = 568.dp
+
 /**
- * Cancel and OK, laid out as in Material's DatePickerDialog. OK gives [onConfirm] the date
- * [state] has selected.
+ * Cancel and OK, at the end of a row as in Material's DatePickerDialog. If they don't fit side by
+ * side, OK goes below Cancel, keeping the order they're read and focused in, where Material
+ * puts it above. OK gives [onConfirm] the date [state] has selected.
  */
 @Composable
 private fun ColumnScope.DatePickerButtons(

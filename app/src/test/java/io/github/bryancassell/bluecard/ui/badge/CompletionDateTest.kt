@@ -1,35 +1,41 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.os.SystemClock
+import android.view.MotionEvent
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
+import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
 import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
+import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowDialog
 
 /**
- * How the date picker fits the window. Robolectric's default screen is 320dp wide, as a Pixel
- * 10's is at the largest display size (#306): too narrow for the calendar. What the picker does
- * with the date picked is tested on the pages that open it.
+ * How the date picker fits the window (#306). What the picker does with the date picked is
+ * tested on the pages that open it.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -42,6 +48,7 @@ class CompletionDateTest {
 
     private val today = LocalDate.of(2026, 5, 20)
     private val picked = mutableListOf<LocalDate>()
+    private var dismissals = 0
 
     private fun showPicker() {
         composeTestRule.setContent {
@@ -49,14 +56,12 @@ class CompletionDateTest {
                 initial = LocalDate.of(2026, 5, 18),
                 today = today,
                 onConfirm = { picked += it },
-                onDismiss = {}
+                onDismiss = { dismissals++ }
             )
         }
     }
 
     // A day in the calendar, which reads each day as its full date.
-    private fun calendarDay(date: String) =
-        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
 
     private fun typedDate() = composeTestRule.onNode(hasSetTextAction())
 
@@ -64,13 +69,14 @@ class CompletionDateTest {
         composeTestRule.onNodeWithText("Cancel").assertIsWhollyDisplayed()
         composeTestRule.onNodeWithText("OK").assertIsWhollyDisplayed()
         typedDate().assertIsWhollyDisplayed()
-        calendarDay("May 18, 2026").assertDoesNotExist()
+        composeTestRule.pickerDay("May 18, 2026").assertDoesNotExist()
         composeTestRule.onNodeWithContentDescription("Switch to calendar input mode")
             .assertDoesNotExist()
     }
 
     // In touch mode, as on a phone without TalkBack or a keyboard. Out of touch mode, Android
     // gives a new window's first item focus, so a keyboard can type straight away.
+    @Config(qualifiers = NARROW_SCREEN)
     @Test
     fun onANarrowWindow_opensToTypingTheDate_withTheKeyboardDown() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
@@ -81,6 +87,7 @@ class CompletionDateTest {
         typedDate().assertIsNotFocused()
     }
 
+    @Config(qualifiers = NARROW_SCREEN)
     @Test
     fun onANarrowWindow_picksTheDateTyped() {
         showPicker()
@@ -91,6 +98,7 @@ class CompletionDateTest {
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), picked)
     }
 
+    @Config(qualifiers = NARROW_SCREEN)
     @Test
     fun onANarrowWindow_aDateAfterTodayCantBeConfirmed() {
         showPicker()
@@ -101,14 +109,33 @@ class CompletionDateTest {
         composeTestRule.onNodeWithText("OK").assertIsEnabled()
     }
 
+    // The margin beside the dialog is outside it, as the space above and below is.
+    @Config(qualifiers = NARROW_SCREEN)
+    @Test
+    fun onANarrowWindow_aTapBesideTheDialog_closesIt() {
+        showPicker()
+
+        composeTestRule.runOnIdle {
+            val window = ShadowDialog.getLatestDialog().window!!.decorView
+            val x = 8 * window.resources.displayMetrics.density
+            val y = window.height / 2f
+            val time = SystemClock.uptimeMillis()
+            for (action in listOf(MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP)) {
+                window.dispatchTouchEvent(MotionEvent.obtain(time, time, action, x, y, 0))
+            }
+        }
+
+        assertEquals(1, dismissals)
+    }
+
     // May 2026's Saturdays are in the calendar's last column, at the window's edge.
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun onAWindowAsWideAsTheCalendar_showsAllOfIt() {
         showPicker()
 
-        calendarDay("May 17, 2026").assertIsWhollyDisplayed()
-        calendarDay("May 16, 2026").assertIsWhollyDisplayed()
+        composeTestRule.pickerDay("May 17, 2026").assertIsWhollyDisplayed()
+        composeTestRule.pickerDay("May 16, 2026").assertIsWhollyDisplayed()
         composeTestRule.onNodeWithContentDescription("Switch to text input mode")
             .assertIsWhollyDisplayed()
         composeTestRule.onNodeWithText("OK").assertIsWhollyDisplayed()
@@ -124,5 +151,19 @@ class CompletionDateTest {
         composeTestRule.waitPastDateFieldFocusDelay()
 
         typedDate().assertIsFocused()
+    }
+
+    // Larger text makes the picker taller. On a tall phone it scrolls inside a dialog no taller
+    // than Material's, as #282's short windows do.
+    @Config(qualifiers = "w411dp-h891dp", fontScale = 2f)
+    @Test
+    fun atTheLargestTextSize_onATallWindow_isNoTallerThanMaterialsDialog() {
+        showPicker()
+
+        val dialog = composeTestRule
+            .onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.PaneTitle))
+            .fetchSemanticsNode()
+        val height = with(composeTestRule.density) { dialog.size.height.toDp() }
+        assertTrue("The dialog is $height tall", height <= 568.dp)
     }
 }
