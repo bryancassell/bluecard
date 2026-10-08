@@ -64,7 +64,7 @@ Examples from the catalog (compare them with the official pages):
 |---|---|---|
 | Canoeing 3a | Identify the main parts of a canoe. | Reworded: the first draft was the official sentence with one word changed, and this says it just as naturally. |
 | Citizenship in the Community 1 | Discuss what good citizenship looks like in your community. | Reworded: the first draft carried over an 11-word official clause that's easy to say other ways. |
-| Citizenship in the Nation 7c | Tour a federal facility. | Fine, though it's the official sentence: any other wording reads worse. |
+| Citizenship in the Nation 7c | Tour a federal facility, and explain what you saw and how it serves the community and nation. | Fine, though it starts with the official sentence: any other wording of that part reads worse. |
 | First Aid 3g | Immersion foot, frostnip, frostbite and ice burns. | Fine: the official list of names. |
 | Environmental Science 1 | Explain environmental science in your own words and how it helps. | Fine: a name and a common phrase from the official text, in a sentence of our own. |
 
@@ -120,8 +120,8 @@ lists in 6.
               "summary": "Look ahead at fitness in your future.",
               "requiredCount": 1,
               "children": [
-                { "number": "8a", "summary": "Explore careers in fitness and study one closely." },
-                { "number": "8b", "summary": "Explore how fitness could become a lifelong hobby." }
+                { "number": "8a", "summary": "Explore careers in fitness, study one closely, and discuss what you found and whether it interests you." },
+                { "number": "8b", "summary": "Explore how fitness could become a lifelong hobby, discuss what you learned, and share your goals for it." }
               ]
             }
           ]
@@ -314,12 +314,31 @@ each one with that section, not by the count: lists and common phrases make
 long matches in summaries that are fine, and rewording to avoid them makes
 summaries read awkwardly.
 
-It also can't check that a step with the counselor made it into the catalog,
-so reviewers check that too. Search the official text of each requirement you
-add or change for "counselor" and for share, show, present, review, discuss,
-explain, describe, tell and state. Each step you find belongs in the summary,
-and so does any approval or help from the counselor. On a requirement the app
-completes by itself, one with a `rowCount` or with `children`, each of them
-also needs `ownWork` or a child that covers it: Coin Collecting 7a's "identify
-for your counselor" was once left out of both, so typing in 20 coins completed
-it.
+It also can't check that a step with the counselor, or anyone else, made it
+into the catalog, so reviewers check that too. Search the official text of
+each requirement you add or change for "counselor" and for share, show,
+present, review, discuss, explain, describe, tell, state, demonstrate and
+report. Each step you find belongs in the summary, and so does any approval or
+help from the counselor. On a requirement the app completes by itself, one
+with a `rowCount` or with `children`, each of them also needs `ownWork` or a
+child that covers it: Coin Collecting 7a's "identify for your counselor" was
+once left out of both, so typing in 20 coins completed it.
+
+Write each step with a verb that has the scout say or show something, such as
+explain, describe, tell, discuss, share, show, present or review. A verb the
+scout could satisfy on paper isn't enough: "Compare automatic and standard
+transmissions." became "Explain how automatic and standard transmissions
+differ." (Automotive Maintenance 9b), and "Adjust the eyepiece…" became "Show
+how to adjust the eyepiece…" (Bird Study 3b). The verb is enough without "to
+your counselor" (Backpacking 5b: "Explain why drinking enough water on a trek
+matters."). Do name the counselor for their approval, help or supervision, or
+for work done with them, even an approval that covers only one choice
+(Emergency Preparedness 2c: "Using the pamphlet's checklist or one your
+counselor approves…"), and name anyone else a step is for, such as a troop, a
+family or the patrol leaders' council. Children that are only topics of their
+parent's step, such as First Aid 3's wounds, don't repeat its verb, but a child
+whose own text has a step does (Personal Fitness 2a). When a parent needs the
+counselor's approval of the scout's choice or activity ("With your parent or
+guardian's and counselor's approval, do ONE of the following"), no child covers
+it, so it gets `ownWork`: "Get permission and your counselor's approval before
+you start." (Pulp and Paper 7).
