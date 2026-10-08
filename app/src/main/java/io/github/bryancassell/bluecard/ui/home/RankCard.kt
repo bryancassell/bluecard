@@ -24,11 +24,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -50,6 +48,21 @@ fun RankCard(
 ) {
     val nextRank = uiState.nextRank
     val colors = MaterialTheme.colorScheme
+    val title = stringResource(R.string.home_rank_title)
+    val rankName = uiState.rank?.name ?: stringResource(R.string.home_no_rank)
+    val earned = uiState.ranks.count { it.status == RankStatus.Earned }
+    val ranksEarned = pluralStringResource(
+        R.plurals.home_ranks_earned,
+        uiState.ranks.size,
+        earned,
+        uiState.ranks.size
+    )
+    val next = nextRank?.let { stringResource(R.string.home_next_rank, it.name) }
+        ?: stringResource(R.string.home_every_rank_earned)
+    val inProgress = nextRank?.let { stringResource(R.string.badges_in_progress) }
+    // How many ranks are earned takes the trail's place.
+    val label = listOfNotNull(title, rankName, ranksEarned, next, inProgress)
+        .joinToString(stringResource(R.string.home_rank_card_separator))
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -73,26 +86,26 @@ fun RankCard(
             modifier = opensNextRank
                 // Screen readers read the card as one heading, which they can jump to as to the
                 // cards' titles below it, saying how much of the rank in progress is done as its
-                // state, as its row on Ranks does.
-                .semantics(mergeDescendants = true) {
+                // state, as its row on Ranks does. The label is the card's own rather than its
+                // parts': TalkBack leaves out parts scrolled off screen, and read only the last
+                // line when Home came back scrolled down (#305).
+                .clearAndSetSemantics {
                     heading()
+                    contentDescription = label
                     percentDone?.let { stateDescription = it }
                 }
                 .padding(20.dp)
         ) {
             Text(
-                text = stringResource(R.string.home_rank_title),
+                text = title,
                 style = MaterialTheme.typography.labelLarge,
                 color = colors.inversePrimary
             )
-            Text(
-                text = uiState.rank?.name ?: stringResource(R.string.home_no_rank),
-                style = MaterialTheme.typography.headlineMedium
-            )
+            Text(text = rankName, style = MaterialTheme.typography.headlineMedium)
             RankTrail(uiState.ranks, Modifier.padding(top = 16.dp))
             // Seven names don't fit under the dots on a phone, so only the trail's ends have
             // one. Screen readers hear how many ranks are earned instead.
-            Row(modifier = Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 val labelStyle = MaterialTheme.typography.labelSmall
                 // Half the row each, so a long name wraps rather than squeezing the other.
                 Text(
@@ -114,19 +127,16 @@ fun RankCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (nextRank == null) {
-                    Text(
-                        text = stringResource(R.string.home_every_rank_earned),
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                if (inProgress == null) {
+                    Text(text = next, style = MaterialTheme.typography.titleMedium)
                 } else {
                     Text(
-                        text = stringResource(R.string.home_next_rank, nextRank.name),
+                        text = next,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = stringResource(R.string.badges_in_progress),
+                        text = inProgress,
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.inversePrimary
                     )
@@ -141,24 +151,15 @@ fun RankCard(
  * Every rank in a row, joined by a line: a filled dot for each rank earned, a larger dot filled
  * as far as the rank in progress is done, and a hollow dot for each rank after it. The line is
  * solid up to the rank in progress, or once every rank is earned, to the last, whose dot is
- * larger. The first and last dots sit at the trail's ends, over their names. Screen readers hear
- * how many ranks are earned.
+ * larger. The first and last dots sit at the trail's ends, over their names.
  */
 @Composable
 private fun RankTrail(ranks: List<RankListItem>, modifier: Modifier = Modifier) {
-    val earned = ranks.count { it.status == RankStatus.Earned }
-    val description =
-        pluralStringResource(R.plurals.home_ranks_earned, ranks.size, earned, ranks.size)
     val colors = MaterialTheme.colorScheme
     val done = colors.onPrimary
     val toGo = colors.inversePrimary
     val background = colors.primary
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(LargeDot)
-            .semantics { text = AnnotatedString(description) }
-    ) {
+    Canvas(modifier = modifier.fillMaxWidth().height(LargeDot)) {
         val lineWidth = LineWidth.toPx()
         // Strokes are drawn centered on their circle, so each is inset to keep within its dot.
         val largeRadius = LargeDot.toPx() / 2

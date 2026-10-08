@@ -483,6 +483,16 @@ both taps of a double tap can reach it.
   text, it replaces the text's label. Tests of such a label check the `Text`
   node in the unmerged tree, and that the button has only one description: the
   merged node has the description wherever it's set.
+- **Something read as one that can be partly scrolled off screen has a label
+  of its own**, set with `clearAndSetSemantics`, rather than merging its
+  parts' (`RankCard` in `ui/home/RankCard.kt`). Compose gives TalkBack a merged
+  node's own properties and its parts as nodes of their own (`getInfoText` in
+  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and
+  marks a part off screen as not visible to the user. TalkBack leaves those
+  parts out: with only the rank card's last line on screen, as Home came back
+  scrolled down, it read only that line
+  ([#305](https://github.com/bryancassell/bluecard/issues/305)).
+  `spokenLabel` in `HomeScreenTest` reads a node as TalkBack does.
 
 ### Live regions
 
