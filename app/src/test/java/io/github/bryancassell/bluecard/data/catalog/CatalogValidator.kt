@@ -203,6 +203,11 @@ object CatalogValidator {
             if (tracker.rowCount != null && tracker.columns.any { it.total != null }) {
                 add("$where: has a total but a fixed number of rows")
             }
+            tracker.rowsNeeded?.let { if (it < 1) add("$where: rowsNeeded must be at least 1") }
+            // A fixed-row tracker's count is already out of its rows.
+            if (tracker.rowCount != null && tracker.rowsNeeded != null) {
+                add("$where: has rowsNeeded but a fixed number of rows")
+            }
             addAll(validateLowercaseLabel("$where: rowLabel", tracker.rowLabel))
             addAll(validateLowercaseLabel("$where: rowLabelPlural", tracker.rowLabelPlural))
         }

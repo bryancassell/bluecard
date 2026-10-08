@@ -165,6 +165,25 @@ class FractionDoneTest {
         assertEquals(1f, log.fractionDone(progressOf(done("6")), entries))
     }
 
+    // Requirement 6 again, asking for at least three sessions.
+    private val logOfThree = log.copy(tracker = log.tracker!!.copy(rowsNeeded = 3))
+
+    @Test
+    fun logThatNeedsRows_countsEachRowItNeedsAndMarkingIt() {
+        assertEquals(0f, logOfThree.fractionDone(emptyMap(), emptyMap()))
+        val twoRows = entriesOf(row("6", null), row("6", null))
+        assertEquals(0.5f, logOfThree.fractionDone(emptyMap(), twoRows))
+        val threeRows = entriesOf(row("6", null), row("6", null), row("6", null))
+        assertEquals(0.75f, logOfThree.fractionDone(emptyMap(), threeRows))
+        assertEquals(1f, logOfThree.fractionDone(progressOf(done("6")), twoRows))
+    }
+
+    @Test
+    fun logThatNeedsRows_rowsPastTheNumberAddNothing() {
+        val fiveRows = entriesOf(*Array(5) { row("6", null) })
+        assertEquals(0.75f, logOfThree.fractionDone(emptyMap(), fiveRows))
+    }
+
     @Test
     fun meritBadges_countTheBadgesNeededTheScoutHas() {
         // Six badges, four of them Eagle-required.
@@ -228,23 +247,26 @@ class FractionDoneTest {
             log,
             nestedTwice,
             childrenAndTracker,
-            weeks.copy(number = "9", ownWork = "Sum up the weeks.")
+            weeks.copy(number = "9", ownWork = "Sum up the weeks."),
+            log.copy(number = "10", tracker = log.tracker!!.copy(rowsNeeded = 2))
         )
-        val partOfEach = listOf(row("5", 1), row("5", 2), row("6", null)) +
+        val partOfEach = listOf(row("5", 1), row("5", 2), row("6", null), row("10", null)) +
             (1..4).map { row("8", it) }
         val recorded = listOf(
             progressOf() to entriesOf(),
             // Part of each, and requirement 8's tracker full while its children aren't.
             progressOf(done("1"), done("2a"), done("3a"), done("7a(1)"), done("8a")) to
                 partOfEach.groupBy { it.requirementNumber },
-            // Enough children for requirement 4, but not its own work, and requirement 9's rows
-            // but not its own work.
+            // Enough children for requirement 4, but not its own work, requirement 9's rows but
+            // not its own work, and more rows than requirement 10 needs, but not marked.
             progressOf(done("3a"), done("3b"), done("7a(1)"), done("7a(2)"), done("7b")) to
-                (1..4).map { row("9", it) }.groupBy { it.requirementNumber },
+                ((1..4).map { row("9", it) } + List(3) { row("10", null) })
+                    .groupBy { it.requirementNumber },
             // Everything.
             progressOf(
                 done("1"), done("2a"), done("2b"), done("3b"), done("3c"), done("4"), done("6"),
-                done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b"), done("9")
+                done("7a(1)"), done("7a(2)"), done("7b"), done("8a"), done("8b"), done("9"),
+                done("10")
             ) to (1..4).flatMap { listOf(row("5", it), row("9", it)) }
                 .groupBy { it.requirementNumber }
         )

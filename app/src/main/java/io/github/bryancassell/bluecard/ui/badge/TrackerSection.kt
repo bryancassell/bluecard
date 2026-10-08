@@ -36,10 +36,9 @@ import java.time.format.DateTimeFormatter
 
 /** "5 sessions", or "8 of 12 weeks". */
 @Composable
-fun trackerCountLabel(count: TrackerCount): String = if (count.rowCount == null) {
-    stringResource(R.string.tracker_count, count.recorded, count.rows)
-} else {
-    stringResource(R.string.tracker_count_of, count.recorded, count.rowCount, count.rows)
+fun trackerCountLabel(count: TrackerCount): String = when (val outOf = count.outOf) {
+    null -> stringResource(R.string.tracker_count, count.recorded, count.rows)
+    else -> stringResource(R.string.tracker_count_of, count.recorded, outOf, count.rows)
 }
 
 /** Formats a tracker's totals in the strings' language ([totalFormat]). */

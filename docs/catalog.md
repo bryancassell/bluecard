@@ -39,7 +39,8 @@ code. Why the catalog works this way is in
   `type`, and never change the tracker's `rowCount`. You can change a column's
   label or add a column, and change a `text` column to `multiline-text`, but
   not back: its saved values may then hold line breaks. You can add, change or
-  remove a column's `total`, which only shows how far along the scout is.
+  remove a column's `total` or the tracker's `rowsNeeded`: they show how far
+  along the scout is, but don't decide what's complete.
 
 ## What counts as copying
 
@@ -218,6 +219,7 @@ A tracker is a table the scout fills in, one row per entry.
 | `rowLabel` | Yes | What one row is called, in lowercase, such as `week` or `session`. The app capitalizes it for titles, such as "Week 3". |
 | `rowLabelPlural` | Yes | `rowLabel` in the plural, in lowercase, such as `weeks`. The requirement's row shows it in a count, such as "8 of 12 weeks". |
 | `rowCount` | No | A fixed number of rows, such as `13` for a 13-week budget. The scout fills in each one ("Week 1" to "Week 13"). Set it when the requirement asks for a set number of things, days or weeks, even when a condition across rows can't be checked (Coin Collecting 7a's 20 coins from seven or more countries). Leave it out for a log the scout adds rows to, any number of them: when the number is only a minimum, so the scout can record more (American Labor 1's "at least EIGHT" concerns, but not Genealogy 2b's six weeks of writing "at least once a week"); when it depends on which option the scout picks (Geology 4D(5)'s 10 collected or 15 identified); when the rows are things that happen during a period rather than its days or weeks (Dog Care 4's two months of feeding, vet care and costs, or Oceanography 7f's three weeks of checking satellite images, where Sustainability 3c's two weeks of results are 14 day rows); or when the scout logs things as they happen and only some may count (Second Class 1a's activities, of which at least three must be outdoors, or Orienteering 7a's events, one of them cross-country). |
+| `rowsNeeded` | No | In a log, how many rows its requirement asks for, such as `10` for Second Class 4's "at least 10 kinds of wild animals". The requirement's count is then out of it, "6 of 10 animals", and goes on past it ("12 of 10 animals"), and each row up to it adds to the progress bar. It's only a guide: the scout still checks the requirement off. Set it whenever a log's requirement asks for a number of rows, including one that's a log because of its other work (Engineering 6b's 10 appliances) or because only some rows may count (Second Class 1a's five activities). When the number has parts, use their sum: `25` for Plant Science 6's 10 native, 10 cultivated and five invasive plants. When it's in a requirement this one refers to, use it: `5` for Backpacking 11c's daily journal of 11a's trek of at least five days. Leave it out when the number depends on which option the scout picks (Geology 4D(5)) or the requirement gives none (Dog Care 4). A tracker with a `rowCount` can't have it. |
 
 Example, a log of exercise sessions:
 
@@ -308,7 +310,8 @@ It checks that:
   Eagle-required badges, counting each `eagleGroup` once with
   `eagleGroupsCountOnce`;
 - trackers have at least one column, unique column IDs, labels, row labels
-  that start with a lowercase letter, and a `rowCount` of at least 1 when set;
+  that start with a lowercase letter, a `rowCount` of at least 1 when set, and
+  a `rowsNeeded` of at least 1 only on a log;
 - a `total` is only on a `number` column of a log, needs at least 1, and has
   labels that start with a lowercase letter.
 

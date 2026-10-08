@@ -56,7 +56,8 @@ class CatalogValidatorTest {
                             "Hours",
                             TrackerColumnType.NUMBER,
                             ColumnTotal(1, "hour", "hours")
-                        )
+                        ),
+                        rowsNeeded = 5
                     )
                 ),
                 Requirement(
@@ -571,6 +572,30 @@ class CatalogValidatorTest {
                     "has a total but a fixed number of rows"
             ),
             errorsForRequirements(requirement.copy(tracker = weeks))
+        )
+    }
+
+    @Test
+    fun rowsNeededBelowOne() {
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "rowsNeeded must be at least 1"
+            ),
+            errorsForRequirements(requirement.copy(tracker = tracker.copy(rowsNeeded = 0)))
+        )
+    }
+
+    @Test
+    fun rowsNeededOnATrackerWithAFixedNumberOfRows() {
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "has rowsNeeded but a fixed number of rows"
+            ),
+            errorsForRequirements(
+                requirement.copy(tracker = tracker.copy(rowCount = 12, rowsNeeded = 12))
+            )
         )
     }
 

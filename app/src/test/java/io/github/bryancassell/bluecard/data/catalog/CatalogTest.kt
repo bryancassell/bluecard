@@ -70,6 +70,16 @@ class CatalogTest {
                       "number": "3",
                       "summary": "Earn six merit badges.",
                       "meritBadges": { "total": 6, "eagleRequired": 4, "eagleGroupsCountOnce": true }
+                    },
+                    {
+                      "number": "4",
+                      "summary": "Log at least 30 days of exercise.",
+                      "tracker": {
+                        "columns": [{ "id": "date", "label": "Date", "type": "date" }],
+                        "rowLabel": "day",
+                        "rowLabelPlural": "days",
+                        "rowsNeeded": 30
+                      }
                     }
                   ]
                 }]
@@ -161,6 +171,18 @@ class CatalogTest {
                                         total = 6,
                                         eagleRequired = 4,
                                         eagleGroupsCountOnce = true
+                                    )
+                                ),
+                                Requirement(
+                                    number = "4",
+                                    summary = "Log at least 30 days of exercise.",
+                                    tracker = TrackerDefinition(
+                                        columns = listOf(
+                                            TrackerColumn("date", "Date", TrackerColumnType.DATE)
+                                        ),
+                                        rowLabel = "day",
+                                        rowLabelPlural = "days",
+                                        rowsNeeded = 30
                                     )
                                 )
                             )
@@ -264,5 +286,22 @@ class CatalogTest {
 
         assertEquals("weeks", twelve.rowsLabel(1))
         assertEquals("week", one.rowsLabel(0))
+    }
+
+    // "1 of 10 animals": the label agrees with the number of rows the log needs.
+    @Test
+    fun rowsLabel_inLogThatNeedsRows_agreesWithTheRowsNeeded() {
+        val ten = TrackerDefinition(columns, "animal", "animals", rowsNeeded = 10)
+        val one = TrackerDefinition(columns, "trek", "treks", rowsNeeded = 1)
+
+        assertEquals("animals", ten.rowsLabel(1))
+        assertEquals("trek", one.rowsLabel(3))
+    }
+
+    @Test
+    fun rowsOutOf_isTheFixedRowsOrTheRowsNeeded() {
+        assertEquals(12, TrackerDefinition(columns, "week", "weeks", rowCount = 12).rowsOutOf)
+        assertEquals(10, TrackerDefinition(columns, "animal", "animals", rowsNeeded = 10).rowsOutOf)
+        assertNull(TrackerDefinition(columns, "session", "sessions").rowsOutOf)
     }
 }

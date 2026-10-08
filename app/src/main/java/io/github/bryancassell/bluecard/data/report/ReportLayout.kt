@@ -182,7 +182,7 @@ private class ReportComposer(private val resources: Resources) {
         val recorded = tracker.rows.size
         // As on the requirement's page: "5 sessions" in a log, or "8 of 12 weeks".
         val rows = definition.rowsLabel(recorded)
-        val count = definition.rowCount?.let {
+        val count = definition.rowsOutOf?.let {
             string(R.string.tracker_count_of, recorded, it, rows)
         } ?: string(R.string.tracker_count, recorded, rows)
         // Then its totals, such as "4 of 6 hours", as on the requirement's page.

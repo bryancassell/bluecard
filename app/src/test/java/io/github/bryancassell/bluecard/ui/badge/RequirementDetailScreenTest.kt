@@ -616,6 +616,20 @@ class RequirementDetailScreenTest {
     }
 
     @Test
+    fun logThatNeedsRows_countsOutOfThem_andStillAddsRows() {
+        show(
+            withLog.copy(
+                tracker = withLog.tracker?.copy(
+                    count = TrackerCount(2, null, "sessions", rowsNeeded = 10)
+                )
+            )
+        )
+
+        composeTestRule.onNodeWithText("2 of 10 sessions").performScrollTo().assert(isHeading())
+        composeTestRule.onNodeWithText("Add session").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun logWithATotal_showsItUnderTheCount() {
         val total = TrackerTotal(BigDecimal("1.5"), ColumnTotal(1, "hour", "hours"))
         show(

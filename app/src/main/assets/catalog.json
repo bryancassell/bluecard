@@ -392,7 +392,8 @@
                   }
                 ],
                 "rowLabel": "concern",
-                "rowLabelPlural": "concerns"
+                "rowLabelPlural": "concerns",
+                "rowsNeeded": 8
               }
             },
             {
@@ -1954,7 +1955,8 @@
                       }
                     ],
                     "rowLabel": "object",
-                    "rowLabelPlural": "objects"
+                    "rowLabelPlural": "objects",
+                    "rowsNeeded": 10
                   }
                 },
                 {
@@ -2942,7 +2944,8 @@
                   }
                 ],
                 "rowLabel": "trek",
-                "rowLabelPlural": "treks"
+                "rowLabelPlural": "treks",
+                "rowsNeeded": 3
               }
             },
             {
@@ -2979,7 +2982,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowsNeeded": 5
                   }
                 }
               ]
@@ -3198,7 +3202,8 @@
                   }
                 ],
                 "rowLabel": "species",
-                "rowLabelPlural": "species"
+                "rowLabelPlural": "species",
+                "rowsNeeded": 5
               }
             },
             {
@@ -6918,7 +6923,8 @@
                       }
                     ],
                     "rowLabel": "ad",
-                    "rowLabelPlural": "ads"
+                    "rowLabelPlural": "ads",
+                    "rowsNeeded": 5
                   }
                 },
                 {
@@ -8486,7 +8492,8 @@
                       }
                     ],
                     "rowLabel": "appliance",
-                    "rowLabelPlural": "appliances"
+                    "rowLabelPlural": "appliances",
+                    "rowsNeeded": 10
                   }
                 },
                 {
@@ -15826,7 +15833,8 @@
                       }
                     ],
                     "rowLabel": "event",
-                    "rowLabelPlural": "events"
+                    "rowLabelPlural": "events",
+                    "rowsNeeded": 3
                   }
                 },
                 {
@@ -16876,7 +16884,8 @@
                   }
                 ],
                 "rowLabel": "plant",
-                "rowLabelPlural": "plants"
+                "rowLabelPlural": "plants",
+                "rowsNeeded": 25
               }
             },
             {
@@ -16923,7 +16932,8 @@
                           }
                         ],
                         "rowLabel": "weed",
-                        "rowLabelPlural": "weeds"
+                        "rowLabelPlural": "weeds",
+                        "rowsNeeded": 5
                       }
                     },
                     {
@@ -17080,7 +17090,8 @@
                           }
                         ],
                         "rowLabel": "plant",
-                        "rowLabelPlural": "plants"
+                        "rowLabelPlural": "plants",
+                        "rowsNeeded": 10
                       }
                     },
                     {
@@ -17281,7 +17292,8 @@
                                   }
                                 ],
                                 "rowLabel": "plant",
-                                "rowLabelPlural": "plants"
+                                "rowLabelPlural": "plants",
+                                "rowsNeeded": 10
                               }
                             }
                           ]
@@ -17381,7 +17393,8 @@
                           }
                         ],
                         "rowLabel": "plant",
-                        "rowLabelPlural": "plants"
+                        "rowLabelPlural": "plants",
+                        "rowsNeeded": 10
                       }
                     },
                     {
@@ -19237,7 +19250,8 @@
                   }
                 ],
                 "rowLabel": "species",
-                "rowLabelPlural": "species"
+                "rowLabelPlural": "species",
+                "rowsNeeded": 10
               }
             },
             {
@@ -25306,7 +25320,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowsNeeded": 30
                   }
                 },
                 {
@@ -25446,7 +25461,8 @@
                       }
                     ],
                     "rowLabel": "activity",
-                    "rowLabelPlural": "activities"
+                    "rowLabelPlural": "activities",
+                    "rowsNeeded": 5
                   }
                 },
                 {
@@ -25532,7 +25548,8 @@
                   }
                 ],
                 "rowLabel": "animal",
-                "rowLabelPlural": "animals"
+                "rowLabelPlural": "animals",
+                "rowsNeeded": 10
               }
             },
             {
@@ -25740,7 +25757,8 @@
                       }
                     ],
                     "rowLabel": "activity",
-                    "rowLabelPlural": "activities"
+                    "rowLabelPlural": "activities",
+                    "rowsNeeded": 10
                   }
                 },
                 {
@@ -25832,7 +25850,8 @@
                       }
                     ],
                     "rowLabel": "plant",
-                    "rowLabelPlural": "plants"
+                    "rowLabelPlural": "plants",
+                    "rowsNeeded": 10
                   }
                 },
                 {

@@ -415,6 +415,17 @@ class ReportLayoutTest {
         assertEquals(listOf("Cooked", "Place: Lake"), lines.subList(row + 1, row + 3))
     }
 
+    // As on the requirement's page, a log that needs a number of rows is counted out of them.
+    @Test
+    fun logThatNeedsRows_isCountedOutOfThem() {
+        val rows = (1..3).map { ReportTrackerRow(it, listOf(place to "Lake")) }
+        val tracker = ReportTracker(log.copy(rowsNeeded = 2), rows)
+        val lines = layOut(report(listOf(requirement("1", "Log.", tracker = tracker))))
+            .single().lines
+
+        assertEquals("Trip 1", lines[lines.indexOf("3 of 2 trips") + 1])
+    }
+
     // A line break ends the wrapping that keeps typed text's direction, so each line has its own.
     @Test
     fun typedTextOnSeveralLines_keepsItsDirectionOnEachLine() {

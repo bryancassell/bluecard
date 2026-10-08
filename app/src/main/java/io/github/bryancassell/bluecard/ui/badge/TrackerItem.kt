@@ -28,8 +28,8 @@ data class TrackerItem(
 
 /**
  * How much of a tracker is filled in, for its requirement: "5 sessions" in a log, or
- * "8 of 12 weeks" in a tracker with a fixed number of rows, and its columns' totals, if it has
- * any, such as "4 of 6 hours".
+ * "8 of 12 weeks" in a tracker with a fixed number of rows, or in a log that needs a number of
+ * them, and its columns' totals, if it has any, such as "4 of 6 hours".
  */
 data class TrackerCount(
     /** The entries recorded; in a tracker with a fixed number of rows, the rows filled in. */
@@ -39,8 +39,13 @@ data class TrackerCount(
     /** What the rows are called, agreeing with the number: "session" or "sessions". */
     val rows: String,
     /** Its columns that have a total ([totals]), in column order. */
-    val totals: List<TrackerTotal> = emptyList()
-)
+    val totals: List<TrackerTotal> = emptyList(),
+    /** In a log, how many rows its requirement asks for, if the catalog says. */
+    val rowsNeeded: Int? = null
+) {
+    /** What [recorded] is out of, as in "8 of 12 weeks", or null to show it alone. */
+    val outOf: Int? get() = rowCount ?: rowsNeeded
+}
 
 /** One row of a tracker. */
 data class TrackerRow(
@@ -66,7 +71,7 @@ fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(
 /** How much of this tracker the [entries] recorded for its requirement fill in. */
 fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
     val recorded = rowCount?.let { count -> filledRows(entries, count).size } ?: entries.size
-    return TrackerCount(recorded, rowCount, rowsLabel(recorded), totals(entries))
+    return TrackerCount(recorded, rowCount, rowsLabel(recorded), totals(entries), rowsNeeded)
 }
 
 private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow> =

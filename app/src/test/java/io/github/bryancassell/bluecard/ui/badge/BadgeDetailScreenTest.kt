@@ -795,6 +795,24 @@ class BadgeDetailScreenTest {
         row("Keep a camping log.").assert(hasText("8 of 12 nights"))
     }
 
+    // Past the number a log needs, the count goes on, as a total's does.
+    @Test
+    fun requirementWithLogPastTheRowsItNeeds_showsAllOfThem() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "3") {
+                        it.copy(tracker = TrackerCount(12, null, "nights", rowsNeeded = 10))
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        row("Keep a camping log.").assert(hasText("12 of 10 nights"))
+    }
+
     @Test
     fun everyRequirement_isButtonThatOpensIt() {
         show(ready)
