@@ -33,7 +33,6 @@ import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
@@ -62,7 +61,9 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -219,10 +220,6 @@ class BadgeDetailScreenTest {
      */
     private fun topOf(text: String) =
         composeTestRule.onNodeWithText(text).fetchSemanticsNode().positionInRoot.y
-
-    /** A day in the date picker, such as "May 20, 2026". */
-    private fun pickerDay(date: String) =
-        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
 
     private val isSelected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
@@ -1005,15 +1002,16 @@ class BadgeDetailScreenTest {
         completedOn = LocalDate.of(2025, 8, 1)
     )
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun incompleteBadge_canBeMarkedCompleted_onADayUpToToday() {
         show(ready)
 
         composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
         // It opens at today.
-        pickerDay("May 20, 2026").assert(isSelected)
-        pickerDay("May 21, 2026").assertIsNotEnabled()
-        pickerDay("May 10, 2026").performClick()
+        composeTestRule.pickerDay("May 20, 2026").assert(isSelected)
+        composeTestRule.pickerDay("May 21, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
@@ -1072,12 +1070,13 @@ class BadgeDetailScreenTest {
     }
 
     // So a mistaken Unmark loses nothing.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_afterUnmarking_opensAtTheDateUnmarked() {
         show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
 
         composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
-        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
@@ -1094,13 +1093,14 @@ class BadgeDetailScreenTest {
         composeTestRule.onNodeWithText("Cancel").assertDoesNotExist()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_onAPageOpenPastMidnight_offersTheNewDay() {
         show(ready)
         today = LocalDate.of(2026, 5, 21)
 
         composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
-        pickerDay("May 22, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2026, 5, 21)), marks)
@@ -1122,13 +1122,14 @@ class BadgeDetailScreenTest {
         assertEquals(tops.sorted(), tops)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markedBadge_changeDate_opensAtItsDate_andMarksTheDayPicked() {
         show(marked)
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        pickerDay("August 1, 2025").assert(isSelected)
-        pickerDay("August 5, 2025").performClick()
+        composeTestRule.pickerDay("August 1, 2025").assert(isSelected)
+        composeTestRule.pickerDay("August 5, 2025").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2025, 8, 5)), marks)

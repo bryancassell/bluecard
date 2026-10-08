@@ -21,7 +21,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
@@ -38,7 +37,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import java.time.LocalDate
@@ -49,6 +50,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -150,12 +152,8 @@ class RankDetailScreenTest {
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = text(summary).performScrollTo()
 
-    /** A day in the date picker, such as "May 20, 2026". */
-    private fun pickerDay(date: String) =
-        composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
-
     private fun pickDay(date: String) {
-        pickerDay(date).performClick()
+        composeTestRule.pickerDay(date).performClick()
         text("OK").performClick()
     }
 
@@ -289,14 +287,15 @@ class RankDetailScreenTest {
         composeTestRule.onNode(anyProgressBar).assertDoesNotExist()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankNotEarned_canBeMarkedEarned_onADayUpToToday() {
         show(ready)
 
         text("Mark earned").performScrollTo().performClick()
         // It opens at today.
-        pickerDay("May 20, 2026").assert(isSelected)
-        pickerDay("May 21, 2026").assertIsNotEnabled()
+        composeTestRule.pickerDay("May 20, 2026").assert(isSelected)
+        composeTestRule.pickerDay("May 21, 2026").assertIsNotEnabled()
         pickDay("May 10, 2026")
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
@@ -338,12 +337,13 @@ class RankDetailScreenTest {
     }
 
     // So a mistaken Unmark loses nothing.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markEarned_afterUnmarking_opensAtTheDateUnmarked() {
         show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
 
         text("Mark earned").performScrollTo().performClick()
-        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
         text("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
@@ -359,6 +359,7 @@ class RankDetailScreenTest {
         assertEquals(emptyList<LocalDate>(), marks)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markedRank_showsItsDate_withChangeDateAndUnmark() {
         show(marked)
@@ -367,7 +368,7 @@ class RankDetailScreenTest {
         text("Mark earned").assertDoesNotExist()
 
         text("Change date").performScrollTo().performClick()
-        pickerDay("August 1, 2025").assert(isSelected)
+        composeTestRule.pickerDay("August 1, 2025").assert(isSelected)
         pickDay("August 5, 2025")
         assertEquals(listOf(LocalDate.of(2025, 8, 5)), marks)
 
@@ -375,6 +376,7 @@ class RankDetailScreenTest {
         assertEquals(1, unmarks)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankEarnedWithARankAbove_saysSo_andCanBeGivenADate() {
         show(earnedWithLife)
@@ -384,7 +386,7 @@ class RankDetailScreenTest {
         text("Unmark").assertDoesNotExist()
 
         text("Add date").performScrollTo().performClick()
-        pickerDay("May 20, 2026").assert(isSelected)
+        composeTestRule.pickerDay("May 20, 2026").assert(isSelected)
         pickDay("May 10, 2026")
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
@@ -392,13 +394,14 @@ class RankDetailScreenTest {
     }
 
     // As when it was marked earned itself, before it was unmarked.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankEarnedWithARankAbove_addDate_afterUnmarking_opensAtTheDateUnmarked() {
         show(earnedWithLife.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
 
         text("Add date").performScrollTo().performClick()
 
-        pickerDay("April 15, 2026").assert(isSelected)
+        composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
     }
 
     @Test
@@ -416,6 +419,7 @@ class RankDetailScreenTest {
         text("Earned").performScrollTo().assertIsDisplayed()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankWaitingOnTheRankBelow_saysSo_aboveMarkEarned() {
         show(ready.copy(fractionDone = 1f, waitingOn = "Scout"))

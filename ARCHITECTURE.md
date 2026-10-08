@@ -559,6 +559,18 @@ both taps of a double tap can reach it.
   `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
   chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
   takes no colors from the wallpaper (no dynamic color).
+- **The date picker's dialog is our own**, around Material's `DatePicker`
+  (`CompletionDatePickerDialog`). Material's `DatePickerDialog` is always as
+  wide as its calendar, so on a narrower window its last days were off the
+  screen ([#306](https://github.com/bryancassell/bluecard/issues/306)). Ours
+  is built the same way, on `BasicAlertDialog`, with the same surface, height
+  cap and buttons, but sized to the window, and with OK below Cancel if they
+  don't fit side by side ([`PRD.md`](PRD.md#design-decisions)'s Date
+  picker's buttons). `BasicAlertDialog` is
+  `@ExperimentalMaterial3Api`, so the function opts in, and a change to it
+  would fail the build when Compose is updated. A change to
+  `DatePickerDialog` wouldn't reach ours, so compare the two when updating
+  Material 3.
 - **Before Compose draws**, the window theme and splash screen follow dark mode
   through `values-night`: the dark scheme's background (`@color/background`,
   which must match each scheme's `background`), a dark window theme, and the
@@ -1372,6 +1384,13 @@ test still exports and imports through the real one.
   - **Any other result that can't be fixed yet is suppressed** in the rule's
     validator (`setSuppressingResultMatcher`), matching only that result, with
     a comment linking its issue.
+- **Every test that picks a day from the date picker uses a screen as wide as
+  its calendar** (`DATE_PICKER_SCREEN`, a small phone's 360dp). On a narrower
+  one, such as Robolectric's default screen (`NARROW_SCREEN`, 320dp wide like
+  a phone's at its largest display size), the picker opens to typing the date
+  instead ([#306](https://github.com/bryancassell/bluecard/issues/306)).
+  `testing/DatePicker.kt` has the helpers these tests share, such as
+  `assertIsWhollyDisplayed` to check nothing is cut off.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally
