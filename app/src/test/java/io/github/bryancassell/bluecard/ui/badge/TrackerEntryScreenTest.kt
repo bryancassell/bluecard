@@ -48,15 +48,18 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
+import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -66,6 +69,7 @@ import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class TrackerEntryScreenTest {
     // Shows the page in touch mode, as on a phone, where buttons can't take focus, so the
     // keyboard's Next skips a date's buttons. Robolectric reads it as the page's window opens.
@@ -78,6 +82,9 @@ class TrackerEntryScreenTest {
 
     @get:Rule(order = 1)
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
 
     /** What the page reads as today when the picker opens, which a test can move on. */
     private var today = LocalDate.of(2026, 5, 20)
@@ -476,6 +483,7 @@ class TrackerEntryScreenTest {
         assertEquals(1, keyboardController.hides)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun noDate_offersToAddOne_openingAtToday() {
         show(newEntry)
@@ -494,6 +502,7 @@ class TrackerEntryScreenTest {
         )
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(newEntry)
@@ -600,7 +609,6 @@ class TrackerEntryScreenTest {
 
     // Seen on a phone: the page scrolled only far enough to show the cursor, leaving Save under
     // the field behind the keyboard (#172).
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardOpensForLastField_fieldAndSaveShowAboveIt() {
@@ -613,7 +621,6 @@ class TrackerEntryScreenTest {
         keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun nextIntoLastField_withKeyboardOpen_fieldAndSaveShowAboveIt() {
@@ -628,7 +635,6 @@ class TrackerEntryScreenTest {
         keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun lastFieldGrowingAsScoutTypes_saveStaysAboveKeyboard() {
@@ -643,7 +649,6 @@ class TrackerEntryScreenTest {
 
     // Higher fields scroll into view as before, as far as their cursor, without pulling the page
     // down to Save.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardOpensForHigherField_itsCursorShowsAboveIt() {
@@ -657,7 +662,6 @@ class TrackerEntryScreenTest {
 
     // Too tall to show with Save above the keyboard, so the page keeps the cursor in view as the
     // keyboard opens, as for any other field.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardOpensForLastFieldTooTallToShowWithSave_itsCursorShowsAboveIt() {
@@ -673,7 +677,6 @@ class TrackerEntryScreenTest {
 
     // With the last field still focused, the scout scrolled up to check an earlier one. Closing
     // the keyboard leaves the page there, rather than pulling it back down to Save.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardClosingAfterScrollingAway_leavesThePageWhereItIs() {
@@ -697,7 +700,6 @@ class TrackerEntryScreenTest {
 
     // Some keyboards have a number pad shorter than their letters. Coming up partway through the
     // scroll to the last field, it stopped the scroll and left Save behind it (#244).
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardGettingShorterWhileLastFieldScrollsIntoView_fieldAndSaveShowAboveIt() {
@@ -717,7 +719,6 @@ class TrackerEntryScreenTest {
 
     // The scout stopped the scroll to the last field by dragging the page, so the page stays where
     // they left it, as when they scroll away once it's done.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardGettingShorterAfterScoutStoppedTheScroll_leavesThePageWhereItIs() {
@@ -734,7 +735,6 @@ class TrackerEntryScreenTest {
 
     // The keyboard stopped the scroll to the last field, and the scout dragged the page while the
     // keyboard was still moving.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun scoutDraggingWhileKeyboardGetsShorter_leavesThePageWhereItIs() {
@@ -753,7 +753,6 @@ class TrackerEntryScreenTest {
     // The keyboard was still getting shorter when focus reached the last field, so the page put
     // off bringing the field and Save into view until it stopped. The page had grown by then, which
     // left Save behind the keyboard (#253).
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun focusReachingLastFieldWhileKeyboardGetsShorter_fieldAndSaveShowAboveIt() {

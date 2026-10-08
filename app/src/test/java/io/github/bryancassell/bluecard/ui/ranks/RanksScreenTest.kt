@@ -26,16 +26,23 @@ import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RanksScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
 
     private val openedRanks = mutableListOf<String>()
 

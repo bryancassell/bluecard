@@ -7,16 +7,23 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowDialog
 
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class DamagedProgressNoticeTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
 
     private var dismissals = 0
 

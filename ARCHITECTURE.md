@@ -1165,6 +1165,42 @@ test still exports and imports through the real one.
   on a phone sets touch mode in a rule that runs before the compose rule opens
   the page's window (`touchMode` in `TrackerEntryScreenTest`), and a test of a
   hardware keyboard asks for keyboard mode (`InputModeManager`).
+- **Each screen's and dialog's tests run Google's accessibility checks**
+  ([ATF](https://github.com/google/Accessibility-Test-Framework-for-Android))
+  before every action, on every window, dialogs included. A control with no
+  label for screen readers or a touch target under 48dp fails the test, so it
+  doesn't wait for someone to try the page with TalkBack. The class turns them
+  on in `@Before` (`enableAccessibilityChecksUnderRobolectric` in `testing/`).
+  Compose's own `enableAccessibilityChecks()` checks nothing under Robolectric:
+  ATF sees the "robolectric" build fingerprint and looks only at Views, never
+  at composables. So the helper gives Compose's hook for the checks
+  (`setComposeAccessibilityValidator`, restricted to Compose's own libraries) a
+  validator that changes the fingerprint while ATF checks, and only then,
+  because Compose's test code reads it too. ATF also finds nothing under
+  Robolectric's default graphics, so these classes use native graphics, and a
+  test in them that reads pixels runs on SDK 36, as screenshot tests do. Both
+  rely on details that aren't public API, so `AccessibilityChecksTest` checks
+  that a small control with no label still fails, on a page and in a dialog.
+  Native graphics and the checks added no measurable time to the suite
+  (checked with Compose UI 1.12.1, ATF 4.1.1 and Robolectric 4.17).
+  - **Only errors fail a test, and text contrast isn't checked.** ATF checks
+    contrast only from screenshots. Taken in these tests, they gave hundreds
+    of warnings that weren't about the app's colors: most screen tests use
+    Material's default theme, and disabled buttons and text partway through
+    fading in were counted too. `BlueCardColorSchemeTest` checks the app's
+    colors instead ([Theme](#theme)).
+  - **A test that opens the date picker uses a taller screen**
+    (`DATE_PICKER_SCREEN`). On Robolectric's default 320x470dp screen, shorter
+    than a phone's, Material's date picker gives each day a 47dp touch target.
+  - **Navigation tests and other components' tests don't run them**, such as
+    `MainActivityTest`, `PageTransitionsTest` and the text field tests. What
+    they show is checked by the screens' and dialogs' own tests. Under native
+    graphics, launching `MainActivity` never finishes, because Robolectric
+    keeps drawing frames, and one of `PageTransitionsTest`'s frame-by-frame
+    checks fails.
+  - **A result that can't be fixed yet is suppressed**
+    (`AccessibilityValidator.setSuppressingResultMatcher`), with a comment
+    linking its issue.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

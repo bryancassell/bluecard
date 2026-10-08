@@ -27,20 +27,27 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * One test per UI state and interaction, with fixed UI state. The fields' own behavior, such as
  * their length limits, is checked through Onboarding, which shares them (OnboardingScreenTest).
  */
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class EditProfileScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
 
     private val name = TextFieldState()
     private val unitNumber = TextFieldState()

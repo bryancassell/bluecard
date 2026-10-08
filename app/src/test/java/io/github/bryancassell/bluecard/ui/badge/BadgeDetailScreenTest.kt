@@ -59,7 +59,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -70,6 +72,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -81,9 +84,13 @@ import org.robolectric.shadows.ShadowToast
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BadgeDetailScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
 
     private val openedRequirements = mutableListOf<String>()
     private var counselorEdits = 0
@@ -332,8 +339,9 @@ class BadgeDetailScreenTest {
     }
 
     // The tag's fill is what sets the label apart from the blue text buttons below it. Only
-    // Robolectric's native graphics draw real pixels and measure real text.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    // Robolectric's native graphics draw real pixels and measure real text. On SDK 36, as the
+    // screenshot tests are: on SDK 37, Robolectric 4.17 leaves a class's later captures blank.
+    @Config(sdk = [36])
     @Test
     fun eagleLabel_isOnTheTagsFill() {
         composeTestRule.setContent {
@@ -346,7 +354,6 @@ class BadgeDetailScreenTest {
     }
 
     // At twice the font size on a narrow phone, a group's label needs several lines.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = "w320dp")
     @Test
     fun longEagleLabel_atLargeFontSize_wrapsWithoutBeingCutOff() {
@@ -738,7 +745,6 @@ class BadgeDetailScreenTest {
     }
 
     // At twice the font size, "10" outgrows the box's minimum width, while "9" doesn't.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(fontScale = 2f)
     @Test
     fun requirementNumbersOfDifferentWidths_atLargestFontSize_summariesLineUp() {
@@ -816,6 +822,7 @@ class BadgeDetailScreenTest {
         completedOn = LocalDate.of(2025, 8, 1)
     )
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun incompleteBadge_canBeMarkedCompleted_onADayUpToToday() {
         show(ready)
@@ -894,6 +901,7 @@ class BadgeDetailScreenTest {
         assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_cancelled_marksNothing() {
         show(ready)
@@ -905,6 +913,7 @@ class BadgeDetailScreenTest {
         composeTestRule.onNodeWithText("Cancel").assertDoesNotExist()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_onAPageOpenPastMidnight_offersTheNewDay() {
         show(ready)
@@ -933,6 +942,7 @@ class BadgeDetailScreenTest {
         assertEquals(tops.sorted(), tops)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markedBadge_changeDate_opensAtItsDate_andMarksTheDayPicked() {
         show(marked)

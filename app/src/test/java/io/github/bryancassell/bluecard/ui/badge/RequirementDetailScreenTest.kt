@@ -50,15 +50,18 @@ import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,9 +71,13 @@ import org.robolectric.shadows.ShadowDialog
 
 /** One test per UI state and interaction, with fixed UI state. */
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RequirementDetailScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @Before
+    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
 
     /** What the page reads as today when the picker opens, which a test can move on. */
     private var today = LocalDate.of(2026, 5, 20)
@@ -545,7 +552,6 @@ class RequirementDetailScreenTest {
 
     // Like Emergency Preparedness 1b's: too long for the box's minimum width, and not all as long
     // as each other.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun subRequirementNumbersOfDifferentWidths_summariesLineUp() {
         val numbers = listOf("1b(9)", "1b(10)", "1b(21)")
@@ -579,7 +585,6 @@ class RequirementDetailScreenTest {
         }
     }
 
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun longestNumbers_showInFullOnOneLine() {
         show(withSubRequirements(longestNumbers))
@@ -587,7 +592,6 @@ class RequirementDetailScreenTest {
         assertShownInFullOnOneLine(longestNumbers)
     }
 
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(fontScale = 2f)
     @Test
     fun longestNumbers_atLargestFontSize_showInFullOnOneLine() {
@@ -750,6 +754,7 @@ class RequirementDetailScreenTest {
     }
 
     // As when a row was saved before database version 3, which recorded no date.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_withoutDateOrRowsDate_addDateOpensAtToday() {
         show(weeksFilledIn.copy(completedDate = null, rowsCompletedDate = null))
@@ -1154,6 +1159,7 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("OK").assertDoesNotExist()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_opensAtToday() {
         show(completedLeaf.copy(completedDate = null))
@@ -1174,6 +1180,7 @@ class RequirementDetailScreenTest {
         pickerDay("May 21, 2026").assertIsNotEnabled()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(completedLeaf.copy(completedDate = null))
@@ -1186,6 +1193,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_onAPageOpenPastMidnight_offersTheNewDay() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 18)))
@@ -1200,6 +1208,7 @@ class RequirementDetailScreenTest {
     }
 
     // As when it was recorded while the device's clock was ahead.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_ofADateAfterToday_opensAtToday() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 22)))
@@ -1268,7 +1277,6 @@ class RequirementDetailScreenTest {
 
     // Seen on a phone: the page scrolled only far enough to show the cursor, leaving Save notes
     // under the field behind the keyboard (#178).
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun keyboardOpensForComment_commentAndSaveShowAboveIt() {
@@ -1351,7 +1359,6 @@ class RequirementDetailScreenTest {
     }
 
     // On a rank's requirement, Next from the sign-off is how the scout reaches the notes.
-    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(qualifiers = SMALL_PHONE)
     @Test
     fun nextIntoComment_withKeyboardOpen_commentAndSaveShowAboveIt() {
