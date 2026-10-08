@@ -18,6 +18,12 @@ import org.junit.Assert.assertTrue
 const val SMALL_PHONE = "w360dp-h560dp"
 
 /**
+ * A Pixel 10's screen in landscape, less its status bar and camera cutout. With a keyboard
+ * [OnScreenKeyboard.LANDSCAPE_HEIGHT] tall, 107dp of the page is left, as on the phone.
+ */
+const val PHONE_IN_LANDSCAPE = "w869dp-h359dp-land"
+
+/**
  * The on-screen keyboard for a page under test, which Robolectric doesn't show. [Content] finds
  * the page's [view], and [open], [close] and [move] move the keyboard's top edge over it, as a
  * phone does. Tests that measure the page use native graphics.
@@ -33,19 +39,22 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
         content()
     }
 
+    /** How tall the keyboard is, or is moving to: 0 while it's closed. */
+    private var currentHeight = 0.dp
+
     /**
      * Opens the keyboard over the bottom of the page, as the system does once a field has focus:
-     * after the page has handled the focus change.
+     * after the page has handled the focus change. It ends [height] tall.
      */
-    fun open() {
+    fun open(height: Dp = HEIGHT) {
         rule.waitForIdle()
-        move(from = 0.dp, to = HEIGHT)
+        move(from = 0.dp, to = height)
     }
 
     /** Closes the keyboard, as the scout does with Back while a field keeps focus. */
     fun close() {
         rule.waitForIdle()
-        move(from = HEIGHT, to = 0.dp)
+        move(from = currentHeight, to = 0.dp)
     }
 
     /**
@@ -54,6 +63,7 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
      * scrolling, and runs [midway] halfway through, as the scout can act while it moves.
      */
     fun move(from: Dp, to: Dp, midway: () -> Unit = {}) {
+        currentHeight = to
         val (start, end) = with(rule.density) { from.roundToPx() to to.roundToPx() }
         val animation = WindowInsetsAnimation(WindowInsets.Type.ime(), null, 250)
         val bounds = WindowInsetsAnimation.Bounds(
@@ -84,15 +94,18 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
         .setVisible(WindowInsets.Type.ime(), height > 0)
         .build()
 
-    /** Where the top edge of a keyboard [keyboardHeight] tall is on the page. */
-    fun top(keyboardHeight: Dp = HEIGHT): Dp =
+    /**
+     * Where the top edge of a keyboard [keyboardHeight] tall is on the page, by default this
+     * keyboard's.
+     */
+    fun top(keyboardHeight: Dp = currentHeight): Dp =
         rule.onRoot().getUnclippedBoundsInRoot().bottom - keyboardHeight
 
     /**
-     * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall. Unclipped
-     * bounds are needed for this: the page clips what's behind the keyboard.
+     * Checks that [bounds] are on the page above a keyboard [keyboardHeight] tall, by default this
+     * keyboard. Unclipped bounds are needed for this: the page clips what's behind the keyboard.
      */
-    fun assertAbove(bounds: DpRect, keyboardHeight: Dp = HEIGHT) {
+    fun assertAbove(bounds: DpRect, keyboardHeight: Dp = currentHeight) {
         val keyboardTop = top(keyboardHeight)
         assertTrue(
             "$bounds isn't between the top of the page and the keyboard at $keyboardTop",
@@ -103,6 +116,12 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
     companion object {
         /** About as tall as a phone's keyboard. */
         val HEIGHT = 300.dp
+
+        /**
+         * As tall as a Pixel 10's keyboard in landscape, with the navigation bar under it, which
+         * the keyboard's inset includes.
+         */
+        val LANDSCAPE_HEIGHT = 252.dp
 
         /** About how many frames a keyboard takes to open or close. */
         private const val FRAMES = 15
