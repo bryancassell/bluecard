@@ -136,11 +136,12 @@ fun BadgesScreen(
                 val badgeCount = uiState.badges.size
                 LazyColumn(
                     state = listState,
-                    // Screen readers say how many badges the list has. LazyColumn counts the
-                    // items of the list state it was first given, and doesn't recount when
-                    // given a new one, as each new set of matches does above (Compose 1.12.1).
-                    // Compose applies a modifier's semantics after LazyColumn's own, so this
-                    // count is the one screen readers get.
+                    // Screen readers say how many badges the list has. LazyColumn's count
+                    // can stay the old list state's after each new set of matches above:
+                    // LazyLayoutSemanticsModifierNode.update() takes a new state without
+                    // invalidating semantics (Compose 1.12.1). Compose applies a modifier's
+                    // semantics after LazyColumn's own, so this count is the one screen
+                    // readers get.
                     modifier = Modifier
                         .fillMaxSize()
                         .semantics {
