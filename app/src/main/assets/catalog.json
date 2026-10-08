@@ -3489,7 +3489,7 @@
                 },
                 {
                   "number": "5d",
-                  "summary": "List the Scout Basic Essentials and explain why each is needed."
+                  "summary": "List the Scout Basic Essentials and explain what each one is for."
                 },
                 {
                   "number": "5e",
@@ -4626,7 +4626,7 @@
                 },
                 {
                   "number": "6b",
-                  "summary": "Show how to inspect a rope for any wear or damage."
+                  "summary": "Show how you check a rope for wear or damage."
                 },
                 {
                   "number": "6c",
@@ -6635,7 +6635,7 @@
                     },
                     {
                       "number": "6A(2)",
-                      "summary": "Take two rides each of 10, 15 and 25 miles, and report on them.",
+                      "summary": "Take two rides each of 10, 15 and 25 miles, and write a report on them.",
                       "tracker": {
                         "columns": [
                           {
@@ -6727,7 +6727,7 @@
                     },
                     {
                       "number": "6B(4)",
-                      "summary": "On counselor-approved trails, take two rides each of 2, 5 and 8 miles, and report on them.",
+                      "summary": "On counselor-approved trails, take two rides each of 2, 5 and 8 miles, and write a report on them.",
                       "ownWork": "Get your counselor's approval of the trails, then take your six rides.",
                       "tracker": {
                         "columns": [
@@ -7797,11 +7797,11 @@
                 },
                 {
                   "number": "10c",
-                  "summary": "Build a rheostat and show that it works."
+                  "summary": "Build a rheostat and show your counselor it works."
                 },
                 {
                   "number": "10d",
-                  "summary": "Build a single-pole, double-throw switch and show that it works."
+                  "summary": "Build a single-pole, double-throw switch and show your counselor it works."
                 },
                 {
                   "number": "10e",
@@ -9076,7 +9076,7 @@
                 {
                   "number": "6b",
                   "summary": "Make an agenda on these topics, review it with your parent or guardian, then hold the meetings.",
-                  "ownWork": "Write an agenda with these topics, review it with a parent, then hold the meetings.",
+                  "ownWork": "Write an agenda with these topics, review it with your parent or guardian, then hold the meetings.",
                   "children": [
                     {
                       "number": "6b(1)",
@@ -13638,7 +13638,8 @@
             },
             {
               "number": "8",
-              "summary": "Show rescues of a conscious subject 30 feet out using two floating aids.",
+              "summary": "Show rescues of a conscious subject 30 feet out using two floating aids your counselor provides.",
+              "ownWork": "Use two kinds of floating aids your counselor provides.",
               "children": [
                 {
                   "number": "8a",
@@ -14674,7 +14675,7 @@
                   "children": [
                     {
                       "number": "2d(1)",
-                      "summary": "Record a court of honor, then show it to an audience."
+                      "summary": "Record a court of honor and screen it for an audience."
                     },
                     {
                       "number": "2d(2)",
@@ -16021,7 +16022,7 @@
             },
             {
               "number": "4",
-              "summary": "Pick, with your counselor, the fitness tests you'll repeat.",
+              "summary": "Pick, with your counselor, the fitness and nutrition tests you'll repeat.",
               "ownWork": "Choose your fitness and nutrition tests with your counselor.",
               "children": [
                 {
@@ -25061,7 +25062,7 @@
                 },
                 {
                   "number": "2b",
-                  "summary": "Describe the four steps of Scout advancement."
+                  "summary": "Walk a leader through the four steps of Scout advancement."
                 },
                 {
                   "number": "2c",
@@ -25128,7 +25129,7 @@
             },
             {
               "number": "1c",
-              "summary": "Explain how you followed the Outdoor Code and Leave No Trace on your campouts and outings."
+              "summary": "Explain what you did on your campouts and outings to follow the Outdoor Code and Leave No Trace."
             },
             {
               "number": "2a",
@@ -25734,7 +25735,7 @@
             },
             {
               "number": "7c",
-              "summary": "Tell the five most common signs of a heart attack and explain the steps of CPR."
+              "summary": "Tell the five most common warning signs of a heart attack, and explain how CPR is done."
             },
             {
               "number": "7d",

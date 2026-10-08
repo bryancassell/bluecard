@@ -331,24 +331,27 @@ transmissions." became "Explain how automatic and standard transmissions
 differ." (Automotive Maintenance 9b), and "Adjust the eyepiece…" became "Show
 how to adjust the eyepiece…" (Bird Study 3b). The verb is enough without "to
 your counselor" (Backpacking 5b: "Explain why drinking enough water on a trek
-matters."). Do name the counselor for their approval, help or supervision, or
-for work done with them, even an approval that covers only one choice
-(Emergency Preparedness 2c: "Using the pamphlet's checklist or one your
+matters."). Do name the counselor for their approval, help, guidance or
+supervision, or for work done with them, even an approval that covers only one
+choice (Emergency Preparedness 2c: "Using the pamphlet's checklist or one your
 counselor approves…"), and name anyone else a step is for, such as a troop, a
-family or the patrol leaders' council. When the parent's own text has the step
-("Discuss the following with your counselor:", or First Aid 3's "Describe …,
-show first aid for, and explain prevention of these wounds:"), children that
-are only its topics don't repeat the verb, even when a child's text repeats it
-(Landscape Architecture 2a's "Tell whether…"). When the parent's text has no
-step ("Do the following:"), a child whose own text has one needs the verb
-(Personal Fitness 2a).
+family or the patrol leaders' council. Children that are only topics don't
+repeat a verb our parent summary already gives them, such as First Aid 3's
+wounds or Swimming 3's strokes ("Show five swimming strokes with good form."
+over "Back crawl."); otherwise each child names its own step.
 
-When a parent needs the counselor's approval, help or guidance, or work done
-with the counselor, no child covers it, so it gets `ownWork`, even when it
-applies to every child: "Get permission and your counselor's approval before
-you start." (Pulp and Paper 7's "With your parent or guardian's and
-counselor's approval, do ONE of the following"), or "Before each hike, share a
-written plan with your counselor or a designee for approval." (Hiking 4). A
+When a parent needs the counselor's approval, help, guidance or supervision, or
+work done with the counselor, no child covers it, so it gets `ownWork`, even
+when it applies to every child: "Get permission and your counselor's approval
+before you start." (Pulp and Paper 7's "With your parent or guardian's and
+counselor's approval, do ONE of the following"), "Before each hike, share a
+written plan with your counselor or a designee for approval." (Hiking 4), or
+"Use two kinds of floating aids your counselor provides." (Lifesaving 8). A
 step that is itself each child's work is different: under Cybersecurity 3's
 "Do the following and discuss each with your counselor", the children cover
-the discussing.
+the discussing. Two other cases need no `ownWork`. One is a step someone else
+may do instead, which isn't a counselor step: Home Repairs 2's "Under the
+supervision of your parent, guardian, or counselor", Motorboating 5's "With
+your counselor or other adults on board", or Climbing 5's help from "the
+counselor or another Scout". The other is work done with the counselor when
+the children are that work, such as Cycling 6A(1)'s road safety test.
