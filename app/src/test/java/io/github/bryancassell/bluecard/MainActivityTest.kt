@@ -37,6 +37,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -1157,6 +1158,8 @@ class MainActivityTest {
     private fun assertNothingFocused() =
         composeTestRule.onAllNodes(isFocused()).assertCountEquals(0)
 
+    private fun press(key: Key) = composeTestRule.onRoot().performKeyInput { pressKey(key) }
+
     /**
      * Out of touch mode, gives Badges' search field focus and goes Back to Home. A phone is out
      * of touch mode after a key press, and stays so while TalkBack is on, since its gestures
@@ -1171,6 +1174,11 @@ class MainActivityTest {
         pressBack()
 
         home().assertIsDisplayed()
+    }
+
+    private fun reopenBadgesAfterSearchHadFocus() {
+        leaveBadgesWithSearchFocused()
+        composeTestRule.onNodeWithText("Merit badges").performClick()
     }
 
     @Test
@@ -1189,24 +1197,98 @@ class MainActivityTest {
         assertNothingFocused()
     }
 
+    // A Home item that took focus here would pass it to Badges' first item as Home went.
+    @Test
+    fun tab_whilePagesSlide_movesFocusIntoTheArrivingPage() {
+        leaveBadgesWithSearchFocused()
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.onNodeWithText("Merit badges").performClick()
+        // Partway through the slide, with Home still drawn.
+        composeTestRule.mainClock.advanceTimeBy(100)
+        home().assertExists()
+
+        press(Key.Tab)
+
+        searchField().assertIsFocused()
+    }
+
     @Test
     fun downKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
-        leaveBadgesWithSearchFocused()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        reopenBadgesAfterSearchHadFocus()
 
-        composeTestRule.onRoot().performKeyInput { pressKey(Key.DirectionDown) }
+        press(Key.DirectionDown)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun upKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionUp)
+
+        // Camping, the catalog's only badge, as when nothing on the page has had focus.
+        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsFocused()
+    }
+
+    @Test
+    fun leftKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionLeft)
+
+        // Camping, the catalog's only badge, as when nothing on the page has had focus.
+        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsFocused()
+    }
+
+    @Test
+    fun rightKey_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.DirectionRight)
+
+        searchField().assertIsFocused()
+    }
+
+    @Test
+    fun enter_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
+        reopenBadgesAfterSearchHadFocus()
+
+        press(Key.Enter)
 
         searchField().assertIsFocused()
     }
 
     @Test
     fun tab_afterAFocusedPageLeft_movesFocusIntoThePageShown() {
-        leaveBadgesWithSearchFocused()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
+        reopenBadgesAfterSearchHadFocus()
 
-        composeTestRule.onRoot().performKeyInput { pressKey(Key.Tab) }
+        press(Key.Tab)
 
         searchField().assertIsFocused()
+    }
+
+    @Test
+    fun shiftTab_afterAFocusedPageLeft_focusesThePagesLastItem() {
+        reopenBadgesAfterSearchHadFocus()
+
+        composeTestRule.onRoot().performKeyInput {
+            withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) }
+        }
+
+        // Camping, the catalog's only badge.
+        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsFocused()
+    }
+
+    @Test
+    fun back_afterFocusMovesIntoThePageShown_leavesIt() {
+        reopenBadgesAfterSearchHadFocus()
+        press(Key.Tab)
+        searchField().assertIsFocused()
+
+        pressBack()
+
+        home().assertIsDisplayed()
     }
 
     @Test
@@ -1214,20 +1296,19 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
 
-        composeTestRule.onRoot().performKeyInput { pressKey(Key.Tab) }
+        press(Key.Tab)
 
         searchField().assertIsFocused()
     }
 
     @Test
     fun tab_fromThePagesLastItem_wrapsAroundToItsFirst() {
-        leaveBadgesWithSearchFocused()
-        composeTestRule.onNodeWithText("Merit badges").performClick()
-        composeTestRule.onRoot().performKeyInput { pressKey(Key.Tab) }
+        reopenBadgesAfterSearchHadFocus()
+        press(Key.Tab)
         // Camping, the catalog's only badge, is the last item.
-        composeTestRule.onRoot().performKeyInput { pressKey(Key.Tab) }
+        press(Key.Tab)
 
-        composeTestRule.onRoot().performKeyInput { pressKey(Key.Tab) }
+        press(Key.Tab)
 
         searchField().assertIsFocused()
     }

@@ -81,11 +81,13 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         backStack = shownBackStack,
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
         // cleared when the entry leaves the back stack, and ignore touches on screens that
-        // are animating, so a double tap can't press a control on the screen it opened.
+        // are animating, so a double tap can't press a control on the screen it opened. Keep
+        // focus out of a screen that's leaving, so it can't pass to the next one.
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
             rememberIgnoreTouchesNavEntryDecorator(),
+            rememberRefuseFocusWhileLeavingNavEntryDecorator(),
             drawnScreens.decorator,
             unsavedChanges.decorator
         ),
@@ -191,15 +193,17 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     val holder = remember { FocusRequester() }
     val page = remember { FocusRequester() }
     var hasFocus by remember { mutableStateOf(false) }
-    // The holder can take focus only from then until focus moves back into a page. Compose moves
-    // focus out to a parent that can take it on Back, so Back wouldn't leave the page, and Tab
-    // would stop on the holder as it starts on a page or wraps around.
-    var canHold by remember { mutableStateOf(false) }
+    // The holder can take focus only as it's given it here, and keeps it only until focus moves
+    // on. Compose moves focus out to a parent that can take it on Back, so Back wouldn't leave
+    // the page, and Tab would stop on the holder as it starts on a page or wraps around.
+    var isTakingFocus by remember { mutableStateOf(false) }
+    var isHolding by remember { mutableStateOf(false) }
     // The page that's left is still composed as the next one comes in, with its item focused.
     LaunchedEffect(shownBackStack.last()) {
         if (hasFocus) {
-            canHold = true
+            isTakingFocus = true
             holder.requestFocus()
+            isTakingFocus = false
         }
     }
     NavDisplay(
@@ -213,15 +217,12 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             .focusRequester(holder)
             .onFocusChanged {
                 hasFocus = it.hasFocus
-                // Not whenever the holder isn't focused: as it takes focus from a page item,
-                // Compose reports it unfocused for a moment, and takes focus away from a node
-                // that can no longer take it.
-                if (it.hasFocus && !it.isFocused) canHold = false
+                isHolding = it.isFocused
             }
             .focusProperties {
-                canFocus = canHold
+                canFocus = isTakingFocus || isHolding
                 // The arrow keys move from it into the page, as they do when nothing is
-                // focused. Tab does so by itself.
+                // focused. Tab, Enter and D-pad center do so by themselves.
                 up = page
                 down = page
                 left = page
