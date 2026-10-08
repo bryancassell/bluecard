@@ -38,7 +38,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
-import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
@@ -50,7 +49,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -291,7 +289,6 @@ class RankDetailScreenTest {
         composeTestRule.onNode(anyProgressBar).assertDoesNotExist()
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankNotEarned_canBeMarkedEarned_onADayUpToToday() {
         show(ready)
@@ -341,7 +338,6 @@ class RankDetailScreenTest {
     }
 
     // So a mistaken Unmark loses nothing.
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markEarned_afterUnmarking_opensAtTheDateUnmarked() {
         show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
@@ -353,7 +349,6 @@ class RankDetailScreenTest {
         assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markEarned_cancelled_marksNothing() {
         show(ready)
@@ -364,7 +359,6 @@ class RankDetailScreenTest {
         assertEquals(emptyList<LocalDate>(), marks)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markedRank_showsItsDate_withChangeDateAndUnmark() {
         show(marked)
@@ -381,7 +375,6 @@ class RankDetailScreenTest {
         assertEquals(1, unmarks)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankEarnedWithARankAbove_saysSo_andCanBeGivenADate() {
         show(earnedWithLife)
@@ -399,7 +392,6 @@ class RankDetailScreenTest {
     }
 
     // As when it was marked earned itself, before it was unmarked.
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankEarnedWithARankAbove_addDate_afterUnmarking_opensAtTheDateUnmarked() {
         show(earnedWithLife.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
@@ -424,7 +416,6 @@ class RankDetailScreenTest {
         text("Earned").performScrollTo().assertIsDisplayed()
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankWaitingOnTheRankBelow_saysSo_aboveMarkEarned() {
         show(ready.copy(fractionDone = 1f, waitingOn = "Scout"))

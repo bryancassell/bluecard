@@ -1276,11 +1276,6 @@ test still exports and imports through the real one.
     most screen tests use Material's default theme, and disabled buttons and
     text partway through fading in were counted too. `BlueCardColorSchemeTest`
     checks the app's colors instead ([Theme](#theme)).
-  - **Every test that opens the date picker uses a taller screen**
-    (`DATE_PICKER_SCREEN`). On Robolectric's default 320x470dp screen, a month
-    that spans six weeks gives each day a 47dp touch target. A short window,
-    such as a phone's in landscape, has the same problem in the app
-    ([#282](https://github.com/bryancassell/bluecard/issues/282)).
   - **Navigation tests and other components' tests don't run them**, such as
     `MainActivityTest`, `PageTransitionsTest` and the text field tests. What
     they show is checked by the screens' and dialogs' own tests. Under native
@@ -1289,8 +1284,7 @@ test still exports and imports through the real one.
     checks fails.
   - **Any other result that can't be fixed yet is suppressed** in the rule's
     validator (`setSuppressingResultMatcher`), matching only that result, with
-    a comment linking its issue. The date picker's tests use a taller screen
-    instead (above), and #282 tracks the problem.
+    a comment linking its issue.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

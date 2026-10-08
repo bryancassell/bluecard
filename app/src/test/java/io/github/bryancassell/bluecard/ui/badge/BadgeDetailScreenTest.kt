@@ -60,7 +60,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
-import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -891,7 +890,6 @@ class BadgeDetailScreenTest {
         completedOn = LocalDate.of(2025, 8, 1)
     )
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun incompleteBadge_canBeMarkedCompleted_onADayUpToToday() {
         show(ready)
@@ -959,7 +957,6 @@ class BadgeDetailScreenTest {
     }
 
     // So a mistaken Unmark loses nothing.
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_afterUnmarking_opensAtTheDateUnmarked() {
         show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
@@ -971,7 +968,6 @@ class BadgeDetailScreenTest {
         assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_cancelled_marksNothing() {
         show(ready)
@@ -983,7 +979,6 @@ class BadgeDetailScreenTest {
         composeTestRule.onNodeWithText("Cancel").assertDoesNotExist()
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_onAPageOpenPastMidnight_offersTheNewDay() {
         show(ready)
@@ -1012,7 +1007,6 @@ class BadgeDetailScreenTest {
         assertEquals(tops.sorted(), tops)
     }
 
-    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markedBadge_changeDate_opensAtItsDate_andMarksTheDayPicked() {
         show(marked)
