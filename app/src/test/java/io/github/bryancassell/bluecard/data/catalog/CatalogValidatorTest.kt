@@ -550,7 +550,8 @@ class CatalogValidatorTest {
                 "$where, column \"hours\": total needed must be at least 1",
                 "$where, column \"hours\": total label is blank",
                 "$where, column \"hours\": total labelPlural \"Hours\" must start with a lowercase letter",
-                "$where, column \"notes\": has a total but isn't a number"
+                "$where, column \"notes\": has a total but isn't a number",
+                "$where: has more than one total that isn't part of another"
             ),
             errorsForRequirements(requirement.copy(tracker = bad))
         )
@@ -572,6 +573,88 @@ class CatalogValidatorTest {
                     "has a total but a fixed number of rows"
             ),
             errorsForRequirements(requirement.copy(tracker = weeks))
+        )
+    }
+
+    private fun hours(id: String, needed: Int, partOf: String? = null) = TrackerColumn(
+        id,
+        "Hours",
+        TrackerColumnType.NUMBER,
+        ColumnTotal(needed, "hour", "hours", partOf)
+    )
+
+    @Test
+    fun totalPartOfAnother() {
+        val life4 = tracker.copy(
+            columns = listOf(hours("hours", 6), hours("conservation-hours", 3, partOf = "hours"))
+        )
+        assertEquals(emptyList<String>(), errorsForRequirements(requirement.copy(tracker = life4)))
+
+        val bad = tracker.copy(
+            columns = listOf(
+                hours("hours", 6),
+                hours("more-than-whole", 7, partOf = "hours"),
+                hours("of-a-part", 1, partOf = "more-than-whole"),
+                hours("of-itself", 1, partOf = "of-itself"),
+                hours("of-no-total", 1, partOf = "minutes")
+            )
+        )
+        val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker"
+        assertEquals(
+            listOf(
+                "$where, column \"more-than-whole\": total needed is more than \"hours\"'s",
+                "$where, column \"of-a-part\": partOf \"more-than-whole\" is part of another total",
+                "$where, column \"of-itself\": partOf \"of-itself\" is its own column",
+                "$where, column \"of-no-total\": partOf \"minutes\" isn't a column with a total"
+            ),
+            errorsForRequirements(requirement.copy(tracker = bad))
+        )
+    }
+
+    // Their units can't be added up on the progress bar, such as nights and miles.
+    @Test
+    fun twoTotalsThatArentPartOfAnother() {
+        val nightsAndMiles = tracker.copy(
+            columns = listOf(
+                TrackerColumn(
+                    "nights",
+                    "Nights",
+                    TrackerColumnType.NUMBER,
+                    ColumnTotal(20, "night", "nights")
+                ),
+                TrackerColumn(
+                    "miles",
+                    "Miles",
+                    TrackerColumnType.NUMBER,
+                    ColumnTotal(100, "mile", "miles")
+                )
+            )
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "has more than one total that isn't part of another"
+            ),
+            errorsForRequirements(requirement.copy(tracker = nightsAndMiles))
+        )
+    }
+
+    // The progress bar counts only one part of a total.
+    @Test
+    fun twoTotalsPartOfTheSameOne() {
+        val bad = tracker.copy(
+            columns = listOf(
+                hours("hours", 6),
+                hours("conservation-hours", 3, partOf = "hours"),
+                hours("outdoor-hours", 2, partOf = "hours")
+            )
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "more than one total is part of \"hours\""
+            ),
+            errorsForRequirements(requirement.copy(tracker = bad))
         )
     }
 
@@ -631,6 +714,22 @@ class CatalogValidatorTest {
             listOf(
                 "badge \"first-aid\", version 2026-01-01, requirement \"1\": " +
                     "tracker has rowsNeeded but the requirement has children"
+            ),
+            errorsForRequirements(parent)
+        )
+    }
+
+    // Its children decide how much of it is done, so its total wouldn't add to the bar.
+    @Test
+    fun totalOnARequirementWithChildren() {
+        val parent = requirement.copy(
+            tracker = tracker.copy(columns = listOf(hours("hours", 8))),
+            children = listOf(Requirement("1a", "A."))
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\": " +
+                    "tracker has a total but the requirement has children"
             ),
             errorsForRequirements(parent)
         )

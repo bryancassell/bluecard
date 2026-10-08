@@ -26163,7 +26163,8 @@
                     "total": {
                       "needed": 3,
                       "label": "conservation hour",
-                      "labelPlural": "conservation hours"
+                      "labelPlural": "conservation hours",
+                      "partOf": "hours"
                     }
                   },
                   {

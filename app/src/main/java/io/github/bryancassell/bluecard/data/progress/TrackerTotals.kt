@@ -36,14 +36,15 @@ data class TrackerTotal(val sum: BigDecimal, val total: ColumnTotal)
 
 /**
  * This tracker's columns that have a [total][TrackerColumn.total], in column order, each with its
- * values added up over the [entries] recorded for its requirement. Only a log has totals
- * (docs/catalog.md), so every entry is a row. A value that isn't a number ([storedNumber]) isn't
- * counted.
+ * values added up over the [entries] recorded for its requirement ([sumOver]).
  */
 fun TrackerDefinition.totals(entries: List<TrackerEntry>): List<TrackerTotal> =
-    columns.mapNotNull { column ->
-        column.total?.let { total ->
-            val sum = entries.sumOf { it.values[column.id]?.let(::storedNumber) ?: BigDecimal.ZERO }
-            TrackerTotal(sum, total)
-        }
-    }
+    columns.mapNotNull { column -> column.total?.let { TrackerTotal(column.sumOver(entries), it) } }
+
+/**
+ * This column's values added up over the [entries] recorded for its requirement. Only a log has
+ * totals (docs/catalog.md), so every entry is a row. A value that isn't a number
+ * ([storedNumber]) isn't counted.
+ */
+fun TrackerColumn.sumOver(entries: List<TrackerEntry>): BigDecimal =
+    entries.sumOf { it.values[id]?.let(::storedNumber) ?: BigDecimal.ZERO }

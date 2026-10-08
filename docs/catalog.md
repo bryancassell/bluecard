@@ -244,13 +244,18 @@ and needs all of them. The requirement then shows the
 column's values added up against it, such as "4.5 of 6 hours": on its row in
 place of how many rows there are, and on its page and in the report under that
 count. It's only a guide: the scout still checks the requirement
-off, as for any log.
+off, as for any log. Each unit of it up to the amount adds to the progress bar,
+and checking the requirement off is one more part, as for `rowsNeeded`. So a
+log has only one total, plus at most one that's `partOf` it: the bar can't add
+up different units, such as nights and miles. A requirement with `children`
+can't have one, because its children decide its share of the bar.
 
 | Field | Required | Meaning |
 |---|---|---|
 | `needed` | Yes | The amount the requirement asks for, a whole number of at least 1. |
 | `label` | Yes | What the amount is counted in, in lowercase, such as `hour`. The app shows it when `needed` is 1: "0.5 of 1 hour". |
 | `labelPlural` | Yes | `label` in the plural, in lowercase, such as `hours`. |
+| `partOf` | No | The `id` of the column whose total includes this one, such as `hours` for Life 4's conservation hours, since its 6 hours must include 3 on conservation. The progress bar then counts that total's units only as far as this part allows: Life 4's 6 hours with no conservation hours count as 3, as 3 conservation hours are still to do. This total isn't counted on its own. Set it whenever the official text asks for an amount within another, and say so in the column's label, as Life 4's "Conservation hours (included in Hours)" does. |
 
 Example, Life 4's service log, where part of a project's hours can be
 conservation:
@@ -268,7 +273,12 @@ conservation:
     "id": "conservation-hours",
     "label": "Conservation hours (included in Hours)",
     "type": "number",
-    "total": { "needed": 3, "label": "conservation hour", "labelPlural": "conservation hours" }
+    "total": {
+      "needed": 3,
+      "label": "conservation hour",
+      "labelPlural": "conservation hours",
+      "partOf": "hours"
+    }
   }
 ]
 ```
@@ -313,8 +323,12 @@ It checks that:
   that start with a lowercase letter, a `rowCount` of at least 1 when set, and
   a `rowsNeeded` of at least 1 only on a log without a `total`, on a
   requirement without `children`;
-- a `total` is only on a `number` column of a log, needs at least 1, and has
-  labels that start with a lowercase letter.
+- a `total` is only on a `number` column of a log of a requirement without
+  `children`, needs at least 1, and has labels that start with a lowercase
+  letter;
+- a log has at most one `total` that isn't `partOf` another, and at most one
+  that is, whose `partOf` names another column of its tracker with a `total`
+  that isn't part of one itself and needs at least as much.
 
 It can't check that the structure matches the official page or that summaries
 are in our own words; reviewers check those. To check the wording, read each
