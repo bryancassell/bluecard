@@ -1315,17 +1315,25 @@ class MainActivityTest {
 
     private fun notesField() = field("Notes")
 
+    private fun saveNotesButton() = composeTestRule.onNodeWithText("Save notes")
+
+    // Out of touch mode, types in a requirement's notes, ready to save them.
+    private fun typeNotesOutOfTouchMode() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        notesField().performClick().performTextInput("Planned it with my patrol.")
+        saveNotesButton().performScrollTo()
+    }
+
     /**
      * Out of touch mode, types in a requirement's notes and saves them. Save closes the keyboard
      * by clearing focus, and the requirement's page stays open.
      */
     private fun saveNotesOutOfTouchMode() {
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
-        notesField().performClick().performTextInput("Planned it with my patrol.")
+        typeNotesOutOfTouchMode()
 
-        composeTestRule.onNodeWithText("Save notes").performScrollTo().performClick()
+        saveNotesButton().performClick()
     }
 
     // Otherwise, Android's View.clearFocus() asks the view to take focus again, and the page's
@@ -1333,6 +1341,17 @@ class MainActivityTest {
     @Test
     fun saveNotes_outOfTouchMode_focusesNothing() {
         saveNotesOutOfTouchMode()
+
+        assertNothingFocused()
+    }
+
+    // The way a hardware keyboard saves, with Save focused.
+    @Test
+    fun enterOnSaveNotes_outOfTouchMode_focusesNothing() {
+        typeNotesOutOfTouchMode()
+        saveNotesButton().performSemanticsAction(SemanticsActions.RequestFocus).assertIsFocused()
+
+        press(Key.Enter)
 
         assertNothingFocused()
     }

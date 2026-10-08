@@ -193,10 +193,11 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     )
     // A focus target around the pages, which takes input focus from a page that's left with it,
     // so the page shown next doesn't get it, and from a page that clears it. Otherwise, out of
-    // touch mode, Compose clears the view's focus as well, Android's View.clearFocus() asks the
-    // view to take focus again, and Compose gives it to the first item that can take it. As
-    // Badges was left, that was its search field, which opened the keyboard, and TalkBack
-    // followed it (#285). After Save on a requirement's page, it was the Completed checkbox (#297).
+    // touch mode, Compose clears the view's focus too, as the focused item leaves composition or
+    // as a page clears focus. Android's View.clearFocus() then asks the view to take focus again,
+    // and Compose gives it to the first item that can take it. As Badges was left, that was its
+    // search field, which opened the keyboard, and TalkBack followed it (#285). After Save on a
+    // requirement's page, it was the Completed checkbox (#297).
     val holder = remember { FocusRequester() }
     val page = remember { FocusRequester() }
     var hasFocus by remember { mutableStateOf(false) }
