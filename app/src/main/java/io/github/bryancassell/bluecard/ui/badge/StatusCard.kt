@@ -32,8 +32,9 @@ internal const val STATUS_CARD_TAG = "statusCard"
  * Where a badge or rank stands, in a card under its official link, with what the scout can do
  * about it: mark it done on a prior date, change or remove that date, or share and save its
  * report once it's done. The card sets these apart from the rest of the page, so its buttons read
- * as things to tap ([#247](https://github.com/bryancassell/bluecard/issues/247)). It's white, the
- * theme's lightest surface, so a tonal button stands out on it.
+ * as things to tap ([#247](https://github.com/bryancassell/bluecard/issues/247)). It's the
+ * theme's brightest surface, white in light mode and Dark Blue in dark mode, so it stands out from
+ * the page and a tonal button stands out on it.
  *
  * Each line pads its own sides, as on the page, so a text button's text lines up with the card's
  * text. Its last line is always a button, whose touch area leaves room under it, so the card
@@ -52,7 +53,7 @@ fun StatusCard(
             .testTag(STATUS_CARD_TAG),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = MaterialTheme.colorScheme.surfaceBright
         )
     ) {
         Column(Modifier.padding(top = 16.dp, bottom = 12.dp)) {

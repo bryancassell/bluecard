@@ -15,14 +15,15 @@ import org.robolectric.annotation.Config
 
 /**
  * Checks the window themes that show before and behind Compose. They have BlueCardTheme's
- * background and dark system bar icons in light and dark mode, so no other color shows before
- * the first frame, and Android doesn't darken the app in dark mode.
+ * background, and system bar icons that show on it, in light and dark mode, so no other color
+ * shows before the first frame.
  */
 @RunWith(AndroidJUnit4::class)
 class WindowThemeTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
-    private val blueCardBackground = BlueCardColorScheme.background.toArgb()
+    private val lightBackground = BlueCardLightColorScheme.background.toArgb()
+    private val darkBackground = BlueCardDarkColorScheme.background.toArgb()
 
     private fun <T> resolve(theme: Int, attribute: Int, read: (TypedArray) -> T): T {
         val values = context.resources.newTheme()
@@ -42,16 +43,10 @@ class WindowThemeTest {
     private fun flag(theme: Int, attribute: Int) =
         resolve(theme, attribute) { if (it.hasValue(0)) it.getBoolean(0, false) else null }
 
-    private fun assertWindowHasBlueCardBackground() {
-        assertEquals(
-            blueCardBackground,
-            color(R.style.Theme_BlueCard, android.R.attr.windowBackground)
-        )
+    private fun assertWindowHasBackground(background: Int) {
+        assertEquals(background, color(R.style.Theme_BlueCard, android.R.attr.windowBackground))
         // Android shows colorBackground behind the app, such as while resizing it in split-screen.
-        assertEquals(
-            blueCardBackground,
-            color(R.style.Theme_BlueCard, android.R.attr.colorBackground)
-        )
+        assertEquals(background, color(R.style.Theme_BlueCard, android.R.attr.colorBackground))
     }
 
     // Android 8 to 11 draw core-splashscreen's splash screen, from its attribute.
@@ -59,48 +54,58 @@ class WindowThemeTest {
         color(R.style.Theme_BlueCard_Starting, SplashScreenR.attr.windowSplashScreenBackground)
 
     // On Android 8 to 11 the splash screen stays up in a window drawn from its theme until the
-    // profile loads. The theme's parent is dark in dark mode and sets neither attribute.
-    private fun assertSplashScreenHasDarkSystemBarIcons() {
+    // profile loads. A "light" bar is one with dark icons, and the window reads it as false if
+    // unset.
+    private fun assertSplashScreenSystemBarIcons(dark: Boolean) {
         assertEquals(
-            true,
-            flag(R.style.Theme_BlueCard_Starting, android.R.attr.windowLightStatusBar)
+            dark,
+            flag(R.style.Theme_BlueCard_Starting, android.R.attr.windowLightStatusBar) ?: false
         )
         assertEquals(
-            true,
-            flag(R.style.Theme_BlueCard_Starting, android.R.attr.windowLightNavigationBar)
+            dark,
+            flag(R.style.Theme_BlueCard_Starting, android.R.attr.windowLightNavigationBar) ?: false
         )
     }
 
     @Test
     @Config(qualifiers = "notnight")
-    fun lightMode_window_hasBlueCardBackground() {
-        assertWindowHasBlueCardBackground()
+    fun lightMode_window_hasLightSchemeBackground() {
+        assertWindowHasBackground(lightBackground)
     }
 
     @Test
     @Config(qualifiers = "night")
-    fun darkMode_window_hasBlueCardBackground() {
-        assertWindowHasBlueCardBackground()
+    fun darkMode_window_hasDarkSchemeBackground() {
+        assertWindowHasBackground(darkBackground)
     }
 
     @Test
     @Config(qualifiers = "notnight")
-    fun lightMode_splashScreen_hasBlueCardBackground() {
-        assertEquals(blueCardBackground, splashScreenBackground())
+    fun lightMode_splashScreen_hasLightSchemeBackground() {
+        assertEquals(lightBackground, splashScreenBackground())
     }
 
     @Test
     @Config(qualifiers = "night")
-    fun darkMode_splashScreen_hasBlueCardBackground() {
-        assertEquals(blueCardBackground, splashScreenBackground())
+    fun darkMode_splashScreen_hasDarkSchemeBackground() {
+        assertEquals(darkBackground, splashScreenBackground())
     }
 
     // Android 12+ draws the splash screen itself, from the platform's attribute.
     @Test
-    @Config(sdk = [31], qualifiers = "night")
-    fun android12AndLater_darkMode_splashScreen_hasBlueCardBackground() {
+    @Config(sdk = [31], qualifiers = "notnight")
+    fun android12AndLater_lightMode_splashScreen_hasLightSchemeBackground() {
         assertEquals(
-            blueCardBackground,
+            lightBackground,
+            color(R.style.Theme_BlueCard_Starting, android.R.attr.windowSplashScreenBackground)
+        )
+    }
+
+    @Test
+    @Config(sdk = [31], qualifiers = "night")
+    fun android12AndLater_darkMode_splashScreen_hasDarkSchemeBackground() {
+        assertEquals(
+            darkBackground,
             color(R.style.Theme_BlueCard_Starting, android.R.attr.windowSplashScreenBackground)
         )
     }
@@ -108,27 +113,41 @@ class WindowThemeTest {
     @Test
     @Config(sdk = [30], qualifiers = "notnight")
     fun android11_lightMode_splashScreen_hasDarkSystemBarIcons() {
-        assertSplashScreenHasDarkSystemBarIcons()
+        assertSplashScreenSystemBarIcons(dark = true)
     }
 
     @Test
     @Config(sdk = [30], qualifiers = "night")
-    fun android11_darkMode_splashScreen_hasDarkSystemBarIcons() {
-        assertSplashScreenHasDarkSystemBarIcons()
+    fun android11_darkMode_splashScreen_hasLightSystemBarIcons() {
+        assertSplashScreenSystemBarIcons(dark = false)
     }
 
-    // Android's force dark and force invert skip a theme that isn't declared light (see
-    // ViewRootImpl.determineForceDarkType).
+    // From Android 13, core-splashscreen's theme sets the navigation bar's itself.
     @Test
-    @Config(qualifiers = "night")
-    fun darkMode_window_isNotDeclaredLight() {
-        assertEquals(false, flag(R.style.Theme_BlueCard, android.R.attr.isLightTheme))
+    @Config(sdk = [36], qualifiers = "notnight")
+    fun android13AndLater_lightMode_splashScreen_hasDarkSystemBarIcons() {
+        assertSplashScreenSystemBarIcons(dark = true)
     }
 
-    // So Android's own popups, such as the text selection toolbar, are light.
+    @Test
+    @Config(sdk = [36], qualifiers = "night")
+    fun android13AndLater_darkMode_splashScreen_hasLightSystemBarIcons() {
+        assertSplashScreenSystemBarIcons(dark = false)
+    }
+
+    // The window theme follows dark mode as BlueCardTheme does, so Android's own popups, such as
+    // the text selection toolbar, match the app. In dark mode it must say it isn't light: the
+    // window reads an unset isLightTheme as true, and Android 10+ then darkens a "light" app
+    // itself, with force dark or force invert (see ViewRootImpl.determineForceDarkType).
     @Test
     @Config(qualifiers = "notnight")
     fun lightMode_window_isDeclaredLight() {
         assertEquals(true, flag(R.style.Theme_BlueCard, android.R.attr.isLightTheme))
+    }
+
+    @Test
+    @Config(qualifiers = "night")
+    fun darkMode_window_isNotDeclaredLight() {
+        assertEquals(false, flag(R.style.Theme_BlueCard, android.R.attr.isLightTheme))
     }
 }

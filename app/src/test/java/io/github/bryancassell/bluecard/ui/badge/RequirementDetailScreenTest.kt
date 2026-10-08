@@ -714,6 +714,51 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Remove date").assertIsDisplayed()
     }
 
+    /** [weeksFilledIn] with work of its own besides its rows, not done yet. */
+    private val weeksAndOwnWork = weeksFilledIn.copy(
+        requirement = weeksFilledIn.requirement.copy(
+            completed = false,
+            completesFromRows = false,
+            ownWork = OwnWork("Compare the weeks.", false)
+        ),
+        completedDate = null,
+        rowsCompletedDate = null
+    )
+
+    // Its rows get no date of their own: the own work's is the requirement's.
+    @Test
+    fun fixedRowsAndOwnWork_haveItsCheckboxAboveTheRows_andNoDateForTheRows() {
+        show(weeksAndOwnWork)
+
+        val checkbox = composeTestRule.onNode(hasText("Compare the weeks.") and isToggleable())
+            .assertIsOff()
+            .getUnclippedBoundsInRoot()
+        assertTrue(checkbox.bottom <= row("Week 1").getUnclippedBoundsInRoot().top)
+        composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+        composeTestRule.onNodeWithText("date", substring = true).assertDoesNotExist()
+
+        composeTestRule.onNode(hasText("Compare the weeks.") and isToggleable()).performClick()
+        assertEquals(listOf(true), completedChanges)
+    }
+
+    @Test
+    fun fixedRowsAndOwnWorkDone_areLabeledCompleted_onTheOwnWorksDate() {
+        show(
+            weeksAndOwnWork.copy(
+                requirement = weeksAndOwnWork.requirement.copy(
+                    completed = true,
+                    ownWork = OwnWork("Compare the weeks.", true)
+                ),
+                completedDate = LocalDate.of(2026, 4, 15)
+            )
+        )
+
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
+        composeTestRule.onNode(hasText("Compare the weeks.") and isToggleable()).assertIsOn()
+        composeTestRule.onNodeWithText("Completed on Apr 15, 2026").performScrollTo()
+            .assertIsDisplayed()
+    }
+
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_changeDate_picksAnotherDay() {

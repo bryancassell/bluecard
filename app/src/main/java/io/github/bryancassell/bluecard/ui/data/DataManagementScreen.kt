@@ -57,7 +57,11 @@ fun DataManagementRoute(
         onEditProfile = onEditProfile,
         onExport = viewModel::export,
         onImport = viewModel::read,
-        onConfirmImport = viewModel::confirmImport,
+        onMerge = viewModel::merge,
+        onReplace = viewModel::replace,
+        onChooseProfile = viewModel::chooseProfile,
+        onChooseProgress = viewModel::chooseProgress,
+        onConfirmMerge = viewModel::confirmMerge,
         onCancelImport = viewModel::cancelImport,
         onClearAll = viewModel::clearAll,
         onMessageShown = viewModel::onMessageShown,
@@ -70,8 +74,11 @@ fun DataManagementRoute(
  * clearing all their progress. Edit opens a page to change the name and unit number
  * ([onEditProfile]). Export saves the data to a file the scout creates with the system file
  * picker ([onExport]), suggesting a name with [today]'s date, read as it opens. Import reads a
- * file they pick ([onImport]) and, once it's checked, asks before replacing everything with it
- * ([onConfirmImport]). Clear all asks before clearing every badge's progress ([onClearAll]).
+ * file they pick ([onImport]) and, once it's checked, asks whether to merge it with their data
+ * ([onMerge]) or replace everything with it ([onReplace]). A merge then asks which to keep, the
+ * phone's or the file's, for the name and unit number ([onChooseProfile]) and each badge and
+ * rank ([onChooseProgress]) where the two differ, before merging ([onConfirmMerge]). Clear all
+ * asks before clearing every badge's progress ([onClearAll]).
  */
 @Composable
 fun DataManagementScreen(
@@ -80,7 +87,11 @@ fun DataManagementScreen(
     onEditProfile: () -> Unit,
     onExport: (destination: Uri) -> Unit,
     onImport: (source: Uri) -> Unit,
-    onConfirmImport: () -> Unit,
+    onMerge: () -> Unit,
+    onReplace: () -> Unit,
+    onChooseProfile: (fromFile: Boolean) -> Unit,
+    onChooseProgress: (id: String, fromFile: Boolean) -> Unit,
+    onConfirmMerge: () -> Unit,
     onCancelImport: () -> Unit,
     onClearAll: () -> Unit,
     onMessageShown: (DataManagementMessage) -> Unit,
@@ -161,11 +172,14 @@ fun DataManagementScreen(
         )
     }
     if (uiState.backupToImport != null) {
-        ConfirmDialog(
-            title = stringResource(R.string.import_confirm_title),
-            message = stringResource(R.string.import_confirm_message),
-            confirmLabel = stringResource(R.string.import_confirm),
-            onConfirm = onConfirmImport,
+        ImportDialog(onMerge = onMerge, onReplace = onReplace, onDismiss = onCancelImport)
+    }
+    uiState.mergeChoices?.let { choices ->
+        MergeDialog(
+            choices = choices,
+            onChooseProfile = onChooseProfile,
+            onChooseProgress = onChooseProgress,
+            onConfirm = onConfirmMerge,
             onDismiss = onCancelImport
         )
     }
@@ -221,6 +235,7 @@ private val Kind.text: Int
         Kind.NewerFormat -> R.string.import_newer_format
         Kind.ImportFailed -> R.string.import_failed
         Kind.Imported -> R.string.import_done
+        Kind.Merged -> R.string.merge_done
         Kind.ClearFailed -> R.string.save_failed
         Kind.Cleared -> R.string.clear_all_done
     }

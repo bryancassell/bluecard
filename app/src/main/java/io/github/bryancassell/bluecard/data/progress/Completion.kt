@@ -12,20 +12,32 @@ data class Completion(val date: LocalDate?)
 
 /**
  * Whether the scout marks this requirement complete by hand, on its page. A requirement with
- * children is complete once enough of them are instead (and the scout marks its
- * [own work][Requirement.ownWork], if any, by hand), one with a tracker with a fixed number
+ * children is complete once enough of them are instead, one with a tracker with a fixed number
  * of rows once every row is filled in, and one that asks for merit badges once the scout has
- * completed enough of them.
+ * completed enough of them. The scout marks the [own work][Requirement.ownWork] of either of the
+ * first two, if any, by hand.
  */
 val Requirement.isMarkedByHand: Boolean
     get() = children.isEmpty() && tracker?.rowCount == null && meritBadges == null
 
 /**
- * Whether this requirement is complete once every row of its tracker is filled in: it has no
- * children, and its tracker has a fixed number of rows. The scout can give the date it was
+ * Whether this requirement needs every row of its tracker filled in: it has no children, and its
+ * tracker has a fixed number of rows. It may need its [own work][Requirement.ownWork] too.
+ */
+val Requirement.needsEveryRow: Boolean get() = children.isEmpty() && tracker?.rowCount != null
+
+/**
+ * Whether this requirement is complete once every row of its tracker is filled in: it
+ * [needsEveryRow] and has no [own work][Requirement.ownWork]. The scout can give the date it was
  * completed on, as for one they mark by hand ([completion]).
  */
-val Requirement.completesFromRows: Boolean get() = children.isEmpty() && tracker?.rowCount != null
+val Requirement.completesFromRows: Boolean get() = needsEveryRow && ownWork == null
+
+/** Whether every row of its tracker is filled in, for a requirement that [needsEveryRow]. */
+fun Requirement.hasEveryRow(trackerEntries: Map<String, List<TrackerEntry>>): Boolean {
+    val rowCount = tracker?.rowCount?.takeIf { needsEveryRow } ?: return false
+    return filledRows(trackerEntries[number].orEmpty(), rowCount).size == rowCount
+}
 
 /**
  * Whether a requirement is complete, from the scout's recorded progress and tracker entries
@@ -37,9 +49,11 @@ val Requirement.completesFromRows: Boolean get() = children.isEmpty() && tracker
  * `requiredCount`, even if it also has a tracker. Its date is when the last child it needed was
  * completed. One with [own work][Requirement.ownWork] also needs the scout to mark that complete,
  * and its date is the later of the two. One without children but with a tracker with a fixed
- * number of rows ([completesFromRows]) is complete when every row is filled in. Its date is the one
- * the scout gave, if they gave one, or else the date the last of its rows was first saved. Any
- * other requirement is complete when the scout marked it complete ([isMarkedByHand]).
+ * number of rows is complete when every row is filled in ([completesFromRows]). Its date is the one
+ * the scout gave, if they gave one, or else the date the last of its rows was first saved. One
+ * that also has own work needs the scout to mark that complete too, and its date is the one they
+ * gave the own work, since the rows' dates are only when they were typed in. Any other
+ * requirement is complete when the scout marked it complete ([isMarkedByHand]).
  */
 fun Requirement.completion(
     progress: Map<String, RequirementProgress>,
@@ -62,9 +76,9 @@ fun Requirement.completion(
 
         rowCount != null -> {
             val byRows = rowsCompletion(trackerEntries[number].orEmpty(), rowCount) ?: return null
-            // The scout gives the date as they mark a requirement by hand, but it doesn't
-            // complete this one.
-            markedCompletion(progress) ?: byRows
+            // The scout gives the date as they mark a requirement by hand. It completes this one
+            // only as its own work, if it has any.
+            markedCompletion(progress) ?: byRows.takeIf { ownWork == null }
         }
 
         else -> markedCompletion(progress)

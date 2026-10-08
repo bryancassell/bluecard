@@ -416,6 +416,41 @@ class JsonBackupRepositoryTest {
         assertEquals(imported, storedBackup())
     }
 
+    @Test
+    fun mergeBackup_addsUnstartedBadges_replacesThoseChosen_andKeepsTheRest() = runTest {
+        val before = storedBackup()
+        fun fromFile(id: String) = BadgeProgressDetails(
+            start.progress(id).copy(counselor = Counselor("Pat")),
+            emptyList(),
+            emptyList()
+        )
+        val file = Backup(
+            Profile("Sam Scout", "Crew 7"),
+            listOf(fromFile("camping"), fromFile("hiking"), fromFile("swimming"))
+        )
+
+        repository.mergeBackup(file, fromFile = setOf("swimming"), profileFromFile = false)
+
+        val camping = before.progress.single { it.badge.badgeId == "camping" }
+        assertEquals(
+            Backup(profile, listOf(camping, fromFile("hiking"), fromFile("swimming"))),
+            storedBackup()
+        )
+    }
+
+    @Test
+    fun mergeBackup_withTheProfileFromTheFile_replacesTheProfile() = runTest {
+        val before = storedBackup()
+
+        repository.mergeBackup(
+            Backup(Profile("Sam Scout", "Crew 7"), emptyList()),
+            fromFile = emptySet(),
+            profileFromFile = true
+        )
+
+        assertEquals(before.copy(profile = Profile("Sam Scout", "Crew 7")), storedBackup())
+    }
+
     // The issue's acceptance test, through the Room database the app stores progress in.
     @Test
     fun exportThenImport_onAClearedApp_restoresTheSameData() = runTest {

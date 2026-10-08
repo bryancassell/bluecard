@@ -153,7 +153,8 @@
             },
             {
               "number": "4",
-              "summary": "Pick three people of different racial, ethnic or religious backgrounds, and tell how each has contributed to our country.",
+              "summary": "Pick three people of different racial, ethnic or religious backgrounds, and tell your counselor how each has contributed to our country.",
+              "ownWork": "Tell your counselor how the three people contributed to our country.",
               "tracker": {
                 "columns": [
                   {
@@ -391,8 +392,7 @@
                   }
                 ],
                 "rowLabel": "concern",
-                "rowLabelPlural": "concerns",
-                "rowCount": 8
+                "rowLabelPlural": "concerns"
               }
             },
             {
@@ -476,7 +476,8 @@
           "requirements": [
             {
               "number": "1",
-              "summary": "Name two breeds in each livestock class (horses, dairy cattle, beef cattle, sheep, hogs, poultry and goats), with their main uses, merits and origins.",
+              "summary": "Name two breeds in each livestock class (horses, dairy cattle, beef cattle, sheep, hogs, poultry and goats), and tell your counselor their main uses, merits and origins.",
+              "ownWork": "Tell your counselor each breed's main uses, merits and origins.",
               "tracker": {
                 "columns": [
                   {
@@ -507,7 +508,8 @@
             },
             {
               "number": "2",
-              "summary": "List two diseases for each class in requirement 1, and describe each one's symptoms, how animals catch it and how to prevent it.",
+              "summary": "List two diseases for each class in requirement 1, and describe to your counselor each one's symptoms, how animals catch it and how to prevent it.",
+              "ownWork": "Describe the diseases to your counselor.",
               "tracker": {
                 "columns": [
                   {
@@ -994,6 +996,7 @@
                 {
                   "number": "4a",
                   "summary": "For each site, locate it on a map, tell how archaeologists learned of it, what it reveals and why that matters to archaeologists and people today; then compare the sites' ages.",
+                  "ownWork": "Compare how old the five sites are.",
                   "tracker": {
                     "columns": [
                       {
@@ -1028,7 +1031,8 @@
                       }
                     ],
                     "rowLabel": "site",
-                    "rowLabelPlural": "sites"
+                    "rowLabelPlural": "sites",
+                    "rowCount": 5
                   }
                 },
                 {
@@ -1933,7 +1937,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Plan and observe 10 objects not seen in requirement 4, and keep a log.",
+                  "summary": "Plan a binocular or telescope session of at least 10 objects not seen in requirement 4, finding each on a chart or app, and discuss your plan and then your log with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -2936,8 +2940,7 @@
                   }
                 ],
                 "rowLabel": "trek",
-                "rowLabelPlural": "treks",
-                "rowCount": 3
+                "rowLabelPlural": "treks"
               }
             },
             {
@@ -4817,7 +4820,8 @@
               "children": [
                 {
                   "number": "7a",
-                  "summary": "Gather 20 world coins, no two alike, from seven or more countries, and identify each one's country, denomination and main design features.",
+                  "summary": "Gather 20 world coins, no two alike, from seven or more countries, and tell your counselor each one's country, denomination and main design features.",
+                  "ownWork": "Show your counselor your 20 coins and identify each one.",
                   "tracker": {
                     "columns": [
                       {
@@ -4843,7 +4847,8 @@
                 },
                 {
                   "number": "7b",
-                  "summary": "Gather 20 world banknotes, no two alike, from seven or more countries, and identify each one's country, denomination and main design features.",
+                  "summary": "Gather 20 world banknotes, no two alike, from seven or more countries, and tell your counselor each one's country, denomination and main design features.",
+                  "ownWork": "Show your counselor your 20 banknotes and identify each one.",
                   "tracker": {
                     "columns": [
                       {
@@ -4869,7 +4874,8 @@
                 },
                 {
                   "number": "7c",
-                  "summary": "Collect 20 different tokens or medals, and identify who issued each and what it was for.",
+                  "summary": "Collect 20 different tokens or medals, and tell your counselor who issued each and what it was for.",
+                  "ownWork": "Show your counselor your 20 tokens or medals and identify each one.",
                   "tracker": {
                     "columns": [
                       {
@@ -5064,7 +5070,8 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Keep a three-day journal of your listening.",
+                  "summary": "Keep a three-day listening journal, and discuss with your counselor an example of each: listening to learn, be persuaded, enjoy something and understand feelings.",
+                  "ownWork": "Find an example of each kind of listening in your journal, and discuss them with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5073,18 +5080,14 @@
                         "type": "date"
                       },
                       {
-                        "id": "heard",
-                        "label": "What you listened to",
-                        "type": "text"
-                      },
-                      {
-                        "id": "purpose",
-                        "label": "Why you listened",
+                        "id": "listening",
+                        "label": "What you listened to and why",
                         "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "entry",
-                    "rowLabelPlural": "entries"
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 3
                   }
                 },
                 {
@@ -5178,7 +5181,7 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Name five major video game genres, explain what defines each, and give an example game.",
+                  "summary": "Name five major video game genres, define each, and give an example game.",
                   "tracker": {
                     "columns": [
                       {
@@ -5209,6 +5212,7 @@
                 {
                   "number": "1d",
                   "summary": "Research five turning points in the esports industry since 1990, including key tournaments, technology and organizations, and discuss what you found.",
+                  "ownWork": "Discuss your five turning points with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5245,7 +5249,8 @@
                 },
                 {
                   "number": "2b",
-                  "summary": "List five ways to deal with bad experiences in online games, and how each fits a point of the Scout Oath or Law.",
+                  "summary": "List five ways to deal with bad experiences in online games, and tell your counselor how each fits a point of the Scout Oath or Law.",
+                  "ownWork": "Tell your counselor how each of the five ways fits the Scout Oath or Law.",
                   "tracker": {
                     "columns": [
                       {
@@ -5306,6 +5311,7 @@
                 {
                   "number": "3b",
                   "summary": "Log your daily gaming time for two weeks, then sum up what you found.",
+                  "ownWork": "Sum up your two weeks of gaming time.",
                   "tracker": {
                     "columns": [
                       {
@@ -5320,12 +5326,14 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
                   "number": "3c",
                   "summary": "Over the same two weeks, log your daily physical activity and compare it with the CDC's advice of an hour of moderate-to-vigorous activity a day for ages 6–17.",
+                  "ownWork": "Compare your two weeks of activity with the CDC's advice.",
                   "tracker": {
                     "columns": [
                       {
@@ -5345,12 +5353,14 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
                   "number": "3d",
                   "summary": "Over the same two weeks, log your daily sleep and compare it with the CDC's advice: 9–12 hours for ages 6–12 and 8–10 hours for ages 13–18.",
+                  "ownWork": "Compare your two weeks of sleep with the CDC's advice.",
                   "tracker": {
                     "columns": [
                       {
@@ -5365,7 +5375,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
@@ -5589,7 +5600,8 @@
               "children": [
                 {
                   "number": "3a",
-                  "summary": "Discuss three different reinforcement materials, their pros, cons and uses, and what each one's SDS says about toxicity, disposal and safe handling.",
+                  "summary": "Discuss with your counselor three different reinforcement materials, their pros, cons and uses, and what each one's SDS says about toxicity, disposal and safe handling.",
+                  "ownWork": "Discuss the three reinforcement materials and their SDS sections with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5620,7 +5632,8 @@
                 },
                 {
                   "number": "3b",
-                  "summary": "Discuss three different resins, including thermoset and thermoplastic ones, with their pros, cons and uses, and what each one's SDS says about toxicity, disposal and safe handling.",
+                  "summary": "Discuss with your counselor three different resins, including thermoset and thermoplastic ones, with their pros, cons and uses, and what each one's SDS says about toxicity, disposal and safe handling.",
+                  "ownWork": "Discuss the three resins and their SDS sections with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5779,7 +5792,8 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Track your activity and calorie needs for five days.",
+                  "summary": "Track your activity and calorie needs for five days, then plan a day's meals with your counselor.",
+                  "ownWork": "With your counselor, plan a day of meals for yourself using MyPlate.",
                   "tracker": {
                     "columns": [
                       {
@@ -6032,6 +6046,7 @@
                 {
                   "number": "3b",
                   "summary": "Note each case's agencies and courts, why you think it happened and how to prevent it, then review your research with your counselor.",
+                  "ownWork": "Go over your research with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -6061,7 +6076,8 @@
                       }
                     ],
                     "rowLabel": "crime",
-                    "rowLabelPlural": "crimes"
+                    "rowLabelPlural": "crimes",
+                    "rowCount": 3
                   }
                 }
               ]
@@ -6386,7 +6402,8 @@
               "children": [
                 {
                   "number": "6a",
-                  "summary": "Find three uses of encryption in cybersecurity, and for each, explain the kind used and why it matters.",
+                  "summary": "Find three uses of encryption in cybersecurity, and for each, explain to your counselor the kind used and why it matters.",
+                  "ownWork": "Explain the three uses of encryption to your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -6441,7 +6458,8 @@
             },
             {
               "number": "7",
-              "summary": "Describe four everyday devices that could go online: what connecting them is good for, the risks it brings, and how to protect them.",
+              "summary": "Describe to your counselor four everyday devices that could go online: what connecting them is good for, the risks it brings, and how to protect them.",
+              "ownWork": "Describe the four devices to your counselor.",
               "tracker": {
                 "columns": [
                   {
@@ -6705,7 +6723,8 @@
                     },
                     {
                       "number": "6B(4)",
-                      "summary": "Take two trail rides each of 2, 5 and 8 miles, and report on them.",
+                      "summary": "On counselor-approved trails, take two rides each of 2, 5 and 8 miles, and report on them.",
+                      "ownWork": "Get your counselor's approval of the trails, then take your six rides.",
                       "tracker": {
                         "columns": [
                           {
@@ -6819,6 +6838,7 @@
                 {
                   "number": "4c",
                   "summary": "Write down all you eat over three days, circle the items with sugars that plaque can turn into acid, and list snacks to avoid for healthy teeth.",
+                  "ownWork": "List snacks to avoid for healthy teeth.",
                   "tracker": {
                     "columns": [
                       {
@@ -6838,7 +6858,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 3
                   }
                 }
               ]
@@ -6892,8 +6913,7 @@
                       }
                     ],
                     "rowLabel": "ad",
-                    "rowLabelPlural": "ads",
-                    "rowCount": 5
+                    "rowLabelPlural": "ads"
                   }
                 },
                 {
@@ -7263,6 +7283,7 @@
                 {
                   "number": "5c",
                   "summary": "With permission for online research, list 10 myths about people with disabilities and the facts, share it with your counselor, and present it to a Cub Scout pack or group.",
+                  "ownWork": "Share your list with your counselor, then present it to a Cub Scout pack or other group.",
                   "tracker": {
                     "columns": [
                       {
@@ -7277,7 +7298,8 @@
                       }
                     ],
                     "rowLabel": "myth",
-                    "rowLabelPlural": "myths"
+                    "rowLabelPlural": "myths",
+                    "rowCount": 10
                   }
                 }
               ]
@@ -8221,7 +8243,8 @@
               "children": [
                 {
                   "number": "2a",
-                  "summary": "Pick three of these and explain how each uses energy and what conversions happen: toaster, greenhouse, lightbulb, bow drill, cell phone, nuclear reactor, sauna or electric vehicles.",
+                  "summary": "Pick three of these and explain to your counselor how each uses energy and what conversions happen: toaster, greenhouse, lightbulb, bow drill, cell phone, nuclear reactor, sauna or electric vehicles.",
+                  "ownWork": "Explain the three devices' energy use and conversions to your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -8993,7 +9016,8 @@
             },
             {
               "number": "3",
-              "summary": "Do at least five chores for 90 days and keep a record.",
+              "summary": "Do at least five chores for 90 days, keep a record, and discuss how they affected your family.",
+              "ownWork": "Discuss with your counselor how your chores affected your family.",
               "tracker": {
                 "columns": [
                   {
@@ -10068,6 +10092,7 @@
                 {
                   "number": "5b",
                   "summary": "Make and mount bird feeders, and each day for two weeks note which kinds of birds visit.",
+                  "ownWork": "Make and mount bird feeders, and keep checking them through your two weeks of records.",
                   "tracker": {
                     "columns": [
                       {
@@ -10082,7 +10107,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 14
                   }
                 },
                 {
@@ -10639,6 +10665,7 @@
                 {
                   "number": "1a",
                   "summary": "Analyze and compare four games from different media, and discuss what you like and dislike.",
+                  "ownWork": "Discuss what you liked and disliked in each game with your counselor, and chart how they compare.",
                   "tracker": {
                     "columns": [
                       {
@@ -10678,7 +10705,8 @@
                       }
                     ],
                     "rowLabel": "game",
-                    "rowLabelPlural": "games"
+                    "rowLabelPlural": "games",
+                    "rowCount": 4
                   }
                 },
                 {
@@ -11060,7 +11088,8 @@
               "children": [
                 {
                   "number": "4a",
-                  "summary": "Pick three kinds of physical genealogy resources, and say where each is kept and what it adds to your family tree.",
+                  "summary": "Pick three kinds of physical genealogy resources, and tell your counselor where each is kept and what it adds to your family tree.",
+                  "ownWork": "Tell your counselor about the three physical resources.",
                   "tracker": {
                     "columns": [
                       {
@@ -11086,7 +11115,8 @@
                 },
                 {
                   "number": "4b",
-                  "summary": "Pick three kinds of digital genealogy resources, and say where each is found and what it adds to your family tree.",
+                  "summary": "Pick three kinds of digital genealogy resources, and tell your counselor where each is found and what it adds to your family tree.",
+                  "ownWork": "Tell your counselor about the three digital resources.",
                   "tracker": {
                     "columns": [
                       {
@@ -11421,7 +11451,8 @@
                       "children": [
                         {
                           "number": "4C(3)(a)",
-                          "summary": "Collect 10 rocks or minerals, then label, classify and describe each.",
+                          "summary": "Collect 10 different rocks or minerals, label, classify and describe each, and show the collection to your counselor.",
+                          "ownWork": "Show your collection to your counselor.",
                           "tracker": {
                             "columns": [
                               {
@@ -11458,6 +11489,7 @@
                         {
                           "number": "4C(3)(b)",
                           "summary": "Identify 15 rocks and minerals with your counselor's help.",
+                          "ownWork": "Identify the 15 rocks and minerals with your counselor's help.",
                           "tracker": {
                             "columns": [
                               {
@@ -12177,7 +12209,8 @@
             },
             {
               "number": "5",
-              "summary": "After each hike, write up the route, weather and what happened.",
+              "summary": "After each hike, write up the route, weather and what happened, and share the reports with your counselor.",
+              "ownWork": "Share your hike reports with your counselor.",
               "tracker": {
                 "columns": [
                   {
@@ -12766,7 +12799,8 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "List three inventions and how each has helped people.",
+                  "summary": "List three inventions, and tell your counselor how each has helped people.",
+                  "ownWork": "Tell your counselor how the three inventions have helped people.",
                   "tracker": {
                     "columns": [
                       {
@@ -12902,7 +12936,8 @@
                   "children": [
                     {
                       "number": "2A(1)",
-                      "summary": "On the same day, compare one event's coverage in a local and a national news source, a news magazine and a social media feed: each story's length, how fairly and accurately it gives different views, and how the source handled it.",
+                      "summary": "On the same day, compare one event's coverage in a local and a national news source, a news magazine and a social media feed, telling your counselor each story's length, how fairly and accurately it gives different views, and how the source handled it.",
+                      "ownWork": "Tell your counselor how the four stories compare.",
                       "tracker": {
                         "columns": [
                           {
@@ -13218,6 +13253,7 @@
             {
               "number": "3",
               "summary": "With help from your counselor or a nursery, choose five shrubs, five trees and a ground cover that grow locally and differ in shape, size and texture, then show pictures or samples to a group and explain how you'd use and care for each.",
+              "ownWork": "Show pictures or samples of your plants to a group, and explain how you'd use and care for each.",
               "tracker": {
                 "columns": [
                   {
@@ -13242,7 +13278,8 @@
                   }
                 ],
                 "rowLabel": "plant",
-                "rowLabelPlural": "plants"
+                "rowLabelPlural": "plants",
+                "rowCount": 11
               }
             },
             {
@@ -13756,7 +13793,7 @@
                 },
                 {
                   "number": "3b",
-                  "summary": "Survey one 4-acre area for 3 hours on five days, and list the mammals.",
+                  "summary": "Survey an area of 4 acres or more for 3 hours on each of five days, and list the mammals you identify.",
                   "tracker": {
                     "columns": [
                       {
@@ -13765,18 +13802,14 @@
                         "type": "date"
                       },
                       {
-                        "id": "species",
-                        "label": "Species",
-                        "type": "text"
-                      },
-                      {
-                        "id": "how",
-                        "label": "How identified",
-                        "type": "text"
+                        "id": "mammals",
+                        "label": "Mammals and how you identified them",
+                        "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "sighting",
-                    "rowLabelPlural": "sightings"
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 5
                   }
                 },
                 {
@@ -14162,6 +14195,7 @@
             {
               "number": "2",
               "summary": "Mark five mines on a state or regional map showing major cities, highways, rivers and railroads; find what each produces and whether it's surface or underground, and discuss how those resources are used.",
+              "ownWork": "Mark the mines on your map, and discuss with your counselor how their resources are used.",
               "tracker": {
                 "columns": [
                   {
@@ -14186,7 +14220,8 @@
                   }
                 ],
                 "rowLabel": "mine",
-                "rowLabelPlural": "mines"
+                "rowLabelPlural": "mines",
+                "rowCount": 5
               }
             },
             {
@@ -15553,6 +15588,7 @@
                 {
                   "number": "7c",
                   "summary": "Make a Secchi disk; for five days in a row, four times daily, log water temperatures at three depths, turbidity, air temperature, clouds and waves; graph and compare temperatures.",
+                  "ownWork": "Make a Secchi disk for your readings, then graph them and tell how water temperature follows air temperature.",
                   "tracker": {
                     "columns": [
                       {
@@ -15597,7 +15633,8 @@
                       }
                     ],
                     "rowLabel": "reading",
-                    "rowLabelPlural": "readings"
+                    "rowLabelPlural": "readings",
+                    "rowCount": 20
                   }
                 },
                 {
@@ -16211,7 +16248,8 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Record your actual income, expenses and savings for those weeks.",
+                  "summary": "Record your actual income, expenses and savings for those weeks, then show your counselor the records.",
+                  "ownWork": "Show your counselor your 13 weeks of records.",
                   "tracker": {
                     "columns": [
                       {
@@ -17163,6 +17201,7 @@
                             {
                               "number": "8B(5)(c)(3)",
                               "summary": "List 10 trees, besides those from requirement 6, with common and scientific names, and tell your counselor how each is used in landscaping.",
+                              "ownWork": "Tell your counselor how each of the 10 trees is used in landscaping.",
                               "tracker": {
                                 "columns": [
                                   {
@@ -17843,7 +17882,8 @@
               "children": [
                 {
                   "number": "3a",
-                  "summary": "List five popular programming languages, the industries that mainly use each, and why.",
+                  "summary": "List five popular programming languages, and tell your counselor the industries that mainly use each, and why.",
+                  "ownWork": "Tell your counselor which industries use each language, and why.",
                   "tracker": {
                     "columns": [
                       {
@@ -17947,7 +17987,8 @@
                 },
                 {
                   "number": "1c",
-                  "summary": "Pick four of gonorrhea, West Nile virus, botulism, influenza, syphilis, hepatitis, emphysema, meningitis, herpes and lead poisoning, and explain how people get each and how it might be prevented.",
+                  "summary": "Pick four of gonorrhea, West Nile virus, botulism, influenza, syphilis, hepatitis, emphysema, meningitis, herpes and lead poisoning, and explain to your counselor how people get each and how it might be prevented.",
+                  "ownWork": "Explain the four diseases to your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -17973,7 +18014,8 @@
                 },
                 {
                   "number": "1d",
-                  "summary": "For all 10 diseases in 1c's list, explain what kind each is (viral, bacterial, environmental or toxin), what might carry it, how to help stop exposure or spread, and its treatments.",
+                  "summary": "For all 10 diseases in 1c's list, explain to your counselor what kind each is (viral, bacterial, environmental or toxin), what might carry it, how to help stop exposure or spread, and its treatments.",
+                  "ownWork": "Explain all 10 diseases to your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -18247,6 +18289,7 @@
             {
               "number": "6",
               "summary": "List 15 pulp or paper products at home, and show your counselor 10 of them.",
+              "ownWork": "Show your counselor 10 of the products.",
               "tracker": {
                 "columns": [
                   {
@@ -18256,7 +18299,8 @@
                   }
                 ],
                 "rowLabel": "product",
-                "rowLabelPlural": "products"
+                "rowLabelPlural": "products",
+                "rowCount": 15
               }
             },
             {
@@ -18557,7 +18601,8 @@
                           }
                         ],
                         "rowLabel": "station",
-                        "rowLabelPlural": "stations"
+                        "rowLabelPlural": "stations",
+                        "rowCount": 15
                       }
                     },
                     {
@@ -22747,7 +22792,8 @@
                 },
                 {
                   "number": "3c",
-                  "summary": "Plan to cut your household's food waste, and track it for two weeks.",
+                  "summary": "Set a baseline, plan to cut your household's food waste, and track it for two weeks.",
+                  "ownWork": "Set a baseline, then make and carry out a plan to cut your household's food waste.",
                   "tracker": {
                     "columns": [
                       {
@@ -23135,6 +23181,7 @@
             {
               "number": "1",
               "summary": "See or read three full-length plays, not on TV, video or film; review each, discuss its plot, and if you watched it, comment on the acting and staging.",
+              "ownWork": "Discuss each play's plot with your counselor, and the acting and staging of any you saw.",
               "tracker": {
                 "columns": [
                   {
@@ -23159,7 +23206,8 @@
                   }
                 ],
                 "rowLabel": "play",
-                "rowLabelPlural": "plays"
+                "rowLabelPlural": "plays",
+                "rowCount": 3
               }
             },
             {
@@ -23481,7 +23529,8 @@
                 },
                 {
                   "number": "5b",
-                  "summary": "Name five trucking company jobs and what each involves.",
+                  "summary": "Name five trucking company jobs, and describe each to your counselor.",
+                  "ownWork": "Describe the five jobs to your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -23504,7 +23553,8 @@
             },
             {
               "number": "6",
-              "summary": "Name five government agencies tied closely to trucking, and describe what each one does.",
+              "summary": "Name five government agencies tied closely to trucking, and describe to your counselor what each one does.",
+              "ownWork": "Describe the five agencies' roles to your counselor.",
               "tracker": {
                 "columns": [
                   {
@@ -23525,7 +23575,8 @@
             },
             {
               "number": "7",
-              "summary": "Name five different kinds of trucks and the job each one does.",
+              "summary": "Name five different kinds of trucks, and tell your counselor the job each one does.",
+              "ownWork": "Tell your counselor the job each kind of truck does.",
               "tracker": {
                 "columns": [
                   {
@@ -23828,6 +23879,7 @@
                 {
                   "number": "10a",
                   "summary": "Build a wind vane, anemometer, rain gauge or hygrometer; log the weather at a set time daily for a week.",
+                  "ownWork": "Build a wind vane, anemometer, rain gauge or hygrometer, and use it for your week of readings.",
                   "tracker": {
                     "columns": [
                       {
@@ -23877,7 +23929,8 @@
                       }
                     ],
                     "rowLabel": "day",
-                    "rowLabelPlural": "days"
+                    "rowLabelPlural": "days",
+                    "rowCount": 7
                   }
                 },
                 {
@@ -24833,7 +24886,8 @@
                 },
                 {
                   "number": "2b",
-                  "summary": "Gather a labeled block of each of six woods used in woodworking, and describe each one's main qualities and best uses.",
+                  "summary": "Gather a labeled block of each of six woods used in woodworking, and describe to your counselor each one's main qualities and best uses.",
+                  "ownWork": "Describe the six woods' qualities and best uses to your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -25373,8 +25427,7 @@
                   }
                 ],
                 "rowLabel": "animal",
-                "rowLabelPlural": "animals",
-                "rowCount": 10
+                "rowLabelPlural": "animals"
               }
             },
             {
@@ -25616,8 +25669,7 @@
                   }
                 ],
                 "rowLabel": "plant",
-                "rowLabelPlural": "plants",
-                "rowCount": 10
+                "rowLabelPlural": "plants"
               }
             },
             {

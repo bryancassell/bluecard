@@ -13,6 +13,8 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
@@ -21,8 +23,11 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.data.progress.needsEveryRow
+import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.data.progress.withoutTrackerEntry
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
@@ -30,6 +35,7 @@ import io.github.bryancassell.bluecard.ui.keepText
 import io.github.bryancassell.bluecard.ui.restoredText
 import java.time.Clock
 import java.time.LocalDate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +43,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -85,8 +93,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
     private var loaded: LoadedRow? = null
 
     val uiState: StateFlow<TrackerEntryUiState> = flow {
+        val catalog = catalogRepository.getAdvancements()
         val row = loaded ?: load(
-            catalogRepository.getAdvancements(),
+            catalog,
             progressRepository.observeProgress(advancementId).first()
         )?.also { loaded = it }
         if (row == null) {
@@ -97,9 +106,10 @@ class TrackerEntryViewModel @AssistedInject constructor(
                     snapshotFlow { _fields.mapValues { it.value.text.toString() } },
                     saving,
                     done,
-                    saves.failure
-                ) { values, saving, done, saveFailure ->
-                    ready(row, values, saving, done, saveFailure)
+                    saves.failure,
+                    unearnedByDelete(catalog, row)
+                ) { values, saving, done, saveFailure, unearnedByDelete ->
+                    ready(row, values, saving, done, saveFailure, unearnedByDelete)
                 }
             )
         }
@@ -117,7 +127,9 @@ class TrackerEntryViewModel @AssistedInject constructor(
         val shownNumber: Int,
         /** Its saved entry; null for a new one or a row not filled in. */
         val entryId: Long?,
-        val saved: Map<String, String>
+        val saved: Map<String, String>,
+        /** Whether its requirement needs every row filled in ([needsEveryRow]). */
+        val needsEveryRow: Boolean
     ) {
         /** The row it fills in a tracker with a fixed number of rows, or null in a log. */
         val rowNumber: Int? get() = tracker.rowCount?.let { shownNumber }
@@ -128,7 +140,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
         values: Map<String, String>,
         saving: Boolean,
         done: Boolean,
-        saveFailure: TaskFailure?
+        saveFailure: TaskFailure?,
+        unearnedByDelete: List<String>
     ): TrackerEntryUiState.Ready {
         val columns = row.tracker.columns
         val stored = valuesToSave(row, values)
@@ -150,6 +163,7 @@ class TrackerEntryViewModel @AssistedInject constructor(
             hasSavedEntry = row.entryId != null,
             // Not while a save is under way, which would ignore it (finish).
             canDelete = !saving && !done && row.entryId != null,
+            unearnedByDelete = unearnedByDelete,
             done = done,
             saveFailure = saveFailure
         )
@@ -161,7 +175,8 @@ class TrackerEntryViewModel @AssistedInject constructor(
      */
     private fun load(catalog: List<Advancement>, progress: BadgeProgressDetails?): LoadedRow? {
         val found = catalog.advancementRequirements(advancementId, progress) ?: return null
-        val tracker = found.version.find(number)?.tracker ?: return null
+        val requirement = found.version.find(number) ?: return null
+        val tracker = requirement.tracker ?: return null
         val entries = found.trackerEntries[number].orEmpty()
         val rows = tracker.toItem(entries).rows
         val row = when {
@@ -171,7 +186,32 @@ class TrackerEntryViewModel @AssistedInject constructor(
         } ?: return null
         val saved = entries.find { it.id == row.entryId }?.values.orEmpty()
         loadFields(tracker.columns, saved)
-        return LoadedRow(found.advancement.name, tracker, row.number, row.entryId, saved)
+        return LoadedRow(
+            found.advancement.name,
+            tracker,
+            row.number,
+            row.entryId,
+            saved,
+            requirement.needsEveryRow
+        )
+    }
+
+    /**
+     * The names of the ranks deleting [row]'s saved entry would un-earn, for the Delete dialog.
+     * Only a saved row of a requirement that needs every row filled in can un-earn any: a log's
+     * rows don't complete its requirement. Unlike the form, they follow the scout's progress, as
+     * Clear progress's do, so a write that lands after the page loads doesn't leave them wrong.
+     */
+    private fun unearnedByDelete(catalog: List<Advancement>, row: LoadedRow): Flow<List<String>> {
+        val id = row.entryId?.takeIf { row.needsEveryRow } ?: return flowOf(emptyList())
+        val ranks = catalog.filterIsInstance<Rank>()
+        val badges = catalog.filterIsInstance<MeritBadge>()
+        return progressRepository.observeAllProgress().map { all ->
+            val byId = all.associateBy { it.badge.badgeId }
+            val progress = byId[advancementId] ?: return@map emptyList()
+            val deleted = byId + (advancementId to progress.withoutTrackerEntry(id))
+            ranks.noLongerEarned(badges, byId, deleted).map { it.name }
+        }
     }
 
     /**

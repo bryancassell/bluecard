@@ -41,15 +41,7 @@ fun ClearProgress(
     if (confirming) {
         ConfirmDialog(
             title = title,
-            message = if (unearnedRanks.isEmpty()) {
-                message
-            } else {
-                stringResource(
-                    R.string.clear_message_unearns,
-                    message,
-                    rememberBadgeNameListFormatter().format(unearnedRanks)
-                )
-            },
+            message = withUnearnedRanks(message, unearnedRanks),
             confirmLabel = stringResource(R.string.clear_progress_confirm),
             onConfirm = {
                 confirming = false
@@ -59,3 +51,20 @@ fun ClearProgress(
         )
     }
 }
+
+/**
+ * A removal dialog's [message], followed by a sentence naming the ranks the removal would un-earn
+ * ([unearnedRanks]), if any: "What you recorded for it will be removed. Star will no longer count
+ * as earned."
+ */
+@Composable
+fun withUnearnedRanks(message: String, unearnedRanks: List<String>): String =
+    if (unearnedRanks.isEmpty()) {
+        message
+    } else {
+        stringResource(
+            R.string.removal_message_unearns,
+            message,
+            rememberBadgeNameListFormatter().format(unearnedRanks)
+        )
+    }

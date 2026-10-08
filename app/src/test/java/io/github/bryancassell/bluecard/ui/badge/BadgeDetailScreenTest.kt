@@ -65,7 +65,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
-import io.github.bryancassell.bluecard.ui.theme.BlueCardColorScheme
+import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -349,7 +349,7 @@ class BadgeDetailScreenTest {
 
         // The text's top-left corner is clear of its letters, so it shows what's behind them.
         val pixels = composeTestRule.onNodeWithText("Eagle-required").captureToImage().toPixelMap()
-        assertEquals(BlueCardColorScheme.primaryFixedDim, pixels[0, 0])
+        assertEquals(BlueCardLightColorScheme.primaryFixedDim, pixels[0, 0])
     }
 
     // At twice the font size on a narrow phone, a group's label needs several lines.
@@ -716,6 +716,76 @@ class BadgeDetailScreenTest {
             .assert(hasStateDescription("In progress"))
             .assert(hasText("Do 2 of 3"))
             .assert(!hasText("complete", substring = true))
+    }
+
+    // Under the sub-requirements' count it's what's left of, not the tracker's.
+    @Test
+    fun subRequirementsAndTrackerWithOnlyItsOwnWorkLeft_saysWhatsStillToDoUnderTheirCount() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "2") {
+                        it.copy(
+                            completed = false,
+                            partlyCompleted = true,
+                            completeCount = CompleteCount(2, 2),
+                            tracker = TrackerCount(2, null, "sessions"),
+                            ownWork = OwnWork("Share what you learned.", completed = false),
+                            stillToDo = "Share what you learned."
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        val texts = row("Do two of these.")
+            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
+        assertEquals(
+            listOf(
+                "2",
+                "Do two of these.",
+                "Do 2 of 3 (2 of 2 complete)",
+                "Still to do: Share what you learned.",
+                "2 sessions"
+            ),
+            texts
+        )
+    }
+
+    // Under the rows' count, as under a count of sub-requirements.
+    @Test
+    fun everyRowFilledInWithOnlyItsOwnWorkLeft_saysWhatsStillToDo() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "3") {
+                        it.copy(
+                            partlyCompleted = true,
+                            tracker = TrackerCount(12, 12, "nights"),
+                            ownWork = OwnWork("Compare the nights.", completed = false),
+                            stillToDo = "Compare the nights."
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        val texts = row("Keep a camping log.")
+            .assert(hasStateDescription("In progress"))
+            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
+        assertEquals(
+            listOf(
+                "3",
+                "Keep a camping log.",
+                "12 of 12 nights",
+                "Still to do: Compare the nights."
+            ),
+            texts
+        )
     }
 
     @Test

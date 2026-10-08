@@ -76,9 +76,10 @@ fun RequirementRows(
 /**
  * A requirement's row, which opens its page: its number, in a box that's tinted once part of it
  * is complete and filled in once all of it is, its summary, "Do N of M" when only some
- * sub-requirements are needed, how many of those it needs are complete, what's still to do once
- * only its own work is left, how far along its tracker is ([trackerProgressLabels]), how many merit
- * badges count toward it, for one that asks for them, and "Not needed" when it no longer is.
+ * sub-requirements are needed, how many of those it needs are complete, how far along its tracker
+ * is ([trackerProgressLabels]), what's still to do once only its own work is left, under the count
+ * of what's done, how many merit badges count toward it, for one that asks for them, and
+ * "Not needed" when it no longer is.
  * Screen readers read "Completed", "In progress", "Not completed", "Not recorded" or "Not needed"
  * as its state. The scout marks a requirement complete on its page.
  */
@@ -99,9 +100,19 @@ private fun RequirementRow(
     )
     // Its lines under the summary, all but "Not needed".
     val lines = buildList {
-        choiceAndCountLabel(item.choice, item.completeCount)?.let { add(it) }
-        item.stillToDo?.let { add(stringResource(R.string.requirement_still_to_do, it)) }
-        item.tracker?.let { addAll(trackerProgressLabels(it)) }
+        val count = listOfNotNull(choiceAndCountLabel(item.choice, item.completeCount))
+        val trackerLines = item.tracker?.let { trackerProgressLabels(it) }.orEmpty()
+        val stillToDo = listOfNotNull(
+            item.stillToDo?.let { stringResource(R.string.requirement_still_to_do, it) }
+        )
+        // Under the count it's what's left of: its sub-requirements', or else its tracker's.
+        addAll(
+            if (item.completeCount != null) {
+                count + stillToDo + trackerLines
+            } else {
+                count + trackerLines + stillToDo
+            }
+        )
         item.meritBadges?.let {
             add(meritBadgesCountLabel(it))
             add(eagleRequiredCountLabel(it))
@@ -155,12 +166,13 @@ private fun trackerProgressLabels(count: TrackerCount): List<String> {
 
 /**
  * A requirement's number in a box, like the boxes on the blue card: outlined until part of the
- * requirement is complete, then tinted light blue and outlined in Scouting America Blue with a
- * half-filled circle on its top end corner, then filled in Scouting America Blue with a check
- * there once all of it is complete, or filled in grey once it's no longer needed. The mark on the
- * corner tells the states apart by more than color. It's [minWidth] wide, room for the widest
- * number in its list, but still widens to fit its own number if that measures wider. It grows
- * taller with the font size. The marks are drawn only: its row reads the state.
+ * requirement is complete, then tinted (primaryContainer) and outlined in primary with a
+ * half-filled circle on its top end corner, then filled in primary with a check there once all of
+ * it is complete, or filled in the highest surface once it's no longer needed. In light mode
+ * that's light blue, Scouting America Blue and grey; in dark mode navy, Pale Blue and Dark Blue.
+ * The mark on the corner tells the states apart by more than color. It's [minWidth] wide, room
+ * for the widest number in its list, but still widens to fit its own number if that measures
+ * wider. It grows taller with the font size. The marks are drawn only: its row reads the state.
  */
 @Composable
 private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
@@ -214,8 +226,8 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
                     // Over the corner. offset, unlike absoluteOffset, mirrors right-to-left.
                     .offset(x = 7.dp, y = (-7).dp)
                     .size(20.dp)
-                    // A blue circle under a smaller white one, rather than a border over a
-                    // white one, so no white shows at its edge over the blue box.
+                    // A primary circle under a smaller onPrimary one, rather than a border over an
+                    // onPrimary one, so no onPrimary shows at its edge over the primary box.
                     .background(colors.primary, CircleShape)
                     .padding(2.dp)
                     .background(colors.onPrimary, CircleShape)

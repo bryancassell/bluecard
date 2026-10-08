@@ -86,6 +86,11 @@ fun OnboardingScreen(
             ) {
                 Text(stringResource(R.string.onboarding_save))
             }
+            Text(
+                text = stringResource(R.string.onboarding_not_affiliated),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         TaskFailureSnackbarHost(
             failure = uiState.saveFailure,

@@ -58,6 +58,7 @@ own documentation says so, and each such claim links to the page.
   - [Room and migration tests](#room-and-migration-tests)
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
+  - [Instrumented tests in CI](#instrumented-tests-in-ci)
   - [Coverage](#coverage)
 - [Release build](#release-build)
 - [Debug builds](#debug-builds)
@@ -397,6 +398,10 @@ both taps of a double tap can reach it.
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)).
+- **The merge's full-screen dialog ignores touches for the double-tap timeout
+  as it opens** (`IgnoreTouchesAsItOpens` in `ui/data/ImportDialogs.kt`), as
+  screens do, so the second tap on the import dialog's Merge doesn't choose an
+  option under the finger.
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
   open another app. After a tap, it ignores taps for the double-tap timeout,
@@ -457,16 +462,27 @@ both taps of a double tap can reach it.
 
 ### Theme
 
-- **Material 3** components, themed by `BlueCardTheme` with one light color
-  scheme (`BlueCardColorScheme` in `ui/theme/Color.kt`), as
-  [`PRD.md`](PRD.md#design-decisions)'s Colors row chooses.
-- **Don't follow dark mode** until the app has a dark scheme
-  ([#108](https://github.com/bryancassell/bluecard/issues/108)).
-  `isSystemInDarkTheme()` still reports the system's dark mode, and `-night`
-  resources still apply in it. Nothing but the window theme should use either:
-  it would put dark-mode colors, images or bar icons on the light app.
-- **`BlueCardColorSchemeTest` checks the PRD's contrast rule** for every text
-  color on every surface.
+- **Material 3** components, themed by `BlueCardTheme` with a light and a dark
+  color scheme (`BlueCardLightColorScheme` and `BlueCardDarkColorScheme` in
+  `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
+  chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
+  takes no colors from the wallpaper (no dynamic color).
+- **Before Compose draws**, the window theme and splash screen follow dark mode
+  through `values-night`: the dark scheme's background (`@color/background`,
+  which must match each scheme's `background`), a dark window theme, and the
+  splash screen's white system bar icons. Once the app draws,
+  `enableEdgeToEdge()` picks the bar icons from dark mode.
+- **Pick a color role that works in both schemes.** In the dark scheme the
+  surface containers are lighter than the page, and `surfaceContainerLowest`
+  is darker. A container that should stand out from the page, such as the
+  status card, uses `surfaceBright`, the brightest surface in both.
+- **No surface shares `surfaceVariant`'s color.** Material picks a container's
+  content color by matching its color against the scheme's, and checks
+  `surfaceVariant` before the surface containers. A card sharing its color
+  would get `onSurfaceVariant` text.
+- **`BlueCardColorSchemeTest` checks both schemes:** the PRD's contrast rule
+  for every text color on every surface, that `surfaceBright` is the brightest
+  surface, and that every other surface gets `onSurface` text.
 
 ## Data layer
 
@@ -658,8 +674,8 @@ totals).
 - **Completion doesn't read totals.** It reads only what the scout marked and
   which rows are filled in, so a total is only a guide
   ([#193](https://github.com/bryancassell/bluecard/issues/193)). A fixed-row
-  tracker can't have a total, because its rows complete it and its row shows
-  how many are filled in.
+  tracker can't have a total, because its requirement needs every row and its
+  row shows how many are filled in.
 - **Numbers are stored as the scout typed them**: digits of any script, with a
   point, a comma or the Arabic decimal separator, whichever their keyboard
   offers (`DECIMAL_SEPARATORS`). So they're read with `storedNumber` when
@@ -761,8 +777,8 @@ works on.
   unmarking a rank undoes what its mark counted as earned. Every screen asks
   `standings` for a rank's status and bar, as they ask `BadgeStatus.kt` for a
   badge's, so they agree. A page that shows a rank reads every rank's progress
-  (`observeAllProgress`), not only its own, as does one that can clear what a
-  rank counts ([Clearing data](#clearing-data)).
+  (`observeAllProgress`), not only its own, as does one that can clear or
+  delete what a rank counts ([Clearing data](#clearing-data)).
 - **Merit badge requirements** (`Requirement.meritBadges`) complete from the
   badges the scout has completed, not from anything recorded on the rank
   ([Completion](#completion)), so `standings` takes the scout's
@@ -795,8 +811,9 @@ At a high level. The exact fields are in the code.
     when the badge is started), started date, counselor (name, phone, email, all
     optional), and the date it was marked completed on a prior date, if any.
   - `RequirementProgress`: badge ID, requirement number, whether it is complete
-    (or, for a requirement completed by its fixed-row tracker, whether the scout
-    gave its completion date), completion date (optional), notes (`comment`,
+    (or, for a requirement with own work, whether that's complete, and for one
+    completed by its fixed-row tracker alone, whether the scout gave its
+    completion date), completion date (optional), notes (`comment`,
     optional), and, for a rank's requirement, who signed off on it
     (`signedOffBy`, optional).
   - `TrackerEntry`: an ID that only grows, badge ID, requirement number, the row
@@ -812,16 +829,20 @@ requirement progress, tracker entries and the catalog:
 - A requirement with children is complete when enough of them are, even if it
   also has a tracker. One that also asks for work of its own (`ownWork` in the
   catalog) needs the scout to mark that complete too. One without children but
-  with a fixed-row tracker is complete when every row has an entry. A rank's
-  requirement that asks for merit badges is complete once the scout has
-  completed enough of them (below). Any other requirement, including one with
-  a log, is complete when the scout marked it complete.
+  with a fixed-row tracker is complete when every row has an entry, and its own
+  work, if any, is marked complete. A rank's requirement that asks for merit
+  badges is complete once the scout has completed enough of them (below). Any
+  other requirement, including one with a log, is complete when the scout
+  marked it complete.
 - A badge is complete when all its top-level requirements are, or when it was
   marked completed on a prior date.
 - The completion date is when the last requirement or own work it needed was
   completed, or the prior date for a badge marked that way. A requirement with a
   fixed-row tracker is completed on the date the scout gave it, if they gave
-  one, or else on the date its last row was first saved.
+  one, or else on the date its last row was first saved. One that also has own
+  work is completed on the date the scout gave that, because a row's date is
+  only when it was typed in, which can be long after the work
+  ([#229](https://github.com/bryancassell/bluecard/issues/229)).
 - A requirement has part done (`hasPartDone`) once anything in it that the scout
   records is: its own work, a requirement under it at any depth, a row of a
   tracker on it or under it, or a badge that counts toward the merit badges it
@@ -844,6 +865,12 @@ export format. A mark left from before
 [#105](https://github.com/bryancassell/bluecard/issues/105), when these
 requirements had a checkbox, becomes the date the scout gave
 ([#116](https://github.com/bryancassell/bluecard/issues/116)).
+
+A requirement with a fixed-row tracker and own work stores only the own work,
+as a requirement with children does, so its rows get no date of their own: the
+own work's date is the requirement's. A date for the rows as well would have
+needed a new column, with a migration and a new export format, while the own
+work is usually the step after the rows, such as summing them up.
 
 A rank's requirement that asks for merit badges (`Requirement.meritBadges`,
 such as Star 3's six, at least four of them Eagle-required) is the only
@@ -978,8 +1005,12 @@ as earned, which all three pages ask `noLongerEarned`
 (`data/progress/RankStatus.kt`), so they agree. Clearing a badge or one of its
 requirements can leave a rank's merit badges short, so Badge detail and
 Requirement detail read every badge's and rank's progress
-(`observeAllProgress`), as Rank detail does. Clearing progress does not clear
-the profile.
+(`observeAllProgress`), as Rank detail does. Deleting a fixed-row tracker's
+row can un-earn ranks too, so Tracker entry asks `noLongerEarned` as well, and
+shares its dialog's sentence (`withUnearnedRanks` in `ClearProgress.kt`). It
+follows every badge's and rank's progress only for a saved row of a requirement
+that `needsEveryRow`, the only kind whose deletion can un-earn one, and
+otherwise reads its own badge's progress once, with its form. Clearing progress does not clear the profile.
 Clearing a requirement leaves its badge started, and clearing a badge deletes
 its `BadgeProgress`, so it's no longer started. A page can show a badge for a
 moment after it's cleared, so a function a page calls then does nothing for a
@@ -995,8 +1026,9 @@ progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`,
 as Save report does (`data/Documents.kt`). Import reads one with
 `ActivityResultContracts.OpenDocument`, asking only for documents that can be
 opened as a file (`CATEGORY_OPENABLE`), checks the format version and validates
-it before changing anything, since import replaces all current data (see
-[`PRD.md`](PRD.md#design-decisions)).
+it before changing anything, since import can replace all current data (see
+[`PRD.md`](PRD.md#design-decisions)). Once it's checked, the scout chooses to
+merge it with their data or replace everything with it.
 
 - **Any change to the format needs a new format version**
   (`BACKUP_FORMAT_VERSION` in `data/backup/BackupFormat.kt`), even an added
@@ -1049,6 +1081,18 @@ it before changing anything, since import replaces all current data (see
   can't share a transaction. If replacing progress fails, nothing has changed;
   if saving the profile then fails, the progress is already the file's, and
   importing again replaces both.
+- **A merge needs no change dates**
+  ([#28](https://github.com/bryancassell/bluecard/issues/28)): the scout
+  chooses a side for each badge and rank whose progress differs
+  (`mergeConflicts` in `data/backup/Merge.kt`), so the export format didn't
+  change. Picking the newer side automatically would take a database
+  migration, a new format version and a record of what was deleted, or
+  progress cleared on one side would come back from the other. The choices are
+  held in the ViewModel with the file, not in saved state.
+  - **A merge writes what was decided from the phone's data as read when the
+    scout chose to merge** (`MergeChoices.progressToMerge`), so a badge
+    cleared on the phone since then isn't added back unasked. The transaction
+    still keeps a badge started since then, rather than replacing it.
 - **The file has no tracker entry IDs.** Entries are listed in the order they
   were added, and an import gives them new IDs in that order, so each log keeps
   its order and IDs keep growing.
@@ -1227,13 +1271,51 @@ test still exports and imports through the real one.
   closed!" (checked with Robolectric 4.17). Local tests check the layout and
   drawing with Robolectric's native graphics (`ReportLayoutTest`), and
   `PdfReportRepositoryTest` uses a fake PDF writer. An instrumented test
-  (`PdfDocumentWriterTest`) writes a real PDF and reads it back; run it on an
-  emulator with `./gradlew connectedAndroidTest`. CI has no emulator, so it
-  doesn't run there.
+  (`PdfDocumentWriterTest`) writes a real PDF and reads it back, in CI and
+  with `./gradlew connectedAndroidTest` (see
+  [Instrumented tests in CI](#instrumented-tests-in-ci)).
 - **Backup tests:** `BackupFormatTest` pins the export format and checks each
   of import's rules. `JsonBackupRepositoryTest` writes and reads documents
   through a test documents provider, and checks that an export imported into an
   empty Room database restores the same data.
+
+### Instrumented tests in CI
+
+CI's **Instrumented tests** job runs `app/src/androidTest` on a Gradle Managed
+Device: a Pixel 6 emulator on API 37 with the Google APIs image and 16 KB
+pages, defined in `app/build.gradle.kts`. AGP downloads the image, starts the
+emulator, runs the tests and shuts it down. The same task runs locally, with
+the image for the computer's own ABI.
+
+- **API 37, the target SDK.** The lighter Automated Test Device images go up to
+  API 36 only (checked October 2026). The tests need API 35 or higher anyway:
+  `PdfRenderer` reads a page's text from Android 15 on.
+- **16 KB pages.** The app ships AndroidX native libraries, and Google Play
+  requires apps targeting Android 15 or higher to support 16 KB pages. Google's
+  later API 37 images (37.1 and 37.2) come only with 16 KB pages.
+- **Gradle Managed Devices, not `reactivecircus/android-emulator-runner`.** That
+  action couldn't boot any API 37 image: in #14's trial its emulator was still
+  booting after 20 minutes, and its maintainers report the same. A managed
+  device booted API 37 and ran the tests in about 3 minutes.
+- **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
+  every job the same key, and only the first job to save it wins, so any other
+  job sets `cache-read-only: true`.
+- **The emulator isn't cached** (#5). Every run, the setup task downloads the
+  emulator and the 2.1 GB system image and cold-boots the emulator to save a
+  snapshot, about 3 minutes that partly overlap building the APKs. #276
+  measured caching it in October 2026, with the Gradle cache restored:
+  - No cache: the job took about 4m10s.
+  - The emulator, image, AVD and snapshot (a 4.4 GB entry): about 3m50s,
+    since restoring took over a minute.
+  - Only the AVD and snapshot (2.5 GB), keyed by the installed emulator and
+    image versions: about 3m35s. The snapshot loaded on every runner CPU
+    tried.
+
+  Build takes about 6 minutes and runs at the same time, so neither made CI
+  finish sooner. Each would also use a quarter to almost half of the
+  repository's 10 GB of Actions cache, which the Gradle caches need. If Build
+  ever finishes before this job,
+  revisit the AVD-only cache, which is in #276's history.
 
 ### Coverage
 
@@ -1389,6 +1471,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
 | [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
+| [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format; a row's date is only when it was typed in |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
 | [Rank sign-off](#ranks) | A nullable `requirement_progress` column that only a rank's requirement fills, saved with the notes in one write | No new table; the notes' one Save can't save one field and fail the other |
 | [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
@@ -1403,8 +1486,10 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
 | [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
-| [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on a device, outside CI and the coverage check | `PdfDocument` doesn't run under Robolectric, and CI has no emulator |
-| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI has no emulator and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
+| [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on an emulator by an instrumented test, outside the coverage check | `PdfDocument` doesn't run under Robolectric |
+| [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with the Google APIs image and 16 KB pages, in its own required CI job | Tests on the target SDK and on the page size Play requires. The emulator action used before couldn't boot API 37 images, and the lighter test images stop at API 36 |
+| [Emulator cache in CI](#instrumented-tests-in-ci) | None: each run downloads the emulator and image and makes a new snapshot | Build takes longer than the instrumented tests job, so a cache doesn't make CI finish sooner, and it would take 2.5–4.4 GB of the 10 GB of Actions cache that the Gradle caches need |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI's emulator runs only the debug build's instrumented tests, and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |

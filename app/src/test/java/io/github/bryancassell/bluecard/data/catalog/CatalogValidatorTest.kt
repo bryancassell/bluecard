@@ -59,7 +59,12 @@ class CatalogValidatorTest {
                         )
                     )
                 ),
-                Requirement(number = "2b", summary = "B.", tracker = tracker.copy(rowCount = 3))
+                Requirement(
+                    number = "2b",
+                    summary = "B.",
+                    ownWork = "Compare them.",
+                    tracker = tracker.copy(rowCount = 3)
+                )
             )
         )
         val eagleBadge = badge.copy(
@@ -265,11 +270,16 @@ class CatalogValidatorTest {
     }
 
     @Test
-    fun ownWorkWithoutChildrenOrBlank() {
+    fun ownWorkWithoutChildrenOrFixedRowsOrBlank() {
         val where = "badge \"first-aid\", version 2026-01-01, requirement \"1\""
         assertEquals(
-            listOf("$where: ownWork but it has no children"),
+            listOf("$where: ownWork but it has no children or fixed-row tracker"),
             errorsForRequirements(requirement.copy(ownWork = "Explain why."))
+        )
+        // A log's requirement has a checkbox of its own.
+        assertEquals(
+            listOf("$where: ownWork but it has no children or fixed-row tracker"),
+            errorsForRequirements(requirement.copy(ownWork = "Explain why.", tracker = tracker))
         )
         val children = listOf(Requirement(number = "1a", summary = "A."))
         assertEquals(

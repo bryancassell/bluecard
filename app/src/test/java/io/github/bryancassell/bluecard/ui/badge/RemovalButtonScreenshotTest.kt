@@ -120,7 +120,11 @@ class RemovalButtonScreenshotTest {
                     onEditProfile = {},
                     onExport = {},
                     onImport = {},
-                    onConfirmImport = {},
+                    onMerge = {},
+                    onReplace = {},
+                    onChooseProfile = {},
+                    onChooseProgress = { _, _ -> },
+                    onConfirmMerge = {},
                     onCancelImport = {},
                     onClearAll = {},
                     onMessageShown = {}
