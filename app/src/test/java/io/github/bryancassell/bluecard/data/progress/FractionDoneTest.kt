@@ -245,6 +245,14 @@ class FractionDoneTest {
     }
 
     @Test
+    fun logWithAPartOfATotal_countsTheSameWithThePartFirst() {
+        val partFirst = sixHoursThreeOnConservation.tracker!!.let {
+            sixHoursThreeOnConservation.copy(tracker = it.copy(columns = it.columns.reversed()))
+        }
+        assertEquals(3f / 7, partFirst.fractionDone(emptyMap(), entriesOf(project("6"))))
+    }
+
+    @Test
     fun meritBadges_countTheBadgesNeededTheScoutHas() {
         // Six badges, four of them Eagle-required.
         val meritBadges = Requirement(

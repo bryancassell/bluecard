@@ -70,34 +70,22 @@ fun Requirement.fractionDone(
 }
 
 /**
- * How much of the amount its requirement asks for this log's [entries] make up, and that amount,
- * such as 4.5 of 6 hours, or null if it has no [totals][TrackerColumn.total]. Each total counts
- * its values added up, to at most the amount it needs. One that's [part of][ColumnTotal.partOf]
- * another isn't counted itself, but that one counts no more than the part, to at most what the
- * part needs, and the rest of its amount: Life 4's 6 hours with no conservation hours count as 3
- * of 6, as its 3 conservation hours are still to do.
+ * How much of the amount its requirement asks for this log's [entries] make up, to at most that
+ * amount, and the amount, such as 4.5 of 6 hours, or null if it has no
+ * [total][TrackerColumn.total]. A log has one total, and at most one more that's
+ * [part of][ColumnTotal.partOf] it (docs/catalog.md). Then the total counts no more than the
+ * part and the rest of its amount: Life 4's 6 hours with no conservation hours count as 3 of 6,
+ * as its 3 conservation hours are still to do.
  */
 private fun TrackerDefinition.amountDone(entries: List<TrackerEntry>): Pair<BigDecimal, Int>? {
     val totals = columns.mapNotNull { column -> column.total?.let { column to it } }
-    val wholes = totals.filter { (_, total) -> total.partOf == null }
-    if (wholes.isEmpty()) return null
-    val done = wholes.sumOf { (column, total) ->
-        val counted = column.counted(total, entries)
-        val part = totals.find { (_, partTotal) -> partTotal.partOf == column.id }
-        if (part == null) {
-            counted
-        } else {
-            val (partColumn, partTotal) = part
-            val rest = (total.needed - partTotal.needed).toBigDecimal()
-            minOf(counted, partColumn.counted(partTotal, entries) + rest)
-        }
-    }
-    return done to wholes.sumOf { (_, total) -> total.needed }
+    val (column, total) = totals.find { it.second.partOf == null } ?: return null
+    val done = minOf(column.sumOver(entries), total.needed.toBigDecimal())
+    val (partColumn, partTotal) = totals.find { it.second.partOf == column.id }
+        ?: return done to total.needed
+    val rest = (total.needed - partTotal.needed).toBigDecimal()
+    return minOf(done, partColumn.sumOver(entries) + rest) to total.needed
 }
-
-/** This column's values added up over [entries], to at most the amount its [total] needs. */
-private fun TrackerColumn.counted(total: ColumnTotal, entries: List<TrackerEntry>): BigDecimal =
-    minOf(sumOver(entries), total.needed.toBigDecimal())
 
 /**
  * How much of a started badge or rank is done on [version] of its requirements, from 0 to 1: the

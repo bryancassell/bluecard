@@ -147,9 +147,16 @@ object CatalogValidator {
             if (ownWork.isBlank()) add("$where: ownWork is blank")
         }
         requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }
-        // Its children decide how much of it is done, so its rows wouldn't add to the bar.
-        if (requirement.children.isNotEmpty() && requirement.tracker?.rowsNeeded != null) {
-            add("$where: tracker has rowsNeeded but the requirement has children")
+        // Its children decide how much of it is done, so its rows or total wouldn't add to the bar.
+        if (requirement.children.isNotEmpty()) {
+            requirement.tracker?.let { tracker ->
+                if (tracker.rowsNeeded != null) {
+                    add("$where: tracker has rowsNeeded but the requirement has children")
+                }
+                if (tracker.columns.any { it.total != null }) {
+                    add("$where: tracker has a total but the requirement has children")
+                }
+            }
         }
         requirement.monthsInRank?.let {
             if (it < 1) add("$where: monthsInRank must be at least 1")
@@ -232,15 +239,20 @@ object CatalogValidator {
         addAll(validateLowercaseLabel("$where: total labelPlural", total.labelPlural))
     }
 
-    // The progress bar counts a total only as far as the one total that's part of it allows.
+    // The progress bar counts one total, only as far as the one total that's part of it allows.
     private fun validatePartsOf(where: String, columns: List<TrackerColumn>): List<String> =
         buildList {
             val totals = columns.mapNotNull { column -> column.total?.let { column.id to it } }
                 .toMap()
+            if (totals.values.count { it.partOf == null } > 1) {
+                add("$where: has more than one total that isn't part of another")
+            }
             for ((id, total) in totals) {
                 val partOf = total.partOf ?: continue
                 val whole = totals[partOf]
                 when {
+                    partOf == id -> add("$where, column \"$id\": partOf \"$id\" is its own column")
+
                     whole == null ->
                         add(
                             "$where, column \"$id\": partOf \"$partOf\" isn't a column with a total"
