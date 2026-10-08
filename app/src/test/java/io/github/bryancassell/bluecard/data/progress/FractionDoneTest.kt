@@ -10,6 +10,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -250,6 +251,42 @@ class FractionDoneTest {
             sixHoursThreeOnConservation.copy(tracker = it.copy(columns = it.columns.reversed()))
         }
         assertEquals(3f / 7, partFirst.fractionDone(emptyMap(), entriesOf(project("6"))))
+    }
+
+    @Test
+    fun hasEnoughLogged_onceTheRowsReachTheNumber() {
+        assertFalse(logOfThree.hasEnoughLogged(entriesOf(row("6", null), row("6", null))))
+        assertTrue(logOfThree.hasEnoughLogged(entriesOf(*Array(3) { row("6", null) })))
+        assertTrue(logOfThree.hasEnoughLogged(entriesOf(*Array(5) { row("6", null) })))
+        // Another requirement's rows don't count.
+        assertFalse(logOfThree.hasEnoughLogged(entriesOf(*Array(3) { row("7", null) })))
+    }
+
+    @Test
+    fun hasEnoughLogged_onceTheTotalReachesTheAmount() {
+        assertFalse(sixHours.hasEnoughLogged(entriesOf(project("3"), project("2.99"))))
+        assertTrue(sixHours.hasEnoughLogged(entriesOf(project("3"), project("3"))))
+        assertTrue(sixHours.hasEnoughLogged(entriesOf(project("4"), project("5"))))
+    }
+
+    // As Life 4's row reads "6 of 6 hours" above "2 of 3 conservation hours" until both are.
+    @Test
+    fun hasEnoughLogged_withAPartOfATotal_onceBothAreReached() {
+        fun hasEnoughLogged(vararg projects: TrackerEntry) =
+            sixHoursThreeOnConservation.hasEnoughLogged(entriesOf(*projects))
+
+        assertFalse(hasEnoughLogged(project("6", conservation = "2")))
+        assertFalse(hasEnoughLogged(project("3", conservation = "3")))
+        assertTrue(hasEnoughLogged(project("6", conservation = "3")))
+    }
+
+    @Test
+    fun hasEnoughLogged_isFalseWithoutANumberOrAmount() {
+        assertFalse(log.hasEnoughLogged(entriesOf(*Array(5) { row("6", null) })))
+        // A fixed-row tracker's rows complete its requirement instead.
+        val allRows = entriesOf(row("5", 1), row("5", 2), row("5", 3), row("5", 4))
+        assertFalse(weeks.hasEnoughLogged(allRows))
+        assertFalse(leaf("1").hasEnoughLogged(emptyMap()))
     }
 
     @Test

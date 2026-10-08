@@ -38,7 +38,6 @@ fun Requirement.fractionDone(
 ): Float {
     if (completion(progress, trackerEntries, earnedBadges) != null) return 1f
     val rowCount = tracker?.rowCount
-    val rowsNeeded = tracker?.rowsNeeded
     return when {
         meritBadges != null ->
             earnedBadges.toward(meritBadges).counted.toFloat() / meritBadges.total
@@ -60,14 +59,32 @@ fun Requirement.fractionDone(
             progress
         )
 
-        rowsNeeded != null ->
-            beforeCheckOff(trackerEntries[number].orEmpty().size.toFloat(), rowsNeeded)
-
-        else -> tracker?.amountDone(trackerEntries[number].orEmpty())
+        else -> tracker?.loggedTowardNumber(trackerEntries[number].orEmpty())
             ?.let { (done, needed) -> beforeCheckOff(done.toFloat(), needed) }
             ?: 0f
     }
 }
+
+/**
+ * Whether this requirement's log has the number of rows or the amount it asks for
+ * ([TrackerDefinition.rowsNeeded], [TrackerColumn.total]), such as Tenderfoot 6b's 30 days or
+ * Star 4's 6 hours. They don't complete it: the scout checks it off once all of it is done. Life
+ * 4 has its 6 hours once 3 of them are on conservation ([amountDone]).
+ */
+fun Requirement.hasEnoughLogged(trackerEntries: Map<String, List<TrackerEntry>>): Boolean {
+    val (done, needed) = tracker?.loggedTowardNumber(trackerEntries[number].orEmpty())
+        ?: return false
+    return done >= needed.toBigDecimal()
+}
+
+/**
+ * How much of the number of rows or the amount its requirement asks for this log's [entries]
+ * make up ([amountDone]), and that number, or null if it asks for neither.
+ */
+private fun TrackerDefinition.loggedTowardNumber(
+    entries: List<TrackerEntry>
+): Pair<BigDecimal, Int>? = rowsNeeded?.let { entries.size.toBigDecimal() to it }
+    ?: amountDone(entries)
 
 /**
  * How much is done with [done] of the [needed] rows or units a log's requirement asks for, which

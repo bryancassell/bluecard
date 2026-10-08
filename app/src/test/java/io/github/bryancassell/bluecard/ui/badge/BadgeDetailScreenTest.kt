@@ -57,8 +57,10 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.visualText
@@ -66,6 +68,7 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
+import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -810,6 +813,79 @@ class BadgeDetailScreenTest {
         )
 
         row("Keep a camping log.").assert(hasText("12 of 10 nights"))
+    }
+
+    // "10 of 10 nights" reads as finished, but the scout hasn't checked it off.
+    @Test
+    fun logWithTheRowsItNeeds_saysCheckingItOffIsStillToDo() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "3") {
+                        it.copy(
+                            partlyCompleted = true,
+                            tracker = TrackerCount(10, 10, "nights"),
+                            checkOffLeft = true
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        val texts = row("Keep a camping log.")
+            .assert(hasStateDescription("In progress"))
+            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
+        assertEquals(
+            listOf(
+                "3",
+                "Keep a camping log.",
+                "10 of 10 nights",
+                "Still to do: Check it off once all of it is done."
+            ),
+            texts
+        )
+    }
+
+    // Under every total, as Life 4's line waits for both.
+    @Test
+    fun logWithItsTotals_saysCheckingItOffIsStillToDoUnderThem() {
+        val totals = listOf(
+            TrackerTotal(BigDecimal("6"), ColumnTotal(6, "hour", "hours")),
+            TrackerTotal(
+                BigDecimal("3"),
+                ColumnTotal(3, "conservation hour", "conservation hours", partOf = "hours")
+            )
+        )
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "3") {
+                        it.copy(
+                            partlyCompleted = true,
+                            tracker = TrackerCount(2, null, "nights", totals),
+                            checkOffLeft = true
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        val texts = row("Keep a camping log.")
+            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
+        assertEquals(
+            listOf(
+                "3",
+                "Keep a camping log.",
+                "6 of 6 hours",
+                "3 of 3 conservation hours",
+                "Still to do: Check it off once all of it is done."
+            ),
+            texts
+        )
     }
 
     @Test

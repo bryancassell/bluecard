@@ -267,6 +267,38 @@ class RequirementItemTest {
         assertTrue(log.toItem(done("4"), emptyMap()).completed)
     }
 
+    // Requirement 4 again, asking for at least two nights.
+    private val logOfTwo = log.copy(tracker = log.tracker!!.copy(rowsNeeded = 2))
+
+    private fun nights(count: Int) = mapOf(
+        "4" to List(count) {
+            TrackerEntry(it.toLong(), "camping", "4", values = mapOf("night" to "2026-05-01"))
+        }
+    )
+
+    // "2 of 2 nights" doesn't complete it, so the row says checking it off is still to do.
+    @Test
+    fun logWithTheRowsItNeeds_hasCheckingItOffLeft() {
+        assertFalse(logOfTwo.toItem(emptyMap(), nights(1)).checkOffLeft)
+        assertTrue(logOfTwo.toItem(emptyMap(), nights(2)).checkOffLeft)
+        assertTrue(logOfTwo.toItem(emptyMap(), nights(3)).checkOffLeft)
+        assertNull(logOfTwo.toItem(emptyMap(), nights(2)).stillToDo)
+    }
+
+    @Test
+    fun logCompleteOrNotNeeded_hasNothingLeftToCheckOff() {
+        assertFalse(logOfTwo.toItem(done("4"), nights(2)).checkOffLeft)
+        assertFalse(logOfTwo.toItem(emptyMap(), nights(2), partOfHasEnough = true).checkOffLeft)
+    }
+
+    // It says what was never recorded, as own work still to do does.
+    @Test
+    fun onBadgeCompletedOnPriorDate_logWithTheRowsItNeedsHasCheckingItOffLeft() {
+        val item = logOfTwo.toItem(emptyMap(), nights(2), advancementCompletedOnPriorDate = true)
+
+        assertTrue(item.checkOffLeft)
+    }
+
     private val weeks = Requirement(
         "5",
         "Save for two weeks.",
