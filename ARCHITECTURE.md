@@ -1332,6 +1332,14 @@ test still exports and imports through the real one.
   - **Any other result that can't be fixed yet is suppressed** in the rule's
     validator (`setSuppressingResultMatcher`), matching only that result, with
     a comment linking its issue.
+- **Every test that picks a day from the date picker uses a screen as wide as
+  its calendar** (`DATE_PICKER_SCREEN`, a small phone's 360dp). On
+  Robolectric's default screen, 320dp wide like a phone's at its largest
+  display size, the picker opens to typing the date instead
+  ([#306](https://github.com/bryancassell/bluecard/issues/306)).
+  `assertIsWhollyDisplayed`, which checks nothing is cut off, compares a
+  node's bounds in its window: a dialog's content can be wider than its
+  window, and bounds in the root aren't clipped at the window's edge.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

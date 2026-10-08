@@ -11,7 +11,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -43,7 +42,6 @@ import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
-import androidx.compose.ui.unit.toSize
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -56,9 +54,11 @@ import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
@@ -310,15 +310,6 @@ class RequirementDetailScreenTest {
     // A day in the date picker, which reads each day as its full date.
     private fun pickerDay(date: String) =
         composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
-
-    /**
-     * Asserts none of the node is clipped, as a picker's day must not be to keep its 48dp touch
-     * target. assertIsDisplayed passes once any of it shows.
-     */
-    private fun SemanticsNodeInteraction.assertIsWhollyDisplayed() = apply {
-        val node = fetchSemanticsNode()
-        assertEquals(node.size.toSize(), node.boundsInRoot.size)
-    }
 
     @Test
     fun loading_showsProgressOnly() {
@@ -788,6 +779,7 @@ class RequirementDetailScreenTest {
             .assertIsDisplayed()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_changeDate_picksAnotherDay() {
         show(weeksFilledIn)
@@ -812,6 +804,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(null), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_withoutDate_offerToAddOne_openingAtTheRowsDate() {
         show(weeksFilledIn.copy(completedDate = null))
@@ -1215,6 +1208,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(null), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_picksAnotherDay() {
         show(completedLeaf)
@@ -1241,6 +1235,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_doesNotOfferFutureDates() {
         show(completedLeaf.copy(completedDate = null))
@@ -1251,6 +1246,7 @@ class RequirementDetailScreenTest {
         pickerDay("May 21, 2026").assertIsNotEnabled()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(completedLeaf.copy(completedDate = null))
@@ -1263,6 +1259,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_onAPageOpenPastMidnight_offersTheNewDay() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 18)))
@@ -1277,6 +1274,7 @@ class RequirementDetailScreenTest {
     }
 
     // As when it was recorded while the device's clock was ahead.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_ofADateAfterToday_opensAtToday() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 22)))
@@ -1290,6 +1288,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_cancel_changesNothing() {
         show(completedLeaf)

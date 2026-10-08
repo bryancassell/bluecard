@@ -48,6 +48,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
@@ -470,6 +471,7 @@ class TrackerEntryScreenTest {
         assertEquals(1, keyboardController.hides)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun noDate_offersToAddOne_openingAtToday() {
         show(newEntry)
@@ -488,6 +490,7 @@ class TrackerEntryScreenTest {
         )
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(newEntry)
@@ -503,6 +506,7 @@ class TrackerEntryScreenTest {
         )
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun date_showsWithChangeAndRemove() {
         show(savedEntry)

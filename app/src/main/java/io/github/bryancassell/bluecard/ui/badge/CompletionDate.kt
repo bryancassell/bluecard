@@ -3,33 +3,50 @@ package io.github.bryancassell.bluecard.ui.badge
 import android.text.TextUtils
 import android.view.View
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.text.completionDateFormatter
 import io.github.bryancassell.bluecard.ui.ButtonText
@@ -145,7 +162,14 @@ internal fun PickDate(
  * language, like other Material labels, and is laid out in that language's direction, so a
  * Persian calendar reads right-to-left: laid out left-to-right, as the app's screens are, its
  * dates would read out of order.
+ *
+ * On a window narrower than the calendar, such as a phone's at the largest display size, the
+ * scout types the date instead, with the keyboard down until they tap the field.
  */
+// BasicAlertDialog is what Material's DatePickerDialog is built on, so the dialog is otherwise
+// the same, and screen readers hear it the same. Material's is always as wide as the calendar,
+// so on a narrower window its last days and OK were off the screen (#306).
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompletionDatePickerDialog(
     initial: LocalDate,
@@ -153,37 +177,102 @@ fun CompletionDatePickerDialog(
     onConfirm: (LocalDate) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = initial.coerceAtMost(today).toPickerMillis(),
-        selectableDates = remember(today) { NotAfter(today) }
-    )
     CompositionLocalProvider(LocalLayoutDirection provides pickerLayoutDirection()) {
-        DatePickerDialog(
+        BasicAlertDialog(
             onDismissRequest = onDismiss,
-            confirmButton = {
-                // Null while a typed date isn't valid. One the picker doesn't offer can still
-                // be selected when it's restored with an earlier today, as when the system
-                // stopped the app and the scout then crossed a date line westward.
-                val selected = state.selectedDateMillis
-                    ?.takeIf(state.selectableDates::isSelectableDate)
-                TextButton(
-                    onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
-                    enabled = selected != null
-                ) {
-                    Text(stringResource(R.string.date_picker_ok))
+            modifier = Modifier.wrapContentHeight(),
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            BoxWithConstraints {
+                val calendarFits = maxWidth >= CalendarWidth
+                val state = rememberDatePickerState(
+                    initialSelectedDateMillis = initial.coerceAtMost(today).toPickerMillis(),
+                    selectableDates = remember(today) { NotAfter(today) },
+                    initialDisplayMode = if (calendarFits) DisplayMode.Picker else DisplayMode.Input
+                )
+                // The calendar comes back after the window changes size, as when the phone turns
+                // or is folded with it showing, and may no longer fit.
+                LaunchedEffect(calendarFits) {
+                    if (!calendarFits) state.displayMode = DisplayMode.Input
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.date_picker_cancel))
+                // Material focuses the field, opening the keyboard, when it's given this. It's
+                // given once the calendar has shown, so the field takes focus when the scout
+                // switches to typing, not when the picker opens to typing or comes back typing
+                // after the window changes size.
+                var calendarShown by remember { mutableStateOf(false) }
+                if (state.displayMode == DisplayMode.Picker) calendarShown = true
+                val focusRequester = remember { FocusRequester() }
+                Surface(
+                    modifier = if (calendarFits) {
+                        Modifier.width(CalendarWidth)
+                    } else {
+                        Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth()
+                    },
+                    shape = DatePickerDefaults.shape,
+                    color = DatePickerDefaults.colors().containerColor,
+                    tonalElevation = DatePickerDefaults.TonalElevation
+                ) {
+                    Column(verticalArrangement = Arrangement.SpaceBetween) {
+                        // On a short window, such as a phone's in landscape, the dialog is
+                        // shorter than the picker. Material would then clip the month's first
+                        // and last weeks, leaving days under 48dp tall or hidden (#282), so the
+                        // picker scrolls instead, as Material's own sample does, and the buttons
+                        // stay below it.
+                        Box(Modifier.weight(1f, fill = false)) {
+                            DatePicker(
+                                state = state,
+                                modifier = Modifier.verticalScroll(rememberScrollState()),
+                                showModeToggle = calendarFits,
+                                focusRequester = focusRequester.takeIf {
+                                    calendarFits && calendarShown
+                                }
+                            )
+                        }
+                        DatePickerButtons(state, onConfirm, onDismiss)
+                    }
                 }
             }
+        }
+    }
+}
+
+/**
+ * The width Material's calendar is laid out for: seven days with 48dp touch targets, and its
+ * padding. Material's own constant for it is internal.
+ */
+private val CalendarWidth = 360.dp
+
+/**
+ * Cancel and OK, laid out as in Material's DatePickerDialog. OK gives [onConfirm] the date
+ * [state] has selected.
+ */
+@Composable
+private fun ColumnScope.DatePickerButtons(
+    state: DatePickerState,
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    FlowRow(
+        modifier = Modifier
+            .align(Alignment.End)
+            .padding(bottom = 8.dp, end = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        TextButton(onClick = onDismiss) {
+            Text(stringResource(R.string.date_picker_cancel))
+        }
+        // Null while a typed date isn't valid. One the picker doesn't offer can still be
+        // selected when it's restored with an earlier today, as when the system stopped the app
+        // and the scout then crossed a date line westward.
+        val selected = state.selectedDateMillis?.takeIf(state.selectableDates::isSelectableDate)
+        TextButton(
+            onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
+            enabled = selected != null
         ) {
-            // On a short window, such as a phone's in landscape, the dialog is shorter than the
-            // picker. Material would then clip the month's first and last weeks, leaving days
-            // under 48dp tall or hidden (#282), so the picker scrolls instead, as Material's own
-            // sample does.
-            DatePicker(state = state, modifier = Modifier.verticalScroll(rememberScrollState()))
+            Text(stringResource(R.string.date_picker_ok))
         }
     }
 }

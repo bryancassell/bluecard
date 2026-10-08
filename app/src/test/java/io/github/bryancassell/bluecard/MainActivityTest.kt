@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -27,6 +28,7 @@ import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -89,7 +91,9 @@ import io.github.bryancassell.bluecard.di.ClockModule
 import io.github.bryancassell.bluecard.di.DataModule
 import io.github.bryancassell.bluecard.di.ProfileModule
 import io.github.bryancassell.bluecard.di.ReportModule
+import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
@@ -104,6 +108,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
@@ -1117,6 +1122,7 @@ class MainActivityTest {
 
     // As when the system stops the app with the picker open, and the scout then crosses a date
     // line westward: the picker comes back with its selection, which it no longer offers.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_restoredWithAnEarlierToday_cantConfirmADayItDoesntOffer() {
         openCamping()
@@ -1138,6 +1144,62 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("OK").performClick()
         composeTestRule.waitForIdle()
         assertEquals(LocalDate.of(2026, 5, 19), runBlocking { recorded("1") }?.completedDate)
+    }
+
+    // The app is recreated when its window changes size, as when it's split or folded, and the
+    // calendar doesn't fit a window narrower than a small phone's. In touch mode, as on a phone
+    // without TalkBack or a keyboard, the field doesn't take focus, which would open the keyboard.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
+    @Test
+    fun datePicker_restoredOnANarrowerWindow_switchesToTypingTheDate() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        completedCheckbox().performClick()
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        pickerDay("May 20, 2026").assertIsDisplayed()
+
+        RuntimeEnvironment.setQualifiers("w320dp")
+        scenario.recreate()
+        composeTestRule.waitPastDateFieldFocusDelay()
+
+        pickerDay("May 20, 2026").assertDoesNotExist()
+        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+            .assertIsDisplayed()
+            .assertIsNotFocused()
+        composeTestRule.onNodeWithText("OK").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(LocalDate.of(2026, 5, 20), runBlocking { recorded("1") }?.completedDate)
+    }
+
+    // As when the phone turns from a window too narrow for the calendar to one it fits. The
+    // scout hasn't chosen to type, so the field doesn't take focus, which would open the keyboard,
+    // until they switch to the calendar and back.
+    @Test
+    fun datePicker_restoredTypingOnAWiderWindow_keepsTheKeyboardDownUntilTheScoutSwitches() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
+        openCamping()
+        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        completedCheckbox().performClick()
+        composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+            .assertIsDisplayed()
+
+        RuntimeEnvironment.setQualifiers(DATE_PICKER_SCREEN)
+        scenario.recreate()
+        composeTestRule.waitPastDateFieldFocusDelay()
+
+        composeTestRule.onNodeWithContentDescription("Switch to calendar input mode")
+            .assertIsDisplayed()
+        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+            .assertIsNotFocused()
+
+        composeTestRule.onNodeWithContentDescription("Switch to calendar input mode").performClick()
+        composeTestRule.onNodeWithContentDescription("Switch to text input mode").performClick()
+        composeTestRule.waitPastDateFieldFocusDelay()
+
+        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+            .assertIsFocused()
     }
 
     @Test
