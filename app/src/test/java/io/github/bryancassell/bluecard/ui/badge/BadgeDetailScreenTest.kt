@@ -59,9 +59,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
-import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -72,7 +72,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -86,11 +85,11 @@ import org.robolectric.shadows.ShadowToast
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BadgeDetailScreenTest {
-    @get:Rule
+    @get:Rule(order = 0)
     val composeTestRule = createComposeRule()
 
-    @Before
-    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
+    @get:Rule(order = 1)
+    val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     private val openedRequirements = mutableListOf<String>()
     private var counselorEdits = 0
@@ -890,6 +889,7 @@ class BadgeDetailScreenTest {
     }
 
     // So a mistaken Unmark loses nothing.
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_afterUnmarking_opensAtTheDateUnmarked() {
         show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))

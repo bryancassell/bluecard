@@ -49,19 +49,18 @@ import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
-import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -73,11 +72,11 @@ import org.robolectric.shadows.ShadowDialog
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RequirementDetailScreenTest {
-    @get:Rule
+    @get:Rule(order = 0)
     val composeTestRule = createComposeRule()
 
-    @Before
-    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
+    @get:Rule(order = 1)
+    val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     /** What the page reads as today when the picker opens, which a test can move on. */
     private var today = LocalDate.of(2026, 5, 20)
@@ -715,6 +714,7 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Remove date").assertIsDisplayed()
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_changeDate_picksAnotherDay() {
         show(weeksFilledIn)
@@ -739,6 +739,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(null), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun fixedRowsAllFilledIn_withoutDate_offerToAddOne_openingAtTheRowsDate() {
         show(weeksFilledIn.copy(completedDate = null))
@@ -1143,6 +1144,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(null), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_picksAnotherDay() {
         show(completedLeaf)
@@ -1170,6 +1172,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_doesNotOfferFutureDates() {
         show(completedLeaf.copy(completedDate = null))
@@ -1222,6 +1225,7 @@ class RequirementDetailScreenTest {
         assertEquals(listOf<LocalDate?>(today), dateChanges)
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_cancel_changesNothing() {
         show(completedLeaf)

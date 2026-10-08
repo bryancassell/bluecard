@@ -44,25 +44,22 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
-import io.github.bryancassell.bluecard.testing.enableAccessibilityChecksUnderRobolectric
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExternalResource
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
@@ -71,20 +68,11 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class TrackerEntryScreenTest {
-    // Shows the page in touch mode, as on a phone, where buttons can't take focus, so the
-    // keyboard's Next skips a date's buttons. Robolectric reads it as the page's window opens.
     @get:Rule(order = 0)
-    val touchMode = object : ExternalResource() {
-        override fun before() {
-            InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
-        }
-    }
-
-    @get:Rule(order = 1)
     val composeTestRule = createComposeRule()
 
-    @Before
-    fun enableAccessibilityChecks() = composeTestRule.enableAccessibilityChecksUnderRobolectric()
+    @get:Rule(order = 1)
+    val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     /** What the page reads as today when the picker opens, which a test can move on. */
     private var today = LocalDate.of(2026, 5, 20)
@@ -518,6 +506,7 @@ class TrackerEntryScreenTest {
         )
     }
 
+    @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun date_showsWithChangeAndRemove() {
         show(savedEntry)

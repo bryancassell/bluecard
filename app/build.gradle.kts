@@ -231,7 +231,7 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     // Google's Accessibility Test Framework checks (testing/AccessibilityChecks.kt).
-    testImplementation(libs.androidx.compose.ui.test.junit4.accessibility)
+    testImplementation(libs.accessibility.test.framework)
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
 

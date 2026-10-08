@@ -23,6 +23,8 @@ junit = "4.13.2"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
 robolectric = "4.17"
+# Accessibility checks in Compose UI tests; see ARCHITECTURE.md (Compose UI and screenshot tests).
+accessibilityTestFramework = "4.1.1"
 # Screenshot tests under Robolectric; see ARCHITECTURE.md (Compose UI and screenshot tests).
 roborazzi = "1.76.0"
 # Debug builds only; see ARCHITECTURE.md (Debug builds). 3.0 is still in alpha.
@@ -64,11 +66,11 @@ androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-compose-ui-test-junit4-accessibility = { group = "androidx.compose.ui", name = "ui-test-junit4-accessibility" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+accessibility-test-framework = { group = "com.google.android.apps.common.testing.accessibility.framework", name = "accessibility-test-framework", version.ref = "accessibilityTestFramework" }
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
