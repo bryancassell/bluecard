@@ -468,12 +468,14 @@ both taps of a double tap can reach it.
 ### Live regions
 
 - **A live region that mustn't be read out as its screen appears becomes one
-  only when its text first changes.** Compose reports a node's first layout as
-  a change to that node (`onLayoutChange` in
-  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). TalkBack
-  reads a live region on any change it's the source of, whatever changed and
-  whether or not it's on screen yet (`EventTypeWindowContentChangedFeedbackRule`
-  in TalkBack's source). That's how each new snackbar is read (see
+  only when its text first changes.** Compose reports each change to a node's
+  size or position, its first layout included, as a change to that node
+  (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose
+  UI 1.12.1). TalkBack reads a live region on any change it's the source of,
+  whatever changed and whether or not it's on screen yet
+  (`EventTypeWindowContentChangedFeedbackRule` in TalkBack's source). So a live
+  region is read when it appears, and whenever it moves within its parent or
+  resizes. That's how each new snackbar is read (see
   [Load and save failures](#load-and-save-failures)). A polite live region
   read as its screen appears holds back the screen's heading, since new speech
   can't cut it off: Badges' count held it back by about 2 seconds

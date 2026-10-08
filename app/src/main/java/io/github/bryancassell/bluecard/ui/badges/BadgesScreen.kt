@@ -221,13 +221,13 @@ internal val TypingPause = 1.seconds
  * type in, and [onClearAnnounced] is called.
  *
  * The count isn't read out when the screen first shows it, as Badges opens or comes back from a
- * badge: it becomes a live region only when it first changes, and stays one. Compose reports a
- * node's first layout as a change to that node (`onLayoutChange` in
- * `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and TalkBack reads a live
- * region on any change it's the source of. A count that was a live region from the start was
- * read out as the screen opened, and held back its heading by 2 seconds (#278). So the count
- * stays composed as the matches change, and only its text changes: a new node wouldn't be a
- * live region.
+ * badge: it becomes a live region only when it first changes, and stays one. Compose reports
+ * each change to a node's size or position, its first layout included, as a change to that node
+ * (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and
+ * TalkBack reads a live region on any change it's the source of. A count that was a live region
+ * from the start was read out as the screen opened, and held back its heading by 2 seconds
+ * (#278). So the count stays composed as the matches change, and only its text changes: a new
+ * node wouldn't be a live region.
  */
 @Composable
 private fun MatchCount(

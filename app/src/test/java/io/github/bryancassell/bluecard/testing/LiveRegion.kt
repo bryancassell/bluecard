@@ -47,6 +47,7 @@ fun SemanticsNodeInteractionsProvider.assertAnnouncedWhenShown(message: String, 
 class LiveRegionReadouts {
     private val readouts = mutableListOf<String>()
     private var readoutsListed = 0
+    private var listeningTo: View? = null
 
     init {
         val accessibilityManager = ApplicationProvider.getApplicationContext<Context>()
@@ -67,6 +68,9 @@ class LiveRegionReadouts {
      * (#278).
      */
     fun listenTo(view: View) {
+        // Called again as the content recomposes.
+        if (view === listeningTo) return
+        listeningTo = view
         (view.parent as ViewGroup).accessibilityDelegate = object : View.AccessibilityDelegate() {
             override fun onRequestSendAccessibilityEvent(
                 host: ViewGroup,
