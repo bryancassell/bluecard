@@ -220,11 +220,14 @@ internal val TypingPause = 1.seconds
  * announced straight away instead, before TalkBack reads the search field the scout is about to
  * type in, and [onClearAnnounced] is called.
  *
- * Compose announces a live region only when a node that's already shown changes
- * (`sendSemanticsPropertyChangeEvents` in `AndroidComposeViewAccessibilityDelegateCompat`,
- * Compose UI 1.12.1), not when a new one appears, so the live region stays composed as the
- * matches change, and only its text changes. That's also why the count isn't read out when the
- * screen first shows it.
+ * The count isn't read out when the screen first shows it, as Badges opens or comes back from a
+ * badge: it becomes a live region only when it first changes, and stays one. Compose reports a
+ * node's first layout as a change to that node (`onLayoutChange` in
+ * `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and TalkBack reads a live
+ * region on any change it's the source of. A count that was a live region from the start was
+ * read out as the screen opened, and held back its heading by 2 seconds (#278). So the count
+ * stays composed as the matches change, and only its text changes: a new node wouldn't be a
+ * live region.
  */
 @Composable
 private fun MatchCount(
@@ -237,6 +240,7 @@ private fun MatchCount(
     // cursor moves.
     val typed by remember(query) { derivedStateOf { query.text.toString() } }
     var announced by remember { mutableStateOf(count) }
+    var isLiveRegion by remember { mutableStateOf(false) }
     // Each keystroke restarts the wait, even one that leaves the count the same.
     LaunchedEffect(count, typed) {
         if (typed.isEmpty() && countWhenCleared != null && count != countWhenCleared) {
@@ -244,8 +248,14 @@ private fun MatchCount(
         } else {
             delay(TypingPause)
         }
+        // Set with the new count, so the change that makes it a live region is read out.
+        if (count != announced) isLiveRegion = true
         announced = count
     }
+    // Read here rather than in the semantics block, so the count becomes a live region as its new
+    // text is composed. Compose updates a semantics block as soon as a state it reads changes,
+    // and TalkBack read out the old count then.
+    val isLiveRegionComposed = isLiveRegion
     Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
         // What screen readers hear. TalkBack announces a live region whenever it changes at
         // all, even just its size, so this one is laid out from the announced count alone,
@@ -255,7 +265,7 @@ private fun MatchCount(
             text = announced,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
-                .semantics { liveRegion = LiveRegionMode.Polite }
+                .semantics { if (isLiveRegionComposed) liveRegion = LiveRegionMode.Polite }
                 .drawWithContent {}
         )
         Text(

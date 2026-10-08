@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import android.os.Looper
 import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -12,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.SoftwareKeyboardController
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -39,13 +39,16 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -90,10 +93,11 @@ class BadgesScreenTest {
     // The view that hosts the screen, which connects the keyboard to the focused field.
     private lateinit var view: View
 
-    private fun show(state: BadgesUiState) {
+    private fun show(state: BadgesUiState, readouts: LiveRegionReadouts? = null) {
         uiState = state
         composeTestRule.setContent {
             view = LocalView.current
+            readouts?.listenTo(view)
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 BadgesScreen(uiState = uiState, query = query, onOpenBadge = { openedBadges += it })
             }
@@ -115,11 +119,14 @@ class BadgesScreenTest {
             SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
     )
 
-    // The count as screen readers hear it: the line's live region.
+    // The count as screen readers hear it: the line's text they aren't kept from, not the search
+    // field, whose label mentions merit badges too.
     private fun announcedCount() = composeTestRule.onNode(
-        hasText("merit badge", substring = true) and
-            SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
+        hasText("merit badge", substring = true) and !hasSetTextAction() and
+            !SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
     )
+
+    private val isLiveRegion = SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion)
 
     private fun noMatchesMessage() = composeTestRule.onNode(
         hasText("No merit badges match your search.") and
@@ -148,6 +155,23 @@ class BadgesScreenTest {
     }
 
     private fun catchUp() = waitFor(0)
+
+    // Longer than Compose takes to send accessibility events, which it sends at most every
+    // 100 ms.
+    private val accessibilityEventsSent = 500L
+
+    /**
+     * Waits [milliseconds] a millisecond at a time, running the work posted to the main thread as
+     * it goes, as a phone does between frames. Compose sends accessibility events from posted
+     * work, which can run before the next frame shows the rest of a change.
+     */
+    private fun waitRunningPostedWork(milliseconds: Long) {
+        composeTestRule.mainClock.autoAdvance = false
+        repeat(milliseconds.toInt()) {
+            composeTestRule.mainClock.advanceTimeBy(1)
+            shadowOf(Looper.getMainLooper()).idle()
+        }
+    }
 
     private val many = (1..200).map {
         BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
@@ -501,33 +525,72 @@ class BadgesScreenTest {
         assertEquals(field, searchField().fetchSemanticsNode().id)
     }
 
-    // Screen readers announce a live region when its text changes. Compose announces only a
-    // node that was already shown, so the count must stay the same node as matches come and
-    // go, with only its text changing.
+    // Screen readers announce a live region when its text changes. The count becomes one only
+    // when it first changes, so it must stay the same node as matches come and go, with only its
+    // text changing.
     @Test
-    fun announcedCount_staysTheSamePoliteLiveRegion_asMatchesChange() {
+    fun announcedCount_staysTheSameNode_aPoliteLiveRegionFromItsFirstChange() {
         show(BadgesUiState.Ready(badges))
-        val count = announcedCount()
-            .assert(
-                SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
-            )
-            .fetchSemanticsNode().id
+        val count = announcedCount().assert(!isLiveRegion).fetchSemanticsNode().id
 
         uiState = BadgesUiState.Ready(badges.take(1))
         pauseTyping()
-        announcedCount().assert(hasText("1 merit badge"))
+        announcedCount().assert(hasText("1 merit badge")).assert(isPoliteLiveRegion)
         assertEquals(count, announcedCount().fetchSemanticsNode().id)
 
         uiState = BadgesUiState.NoMatches
         pauseTyping()
         announcedCount().assert(hasText("No merit badges match your search."))
+            .assert(isPoliteLiveRegion)
         assertEquals(count, announcedCount().fetchSemanticsNode().id)
 
-        // As when the scout clears the search.
+        // As when the scout clears the search: the count first shown is announced this time.
         uiState = BadgesUiState.Ready(badges)
         pauseTyping()
-        announcedCount().assert(hasText("4 merit badges"))
+        announcedCount().assert(hasText("4 merit badges")).assert(isPoliteLiveRegion)
         assertEquals(count, announcedCount().fetchSemanticsNode().id)
+    }
+
+    // TalkBack reads a live region on any change it's the source of, and Compose reports a
+    // node's first layout as one. A count read out as Badges opened held back its heading by 2
+    // seconds (#278).
+    @Test
+    fun count_isNotReadOut_whenBadgesLoad() {
+        val readouts = LiveRegionReadouts()
+        show(BadgesUiState.Loading, readouts)
+
+        uiState = BadgesUiState.Ready(badges)
+        // Past the typing pause too, when the screen sets the count it announces.
+        waitRunningPostedWork(TypingPause.inWholeMilliseconds + accessibilityEventsSent)
+
+        announcedCount().assert(hasText("4 merit badges"))
+        assertEquals(emptyList<String>(), readouts.sinceLastCall())
+    }
+
+    // As when the scout comes back from a badge, or the phone rotates.
+    @Test
+    fun count_isNotReadOut_whenTheScreenShowsBadgesStraightAway() {
+        val readouts = LiveRegionReadouts()
+        show(BadgesUiState.Ready(badges), readouts)
+
+        waitRunningPostedWork(TypingPause.inWholeMilliseconds + accessibilityEventsSent)
+
+        announcedCount().assert(hasText("4 merit badges"))
+        assertEquals(emptyList<String>(), readouts.sinceLastCall())
+    }
+
+    // The change that makes the count a live region is read out, and only with the new count:
+    // made one before its new text was composed, the old count was read out first.
+    @Test
+    fun count_isReadOut_whenItFirstChanges() {
+        val readouts = LiveRegionReadouts()
+        show(BadgesUiState.Ready(badges), readouts)
+
+        uiState = BadgesUiState.Ready(badges.take(1))
+        waitRunningPostedWork(TypingPause.inWholeMilliseconds + accessibilityEventsSent)
+
+        // Compose sends both the new text and the new size, and TalkBack skips the second.
+        assertEquals(listOf("1 merit badge"), readouts.sinceLastCall().distinct())
     }
 
     // TalkBack doesn't let new speech cut off a polite live region, so a count announced as
