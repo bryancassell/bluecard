@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.backup
 import android.content.res.Resources
 import android.net.Uri
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import java.time.LocalDate
 
 /**
@@ -28,6 +29,15 @@ interface BackupRepository {
      * cancelled. If it fails, the progress may already be replaced, but not the profile.
      */
     suspend fun importBackup(backup: Backup)
+
+    /**
+     * Merges [backup] into the scout's data: each of its badges and ranks that isn't started is
+     * added, and each in [fromFile] replaces the scout's progress on it, as
+     * [ProgressRepository.merge] does. The scout's progress on any other stays. The profile is
+     * replaced with [backup]'s if [profileFromFile]. It finishes even if the caller is
+     * cancelled. If it fails, the progress may already be merged, but the profile not replaced.
+     */
+    suspend fun mergeBackup(backup: Backup, fromFile: Set<String>, profileFromFile: Boolean)
 }
 
 /**

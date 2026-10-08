@@ -138,6 +138,9 @@ class RoomProgressRepository @Inject constructor(
     override suspend fun replaceAll(progress: List<BadgeProgressDetails>) =
         writing { dao.replaceAll(progress) }
 
+    override suspend fun merge(progress: List<BadgeProgressDetails>, replacing: Set<String>) =
+        writing { dao.merge(progress, replacing) }
+
     /**
      * Reports a database that can't be read, such as one that can't be opened, as the
      * [IOException] that [ProgressRepository] documents. Android's SQLite reports those as

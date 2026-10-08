@@ -398,6 +398,10 @@ both taps of a double tap can reach it.
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)).
+- **The merge's full-screen dialog ignores touches for the double-tap timeout
+  as it opens** (`IgnoreTouchesAsItOpens` in `ui/data/ImportDialogs.kt`), as
+  screens do, so the second tap on the import dialog's Merge doesn't choose an
+  option under the finger.
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
   open another app. After a tap, it ignores taps for the double-tap timeout,
@@ -1022,8 +1026,9 @@ progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`,
 as Save report does (`data/Documents.kt`). Import reads one with
 `ActivityResultContracts.OpenDocument`, asking only for documents that can be
 opened as a file (`CATEGORY_OPENABLE`), checks the format version and validates
-it before changing anything, since import replaces all current data (see
-[`PRD.md`](PRD.md#design-decisions)).
+it before changing anything, since import can replace all current data (see
+[`PRD.md`](PRD.md#design-decisions)). Once it's checked, the scout chooses to
+merge it with their data or replace everything with it.
 
 - **Any change to the format needs a new format version**
   (`BACKUP_FORMAT_VERSION` in `data/backup/BackupFormat.kt`), even an added
@@ -1076,6 +1081,18 @@ it before changing anything, since import replaces all current data (see
   can't share a transaction. If replacing progress fails, nothing has changed;
   if saving the profile then fails, the progress is already the file's, and
   importing again replaces both.
+- **A merge needs no change dates**
+  ([#28](https://github.com/bryancassell/bluecard/issues/28)): the scout
+  chooses a side for each badge and rank whose progress differs
+  (`mergeConflicts` in `data/backup/Merge.kt`), so the export format didn't
+  change. Picking the newer side automatically would take a database
+  migration, a new format version and a record of what was deleted, or
+  progress cleared on one side would come back from the other. The choices are
+  held in the ViewModel with the file, not in saved state.
+  - **A merge writes what was decided from the phone's data as read when the
+    scout chose to merge** (`MergeChoices.progressToMerge`), so a badge
+    cleared on the phone since then isn't added back unasked. The transaction
+    still keeps a badge started since then, rather than replacing it.
 - **The file has no tracker entry IDs.** Entries are listed in the order they
   were added, and an import gives them new IDs in that order, so each log keeps
   its order and IDs keep growing.

@@ -72,6 +72,16 @@ class JsonBackupRepository @Inject constructor(
         profileRepository.saveProfile(backup.profile)
     }
 
+    // Progress first, as for an import.
+    override suspend fun mergeBackup(
+        backup: Backup,
+        fromFile: Set<String>,
+        profileFromFile: Boolean
+    ) = externalScope.runOutlivingCaller {
+        progressRepository.merge(backup.progress, replacing = fromFile)
+        if (profileFromFile) profileRepository.saveProfile(backup.profile)
+    }
+
     /** Everything left in this stream, or null if it holds more than [limit] bytes. */
     private fun InputStream.readAtMost(limit: Int): ByteArray? {
         val bytes = ByteArrayOutputStream()
