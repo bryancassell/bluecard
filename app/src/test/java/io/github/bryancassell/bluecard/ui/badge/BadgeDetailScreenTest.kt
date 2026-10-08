@@ -848,6 +848,27 @@ class BadgeDetailScreenTest {
         )
     }
 
+    // At its number but checked off, as a log can be once the scout has checked it.
+    @Test
+    fun logWithTheRowsItNeedsButNothingLeftToCheckOff_saysNothingStillToDo() {
+        show(
+            ready.copy(
+                requirements = ready.requirements.map {
+                    if (it.number == "3") {
+                        it.copy(completed = true, tracker = TrackerCount(10, 10, "nights"))
+                    } else {
+                        it
+                    }
+                }
+            )
+        )
+
+        row("Keep a camping log.")
+            .assert(hasStateDescription("Completed"))
+            .assert(hasText("10 of 10 nights"))
+            .assert(!hasText("Still to do", substring = true))
+    }
+
     // Under every total, as Life 4's line waits for both.
     @Test
     fun logWithItsTotals_saysCheckingItOffIsStillToDoUnderThem() {
@@ -864,7 +885,7 @@ class BadgeDetailScreenTest {
                     if (it.number == "3") {
                         it.copy(
                             partlyCompleted = true,
-                            tracker = TrackerCount(2, null, "nights", totals),
+                            tracker = TrackerCount(2, null, "projects", totals),
                             checkOffLeft = true
                         )
                     } else {

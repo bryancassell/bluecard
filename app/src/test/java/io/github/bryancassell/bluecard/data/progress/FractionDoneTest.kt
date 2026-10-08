@@ -289,6 +289,15 @@ class FractionDoneTest {
         assertFalse(leaf("1").hasEnoughLogged(emptyMap()))
     }
 
+    // Its children decide it, as they decide its share of the bar. Only a catalog the catalog
+    // test rejects could give it a log with a number.
+    @Test
+    fun hasEnoughLogged_isFalseWithChildren() {
+        val childrenAndLog = logOfThree.copy(children = listOf(leaf("6a")))
+
+        assertFalse(childrenAndLog.hasEnoughLogged(entriesOf(*Array(3) { row("6", null) })))
+    }
+
     @Test
     fun meritBadges_countTheBadgesNeededTheScoutHas() {
         // Six badges, four of them Eagle-required.

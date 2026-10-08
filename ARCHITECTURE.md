@@ -761,8 +761,8 @@ screens and the report agree.
   children, whose children decide the bar, and off a log with a total, whose
   row shows the total instead.
 - **The row's "Still to do" line uses the bar's measure**
-  (`Requirement.hasEnoughLogged`), for rows and totals alike, so the line and
-  the bar can't disagree on when a log has its number
+  (`Requirement.hasEnoughLogged`), for rows and totals alike, so a change to
+  how a log's number is counted changes both
   ([#293](https://github.com/bryancassell/bluecard/issues/293)).
 
 ### Requirement versions

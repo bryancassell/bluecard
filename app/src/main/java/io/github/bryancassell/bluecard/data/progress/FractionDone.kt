@@ -66,12 +66,14 @@ fun Requirement.fractionDone(
 }
 
 /**
- * Whether this requirement's log has the number of rows or the amount it asks for
- * ([TrackerDefinition.rowsNeeded], [TrackerColumn.total]), such as Tenderfoot 6b's 30 days or
- * Star 4's 6 hours. They don't complete it: the scout checks it off once all of it is done. Life
- * 4 has its 6 hours once 3 of them are on conservation ([amountDone]).
+ * Whether this requirement, which the scout marks complete by hand ([isMarkedByHand]), has the
+ * number of rows or the amount it asks for in its log ([TrackerDefinition.rowsNeeded],
+ * [TrackerColumn.total]), such as Tenderfoot 6b's 30 days or Star 4's 6 hours, as [fractionDone]
+ * counts them. They don't complete it: the scout checks it off once all of it is done. Life 4 has
+ * its 6 hours once 3 of them are on conservation ([amountDone]).
  */
 fun Requirement.hasEnoughLogged(trackerEntries: Map<String, List<TrackerEntry>>): Boolean {
+    if (!isMarkedByHand) return false
     val (done, needed) = tracker?.loggedTowardNumber(trackerEntries[number].orEmpty())
         ?: return false
     return done >= needed.toBigDecimal()
