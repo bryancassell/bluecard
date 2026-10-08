@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -42,6 +43,7 @@ import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.toSize
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -306,6 +308,15 @@ class RequirementDetailScreenTest {
     // A day in the date picker, which reads each day as its full date.
     private fun pickerDay(date: String) =
         composeTestRule.onNode(hasText(date, substring = true) and hasClickAction())
+
+    /**
+     * Asserts none of the node is clipped, as a picker's day must not be to keep its 48dp touch
+     * target. assertIsDisplayed passes once any of it shows.
+     */
+    private fun SemanticsNodeInteraction.assertIsWhollyDisplayed() = apply {
+        val node = fetchSemanticsNode()
+        assertEquals(node.size.toSize(), node.boundsInRoot.size)
+    }
 
     @Test
     fun loading_showsProgressOnly() {
@@ -1275,21 +1286,23 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Cancel").assertDoesNotExist()
     }
 
-    // A phone in landscape. November 2025 spans six weeks, so the picker is taller than the
-    // dialog, and its last day is alone in the sixth.
+    // A phone in landscape, where the picker is taller than the dialog: Material leaves room for
+    // six weeks in every month. November 2025 fills them, with its first day alone in the first
+    // week and its last day alone in the sixth.
     @Config(qualifiers = "w891dp-h411dp-land")
     @Test
     fun datePicker_onAShortWindow_scrollsToEveryDay() {
         show(completedLeaf.copy(completedDate = LocalDate.of(2025, 11, 12)))
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
+        pickerDay("November 1, 2025").assertIsWhollyDisplayed()
         pickerDay("November 30, 2025").assertIsNotDisplayed()
         // performScrollTo would scroll only the months, which scroll sideways.
         composeTestRule.onNode(
             hasAnyAncestor(isDialog()) and
                 SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
         ).performTouchInput { swipeUp() }
-        pickerDay("November 30, 2025").assertIsDisplayed().performClick()
+        pickerDay("November 30, 2025").assertIsWhollyDisplayed().performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf<LocalDate?>(LocalDate.of(2025, 11, 30)), dateChanges)
