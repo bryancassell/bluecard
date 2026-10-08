@@ -132,14 +132,12 @@ fun RankCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (nextRank == null) {
-                    Text(text = next, style = MaterialTheme.typography.titleMedium)
-                } else {
-                    Text(
-                        text = next,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
+                Text(
+                    text = next,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                if (nextRank != null) {
                     Text(
                         text = inProgress,
                         style = MaterialTheme.typography.bodyMedium,

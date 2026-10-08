@@ -492,10 +492,9 @@ both taps of a double tap can reach it.
   parts out: with only the rank card's last line on screen, as Home came back
   scrolled down, it read only that line
   ([#305](https://github.com/bryancassell/bluecard/issues/305)). List rows
-  that merge their lines, `RequirementRow` and `BadgeRow`, don't follow this
-  yet: [#312](https://github.com/bryancassell/bluecard/issues/312).
-  `spokenLabel` in `HomeScreenTest` reads a node as TalkBack does, when none of
-  its parts is a stop of its own.
+  that merge their lines don't follow this yet
+  ([#312](https://github.com/bryancassell/bluecard/issues/312)). Tests read
+  such a node as TalkBack does with `spokenLabel` (`HomeScreenTest`).
 
 ### Live regions
 

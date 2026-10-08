@@ -18,6 +18,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
@@ -37,6 +38,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -150,17 +152,22 @@ class HomeScreenTest {
         composeTestRule.onNode(hasContentDescription("Your rank", substring = true) and isHeading())
 
     /**
-     * Text drawn on the rank card, the only heading with parts. The unmerged tree keeps it,
-     * although screen readers don't get it.
+     * The rank card in the unmerged tree, which keeps the card's parts although screen readers
+     * don't get them.
      */
+    private val isRankCard = isHeading() and hasAnyDescendant(hasText("Your rank"))
+
+    /** Text drawn on the rank card. */
     private fun drawn(text: String) = composeTestRule
-        .onNode(hasText(text) and hasAnyAncestor(isHeading()), useUnmergedTree = true)
+        .onNode(hasText(text) and hasAnyAncestor(isRankCard), useUnmergedTree = true)
 
     /**
      * What TalkBack reads as [node], found in the unmerged tree, when none of its parts is a stop
      * of its own: its own description or text, then each part's in turn, since a description
      * doesn't replace its parts' (#166). It leaves out the parts Compose doesn't give TalkBack,
      * and those it marks as not visible to the user, such as parts scrolled off screen (#305).
+     * Parts come in the semantics tree's order, where TalkBack sorts them by position. Turn on a
+     * screen reader first, so Compose answers as it does for TalkBack.
      */
     private fun spokenLabel(node: SemanticsNode): String {
         val provider = view.accessibilityNodeProvider
@@ -329,25 +336,43 @@ class HomeScreenTest {
         assertTrue(card.right < screen.right)
     }
 
-    // TalkBack can focus the card with only its last line on screen, as when Home comes back
-    // scrolled down, and doesn't scroll it into view first.
-    @Test
-    fun rankCard_partlyScrolledOff_isReadWhole() {
-        show(withBadgesInProgress)
-        val card = composeTestRule
-            .onNode(isHeading() and hasStateDescription("40% done"), useUnmergedTree = true)
-        val lastLine = with(composeTestRule.density) {
+    /**
+     * Scrolls Home until only the rank card's [lastLine] shows, and returns what TalkBack reads
+     * as the card. TalkBack can focus the card like that, as when Home comes back scrolled down,
+     * and doesn't scroll it into view first.
+     */
+    private fun readRankCardWithOnlyItsLastLineShown(lastLine: String): String {
+        val card = composeTestRule.onNode(isRankCard, useUnmergedTree = true)
+        val scrollBy = with(composeTestRule.density) {
             (card.getUnclippedBoundsInRoot().bottom - 40.dp).toPx()
         }
         composeTestRule.onNode(hasScrollAction())
-            .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, lastLine) }
+            .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, scrollBy) }
+        assertTrue(drawn("Your rank").getUnclippedBoundsInRoot().bottom < 0.dp)
+        assertTrue(drawn(lastLine).getUnclippedBoundsInRoot().bottom > 0.dp)
+        return spokenLabel(card.fetchSemanticsNode())
+    }
 
-        // Only the last line shows.
-        assertTrue(drawn("Tenderfoot").getUnclippedBoundsInRoot().bottom < 0.dp)
-        assertTrue(drawn("Next: Second Class").getUnclippedBoundsInRoot().bottom > 0.dp)
+    @Test
+    fun rankCard_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        show(withBadgesInProgress)
+
         assertEquals(
             "Your rank. Tenderfoot. 2 of 7 ranks earned. Next: Second Class. In progress",
-            spokenLabel(card.fetchSemanticsNode())
+            readRankCardWithOnlyItsLastLineShown("Next: Second Class")
+        )
+    }
+
+    // Not clickable, so nothing merges into it.
+    @Test
+    fun everyRankEarned_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        show(withBadgesInProgress.copy(ranks = ranks(earned = 7)))
+
+        assertEquals(
+            "Your rank. Eagle Scout. 7 of 7 ranks earned. Every rank earned",
+            readRankCardWithOnlyItsLastLineShown("Every rank earned")
         )
     }
 
