@@ -1935,7 +1935,7 @@
                 },
                 {
                   "number": "8b",
-                  "summary": "Plan and observe 10 objects not seen in requirement 4, and keep a log.",
+                  "summary": "Plan and observe at least 10 objects not seen in requirement 4, discussing your plan and then your log with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5066,7 +5066,8 @@
                 },
                 {
                   "number": "1b",
-                  "summary": "Keep a three-day journal of your listening.",
+                  "summary": "Keep a listening journal for three days, and discuss an example of listening for information, persuasion, enjoyment and understanding feelings.",
+                  "ownWork": "Find an example of each kind of listening in your journal, and discuss them with your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -5075,18 +5076,14 @@
                         "type": "date"
                       },
                       {
-                        "id": "heard",
-                        "label": "What you listened to",
-                        "type": "text"
-                      },
-                      {
-                        "id": "purpose",
-                        "label": "Why you listened",
+                        "id": "listening",
+                        "label": "What you listened to and why",
                         "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "entry",
-                    "rowLabelPlural": "entries"
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 3
                   }
                 },
                 {
@@ -6071,7 +6068,8 @@
                       }
                     ],
                     "rowLabel": "crime",
-                    "rowLabelPlural": "crimes"
+                    "rowLabelPlural": "crimes",
+                    "rowCount": 3
                   }
                 }
               ]
@@ -11440,7 +11438,7 @@
                       "children": [
                         {
                           "number": "4C(3)(a)",
-                          "summary": "Collect 10 rocks or minerals, then label, classify and describe each.",
+                          "summary": "Collect 10 rocks or minerals, label, classify and describe each, and show the collection to your counselor.",
                           "tracker": {
                             "columns": [
                               {
@@ -12196,7 +12194,7 @@
             },
             {
               "number": "5",
-              "summary": "After each hike, write up the route, weather and what happened.",
+              "summary": "After each hike, write up the route, weather and what happened, and share the reports with your counselor.",
               "tracker": {
                 "columns": [
                   {
@@ -13786,18 +13784,14 @@
                         "type": "date"
                       },
                       {
-                        "id": "species",
-                        "label": "Species",
-                        "type": "text"
-                      },
-                      {
-                        "id": "how",
-                        "label": "How identified",
-                        "type": "text"
+                        "id": "mammals",
+                        "label": "Mammals you identified",
+                        "type": "multiline-text"
                       }
                     ],
-                    "rowLabel": "sighting",
-                    "rowLabelPlural": "sightings"
+                    "rowLabel": "day",
+                    "rowLabelPlural": "days",
+                    "rowCount": 5
                   }
                 },
                 {
@@ -15803,7 +15797,8 @@
                       }
                     ],
                     "rowLabel": "event",
-                    "rowLabelPlural": "events"
+                    "rowLabelPlural": "events",
+                    "rowCount": 3
                   }
                 },
                 {
@@ -16236,7 +16231,7 @@
                 },
                 {
                   "number": "2c",
-                  "summary": "Record your actual income, expenses and savings for those weeks.",
+                  "summary": "Record your actual income, expenses and savings for those weeks, then show your counselor.",
                   "tracker": {
                     "columns": [
                       {
@@ -18281,7 +18276,8 @@
                   }
                 ],
                 "rowLabel": "product",
-                "rowLabelPlural": "products"
+                "rowLabelPlural": "products",
+                "rowCount": 15
               }
             },
             {
@@ -18582,7 +18578,8 @@
                           }
                         ],
                         "rowLabel": "station",
-                        "rowLabelPlural": "stations"
+                        "rowLabelPlural": "stations",
+                        "rowCount": 15
                       }
                     },
                     {
