@@ -146,6 +146,7 @@ class RequirementDetailScreenTest {
             count = TrackerCount(2, null, "sessions"),
             rowTitle = "Session",
             rowLabel = "session",
+            addsRows = true,
             rows = listOf(
                 TrackerRow(
                     1,
@@ -186,6 +187,7 @@ class RequirementDetailScreenTest {
             count = TrackerCount(1, 3, "weeks"),
             rowTitle = "Week",
             rowLabel = "week",
+            addsRows = false,
             rows = listOf(
                 TrackerRow(1, null, emptyList()),
                 TrackerRow(2, 5, listOf(TrackerValue(TrackerColumnType.NUMBER, "20"))),
@@ -620,7 +622,7 @@ class RequirementDetailScreenTest {
         show(
             withLog.copy(
                 tracker = withLog.tracker?.copy(
-                    count = TrackerCount(2, null, "sessions", outOf = 10)
+                    count = TrackerCount(2, 10, "sessions")
                 )
             )
         )

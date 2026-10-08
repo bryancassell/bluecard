@@ -416,6 +416,7 @@ class RequirementDetailViewModelTest {
                 count = TrackerCount(1, null, "night"),
                 rowTitle = "Night",
                 rowLabel = "night",
+                addsRows = true,
                 rows = listOf(
                     TrackerRow(1, 1, listOf(TrackerValue(TrackerColumnType.DATE, "2026-04-10")))
                 )

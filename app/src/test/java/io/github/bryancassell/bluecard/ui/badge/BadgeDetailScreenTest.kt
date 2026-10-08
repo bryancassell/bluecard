@@ -802,7 +802,7 @@ class BadgeDetailScreenTest {
             ready.copy(
                 requirements = ready.requirements.map {
                     if (it.number == "3") {
-                        it.copy(tracker = TrackerCount(12, null, "nights", outOf = 10))
+                        it.copy(tracker = TrackerCount(12, 10, "nights"))
                     } else {
                         it
                     }

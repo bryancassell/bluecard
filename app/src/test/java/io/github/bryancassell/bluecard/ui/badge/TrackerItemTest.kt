@@ -62,14 +62,14 @@ class TrackerItemTest {
 
         val item = atLeastThree.toItem(fourEntries)
 
-        assertEquals(TrackerCount(4, null, "sessions", outOf = 3), item.count)
-        assertEquals(3, item.count.outOf)
+        assertEquals(TrackerCount(4, 3, "sessions"), item.count)
         assertTrue(item.addsRows)
     }
 
     @Test
     fun outOf_isTheFixedRowsOrTheRowsNeeded() {
         assertEquals(3, weeks.count(emptyList()).outOf)
+        assertEquals(10, log.copy(rowsNeeded = 10).count(emptyList()).outOf)
         assertEquals(null, log.count(emptyList()).outOf)
     }
 

@@ -180,7 +180,8 @@ private class ReportComposer(private val resources: Resources) {
     private fun add(tracker: ReportTracker, indent: Int) {
         val definition = tracker.definition
         val recorded = tracker.rows.size
-        // As on the requirement's page: "5 sessions" in a log, or "8 of 12 weeks".
+        // As on the requirement's page: "5 sessions" in a log, or "8 of 12 weeks" or
+        // "6 of 10 animals" when it's out of a number.
         val rows = definition.rowsLabel(recorded)
         val count = definition.rowsOutOf?.let {
             string(R.string.tracker_count_of, recorded, it, rows)
