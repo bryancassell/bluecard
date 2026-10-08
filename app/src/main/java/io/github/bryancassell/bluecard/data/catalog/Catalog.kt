@@ -75,7 +75,10 @@ data class RequirementsVersion(
 
 @Serializable
 data class Requirement(
-    /** Official number, such as "4b". Unique within its requirements version. */
+    /**
+     * Official number, such as "4b", or for a rank's parent the PDF leaves out, the number its
+     * lettered requirements imply, such as Scout "1". Unique within its requirements version.
+     */
     val number: String,
     /** Our own one-line summary. */
     val summary: String,

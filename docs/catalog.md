@@ -15,8 +15,9 @@ code. Why the catalog works this way is in
   The app links to the official page for the full wording.
 - **Match the official structure.** Requirement numbers, nesting and "do N of the
   following" counts must match the official page exactly, because scouts and
-  counselors use those numbers. The one exception is either/or children (see
-  `requiredCount` below).
+  counselors use those numbers. The exceptions are either/or children (see
+  `requiredCount` below) and ranks' lettered requirements with no number above
+  them (see [Rank](#rank)).
 - **Leave out Test Lab pilots.** Scouts BSA Test Lab pilot badges, whose
   requirements are on Scouting America's Test Lab pages rather than a
   `/merit-badges/` page, aren't added: they count toward ranks only once they
@@ -159,11 +160,14 @@ format as a badge's.
   lists. Eagle has no PDF of its own, so it links to the PDF of all the ranks.
 - **Numbering:** most rank requirements are numbered `1a`, `1b` and so on with
   no requirement `1` above them, under unnumbered headings such as "Camping and
-  Outdoor Ethics". Keep them at the top level, as the PDF has them, and leave
-  the headings out. Unnumbered bullets, and letters inside a requirement's
-  sentence, such as Eagle 3's "(a) First Aid, (b) Citizenship in the
-  Community…", aren't requirements of their own: summarize them in the
-  requirement's summary.
+  Outdoor Ethics", or none. Nest them under a requirement `1` anyway, as a
+  badge's are, so the rank's page lists one row per number. With no official
+  text to summarize, give it our own summary of what its sub-requirements ask,
+  such as Scout 1's "Learn what Scouts stand for, from the Oath and Law to the
+  sign and badge.", and leave the headings out. Unnumbered bullets, and letters
+  inside a requirement's sentence, such as Eagle 3's "(a) First Aid, (b)
+  Citizenship in the Community…", aren't requirements of their own: summarize
+  them in the requirement's summary.
 - **Time in rank:** give `monthsInRank` to each requirement that asks for
   months in the rank below: Star 1 and 5, Life 1 and 5, and Eagle 1 and 4.
   That includes Star 5 and Life 5, though a leadership project can replace
@@ -195,7 +199,7 @@ format as a badge's.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. It identifies the requirement, so it must be unique within the version. For a requirement split into lettered options ("Option A", "Option B"), add the option's letter to the number, then its parts' labels in parentheses: Cycling 6 Option B's part (1)(c) is `6B(1)(c)`. If the page gives the options labels of their own, such as "(a) Option A—Model Railroading", use those labels instead: Railroading 7 Option A's part (1) is `7a(1)`. |
+| `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. Where a rank's lettered requirements have no number above them, nest them under one anyway (see [Rank](#rank)). It identifies the requirement, so it must be unique within the version. For a requirement split into lettered options ("Option A", "Option B"), add the option's letter to the number, then its parts' labels in parentheses: Cycling 6 Option B's part (1)(c) is `6B(1)(c)`. If the page gives the options labels of their own, such as "(a) Option A—Model Railroading", use those labels instead: Railroading 7 Option A's part (1) is `7a(1)`. |
 | `summary` | Yes | Our own one-line summary. Aim for 15 words or fewer. This isn't a hard limit: a summary that reads clearly matters more than its length. |
 | `children` | No | Sub-requirements, in official order. |
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
@@ -289,7 +293,10 @@ It checks that:
   `https://www.scouting.org/merit-badges/` page;
 - a badge or rank doesn't have two versions with the same effective date, and
   `eagleGroup` is only set on Eagle-required badges;
-- every version has requirements, and requirement numbers are unique within it;
+- every version has requirements, requirement numbers are unique within it,
+  top-level numbers are whole numbers, such as `1` but not `1a`, and each
+  sub-requirement's number starts with its parent's, not followed by a digit,
+  such as `2a` under `2` but not `20`;
 - every requirement has a number and a summary, `requiredCount` is between 1
   and the number of children, and `ownWork` is only set, and not blank, on a
   requirement with children or a tracker with a `rowCount`;

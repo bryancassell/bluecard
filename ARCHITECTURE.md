@@ -749,6 +749,12 @@ unique within a requirements version. Progress is stored against the badge ID,
 its version and the requirement number; because switching versions starts
 requirement progress fresh, numbers only need to be unique within one version.
 
+A rank's parent that the official PDF leaves out, such as Scout `1` above
+`1a`–`1f`, is numbered too, so ranks nest like badges
+([#286](https://github.com/bryancassell/bluecard/issues/286)). Like an option's
+letter (Cycling `6B`), its number comes from the official text: here, from the
+lettered requirements that imply it.
+
 ### Shipping and authoring
 
 - **The catalog is a JSON file bundled in `assets/`**, loaded into memory at
@@ -885,9 +891,11 @@ A requirement's own work is stored as that requirement's own
 `RequirementProgress`, as for one marked complete by hand, so it needs no new
 table. The catalog marks the requirements that have own work, rather than every
 requirement with children needing a check, because most only group their
-children. The work can't be a child of its own, because the catalog's numbers
-and nesting must match the official page
-([#143](https://github.com/bryancassell/bluecard/issues/143)).
+children. The work can't be a child of its own, because it would need a number
+the official page doesn't have
+([#143](https://github.com/bryancassell/bluecard/issues/143)), unlike a rank's
+added parent, whose number its lettered requirements imply
+([Requirement IDs](#requirement-ids)).
 
 The date the scout gives a requirement completed by its fixed-row tracker is
 stored the same way: `completed` with the date, or with none once they remove
@@ -1502,7 +1510,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
 | [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
-| [Requirement IDs](#requirement-ids) | A requirement's official number, unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
+| [Requirement IDs](#requirement-ids) | A requirement's official number, or for a rank's parent the PDF leaves out, the number its lettered requirements imply; unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
 | [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
 | [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format; a row's date is only when it was typed in |
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
