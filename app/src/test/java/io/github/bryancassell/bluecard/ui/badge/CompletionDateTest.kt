@@ -8,7 +8,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
-import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -21,6 +21,7 @@ import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
 import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
+import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
 import java.time.LocalDate
@@ -61,14 +62,10 @@ class CompletionDateTest {
         }
     }
 
-    // A day in the calendar, which reads each day as its full date.
-
-    private fun typedDate() = composeTestRule.onNode(hasSetTextAction())
-
     private fun assertTypingTheDate() {
         composeTestRule.onNodeWithText("Cancel").assertIsWhollyDisplayed()
         composeTestRule.onNodeWithText("OK").assertIsWhollyDisplayed()
-        typedDate().assertIsWhollyDisplayed()
+        composeTestRule.pickerDateField().assertIsWhollyDisplayed()
         composeTestRule.pickerDay("May 18, 2026").assertDoesNotExist()
         composeTestRule.onNodeWithContentDescription("Switch to calendar input mode")
             .assertDoesNotExist()
@@ -84,7 +81,7 @@ class CompletionDateTest {
         composeTestRule.waitPastDateFieldFocusDelay()
 
         assertTypingTheDate()
-        typedDate().assertIsNotFocused()
+        composeTestRule.pickerDateField().assertIsNotFocused()
     }
 
     @Config(qualifiers = NARROW_SCREEN)
@@ -92,7 +89,7 @@ class CompletionDateTest {
     fun onANarrowWindow_picksTheDateTyped() {
         showPicker()
 
-        typedDate().performTextReplacement("05102026")
+        composeTestRule.pickerDateField().performTextReplacement("05102026")
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(listOf(LocalDate.of(2026, 5, 10)), picked)
@@ -103,9 +100,9 @@ class CompletionDateTest {
     fun onANarrowWindow_aDateAfterTodayCantBeConfirmed() {
         showPicker()
 
-        typedDate().performTextReplacement("05212026")
+        composeTestRule.pickerDateField().performTextReplacement("05212026")
         composeTestRule.onNodeWithText("OK").assertIsNotEnabled()
-        typedDate().performTextReplacement("05202026")
+        composeTestRule.pickerDateField().performTextReplacement("05202026")
         composeTestRule.onNodeWithText("OK").assertIsEnabled()
     }
 
@@ -150,7 +147,7 @@ class CompletionDateTest {
         composeTestRule.onNodeWithContentDescription("Switch to text input mode").performClick()
         composeTestRule.waitPastDateFieldFocusDelay()
 
-        typedDate().assertIsFocused()
+        composeTestRule.pickerDateField().assertIsFocused()
     }
 
     // Larger text makes the picker taller. On a tall phone it scrolls inside a dialog no taller
@@ -165,5 +162,19 @@ class CompletionDateTest {
             .fetchSemanticsNode()
         val height = with(composeTestRule.density) { dialog.size.height.toDp() }
         assertTrue("The dialog is $height tall", height <= 568.dp)
+    }
+
+    // Only on a window narrower than any phone's, at the largest text size, are they too wide
+    // for one row. They keep the order they're read and focused in.
+    @Config(qualifiers = "w200dp-h470dp", fontScale = 2f)
+    @Test
+    fun ifTheButtonsDontFitSideBySide_okGoesBelowCancel() {
+        showPicker()
+
+        val cancel = composeTestRule.onNodeWithText("Cancel").assertIsWhollyDisplayed()
+            .getBoundsInRoot()
+        val ok = composeTestRule.onNodeWithText("OK").assertIsWhollyDisplayed().getBoundsInRoot()
+        assertTrue(ok.top >= cancel.bottom)
+        assertEquals(cancel.right, ok.right)
     }
 }

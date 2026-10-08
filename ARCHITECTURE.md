@@ -524,7 +524,9 @@ both taps of a double tap can reach it.
   wide as its calendar, so on a narrower window its last days were off the
   screen ([#306](https://github.com/bryancassell/bluecard/issues/306)). Ours
   is built the same way, on `BasicAlertDialog`, with the same surface, height
-  cap and buttons, but sized to the window. `BasicAlertDialog` is
+  cap and buttons, but sized to the window, and with OK below Cancel if they
+  don't fit side by side ([`PRD.md`](PRD.md#design-decisions)'s Date
+  picker's buttons). `BasicAlertDialog` is
   `@ExperimentalMaterial3Api`, so the function opts in, and a change to it
   would fail the build when Compose is updated. A change to
   `DatePickerDialog` wouldn't reach ours, so compare the two when updating
@@ -1347,11 +1349,8 @@ test still exports and imports through the real one.
   one, such as Robolectric's default screen (`NARROW_SCREEN`, 320dp wide like
   a phone's at its largest display size), the picker opens to typing the date
   instead ([#306](https://github.com/bryancassell/bluecard/issues/306)).
-  `testing/DatePicker.kt` has the helpers these tests share.
-  `assertIsWhollyDisplayed`, which checks nothing is cut off, compares a
-  node's bounds in its window, which are clipped at the edges of its root
-  view. Bounds in the root aren't, so a dialog's content wider than its
-  window passed them.
+  `testing/DatePicker.kt` has the helpers these tests share, such as
+  `assertIsWhollyDisplayed` to check nothing is cut off.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally

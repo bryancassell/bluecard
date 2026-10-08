@@ -230,8 +230,9 @@ private fun DatePickerSurface(
     val focusRequester = remember { FocusRequester() }
     Surface(
         // Sized rather than padded, so a tap in the margin is outside the dialog and closes it.
+        // On a window under 312dp, Material's dialogs' 280dp least width takes part of it.
         modifier = Modifier
-            .width(if (calendarFits) CalendarWidth else windowWidth - 32.dp)
+            .width(if (calendarFits) CalendarWidth else windowWidth - NarrowMargin * 2)
             .heightIn(max = MaxHeight),
         shape = DatePickerDefaults.shape,
         color = DatePickerDefaults.colors().containerColor,
@@ -264,10 +265,13 @@ private val CalendarWidth = 360.dp
 /** Material's DatePickerDialog's greatest height, whose constant is also internal. */
 private val MaxHeight = 568.dp
 
+/** The margin each side of the dialog where the calendar doesn't fit: the pages' side margin. */
+private val NarrowMargin = 16.dp
+
 /**
  * Cancel and OK, at the end of a row as in Material's DatePickerDialog. If they don't fit side by
- * side, OK goes below Cancel, keeping the order they're read and focused in, where Material
- * puts it above. OK gives [onConfirm] the date [state] has selected.
+ * side, OK goes below Cancel, unlike Material's (PRD.md's Date picker's buttons). OK gives
+ * [onConfirm] the date [state] has selected.
  */
 @Composable
 private fun ColumnScope.DatePickerButtons(

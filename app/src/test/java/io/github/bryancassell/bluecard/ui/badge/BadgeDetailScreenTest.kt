@@ -221,8 +221,6 @@ class BadgeDetailScreenTest {
     private fun topOf(text: String) =
         composeTestRule.onNodeWithText(text).fetchSemanticsNode().positionInRoot.y
 
-    /** A day in the date picker, such as "May 20, 2026". */
-
     private val isSelected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
     private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")

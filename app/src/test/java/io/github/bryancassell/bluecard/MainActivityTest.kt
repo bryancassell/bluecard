@@ -94,6 +94,7 @@ import io.github.bryancassell.bluecard.di.ReportModule
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
+import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
 import java.time.Clock
@@ -1103,7 +1104,7 @@ class MainActivityTest {
     // The date picker shows its labels and dates in the device's language, so it's laid out in
     // that language's direction, unlike the English screen behind it: a Persian calendar reads
     // right-to-left. Its buttons show the direction: OK comes first, on the left.
-    @Config(qualifiers = "fa")
+    @Config(qualifiers = "fa-$DATE_PICKER_SCREEN")
     @Test
     fun onRightToLeftDevice_datePickerIsRightToLeft() {
         assertDeviceIsRightToLeft()
@@ -1145,8 +1146,9 @@ class MainActivityTest {
     }
 
     // The app is recreated when its window changes size, as when it's split or folded, and the
-    // calendar doesn't fit a window narrower than a small phone's. In touch mode, as on a phone
-    // without TalkBack or a keyboard, the field doesn't take focus, which would open the keyboard.
+    // calendar doesn't fit a window narrower than a small phone's. The day picked comes back
+    // typed. In touch mode, as on a phone without TalkBack or a keyboard, the field doesn't take
+    // focus, which would open the keyboard.
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun datePicker_restoredOnANarrowerWindow_switchesToTypingTheDate() {
@@ -1155,23 +1157,23 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        composeTestRule.pickerDay("May 20, 2026").assertIsDisplayed()
+        composeTestRule.pickerDay("May 12, 2026").performClick()
 
         RuntimeEnvironment.setQualifiers(NARROW_SCREEN)
         // Frame by frame, so a calendar drawn squeezed before the switch would show.
         composeTestRule.mainClock.autoAdvance = false
         scenario.recreate()
-        composeTestRule.pickerDay("May 20, 2026").assertDoesNotExist()
+        composeTestRule.pickerDay("May 12, 2026").assertDoesNotExist()
         composeTestRule.mainClock.autoAdvance = true
         composeTestRule.waitPastDateFieldFocusDelay()
 
-        composeTestRule.pickerDay("May 20, 2026").assertDoesNotExist()
-        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+        composeTestRule.pickerDay("May 12, 2026").assertDoesNotExist()
+        composeTestRule.pickerDateField()
             .assertIsDisplayed()
             .assertIsNotFocused()
         composeTestRule.onNodeWithText("OK").performClick()
         composeTestRule.waitForIdle()
-        assertEquals(LocalDate.of(2026, 5, 20), runBlocking { recorded("1") }?.completedDate)
+        assertEquals(LocalDate.of(2026, 5, 12), runBlocking { recorded("1") }?.completedDate)
     }
 
     // As when the phone turns from a window too narrow for the calendar to one it fits. The
@@ -1185,7 +1187,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
-        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+        composeTestRule.pickerDateField()
             .assertIsDisplayed()
 
         RuntimeEnvironment.setQualifiers(DATE_PICKER_SCREEN)
@@ -1194,14 +1196,14 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithContentDescription("Switch to calendar input mode")
             .assertIsDisplayed()
-        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+        composeTestRule.pickerDateField()
             .assertIsNotFocused()
 
         composeTestRule.onNodeWithContentDescription("Switch to calendar input mode").performClick()
         composeTestRule.onNodeWithContentDescription("Switch to text input mode").performClick()
         composeTestRule.waitPastDateFieldFocusDelay()
 
-        composeTestRule.onNode(hasSetTextAction() and hasAnyAncestor(isDialog()))
+        composeTestRule.pickerDateField()
             .assertIsFocused()
     }
 

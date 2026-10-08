@@ -152,8 +152,6 @@ class RankDetailScreenTest {
     // scrolled to first, as the page can be taller than the screen.
     private fun row(summary: String) = text(summary).performScrollTo()
 
-    /** A day in the date picker, such as "May 20, 2026". */
-
     private fun pickDay(date: String) {
         composeTestRule.pickerDay(date).performClick()
         text("OK").performClick()
