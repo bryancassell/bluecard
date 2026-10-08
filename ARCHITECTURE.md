@@ -1231,8 +1231,17 @@ the image for the computer's own ABI.
 - **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
   every job the same key, and only the first job to save it wins, so any other
   job sets `cache-read-only: true`.
-- The job downloads the emulator and the system image on every run. Caching
-  them is #5.
+- **The emulator, system image and snapshot are cached.** Without the cache,
+  the setup task spent about 3 minutes of each run downloading the emulator
+  and the 2.1 GB image, then cold-booting the emulator to save a snapshot. AGP
+  reuses a managed AVD whose snapshot still loads, and it never updates an
+  installed emulator or image, so CI stays on the cached versions until the
+  version in the cache key changes. The cache also holds adb's key, since
+  the snapshot was made trusting it.
+- **Only pushes to main save the emulator cache**, under its own
+  `actions/cache` key. Pull requests restore main's entry. The repository has
+  10 GB of cache, mostly Gradle caches, and an entry of several GB for each
+  pull request would push them out.
 
 ### Coverage
 

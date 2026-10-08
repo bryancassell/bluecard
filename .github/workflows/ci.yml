@@ -96,23 +96,21 @@ jobs:
             ~/.android/avd/gradle-managed
             ~/.android/adbkey*
 
-      # TEMPORARY: sizes of the cached paths and the cost of looking up versions.
-      - name: Measure cache contents
-        run: |
-          du -sh /usr/local/lib/android/sdk/emulator /usr/local/lib/android/sdk/system-images/android-37.0/google_apis_ps16k/x86_64 ~/.android/avd/gradle-managed ~/.android/adbkey* || true
-          find ~/.android/avd/gradle-managed -size +20M -exec ls -lsh {} \; || true
-          time (tar -cf - -C ~/.android/avd gradle-managed | zstd -T0 --long=30 | wc -c) || true
-          time (/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --list 2>/dev/null | grep -E '^ *(emulator|system-images;android-37.0;google_apis_ps16k;x86_64) ') || true
-          cat /usr/local/lib/android/sdk/emulator/source.properties || true
-          grep -h -i 'revision\|Pkg.Revision' /usr/local/lib/android/sdk/system-images/android-37.0/google_apis_ps16k/x86_64/source.properties || true
+      # TEMPORARY: the host CPU, which a snapshot may depend on.
+      - run: grep -m1 'model name' /proc/cpuinfo
 
       # Gradle builds the app and test APKs and, on a cache miss, downloads the
       # emulator and system image and boots the emulator once to save a snapshot.
       # Then it starts the emulator from the snapshot, runs app/src/androidTest
       # and shuts it down. The runner has no GPU, so the emulator draws in software.
-      - run: >-
-          ./gradlew pixel6Api37DebugAndroidTest
-          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+      # TEMPORARY: --info shows why AGP did or didn't reuse the snapshot.
+      - run: |
+          set -o pipefail
+          ./gradlew pixel6Api37DebugAndroidTest --info \
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            2>&1 | tee gradle-info.log | grep -E --line-buffered '^> Task |BUILD |FAIL'
+      - if: always()
+        run: grep -i -E 'snapshot|loadable|avd|emulator|qemu' gradle-info.log | cut -c1-300 | head -400
 
       # Only pushes to main save the cache, as with the Gradle cache. Pull requests
       # read main's entry instead of each saving a copy, which would push the
