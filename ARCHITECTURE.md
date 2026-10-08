@@ -1238,10 +1238,51 @@ test still exports and imports through the real one.
   `WindowInsetsAnimation` events. A keyboard that appears in one step doesn't show the behavior that
   depends on frames, such as the page following the cursor. With its default
   graphics, Robolectric shows a page out of touch mode, where buttons can take
-  focus (native graphics start in touch mode). So a test of where focus goes
-  on a phone sets touch mode in a rule that runs before the compose rule opens
-  the page's window (`touchMode` in `TrackerEntryScreenTest`), and a test of a
-  hardware keyboard asks for keyboard mode (`InputModeManager`).
+  focus. Native graphics start in touch mode, as a phone is while the scout
+  taps it, so a test of where focus goes on a phone uses them, as every
+  screen's tests do (below). A test of a hardware keyboard asks for keyboard
+  mode (`InputModeManager`).
+- **Each screen's and dialog's tests run Google's accessibility checks**
+  ([ATF](https://github.com/google/Accessibility-Test-Framework-for-Android))
+  on every window, dialogs included, before each click, scroll, touch, key or
+  text input and again on the state the test ends in. Compose doesn't run them
+  before a semantics action, a focus request, or replacing or clearing a
+  field's text. A control with no label for screen readers or a touch target
+  under 48dp fails the test, so it doesn't wait for someone to try the page
+  with TalkBack. The class applies the `AccessibilityChecks` rule
+  (`testing/`) inside its compose rule. Compose's own
+  `enableAccessibilityChecks()` checks nothing under Robolectric, where ATF
+  skips composables, so the rule works around that through a hook restricted
+  to Compose's own libraries
+  ([#196](https://github.com/bryancassell/bluecard/issues/196) compares the
+  options). The checks also need Robolectric's native graphics,
+  so these classes use them, and a test in them that reads pixels runs on SDK
+  36, as screenshot tests do. The workaround relies on details that aren't
+  public API, so `AccessibilityChecksTest` checks that each kind of problem
+  still fails a test. Native graphics and the checks added no measurable time
+  to the suite (checked with Compose UI 1.12.1, ATF 4.1.1 and Robolectric
+  4.17).
+  - **Only errors fail a test, and contrast isn't checked.** ATF checks
+    contrast only from screenshots, so the rule takes none. Taken in these
+    tests, they gave hundreds of warnings that weren't about the app's colors:
+    most screen tests use Material's default theme, and disabled buttons and
+    text partway through fading in were counted too. `BlueCardColorSchemeTest`
+    checks the app's colors instead ([Theme](#theme)).
+  - **Every test that opens the date picker uses a taller screen**
+    (`DATE_PICKER_SCREEN`). On Robolectric's default 320x470dp screen, a month
+    that spans six weeks gives each day a 47dp touch target. A short window,
+    such as a phone's in landscape, has the same problem in the app
+    ([#282](https://github.com/bryancassell/bluecard/issues/282)).
+  - **Navigation tests and other components' tests don't run them**, such as
+    `MainActivityTest`, `PageTransitionsTest` and the text field tests. What
+    they show is checked by the screens' and dialogs' own tests. Under native
+    graphics, launching `MainActivity` never finishes, because Robolectric
+    keeps drawing frames, and one of `PageTransitionsTest`'s frame-by-frame
+    checks fails.
+  - **Any other result that can't be fixed yet is suppressed** in the rule's
+    validator (`setSuppressingResultMatcher`), matching only that result, with
+    a comment linking its issue. The date picker's tests use a taller screen
+    instead (above), and #282 tracks the problem.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   check looks that semantics can't tell apart, such as a requirement row's
   number box in each state (`RequirementRowScreenshotTest`). They run locally
@@ -1292,8 +1333,22 @@ the image for the computer's own ABI.
 - **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
   every job the same key, and only the first job to save it wins, so any other
   job sets `cache-read-only: true`.
-- The job downloads the emulator and the system image on every run. Caching
-  them is #5.
+- **The emulator isn't cached** (#5). Every run, the setup task downloads the
+  emulator and the 2.1 GB system image and cold-boots the emulator to save a
+  snapshot, about 3 minutes that partly overlap building the APKs. #276
+  measured caching it in October 2026, with the Gradle cache restored:
+  - No cache: the job took about 4m10s.
+  - The emulator, image, AVD and snapshot (a 4.4 GB entry): about 3m50s,
+    since restoring took over a minute.
+  - Only the AVD and snapshot (2.5 GB), keyed by the installed emulator and
+    image versions: about 3m35s. The snapshot loaded on every runner CPU
+    tried.
+
+  Build takes about 6 minutes and runs at the same time, so neither made CI
+  finish sooner. Each would also use a quarter to almost half of the
+  repository's 10 GB of Actions cache, which the Gradle caches need. If Build
+  ever finishes before this job,
+  revisit the AVD-only cache, which is in #276's history.
 
 ### Coverage
 
@@ -1467,6 +1522,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on an emulator by an instrumented test, outside the coverage check | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with the Google APIs image and 16 KB pages, in its own required CI job | Tests on the target SDK and on the page size Play requires. The emulator action used before couldn't boot API 37 images, and the lighter test images stop at API 36 |
+| [Emulator cache in CI](#instrumented-tests-in-ci) | None: each run downloads the emulator and image and makes a new snapshot | Build takes longer than the instrumented tests job, so a cache doesn't make CI finish sooner, and it would take 2.5–4.4 GB of the 10 GB of Actions cache that the Gradle caches need |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI's emulator runs only the debug build's instrumented tests, and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |

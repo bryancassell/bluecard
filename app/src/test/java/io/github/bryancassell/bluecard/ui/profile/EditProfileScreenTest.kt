@@ -8,14 +8,15 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.hasImeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -32,15 +34,20 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * One test per UI state and interaction, with fixed UI state. The fields' own behavior, such as
  * their length limits, is checked through Onboarding, which shares them (OnboardingScreenTest).
  */
 @RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class EditProfileScreenTest {
-    @get:Rule
+    @get:Rule(order = 0)
     val composeTestRule = createComposeRule()
+
+    @get:Rule(order = 1)
+    val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     private val name = TextFieldState()
     private val unitNumber = TextFieldState()
@@ -184,9 +191,6 @@ class EditProfileScreenTest {
         composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
     }
 
-    // The tests' view isn't in touch mode, as a phone's is while the scout taps it, so Android
-    // gives focus to the first field once it's cleared. The field the scout typed in last
-    // shows that Save cleared it.
     @Test
     fun save_closesTheKeyboard() {
         show(ready.copy(canSave = true))
@@ -194,7 +198,7 @@ class EditProfileScreenTest {
 
         saveButton().performClick()
 
-        field("Unit number").assertIsNotFocused()
+        composeTestRule.onAllNodes(isFocused()).assertCountEquals(0)
     }
 
     @Test
