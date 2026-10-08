@@ -57,13 +57,6 @@ jobs:
     runs-on: ubuntu-latest
     # Emulator jobs on GitHub's runners sometimes hang instead of failing.
     timeout-minutes: 30
-    # TEMPORARY: three copies without an emulator cache and three that cache only
-    # the managed AVD and its snapshot, to compare them on the same commit.
-    strategy:
-      fail-fast: false
-      matrix:
-        cache: [none, avd]
-        copy: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
 
@@ -87,52 +80,12 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # TEMPORARY (experiment): restores the newest saved AVD and snapshot. Its
-      # key names the emulator and image versions it was made with.
-      - uses: actions/cache/restore@v6
-        if: matrix.cache == 'avd'
-        id: avd-cache
-        with:
-          key: managed-device-avd-pixel6Api37
-          restore-keys: managed-device-avd-pixel6Api37-
-          path: |
-            ~/.android/avd/gradle-managed
-            ~/.android/adbkey*
-
-      # TEMPORARY: the host CPU, which a snapshot may depend on.
-      - run: grep -m1 'model name' /proc/cpuinfo
-
-      # Gradle builds the app and test APKs and, on a cache miss, downloads the
-      # emulator and system image and boots the emulator once to save a snapshot.
-      # Then it starts the emulator from the snapshot, runs app/src/androidTest
-      # and shuts it down. The runner has no GPU, so the emulator draws in software.
-      # TEMPORARY: --info shows why AGP did or didn't reuse the snapshot.
-      - run: |
-          set -o pipefail
-          ./gradlew pixel6Api37DebugAndroidTest --info \
-            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            2>&1 | tee gradle-info.log | grep -E --line-buffered '^> Task |BUILD |FAIL'
-      - if: always()
-        run: grep -E 'loadable|Loadable|snapshot|Snapshot|AVD creation' gradle-info.log | grep -v 'ClasspathEntrySnapshot|classpath snapshot' | cut -c1-300 | head -100
-
-      # TEMPORARY (experiment): saves the AVD under the versions Gradle installed,
-      # when they differ from the restored entry's.
-      - id: avd-key
-        if: matrix.cache == 'avd'
-        run: |
-          sdk=/usr/local/lib/android/sdk
-          emulator=$(sed -n 's/^Pkg.Revision=//p' $sdk/emulator/source.properties)
-          image=$(sed -n 's/^Pkg.Revision=//p' $sdk/system-images/android-37.0/google_apis_ps16k/x86_64/source.properties)
-          echo "key=managed-device-avd-pixel6Api37-emulator-$emulator-image-$image" | tee -a "$GITHUB_OUTPUT"
-      - uses: actions/cache/save@v6
-        if: >-
-          matrix.cache == 'avd'
-          && steps.avd-cache.outputs.cache-matched-key != steps.avd-key.outputs.key
-        with:
-          key: ${{ steps.avd-key.outputs.key }}
-          path: |
-            ~/.android/avd/gradle-managed
-            ~/.android/adbkey*
+      # Gradle builds the app and test APKs and downloads the system image, then
+      # starts the managed emulator, runs app/src/androidTest and shuts it down.
+      # The runner has no GPU, so the emulator draws in software.
+      - run: >-
+          ./gradlew pixel6Api37DebugAndroidTest
+          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
       # Also after a timeout, which cancels the job instead of failing it.
       - uses: actions/upload-artifact@v7

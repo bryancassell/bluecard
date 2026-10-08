@@ -1231,17 +1231,22 @@ the image for the computer's own ABI.
 - **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
   every job the same key, and only the first job to save it wins, so any other
   job sets `cache-read-only: true`.
-- **The emulator, system image and snapshot are cached.** Without the cache,
-  the setup task spent about 3 minutes of each run downloading the emulator
-  and the 2.1 GB image, then cold-booting the emulator to save a snapshot. AGP
-  reuses a managed AVD whose snapshot still loads, and it never updates an
-  installed emulator or image, so CI stays on the cached versions until the
-  version in the cache key changes. The cache also holds adb's key, since
-  the snapshot was made trusting it.
-- **Only pushes to main save the emulator cache**, under its own
-  `actions/cache` key. Pull requests restore main's entry. The repository has
-  10 GB of cache, mostly Gradle caches, and an entry of several GB for each
-  pull request would push them out.
+- **The emulator isn't cached** (#5). Every run, the setup task downloads the
+  emulator and the 2.1 GB system image and cold-boots the emulator to save a
+  snapshot, about 3 minutes that partly overlap building the APKs. #276
+  measured caching it in October 2026, with the Gradle cache restored:
+  - No cache: the job took about 4m10s.
+  - The emulator, image, AVD and snapshot (a 4.4 GB entry): about 3m50s,
+    since restoring took over a minute.
+  - Only the AVD and snapshot (2.5 GB), keyed by the installed emulator and
+    image versions: about 3m35s. The snapshot loaded on every runner CPU
+    tried.
+
+  Build takes about 6 minutes and runs at the same time, so neither made CI
+  finish sooner. Each would also use a quarter to almost half of the
+  repository's 10 GB of Actions cache, which the Gradle caches need. If Build
+  ever finishes before this job,
+  revisit the AVD-only cache, which is in #276's history.
 
 ### Coverage
 
@@ -1413,6 +1418,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on an emulator by an instrumented test, outside the coverage check | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with the Google APIs image and 16 KB pages, in its own required CI job | Tests on the target SDK and on the page size Play requires. The emulator action used before couldn't boot API 37 images, and the lighter test images stop at API 36 |
+| [Emulator cache in CI](#instrumented-tests-in-ci) | None: each run downloads the emulator and image and makes a new snapshot | Build takes longer than the instrumented tests job, so a cache doesn't make CI finish sooner, and it would take 2.5–4.4 GB of the 10 GB of Actions cache that the Gradle caches need |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI's emulator runs only the debug build's instrumented tests, and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
 | [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |
