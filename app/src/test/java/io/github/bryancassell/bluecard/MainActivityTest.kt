@@ -14,6 +14,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getBoundsInRoot
@@ -1352,6 +1353,24 @@ class MainActivityTest {
         saveNotesButton().performSemanticsAction(SemanticsActions.RequestFocus).assertIsFocused()
 
         press(Key.Enter)
+
+        assertNothingFocused()
+    }
+
+    // TalkBack, Switch Access and Voice Access click Save without moving input focus. A page
+    // opened from the notes field and closed again leaves focus with the focus target around the
+    // pages, and the notes still to save.
+    @Test
+    fun accessibilityClickOnSave_afterReturningToThePage_focusesNothing() {
+        typeNotesOutOfTouchMode()
+        composeTestRule.onNodeWithText("Add night").performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
+        // pressBack() doesn't wait for Compose, so let the new page settle first.
+        composeTestRule.waitForIdle()
+        pressBack()
+        saveNotesButton().assertIsEnabled()
+
+        saveNotesButton().performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
 
         assertNothingFocused()
     }

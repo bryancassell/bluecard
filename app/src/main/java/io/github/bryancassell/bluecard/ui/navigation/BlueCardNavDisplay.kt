@@ -223,19 +223,26 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         // a navigation bar or cutout at the side.
         modifier = modifier
             .clipToBounds()
+            // Before Compose clears focus, as Save does to close the keyboard, it asks the focused
+            // item's parents, from the innermost out. Moving focus to the holder, or cancelling
+            // the clear when the holder already has it, leaves the view's focus alone. This is
+            // around the holder, so it's asked while the holder has focus too, as after a page
+            // opened from a field closes again. Tab clears focus as it wraps around, going Next or
+            // Previous, and still reaches the page's first or last item.
+            .focusProperties {
+                onExit = {
+                    if (requestedFocusDirection == FocusDirection.Exit) {
+                        if (isHolding) cancelFocusChange() else takeFocus()
+                    }
+                }
+            }
+            .focusGroup()
             .focusRequester(holder)
             .onFocusChanged {
                 hasFocus = it.hasFocus
                 isHolding = it.isFocused
             }
-            .focusProperties {
-                canFocus = isTakingFocus || isHolding
-                // Save clears focus to close the keyboard, and Compose asks here first. Once focus
-                // has moved here, Compose leaves the view's focus alone. Tab clears focus too as
-                // it wraps around, going Next or Previous, and still reaches the page's first or
-                // last item.
-                onExit = { if (requestedFocusDirection == FocusDirection.Exit) takeFocus() }
-            }
+            .focusProperties { canFocus = isTakingFocus || isHolding }
             // An arrow key moves from it to the page's first item, as on a phone where nothing
             // is focused: Android then asks the view to take focus going down. Compose would
             // look only beside the holder. Tab, Enter and D-pad center move into the page by

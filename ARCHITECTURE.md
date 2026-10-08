@@ -411,16 +411,17 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   as it went.
 - **A page that clears input focus doesn't hand it to its first item.** Save
   closes the keyboard with `FocusManager.clearFocus()`, which clears the
-  view's focus the same way, as does TalkBack's clear focus action. With a
-  hardware keyboard, focus went to a requirement page's Completed checkbox,
-  and in local tests, a page that closes once saved gave its first field
-  focus as it went
+  view's focus the same way. With a hardware keyboard, focus went to a
+  requirement page's Completed checkbox, and in local tests, a page that
+  closes once saved gave its first field focus as it went
   ([#297](https://github.com/bryancassell/bluecard/issues/297)). So the
   focus target around the pages takes focus from any `clearFocus()` on a
-  page, and a page can close the keyboard that way. It can't when a focused
-  item leaves composition or can no longer take focus, such as a button
-  that's disabled, since Compose clears focus then without asking. Those
-  still hand focus to the page's first item
+  page, and a page can close the keyboard that way. It does so even while it
+  has focus itself, as after a page opened from a field closes again. A
+  screen reader or switch can then press Save without moving focus.
+  It can't when a focused item leaves composition or can no longer take
+  focus, such as a button that's disabled, since Compose clears focus then
+  without asking. Those still hand focus to the page's first item
   ([#301](https://github.com/bryancassell/bluecard/issues/301)).
 
 ### Double taps
