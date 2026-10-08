@@ -227,11 +227,11 @@ class CatalogValidatorTest {
         val parent = Requirement(
             number = "2",
             summary = "Parent.",
-            children = listOf(Requirement(number = "1", summary = "Clashes with the top level."))
+            children = listOf(Requirement(number = "2", summary = "Clashes with the top level."))
         )
         assertEquals(
             listOf(
-                "badge \"first-aid\", version 2026-01-01: requirement number \"1\" is used more than once"
+                "badge \"first-aid\", version 2026-01-01: requirement number \"2\" is used more than once"
             ),
             errorsForRequirements(requirement, parent)
         )
@@ -250,6 +250,39 @@ class CatalogValidatorTest {
                     "is at the top level, so its number must be a whole number"
             ),
             errorsForRequirements(Requirement(number = "1a", summary = "Has no parent."), nested)
+        )
+    }
+
+    @Test
+    fun childNumberNotUnderItsParents() {
+        val parent = Requirement(
+            number = "2",
+            summary = "Parent.",
+            children = listOf(
+                Requirement(number = "2a", summary = "Its own."),
+                Requirement(number = "3a", summary = "Another's.")
+            )
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"3a\": " +
+                    "is under \"2\", so its number must start with \"2\""
+            ),
+            errorsForRequirements(parent)
+        )
+    }
+
+    @Test
+    fun blankNumber_isOnlyReportedAsBlank() {
+        val parent = Requirement(
+            number = "2",
+            summary = "Parent.",
+            children = listOf(Requirement(number = "  ", summary = "Blank child."))
+        )
+        val where = "badge \"first-aid\", version 2026-01-01, requirement"
+        assertEquals(
+            listOf("$where \" \": number is blank", "$where \"  \": number is blank"),
+            errorsForRequirements(Requirement(number = " ", summary = "Blank."), parent)
         )
     }
 

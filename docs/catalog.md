@@ -199,7 +199,7 @@ format as a badge's.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. It identifies the requirement, so it must be unique within the version. For a requirement split into lettered options ("Option A", "Option B"), add the option's letter to the number, then its parts' labels in parentheses: Cycling 6 Option B's part (1)(c) is `6B(1)(c)`. If the page gives the options labels of their own, such as "(a) Option A—Model Railroading", use those labels instead: Railroading 7 Option A's part (1) is `7a(1)`. |
+| `number` | Yes | The official number, written as on the official page: `4`, `4c`, `4c(1)`. Where a rank's lettered requirements have no number above them, nest them under one anyway (see [Rank](#rank)). It identifies the requirement, so it must be unique within the version. For a requirement split into lettered options ("Option A", "Option B"), add the option's letter to the number, then its parts' labels in parentheses: Cycling 6 Option B's part (1)(c) is `6B(1)(c)`. If the page gives the options labels of their own, such as "(a) Option A—Model Railroading", use those labels instead: Railroading 7 Option A's part (1) is `7a(1)`. |
 | `summary` | Yes | Our own one-line summary. Aim for 15 words or fewer. This isn't a hard limit: a summary that reads clearly matters more than its length. |
 | `children` | No | Sub-requirements, in official order. |
 | `requiredCount` | No | For "do N of the following": how many children must be done. Leave it out when all children are required. Also set it to `1` when the children are either/or cases and only one can apply, even though the page gives no count (Personal Management 2b: one child for a budget that overspends, one for a budget with money left over). |
@@ -293,8 +293,9 @@ It checks that:
   `https://www.scouting.org/merit-badges/` page;
 - a badge or rank doesn't have two versions with the same effective date, and
   `eagleGroup` is only set on Eagle-required badges;
-- every version has requirements, requirement numbers are unique within it, and
-  top-level numbers are whole numbers, such as `1` but not `1a`;
+- every version has requirements, requirement numbers are unique within it,
+  top-level numbers are whole numbers, such as `1` but not `1a`, and each
+  sub-requirement's number starts with its parent's, such as `2a` under `2`;
 - every requirement has a number and a summary, `requiredCount` is between 1
   and the number of children, and `ownWork` is only set, and not blank, on a
   requirement with children or a tracker with a `rowCount`;

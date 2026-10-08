@@ -6,9 +6,7 @@ package io.github.bryancassell.bluecard.data.catalog
  */
 object CatalogValidator {
     private val idPattern = Regex("[a-z0-9]+(-[a-z0-9]+)*")
-
-    /** A blank number is reported on its own, so it doesn't fail this too. */
-    private val topLevelNumber = Regex("[0-9]*")
+    private val wholeNumber = Regex("[0-9]+")
 
     fun validate(catalog: Catalog): List<String> = buildList {
         if (catalog.formatVersion != CATALOG_FORMAT_VERSION) {
@@ -99,13 +97,27 @@ object CatalogValidator {
     ): List<String> = buildList {
         if (version.requirements.isEmpty()) add("$where: has no requirements")
         // Lettered requirements go under a numbered parent, even where the official text has none.
-        version.requirements.filterNot { topLevelNumber.matches(it.number) }.forEach {
-            add(
-                "$where, requirement \"${it.number}\": " +
-                    "is at the top level, so its number must be a whole number"
-            )
-        }
+        // A blank number is reported as blank, so it's skipped here.
+        version.requirements
+            .filter { it.number.isNotBlank() && !wholeNumber.matches(it.number) }
+            .forEach {
+                add(
+                    "$where, requirement \"${it.number}\": " +
+                        "is at the top level, so its number must be a whole number"
+                )
+            }
         val all = version.requirements.flatMap { it.withDescendants() }
+        all.forEach { parent ->
+            parent.children
+                .filter { it.number.isNotBlank() && !it.number.startsWith(parent.number) }
+                .forEach {
+                    add(
+                        "$where, requirement \"${it.number}\": " +
+                            "is under \"${parent.number}\", so its number must start with " +
+                            "\"${parent.number}\""
+                    )
+                }
+        }
         all.duplicatesBy { it.number }.forEach {
             add("$where: requirement number \"$it\" is used more than once")
         }
