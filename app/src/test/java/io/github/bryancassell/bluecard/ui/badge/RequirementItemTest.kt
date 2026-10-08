@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
@@ -265,6 +266,92 @@ class RequirementItemTest {
         assertTrue(log.toItem(emptyMap(), emptyMap()).markedByHand)
         assertFalse(log.toItem(emptyMap(), emptyMap()).completesFromRows)
         assertTrue(log.toItem(done("4"), emptyMap()).completed)
+    }
+
+    // Requirement 4 again, asking for at least two nights.
+    private val logOfTwo = log.copy(tracker = log.tracker!!.copy(rowsNeeded = 2))
+
+    private fun nights(count: Int) = mapOf(
+        "4" to List(count) {
+            TrackerEntry(it.toLong(), "camping", "4", values = mapOf("night" to "2026-05-01"))
+        }
+    )
+
+    // "2 of 2 nights" doesn't complete it, so the row says checking it off is still to do.
+    @Test
+    fun logWithTheRowsItNeeds_hasCheckingItOffLeft() {
+        assertFalse(logOfTwo.toItem(emptyMap(), nights(1)).checkOffLeft)
+        assertTrue(logOfTwo.toItem(emptyMap(), nights(2)).checkOffLeft)
+        assertTrue(logOfTwo.toItem(emptyMap(), nights(3)).checkOffLeft)
+        assertNull(logOfTwo.toItem(emptyMap(), nights(2)).stillToDo)
+    }
+
+    @Test
+    fun logCompleteOrNotNeeded_hasNothingLeftToCheckOff() {
+        assertFalse(logOfTwo.toItem(done("4"), nights(2)).checkOffLeft)
+        assertFalse(logOfTwo.toItem(emptyMap(), nights(2), partOfHasEnough = true).checkOffLeft)
+    }
+
+    // It says what was never recorded, as own work still to do does.
+    @Test
+    fun onBadgeCompletedOnPriorDate_logWithTheRowsItNeedsHasCheckingItOffLeft() {
+        val item = logOfTwo.toItem(emptyMap(), nights(2), advancementCompletedOnPriorDate = true)
+
+        assertTrue(item.checkOffLeft)
+    }
+
+    // As Life 4 asks: 6 hours, with at least 3 of them on conservation.
+    private val sixHoursThreeOnConservation = Requirement(
+        "4",
+        "Give six hours of service.",
+        tracker = TrackerDefinition(
+            listOf(
+                TrackerColumn(
+                    "hours",
+                    "Hours",
+                    TrackerColumnType.NUMBER,
+                    ColumnTotal(6, "hour", "hours")
+                ),
+                TrackerColumn(
+                    "conservation",
+                    "Conservation hours",
+                    TrackerColumnType.NUMBER,
+                    ColumnTotal(3, "conservation hour", "conservation hours", partOf = "hours")
+                )
+            ),
+            "project",
+            "projects"
+        )
+    )
+
+    private fun project(hours: String, conservation: String) = mapOf(
+        "4" to listOf(
+            TrackerEntry(
+                1,
+                "life",
+                "4",
+                values = mapOf(
+                    "hours" to hours,
+                    "conservation" to conservation
+                )
+            )
+        )
+    )
+
+    @Test
+    fun logWithItsTotals_hasCheckingItOffLeftOnceEveryTotalIsReached() {
+        assertFalse(sixHoursThreeOnConservation.toItem(emptyMap(), project("6", "2")).checkOffLeft)
+        assertTrue(sixHoursThreeOnConservation.toItem(emptyMap(), project("6", "3")).checkOffLeft)
+    }
+
+    // Its children decide it, so it has no checkbox to check off. Only a catalog the catalog
+    // test rejects could give it a log with a number.
+    @Test
+    fun requirementWithChildren_hasNothingLeftToCheckOff() {
+        val childrenAndLog = twoOfThree.copy(tracker = logOfTwo.tracker)
+        val entries = mapOf("2" to nights(2)["4"]!!)
+
+        assertFalse(childrenAndLog.toItem(emptyMap(), entries).checkOffLeft)
     }
 
     private val weeks = Requirement(

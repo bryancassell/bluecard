@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.hasEnoughChildren
+import io.github.bryancassell.bluecard.data.progress.hasEnoughLogged
 import io.github.bryancassell.bluecard.data.progress.hasEveryRow
 import io.github.bryancassell.bluecard.data.progress.hasPartDone
 import io.github.bryancassell.bluecard.data.progress.isMarkedByHand
@@ -66,6 +67,14 @@ data class RequirementItem(
      * was never recorded.
      */
     val stillToDo: String? = null,
+    /**
+     * Whether its row says to check it off once all of it is done: it's still needed, and the
+     * scout marks it complete by hand and has the number of rows or the amount it asks for in its
+     * log ([hasEnoughLogged]). Those don't complete it, as it may ask for more, such as
+     * Tenderfoot 6b's plan. It stays on a badge marked completed on a prior date, as [stillToDo]
+     * does.
+     */
+    val checkOffLeft: Boolean = false,
     /**
      * Whether it's complete once every row of its tracker is filled in ([completesFromRows]).
      * Its page then has the date it was completed on, which the scout can change.
@@ -132,6 +141,7 @@ fun Requirement.toItem(
         partlyCompleted = partlyCompleted,
         completeCount = completeCount,
         stillToDo = ownWork?.takeIf { onlyOwnWorkLeft },
+        checkOffLeft = stillNeeded && hasEnoughLogged(trackerEntries),
         completesFromRows = completesFromRows,
         meritBadges = meritBadges?.let(earnedBadges::toward)
     )

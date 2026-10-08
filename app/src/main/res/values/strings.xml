@@ -438,6 +438,11 @@
          tracker_count_of): our summary of that work, such as
          "Still to do: Share what you learned with your counselor." -->
     <string name="requirement_still_to_do">Still to do: %1$s</string>
+    <!-- On the row of a requirement whose log has the number of rows or the amount it asks
+         for but that isn't checked off, under the count of them (tracker_count_of or
+         tracker_total), such as "30 of 30 days" or "6 of 6 hours": they don't complete it, as
+         the requirement may ask for more. Worded like requirement_still_to_do. -->
+    <string name="requirement_check_off_left">Still to do: Check it off once all of it is done.</string>
     <!-- Under the summary on the page of a rank's requirement that asks for time in the rank
          below, such as "Eligible from Jan 1, 2027, 4 months after earning First Class": the
          date the scout becomes eligible to complete it, the months it asks for, and the rank

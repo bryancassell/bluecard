@@ -760,6 +760,10 @@ screens and the report agree.
   share before it's complete. The catalog test keeps it off a requirement with
   children, whose children decide the bar, and off a log with a total, whose
   row shows the total instead.
+- **The row's "Still to do" line uses the bar's measure**
+  (`Requirement.hasEnoughLogged`), for rows and totals alike, so a change to
+  how a log's number is counted changes both
+  ([#293](https://github.com/bryancassell/bluecard/issues/293)).
 
 ### Requirement versions
 
