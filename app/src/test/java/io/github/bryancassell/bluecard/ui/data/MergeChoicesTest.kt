@@ -90,14 +90,14 @@ class MergeChoicesTest {
                     "Camping",
                     isRank = false,
                     phone = ProgressSummary(done = false, fractionDone = 0.5f),
-                    file = ProgressSummary(done = true)
+                    file = ProgressSummary(done = true, doneOn = day)
                 ),
                 AdvancementChoice(
                     "scout",
                     "Scout",
                     isRank = true,
                     phone = ProgressSummary(done = false, fractionDone = 0f),
-                    file = ProgressSummary(done = true)
+                    file = ProgressSummary(done = true, doneOn = day)
                 )
             ),
             choices.advancements
@@ -148,6 +148,66 @@ class MergeChoicesTest {
         )
 
         assertTrue(choices.isEmpty)
+    }
+
+    // So a badge started or cleared on the phone after the choices were made isn't replaced or
+    // added without being asked about.
+    @Test
+    fun progressToMerge_hasTheFilesBadgesNotOnThePhone_andThoseChosen() {
+        val choices = choices(
+            phone = listOf(progress("camping"), progress("cooking")),
+            file = listOf(
+                progress("camping", "1"),
+                progress("cooking", "1"),
+                progress("scout", "1")
+            )
+        )
+        val chosen = choices.copy(
+            advancements = choices.advancements.map { it.copy(fromFile = it.id == "cooking") }
+        )
+
+        assertEquals(
+            listOf(progress("cooking", "1"), progress("scout", "1")),
+            chosen.progressToMerge
+        )
+    }
+
+    @Test
+    fun anyFromFile_isWhetherAnythingIsChosenFromTheFile() {
+        val choices = choices(
+            phone = listOf(progress("camping")),
+            file = listOf(progress("camping", "1")),
+            fileProfile = Profile("Alex Lee", "Troop 12")
+        )
+        val profile = choices.profile!!
+
+        assertFalse(choices.anyFromFile)
+        assertTrue(choices.copy(profile = profile.copy(fromFile = true)).anyFromFile)
+        assertTrue(
+            choices.copy(advancements = choices.advancements.map { it.copy(fromFile = true) })
+                .anyFromFile
+        )
+    }
+
+    @Test
+    fun withUnearnedRanks_namesTheRanksTheChoicesWouldUnearn_inOrder() {
+        // Scout and Tenderfoot are earned on the phone. The file has neither earned.
+        val choices = choices(
+            phone = listOf(
+                progress("scout", "1", "2"),
+                progress("tenderfoot", completedOnPriorDate = day)
+            ),
+            file = listOf(progress("scout", "1"), progress("tenderfoot", "1"))
+        )
+        fun choosing(vararg ids: String) = choices.copy(
+            advancements = choices.advancements.map { it.copy(fromFile = it.id in ids) }
+        ).withUnearnedRanks().unearnedRanks
+
+        assertEquals(emptyList<String>(), choices.unearnedRanks)
+        // Tenderfoot's mark counts Scout as earned, so taking the file's Scout un-earns nothing.
+        assertEquals(emptyList<String>(), choosing("scout"))
+        assertEquals(listOf("Tenderfoot"), choosing("tenderfoot"))
+        assertEquals(listOf("Scout", "Tenderfoot"), choosing("scout", "tenderfoot"))
     }
 
     @Test

@@ -397,6 +397,10 @@ both taps of a double tap can reach it.
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)).
+- **The merge's full-screen dialog ignores touches for the double-tap timeout
+  as it opens** (`IgnoreTouchesAsItOpens` in `ui/data/ImportDialogs.kt`), as
+  screens do, so the second tap on the import dialog's Merge doesn't choose an
+  option under the finger.
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
   open another app. After a tap, it ignores taps for the double-tap timeout,
@@ -1076,9 +1080,11 @@ merge it with their data or replace everything with it.
   changed, so a merge can't pick the newer side itself. Recording that would
   take a database migration, a new format version and a record of what was
   deleted, or progress cleared on one side would come back from the other.
-  Each side's summary is worked out from that side's progress alone
-  (`ui/data/MergeChoices.kt`). The choices are held in the ViewModel with the
-  file, not in saved state.
+  The choices are held in the ViewModel with the file, not in saved state.
+  - **A merge writes what was decided from the phone's data as read when the
+    scout chose to merge** (`MergeChoices.progressToMerge`), so a badge
+    cleared on the phone since then isn't added back unasked. The transaction
+    still keeps a badge started since then, rather than replacing it.
 - **The file has no tracker entry IDs.** Entries are listed in the order they
   were added, and an import gives them new IDs in that order, so each log keeps
   its order and IDs keep growing.

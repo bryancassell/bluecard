@@ -13,9 +13,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.LiveRegionMode.Companion.Polite
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -26,6 +28,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
@@ -397,7 +400,7 @@ class DataManagementScreenTest {
     }
 
     private val choices = MergeChoices(
-        backup,
+        MergeSources(emptyList(), emptyList(), backup, backup),
         ProfileChoice(Profile("Sam Scout", "Crew 7"), Profile("Sam Lee", "Troop 12")),
         listOf(
             AdvancementChoice(
@@ -405,7 +408,7 @@ class DataManagementScreenTest {
                 "Camping",
                 isRank = false,
                 phone = ProgressSummary(done = false, fractionDone = 0.4f),
-                file = ProgressSummary(done = true)
+                file = ProgressSummary(done = true, doneOn = LocalDate.of(2026, 4, 15))
             ),
             AdvancementChoice(
                 "cooking",
@@ -433,6 +436,15 @@ class DataManagementScreenTest {
         )
     )
 
+    /**
+     * Shows the merge's [choices], once they take taps
+     * (mergeChoices_ignoreTapsForTheDoubleTapTimeout_asTheyOpen).
+     */
+    private fun showMergeChoices(choices: MergeChoices) {
+        show(ready.copy(mergeChoices = choices))
+        composeTestRule.mainClock.advanceTimeBy(ViewConfiguration.getDoubleTapTimeout().toLong())
+    }
+
     /** In the merge's dialog, not the page under it. */
     private fun inDialog(matcher: SemanticsMatcher) = matcher and hasAnyAncestor(isDialog())
 
@@ -443,7 +455,7 @@ class DataManagementScreenTest {
 
     @Test
     fun mergeChoices_showEachChoice_underItsHeading_withWhatEachSideHolds() {
-        show(ready.copy(mergeChoices = choices))
+        showMergeChoices(choices)
 
         // The title stays at the top as the choices scroll.
         composeTestRule.onNode(inDialog(hasTextAndHeading("Merge"))).assertIsDisplayed()
@@ -458,7 +470,7 @@ class DataManagementScreenTest {
         option("This phone", "Sam Scout", "Unit: Crew 7").assertIsSelected()
         option("The file", "Sam Lee", "Unit: Troop 12").assertIsNotSelected()
         option("This phone", "40% done").assertIsSelected()
-        option("The file", "Completed").assertIsNotSelected()
+        option("The file", "Completed on Apr 15, 2026").assertIsNotSelected()
         option("This phone", "In progress", "Requirements effective Jan 1, 2025")
             .assertIsSelected()
         option("The file", "25% done", "Requirements effective Jan 1, 2026").assertIsNotSelected()
@@ -469,7 +481,7 @@ class DataManagementScreenTest {
     // Screen readers hear each option as a radio button, in a group of two.
     @Test
     fun mergeChoices_areRadioButtons_inGroups() {
-        show(ready.copy(mergeChoices = choices))
+        showMergeChoices(choices)
 
         val options = composeTestRule.onAllNodes(inDialog(isSelectable()))
         options.assertCountEquals(8)
@@ -481,7 +493,7 @@ class DataManagementScreenTest {
 
     @Test
     fun mergeChoices_withTheSameProfile_dontAskAboutIt() {
-        show(ready.copy(mergeChoices = choices.copy(profile = null)))
+        showMergeChoices(choices.copy(profile = null))
 
         composeTestRule.onNode(inDialog(hasText("Name and unit"))).assertDoesNotExist()
         composeTestRule.onNode(inDialog(hasText("Sam Scout"))).assertDoesNotExist()
@@ -489,10 +501,10 @@ class DataManagementScreenTest {
 
     @Test
     fun mergeChoices_tappingAnOption_choosesIt() {
-        show(ready.copy(mergeChoices = choices))
+        showMergeChoices(choices)
 
         option("The file", "Sam Lee").performClick()
-        option("The file", "Completed").performClick()
+        option("The file", "Completed on Apr 15, 2026").performClick()
         option("This phone", "50% done").performClick()
 
         assertEquals(listOf(true), profileChoices)
@@ -501,7 +513,7 @@ class DataManagementScreenTest {
 
     @Test
     fun mergeChoices_merge_confirmsTheMerge() {
-        show(ready.copy(mergeChoices = choices))
+        showMergeChoices(choices)
 
         composeTestRule.onNode(inDialog(hasText("Merge") and hasClickAction())).performClick()
 
@@ -509,28 +521,117 @@ class DataManagementScreenTest {
         assertEquals(0, importsCancelled)
     }
 
-    @Test
-    fun mergeChoices_close_cancelsTheImport() {
-        show(ready.copy(mergeChoices = choices))
+    /** [choices] with the phone's chosen for everything, as they start. */
+    private val unchanged = choices.copy(
+        advancements = choices.advancements.map { it.copy(fromFile = false) }
+    )
 
-        composeTestRule.onNodeWithContentDescription("Close").performClick()
+    private fun closeButton() = composeTestRule.onNodeWithContentDescription("Close")
+
+    /** Back, sent to the topmost dialog, as in fileToImport_back_cancelsTheImport. */
+    private fun pressBackOnTopDialog() = composeTestRule.runOnIdle {
+        (ShadowDialog.getLatestDialog() as ComponentDialog).onBackPressedDispatcher.onBackPressed()
+    }
+
+    @Test
+    fun mergeChoices_unchanged_close_cancelsTheImport() {
+        showMergeChoices(unchanged)
+
+        closeButton().performClick()
 
         assertEquals(1, importsCancelled)
         assertEquals(0, mergesConfirmed)
     }
 
     @Test
-    fun mergeChoices_back_cancelsTheImport() {
-        show(ready.copy(mergeChoices = choices))
+    fun mergeChoices_unchanged_back_cancelsTheImport() {
+        showMergeChoices(unchanged)
 
-        // As for fileToImport_back_cancelsTheImport.
-        composeTestRule.runOnIdle {
-            (ShadowDialog.getLatestDialog() as ComponentDialog).onBackPressedDispatcher
-                .onBackPressed()
-        }
+        pressBackOnTopDialog()
 
         assertEquals(1, importsCancelled)
         assertEquals(0, mergesConfirmed)
+    }
+
+    @Test
+    fun mergeChoices_withTheFilesChosen_close_asksBeforeDiscarding_thenCancels() {
+        showMergeChoices(choices)
+
+        closeButton().performClick()
+
+        composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Your changes haven't been saved.").assertIsDisplayed()
+        assertEquals(0, importsCancelled)
+
+        composeTestRule.onNodeWithText("Discard").performClick()
+
+        assertEquals(1, importsCancelled)
+        assertEquals(0, mergesConfirmed)
+    }
+
+    @Test
+    fun mergeChoices_withTheFilesChosen_back_asks_andCancelKeepsTheChoices() {
+        showMergeChoices(choices)
+
+        pressBackOnTopDialog()
+        composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+
+        composeTestRule.onNodeWithText("Discard changes?").assertDoesNotExist()
+        option("The file", "Earned").assertIsSelected()
+        assertEquals(0, importsCancelled)
+    }
+
+    @Test
+    fun mergeChoices_namesTheRanksTheMergeWouldUnearn() {
+        showMergeChoices(choices.copy(unearnedRanks = listOf("Scout", "Tenderfoot")))
+
+        // A live region, so screen readers announce it as the scout chooses.
+        composeTestRule
+            .onNodeWithText("Scout and Tenderfoot will no longer count as earned.")
+            .assertIsDisplayed()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, Polite))
+    }
+
+    // A screen reader user moving from control to control doesn't hear the heading, so each
+    // option's label names it. The label is on the text, as for ButtonText.
+    @Test
+    fun mergeChoices_optionsNameWhatTheyreFor_toScreenReaders() {
+        showMergeChoices(choices)
+
+        for (description in listOf(
+            "Name and unit, this phone",
+            "Name and unit, the file",
+            "Camping, this phone",
+            "Scout, the file"
+        )) {
+            composeTestRule
+                .onNode(hasContentDescription(description), useUnmergedTree = true)
+                .assert(hasText(description.substringAfter(", "), ignoreCase = true))
+        }
+    }
+
+    // The second tap of a double tap on the import dialog's Merge would land on the merge's
+    // dialog as it opens.
+    @Test
+    fun mergeChoices_ignoreTapsForTheDoubleTapTimeout_asTheyOpen() {
+        composeTestRule.mainClock.autoAdvance = false
+        show(ready.copy(mergeChoices = unchanged))
+        composeTestRule.mainClock.advanceTimeByFrame()
+        val doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
+
+        // Near the top, so no scrolling, which would wait on the clock this test holds.
+        val filesProfile = composeTestRule.onNode(
+            inDialog(hasText("The file") and hasText("Sam Lee"))
+        )
+
+        filesProfile.performClick()
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout / 2)
+        assertEquals(emptyList<Boolean>(), profileChoices)
+
+        composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout)
+        filesProfile.performClick()
+        assertEquals(listOf(true), profileChoices)
     }
 
     @Test

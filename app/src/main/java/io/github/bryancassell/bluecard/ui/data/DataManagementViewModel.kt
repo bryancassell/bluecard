@@ -121,13 +121,16 @@ class DataManagementViewModel @Inject constructor(
         choices.copy(profile = choices.profile?.copy(fromFile = fromFile))
     }
 
-    /** The scout chose the file's progress on badge or rank [id] if [fromFile], or the phone's. */
+    /**
+     * The scout chose the file's progress on badge or rank [id] if [fromFile], or the phone's.
+     * The ranks the merge would un-earn are worked out again.
+     */
     fun chooseProgress(id: String, fromFile: Boolean) = updateChoices { choices ->
         choices.copy(
             advancements = choices.advancements.map {
                 if (it.id == id) it.copy(fromFile = fromFile) else it
             }
-        )
+        ).withUnearnedRanks()
     }
 
     /** The scout confirmed merging the file with their data, as they chose. */
@@ -178,9 +181,15 @@ class DataManagementViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Merges only the progress decided on from the data read when the scout chose to merge
+     * ([MergeChoices.progressToMerge]), so a badge started or cleared on the phone since then
+     * isn't replaced or added without being asked about.
+     */
     private suspend fun mergeWith(choices: MergeChoices) {
+        val file = Backup(choices.sources.file.profile, choices.progressToMerge)
         val profileFromFile = choices.profile?.fromFile == true
-        backupRepository.mergeBackup(choices.backup, choices.fromFile, profileFromFile)
+        backupRepository.mergeBackup(file, choices.fromFile, profileFromFile)
         show(Kind.Merged)
     }
 

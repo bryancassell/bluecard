@@ -71,6 +71,25 @@ class MergeTest {
         assertEquals(emptySet<String>(), mergeConflicts(listOf(phone), listOf(file)))
     }
 
+    // The start date isn't shown anywhere, and a requirement unchecked with nothing else on it
+    // reads the same as one never checked.
+    @Test
+    fun mergeConflicts_leavesOutDifferencesTheScoutCantSee() {
+        val phone = progress(
+            badge = BadgeProgress("camping", version, started),
+            requirements = listOf(
+                requirement("4b"),
+                RequirementProgress("camping", "5", completed = false)
+            )
+        )
+        val file = progress(
+            badge = BadgeProgress("camping", version, day),
+            requirements = listOf(requirement("4b"))
+        )
+
+        assertEquals(emptySet<String>(), mergeConflicts(listOf(phone), listOf(file)))
+    }
+
     @Test
     fun mergeConflicts_hasEachBadgeWithDifferentProgress() {
         fun hikingRow(id: Long, value: String) = row(id, "8", value = value, badgeId = "hiking")

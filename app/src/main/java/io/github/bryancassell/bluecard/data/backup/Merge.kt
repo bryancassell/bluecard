@@ -5,7 +5,8 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 /**
  * The IDs of the badges and ranks that a merge of [file]'s progress into the [phone]'s asks the
  * scout about: those started on both, with different progress. One with the same progress on
- * both, such as one unchanged since the file was exported, needs no choice.
+ * both, such as one unchanged since the file was exported, needs no choice, and the phone's is
+ * kept.
  */
 fun mergeConflicts(
     phone: List<BadgeProgressDetails>,
@@ -19,12 +20,21 @@ fun mergeConflicts(
 
 /**
  * Whether this progress and [other] record the same, as the scout sees it: in any order, except
- * for each log's entries, and with any tracker entry IDs, which an import replaces.
+ * for each log's entries, and with any tracker entry IDs, which an import replaces. The date
+ * each was started on isn't shown anywhere, so it doesn't count.
  */
 private fun BadgeProgressDetails.recordsSameAs(other: BadgeProgressDetails) =
-    badge == other.badge &&
-        requirements.toSet() == other.requirements.toSet() &&
+    badge.copy(startedDate = other.badge.startedDate) == other.badge &&
+        recordedRequirements() == other.recordedRequirements() &&
         trackerRows() == other.trackerRows()
+
+/**
+ * The requirements with something recorded. Unchecking a requirement with nothing else
+ * recorded leaves its progress with nothing in it, which reads the same as none.
+ */
+private fun BadgeProgressDetails.recordedRequirements() = requirements.filter {
+    it.completed || it.completedDate != null || it.comment != null || it.signedOffBy != null
+}.toSet()
 
 /**
  * The tracker entries without their IDs, by requirement and then row, with each log's in the

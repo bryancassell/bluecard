@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.backup.FakeBackupRepository
 import io.github.bryancassell.bluecard.data.backup.FakeBackupRepository.Merge
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
@@ -60,6 +61,17 @@ class DataManagementViewModelTest {
                 name = "Camping",
                 summary = "Our summary of Camping.",
                 officialUrl = "https://www.scouting.org/merit-badges/camping/",
+                requirementVersions = listOf(
+                    RequirementsVersion(version, listOf(Requirement("1", "First.")))
+                )
+            )
+        ),
+        ranks = listOf(
+            Rank(
+                id = "scout",
+                name = "Scout",
+                summary = "Our summary of Scout.",
+                officialUrl = "https://www.scouting.org/scout.pdf",
                 requirementVersions = listOf(
                     RequirementsVersion(version, listOf(Requirement("1", "First.")))
                 )
@@ -327,22 +339,22 @@ class DataManagementViewModelTest {
 
         viewModel.merge()
 
+        val choices = viewModel.uiState.value.mergeChoices!!
+        assertEquals(ProfileChoice(profile, file.profile), choices.profile)
         assertEquals(
-            MergeChoices(
-                file,
-                ProfileChoice(profile, file.profile),
-                listOf(
-                    AdvancementChoice(
-                        "camping",
-                        "Camping",
-                        isRank = false,
-                        phone = ProgressSummary(done = false, fractionDone = 0f),
-                        file = ProgressSummary(done = true)
-                    )
+            listOf(
+                AdvancementChoice(
+                    "camping",
+                    "Camping",
+                    isRank = false,
+                    phone = ProgressSummary(done = false, fractionDone = 0f),
+                    file = ProgressSummary(done = true)
                 )
             ),
-            viewModel.uiState.value.mergeChoices
+            choices.advancements
         )
+        assertEquals(file, choices.sources.file)
+        assertEquals(profile, choices.sources.phone.profile)
         assertNull(viewModel.uiState.value.backupToImport)
         assertEquals(emptyList<Merge>(), backupRepository.merged)
     }
@@ -386,6 +398,29 @@ class DataManagementViewModelTest {
         assertEquals(emptySet<String>(), choices().fromFile)
     }
 
+    @Test
+    fun chooseProgress_namesTheRanksTheMergeWouldUnearn() = runTest {
+        progressRepository.markRequirementCompleted("scout", "1", null, badgeStart)
+        val file = Backup(
+            profile,
+            listOf(
+                BadgeProgressDetails(
+                    BadgeProgress("scout", version, badgeStart.startedDate),
+                    emptyList(),
+                    emptyList()
+                )
+            )
+        )
+        val viewModel = viewModelWithFileToImport(file).apply { merge() }
+        fun unearned() = viewModel.uiState.value.mergeChoices!!.unearnedRanks
+
+        viewModel.chooseProgress("scout", fromFile = true)
+        assertEquals(listOf("Scout"), unearned())
+
+        viewModel.chooseProgress("scout", fromFile = false)
+        assertEquals(emptyList<String>(), unearned())
+    }
+
     // Twice too, as a double tap on Merge.
     @Test
     fun confirmMerge_mergesAsTheScoutChose_andSaysSo() = runTest {
@@ -412,8 +447,9 @@ class DataManagementViewModelTest {
 
         viewModel.confirmMerge()
 
+        // Without Camping, which the scout kept the phone's progress on.
         assertEquals(
-            listOf(Merge(file, emptySet(), profileFromFile = true)),
+            listOf(Merge(Backup(file.profile, emptyList()), emptySet(), profileFromFile = true)),
             backupRepository.merged
         )
     }

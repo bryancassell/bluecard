@@ -194,7 +194,11 @@ interface ProgressDao {
     @Query("DELETE FROM badge_progress WHERE badgeId IN (:badgeIds)")
     suspend fun deleteBadges(badgeIds: Collection<String>)
 
-    /** Inserts [progress], giving its tracker entries new IDs in the order they're listed. */
+    /**
+     * Inserts [progress] in a single transaction, giving its tracker entries new IDs in the
+     * order they're listed.
+     */
+    @Transaction
     suspend fun insertAll(progress: List<BadgeProgressDetails>) {
         insertBadges(progress.map { it.badge })
         insertRequirements(progress.flatMap { it.requirements })

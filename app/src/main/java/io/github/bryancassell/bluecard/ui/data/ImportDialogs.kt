@@ -1,11 +1,13 @@
 package io.github.bryancassell.bluecard.ui.data
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -23,22 +25,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
+import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.removalButtonColors
+import io.github.bryancassell.bluecard.ui.typedText
+import kotlinx.coroutines.delay
 
 /**
  * Asks the scout, once a file to import is checked, whether to merge it with their data
@@ -71,7 +89,9 @@ fun ImportDialog(onMerge: () -> Unit, onReplace: () -> Unit, onDismiss: () -> Un
  * Asks the scout which to keep, the phone's or the file's, for each of the merge's [choices]:
  * the name and unit number ([onChooseProfile]), and each badge and rank ([onChooseProgress]).
  * A full-screen dialog, as Material 3 suggests for a task with many choices, with a close
- * button ([onDismiss], as is Back) and the button that merges ([onConfirm]) at its top.
+ * button and the button that merges ([onConfirm]) at its top. Under them, it names the ranks
+ * that merging as chosen would un-earn. Closing it, or Back, calls [onDismiss], once the scout
+ * confirms discarding their choices if they chose the file's for anything.
  */
 @Composable
 fun MergeDialog(
@@ -81,8 +101,12 @@ fun MergeDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var confirmingDiscard by rememberSaveable { mutableStateOf(false) }
+    val close: () -> Unit = {
+        if (choices.anyFromFile) confirmingDiscard = true else onDismiss()
+    }
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = close,
         // Drawn behind the system bars, as the app's pages are, rather than leaving them over
         // the dimmed page below.
         properties = DialogProperties(
@@ -91,59 +115,133 @@ fun MergeDialog(
         )
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .heightIn(min = 64.dp)
-                        .padding(horizontal = 4.dp)
-                ) {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            painterResource(R.drawable.ic_close),
-                            contentDescription = stringResource(R.string.merge_close)
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.merge_title),
-                        style = MaterialTheme.typography.titleLarge,
+            IgnoreTouchesAsItOpens {
+                Column(modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 12.dp)
-                            .semantics { heading() }
-                    )
-                    TextButton(onClick = onConfirm) {
-                        Text(stringResource(R.string.merge_confirm))
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(stringResource(R.string.merge_message))
-                    choices.profile?.let { profile ->
-                        Choice(
-                            heading = stringResource(R.string.merge_profile_heading),
-                            phone = profileLines(profile.phone),
-                            file = profileLines(profile.file),
-                            fromFile = profile.fromFile,
-                            onChoose = onChooseProfile
-                        )
-                    }
-                    for (advancement in choices.advancements) {
-                        key(advancement.id) {
-                            Choice(
-                                heading = advancement.name,
-                                phone = summaryLines(advancement.phone, advancement.isRank),
-                                file = summaryLines(advancement.file, advancement.isRank),
-                                fromFile = advancement.fromFile,
-                                onChoose = { onChooseProgress(advancement.id, it) }
+                            .heightIn(min = 64.dp)
+                            .padding(horizontal = 4.dp)
+                    ) {
+                        IconButton(onClick = close) {
+                            Icon(
+                                painterResource(R.drawable.ic_close),
+                                contentDescription = stringResource(R.string.merge_close)
                             )
                         }
+                        Text(
+                            text = stringResource(R.string.merge_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 12.dp)
+                                .semantics { heading() }
+                        )
+                        TextButton(onClick = onConfirm) {
+                            Text(stringResource(R.string.merge_confirm))
+                        }
                     }
+                    UnearnedRanks(choices.unearnedRanks)
+                    MergeChoiceList(choices, onChooseProfile, onChooseProgress)
                 }
+            }
+        }
+        if (confirmingDiscard) {
+            ConfirmDialog(
+                title = stringResource(R.string.discard_changes_title),
+                message = stringResource(R.string.discard_changes_message),
+                confirmLabel = stringResource(R.string.discard_changes_confirm),
+                onConfirm = {
+                    confirmingDiscard = false
+                    onDismiss()
+                },
+                onDismiss = { confirmingDiscard = false }
+            )
+        }
+    }
+}
+
+/**
+ * Ignores touches on [content] for the double-tap timeout after it opens, so the second tap of a
+ * double tap on the import dialog's Merge doesn't choose an option under the finger, as screens
+ * ignore it as they open (`rememberIgnoreTouchesNavEntryDecorator`).
+ */
+@Composable
+private fun IgnoreTouchesAsItOpens(content: @Composable () -> Unit) {
+    var opening by remember { mutableStateOf(true) }
+    val timeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    LaunchedEffect(timeoutMillis) {
+        delay(timeoutMillis)
+        opening = false
+    }
+    Box {
+        content()
+        if (opening) {
+            // A cover that takes touches and does nothing with them.
+            Box(Modifier.matchParentSize().pointerInput(Unit) {})
+        }
+    }
+}
+
+/**
+ * The ranks that merging as chosen would un-earn, such as "Star will no longer count as
+ * earned.", as the removal dialogs name them. It's composed with none too, hidden, so screen
+ * readers announce it as it appears (as ScreenMessage explains), and takes no space then.
+ */
+@Composable
+private fun UnearnedRanks(names: List<String>) {
+    val text = names.takeIf { it.isNotEmpty() }?.let {
+        stringResource(R.string.merge_unearns, rememberBadgeNameListFormatter().format(it))
+    }
+    Text(
+        text = text.orEmpty(),
+        modifier = Modifier
+            .then(
+                if (text == null) {
+                    Modifier.height(0.dp)
+                } else {
+                    Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                }
+            )
+            .semantics {
+                liveRegion = LiveRegionMode.Polite
+                if (text == null) hideFromAccessibility()
+            }
+    )
+}
+
+/** The merge's [choices], below what the dialog asks, scrolling under its header. */
+@Composable
+private fun MergeChoiceList(
+    choices: MergeChoices,
+    onChooseProfile: (fromFile: Boolean) -> Unit,
+    onChooseProgress: (id: String, fromFile: Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(stringResource(R.string.merge_message))
+        choices.profile?.let { profile ->
+            Choice(
+                heading = stringResource(R.string.merge_profile_heading),
+                phone = profileLines(profile.phone),
+                file = profileLines(profile.file),
+                fromFile = profile.fromFile,
+                onChoose = onChooseProfile
+            )
+        }
+        for (advancement in choices.advancements) {
+            key(advancement.id) {
+                Choice(
+                    heading = advancement.name,
+                    phone = summaryLines(advancement.phone, advancement.isRank),
+                    file = summaryLines(advancement.file, advancement.isRank),
+                    fromFile = advancement.fromFile,
+                    onChoose = { onChooseProgress(advancement.id, it) }
+                )
             }
         }
     }
@@ -169,14 +267,36 @@ private fun Choice(
             .semantics { heading() }
     )
     Column(modifier = Modifier.selectableGroup()) {
-        Option(stringResource(R.string.merge_this_phone), phone, !fromFile) { onChoose(false) }
-        Option(stringResource(R.string.merge_the_file), file, fromFile) { onChoose(true) }
+        Option(
+            label = stringResource(R.string.merge_this_phone),
+            // Screen reader users moving from control to control don't hear the heading.
+            labelDescription = stringResource(R.string.merge_this_phone_description, heading),
+            details = phone,
+            selected = !fromFile,
+            onClick = { onChoose(false) }
+        )
+        Option(
+            label = stringResource(R.string.merge_the_file),
+            labelDescription = stringResource(R.string.merge_the_file_description, heading),
+            details = file,
+            selected = fromFile,
+            onClick = { onChoose(true) }
+        )
     }
 }
 
-/** A radio button labeled [label], with [details] below it, that the whole row selects. */
+/**
+ * A radio button labeled [label], with [details] below it, that the whole row selects. Screen
+ * readers read [labelDescription] in place of the label.
+ */
 @Composable
-private fun Option(label: String, details: List<String>, selected: Boolean, onClick: () -> Unit) {
+private fun Option(
+    label: String,
+    labelDescription: String,
+    details: List<String>,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -188,7 +308,13 @@ private fun Option(label: String, details: List<String>, selected: Boolean, onCl
         // The row is the control, so the button isn't one of its own.
         RadioButton(selected = selected, onClick = null)
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            // On the text, not the row, as ButtonText puts a button's (ARCHITECTURE.md, Screen
+            // reader labels).
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.semantics { contentDescription = labelDescription }
+            )
             for (detail in details) {
                 Text(
                     text = detail,
@@ -201,19 +327,24 @@ private fun Option(label: String, details: List<String>, selected: Boolean, onCl
 }
 
 @Composable
-private fun profileLines(profile: Profile) =
-    listOf(profile.name, stringResource(R.string.merge_unit, profile.unitNumber))
+private fun profileLines(profile: Profile) = listOf(
+    typedText(profile.name),
+    stringResource(R.string.home_unit, typedText(profile.unitNumber))
+)
 
 /**
- * How far one side got with a badge or rank, as its list shows it, and its requirements version
- * when the two sides' differ.
+ * How far one side got with a badge or rank, as its list shows it, with the date it was
+ * completed or earned on, and its requirements version when the two sides' differ.
  */
 @Composable
 private fun summaryLines(summary: ProgressSummary, isRank: Boolean): List<String> {
     val formatter = rememberCompletionDateFormatter()
     val fractionDone = summary.fractionDone
+    val doneOn = summary.doneOn?.let { formatter.format(it) }
     val status = when {
+        summary.done && isRank && doneOn != null -> stringResource(R.string.merge_earned_on, doneOn)
         summary.done && isRank -> stringResource(R.string.ranks_earned)
+        summary.done && doneOn != null -> stringResource(R.string.merge_completed_on, doneOn)
         summary.done -> stringResource(R.string.badges_completed)
         fractionDone != null -> percentDoneDescription(fractionDone)
         else -> stringResource(R.string.badges_in_progress)
