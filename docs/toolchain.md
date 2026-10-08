@@ -44,6 +44,7 @@ Run these from the repository root.
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
 | `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. Its application ID is `io.github.bryancassell.bluecard.debug`, so it installs next to a release build (see [`ARCHITECTURE.md`](../ARCHITECTURE.md#debug-builds)). |
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
+| `./gradlew pixel6Api37DebugAndroidTest` | Runs instrumented tests on an API 37 emulator that Gradle downloads, starts and shuts down, as CI does. |
 | `./gradlew clean` | Deletes build outputs. Rarely needed; the build knows what changed. |
 
 ## How the pieces fit together
@@ -164,7 +165,11 @@ Dependabot proposes those updates instead.
 
 To run instrumented tests, create a virtual device once in Android Studio
 (**Device Manager → Create Virtual Device**), start it, then run
-`./gradlew connectedAndroidTest`.
+`./gradlew connectedAndroidTest`. Or let Gradle manage the emulator, as CI
+does, with `./gradlew pixel6Api37DebugAndroidTest`: it downloads the API 37
+system image for your computer's architecture the first time, then starts its
+own emulator for the run, with no window, and shuts it down afterwards. CI's
+runners use the x86_64 image; an Apple silicon Mac uses the arm64 one.
 
 ## Testing rules the build enforces
 
@@ -512,16 +517,21 @@ records, not a real scout's.
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
-pushes to `main`. Its **Build** job runs `./gradlew build`, the same command as
-locally, and must pass before a pull request can merge.
+pushes to `main`. Two jobs run side by side, and both must pass before a pull
+request can merge:
 
-When the job fails, the lint and test reports are attached to the run as a
-`reports` artifact: open the failed run on GitHub and download it from the
-**Artifacts** section of the summary page.
+- **Build** runs `./gradlew build`, the same command as locally.
+- **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
+  `./gradlew pixel6Api37DebugAndroidTest` (see
+  [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes about
+  6 minutes, a little less than Build: Gradle builds the app and test APKs
+  while it downloads the emulator and system image, then boots the emulator
+  and runs the tests.
 
-CI does not run instrumented tests yet, because it has no emulator; run them by
-hand with `./gradlew connectedAndroidTest`. An emulator job is planned
-([#14](https://github.com/bryancassell/bluecard/issues/14)).
+When a job fails, its reports are attached to the run: lint and local test
+reports as `reports`, instrumented test reports as `instrumented-test-reports`.
+Open the failed run on GitHub and download them from the **Artifacts** section
+of the summary page.
 
 Pull requests are squash-merged: each one becomes a single commit on `main`,
 titled with the PR title and described by the PR description, so write both as
