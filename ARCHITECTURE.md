@@ -564,14 +564,14 @@ both taps of a double tap can reach it.
   which must match each scheme's `background`), a dark window theme, and the
   splash screen's white system bar icons. Once the app draws,
   `enableEdgeToEdge()` picks the bar icons from dark mode.
-- **A full-screen dialog copies the page's system bar icons into its window.**
-  A Compose `Dialog` has its own window, which doesn't get the icons
-  `enableEdgeToEdge()` gives the activity's, and Android takes the bar icons
-  from it as the top full-screen window. Without them, Android 8's navigation
-  bar has white icons on the light page
+- **A full-screen dialog sets its own system bar icons.** A Compose `Dialog`
+  has its own window, which doesn't get the icons `enableEdgeToEdge()` gives
+  the activity's, and Android takes the bar icons from it as the top
+  full-screen window. Without them, Android 8's navigation bar has white icons
+  on the light page
   ([#299](https://github.com/bryancassell/bluecard/issues/299)). `MergeDialog`
-  copies them. The dialog's window draws no bar backgrounds, so its own page
-  shows behind the bars rather than the activity's scrim.
+  calls `UseSystemBarIconsForTheme` (in `ui/data/ImportDialogs.kt`). Move it to
+  `ui/` when a second full-screen dialog needs it.
 - **Pick a color role that works in both schemes.** In the dark scheme the
   surface containers are lighter than the page, and `surfaceContainerLowest`
   is darker. A container that should stand out from the page, such as the
