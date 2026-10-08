@@ -1069,18 +1069,14 @@ merge it with their data or replace everything with it.
   can't share a transaction. If replacing progress fails, nothing has changed;
   if saving the profile then fails, the progress is already the file's, and
   importing again replaces both.
-- **A merge takes whole badges and ranks from one side or the other**
-  ([#28](https://github.com/bryancassell/bluecard/issues/28)).
-  `ProgressRepository.merge` adds those in the file that aren't started and
-  replaces those the scout chose the file's for, in one transaction, then the
-  profile is saved if they chose the file's (`BackupRepository.mergeBackup`).
-  Which to ask about comes from `mergeConflicts` (`data/backup/Merge.kt`):
-  those started on both whose progress differs, ignoring order and tracker
-  entry IDs, which an import replaces. The export doesn't record when anything
-  changed, so a merge can't pick the newer side itself. Recording that would
-  take a database migration, a new format version and a record of what was
-  deleted, or progress cleared on one side would come back from the other.
-  The choices are held in the ViewModel with the file, not in saved state.
+- **A merge needs no change dates**
+  ([#28](https://github.com/bryancassell/bluecard/issues/28)): the scout
+  chooses a side for each badge and rank whose progress differs
+  (`mergeConflicts` in `data/backup/Merge.kt`), so the export format didn't
+  change. Picking the newer side automatically would take a database
+  migration, a new format version and a record of what was deleted, or
+  progress cleared on one side would come back from the other. The choices are
+  held in the ViewModel with the file, not in saved state.
   - **A merge writes what was decided from the phone's data as read when the
     scout chose to merge** (`MergeChoices.progressToMerge`), so a badge
     cleared on the phone since then isn't added back unasked. The transaction

@@ -244,7 +244,7 @@
     <!-- Asks, once a file to import is checked, whether to merge it with the scout's data or
          replace all of it. Replace all is red, as it removes what the scout recorded. -->
     <string name="import_choose_title">Import this file?</string>
-    <string name="import_choose_message">Merge adds the file\'s badges and ranks to yours, and asks which to keep where both have progress. Replace all replaces your name, unit number and all your progress with the file\'s.</string>
+    <string name="import_choose_message">Merge adds the file\'s badges and ranks to yours, and asks which to keep where the two differ. Replace all replaces your name, unit number and all your progress with the file\'s.</string>
     <string name="import_merge">Merge</string>
     <string name="import_replace_all">Replace all</string>
     <!-- A full-screen dialog that asks which to keep, the phone's or the file's, for each

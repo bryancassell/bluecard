@@ -347,8 +347,8 @@ class DataManagementScreenTest {
         composeTestRule
             .onNodeWithText(
                 "Merge adds the file's badges and ranks to yours, and asks which to keep where " +
-                    "both have progress. Replace all replaces your name, unit number and all " +
-                    "your progress with the file's."
+                    "the two differ. Replace all replaces your name, unit number and all your " +
+                    "progress with the file's."
             )
             .assertIsDisplayed()
         assertEquals(0, merges + replaces)
