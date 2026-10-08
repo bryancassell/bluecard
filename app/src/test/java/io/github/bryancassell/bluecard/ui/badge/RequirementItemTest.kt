@@ -291,6 +291,35 @@ class RequirementItemTest {
         assertFalse(weeks.toItem(done("5"), emptyMap()).completed)
     }
 
+    private val ownWorkAndWeeks = weeks.copy(ownWork = "Compare the two weeks.")
+
+    @Test
+    fun fixedRowTrackerAndOwnWork_isCompletedOnceBothAreDone() {
+        val bothWeeks = mapOf("5" to listOf(week(1, 1), week(2, 2)))
+        val item = ownWorkAndWeeks.toItem(emptyMap(), bothWeeks)
+        assertFalse(item.markedByHand)
+        assertFalse(item.completesFromRows)
+        assertEquals(OwnWork("Compare the two weeks.", completed = false), item.ownWork)
+        assertFalse(item.completed)
+        assertFalse(ownWorkAndWeeks.toItem(done("5"), mapOf("5" to listOf(week(1, 1)))).completed)
+
+        assertTrue(ownWorkAndWeeks.toItem(done("5"), bothWeeks).completed)
+    }
+
+    // Only its own work is left, so the row says what that is.
+    @Test
+    fun everyRowFilledButNotOwnWork_hasItsOwnWorkStillToDo() {
+        val bothWeeks = mapOf("5" to listOf(week(1, 1), week(2, 2)))
+        assertEquals(
+            "Compare the two weeks.",
+            ownWorkAndWeeks.toItem(emptyMap(), bothWeeks).stillToDo
+        )
+
+        assertNull(ownWorkAndWeeks.toItem(done("5"), mapOf("5" to listOf(week(1, 1)))).stillToDo)
+        assertNull(ownWorkAndWeeks.toItem(done("5"), bothWeeks).stillToDo)
+        assertNull(weeks.toItem(emptyMap(), bothWeeks).stillToDo)
+    }
+
     @Test
     fun trackerPartlyFilled_isPartlyCompleted_untilComplete() {
         assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).partlyCompleted)

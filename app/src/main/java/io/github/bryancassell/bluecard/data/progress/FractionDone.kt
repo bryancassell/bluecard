@@ -13,7 +13,8 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
  *   [own work][Requirement.ownWork], if any. Each needed child counts by how much of it is done;
  *   when only some are needed, the furthest along of them count. Its tracker, if any, doesn't
  *   count, as it doesn't for completion.
- * - One without children but with a tracker with a fixed number of rows counts its filled rows.
+ * - One without children but with a tracker with a fixed number of rows has a part for each row,
+ *   plus one for its own work, if any.
  * - A rank's requirement that asks for merit badges counts the badges needed that the scout's
  *   [earnedBadges] give it ([MeritBadgeCredit.counted]).
  * - Any other requirement is marked complete by hand ([isMarkedByHand]), so it has no parts.
@@ -37,15 +38,14 @@ fun Requirement.fractionDone(
                 .sortedDescending()
                 .take(needed)
                 .sum()
-            if (ownWork == null) {
-                childrenDone / needed
-            } else {
-                (childrenDone + progress.markedDone(number)) / (needed + 1)
-            }
+            withOwnWork(childrenDone, needed, progress)
         }
 
-        rowCount != null ->
-            filledRows(trackerEntries[number].orEmpty(), rowCount).size.toFloat() / rowCount
+        rowCount != null -> withOwnWork(
+            filledRows(trackerEntries[number].orEmpty(), rowCount).size.toFloat(),
+            rowCount,
+            progress
+        )
 
         else -> 0f
     }
@@ -92,6 +92,16 @@ fun MeritBadge.fractionDoneWhileInProgress(progress: BadgeProgressDetails?): Flo
     if (progress == null || status(progress) != BadgeStatus.InProgress) return null
     return requirementsVersionFor(progress)?.let { progress.fractionDone(it) }
 }
+
+/**
+ * How much is done with [done] of its [parts] done, and one more part for its
+ * [own work][Requirement.ownWork], if it has any.
+ */
+private fun Requirement.withOwnWork(
+    done: Float,
+    parts: Int,
+    progress: Map<String, RequirementProgress>
+): Float = if (ownWork == null) done / parts else (done + progress.markedDone(number)) / (parts + 1)
 
 /** 1 if the scout marked requirement [number] complete, otherwise 0. */
 private fun Map<String, RequirementProgress>.markedDone(number: String): Float =

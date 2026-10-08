@@ -86,8 +86,8 @@ fun RequirementDetailRoute(
 
 /**
  * A requirement's own page: whether it's complete, and when for one the scout marks complete or
- * one complete once its tracker's rows are, the same for its own work if it asks for some
- * besides its sub-requirements, its sub-requirements, its tracker, and the scout's [comment] on
+ * one complete once its tracker's rows are, the same for any own work it asks for besides its
+ * sub-requirements or rows, its sub-requirements, its tracker, and the scout's [comment] on
  * it, below who it was [signedOffBy] for a rank's requirement. A sub-requirement opens its own
  * page in turn, and a tracker row opens the Tracker entry page ([onOpenTrackerEntry]) with its
  * entry's ID, if it has one, and its number. Adding a row to a log opens it with neither. A
