@@ -6781,6 +6781,7 @@
             {
               "number": "1",
               "summary": "With your counselor's guidance, study a tooth on X-rays (radiographs) and draw it.",
+              "ownWork": "Study the X-rays and make your drawing with your counselor's guidance.",
               "children": [
                 {
                   "number": "1a",
@@ -7063,11 +7064,11 @@
                 },
                 {
                   "number": "6g",
-                  "summary": "Blog about your Scouting activities in five or more entries with two images, and show your counselor; get permission and approval before posting it online."
+                  "summary": "Blog about your Scouting activities in five or more entries with two images, and show your counselor; if you post it online, first share it with a parent or guardian and your counselor and get their approval."
                 },
                 {
                   "number": "6h",
-                  "summary": "Build a webpage for your troop, patrol, school or place of worship with three articles, two images and a useful link; get permission and approval to post it online."
+                  "summary": "Build a webpage for your troop, patrol, school or place of worship with three articles, two images and a useful link; if you post it online, first share it with a parent or guardian and your counselor and get their approval."
                 }
               ]
             },
@@ -9087,7 +9088,7 @@
                     },
                     {
                       "number": "6b(3)",
-                      "summary": "How growing up physically and mentally affects your choices."
+                      "summary": "Discuss with a parent or guardian how growing up physically and mentally affects your choices."
                     },
                     {
                       "number": "6b(4)",
@@ -9621,6 +9622,7 @@
                 {
                   "number": "2b",
                   "summary": "Work with first-aid kits, using the pamphlet's checklists or ones your counselor approves.",
+                  "ownWork": "Use the pamphlet's checklists, or get your counselor's approval of your own before you start.",
                   "children": [
                     {
                       "number": "2b(1)",
@@ -12191,6 +12193,7 @@
             {
               "number": "4",
               "summary": "Plan and take five long hikes, each on its own day without stopping overnight; before each, share your written plan with your counselor or a designee for approval.",
+              "ownWork": "Before each hike, share a written plan with your counselor or a designee for approval.",
               "children": [
                 {
                   "number": "4a",
@@ -12509,7 +12512,7 @@
                 },
                 {
                   "number": "9b",
-                  "summary": "Show how to saddle and bridle a horse correctly."
+                  "summary": "Show you can saddle and bridle a horse correctly."
                 },
                 {
                   "number": "9c",
@@ -15740,7 +15743,7 @@
                 },
                 {
                   "number": "3b",
-                  "summary": "Outdoors, show how to take a compass bearing and follow it."
+                  "summary": "Show how you take and follow a compass bearing outdoors."
                 }
               ]
             },
@@ -15766,11 +15769,11 @@
                 },
                 {
                   "number": "4e",
-                  "summary": "Show how to measure distances on a map with an orienteering compass."
+                  "summary": "Use an orienteering compass to show how you measure distances on a map."
                 },
                 {
                   "number": "4f",
-                  "summary": "Show how to orient a map with a compass."
+                  "summary": "Use a compass to show how you orient a map."
                 }
               ]
             },
@@ -16019,6 +16022,7 @@
             {
               "number": "4",
               "summary": "Pick, with your counselor, the fitness tests you'll repeat.",
+              "ownWork": "Choose your fitness and nutrition tests with your counselor.",
               "children": [
                 {
                   "number": "4a",
@@ -16059,6 +16063,7 @@
             {
               "number": "6",
               "summary": "With your counselor, plan a 12-week exercise and eating program.",
+              "ownWork": "Outline your 12-week program with your counselor.",
               "children": [
                 {
                   "number": "6a",
@@ -20497,7 +20502,7 @@
             },
             {
               "number": "5",
-              "summary": "Explain what an ecosystem is, and describe four aquatic ecosystems you might dive in."
+              "summary": "Explain the term ecosystem, and describe four aquatic ecosystems you might dive in."
             },
             {
               "number": "6",
@@ -21759,7 +21764,7 @@
                     },
                     {
                       "number": "7B(3)",
-                      "summary": "Discuss classic, skating, touring and telemark skis."
+                      "summary": "Discuss the four kinds of cross-country skis: classic, skating, touring and telemark."
                     },
                     {
                       "number": "7B(4)",
@@ -23029,7 +23034,7 @@
                 },
                 {
                   "number": "6b",
-                  "summary": "Show survival floating for at least five minutes."
+                  "summary": "Show you can survival float for at least five minutes."
                 },
                 {
                   "number": "6c",
@@ -23825,7 +23830,7 @@
                 },
                 {
                   "number": "5b",
-                  "summary": "From outside the wakes, show you can cross both of them four times without falling, returning to the middle after each crossing."
+                  "summary": "From outside the wakes, show you can cross both four times without falling, coming back to the middle after each crossing."
                 },
                 {
                   "number": "5c",
