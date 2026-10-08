@@ -20,22 +20,21 @@ data class TrackerItem(
     val rowTitle: String,
     /** What one row is called, in lowercase, such as "session" in "Add session". */
     val rowLabel: String,
-    val rows: List<TrackerRow>
-) {
+    val rows: List<TrackerRow>,
     /** Whether the scout adds rows, as to a log. A fixed-row tracker has all of its rows. */
-    val addsRows: Boolean get() = count.rowCount == null
-}
+    val addsRows: Boolean
+)
 
 /**
  * How much of a tracker is filled in, for its requirement: "5 sessions" in a log, or
- * "8 of 12 weeks" in a tracker with a fixed number of rows, and its columns' totals, if it has
- * any, such as "4 of 6 hours".
+ * "8 of 12 weeks" in a tracker with a fixed number of rows, or "6 of 10 animals" in a log that
+ * needs a number of them, and its columns' totals, if it has any, such as "4 of 6 hours".
  */
 data class TrackerCount(
     /** The entries recorded; in a tracker with a fixed number of rows, the rows filled in. */
     val recorded: Int,
-    /** The fixed number of rows, or null for a log. */
-    val rowCount: Int?,
+    /** What [recorded] is out of ([TrackerDefinition.rowsOutOf]), or null to show it alone. */
+    val outOf: Int?,
     /** What the rows are called, agreeing with the number: "session" or "sessions". */
     val rows: String,
     /** Its columns that have a total ([totals]), in column order. */
@@ -60,13 +59,14 @@ fun TrackerDefinition.toItem(entries: List<TrackerEntry>) = TrackerItem(
     count = count(entries),
     rowTitle = rowTitle,
     rowLabel = rowLabel,
-    rows = rows(entries)
+    rows = rows(entries),
+    addsRows = rowCount == null
 )
 
 /** How much of this tracker the [entries] recorded for its requirement fill in. */
 fun TrackerDefinition.count(entries: List<TrackerEntry>): TrackerCount {
     val recorded = rowCount?.let { count -> filledRows(entries, count).size } ?: entries.size
-    return TrackerCount(recorded, rowCount, rowsLabel(recorded), totals(entries))
+    return TrackerCount(recorded, rowsOutOf, rowsLabel(recorded), totals(entries))
 }
 
 private fun TrackerDefinition.rows(entries: List<TrackerEntry>): List<TrackerRow> =

@@ -234,8 +234,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
      * ([ProgressRepository.setCompletedFromRowsDate]).
      */
     fun setCompletedDate(date: LocalDate?) {
-        // The date shows only once the page has.
-        val rowCount = shown?.requirement?.takeIf { it.completesFromRows }?.tracker?.rowCount
+        // The date shows only once the page has. One that completesFromRows has a fixed number of
+        // rows, which its count is out of.
+        val rowCount = shown?.requirement?.takeIf { it.completesFromRows }?.tracker?.outOf
         saves.launch {
             if (rowCount != null) {
                 progressRepository.setCompletedFromRowsDate(advancementId, number, rowCount, date)

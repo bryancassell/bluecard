@@ -155,7 +155,7 @@ private fun RequirementRow(
 /**
  * How far along a requirement's tracker is: its columns' totals, such as "4 of 6 hours", if it
  * has any, as they say more than how many rows there are. Otherwise how much of it is filled
- * in, such as "5 sessions" or "8 of 12 weeks".
+ * in, such as "5 sessions", "8 of 12 weeks" or "6 of 10 animals".
  */
 @Composable
 private fun trackerProgressLabels(count: TrackerCount): List<String> {

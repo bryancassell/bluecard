@@ -147,6 +147,10 @@ object CatalogValidator {
             if (ownWork.isBlank()) add("$where: ownWork is blank")
         }
         requirement.tracker?.let { addAll(validateTracker("$where, tracker", it)) }
+        // Its children decide how much of it is done, so its rows wouldn't add to the bar.
+        if (requirement.children.isNotEmpty() && requirement.tracker?.rowsNeeded != null) {
+            add("$where: tracker has rowsNeeded but the requirement has children")
+        }
         requirement.monthsInRank?.let {
             if (it < 1) add("$where: monthsInRank must be at least 1")
             rules.noMonthsInRank?.let { why -> add("$where: has monthsInRank but $why") }
@@ -202,6 +206,15 @@ object CatalogValidator {
             // A fixed-row tracker's row shows how many rows are filled in, which complete it.
             if (tracker.rowCount != null && tracker.columns.any { it.total != null }) {
                 add("$where: has a total but a fixed number of rows")
+            }
+            tracker.rowsNeeded?.let { if (it < 1) add("$where: rowsNeeded must be at least 1") }
+            // A fixed-row tracker's count is already out of its rows.
+            if (tracker.rowCount != null && tracker.rowsNeeded != null) {
+                add("$where: has rowsNeeded but a fixed number of rows")
+            }
+            // A requirement's row shows its totals in place of how many rows there are.
+            if (tracker.rowsNeeded != null && tracker.columns.any { it.total != null }) {
+                add("$where: has rowsNeeded and a total")
             }
             addAll(validateLowercaseLabel("$where: rowLabel", tracker.rowLabel))
             addAll(validateLowercaseLabel("$where: rowLabelPlural", tracker.rowLabelPlural))

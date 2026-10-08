@@ -34,12 +34,11 @@ import java.time.format.DateTimeFormatter
 
 // A requirement's tracker, on its page and in its row.
 
-/** "5 sessions", or "8 of 12 weeks". */
+/** "5 sessions", or, when it's out of a number, "8 of 12 weeks" or "6 of 10 animals". */
 @Composable
-fun trackerCountLabel(count: TrackerCount): String = if (count.rowCount == null) {
-    stringResource(R.string.tracker_count, count.recorded, count.rows)
-} else {
-    stringResource(R.string.tracker_count_of, count.recorded, count.rowCount, count.rows)
+fun trackerCountLabel(count: TrackerCount): String = when (val outOf = count.outOf) {
+    null -> stringResource(R.string.tracker_count, count.recorded, count.rows)
+    else -> stringResource(R.string.tracker_count_of, count.recorded, outOf, count.rows)
 }
 
 /** Formats a tracker's totals in the strings' language ([totalFormat]). */

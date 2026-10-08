@@ -718,6 +718,20 @@ totals).
   not be a number, and isn't counted. They're added as `BigDecimal`, so 0.1 and
   0.2 hours make 0.3.
 
+A log can also have the number of rows its requirement asks for
+(`TrackerDefinition.rowsNeeded`, PRD.md's Rows a log needs,
+[#284](https://github.com/bryancassell/bluecard/issues/284)). Every count of a
+tracker's rows is out of `rowsOutOf`, its fixed rows or that number, so the
+screens and the report agree.
+
+- **Completion doesn't read it either**, because some rows may not count, such
+  as Second Class 1a's activities that aren't outdoors.
+- **The progress bar counts its rows, with the check-off as one more part**
+  (`data/progress/FractionDone.kt`), so the rows can't fill the requirement's
+  share before it's complete. The catalog test keeps it off a requirement with
+  children, whose children decide the bar, and off a log with a total, whose
+  row shows the total instead.
+
 ### Requirement versions
 
 Scouting America updates many badges each January 1 and can make safety changes

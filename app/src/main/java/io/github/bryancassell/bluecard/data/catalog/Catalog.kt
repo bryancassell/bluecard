@@ -155,18 +155,26 @@ data class TrackerDefinition(
     /** [rowLabel] in the plural, such as "weeks". */
     val rowLabelPlural: String,
     /** A fixed number of rows (for example 12 weeks); null means any number. */
-    val rowCount: Int? = null
+    val rowCount: Int? = null,
+    /**
+     * In a log, how many rows its requirement asks for, such as at least 10 animals, or null.
+     * It's only a guide: the scout can record more, and still checks the requirement off.
+     */
+    val rowsNeeded: Int? = null
 ) {
     /** What one row is called, capitalized for titles such as "Week 3". */
     val rowTitle: String get() = rowLabel.replaceFirstChar { it.titlecase() }
 
+    /** What a count of the rows is out of, as in "8 of 12 weeks": [rowCount] or [rowsNeeded]. */
+    val rowsOutOf: Int? get() = rowCount ?: rowsNeeded
+
     /**
      * What the rows are called in a count of the [recorded] ones, agreeing with the number:
-     * "1 session" or "5 sessions" in a log, and "8 of 12 weeks" with a fixed number of rows. The
-     * catalog is in English, so its row labels follow English plurals.
+     * "1 session" or "5 sessions" in a log, and "8 of 12 weeks" when the count is out of a number
+     * ([rowsOutOf]). The catalog is in English, so its row labels follow English plurals.
      */
     fun rowsLabel(recorded: Int): String =
-        if ((rowCount ?: recorded) == 1) rowLabel else rowLabelPlural
+        if ((rowsOutOf ?: recorded) == 1) rowLabel else rowLabelPlural
 }
 
 @Serializable

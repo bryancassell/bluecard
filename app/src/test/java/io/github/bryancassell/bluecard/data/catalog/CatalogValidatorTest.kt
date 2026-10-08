@@ -64,7 +64,8 @@ class CatalogValidatorTest {
                     summary = "B.",
                     ownWork = "Compare them.",
                     tracker = tracker.copy(rowCount = 3)
-                )
+                ),
+                Requirement(number = "2c", summary = "C.", tracker = tracker.copy(rowsNeeded = 5))
             )
         )
         val eagleBadge = badge.copy(
@@ -571,6 +572,67 @@ class CatalogValidatorTest {
                     "has a total but a fixed number of rows"
             ),
             errorsForRequirements(requirement.copy(tracker = weeks))
+        )
+    }
+
+    @Test
+    fun rowsNeededBelowOne() {
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "rowsNeeded must be at least 1"
+            ),
+            errorsForRequirements(requirement.copy(tracker = tracker.copy(rowsNeeded = 0)))
+        )
+    }
+
+    @Test
+    fun rowsNeededOnATrackerWithAFixedNumberOfRows() {
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "has rowsNeeded but a fixed number of rows"
+            ),
+            errorsForRequirements(
+                requirement.copy(tracker = tracker.copy(rowCount = 12, rowsNeeded = 12))
+            )
+        )
+    }
+
+    // Its row would show only the total, not how many rows it needs.
+    @Test
+    fun rowsNeededAndATotal() {
+        val hours =
+            TrackerColumn(
+                "hours",
+                "Hours",
+                TrackerColumnType.NUMBER,
+                ColumnTotal(6, "hour", "hours")
+            )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\", tracker: " +
+                    "has rowsNeeded and a total"
+            ),
+            errorsForRequirements(
+                requirement.copy(tracker = tracker.copy(columns = listOf(hours), rowsNeeded = 3))
+            )
+        )
+    }
+
+    // Its children decide how much of it is done, so its rows wouldn't add to the bar.
+    @Test
+    fun rowsNeededOnARequirementWithChildren() {
+        val parent = requirement.copy(
+            tracker = tracker.copy(rowsNeeded = 3),
+            children = listOf(Requirement("1a", "A."))
+        )
+        assertEquals(
+            listOf(
+                "badge \"first-aid\", version 2026-01-01, requirement \"1\": " +
+                    "tracker has rowsNeeded but the requirement has children"
+            ),
+            errorsForRequirements(parent)
         )
     }
 

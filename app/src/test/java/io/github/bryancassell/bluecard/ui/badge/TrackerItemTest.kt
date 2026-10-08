@@ -56,6 +56,24 @@ class TrackerItemTest {
     }
 
     @Test
+    fun logThatNeedsRows_isCountedOutOfThem_andStillAddsRows() {
+        val atLeastThree = log.copy(rowsNeeded = 3)
+        val fourEntries = (1L..4L).map { entry(it, emptyMap()) }
+
+        val item = atLeastThree.toItem(fourEntries)
+
+        assertEquals(TrackerCount(4, 3, "sessions"), item.count)
+        assertTrue(item.addsRows)
+    }
+
+    @Test
+    fun outOf_isTheFixedRowsOrTheRowsNeeded() {
+        assertEquals(3, weeks.count(emptyList()).outOf)
+        assertEquals(10, log.copy(rowsNeeded = 10).count(emptyList()).outOf)
+        assertEquals(null, log.count(emptyList()).outOf)
+    }
+
+    @Test
     fun fixedRows_countsRowsFilledIn_agreeingWithTheRowCount() {
         val entries = listOf(entry(1, emptyMap(), rowNumber = 1))
 

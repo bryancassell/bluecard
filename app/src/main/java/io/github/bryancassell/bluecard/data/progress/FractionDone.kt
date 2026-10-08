@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 
 /**
  * How much of this requirement is done, from 0 to 1, from the scout's recorded progress and
@@ -15,6 +16,10 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
  *   count, as it doesn't for completion.
  * - One without children but with a tracker with a fixed number of rows has a part for each row,
  *   plus one for its own work, if any.
+ * - One without children but with a log that asks for a number of rows
+ *   ([TrackerDefinition.rowsNeeded]) has a part for each row it asks for, which rows past that
+ *   number don't add to, plus one for checking it off. Checking it off completes it, so its rows
+ *   alone never make it all done.
  * - A rank's requirement that asks for merit badges counts the badges needed that the scout's
  *   [earnedBadges] give it ([MeritBadgeCredit.counted]).
  * - Any other requirement is marked complete by hand ([isMarkedByHand]), so it has no parts.
@@ -26,6 +31,7 @@ fun Requirement.fractionDone(
 ): Float {
     if (completion(progress, trackerEntries, earnedBadges) != null) return 1f
     val rowCount = tracker?.rowCount
+    val rowsNeeded = tracker?.rowsNeeded
     return when {
         meritBadges != null ->
             earnedBadges.toward(meritBadges).counted.toFloat() / meritBadges.total
@@ -46,6 +52,9 @@ fun Requirement.fractionDone(
             rowCount,
             progress
         )
+
+        rowsNeeded != null ->
+            minOf(trackerEntries[number].orEmpty().size, rowsNeeded).toFloat() / (rowsNeeded + 1)
 
         else -> 0f
     }

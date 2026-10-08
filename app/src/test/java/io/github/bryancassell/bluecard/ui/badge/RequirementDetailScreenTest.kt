@@ -146,6 +146,7 @@ class RequirementDetailScreenTest {
             count = TrackerCount(2, null, "sessions"),
             rowTitle = "Session",
             rowLabel = "session",
+            addsRows = true,
             rows = listOf(
                 TrackerRow(
                     1,
@@ -186,6 +187,7 @@ class RequirementDetailScreenTest {
             count = TrackerCount(1, 3, "weeks"),
             rowTitle = "Week",
             rowLabel = "week",
+            addsRows = false,
             rows = listOf(
                 TrackerRow(1, null, emptyList()),
                 TrackerRow(2, 5, listOf(TrackerValue(TrackerColumnType.NUMBER, "20"))),
@@ -613,6 +615,20 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("2 sessions").performScrollTo().assert(isHeading())
         row("Session 1").assert(hasText("Apr 12, 2026 · Running · 30"))
         row("Session 2").assert(hasText("Last Tuesday · Swimming"))
+    }
+
+    @Test
+    fun logThatNeedsRows_countsOutOfThem_andStillAddsRows() {
+        show(
+            withLog.copy(
+                tracker = withLog.tracker?.copy(
+                    count = TrackerCount(2, 10, "sessions")
+                )
+            )
+        )
+
+        composeTestRule.onNodeWithText("2 of 10 sessions").performScrollTo().assert(isHeading())
+        composeTestRule.onNodeWithText("Add session").performScrollTo().assertIsDisplayed()
     }
 
     @Test

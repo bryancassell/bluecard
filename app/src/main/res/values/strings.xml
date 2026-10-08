@@ -188,10 +188,14 @@
     <string name="requirement_clear_message_with_unsaved_sign_off_and_notes">What you recorded for it will be removed, along with unsaved changes to its sign-off and notes.</string>
     <string name="requirement_clear_message_with_children_and_unsaved_sign_off_and_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its sign-off and notes.</string>
     <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
-         rows to it, such as "5 sessions". What a row is called comes from the catalog. -->
+         rows to it and the catalog doesn't say how many it needs, such as "5 sessions". What a
+         row is called comes from the catalog. -->
     <string name="tracker_count">%1$d %2$s</string>
     <!-- How much of a requirement's tracker is filled in, when it has a fixed number of rows,
-         such as "8 of 12 weeks". What a row is called comes from the catalog. -->
+         such as "8 of 12 weeks", or when the scout adds rows and its requirement asks for a
+         number of them, such as "6 of 10 animals". Then the scout can add more than it asks
+         for, so the first number can be the larger: "12 of 10 animals". What a row is called
+         comes from the catalog. -->
     <string name="tracker_count_of">%1$d of %2$d %3$s</string>
     <!-- A tracker column's numbers added up, against the amount its requirement asks for, such
          as "4.5 of 6 hours" or "2 of 3 conservation hours". The first number is already
