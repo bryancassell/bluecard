@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
@@ -239,6 +240,41 @@ class BadgesScreenTest {
         rows[1].assert(hasText("Chess"))
         rows[2].assert(hasText("Cooking"))
         rows[3].assert(hasText("Hiking"))
+    }
+
+    private fun isListOf(rows: Int) = SemanticsMatcher("is a list of $rows rows") {
+        val info = it.config.getOrNull(SemanticsProperties.CollectionInfo)
+        info?.rowCount == rows && info.columnCount == 1
+    }
+
+    // TalkBack reads the size when focus enters the list: "In list. 4 items".
+    @Test
+    fun list_tellsScreenReadersItsSize() {
+        show(BadgesUiState.Ready(badges))
+
+        list().assert(isListOf(4))
+    }
+
+    @Test
+    fun search_tellsScreenReadersTheListsNewSize() {
+        show(BadgesUiState.Ready(badges))
+
+        query.setTextAndPlaceCursorAtEnd("c")
+        uiState = BadgesUiState.Ready(badges.take(3))
+
+        list().assert(isListOf(3))
+    }
+
+    @Test
+    fun clearSearch_tellsScreenReadersTheListsNewSize() {
+        query.setTextAndPlaceCursorAtEnd("chess")
+        show(BadgesUiState.Ready(badges.take(1)))
+
+        clearButton().performClick()
+        // The ViewModel lists every badge again a moment later.
+        uiState = BadgesUiState.Ready(badges)
+
+        list().assert(isListOf(4))
     }
 
     @Test

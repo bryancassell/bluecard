@@ -497,6 +497,14 @@ both taps of a double tap can reach it.
   text, it replaces the text's label. Tests of such a label check the `Text`
   node in the unmerged tree, and that the button has only one description: the
   merged node has the description wherever it's set.
+- **A lazy list whose number of items can change sets its own
+  `collectionInfo`** on its modifier, from the items it's given (Badges'
+  search, [#304](https://github.com/bryancassell/bluecard/issues/304)).
+  TalkBack reads the size as focus enters the list ("In list. 6 items").
+  `LazyColumn`'s own count is set once and never updated, since its semantics
+  don't track the items (Compose 1.12.1). The modifier's value is applied
+  after `LazyColumn`'s own, so it's the one TalkBack reads. A list whose items
+  never change, such as Ranks, can keep Compose's count.
 
 ### Live regions
 
