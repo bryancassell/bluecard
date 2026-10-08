@@ -491,8 +491,11 @@ both taps of a double tap can reach it.
   marks a part off screen as not visible to the user. TalkBack leaves those
   parts out: with only the rank card's last line on screen, as Home came back
   scrolled down, it read only that line
-  ([#305](https://github.com/bryancassell/bluecard/issues/305)).
-  `spokenLabel` in `HomeScreenTest` reads a node as TalkBack does.
+  ([#305](https://github.com/bryancassell/bluecard/issues/305)). List rows
+  that merge their lines, `RequirementRow` and `BadgeRow`, don't follow this
+  yet: [#312](https://github.com/bryancassell/bluecard/issues/312).
+  `spokenLabel` in `HomeScreenTest` reads a node as TalkBack does, when none of
+  its parts is a stop of its own.
 
 ### Live regions
 

@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
@@ -149,9 +150,17 @@ class HomeScreenTest {
         composeTestRule.onNode(hasContentDescription("Your rank", substring = true) and isHeading())
 
     /**
-     * What TalkBack reads as [node], found in the unmerged tree: its own description or text, then
-     * that of each of its parts in turn. It leaves out the parts Compose doesn't give TalkBack, and
-     * those it marks as not visible to the user, such as parts scrolled off screen (#305).
+     * Text drawn on the rank card, the only heading with parts. The unmerged tree keeps it,
+     * although screen readers don't get it.
+     */
+    private fun drawn(text: String) = composeTestRule
+        .onNode(hasText(text) and hasAnyAncestor(isHeading()), useUnmergedTree = true)
+
+    /**
+     * What TalkBack reads as [node], found in the unmerged tree, when none of its parts is a stop
+     * of its own: its own description or text, then each part's in turn, since a description
+     * doesn't replace its parts' (#166). It leaves out the parts Compose doesn't give TalkBack,
+     * and those it marks as not visible to the user, such as parts scrolled off screen (#305).
      */
     private fun spokenLabel(node: SemanticsNode): String {
         val provider = view.accessibilityNodeProvider
@@ -236,6 +245,9 @@ class HomeScreenTest {
             )
             .assert(hasStateDescription("0% done"))
             .assertIsDisplayed()
+        drawn("None yet").assertIsDisplayed()
+        drawn("Next: Scout").assertIsDisplayed()
+        drawn("In progress").assertIsDisplayed()
     }
 
     // Screen readers hear the card as one heading: the rank, how many ranks are earned, and the
@@ -252,6 +264,10 @@ class HomeScreenTest {
             )
             .assert(hasStateDescription("40% done"))
             .assertIsDisplayed()
+        drawn("Your rank").assertIsDisplayed()
+        drawn("Tenderfoot").assertIsDisplayed()
+        drawn("Next: Second Class").assertIsDisplayed()
+        drawn("In progress").assertIsDisplayed()
     }
 
     // The names under the trail's ends would read as ranks of their own.
@@ -285,6 +301,8 @@ class HomeScreenTest {
             )
             .assert(!hasClickAction())
             .assertIsDisplayed()
+        drawn("Every rank earned").assertIsDisplayed()
+        drawn("In progress").assertDoesNotExist()
         composeTestRule.onAllNodes(opensRank).assertCountEquals(0)
     }
 
@@ -293,7 +311,7 @@ class HomeScreenTest {
     fun noRanks_showsNoRankCard() {
         show(withProgress.copy(ranks = emptyList()))
 
-        text("Your rank").assertDoesNotExist()
+        rankCard().assertDoesNotExist()
         text("Your merit badges").assertIsDisplayed()
     }
 
@@ -316,15 +334,17 @@ class HomeScreenTest {
     @Test
     fun rankCard_partlyScrolledOff_isReadWhole() {
         show(withBadgesInProgress)
+        val card = composeTestRule
+            .onNode(isHeading() and hasStateDescription("40% done"), useUnmergedTree = true)
         val lastLine = with(composeTestRule.density) {
-            (rankCard().getUnclippedBoundsInRoot().bottom - 40.dp).toPx()
+            (card.getUnclippedBoundsInRoot().bottom - 40.dp).toPx()
         }
         composeTestRule.onNode(hasScrollAction())
             .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, lastLine) }
 
-        val card = composeTestRule
-            .onNode(isHeading() and hasStateDescription("40% done"), useUnmergedTree = true)
-        assertTrue(card.getUnclippedBoundsInRoot().top < 0.dp)
+        // Only the last line shows.
+        assertTrue(drawn("Tenderfoot").getUnclippedBoundsInRoot().bottom < 0.dp)
+        assertTrue(drawn("Next: Second Class").getUnclippedBoundsInRoot().bottom > 0.dp)
         assertEquals(
             "Your rank. Tenderfoot. 2 of 7 ranks earned. Next: Second Class. In progress",
             spokenLabel(card.fetchSemanticsNode())

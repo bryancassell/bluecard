@@ -59,10 +59,15 @@ fun RankCard(
     )
     val next = nextRank?.let { stringResource(R.string.home_next_rank, it.name) }
         ?: stringResource(R.string.home_every_rank_earned)
-    val inProgress = nextRank?.let { stringResource(R.string.badges_in_progress) }
+    val inProgress = stringResource(R.string.badges_in_progress)
     // How many ranks are earned takes the trail's place.
-    val label = listOfNotNull(title, rankName, ranksEarned, next, inProgress)
-        .joinToString(stringResource(R.string.home_rank_card_separator))
+    val label = listOfNotNull(
+        title,
+        rankName,
+        ranksEarned,
+        next,
+        inProgress.takeIf { nextRank != null }
+    ).joinToString(stringResource(R.string.home_rank_card_separator))
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -127,7 +132,7 @@ fun RankCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (inProgress == null) {
+                if (nextRank == null) {
                     Text(text = next, style = MaterialTheme.typography.titleMedium)
                 } else {
                     Text(
