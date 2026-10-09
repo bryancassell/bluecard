@@ -13,7 +13,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.LiveRegionMode.Companion.Polite
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -52,6 +51,7 @@ import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.assertShows
 import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.hostView
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
@@ -620,22 +620,31 @@ class DataManagementScreenTest {
 
     // The line joins a dialog that's already open, in place of nothing.
     @Test
-    fun ranksTheMergeWouldUnearn_areReadOut_asTheScoutsChoiceUnearnsThem() {
+    fun ranksTheMergeWouldUnearn_areReadOut_eachTimeAChoiceUnearnsThem() {
         val readouts = LiveRegionReadouts()
         showMergeChoices(choices)
-        readouts.listenTo(
-            (composeTestRule.onNode(isDialog()).fetchSemanticsNode().root as ViewRootForTest).view
-        )
+        readouts.listenTo(composeTestRule.onNode(isDialog()).hostView())
         composeTestRule.waitRunningPostedWork()
         readouts.sinceLastCall()
+        val line = "Scout will no longer count as earned."
+        composeTestRule.onNodeWithText("no longer count", substring = true).assertDoesNotExist()
 
-        uiState = ready.copy(mergeChoices = choices.copy(unearnedRanks = listOf("Scout")))
+        val unearningScout = ready.copy(
+            mergeChoices = choices.copy(unearnedRanks = listOf("Scout"))
+        )
+        uiState = unearningScout
+        composeTestRule.waitRunningPostedWork()
+        assertEquals(listOf(line), readouts.sinceLastCall().distinct())
+
+        // As the scout changes the choice back, then makes it again.
+        uiState = ready.copy(mergeChoices = choices)
+        composeTestRule.waitRunningPostedWork()
+        composeTestRule.onNodeWithText(line).assertDoesNotExist()
+        assertEquals(emptyList<String>(), readouts.sinceLastCall())
+        uiState = unearningScout
         composeTestRule.waitRunningPostedWork()
 
-        assertEquals(
-            listOf("Scout will no longer count as earned."),
-            readouts.sinceLastCall().distinct()
-        )
+        assertEquals(listOf(line), readouts.sinceLastCall().distinct())
     }
 
     // A screen reader user moving from control to control doesn't hear the heading, so each
@@ -690,9 +699,7 @@ class DataManagementScreenTest {
         turnOnScreenReader()
         showMergeChoices(choices)
         // The dialog's own Compose view, in its own window, gives screen readers its nodes.
-        val dialogView = (
-            composeTestRule.onNode(isDialog()).fetchSemanticsNode().root as ViewRootForTest
-            ).view
+        val dialogView = composeTestRule.onNode(isDialog()).hostView()
 
         assertEquals(
             "Name and unit, this phone. Sam Scout. Unit: Crew 7",

@@ -9,7 +9,6 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityRecord
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -34,7 +33,7 @@ fun ComposeTestRule.assertAnnouncedWhenShown(
     show: () -> Unit
 ) {
     onNodeWithText(message).assertDoesNotExist()
-    readouts.listenTo((onRoot().fetchSemanticsNode().root as ViewRootForTest).view)
+    readouts.listenTo(onRoot().hostView())
     waitRunningPostedWork()
     readouts.sinceLastCall()
 

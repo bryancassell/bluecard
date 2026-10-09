@@ -8,8 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -69,8 +68,8 @@ fun ScreenLoadingIndicator(modifier: Modifier = Modifier) {
 
 /**
  * Whether [text] is new where it's shown, so a live region showing it should be read out: this
- * place didn't show it last, even before the phone rotated or the system stopped BlueCard. A place
- * that leaves the composition forgets what it showed.
+ * place didn't show it last, even before the phone rotated. A place that leaves the composition
+ * forgets what it showed.
  *
  * Compose reports a node's first layout, and each later change to its size or position, as a
  * change to it (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI
@@ -79,21 +78,22 @@ fun ScreenLoadingIndicator(modifier: Modifier = Modifier) {
  * that held back the screen's heading by about 3 seconds (#281). A screen composed showing text
  * it hadn't shown, such as a failure while the scout was on a later page, is still read out.
  *
+ * What a place showed is retained through a rotation, but not after the system stops BlueCard,
+ * unlike what a page remembers (ARCHITECTURE.md, Screen state). Saved with `rememberSaveable`, it
+ * waited to be restored until its place was next composed, which could be long after a restart:
+ * once a screen had loaded in between, a later failure with the same text wasn't read out (#329).
+ *
  * It's worked out once per text, so a live region stays one for as long as its text, however late
  * TalkBack looks at it.
  */
 @Composable
 fun rememberIsNewText(text: String): Boolean {
-    val shown = rememberSaveable(saver = ShownText.Saver) { ShownText() }
+    val shown = retain { ShownText() }
     val isNew = remember(text) { text != shown.text }
     // Not state: it's read only when the text changes, so updating it needn't recompose.
     SideEffect { shown.text = text }
     return isNew
 }
 
-/** The [text] a place showed last, saved with the screen. */
-private class ShownText(var text: String? = null) {
-    companion object {
-        val Saver = Saver<ShownText, String>(save = { it.text }, restore = { ShownText(it) })
-    }
-}
+/** The [text] a place showed last. */
+private class ShownText(var text: String? = null)
