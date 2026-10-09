@@ -9422,7 +9422,7 @@
                 },
                 {
                   "number": "5d",
-                  "summary": "With an adult, use the pamphlet's checklist or one your counselor approves to look for fire safety hazards in a home or similar building; review the checklist with your counselor."
+                  "summary": "With an adult, use the pamphlet's checklist or one your counselor approves to look for fire safety hazards in a home or similar building; discuss the completed checklist with your counselor."
                 },
                 {
                   "number": "5e",
@@ -11608,7 +11608,7 @@
                     },
                     {
                       "number": "4D(6)",
-                      "summary": "See fossils firsthand, or present a state fossil.",
+                      "summary": "See fossils firsthand, or present your state fossil, or a neighboring state's if yours has none.",
                       "requiredCount": 1,
                       "children": [
                         {
@@ -11625,7 +11625,7 @@
                         },
                         {
                           "number": "4D(6)(d)",
-                          "summary": "Present your state fossil, or a neighboring state's if yours has none, to your counselor or a small group in a display or talk with its image, age and classification."
+                          "summary": "For your counselor or a small group, present a display or talk on your state fossil, or a neighboring state's if yours has none, covering its image, age and classification."
                         }
                       ]
                     }
@@ -19462,7 +19462,7 @@
                     },
                     {
                       "number": "2A(11)",
-                      "summary": "Adjust the sights, or explain how if your instructor finds it impractical, then shoot five tight five-shot groups."
+                      "summary": "Adjust the sights and shoot five tight five-shot groups; if your instructor rules out adjusting, explain how instead."
                     }
                   ]
                 },
@@ -19508,7 +19508,7 @@
                     },
                     {
                       "number": "2B(10)",
-                      "summary": "Adjust the sights, or explain how if your instructor finds it impractical, then shoot five tight five-shot groups."
+                      "summary": "Adjust the sights and shoot five tight five-shot groups; if your instructor rules out adjusting, explain how instead."
                     }
                   ]
                 },
@@ -19570,7 +19570,7 @@
                     },
                     {
                       "number": "2C(14)",
-                      "summary": "Adjust the sights, or explain how if your instructor finds it impractical, then shoot three tight five-shot groups."
+                      "summary": "Adjust the sights and shoot three tight five-shot groups; if your instructor rules out adjusting, explain how instead."
                     }
                   ]
                 }

@@ -339,13 +339,11 @@ summary next to its requirement on the official page, using
 shares with the official text can help find summaries to look at, but decide
 each one with that section, not by the count: lists and common phrases make
 long matches in summaries that are fine, and rewording to avoid them makes
-summaries read awkwardly.
-
-Reading them side by side, also check that each summary keeps every
-alternative the official text gives, such as an "or", a "may" or a note under
-the requirement, and adds none: Rifle Shooting 2A(11) once left out explaining
-how to adjust the sights when the instructor finds adjusting impractical, and
-Snow Sports 7D(9) once took 7B(10)'s note for adaptive skiers.
+summaries read awkwardly. Also check that each summary keeps every way to meet
+the requirement that the official text gives, including in a note, and adds
+none, such as Rifle Shooting 2A(11)'s explaining how to adjust the sights when
+the instructor rules adjusting out, or the 1-mile tour for adaptive skiers,
+which Snow Sports 7B(10) has and 7D(9) doesn't.
 
 It also can't check that a step with the counselor, or anyone else, made it
 into the catalog, so reviewers check that too. Search the official text of
