@@ -39,6 +39,7 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -238,9 +239,7 @@ class RankDetailScreenTest {
             row(it)
                 .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
                 .assert(
-                    SemanticsMatcher("click label is \"open requirement\"") { node ->
-                        node.config[SemanticsActions.OnClick].label == "open requirement"
-                    }
+                    hasClickLabel("open requirement")
                 )
                 .performClick()
         }

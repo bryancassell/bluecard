@@ -23,7 +23,7 @@ import org.junit.Assert.assertTrue
  * them by position. Turn on a screen reader first ([turnOnScreenReader]), so Compose answers as it
  * does for TalkBack.
  */
-fun spokenLabel(view: View, node: SemanticsNode): String {
+private fun spokenLabel(view: View, node: SemanticsNode): String {
     val provider = view.accessibilityNodeProvider
     fun labels(node: SemanticsNode): List<CharSequence> {
         val info = provider.createAccessibilityNodeInfo(node.id)

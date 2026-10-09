@@ -34,6 +34,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.hasNoLineWith
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
@@ -137,9 +138,7 @@ class HomeScreenTest {
     private val hiddenFromScreenReaders =
         SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
 
-    private val opensBadge = SemanticsMatcher("click label is \"open badge\"") {
-        it.config.getOrNull(SemanticsActions.OnClick)?.label == "open badge"
-    }
+    private val opensBadge = hasClickLabel("open badge")
 
     // Found in the unmerged tree by the name it shows: it's read as one, with a label of its own.
     private fun row(name: String) = composeTestRule.onNode(
@@ -147,9 +146,7 @@ class HomeScreenTest {
         useUnmergedTree = true
     )
 
-    private val opensRank = SemanticsMatcher("click label is \"open rank\"") {
-        it.config.getOrNull(SemanticsActions.OnClick)?.label == "open rank"
-    }
+    private val opensRank = hasClickLabel("open rank")
 
     private fun rankCard() =
         composeTestRule.onNode(hasContentDescription("Your rank", substring = true) and isHeading())

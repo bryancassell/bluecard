@@ -60,6 +60,7 @@ import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.PHONE_IN_LANDSCAPE
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.hasNoLineWith
 import io.github.bryancassell.bluecard.testing.isGivenToScreenReaders
@@ -322,9 +323,7 @@ class BadgesScreenTest {
         row("Chess")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .assert(
-                SemanticsMatcher("click label is \"open badge\"") {
-                    it.config[SemanticsActions.OnClick].label == "open badge"
-                }
+                hasClickLabel("open badge")
             )
     }
 
@@ -350,15 +349,12 @@ class BadgesScreenTest {
         turnOnScreenReader()
         val hiking = badges.last().copy(status = BadgeStatus.InProgress, fractionDone = 0.4f)
         show(BadgesUiState.Ready(listOf(hiking) + many))
-        val opensBadge = SemanticsMatcher("click label is \"open badge\"") {
-            it.config.getOrNull(SemanticsActions.OnClick)?.label == "open badge"
-        }
 
         assertEquals(
             "Hiking. Eagle-required (one of Cycling, Hiking, and Swimming). In progress",
             composeTestRule.readWithOnlyItsLastLineShown(
                 view,
-                opensBadge and hasAnyDescendant(hasText("Hiking")),
+                hasClickLabel("open badge") and hasAnyDescendant(hasText("Hiking")),
                 firstLine = "Hiking",
                 lastLine = "Eagle-required (one of Cycling, Hiking, and Swimming)"
             )
@@ -429,6 +425,7 @@ class BadgesScreenTest {
         )
         // Screen readers hear it from the row, so they skip the bar.
         val bar = composeTestRule.onNode(anyProgressBar, useUnmergedTree = true)
+        assertTrue(isGivenToScreenReaders(view, row("Chess").fetchSemanticsNode()))
         assertFalse(isGivenToScreenReaders(view, bar.fetchSemanticsNode()))
     }
 

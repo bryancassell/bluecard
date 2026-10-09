@@ -63,6 +63,7 @@ import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
+import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.hasNoLineWith
 import io.github.bryancassell.bluecard.testing.onReadAsOne
@@ -1151,10 +1152,6 @@ class RequirementDetailScreenTest {
         composeTestRule.onNode(hasText("Completed") and hasClickAction().not())
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Needs", substring = true).assertDoesNotExist()
-    }
-
-    private fun hasClickLabel(label: String) = SemanticsMatcher("click label is \"$label\"") {
-        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
     }
 
     @Test

@@ -67,6 +67,7 @@ import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertShowsAndReads
+import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.hasNoLineWith
 import io.github.bryancassell.bluecard.testing.onReadAsOne
@@ -237,10 +238,6 @@ class BadgeDetailScreenTest {
     private val isSelected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
     private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")
-
-    private fun hasClickLabel(label: String) = SemanticsMatcher("click label is \"$label\"") {
-        it.config.getOrNull(SemanticsActions.OnClick)?.label == label
-    }
 
     private val application = ApplicationProvider.getApplicationContext<Application>()
 
@@ -734,7 +731,7 @@ class BadgeDetailScreenTest {
         show(withStillToDo.copy(requirements = withStillToDo.requirements + more))
 
         assertEquals(
-            "2. Do two of these.. Do 2 of 3 (2 of 2 complete). " +
+            "2. Do two of these. Do 2 of 3 (2 of 2 complete). " +
                 "Still to do: Share what you learned with your counselor.",
             composeTestRule.readWithOnlyItsLastLineShown(
                 view,
@@ -937,9 +934,7 @@ class BadgeDetailScreenTest {
             row(summary)
                 .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
                 .assert(
-                    SemanticsMatcher("click label is \"open requirement\"") {
-                        it.config[SemanticsActions.OnClick].label == "open requirement"
-                    }
+                    hasClickLabel("open requirement")
                 )
                 .performClick()
         }

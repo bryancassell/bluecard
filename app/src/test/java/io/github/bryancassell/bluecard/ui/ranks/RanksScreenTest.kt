@@ -29,6 +29,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import org.junit.Assert.assertEquals
@@ -73,7 +74,6 @@ class RanksScreenTest {
         }
     }
 
-    // Each row merges its texts, so a row is the node with the rank's name.
     // A row is read as one, with a label of its own, so it's found by the name it shows.
     private fun row(name: String) = composeTestRule.onReadAsOne(name)
 
@@ -141,9 +141,7 @@ class RanksScreenTest {
         row("Star")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .assert(
-                SemanticsMatcher("click label is \"open rank\"") {
-                    it.config[SemanticsActions.OnClick].label == "open rank"
-                }
+                hasClickLabel("open rank")
             )
     }
 

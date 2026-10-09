@@ -676,7 +676,7 @@ class MainActivityTest {
 
         openCamping()
 
-        // ListItem merges its texts into one node, so find each in the unmerged tree.
+        // The row has a label of its own in place of its texts, so find each in the unmerged tree.
         val number = composeTestRule.onNodeWithText("1", useUnmergedTree = true)
             .getBoundsInRoot()
         val text = composeTestRule.onNodeWithText("First.", useUnmergedTree = true)
