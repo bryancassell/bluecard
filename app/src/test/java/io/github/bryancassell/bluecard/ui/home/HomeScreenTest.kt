@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertAll
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyDescendant
@@ -37,7 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
+import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.assertNoWordBroken
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
@@ -47,6 +50,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -275,6 +279,19 @@ class HomeScreenTest {
         drawn("Tenderfoot").assertIsDisplayed()
         drawn("Next: Second Class").assertIsDisplayed()
         drawn("In progress").assertIsDisplayed()
+    }
+
+    // At the largest text and display size, "In progress" beside it squeezed it to
+    // "Next: Seco" / "nd Class" (#307).
+    @Config(qualifiers = NARROW_SCREEN, fontScale = 2f)
+    @Test
+    fun rankInProgress_ifItsStatusWouldBreakAWord_goesUnderTheNextRank() {
+        show(withProgress)
+
+        val next = drawn("Next: Second Class").assertNoWordBroken().getBoundsInRoot()
+        val status = drawn("In progress").assertNoWordBroken().getBoundsInRoot()
+        assertTrue(status.top >= next.bottom)
+        assertEquals(next.left, status.left)
     }
 
     // The names under the trail's ends would read as ranks of their own.
