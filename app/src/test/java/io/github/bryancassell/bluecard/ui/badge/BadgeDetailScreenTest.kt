@@ -66,7 +66,9 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
+import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.assertNoWordBroken
 import io.github.bryancassell.bluecard.testing.assertShows
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
@@ -1177,6 +1179,29 @@ class BadgeDetailScreenTest {
 
         assertEquals(1, unmarks)
         assertEquals(emptyList<LocalDate>(), marks)
+    }
+
+    // At the largest text and display size, they're too wide for one row, which squeezed Unmark
+    // to "Unmar" / "k" (#307). They keep the order they're read and focused in.
+    @Config(qualifiers = NARROW_SCREEN, fontScale = 2f)
+    @Test
+    fun markedBadge_ifItsDatesButtonsDontFitSideBySide_unmarkGoesBelowChangeDate() {
+        show(marked)
+
+        val buttons = listOf("Change date", "Unmark").map {
+            composeTestRule.onNodeWithText(it, useUnmergedTree = true)
+                .performScrollTo()
+                .assertNoWordBroken()
+                .getBoundsInRoot()
+        }
+        val (changeDate, unmark) = buttons
+        assertTrue(unmark.top >= changeDate.bottom)
+        assertEquals(changeDate.left, unmark.left)
+        // As far apart as the date picker's stacked buttons.
+        val (changeDateButton, unmarkButton) = listOf("Change date", "Unmark").map {
+            composeTestRule.onNodeWithText(it).getBoundsInRoot()
+        }
+        assertEquals(12f, (unmarkButton.top - changeDateButton.bottom).value, 0.5f)
     }
 
     @Test

@@ -3,11 +3,13 @@ package io.github.bryancassell.bluecard.ui.home
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -19,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -35,6 +38,7 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
+import io.github.bryancassell.bluecard.ui.statusFitsBeside
 
 /**
  * The scout's rank, a trail of every rank, and the rank in progress, which tapping the card
@@ -128,28 +132,52 @@ fun RankCard(
                     textAlign = TextAlign.End
                 )
             }
-            Row(
-                modifier = Modifier.padding(top = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = next,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
+            BoxWithConstraints(Modifier.padding(top = 12.dp)) {
+                val nextStyle = MaterialTheme.typography.titleMedium
+                val statusStyle = MaterialTheme.typography.bodyMedium
+                // Where "In progress" would leave too little room for a word of the next rank,
+                // it goes under it, with the chevron still at the end (PRD.md's Status in a
+                // narrow row). Beside it, they share the row's width less the chevron and the
+                // gaps before it and before the status, each rounded to pixels as the Row does.
+                val besideWidth = with(LocalDensity.current) {
+                    constraints.maxWidth - ChevronSize.roundToPx() - RowGap.roundToPx() * 2
+                }
+                val statusUnder = nextRank != null && !statusFitsBeside(
+                    status = inProgress,
+                    statusStyle = statusStyle,
+                    lines = listOf(next to nextStyle),
+                    width = besideWidth
                 )
-                if (nextRank != null) {
-                    Text(
-                        text = inProgress,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.inversePrimary
-                    )
-                    Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
+                val status = @Composable {
+                    Text(text = inProgress, style = statusStyle, color = colors.inversePrimary)
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(RowGap),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(text = next, style = nextStyle)
+                        if (statusUnder) status()
+                    }
+                    if (nextRank != null) {
+                        if (!statusUnder) status()
+                        Icon(
+                            painterResource(R.drawable.ic_chevron_right),
+                            contentDescription = null,
+                            modifier = Modifier.size(ChevronSize)
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/** The chevron at the end of the rank card's last row. */
+private val ChevronSize = 24.dp
+
+/** The gap between the last row's parts: the next rank, "In progress" and the chevron. */
+private val RowGap = 8.dp
 
 /**
  * Every rank in a row, joined by a line: a filled dot for each rank earned, a larger dot filled
