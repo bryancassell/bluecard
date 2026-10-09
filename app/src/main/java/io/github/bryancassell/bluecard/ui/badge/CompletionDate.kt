@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -96,8 +95,10 @@ fun EditableDate(
             style = textStyle,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        // Lines the buttons' text up with the date's.
-        Row(modifier = Modifier.padding(horizontal = 4.dp)) {
+        // Lines the buttons' text up with the date's. If they don't fit side by side, as at the
+        // largest text and display size, the second goes below the first rather than squeezing
+        // its label until a word breaks (#307).
+        FlowRow(modifier = Modifier.padding(horizontal = 4.dp)) {
             val pickText = if (date == null) {
                 R.string.requirement_add_date
             } else {

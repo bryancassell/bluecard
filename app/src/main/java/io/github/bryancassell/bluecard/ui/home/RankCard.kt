@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.home
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +35,7 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
+import io.github.bryancassell.bluecard.ui.statusFitsBeside
 
 /**
  * The scout's rank, a trail of every rank, and the rank in progress, which tapping the card
@@ -127,23 +129,36 @@ fun RankCard(
                     textAlign = TextAlign.End
                 )
             }
-            Row(
-                modifier = Modifier.padding(top = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = next,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f)
+            BoxWithConstraints(Modifier.padding(top = 12.dp)) {
+                val nextStyle = MaterialTheme.typography.titleMedium
+                val statusStyle = MaterialTheme.typography.bodyMedium
+                // Where "In progress" would leave too little room for a word of the next rank,
+                // it goes under it, with the chevron still at the end (PRD.md's Status in a
+                // narrow row). The chevron is 24dp, with 8dp before it and before the status.
+                val statusUnder = nextRank != null && !statusFitsBeside(
+                    status = inProgress,
+                    statusStyle = statusStyle,
+                    lines = listOf(next to nextStyle),
+                    width = maxWidth - 24.dp - 8.dp * 2
                 )
-                if (nextRank != null) {
-                    Text(
-                        text = inProgress,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.inversePrimary
-                    )
-                    Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
+                val status = @Composable {
+                    Text(text = inProgress, style = statusStyle, color = colors.inversePrimary)
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(text = next, style = nextStyle)
+                        if (statusUnder) status()
+                    }
+                    if (nextRank != null) {
+                        if (!statusUnder) status()
+                        Icon(
+                            painterResource(R.drawable.ic_chevron_right),
+                            contentDescription = null
+                        )
+                    }
                 }
             }
         }
