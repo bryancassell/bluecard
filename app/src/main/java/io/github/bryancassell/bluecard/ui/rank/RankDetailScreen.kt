@@ -28,7 +28,8 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badge.AdvancementHeader
@@ -102,20 +103,13 @@ fun RankDetailScreen(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        RankDetailUiState.Loading,
-        RankDetailUiState.LoadFailed,
-        RankDetailUiState.Unavailable -> LoadingOrMessage(
-            message = when (uiState) {
-                RankDetailUiState.LoadFailed -> stringResource(R.string.load_failed)
+        RankDetailUiState.Loading -> ScreenLoadingIndicator(modifier)
 
-                RankDetailUiState.Unavailable ->
-                    stringResource(R.string.rank_requirements_unavailable)
+        RankDetailUiState.LoadFailed ->
+            ScreenMessage(stringResource(R.string.load_failed), modifier)
 
-                else -> null
-            },
-            modifier = modifier
-        )
+        RankDetailUiState.Unavailable ->
+            ScreenMessage(stringResource(R.string.rank_requirements_unavailable), modifier)
 
         is RankDetailUiState.Ready -> Box(modifier = modifier) {
             RankDetails(

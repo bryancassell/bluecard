@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
@@ -114,9 +115,11 @@ class RanksScreenTest {
 
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(RanksUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = RanksUiState.LoadFailed }
     }

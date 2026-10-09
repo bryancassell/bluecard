@@ -1,9 +1,11 @@
 package io.github.bryancassell.bluecard.testing
 
 import android.view.View
+import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyDescendant
@@ -13,6 +15,9 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertTrue
+
+/** The Compose view that gives screen readers this node, such as a dialog's own, in its window. */
+fun SemanticsNodeInteraction.hostView(): View = (fetchSemanticsNode().root as ViewRootForTest).view
 
 /**
  * What TalkBack reads as [node], found in the unmerged tree, when none of its parts is a stop of

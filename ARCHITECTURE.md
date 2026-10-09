@@ -208,10 +208,9 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   happen. Data management, with several kinds of message, runs its own (`work`
   in `DataManagementViewModel`).
 - **A message that takes a screen's place is a `ScreenMessage`**
-  (`ui/ScreenMessage.kt`), which each screen shows with `LoadingOrMessage`.
-  It's a live region, so screen readers announce it as it appears
-  ([#69](https://github.com/bryancassell/bluecard/issues/69)), but not again
-  after the phone rotates (see [Live regions](#live-regions)).
+  (`ui/ScreenMessage.kt`). It's a live region, so screen readers announce it as
+  it appears ([#69](https://github.com/bryancassell/bluecard/issues/69)), but
+  not again after the phone rotates (see [Live regions](#live-regions)).
 - **Any other exception is a bug and still crashes the app**, so it reaches
   [Android vitals](https://developer.android.com/topic/performance/vitals) once
   BlueCard is on Google Play. That's the only automatic crash reporting, since

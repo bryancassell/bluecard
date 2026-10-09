@@ -48,8 +48,9 @@ import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
 import io.github.bryancassell.bluecard.ui.NumberInput
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
@@ -110,20 +111,13 @@ fun TrackerEntryScreen(
         onDiscard = onClose
     )
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        TrackerEntryUiState.Loading,
-        TrackerEntryUiState.LoadFailed,
-        TrackerEntryUiState.Unavailable -> LoadingOrMessage(
-            message = when (uiState) {
-                TrackerEntryUiState.LoadFailed -> stringResource(R.string.load_failed)
+        TrackerEntryUiState.Loading -> ScreenLoadingIndicator(modifier)
 
-                TrackerEntryUiState.Unavailable ->
-                    stringResource(R.string.tracker_entry_unavailable)
+        TrackerEntryUiState.LoadFailed ->
+            ScreenMessage(stringResource(R.string.load_failed), modifier)
 
-                else -> null
-            },
-            modifier = modifier
-        )
+        TrackerEntryUiState.Unavailable ->
+            ScreenMessage(stringResource(R.string.tracker_entry_unavailable), modifier)
 
         is TrackerEntryUiState.Ready -> {
             if (uiState.done) {

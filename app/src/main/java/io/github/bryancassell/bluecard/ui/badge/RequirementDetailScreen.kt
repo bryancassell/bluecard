@@ -42,7 +42,8 @@ import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
@@ -128,20 +129,13 @@ fun RequirementDetailScreen(
         )
     )
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        RequirementDetailUiState.Loading,
-        RequirementDetailUiState.LoadFailed,
-        RequirementDetailUiState.Unavailable -> LoadingOrMessage(
-            message = when (uiState) {
-                RequirementDetailUiState.LoadFailed -> stringResource(R.string.load_failed)
+        RequirementDetailUiState.Loading -> ScreenLoadingIndicator(modifier)
 
-                RequirementDetailUiState.Unavailable ->
-                    stringResource(R.string.requirement_detail_unavailable)
+        RequirementDetailUiState.LoadFailed ->
+            ScreenMessage(stringResource(R.string.load_failed), modifier)
 
-                else -> null
-            },
-            modifier = modifier
-        )
+        RequirementDetailUiState.Unavailable ->
+            ScreenMessage(stringResource(R.string.requirement_detail_unavailable), modifier)
 
         // Ends the page above the keyboard, so the text fields can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {

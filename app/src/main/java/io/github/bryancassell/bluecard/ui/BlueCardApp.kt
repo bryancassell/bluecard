@@ -35,13 +35,10 @@ fun BlueCardApp(uiState: MainActivityUiState, onDismissDamagedProgressNotice: ()
                 contentWindowInsets = insets
             ) { innerPadding ->
                 when (uiState) {
-                    // Composed while loading too, with no text, so screen readers hear the
-                    // message (see ScreenMessage).
-                    MainActivityUiState.Loading, MainActivityUiState.LoadFailed -> ScreenMessage(
-                        text = when (uiState) {
-                            MainActivityUiState.LoadFailed -> stringResource(R.string.load_failed)
-                            else -> null
-                        },
+                    MainActivityUiState.Loading -> {}
+
+                    MainActivityUiState.LoadFailed -> ScreenMessage(
+                        text = stringResource(R.string.load_failed),
                         modifier = Modifier.padding(innerPadding)
                     )
 
