@@ -576,8 +576,8 @@ moved, merge it into the branch and wait for the checks again:
 - **Build** runs `./gradlew build`, the same command as locally.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
-  [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes about
-  6 minutes, a little less than Build: Gradle builds the app and test APKs
+  [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to
+  5 minutes, less than Build's 6 to 9: Gradle builds the app and test APKs
   while it downloads the emulator and system image, then boots the emulator
   and runs the tests.
 
@@ -612,7 +612,7 @@ The Instrumented tests job's emulator choices:
   entry) took about 3m50s, since restoring took over a minute. Caching only
   the AVD and snapshot (2.5 GB), keyed by the installed emulator and image
   versions, took about 3m35s, and the snapshot loaded on every runner CPU
-  tried. Build takes about 6 minutes and runs at the same time, so neither
+  tried. Build takes 6 to 9 minutes and runs at the same time, so neither
   made CI finish sooner, and each would use a quarter to almost half of the
   repository's 10 GB of Actions cache, which the Gradle caches need. If Build
   ever finishes before this job, revisit the AVD-only cache, which is in

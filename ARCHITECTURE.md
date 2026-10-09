@@ -806,8 +806,6 @@ backup, not app sync, and the scout can turn it off in system settings.
   (`res/xml/data_extraction_rules.xml` and `res/xml/backup_rules.xml`). A
   library that stores data in either directory would be backed up too, so
   check new dependencies for that.
-- **Backup isn't limited to phones that can encrypt it end to end,** so every
-  scout who keeps backup on can move their records.
 
 ## Testing approach
 

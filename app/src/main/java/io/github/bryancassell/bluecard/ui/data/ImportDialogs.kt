@@ -318,8 +318,9 @@ private fun Choice(
  * A radio button labeled [label], with [details] below it, that the whole row selects. Screen
  * readers read [labelDescription] in place of the label.
  *
- * Its lines merge into the row rather than giving it a label of its own, as `readAsOneLabel`
- * (`ui/ReadAsOne.kt`) does, so TalkBack can leave out the ones scrolled off screen (#323).
+ * Its lines still merge into the row, with no label of its own from `readAsOneLabel`
+ * (`ui/ReadAsOne.kt`), so TalkBack may leave out the ones scrolled off screen. That's a bug,
+ * #323, not a pattern to copy.
  */
 @Composable
 private fun Option(

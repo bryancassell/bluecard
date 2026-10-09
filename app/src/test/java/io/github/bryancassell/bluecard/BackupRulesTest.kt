@@ -83,8 +83,7 @@ class BackupRulesTest {
 
     @Test
     fun ruleSets_haveNoConditions() {
-        // Backup isn't limited to phones that can encrypt it, so every scout who keeps backup on
-        // can move their records.
+        // Backup isn't limited to phones that can encrypt it; data_extraction_rules.xml says why.
         for (ruleSet in listOf(fullBackupContent, cloudBackup, deviceTransfer)) {
             assertEquals(emptyList<String>(), ruleSet.conditions)
         }

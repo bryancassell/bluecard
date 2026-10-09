@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * The app's light color scheme, used on every phone in light mode, so the app looks like the merit
- * badge blue card (see ARCHITECTURE.md, Theme).
+ * badge blue card (PRD.md's Colors).
  *
  * Material 3's standard light tones of the palettes that Material Color Utilities' fidelity
  * scheme makes from Scouting America Blue, #003F87, except:
@@ -79,7 +79,7 @@ internal val BlueCardLightColorScheme = lightColorScheme(
 
 /**
  * The app's dark color scheme, used on every phone in dark mode: the blue card's colors on Dark
- * Blue (see ARCHITECTURE.md, Theme).
+ * Blue (PRD.md's Colors).
  *
  * Material 3's standard dark tones of the same palettes as [BlueCardLightColorScheme], except:
  * - `primary` is the card stock's Pale Blue, #9AB3D5.
