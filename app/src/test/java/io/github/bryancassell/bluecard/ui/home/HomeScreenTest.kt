@@ -8,7 +8,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -22,7 +21,6 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
@@ -32,12 +30,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
@@ -142,7 +141,11 @@ class HomeScreenTest {
         it.config.getOrNull(SemanticsActions.OnClick)?.label == "open badge"
     }
 
-    private fun row(name: String) = composeTestRule.onNode(hasText(name) and opensBadge)
+    // Found in the unmerged tree by the name it shows: it's read as one, with a label of its own.
+    private fun row(name: String) = composeTestRule.onNode(
+        opensBadge and hasAnyDescendant(hasText(name)),
+        useUnmergedTree = true
+    )
 
     private val opensRank = SemanticsMatcher("click label is \"open rank\"") {
         it.config.getOrNull(SemanticsActions.OnClick)?.label == "open rank"
@@ -160,25 +163,6 @@ class HomeScreenTest {
     /** Text drawn on the rank card. */
     private fun drawn(text: String) = composeTestRule
         .onNode(hasText(text) and hasAnyAncestor(isRankCard), useUnmergedTree = true)
-
-    /**
-     * What TalkBack reads as [node], found in the unmerged tree, when none of its parts is a stop
-     * of its own: its own description or text, then each part's in turn, since a description
-     * doesn't replace its parts' (#166). It leaves out the parts Compose doesn't give TalkBack,
-     * and those it marks as not visible to the user, such as parts scrolled off screen (#305).
-     * Parts come in the semantics tree's order, where TalkBack sorts them by position. Turn on a
-     * screen reader first, so Compose answers as it does for TalkBack.
-     */
-    private fun spokenLabel(node: SemanticsNode): String {
-        val provider = view.accessibilityNodeProvider
-        fun labels(node: SemanticsNode): List<CharSequence> {
-            val info = provider.createAccessibilityNodeInfo(node.id)
-            if (info == null || !info.isVisibleToUser) return emptyList()
-            return listOfNotNull(info.contentDescription ?: info.text) +
-                node.children.flatMap(::labels)
-        }
-        return labels(node).joinToString(". ")
-    }
 
     @Test
     fun loading_showsProgressAndNoProfile() {
@@ -336,22 +320,9 @@ class HomeScreenTest {
         assertTrue(card.right < screen.right)
     }
 
-    /**
-     * Scrolls Home until only the rank card's [lastLine] shows, and returns what TalkBack reads
-     * as the card. TalkBack can focus the card like that, as when Home comes back scrolled down,
-     * and doesn't scroll it into view first.
-     */
-    private fun readRankCardWithOnlyItsLastLineShown(lastLine: String): String {
-        val card = composeTestRule.onNode(isRankCard, useUnmergedTree = true)
-        val scrollBy = with(composeTestRule.density) {
-            (card.getUnclippedBoundsInRoot().bottom - 40.dp).toPx()
-        }
-        composeTestRule.onNode(hasScrollAction())
-            .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, scrollBy) }
-        assertTrue(drawn("Your rank").getUnclippedBoundsInRoot().bottom < 0.dp)
-        assertTrue(drawn(lastLine).getUnclippedBoundsInRoot().bottom > 0.dp)
-        return spokenLabel(card.fetchSemanticsNode())
-    }
+    /** What TalkBack reads as the rank card with only its [lastLine] on screen. */
+    private fun readRankCardWithOnlyItsLastLineShown(lastLine: String) =
+        composeTestRule.readWithOnlyItsLastLineShown(view, isRankCard, "Your rank", lastLine)
 
     @Test
     fun rankCard_partlyScrolledOff_isReadWhole() {
@@ -475,13 +446,13 @@ class HomeScreenTest {
     fun badgesInProgress_areLabeledAsOnBadges() {
         show(withBadgesInProgress)
 
-        row("Camping").assert(hasText("Eagle-required")).assert(hasText("In progress"))
+        row("Camping").assert(hasLine("Eagle-required")).assert(hasLine("In progress"))
         row("Chess")
-            .assert(!hasText("Eagle-required", substring = true))
-            .assert(hasText("In progress"))
+            .assert(hasNoLineWith("Eagle-required"))
+            .assert(hasLine("In progress"))
         row("Hiking")
-            .assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
-            .assert(hasText("In progress"))
+            .assert(hasLine("Eagle-required (one of Cycling, Hiking, and Swimming)"))
+            .assert(hasLine("In progress"))
     }
 
     @Test

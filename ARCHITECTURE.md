@@ -509,16 +509,23 @@ both taps of a double tap can reach it.
   merged node has the description wherever it's set.
 - **Something read as one that can be partly scrolled off screen has a label
   of its own**, set with `clearAndSetSemantics`, rather than merging its
-  parts' (`RankCard` in `ui/home/RankCard.kt`). Compose gives TalkBack a merged
-  node's own properties and its parts as nodes of their own (`getInfoText` in
+  parts': Home's rank card, and list rows such as a badge's, a requirement's
+  and a tracker row. The label is `readAsOneLabel` (`ui/ReadAsOne.kt`) of the
+  strings it draws, in reading order. Compose gives TalkBack a merged node's
+  own properties and its parts as nodes of their own (`getInfoText` in
   `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and
   marks a part off screen as not visible to the user. TalkBack leaves those
   parts out: with only the rank card's last line on screen, as Home came back
   scrolled down, it read only that line
-  ([#305](https://github.com/bryancassell/bluecard/issues/305)). List rows
-  that merge their lines don't follow this yet
-  ([#312](https://github.com/bryancassell/bluecard/issues/312)). Tests read
-  such a node as TalkBack does with `spokenLabel` (`HomeScreenTest`).
+  ([#305](https://github.com/bryancassell/bluecard/issues/305)), and a
+  requirement row read its count without its number and summary
+  ([#312](https://github.com/bryancassell/bluecard/issues/312)). Compose
+  gives screen readers none of the parts it clears, so a part such as a
+  progress bar read as the row's state needs no `hideFromAccessibility` of its
+  own. Tests find such a node by a line it shows, in the unmerged tree, which
+  keeps its parts (`onReadAsOne` in `testing/ReadAsOne.kt`). They read it as
+  TalkBack does, scrolled until only its last line shows, with
+  `readWithOnlyItsLastLineShown` (`testing/SpokenLabel.kt`).
 
 ### Live regions
 

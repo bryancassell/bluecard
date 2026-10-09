@@ -1,10 +1,12 @@
 package io.github.bryancassell.bluecard.ui.badge
 
+import android.view.View
 import androidx.activity.ComponentDialog
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -22,7 +24,9 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasImeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasStateDescription
@@ -59,8 +63,13 @@ import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.pickerDay
+import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -242,9 +251,13 @@ class RequirementDetailScreenTest {
         RequirementDetailUiState.Loading
     )
 
+    /** The view [show] composes into. */
+    private lateinit var view: View
+
     private fun show(state: RequirementDetailUiState) {
         uiState = state
         composeTestRule.setContent {
+            view = LocalView.current
             keyboard.Content {
                 back.Content {
                     RequirementDetailScreen(
@@ -269,9 +282,9 @@ class RequirementDetailScreenTest {
         }
     }
 
-    // Each row merges its texts, so a row is the node with the requirement's summary. It's
-    // scrolled to first, as the page can be taller than the screen.
-    private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
+    // A row is read as one, with a label of its own, so it's found by a line it shows, such as
+    // a requirement's summary. It's scrolled to first, as the page can be taller than the screen.
+    private fun row(summary: String) = composeTestRule.onReadAsOne(summary).performScrollTo()
 
     // The requirement's own checkbox, labeled by the text next to it.
     private fun completedCheckbox() =
@@ -429,7 +442,7 @@ class RequirementDetailScreenTest {
 
         val count = composeTestRule.onNodeWithText("Do 2 of 3").getUnclippedBoundsInRoot()
         val completed = composeTestRule.onNodeWithText("Completed").getUnclippedBoundsInRoot()
-        val firstRow = composeTestRule.onNodeWithText("Cook a meal.").getUnclippedBoundsInRoot()
+        val firstRow = composeTestRule.onReadAsOne("Cook a meal.").getUnclippedBoundsInRoot()
         assertTrue(completed.bottom <= count.top)
         assertTrue(count.bottom <= firstRow.top)
     }
@@ -441,7 +454,7 @@ class RequirementDetailScreenTest {
         val count = composeTestRule.onNodeWithText("Do 2 of 3").getUnclippedBoundsInRoot()
         val checkbox = composeTestRule.onNode(hasText("Pack your gear.") and isToggleable())
             .getUnclippedBoundsInRoot()
-        val firstRow = composeTestRule.onNodeWithText("Cook a meal.").getUnclippedBoundsInRoot()
+        val firstRow = composeTestRule.onReadAsOne("Cook a meal.").getUnclippedBoundsInRoot()
         assertTrue(checkbox.bottom <= count.top)
         assertTrue(count.bottom <= firstRow.top)
     }
@@ -484,7 +497,7 @@ class RequirementDetailScreenTest {
         row("Keep a camping log.").assert(hasStateDescription("Not completed"))
         row(
             "Lead one hike."
-        ).assert(hasText("Do 1 of 2")).assert(hasStateDescription("Not completed"))
+        ).assert(hasLine("Do 1 of 2")).assert(hasStateDescription("Not completed"))
     }
 
     @Test
@@ -497,7 +510,8 @@ class RequirementDetailScreenTest {
         // It shows "Not needed" too, but screen readers read it only as its state.
         row("Keep a camping log.")
             .assert(hasStateDescription("Not needed"))
-            .assert(!hasText("Not needed"))
+            .assert(hasAnyDescendant(hasText("Not needed")))
+            .assert(!hasContentDescription("Not needed", substring = true))
     }
 
     @Test
@@ -520,7 +534,7 @@ class RequirementDetailScreenTest {
     fun subRequirementWithTracker_showsHowMuchIsFilledIn() {
         show(ready)
 
-        row("Keep a camping log.").assert(hasText("3 nights"))
+        row("Keep a camping log.").assert(hasLine("3 nights"))
     }
 
     @Test
@@ -540,9 +554,9 @@ class RequirementDetailScreenTest {
         show(ready.copy(children = ready.children + child))
 
         row("Give six hours of service.")
-            .assert(hasText("4.5 of 6 hours"))
-            .assert(hasText("2 of 3 conservation hours"))
-            .assert(hasText("2 projects").not())
+            .assert(hasLine("4.5 of 6 hours"))
+            .assert(hasLine("2 of 3 conservation hours"))
+            .assert(hasNoLineWith("2 projects"))
     }
 
     /** Sub-requirements with these numbers, each summarized as "Summary of <number>.". */
@@ -614,8 +628,8 @@ class RequirementDetailScreenTest {
         show(withLog)
 
         composeTestRule.onNodeWithText("2 sessions").performScrollTo().assert(isHeading())
-        row("Session 1").assert(hasText("Apr 12, 2026 · Running · 30"))
-        row("Session 2").assert(hasText("Last Tuesday · Swimming"))
+        row("Session 1").assert(hasLine("Apr 12, 2026 · Running · 30"))
+        row("Session 2").assert(hasLine("Last Tuesday · Swimming"))
     }
 
     @Test
@@ -666,7 +680,39 @@ class RequirementDetailScreenTest {
             withLog.copy(tracker = withLog.tracker?.copy(rows = listOf(TrackerRow(1, 11, values))))
         )
 
-        row("Session 1").assert(hasText("Push-ups and sit-ups · 3 sets of 10 Felt good"))
+        row("Session 1").assert(hasLine("Push-ups and sit-ups · 3 sets of 10 Felt good"))
+    }
+
+    @Test
+    fun trackerRow_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        // Long enough to take two lines.
+        val values = "Apr 12, 2026 · Ran around the lake twice with my patrol after school · 30"
+        val row = TrackerRow(
+            1,
+            11,
+            listOf(
+                TrackerValue(TrackerColumnType.DATE, "2026-04-12"),
+                TrackerValue(
+                    TrackerColumnType.TEXT,
+                    "Ran around the lake twice with my patrol after school"
+                ),
+                TrackerValue(TrackerColumnType.NUMBER, "30")
+            )
+        )
+        // With room below it to scroll it off.
+        val more = (2..6).map { TrackerRow(it, it.toLong() + 10, emptyList()) }
+        show(withLog.copy(tracker = withLog.tracker?.copy(rows = listOf(row) + more)))
+
+        assertEquals(
+            "Session 1. $values",
+            composeTestRule.readWithOnlyItsLastLineShown(
+                view,
+                hasClickLabel("edit") and hasAnyDescendant(hasText("Session 1")),
+                firstLine = "Session 1",
+                lastLine = values
+            )
+        )
     }
 
     @Test
@@ -694,8 +740,8 @@ class RequirementDetailScreenTest {
         show(withWeeks)
 
         composeTestRule.onNodeWithText("1 of 3 weeks").performScrollTo().assert(isHeading())
-        row("Week 1").assert(!hasText("20"))
-        row("Week 2").assert(hasText("20"))
+        row("Week 1").assert(hasNoLineWith("20"))
+        row("Week 2").assert(hasLine("20"))
         row("Week 3")
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
     }
@@ -997,8 +1043,8 @@ class RequirementDetailScreenTest {
         show(ready.copy(children = ready.children + child))
 
         row("Earn six merit badges.")
-            .assert(hasText("1 of 6 merit badges"))
-            .assert(hasText("0 of 4 Eagle-required"))
+            .assert(hasLine("1 of 6 merit badges"))
+            .assert(hasLine("0 of 4 Eagle-required"))
     }
 
     @Test
@@ -1038,17 +1084,17 @@ class RequirementDetailScreenTest {
         show(withMeritBadges)
 
         row("Camping")
-            .assert(hasText("Completed"))
-            .assert(hasText("Eagle-required"))
+            .assert(hasLine("Completed"))
+            .assert(hasLine("Eagle-required"))
         row("Chess")
-            .assert(hasText("Completed on Feb 1, 2026"))
-            .assert(hasText("Eagle-required").not())
+            .assert(hasLine("Completed on Feb 1, 2026"))
+            .assert(hasNoLineWith("Eagle-required"))
         row("Hiking")
-            .assert(hasText("Completed on Mar 1, 2026"))
-            .assert(hasText("Eagle-required"))
+            .assert(hasLine("Completed on Mar 1, 2026"))
+            .assert(hasLine("Eagle-required"))
         row("Swimming")
-            .assert(hasText("Completed on Apr 15, 2026"))
-            .assert(hasText("Eagle-required"))
+            .assert(hasLine("Completed on Apr 15, 2026"))
+            .assert(hasLine("Eagle-required"))
     }
 
     // As for Eagle 3: of Hiking and Swimming, only Hiking, completed first, counts.
@@ -1056,9 +1102,9 @@ class RequirementDetailScreenTest {
     fun meritBadgesWhoseGroupsCountOnce_labelOnlyTheFirstBadgeOfAGroup() {
         show(withMeritBadgeCredit(MeritBadgeCredit(MeritBadgesNeeded(21, 13, true), 4, 2, null)))
 
-        row("Camping").assert(hasText("Eagle-required"))
-        row("Hiking").assert(hasText("Eagle-required"))
-        row("Swimming").assert(hasText("Eagle-required").not())
+        row("Camping").assert(hasLine("Eagle-required"))
+        row("Hiking").assert(hasLine("Eagle-required"))
+        row("Swimming").assert(hasNoLineWith("Eagle-required"))
     }
 
     @Test

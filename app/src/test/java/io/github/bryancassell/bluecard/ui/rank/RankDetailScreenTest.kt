@@ -39,6 +39,7 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
@@ -148,9 +149,9 @@ class RankDetailScreenTest {
 
     private fun text(text: String) = composeTestRule.onNodeWithText(text)
 
-    // Each row merges its texts, so a row is the node with the requirement's summary. It's
-    // scrolled to first, as the page can be taller than the screen.
-    private fun row(summary: String) = text(summary).performScrollTo()
+    // A row is read as one, with a label of its own, so it's found by the summary it shows.
+    // It's scrolled to first, as the page can be taller than the screen.
+    private fun row(summary: String) = composeTestRule.onReadAsOne(summary).performScrollTo()
 
     private fun pickDay(date: String) {
         composeTestRule.pickerDay(date).performClick()
@@ -167,7 +168,9 @@ class RankDetailScreenTest {
         ProgressBarRangeInfo.Indeterminate
     )
 
-    private fun topOf(text: String) = text(text).fetchSemanticsNode().positionInRoot.y
+    // In the unmerged tree, which keeps a row's lines.
+    private fun topOf(text: String) = composeTestRule.onNodeWithText(text, useUnmergedTree = true)
+        .fetchSemanticsNode().positionInRoot.y
 
     @Test
     fun loading_showsProgressOnly() {

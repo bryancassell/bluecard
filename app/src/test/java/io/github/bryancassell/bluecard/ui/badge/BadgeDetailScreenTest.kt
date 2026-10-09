@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import androidx.activity.ComponentDialog
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
@@ -17,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -33,6 +35,7 @@ import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasStateDescription
@@ -63,7 +66,13 @@ import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.assertShowsAndReads
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
+import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
@@ -163,12 +172,16 @@ class BadgeDetailScreenTest {
     /** The UI state shown, which a test can change after [show]. */
     private var uiState by mutableStateOf<BadgeDetailUiState>(BadgeDetailUiState.Loading)
 
+    /** The view [show] composes into. */
+    private lateinit var view: View
+
     private fun show(
         state: BadgeDetailUiState,
         layoutDirection: LayoutDirection = LayoutDirection.Ltr
     ) {
         uiState = state
         composeTestRule.setContent {
+            view = LocalView.current
             CompositionLocalProvider(
                 LocalLayoutDirection provides layoutDirection,
                 LocalActivityResultRegistryOwner provides resultRegistryOwner
@@ -210,16 +223,16 @@ class BadgeDetailScreenTest {
         )
     }
 
-    // Each row merges its texts, so a row is the node with the requirement's summary. It's
-    // scrolled to first, as the page can be taller than the screen.
-    private fun row(summary: String) = composeTestRule.onNodeWithText(summary).performScrollTo()
+    // A row is read as one, with a label of its own, so it's found by the summary it shows.
+    // It's scrolled to first, as the page can be taller than the screen.
+    private fun row(summary: String) = composeTestRule.onReadAsOne(summary).performScrollTo()
 
     /**
      * Where the text's node starts down the page. Every part of the page is laid out, on screen
      * or not, so these give their order.
      */
-    private fun topOf(text: String) =
-        composeTestRule.onNodeWithText(text).fetchSemanticsNode().positionInRoot.y
+    private fun topOf(text: String) = composeTestRule.onNodeWithText(text, useUnmergedTree = true)
+        .fetchSemanticsNode().positionInRoot.y
 
     private val isSelected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
@@ -630,7 +643,7 @@ class BadgeDetailScreenTest {
         row("Plan a campout.")
             .assert(hasStateDescription("Completed"))
             .assert(!hasContentDescription("Completed"))
-            .assert(!hasText("Completed"))
+            .assert(hasNoLineWith("Completed"))
     }
 
     // The scout marks a requirement complete on its own page.
@@ -645,8 +658,8 @@ class BadgeDetailScreenTest {
     fun choiceRequirement_showsHowManyAreNeeded() {
         show(ready)
 
-        row("Do two of these.").assert(hasText("Do 2 of 3"))
-        row("Plan a campout.").assert(!hasText("Do", substring = true))
+        row("Do two of these.").assert(hasLine("Do 2 of 3"))
+        row("Plan a campout.").assert(hasNoLineWith("Do"))
     }
 
     private fun withPartlyCompleted(number: String, count: CompleteCount?) = ready.copy(
@@ -665,7 +678,7 @@ class BadgeDetailScreenTest {
 
         row("Do two of these.")
             .assert(hasStateDescription("In progress"))
-            .assert(hasText("Do 2 of 3 (1 of 2 complete)"))
+            .assert(hasLine("Do 2 of 3 (1 of 2 complete)"))
     }
 
     @Test
@@ -674,36 +687,62 @@ class BadgeDetailScreenTest {
 
         row("Do all of these.")
             .assert(hasStateDescription("In progress"))
-            .assert(hasText("(2 of 3 complete)"))
+            .assert(hasLine("(2 of 3 complete)"))
     }
+
+    /** Requirement 2 with only its own work left. */
+    private val withStillToDo = ready.copy(
+        requirements = ready.requirements.map {
+            if (it.number == "2") {
+                it.copy(
+                    completed = false,
+                    partlyCompleted = true,
+                    completeCount = CompleteCount(2, 2),
+                    ownWork = OwnWork(
+                        "Share what you learned with your counselor.",
+                        completed = false
+                    ),
+                    stillToDo = "Share what you learned with your counselor."
+                )
+            } else {
+                it
+            }
+        }
+    )
 
     @Test
     fun partlyCompletedWithOnlyItsOwnWorkLeft_saysWhatsStillToDo() {
-        show(
-            ready.copy(
-                requirements = ready.requirements.map {
-                    if (it.number == "2") {
-                        it.copy(
-                            completed = false,
-                            partlyCompleted = true,
-                            completeCount = CompleteCount(2, 2),
-                            ownWork = OwnWork(
-                                "Share what you learned with your counselor.",
-                                completed = false
-                            ),
-                            stillToDo = "Share what you learned with your counselor."
-                        )
-                    } else {
-                        it
-                    }
-                }
-            )
-        )
+        show(withStillToDo)
 
         row("Do two of these.")
             .assert(hasStateDescription("In progress"))
-            .assert(hasText("Do 2 of 3 (2 of 2 complete)"))
-            .assert(hasText("Still to do: Share what you learned with your counselor."))
+            .assert(hasLine("Do 2 of 3 (2 of 2 complete)"))
+            .assert(hasLine("Still to do: Share what you learned with your counselor."))
+    }
+
+    /** A requirement's row in the unmerged tree, which keeps its lines. */
+    private fun requirementRow(summary: String) =
+        hasClickLabel("open requirement") and hasAnyDescendant(hasText(summary))
+
+    @Test
+    fun requirementRow_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        // With room below it to scroll it off.
+        val more = (5..9).map {
+            RequirementItem("$it", "Do $it.", null, false, markedByHand = true)
+        }
+        show(withStillToDo.copy(requirements = withStillToDo.requirements + more))
+
+        assertEquals(
+            "2. Do two of these.. Do 2 of 3 (2 of 2 complete). " +
+                "Still to do: Share what you learned with your counselor.",
+            composeTestRule.readWithOnlyItsLastLineShown(
+                view,
+                requirementRow("Do two of these."),
+                firstLine = "Do two of these.",
+                lastLine = "Still to do: Share what you learned with your counselor."
+            )
+        )
     }
 
     // Only its own work, or a requirement further down, is complete.
@@ -713,8 +752,8 @@ class BadgeDetailScreenTest {
 
         row("Do two of these.")
             .assert(hasStateDescription("In progress"))
-            .assert(hasText("Do 2 of 3"))
-            .assert(!hasText("complete", substring = true))
+            .assert(hasLine("Do 2 of 3"))
+            .assert(hasNoLineWith("complete"))
     }
 
     // Under the sub-requirements' count it's what's left of, not the tracker's.
@@ -739,18 +778,14 @@ class BadgeDetailScreenTest {
             )
         )
 
-        val texts = row("Do two of these.")
-            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
-        assertEquals(
-            listOf(
+        row("Do two of these.")
+            .assertShowsAndReads(
                 "2",
                 "Do two of these.",
                 "Do 2 of 3 (2 of 2 complete)",
                 "Still to do: Share what you learned.",
                 "2 sessions"
-            ),
-            texts
-        )
+            )
     }
 
     // Under the rows' count, as under a count of sub-requirements.
@@ -773,25 +808,21 @@ class BadgeDetailScreenTest {
             )
         )
 
-        val texts = row("Keep a camping log.")
+        row("Keep a camping log.")
             .assert(hasStateDescription("In progress"))
-            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
-        assertEquals(
-            listOf(
+            .assertShowsAndReads(
                 "3",
                 "Keep a camping log.",
                 "12 of 12 nights",
                 "Still to do: Compare the nights."
-            ),
-            texts
-        )
+            )
     }
 
     @Test
     fun requirementWithTracker_showsHowMuchIsFilledIn() {
         show(ready)
 
-        row("Keep a camping log.").assert(hasText("8 of 12 nights"))
+        row("Keep a camping log.").assert(hasLine("8 of 12 nights"))
     }
 
     // Past the number a log needs, the count goes on, as a total's does.
@@ -809,7 +840,7 @@ class BadgeDetailScreenTest {
             )
         )
 
-        row("Keep a camping log.").assert(hasText("12 of 10 nights"))
+        row("Keep a camping log.").assert(hasLine("12 of 10 nights"))
     }
 
     // "10 of 10 nights" reads as finished, but the scout hasn't checked it off.
@@ -831,18 +862,14 @@ class BadgeDetailScreenTest {
             )
         )
 
-        val texts = row("Keep a camping log.")
+        row("Keep a camping log.")
             .assert(hasStateDescription("In progress"))
-            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
-        assertEquals(
-            listOf(
+            .assertShowsAndReads(
                 "3",
                 "Keep a camping log.",
                 "10 of 10 nights",
                 "Still to do: Check it off once all of it is done."
-            ),
-            texts
-        )
+            )
     }
 
     // At its number but checked off, as a log can be once the scout has checked it.
@@ -862,8 +889,8 @@ class BadgeDetailScreenTest {
 
         row("Keep a camping log.")
             .assert(hasStateDescription("Completed"))
-            .assert(hasText("10 of 10 nights"))
-            .assert(!hasText("Still to do", substring = true))
+            .assert(hasLine("10 of 10 nights"))
+            .assert(hasNoLineWith("Still to do"))
     }
 
     // Under every total, as Life 4's line waits for both.
@@ -892,18 +919,14 @@ class BadgeDetailScreenTest {
             )
         )
 
-        val texts = row("Keep a camping log.")
-            .fetchSemanticsNode().config[SemanticsProperties.Text].map { it.text }
-        assertEquals(
-            listOf(
+        row("Keep a camping log.")
+            .assertShowsAndReads(
                 "3",
                 "Keep a camping log.",
                 "6 of 6 hours",
                 "3 of 3 conservation hours",
                 "Still to do: Check it off once all of it is done."
-            ),
-            texts
-        )
+            )
     }
 
     @Test

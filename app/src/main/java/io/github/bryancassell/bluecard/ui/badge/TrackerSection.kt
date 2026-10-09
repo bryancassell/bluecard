@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -27,6 +29,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import io.github.bryancassell.bluecard.text.totalFormat
+import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.stringsLocale
 import io.github.bryancassell.bluecard.ui.typedText
 import java.text.NumberFormat
@@ -119,24 +122,27 @@ private fun TrackerRowItem(
     formatter: DateTimeFormatter,
     onOpen: () -> Unit
 ) {
+    val title = stringResource(R.string.tracker_row_title, rowTitle, row.number)
     val values = trackerValuesText(row.values, formatter)
+    // Its values in full, though only two lines of them show.
+    val label = readAsOneLabel(title, values)
     ListItem(
-        headlineContent = {
-            Text(stringResource(R.string.tracker_row_title, rowTitle, row.number))
-        },
+        headlineContent = { Text(title) },
         supportingContent = values?.let {
             { Text(it, maxLines = 2, overflow = TextOverflow.Ellipsis) }
         },
         trailingContent = {
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
         },
-        // ListItem already reads as one item to screen readers, announced as a button that
-        // edits the row.
-        modifier = Modifier.clickable(
-            onClickLabel = stringResource(R.string.tracker_edit_row),
-            role = Role.Button,
-            onClick = onOpen
-        )
+        // Screen readers read the row as one button that edits it, with a label of its own:
+        // TalkBack leaves out parts scrolled off screen (#312).
+        modifier = Modifier
+            .clickable(
+                onClickLabel = stringResource(R.string.tracker_edit_row),
+                role = Role.Button,
+                onClick = onOpen
+            )
+            .clearAndSetSemantics { contentDescription = label }
     )
 }
 
