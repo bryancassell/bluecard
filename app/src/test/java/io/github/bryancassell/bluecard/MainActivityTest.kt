@@ -19,6 +19,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -2422,5 +2423,24 @@ class MainActivityTest {
         // The row reaches the side of the area, so it would slide past it.
         assertEquals(areaRight.value, badgesAtRest.right.value, 1f)
         assertTrue(badgesMoving.right <= areaRight)
+    }
+
+    // Pages start below the status bar's band (#315), as BlueCardAppTest's load-failed message
+    // does.
+    @Test
+    fun page_startsBelowTheStatusBar() {
+        launchWithProfile()
+        val statusBar = 24.dp
+        val barPixels = with(composeTestRule.density) { statusBar.roundToPx() }
+        scenario.onActivity {
+            val insets = WindowInsetsCompat.Builder()
+                .setInsets(WindowInsetsCompat.Type.statusBars(), Insets.of(0, barPixels, 0, 0))
+                .build()
+            ViewCompat.dispatchApplyWindowInsets(it.window.decorView, insets)
+        }
+
+        // Home's name is 16dp from the top of the page.
+        composeTestRule.onNodeWithText("Alex Scout")
+            .assertTopPositionInRootIsEqualTo(statusBar + 16.dp)
     }
 }

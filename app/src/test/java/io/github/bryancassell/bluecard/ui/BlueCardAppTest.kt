@@ -139,11 +139,13 @@ class BlueCardAppTest {
             )
         }
 
-        // The left edge is clear of the message, so it shows what's behind it.
+        // Both edges are clear of the message, so they show what's behind it.
         val pixels = composeTestRule.onRoot().captureToImage().toPixelMap()
-        assertEquals(scheme.surfaceContainer, pixels[0, 0])
-        assertEquals(scheme.surfaceContainer, pixels[0, insetPx - 1])
-        assertEquals(scheme.background, pixels[0, insetPx])
+        for (x in listOf(0, pixels.width - 1)) {
+            assertEquals(scheme.surfaceContainer, pixels[x, 0])
+            assertEquals(scheme.surfaceContainer, pixels[x, insetPx - 1])
+            assertEquals(scheme.background, pixels[x, insetPx])
+        }
         assertNotEquals(pixels[0, 0], pixels[0, insetPx])
         // ScreenMessage is inset 16dp from the top of the page.
         composeTestRule.onNodeWithText(

@@ -589,10 +589,9 @@ both taps of a double tap can reach it.
   (`StatusBarBackground` in `BlueCardApp`), in `surfaceContainer`, as
   [`PRD.md`](PRD.md#design-decisions)'s Status bar row chooses. As the top bar,
   its height is where every page starts, so no page pads itself for the status
-  bar. With a top bar, the Scaffold pads its content by the bar's height in
-  place of its window insets, so the band takes its height from those insets
-  (`ScaffoldDefaults.contentWindowInsets`). Sized by the status bar alone, it
-  would let a window's caption bar or a taller camera cutout cover the page.
+  bar. It takes its height from the Scaffold's own window insets
+  (`ScaffoldDefaults.contentWindowInsets`), not the status bar's, so a window's
+  caption bar or a taller camera cutout can't cover the page.
 - **A full-screen dialog sets its own system bar icons.** A Compose `Dialog`
   has its own window, which doesn't get the icons `enableEdgeToEdge()` gives
   the activity's, and Android takes the bar icons from it as the top
