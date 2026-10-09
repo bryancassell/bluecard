@@ -22,22 +22,25 @@ jobs:
     name: Doc growth
     runs-on: ubuntu-latest
     steps:
-      # Checks out the pull request merged into main. Its first parent is main
-      # as it was merged with, so comparing with it counts only this PR's changes.
+      # Checks out the pull request merged into its base branch. Its first parent
+      # is that branch as it was merged with, so comparing with it counts only
+      # this PR's changes.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
       # Counts words, so rewrapping a paragraph or lengthening a link isn't growth.
-      - name: Compare with main
+      # A file that's missing on either side counts as no words.
+      - name: Compare with the base branch
         env:
+          BASE: ${{ github.base_ref }}
           APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'grows-docs') }}
         run: |
           grew=""
           for f in ARCHITECTURE.md PRD.md; do
-            before=$(git show "HEAD^1:$f" | wc -w)
-            after=$(wc -w < "$f")
-            echo "$f: $before words on main, $after with this PR"
+            before=$(git show "HEAD^1:$f" 2>/dev/null | wc -w)
+            after=$(cat "$f" 2>/dev/null | wc -w)
+            echo "$f: $before words on $BASE, $after with this PR"
             if [ "$after" -gt "$before" ]; then grew="$grew $f"; fi
           done
           if [ -n "$grew" ] && [ "$APPROVED" != true ]; then

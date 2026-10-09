@@ -317,6 +317,9 @@ private fun Choice(
 /**
  * A radio button labeled [label], with [details] below it, that the whole row selects. Screen
  * readers read [labelDescription] in place of the label.
+ *
+ * Its lines merge into the row rather than giving it a label of its own, as `readAsOneLabel`
+ * (`ui/ReadAsOne.kt`) does, so TalkBack can leave out the ones scrolled off screen (#323).
  */
 @Composable
 private fun Option(

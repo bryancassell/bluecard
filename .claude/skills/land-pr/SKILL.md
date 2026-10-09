@@ -42,10 +42,10 @@ Don't ask what the code, the docs or a convention already answers. Ask when the 
 
 ## 3. Open the PR
 
-1. Commit, `git push -u origin HEAD`, then `gh pr create`.
+1. Commit, `git push -u origin HEAD`, then `gh pr create`. If the change makes ARCHITECTURE.md or PRD.md longer and the developer agreed, add `--label grows-docs`: CI's Doc growth check fails without it.
 2. Title: what now works, in plain words, ending in `(#N)`. For example, "Keep Badges' search field above the keyboard in landscape (#308)".
 3. Body, as in recent PRs (`gh pr view 314` is a model): `Closes #N.` if this PR finishes the issue, or `Part of #N.` and what's left if it doesn't. Then what was wrong, and `## Cause`, `## What`, `## Tests` and, for the checks in step 2.6, `## Checked on the emulator`. The squash commit takes the PR's title and body, so write them for `main`'s history.
-4. If ARCHITECTURE.md or PRD.md changed, end `## What` with how many words each gained or lost (`wc -w`). If either got longer and the developer agreed, `gh pr edit <PR number> --add-label grows-docs`; CI's Doc growth check fails without it.
+4. If ARCHITECTURE.md or PRD.md changed, end `## What` with how many words each gained or lost (`wc -w`). If one grows later, such as from a review fix, and the developer agrees, `gh pr edit <PR number> --add-label grows-docs`.
 
 ## 4. Two review rounds
 

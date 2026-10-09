@@ -168,7 +168,7 @@ fun RequirementDetailScreen(
                     }
                 } else if (requirement.completesFromRows && requirement.completed) {
                     // Under the header's "Completed", where a checkbox's date would be. Once the
-                    // date is removed, Add date opens at the date the last row was saved, which
+                    // date is removed, Add date opens at the date the last row was first saved, which
                     // gives it a way back without another button: Clear would delete the rows too.
                     CompletionDate(
                         uiState.completedDate,

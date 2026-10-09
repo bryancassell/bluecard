@@ -216,16 +216,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   calls `ScreenMessage` itself the same way.
 - **Any other exception is a bug and still crashes the app**, so it reaches
   [Android vitals](https://developer.android.com/topic/performance/vitals) once
-  BlueCard is on Google Play, the only automatic crash reporting
-  ([#63](https://github.com/bryancassell/bluecard/issues/63)). Caught
-  exceptions don't, so each caught load or save failure is logged with `Log.w`.
-  A tool that sends reports itself needs the `INTERNET` permission, which
-  requirement 1 rules out, and Google Play's
-  [Families policy](https://support.google.com/googleplay/android-developer/answer/9893335)
-  limits the SDKs an app for children can use. ACRA's email reports need
-  neither, but add a library in its own process and a dialog after every crash.
-  Testers of GitHub builds report crashes by hand (see
-  [Release build](#release-build)).
+  BlueCard is on Google Play. That's the only automatic crash reporting, since
+  a tool that sends reports itself needs the `INTERNET` permission, which
+  requirement 1 rules out
+  ([#63](https://github.com/bryancassell/bluecard/issues/63) weighs the
+  others). Caught exceptions don't reach it, so each caught load or save
+  failure is logged with `Log.w`.
 
 ### Text fields
 
@@ -875,7 +871,9 @@ runs Android's SQLite code.
   with the `AccessibilityChecks` rule (`testing/`), so a control with no label
   for screen readers or a touch target under 48dp fails the test rather than
   waiting for someone to try the page with TalkBack. Navigation tests and
-  other components' tests, such as `MainActivityTest`, don't, and say why.
+  other components' tests don't, since the screens' and dialogs' own tests check
+  what they show; `MainActivityTest` and `PageTransitionsTest` say why they
+  can't.
 - **A test that reads pixels runs on SDK 36** (`@Config(sdk = [36])`), because
   on SDK 37 Robolectric 4.17 draws only a class's first screenshot.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
