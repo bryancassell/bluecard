@@ -11,8 +11,10 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
@@ -27,6 +29,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasClickLabel
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.onReadAsOne
+import io.github.bryancassell.bluecard.testing.readsLine
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -69,8 +75,8 @@ class RanksScreenTest {
         }
     }
 
-    // Each row merges its texts, so a row is the node with the rank's name.
-    private fun row(name: String) = composeTestRule.onNodeWithText(name)
+    // A row is read as one, with a label of its own, so it's found by the name it shows.
+    private fun row(name: String) = composeTestRule.onReadAsOne(name)
 
     private fun list() = composeTestRule.onNode(hasScrollToNodeAction())
 
@@ -121,11 +127,12 @@ class RanksScreenTest {
 
         composeTestRule.onNodeWithText("Ranks").assert(isHeading())
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+        // As screen readers read them: each row's lines in turn.
         val rows = list().onChildren()
-        rows[0].assert(hasText("Scout"))
-        rows[1].assert(hasText("Tenderfoot"))
-        rows[2].assert(hasText("Second Class"))
-        rows[3].assert(hasText("First Class"))
+        rows[0].assertContentDescriptionEquals("Scout. Earned")
+        rows[1].assertContentDescriptionEquals("Tenderfoot. In progress")
+        rows[2].assertContentDescriptionEquals("Second Class")
+        rows[3].assertContentDescriptionEquals("First Class")
     }
 
     @Test
@@ -135,9 +142,7 @@ class RanksScreenTest {
         row("Star")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .assert(
-                SemanticsMatcher("click label is \"open rank\"") {
-                    it.config[SemanticsActions.OnClick].label == "open rank"
-                }
+                hasClickLabel("open rank")
             )
     }
 
@@ -154,16 +159,20 @@ class RanksScreenTest {
     fun earnedRank_isLabeledEarned() {
         show(RanksUiState.Ready(ranks))
 
-        row("Scout").assert(hasText("Earned"))
-        composeTestRule.onAllNodes(hasText("Earned")).assertCountEquals(1)
+        row("Scout").assert(hasLine("Earned"))
+        composeTestRule.onAllNodes(hasText("Earned"), useUnmergedTree = true).assertCountEquals(1)
+        composeTestRule.onAllNodes(readsLine("Earned"), useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test
     fun inProgressRank_isTheOnlyOneLabeledInProgress() {
         show(RanksUiState.Ready(ranks))
 
-        row("Tenderfoot").assert(hasText("In progress"))
-        composeTestRule.onAllNodes(hasText("In progress")).assertCountEquals(1)
+        row("Tenderfoot").assert(hasLine("In progress"))
+        composeTestRule.onAllNodes(hasText("In progress"), useUnmergedTree = true)
+            .assertCountEquals(1)
+        composeTestRule.onAllNodes(readsLine("In progress"), useUnmergedTree = true)
+            .assertCountEquals(1)
     }
 
     @Test
@@ -200,16 +209,16 @@ class RanksScreenTest {
         val waiting = RankListItem("star", "Star", RankStatus.NotEarned, fractionDone = 1f)
         show(RanksUiState.Ready(listOf(waiting)))
 
-        row("Star").assert(stateDescription("100% done"))
-        composeTestRule.onNodeWithText("Earned").assertDoesNotExist()
-        composeTestRule.onNodeWithText("In progress").assertDoesNotExist()
+        row("Star").assert(stateDescription("100% done")).assertContentDescriptionEquals("Star")
+        composeTestRule.onNodeWithText("Earned", useUnmergedTree = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText("In progress", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
     fun atLargestFontSize_scrollsToTheLastRank() {
         show(RanksUiState.Ready(ranks), density = Density(1f, fontScale = 2f))
 
-        list().performScrollToNode(hasText("Eagle Scout"))
+        list().performScrollToNode(hasContentDescription("Eagle Scout"))
 
         row("Eagle Scout").assertIsDisplayed().performClick()
         assertEquals(listOf("eagle"), openedRanks)

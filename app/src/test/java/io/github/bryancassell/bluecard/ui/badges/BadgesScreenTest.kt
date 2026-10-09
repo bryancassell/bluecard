@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
@@ -31,6 +32,8 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -57,8 +60,15 @@ import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.PHONE_IN_LANDSCAPE
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.hasClickLabel
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.hasNoLine
+import io.github.bryancassell.bluecard.testing.isGivenToScreenReaders
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
+import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.paragraphDirection
+import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -135,8 +145,8 @@ class BadgesScreenTest {
         }
     }
 
-    // Each row merges its texts, so a row is the node with the badge's name.
-    private fun row(name: String) = composeTestRule.onNodeWithText(name)
+    // A row is read as one, with a label of its own, so it's found by the name it shows.
+    private fun row(name: String) = composeTestRule.onReadAsOne(name)
 
     private fun list() = composeTestRule.onNode(hasScrollToNodeAction())
 
@@ -257,11 +267,14 @@ class BadgesScreenTest {
 
         composeTestRule.onNodeWithText("Merit badges").assert(isHeading())
         composeTestRule.onNode(loadingIndicator).assertDoesNotExist()
+        // As screen readers read them: each row's lines in turn.
         val rows = list().onChildren()
-        rows[0].assert(hasText("Camping"))
-        rows[1].assert(hasText("Chess"))
-        rows[2].assert(hasText("Cooking"))
-        rows[3].assert(hasText("Hiking"))
+        rows[0].assertContentDescriptionEquals("Camping. Eagle-required. Completed")
+        rows[1].assertContentDescriptionEquals("Chess. In progress")
+        rows[2].assertContentDescriptionEquals("Cooking. Eagle-required")
+        rows[3].assertContentDescriptionEquals(
+            "Hiking. Eagle-required (one of Cycling, Hiking, and Swimming)"
+        )
     }
 
     private fun isListOf(rows: Int) = SemanticsMatcher("is a list of $rows rows") {
@@ -310,9 +323,7 @@ class BadgesScreenTest {
         row("Chess")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .assert(
-                SemanticsMatcher("click label is \"open badge\"") {
-                    it.config[SemanticsActions.OnClick].label == "open badge"
-                }
+                hasClickLabel("open badge")
             )
     }
 
@@ -320,17 +331,34 @@ class BadgesScreenTest {
     fun eagleRequiredBadges_areLabeled() {
         show(BadgesUiState.Ready(badges))
 
-        row("Camping").assert(hasText("Eagle-required"))
-        row("Cooking").assert(hasText("Eagle-required"))
-        row("Chess").assert(!hasText("Eagle-required"))
+        row("Camping").assert(hasLine("Eagle-required"))
+        row("Cooking").assert(hasLine("Eagle-required"))
+        row("Chess").assert(hasNoLine("Eagle-required", substring = true))
     }
 
     @Test
     fun eagleGroupBadge_namesTheGroup() {
         show(BadgesUiState.Ready(badges))
 
-        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
-        row("Hiking").assert(!hasText("Eagle-required"))
+        row("Hiking").assert(hasLine("Eagle-required (one of Cycling, Hiking, and Swimming)"))
+        row("Hiking").assert(hasNoLine("Eagle-required"))
+    }
+
+    @Test
+    fun badgeRow_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        val hiking = badges.last().copy(status = BadgeStatus.InProgress, fractionDone = 0.4f)
+        show(BadgesUiState.Ready(listOf(hiking) + many))
+
+        assertEquals(
+            "Hiking. Eagle-required (one of Cycling, Hiking, and Swimming). In progress",
+            composeTestRule.readWithOnlyItsLastLineShown(
+                view,
+                hasClickLabel("open badge") and hasAnyDescendant(hasText("Hiking")),
+                firstLine = "Hiking",
+                lastLine = "Eagle-required (one of Cycling, Hiking, and Swimming)"
+            )
+        )
     }
 
     // The app has only English strings, so on a French device the whole label stays
@@ -340,31 +368,31 @@ class BadgesScreenTest {
     fun eagleGroupBadge_onDeviceInAnotherLanguage_staysInOneLanguage() {
         show(BadgesUiState.Ready(badges))
 
-        row("Hiking").assert(hasText("Eagle-required (one of Cycling, Hiking, and Swimming)"))
+        row("Hiking").assert(hasLine("Eagle-required (one of Cycling, Hiking, and Swimming)"))
     }
 
     @Test
     fun completedBadge_isLabeledCompleted() {
         show(BadgesUiState.Ready(badges))
 
-        row("Camping").assert(hasText("Completed"))
-        row("Camping").assert(!hasText("In progress"))
+        row("Camping").assert(hasLine("Completed"))
+        row("Camping").assert(hasNoLine("In progress", substring = true))
     }
 
     @Test
     fun inProgressBadge_isLabeledInProgress() {
         show(BadgesUiState.Ready(badges))
 
-        row("Chess").assert(hasText("In progress"))
-        row("Chess").assert(!hasText("Completed"))
+        row("Chess").assert(hasLine("In progress"))
+        row("Chess").assert(hasNoLine("Completed", substring = true))
     }
 
     @Test
     fun notStartedBadge_hasNoStatusLabel() {
         show(BadgesUiState.Ready(badges))
 
-        row("Cooking").assert(!hasText("In progress"))
-        row("Cooking").assert(!hasText("Completed"))
+        row("Cooking").assert(hasNoLine("In progress", substring = true))
+        row("Cooking").assert(hasNoLine("Completed", substring = true))
     }
 
     private val anyProgressBar =
@@ -389,14 +417,16 @@ class BadgesScreenTest {
 
     @Test
     fun inProgressBadge_readsHowMuchIsDone_asTheRowsState() {
+        turnOnScreenReader()
         show(BadgesUiState.Ready(badges))
 
         row("Chess").assert(
             SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "40% done")
         )
         // Screen readers hear it from the row, so they skip the bar.
-        composeTestRule.onNode(anyProgressBar, useUnmergedTree = true)
-            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility))
+        val bar = composeTestRule.onNode(anyProgressBar, useUnmergedTree = true)
+        assertTrue(isGivenToScreenReaders(view, row("Chess").fetchSemanticsNode()))
+        assertFalse(isGivenToScreenReaders(view, bar.fetchSemanticsNode()))
     }
 
     @Test
@@ -435,7 +465,7 @@ class BadgesScreenTest {
         // Rows off screen aren't composed until scrolled to.
         row("Badge 200").assertDoesNotExist()
 
-        list().performScrollToNode(hasText("Badge 200"))
+        list().performScrollToNode(hasContentDescription("Badge 200"))
 
         row("Badge 200").assertIsDisplayed()
         row("Badge 200").performClick()
@@ -926,7 +956,7 @@ class BadgesScreenTest {
     @Test
     fun newMatches_areShownFromTheTop() {
         show(BadgesUiState.Ready(many))
-        list().performScrollToNode(hasText("Badge 150"))
+        list().performScrollToNode(hasContentDescription("Badge 150"))
 
         // Badge 1, Badge 10 to 19, then Badge 100 to 199, which include the rows on screen.
         uiState = BadgesUiState.Ready(many.filter { it.name.startsWith("Badge 1") })
@@ -937,7 +967,7 @@ class BadgesScreenTest {
     @Test
     fun sameBadges_keepTheirScrollPosition() {
         show(BadgesUiState.Ready(many))
-        list().performScrollToNode(hasText("Badge 200"))
+        list().performScrollToNode(hasContentDescription("Badge 200"))
 
         // As when the scout comes back from a badge they started.
         uiState = BadgesUiState.Ready(many.map { it.copy(status = BadgeStatus.InProgress) })

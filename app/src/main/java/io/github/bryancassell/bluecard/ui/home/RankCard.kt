@@ -37,6 +37,7 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
+import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.statusFitsBeside
 
 /**
@@ -65,13 +66,13 @@ fun RankCard(
         ?: stringResource(R.string.home_every_rank_earned)
     val inProgress = stringResource(R.string.badges_in_progress)
     // How many ranks are earned takes the trail's place.
-    val label = listOfNotNull(
+    val label = readAsOneLabel(
         title,
         rankName,
         ranksEarned,
         next,
         inProgress.takeIf { nextRank != null }
-    ).joinToString(stringResource(R.string.home_rank_card_separator))
+    )
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,

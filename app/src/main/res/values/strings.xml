@@ -9,6 +9,10 @@
     <string name="load_failed">Couldn\'t load your data. Try closing and reopening BlueCard.</string>
     <!-- Shown briefly when something the scout recorded couldn't be saved on the phone. -->
     <string name="save_failed">Couldn\'t save. Try again.</string>
+    <!-- Between the lines of a list row or card as screen readers read it, such as
+         "Your rank. Tenderfoot. 2 of 7 ranks earned" on Home's rank card. The quotes keep its
+         space. -->
+    <string name="read_as_one_separator">". "</string>
     <!-- A dialog shown once, when the progress stored on the phone was damaged and BlueCard
          started over without it. The name and unit number are stored apart, so they're kept. -->
     <string name="damaged_progress_title">Your progress couldn\'t be read</string>
@@ -32,9 +36,6 @@
     <string name="home_next_rank">Next: %1$s</string>
     <!-- On Home's rank card in place of home_next_rank, once the scout has earned every rank. -->
     <string name="home_every_rank_earned">Every rank earned</string>
-    <!-- Between the parts of Home's rank card as screen readers read it, such as
-         "Your rank. Tenderfoot. 2 of 7 ranks earned". The quotes keep its space. -->
-    <string name="home_rank_card_separator">". "</string>
     <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
     <string name="home_badges_title">Your merit badges</string>
     <string name="home_eagle_title">Eagle-required</string>
