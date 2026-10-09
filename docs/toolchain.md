@@ -116,6 +116,19 @@ The one exception is lint's "a newer version is available" checks, which are
 turned off: they would fail the build whenever a new release came out, and
 Dependabot proposes those updates instead.
 
+**When lint itself crashes.** Now and then a local build fails with
+"Unexpected failure during lint analysis of … (this is a bug in lint or one of
+the libraries it depends on)" or "Could not initialize class
+com.intellij.ide.plugins.PluginEnabler". That's lint crashing, not a problem
+lint found in the code. Run the same command again. If it crashes again, add
+`--no-daemon`: lint runs inside the Gradle daemon and keeps its state there
+from one build to the next, so a new daemon starts it afresh. Unlike
+`./gradlew --stop`, `--no-daemon` leaves other builds' daemons running. Lint
+prints the crash's full stack trace (`android.lint.printStackTrace` in
+`gradle.properties`). Add it to
+[#227](https://github.com/bryancassell/bluecard/issues/227), so the crash can
+be reported to Google.
+
 ## Project layout
 
 ```
