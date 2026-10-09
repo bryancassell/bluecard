@@ -116,18 +116,21 @@ The one exception is lint's "a newer version is available" checks, which are
 turned off: they would fail the build whenever a new release came out, and
 Dependabot proposes those updates instead.
 
-**When lint itself crashes.** Now and then a local build fails with
-"Unexpected failure during lint analysis of … (this is a bug in lint or one of
-the libraries it depends on)" or "Could not initialize class
-com.intellij.ide.plugins.PluginEnabler". That's lint crashing, not a problem
-lint found in the code. Run the same command again. If it crashes again, add
-`--no-daemon`: lint runs inside the Gradle daemon and keeps its state there
-from one build to the next, so a new daemon starts it afresh. Unlike
-`./gradlew --stop`, `--no-daemon` leaves other builds' daemons running. Lint
-prints the crash's full stack trace (`android.lint.printStackTrace` in
-`gradle.properties`). Add it to
-[#227](https://github.com/bryancassell/bluecard/issues/227), so the crash can
-be reported to Google.
+**When lint itself crashes.** Now and then a lint task, such as
+`lintAnalyzeDebugUnitTest`, fails with "Unexpected failure during lint analysis
+of … (this is a bug in lint or one of the libraries it depends on)" or "Could
+not initialize class com.intellij.ide.plugins.PluginEnabler". That's lint
+crashing, not a problem lint found in the code. First save the build's output.
+For the first message, it has the crash's full stack trace
+(`android.lint.printStackTrace` in `gradle.properties`), which a bug report to
+Google needs. Lint's report files have only a few lines of it. Then run the
+command again with `--no-daemon`. Lint runs inside the Gradle daemon and keeps
+its state there from one build to the next. A plain rerun can crash the same
+way or, after 20 crashes in that daemon, pass without checking the files lint
+crashed on. `--no-daemon` runs the build in a new JVM, which starts lint
+afresh, and unlike `./gradlew --stop`, it leaves other builds' daemons
+running. The daemon that crashed keeps lint's state until it exits, so if a
+later build crashes the same way, add `--no-daemon` again.
 
 ## Project layout
 
