@@ -585,6 +585,14 @@ both taps of a double tap can reach it.
   which must match each scheme's `background`), a dark window theme, and the
   splash screen's white system bar icons. Once the app draws,
   `enableEdgeToEdge()` picks the bar icons from dark mode.
+- **The status bar's background is the Scaffold's top bar**
+  (`StatusBarBackground` in `BlueCardApp`), in `surfaceContainer`, as
+  [`PRD.md`](PRD.md#design-decisions)'s Status bar row chooses. As the top bar,
+  it sets where every page starts, so no page pads itself for the status bar.
+  It's as tall as all the system bars at the top (`WindowInsets.systemBars`),
+  not just the status bar: the Scaffold pads its content by the top bar's
+  height in place of its window insets, so a band sized by the status bar alone
+  would let a window's caption bar cover the page in desktop windowing.
 - **A full-screen dialog sets its own system bar icons.** A Compose `Dialog`
   has its own window, which doesn't get the icons `enableEdgeToEdge()` gives
   the activity's, and Android takes the bar icons from it as the top
