@@ -116,6 +116,17 @@ The one exception is lint's "a newer version is available" checks, which are
 turned off: they would fail the build whenever a new release came out, and
 Dependabot proposes those updates instead.
 
+**When lint itself crashes.** Now and then a lint task, such as
+`lintAnalyzeDebugUnitTest`, fails with "Unexpected failure during lint analysis
+of … (this is a bug in lint or one of the libraries it depends on)". That's
+lint crashing, not a problem lint found in the code. Running the same command
+again has passed in every case reported so far. A bug report to Google needs
+lint's whole message. Gradle keeps each build's output in
+`~/.gradle/daemon/<Gradle version>/daemon-<pid>.out.log` for 14 days, so the
+message is there after the console has lost it:
+`grep -l "Unexpected failure during lint" ~/.gradle/daemon/*/*.out.log` finds
+it.
+
 ## Project layout
 
 ```
