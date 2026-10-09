@@ -217,7 +217,8 @@ private fun IgnoreTouchesAsItOpens(content: @Composable () -> Unit) {
  * The ranks that merging as chosen would un-earn, such as "Star will no longer count as
  * earned.", as the removal dialogs name them (#259). Screen readers announce it as it appears,
  * but not again after the phone rotates ([rememberIsNewText]). It's composed with none too,
- * hidden, and takes no space then (see LoadingOrMessage).
+ * hidden, and takes no space then, for the reason LoadingOrMessage gives for its message, which
+ * no longer holds.
  */
 @Composable
 private fun UnearnedRanks(names: List<String>) {

@@ -53,8 +53,9 @@ fun turnOnScreenReader() {
 
 /**
  * Turns on a screen reader, as far as Compose can tell, and lists what TalkBack would read out
- * from live regions: the text of each live region that's the source of a content change. TalkBack
- * reads one on any such change, whatever changed, and on nothing else. Create it before setting
+ * from live regions: the content description, or else the text, of each live region that's the
+ * source of a content change. TalkBack reads one on any such change, whatever changed, and on
+ * nothing else. Create it before setting
  * the content.
  */
 class LiveRegionReadouts {
@@ -91,7 +92,9 @@ class LiveRegionReadouts {
                         ?.takeIf { it.liveRegion != View.ACCESSIBILITY_LIVE_REGION_NONE }
                     // TalkBack reads a content description in place of the text, and nothing
                     // from a live region with neither.
-                    val readout = liveRegion?.run { contentDescription ?: text }
+                    val readout = liveRegion?.run {
+                        contentDescription.takeUnless { it.isNullOrEmpty() } ?: text
+                    }
                     if (!readout.isNullOrEmpty()) readouts += readout.toString()
                 }
                 return super.onRequestSendAccessibilityEvent(host, child, event)

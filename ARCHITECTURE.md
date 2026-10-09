@@ -378,8 +378,8 @@ both taps of a double tap can reach it.
   Compose reports a node's first layout, and each later change to its size or
   position, as a change to it, and TalkBack reads a live region on any change
   it's the source of. So Badges' count becomes one only when its text first
-  changes (`MatchCount` in `BadgesScreen.kt`), and a message only for text it
-  hasn't shown in its place, even before the phone rotated
+  changes (`MatchCount` in `BadgesScreen.kt`), and a message only for text
+  other than what its place showed last, even before the phone rotated
   (`rememberIsNewText` in `ui/ScreenMessage.kt`). Read out as their screens
   appeared, each held back the heading by 2 to 3 seconds
   ([#278](https://github.com/bryancassell/bluecard/issues/278),
@@ -976,7 +976,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals | Automatic reports need the `INTERNET` permission (req. 1) |
 | [Damaged database](#storage-errors) | Damaged files are set aside, never deleted, and the scout is told | Progress is never lost without the scout knowing |
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; the screen keeps showing what's stored | The UI layer guide's pattern for ViewModel messages |
-| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region | Screen readers hear it as it appears |
+| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region | Screen readers hear it as it appears, but not again after rotation |
 | [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text goes on the `Text` inside it | TalkBack read one on the button and then the text too |
 | [Live regions](#live-regions) | A live region is set only for text the scout should hear as it appears | Compose reports a node's first layout as a change |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |

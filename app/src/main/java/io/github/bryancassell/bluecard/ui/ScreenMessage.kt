@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
  * Screen readers announce the message as it appears, because it's a polite live region. Without
  * that, TalkBack read the message only when its focus happened to move onto it, so with its focus
  * on a heading that stays, as on Badges, nothing told the scout (#69). It's a live region only for
- * a message it hasn't shown in its place ([rememberIsNewText]), so it isn't read out again after
- * the phone rotates. TalkBack may read it a second time as its focus moves off something that
+ * a message other than the one it showed last ([rememberIsNewText]), so it isn't read out again
+ * after the phone rotates. TalkBack may read it a second time as its focus moves off something that
  * went away, such as the loading indicator. A pane title was tried first: TalkBack treated the
  * message like a window and said "BlueCard" whenever it went away.
  *
@@ -58,7 +58,7 @@ fun ScreenMessage(text: String?, modifier: Modifier = Modifier) {
  * The loading indicator while [message] is null, then [message] in its place. A screen shows its
  * loading, load-failed and unavailable states with one call, from one `when` branch. That was so
  * screen readers would announce the message from a node Compose had already seen, but a new one
- * is announced too (see [rememberIsNewText]), and #329 is to drop it.
+ * is announced too (see [rememberIsNewText]).
  */
 @Composable
 fun LoadingOrMessage(message: String?, modifier: Modifier = Modifier) {
