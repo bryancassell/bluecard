@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui
 import android.graphics.Insets
 import android.view.View
 import android.view.WindowInsets
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +13,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -20,8 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.MainActivityUiState
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.ui.theme.BlueCardDarkColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -85,35 +89,51 @@ class BlueCardAppTest {
     @Config(sdk = [36])
     @Test
     fun statusBar_isDrawnInAColorSetApartFromThePage() {
-        assertBandCoversTopBar(WindowInsets.Type.statusBars())
+        assertBandCovers(WindowInsets.Type.statusBars())
     }
 
-    // As the Scaffold's top bar, the band sets where pages start, so it must cover a window's
-    // caption bar too, as in desktop windowing.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "night", sdk = [36])
+    @Test
+    fun statusBar_inDarkMode_isDrawnInTheDarkSchemesColors() {
+        assertBandCovers(WindowInsets.Type.statusBars(), BlueCardDarkColorScheme)
+    }
+
+    // As the Scaffold's top bar, the band sets where pages start, so it must cover whatever the
+    // Scaffold's own padding would keep pages out of: a window's caption bar in desktop windowing,
+    // and a camera cutout taller than the status bar.
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Config(sdk = [36])
     @Test
     fun captionBar_isCoveredByTheBandToo() {
-        assertBandCoversTopBar(WindowInsets.Type.captionBar())
+        assertBandCovers(WindowInsets.Type.captionBar())
+    }
+
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(sdk = [36])
+    @Test
+    fun displayCutout_isCoveredByTheBandToo() {
+        assertBandCovers(WindowInsets.Type.displayCutout())
     }
 
     /**
-     * Shows a 24dp system bar of [type] across the top of the window, and checks that the band,
-     * which pages start below, covers exactly it. Only Robolectric's native graphics draw real
-     * pixels. On SDK 36, as the screenshot tests are: on SDK 37, Robolectric 4.17 leaves a class's
-     * later captures blank.
+     * Gives the window a 24dp inset of [type] across its top, and checks that the band covers
+     * exactly it in [scheme]'s colors, set apart from the page, and that the page starts below it.
+     * Only Robolectric's native graphics draw real pixels. On SDK 36, as the screenshot tests are:
+     * on SDK 37, Robolectric 4.17 leaves a class's later captures blank.
      */
-    private fun assertBandCoversTopBar(type: Int) {
+    private fun assertBandCovers(type: Int, scheme: ColorScheme = BlueCardLightColorScheme) {
         lateinit var view: View
         composeTestRule.setContent {
             view = LocalView.current
             BlueCardApp(MainActivityUiState.LoadFailed, onDismissDamagedProgressNotice = {})
         }
-        val barHeight = with(composeTestRule.density) { 24.dp.roundToPx() }
+        val inset = 24.dp
+        val insetPx = with(composeTestRule.density) { inset.roundToPx() }
         composeTestRule.runOnUiThread {
             view.dispatchApplyWindowInsets(
                 WindowInsets.Builder()
-                    .setInsets(type, Insets.of(0, barHeight, 0, 0))
+                    .setInsets(type, Insets.of(0, insetPx, 0, 0))
                     .setVisible(type, true)
                     .build()
             )
@@ -121,8 +141,14 @@ class BlueCardAppTest {
 
         // The left edge is clear of the message, so it shows what's behind it.
         val pixels = composeTestRule.onRoot().captureToImage().toPixelMap()
-        assertEquals(BlueCardLightColorScheme.surfaceContainer, pixels[0, 0])
-        assertEquals(BlueCardLightColorScheme.surfaceContainer, pixels[0, barHeight - 1])
-        assertEquals(BlueCardLightColorScheme.background, pixels[0, barHeight])
+        assertEquals(scheme.surfaceContainer, pixels[0, 0])
+        assertEquals(scheme.surfaceContainer, pixels[0, insetPx - 1])
+        assertEquals(scheme.background, pixels[0, insetPx])
+        assertNotEquals(pixels[0, 0], pixels[0, insetPx])
+        // ScreenMessage is inset 16dp from the top of the page.
+        composeTestRule.onNodeWithText(
+            "Couldn't load your data. Try closing and reopening BlueCard."
+        )
+            .assertTopPositionInRootIsEqualTo(inset + 16.dp)
     }
 }

@@ -112,8 +112,9 @@ fun MergeDialog(
     }
     Dialog(
         onDismissRequest = close,
-        // Drawn behind the system bars, as the app's pages are, rather than leaving them over
-        // the dimmed page below.
+        // Drawn behind the system bars, as the app's window is, rather than leaving them over
+        // the dimmed page below. Its status bar takes its top row's color, with no band as pages
+        // have: the list scrolls under the top row, clear of the clock (PRD.md's Status bar).
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false

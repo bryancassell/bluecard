@@ -2,15 +2,14 @@ package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -65,16 +64,16 @@ fun BlueCardApp(uiState: MainActivityUiState, onDismissDamagedProgressNotice: ()
 /**
  * Fills the space behind the status bar in a color set apart from the page's: Material's color for
  * a top app bar that a page has scrolled under. A page scrolled up to the bar ends at its edge; on
- * the page's own color, its cut-off text ran into the clock. As the Scaffold's top bar, it sets
- * where pages start, so it covers all the system bars at the top, as the Scaffold's padding did
- * without it: a window's caption bar too, in desktop windowing.
+ * the page's own color, its cut-off text ran into the clock. As the Scaffold's top bar, its height
+ * is where every page starts, so it's as tall as the Scaffold's top padding would be without it:
+ * the status bar, or a window's caption bar or a camera cutout where either is taller.
  */
 @Composable
 private fun StatusBarBackground() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .windowInsetsTopHeight(WindowInsets.systemBars)
+            .windowInsetsTopHeight(ScaffoldDefaults.contentWindowInsets)
             .background(MaterialTheme.colorScheme.surfaceContainer)
     )
 }
