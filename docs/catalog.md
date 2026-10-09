@@ -341,6 +341,12 @@ each one with that section, not by the count: lists and common phrases make
 long matches in summaries that are fine, and rewording to avoid them makes
 summaries read awkwardly.
 
+Reading them side by side, also check that each summary keeps every
+alternative the official text gives, such as an "or", a "may" or a note under
+the requirement, and adds none: Rifle Shooting 2A(11) once left out explaining
+how to adjust the sights when the instructor finds adjusting impractical, and
+Snow Sports 7D(9) once took 7B(10)'s note for adaptive skiers.
+
 It also can't check that a step with the counselor, or anyone else, made it
 into the catalog, so reviewers check that too. Search the official text of
 each requirement you add or change for "counselor" and for share, show,

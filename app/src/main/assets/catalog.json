@@ -9422,7 +9422,7 @@
                 },
                 {
                   "number": "5d",
-                  "summary": "With an adult and the pamphlet's checklist or one your counselor approves, inspect a home or similar building for fire hazards; show your counselor the checklist and discuss what you found."
+                  "summary": "With an adult, use the pamphlet's checklist or one your counselor approves to look for fire safety hazards in a home or similar building; review the checklist with your counselor."
                 },
                 {
                   "number": "5e",
@@ -11608,7 +11608,7 @@
                     },
                     {
                       "number": "4D(6)",
-                      "summary": "See fossils firsthand, or present your state fossil.",
+                      "summary": "See fossils firsthand, or present a state fossil.",
                       "requiredCount": 1,
                       "children": [
                         {
@@ -11625,7 +11625,7 @@
                         },
                         {
                           "number": "4D(6)(d)",
-                          "summary": "Present a display on your state fossil, or a neighboring state's if yours has none, with its image, age and classification."
+                          "summary": "Present your state fossil, or a neighboring state's if yours has none, to your counselor or a small group in a display or talk with its image, age and classification."
                         }
                       ]
                     }
