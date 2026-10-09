@@ -526,10 +526,11 @@ both taps of a double tap can reach it.
   read as the row's state needs no `hideFromAccessibility` of its own. Something
   with one line of text, such as a counselor's phone number or a button, merges
   its parts as usual: it loses its text only when nothing but its padding is on
-  screen, as every button can. Tests find such a node by a line it shows, in the
-  unmerged tree, which keeps its parts (`onReadAsOne` in
-  `testing/ReadAsOne.kt`). They read it as TalkBack does, scrolled until only
-  its last line shows, with `readWithOnlyItsLastLineShown`
+  screen, as every button can. The Merge dialog's options don't follow this yet
+  ([#323](https://github.com/bryancassell/bluecard/issues/323)). Tests find such
+  a node by a line it shows, in the unmerged tree, which keeps its parts
+  (`onReadAsOne` in `testing/ReadAsOne.kt`). They read it as TalkBack does,
+  scrolled until only its last line shows, with `readWithOnlyItsLastLineShown`
   (`testing/SpokenLabel.kt`).
 
 ### Live regions

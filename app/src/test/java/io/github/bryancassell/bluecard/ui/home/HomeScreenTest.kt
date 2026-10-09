@@ -36,7 +36,7 @@ import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
-import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.hasNoLine
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
@@ -445,7 +445,7 @@ class HomeScreenTest {
 
         row("Camping").assert(hasLine("Eagle-required")).assert(hasLine("In progress"))
         row("Chess")
-            .assert(hasNoLineWith("Eagle-required"))
+            .assert(hasNoLine("Eagle-required", substring = true))
             .assert(hasLine("In progress"))
         row("Hiking")
             .assert(hasLine("Eagle-required (one of Cycling, Hiking, and Swimming)"))

@@ -32,6 +32,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.onReadAsOne
+import io.github.bryancassell.bluecard.testing.readsLine
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -160,6 +161,7 @@ class RanksScreenTest {
 
         row("Scout").assert(hasLine("Earned"))
         composeTestRule.onAllNodes(hasText("Earned"), useUnmergedTree = true).assertCountEquals(1)
+        composeTestRule.onAllNodes(readsLine("Earned"), useUnmergedTree = true).assertCountEquals(1)
     }
 
     @Test
@@ -168,6 +170,8 @@ class RanksScreenTest {
 
         row("Tenderfoot").assert(hasLine("In progress"))
         composeTestRule.onAllNodes(hasText("In progress"), useUnmergedTree = true)
+            .assertCountEquals(1)
+        composeTestRule.onAllNodes(readsLine("In progress"), useUnmergedTree = true)
             .assertCountEquals(1)
     }
 

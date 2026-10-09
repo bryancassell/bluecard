@@ -65,7 +65,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
-import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.hasNoLine
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.pickerDay
@@ -557,7 +557,7 @@ class RequirementDetailScreenTest {
         row("Give six hours of service.")
             .assert(hasLine("4.5 of 6 hours"))
             .assert(hasLine("2 of 3 conservation hours"))
-            .assert(hasNoLineWith("2 projects"))
+            .assert(hasNoLine("2 projects", substring = true))
     }
 
     /** Sub-requirements with these numbers, each summarized as "Summary of <number>.". */
@@ -741,7 +741,7 @@ class RequirementDetailScreenTest {
         show(withWeeks)
 
         composeTestRule.onNodeWithText("1 of 3 weeks").performScrollTo().assert(isHeading())
-        row("Week 1").assert(hasNoLineWith("20"))
+        row("Week 1").assert(hasNoLine("20", substring = true))
         row("Week 2").assert(hasLine("20"))
         row("Week 3")
         composeTestRule.onNodeWithText("Add week").assertDoesNotExist()
@@ -1089,7 +1089,7 @@ class RequirementDetailScreenTest {
             .assert(hasLine("Eagle-required"))
         row("Chess")
             .assert(hasLine("Completed on Feb 1, 2026"))
-            .assert(hasNoLineWith("Eagle-required"))
+            .assert(hasNoLine("Eagle-required", substring = true))
         row("Hiking")
             .assert(hasLine("Completed on Mar 1, 2026"))
             .assert(hasLine("Eagle-required"))
@@ -1105,7 +1105,7 @@ class RequirementDetailScreenTest {
 
         row("Camping").assert(hasLine("Eagle-required"))
         row("Hiking").assert(hasLine("Eagle-required"))
-        row("Swimming").assert(hasNoLineWith("Eagle-required"))
+        row("Swimming").assert(hasNoLine("Eagle-required", substring = true))
     }
 
     @Test

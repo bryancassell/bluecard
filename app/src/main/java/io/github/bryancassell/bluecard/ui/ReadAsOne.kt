@@ -19,19 +19,21 @@ fun readAsOneLabel(vararg parts: String?): String =
     joinedAsOne(parts.filterNotNull(), stringResource(R.string.read_as_one_separator))
 
 /**
- * [parts] joined with [separator]. After a part that already ends a sentence, such as a
- * requirement's summary, the separator's punctuation is left out, so it isn't doubled ("knots..")
- * on a braille display or with punctuation read aloud.
+ * [parts] joined with [separator]. After a part that already ends with the separator's
+ * punctuation, such as a requirement's summary ending in ".", only the space after it follows,
+ * so the punctuation isn't doubled ("knots.. (2 of 7") on a braille display or when punctuation
+ * is read aloud.
  */
-internal fun joinedAsOne(parts: List<String>, separator: String): String = buildString {
-    parts.forEachIndexed { index, part ->
-        if (index > 0) {
-            val afterSentence = parts[index - 1].lastOrNull()?.let(::endsSentence) == true
-            append(if (afterSentence) separator.dropWhile { !it.isWhitespace() } else separator)
+internal fun joinedAsOne(parts: List<String>, separator: String): String {
+    val punctuation = separator.trimEnd()
+    val space = separator.substring(punctuation.length)
+    return buildString {
+        parts.forEachIndexed { index, part ->
+            if (index > 0) {
+                val endsWithIt = punctuation.isNotEmpty() && parts[index - 1].endsWith(punctuation)
+                append(if (endsWithIt) space else separator)
+            }
+            append(part)
         }
-        append(part)
     }
 }
-
-/** Whether [char] ends a sentence. */
-internal fun endsSentence(char: Char): Boolean = char in ".?!"

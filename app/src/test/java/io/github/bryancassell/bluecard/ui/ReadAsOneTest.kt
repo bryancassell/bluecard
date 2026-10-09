@@ -28,18 +28,21 @@ class ReadAsOneTest {
     }
 
     @Test
-    fun partEndingASentence_isFollowedByTheSeparatorWithoutItsPunctuation() {
+    fun partEndingWithTheSeparatorsPunctuation_isFollowedByItsSpaceOnly() {
         assertEquals(
-            "2. Tie two knots. (2 of 7 complete). Is it done? Yes! Done",
-            joinedAsOne(
-                listOf("2", "Tie two knots.", "(2 of 7 complete)", "Is it done?", "Yes!", "Done"),
-                ". "
-            )
+            "2. Tie two knots. (2 of 7 complete). Done",
+            joinedAsOne(listOf("2", "Tie two knots.", "(2 of 7 complete)", "Done"), ". ")
         )
     }
 
+    // As a translation's separator might be.
     @Test
-    fun lastPartEndingASentence_isKeptAsItIs() {
+    fun separatorWithoutASpace_isLeftOutAfterItsPunctuation() {
+        assertEquals("一。二。三", joinedAsOne(listOf("一。", "二", "三"), "。"))
+    }
+
+    @Test
+    fun lastPartEndingWithTheSeparatorsPunctuation_isKeptAsItIs() {
         assertEquals("Next. Done.", joinedAsOne(listOf("Next", "Done."), ". "))
     }
 

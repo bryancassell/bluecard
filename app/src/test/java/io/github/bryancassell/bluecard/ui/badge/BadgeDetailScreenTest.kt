@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -66,10 +67,10 @@ import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
-import io.github.bryancassell.bluecard.testing.assertShowsAndReads
+import io.github.bryancassell.bluecard.testing.assertShows
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
-import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.hasNoLine
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
@@ -640,7 +641,7 @@ class BadgeDetailScreenTest {
         row("Plan a campout.")
             .assert(hasStateDescription("Completed"))
             .assert(!hasContentDescription("Completed"))
-            .assert(hasNoLineWith("Completed"))
+            .assert(hasNoLine("Completed", substring = true))
     }
 
     // The scout marks a requirement complete on its own page.
@@ -656,7 +657,7 @@ class BadgeDetailScreenTest {
         show(ready)
 
         row("Do two of these.").assert(hasLine("Do 2 of 3"))
-        row("Plan a campout.").assert(hasNoLineWith("Do"))
+        row("Plan a campout.").assert(hasNoLine("Do", substring = true))
     }
 
     private fun withPartlyCompleted(number: String, count: CompleteCount?) = ready.copy(
@@ -750,7 +751,7 @@ class BadgeDetailScreenTest {
         row("Do two of these.")
             .assert(hasStateDescription("In progress"))
             .assert(hasLine("Do 2 of 3"))
-            .assert(hasNoLineWith("complete"))
+            .assert(hasNoLine("complete", substring = true))
     }
 
     // Under the sub-requirements' count it's what's left of, not the tracker's.
@@ -776,12 +777,16 @@ class BadgeDetailScreenTest {
         )
 
         row("Do two of these.")
-            .assertShowsAndReads(
+            .assertShows(
                 "2",
                 "Do two of these.",
                 "Do 2 of 3 (2 of 2 complete)",
                 "Still to do: Share what you learned.",
                 "2 sessions"
+            )
+            .assertContentDescriptionEquals(
+                "2. Do two of these. Do 2 of 3 (2 of 2 complete). Still to do: Share what you " +
+                    "learned. 2 sessions"
             )
     }
 
@@ -807,11 +812,14 @@ class BadgeDetailScreenTest {
 
         row("Keep a camping log.")
             .assert(hasStateDescription("In progress"))
-            .assertShowsAndReads(
+            .assertShows(
                 "3",
                 "Keep a camping log.",
                 "12 of 12 nights",
                 "Still to do: Compare the nights."
+            )
+            .assertContentDescriptionEquals(
+                "3. Keep a camping log. 12 of 12 nights. Still to do: Compare the nights."
             )
     }
 
@@ -861,11 +869,15 @@ class BadgeDetailScreenTest {
 
         row("Keep a camping log.")
             .assert(hasStateDescription("In progress"))
-            .assertShowsAndReads(
+            .assertShows(
                 "3",
                 "Keep a camping log.",
                 "10 of 10 nights",
                 "Still to do: Check it off once all of it is done."
+            )
+            .assertContentDescriptionEquals(
+                "3. Keep a camping log. 10 of 10 nights. Still to do: Check it off once all of " +
+                    "it is done."
             )
     }
 
@@ -887,7 +899,7 @@ class BadgeDetailScreenTest {
         row("Keep a camping log.")
             .assert(hasStateDescription("Completed"))
             .assert(hasLine("10 of 10 nights"))
-            .assert(hasNoLineWith("Still to do"))
+            .assert(hasNoLine("Still to do", substring = true))
     }
 
     // Under every total, as Life 4's line waits for both.
@@ -917,12 +929,16 @@ class BadgeDetailScreenTest {
         )
 
         row("Keep a camping log.")
-            .assertShowsAndReads(
+            .assertShows(
                 "3",
                 "Keep a camping log.",
                 "6 of 6 hours",
                 "3 of 3 conservation hours",
                 "Still to do: Check it off once all of it is done."
+            )
+            .assertContentDescriptionEquals(
+                "3. Keep a camping log. 6 of 6 hours. 3 of 3 conservation hours. Still to do: " +
+                    "Check it off once all of it is done."
             )
     }
 

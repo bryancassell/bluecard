@@ -62,7 +62,7 @@ import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
-import io.github.bryancassell.bluecard.testing.hasNoLineWith
+import io.github.bryancassell.bluecard.testing.hasNoLine
 import io.github.bryancassell.bluecard.testing.isGivenToScreenReaders
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.onReadAsOne
@@ -333,7 +333,7 @@ class BadgesScreenTest {
 
         row("Camping").assert(hasLine("Eagle-required"))
         row("Cooking").assert(hasLine("Eagle-required"))
-        row("Chess").assert(hasNoLineWith("Eagle-required"))
+        row("Chess").assert(hasNoLine("Eagle-required", substring = true))
     }
 
     @Test
@@ -341,7 +341,7 @@ class BadgesScreenTest {
         show(BadgesUiState.Ready(badges))
 
         row("Hiking").assert(hasLine("Eagle-required (one of Cycling, Hiking, and Swimming)"))
-        row("Hiking").assert(!hasAnyDescendant(hasText("Eagle-required")))
+        row("Hiking").assert(hasNoLine("Eagle-required"))
     }
 
     @Test
@@ -376,7 +376,7 @@ class BadgesScreenTest {
         show(BadgesUiState.Ready(badges))
 
         row("Camping").assert(hasLine("Completed"))
-        row("Camping").assert(hasNoLineWith("In progress"))
+        row("Camping").assert(hasNoLine("In progress", substring = true))
     }
 
     @Test
@@ -384,15 +384,15 @@ class BadgesScreenTest {
         show(BadgesUiState.Ready(badges))
 
         row("Chess").assert(hasLine("In progress"))
-        row("Chess").assert(hasNoLineWith("Completed"))
+        row("Chess").assert(hasNoLine("Completed", substring = true))
     }
 
     @Test
     fun notStartedBadge_hasNoStatusLabel() {
         show(BadgesUiState.Ready(badges))
 
-        row("Cooking").assert(hasNoLineWith("In progress"))
-        row("Cooking").assert(hasNoLineWith("Completed"))
+        row("Cooking").assert(hasNoLine("In progress", substring = true))
+        row("Cooking").assert(hasNoLine("Completed", substring = true))
     }
 
     private val anyProgressBar =
