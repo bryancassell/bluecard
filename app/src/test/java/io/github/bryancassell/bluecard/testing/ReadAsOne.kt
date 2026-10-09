@@ -31,15 +31,19 @@ fun SemanticsNodeInteractionsProvider.onReadAsOne(
 /**
  * Whether something read as one ([onReadAsOne]) reads [text] as a whole part of its label:
  * between the label's ends or the separators around it. After a part ending in the separator's
- * punctuation, as "knots." does, only the separator's space follows it.
+ * punctuation, as "knots." does, only the separator's space follows it, even with invisible
+ * formatting characters after the punctuation, such as the direction marks `typedText` puts after
+ * a right-to-left name.
  */
 fun readsLine(text: String): SemanticsMatcher {
     val separator = ApplicationProvider.getApplicationContext<Context>()
         .getString(R.string.read_as_one_separator)
     val punctuation = separator.trimEnd()
     val space = separator.substring(punctuation.length)
-    val after = if (text.endsWith(punctuation)) space else separator
-    val before = "(?:^|(?<=${Regex.escape(separator)}))"
+    val endsWithIt = text.trimEnd { it.category == CharCategory.FORMAT }.endsWith(punctuation)
+    val after = if (endsWithIt) space else separator
+    val afterMarks = "${Regex.escape(punctuation)}\\p{Cf}{1,8}${Regex.escape(space)}"
+    val before = "(?:^|(?<=${Regex.escape(separator)})|(?<=$afterMarks))"
     val part = Regex("$before${Regex.escape(text)}(?:$|(?=${Regex.escape(after)}))")
     return SemanticsMatcher("reads \"$text\" as a part of its label") { node ->
         node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()

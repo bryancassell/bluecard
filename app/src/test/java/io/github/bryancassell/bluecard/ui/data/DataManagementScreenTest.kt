@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.semantics.LiveRegionMode.Companion.Polite
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -27,6 +28,7 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
@@ -47,8 +49,14 @@ import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
+import io.github.bryancassell.bluecard.testing.assertShows
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.turnOnScreenReader
+import io.github.bryancassell.bluecard.text.typedText
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.time.LocalDate
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -454,10 +462,18 @@ class DataManagementScreenTest {
     /** In the merge's dialog, not the page under it. */
     private fun inDialog(matcher: SemanticsMatcher) = matcher and hasAnyAncestor(isDialog())
 
-    /** The option for the phone's or the file's ([label]) that holds [details]. */
-    private fun option(label: String, vararg details: String) = composeTestRule.onNode(
-        details.fold(inDialog(hasText(label))) { matcher, detail -> matcher and hasText(detail) }
-    ).performScrollTo()
+    /**
+     * Whether a node is the option for the phone's or the file's ([label]) that shows and reads
+     * [details]. It's found by all its lines, not by one as `onReadAsOne` finds a row, since both
+     * options under a heading can show the same line, such as "In progress".
+     */
+    private fun isOption(label: String, vararg details: String) = details.fold(
+        inDialog(hasClickAction() and hasAnyDescendant(hasText(label)))
+    ) { matcher, detail -> matcher and hasLine(detail) }
+
+    /** The option for the phone's or the file's ([label]) that holds [details] ([isOption]). */
+    private fun option(label: String, vararg details: String) =
+        composeTestRule.onNode(isOption(label, *details), useUnmergedTree = true).performScrollTo()
 
     @Test
     fun mergeChoices_showEachChoice_underItsHeading_withWhatEachSideHolds() {
@@ -502,7 +518,8 @@ class DataManagementScreenTest {
         showMergeChoices(choices.copy(profile = null))
 
         composeTestRule.onNode(inDialog(hasText("Name and unit"))).assertDoesNotExist()
-        composeTestRule.onNode(inDialog(hasText("Sam Scout"))).assertDoesNotExist()
+        composeTestRule.onNode(inDialog(hasText("Sam Scout")), useUnmergedTree = true)
+            .assertDoesNotExist()
     }
 
     @Test
@@ -600,21 +617,70 @@ class DataManagementScreenTest {
     }
 
     // A screen reader user moving from control to control doesn't hear the heading, so each
-    // option's label names it. The label is on the text, as for ButtonText.
+    // option's label names it, then reads the lines below it.
     @Test
     fun mergeChoices_optionsNameWhatTheyreFor_toScreenReaders() {
         showMergeChoices(choices)
 
-        for (description in listOf(
-            "Name and unit, this phone",
-            "Name and unit, the file",
-            "Camping, this phone",
-            "Scout, the file"
-        )) {
-            composeTestRule
-                .onNode(hasContentDescription(description), useUnmergedTree = true)
-                .assert(hasText(description.substringAfter(", "), ignoreCase = true))
+        // Each option's lines, as it shows them, and its label.
+        val options = listOf(
+            listOf("This phone", "Sam Scout", "Unit: Crew 7") to
+                "Name and unit, this phone. Sam Scout. Unit: Crew 7",
+            listOf("The file", "Sam Lee", "Unit: Troop 12") to
+                "Name and unit, the file. Sam Lee. Unit: Troop 12",
+            listOf("This phone", "40% done") to "Camping, this phone. 40% done",
+            listOf("The file", "Completed on Apr 15, 2026") to
+                "Camping, the file. Completed on Apr 15, 2026",
+            listOf("This phone", "In progress", "Requirements effective Jan 1, 2025") to
+                "Cooking, this phone. In progress. Requirements effective Jan 1, 2025",
+            listOf("The file", "25% done", "Requirements effective Jan 1, 2026") to
+                "Cooking, the file. 25% done. Requirements effective Jan 1, 2026",
+            listOf("This phone", "50% done") to "Scout, this phone. 50% done",
+            listOf("The file", "Earned") to "Scout, the file. Earned"
+        )
+        for ((lines, label) in options) {
+            option(lines.first(), *lines.drop(1).toTypedArray())
+                .assertShows(*lines.toTypedArray())
+                .assert(hasContentDescription(label))
         }
+    }
+
+    // typedText puts direction marks after a right-to-left name, after its final period, which
+    // the label then doesn't double.
+    @Test
+    fun mergeOption_withARightToLeftNameEndingInAPeriod_readsThePeriodOnce() {
+        val name = "\u05D3\u05D5\u05D3."
+        showMergeChoices(
+            choices.copy(
+                profile = ProfileChoice(Profile("Sam Scout", "Crew 7"), Profile(name, "Troop 12"))
+            )
+        )
+        val shown = typedText(name, Locale.ENGLISH)
+
+        option("The file", shown, "Unit: Troop 12")
+            .assert(hasContentDescription("Name and unit, the file. $shown Unit: Troop 12"))
+    }
+
+    // TalkBack can focus an option without scrolling it into view, as when the scout touches the
+    // part that shows.
+    @Test
+    fun mergeOption_partlyScrolledOff_isReadWhole() {
+        turnOnScreenReader()
+        showMergeChoices(choices)
+        // The dialog's own Compose view, in its own window, gives screen readers its nodes.
+        val dialogView = (
+            composeTestRule.onNode(isDialog()).fetchSemanticsNode().root as ViewRootForTest
+            ).view
+
+        assertEquals(
+            "Name and unit, this phone. Sam Scout. Unit: Crew 7",
+            composeTestRule.readWithOnlyItsLastLineShown(
+                dialogView,
+                hasClickAction() and hasAnyDescendant(hasText("Sam Scout")),
+                firstLine = "This phone",
+                lastLine = "Unit: Crew 7"
+            )
+        )
     }
 
     // The second tap of a double tap on the import dialog's Merge would land on the merge's
@@ -627,9 +693,8 @@ class DataManagementScreenTest {
         val doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
 
         // Near the top, so no scrolling, which would wait on the clock this test holds.
-        val filesProfile = composeTestRule.onNode(
-            inDialog(hasText("The file") and hasText("Sam Lee"))
-        )
+        val filesProfile =
+            composeTestRule.onNode(isOption("The file", "Sam Lee"), useUnmergedTree = true)
 
         filesProfile.performClick()
         composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout / 2)

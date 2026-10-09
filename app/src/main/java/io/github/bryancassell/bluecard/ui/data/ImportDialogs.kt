@@ -43,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
@@ -59,6 +60,7 @@ import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
+import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedText
 import kotlinx.coroutines.delay
@@ -316,11 +318,7 @@ private fun Choice(
 
 /**
  * A radio button labeled [label], with [details] below it, that the whole row selects. Screen
- * readers read [labelDescription] in place of the label.
- *
- * Its lines still merge into the row, with no label of its own from `readAsOneLabel`
- * (`ui/ReadAsOne.kt`), so TalkBack may leave out the ones scrolled off screen. That's a bug,
- * #323, not a pattern to copy.
+ * readers read it as one: [labelDescription] in place of the label, then the details.
  */
 @Composable
 private fun Option(
@@ -330,24 +328,22 @@ private fun Option(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val readAs = readAsOneLabel(labelDescription, *details.toTypedArray())
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+            // A label of its own rather than its lines merged, which TalkBack read without
+            // "This phone" or "The file" once that line was scrolled off screen (#323).
+            .clearAndSetSemantics { contentDescription = readAs }
             .padding(vertical = 8.dp)
     ) {
         // The row is the control, so the button isn't one of its own.
         RadioButton(selected = selected, onClick = null)
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            // On the text, not the row, as ButtonText puts a button's (ARCHITECTURE.md, Screen
-            // reader labels).
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.semantics { contentDescription = labelDescription }
-            )
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
             for (detail in details) {
                 Text(
                     text = detail,
