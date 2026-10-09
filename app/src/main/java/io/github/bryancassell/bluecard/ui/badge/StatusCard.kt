@@ -38,7 +38,10 @@ internal const val STATUS_CARD_TAG = "statusCard"
  *
  * Each line pads its own sides, as on the page, so a text button's text lines up with the card's
  * text. Its last line is always a button, whose touch area leaves room under it, so the card
- * leaves less. The [reportButtons], if given, for a badge or rank that's done, come last.
+ * leaves less. The [reportButtons], if given, for a badge or rank that's done, come last: they're
+ * part of being done. The card pushes the requirements down the page, so on a small phone or with
+ * large text the scout scrolls to reach the first one; finding the action mattered more than
+ * saving a scroll.
  */
 @Composable
 fun StatusCard(
@@ -89,7 +92,8 @@ fun DoneStatusLine(text: String) {
  * A status card's lines while the badge or rank isn't done: its [status], the [prompt] asking
  * whether the scout has already done it, if there is one, and a button labeled [markText] that
  * marks it done on a date the scout picks, up to [today], without recording its requirements
- * ([onMark]). The picker opens at [initial], if given, or at today.
+ * ([onMark]). The picker opens at [initial], if given, or at today. The button's fill and icon say
+ * it's something to tap that asks for a date, and the prompt says what it's for.
  */
 @Composable
 fun ColumnScope.MarkDoneLines(
@@ -122,6 +126,9 @@ fun ColumnScope.MarkDoneLines(
 /**
  * Mark completed or Mark earned, labeled [text]: a tonal button with a calendar icon that asks
  * for a date as [PickDate] does. As a text button, it looked like a caption, not something to tap.
+ * It opens the picker straight away, as the date is the point: a prior date is rarely today.
+ * Tonal rather than filled, since recording requirements, not marking, is how most badges get
+ * completed; the card, lighter than the page, keeps it from blending into the page.
  */
 @Composable
 private fun MarkOnDateButton(

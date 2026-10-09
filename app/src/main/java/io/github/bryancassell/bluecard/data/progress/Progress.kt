@@ -107,7 +107,8 @@ data class RequirementProgress(
      * marked complete, and the requirement is only complete once enough of its sub-requirements
      * are too, or every row of its tracker is filled in ([completion]). For one that
      * [completesFromRows], it's that the scout gave the date it was completed on, which doesn't
-     * complete it.
+     * complete it, so that date needed no migration or new export format. A mark left from before
+     * #105, when those requirements had a checkbox, reads as a date given (#116).
      */
     val completed: Boolean = false,
     /** Optional date the scout gave when they marked it [completed]; only set when it is. */
@@ -117,7 +118,11 @@ data class RequirementProgress(
      * them Notes (#127); the code and database kept the name, so the rename needed no migration.
      */
     val comment: String? = null,
-    /** For a rank's requirement, who signed off on it, such as the Scoutmaster (#248). */
+    /**
+     * For a rank's requirement, who signed off on it, such as the Scoutmaster (#248). It doesn't
+     * complete the requirement, and the date stays the checkbox's: a sign-off says who approved
+     * the work, not that it's done.
+     */
     val signedOffBy: String? = null
 )
 
@@ -154,7 +159,10 @@ data class TrackerEntry(
 
 /**
  * The [entries] of a tracker with [rowCount] rows, by the row they fill. Only a catalog edited
- * during development could leave an entry outside them.
+ * during development could leave an entry outside them. A row with an entry is filled in even
+ * with some of its fields empty, so saving only Genealogy 2b's six week-start dates completes
+ * it. A field can be empty for good reason, such as a week with no income, and the app doesn't
+ * decide which of a requirement's columns it needs (#115).
  */
 fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntry> =
     entries.filter { it.rowNumber in 1..rowCount }.associateBy { it.rowNumber!! }
@@ -162,7 +170,9 @@ fun filledRows(entries: List<TrackerEntry>, rowCount: Int): Map<Int, TrackerEntr
 /**
  * The rows of this tracker with the [entries] recorded for its requirement, each with its
  * number from 1: in a log, each entry in the order it was added; with a fixed number of rows,
- * every row, with its entry, or null if it isn't filled in.
+ * every row, with its entry, or null if it isn't filled in, so a row keeps its number when
+ * another is deleted. Numbered rows match trackers such as a 13-week budget, where each week is
+ * its own row.
  */
 fun TrackerDefinition.numberedRows(entries: List<TrackerEntry>): List<Pair<Int, TrackerEntry?>> {
     val count = rowCount

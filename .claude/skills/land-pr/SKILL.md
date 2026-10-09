@@ -18,7 +18,7 @@ Ask with AskUserQuestion, recommended option first, whenever the answer is the d
 - The issue is unclear, or what it expects conflicts with PRD.md or ARCHITECTURE.md.
 - The issue needs more than one PR: which part this one covers.
 - Two or more reasonable approaches differ in a way the developer would care about.
-- A change would add or change a row in PRD.md's Design decisions, or a decision in ARCHITECTURE.md.
+- A change would add or change a row in PRD.md's Design decisions, or a decision in ARCHITECTURE.md, or make either file longer.
 - You'd decline a review finding about correctness, or fixing one would change behavior the issue didn't ask about.
 - A test or CI failure isn't clearly caused by this change.
 
@@ -35,7 +35,7 @@ Don't ask what the code, the docs or a convention already answers. Ask when the 
 
 1. `git status --porcelain` prints nothing. If it prints anything, ask what to do with those changes rather than carrying them onto the new branch.
 2. `git switch main && git pull --ff-only`, then `git switch -c fix/N-<short-slug>` for a bug, or `feature/N-<short-slug>` otherwise.
-3. Write a test that fails for the issue's reason, then make it pass. Update PRD.md and ARCHITECTURE.md in the same change when a decision changes.
+3. Write a test that fails for the issue's reason, then make it pass. Update PRD.md and ARCHITECTURE.md in the same change when a decision changes, following CLAUDE.md's "What goes where": the cause of a bug and how the fix works go in a comment at the fix, not in either document. Check each paragraph you add to either file against it, and remove what your change makes redundant.
 4. `./gradlew build` passes. CI's Build job runs the same command: unit tests, the coverage check, lint and Spotless. When the change touches `app/src/androidTest`, `./gradlew pixel6Api37DebugAndroidTest` passes too, as in CI's Instrumented tests job.
 5. The coverage check only holds each class to 80%. If the change lowers coverage anyway, say so and why under `## Tests`, with numbers from `./gradlew createDebugUnitTestCoverageReport`.
 6. For a change people can see or hear, check it on the emulator through a subagent that reports back in text. Also do the checks docs/toolchain.md asks for by hand: "Checking a release build" after adding or updating AGP, a library, a keep rule or code that uses reflection, and "Checking backup and restore" after changing the backup rules or where data is stored.
@@ -45,6 +45,7 @@ Don't ask what the code, the docs or a convention already answers. Ask when the 
 1. Commit, `git push -u origin HEAD`, then `gh pr create`.
 2. Title: what now works, in plain words, ending in `(#N)`. For example, "Keep Badges' search field above the keyboard in landscape (#308)".
 3. Body, as in recent PRs (`gh pr view 314` is a model): `Closes #N.` if this PR finishes the issue, or `Part of #N.` and what's left if it doesn't. Then what was wrong, and `## Cause`, `## What`, `## Tests` and, for the checks in step 2.6, `## Checked on the emulator`. The squash commit takes the PR's title and body, so write them for `main`'s history.
+4. If ARCHITECTURE.md or PRD.md changed, end `## What` with how many words each gained or lost (`wc -w`). If either got longer and the developer agreed, `gh pr edit <PR number> --add-label grows-docs`; CI's Doc growth check fails without it.
 
 ## 4. Two review rounds
 

@@ -46,9 +46,13 @@ class SetAsideDamagedDatabaseFactory(private val damagedProgress: FileDamagedPro
          * Called by Android's SQLite when it finds the database damaged. If that's while
          * opening it, the database isn't open yet, and SQLite then creates a new one in its
          * place. If it's while reading or writing, the database is open, and it's closed first,
-         * as the default handler does. Room keeps using the closed connection, so the next
-         * read or write crashes the app, and the new database is created when the app starts
-         * again (see ARCHITECTURE.md, Storage errors).
+         * as the default handler does. Room keeps using the closed connection (checked in Room
+         * 2.8.5), so the next read or write throws an exception the repository treats as a bug,
+         * which crashes the app, and the new database is created when the app starts again.
+         * Damage is rare, so this was chosen over reporting those exceptions as storage
+         * failures until the app restarts, or moving every read to a new database. SQLite's
+         * https://www.sqlite.org/howtocorrupt.html lists causes such as failing storage;
+         * neither it nor Android publishes how often it happens.
          */
         override fun onCorruption(db: SupportSQLiteDatabase) {
             // Set aside even if closing fails, as the default handler deletes in that case.

@@ -118,6 +118,7 @@ fun RequirementDetailScreen(
     ConfirmDiscardOnBack(
         changed = ready?.textChanged == true,
         onDiscard = onDiscard,
+        // Says it's the text that isn't saved, as the checkbox and date save straight away.
         message = stringResource(
             if (ready?.hasSignOffField == true) {
                 R.string.discard_changes_message_sign_off_and_notes
@@ -149,7 +150,11 @@ fun RequirementDetailScreen(
                 RequirementHeader(uiState.advancementName, uiState.requirement, uiState.timeInRank)
                 val requirement = uiState.requirement
                 // Its own work is stored as the requirement's own progress, like one marked by
-                // hand, so it has the same checkbox and date.
+                // hand, so it has the same checkbox and date. Only a requirement with own work
+                // gets one: a checkbox on every requirement with sub-requirements would add a trip
+                // to the many that only group them. It's labeled with our summary of the work, so
+                // it says exactly what to check off, where "Completed" would be wrong until the
+                // sub-requirements are done too (#143).
                 val ownWork = requirement.ownWork
                 if (requirement.markedByHand || ownWork != null) {
                     val checked = ownWork?.completed ?: requirement.completed
@@ -162,7 +167,9 @@ fun RequirementDetailScreen(
                         CompletionDate(uiState.completedDate, today, onCompletedDateChange)
                     }
                 } else if (requirement.completesFromRows && requirement.completed) {
-                    // Under the header's "Completed", where a checkbox's date would be.
+                    // Under the header's "Completed", where a checkbox's date would be. Once the
+                    // date is removed, Add date opens at the date the last row was saved, which
+                    // gives it a way back without another button: Clear would delete the rows too.
                     CompletionDate(
                         uiState.completedDate,
                         today,
@@ -171,6 +178,7 @@ fun RequirementDetailScreen(
                     )
                 }
                 // Right above the sub-requirements it counts, below the checkbox for its own work.
+                // Under the summary, it had the checkbox between it and what it counts.
                 requirement.choice?.let {
                     Text(
                         text = choiceLabel(it),
@@ -246,6 +254,7 @@ private fun RequirementHeader(
             modifier = Modifier.semantics { heading() }
         )
         Text(text = requirement.summary, style = MaterialTheme.typography.bodyLarge)
+        // Only here, not on the requirement's row, and still once it's checked off.
         timeInRank?.let {
             Text(
                 text = timeInRankText(it),
@@ -255,6 +264,13 @@ private fun RequirementHeader(
         }
         // One the scout marks by hand has a "Completed" checkbox instead. One with own work
         // shows it here, as its checkbox is only for that work.
+        //
+        // Not a live region, so screen readers aren't told when it appears or goes without the
+        // scout ticking anything: by its fixed-row tracker's last row being saved or a row of a
+        // full tracker deleted, or by its sub-requirements, own work or merit badges. TalkBack
+        // reads it here and as the row's state as the scout reaches them, as a sighted scout
+        // sees it on going back. Android 16's behavior changes ask that live regions be "used
+        // sparingly" (#109).
         if (!requirement.markedByHand && requirement.completed) {
             Text(
                 text = stringResource(R.string.requirement_completed),
@@ -350,8 +366,12 @@ private val CommentLengthLimit = TextLengthLimit(maxLength = NOTES_MAX_LENGTH)
 
 /**
  * Who [signedOffBy] on the requirement, unless it's null, as for a badge's requirement, and the
- * scout's comment on it, saved together when they choose. While the comment has focus, it and
- * Save are kept in view in the page's [scrollState].
+ * scout's comment on it, saved together when they choose. One Save keeps the page to one button,
+ * and its single write can't save one field and fail the other (#248). While the comment has
+ * focus, it and Save are kept in view in the page's [scrollState], as a tracker row's last field
+ * and Save are: Save sat partly behind the keyboard on a phone (#178). Clear progress, under
+ * Save, can stay behind the keyboard, as it isn't part of saving what the scout types. The
+ * sign-off keeps only its line in view, like a tracker row's earlier fields.
  */
 @Composable
 private fun TextFields(

@@ -107,7 +107,15 @@ fun BadgesScreen(
  * squeezing the search field into a strip that hid what the scout typed, with no room for the
  * count (#308). With the heading left out, the field and count fit, and the heading comes back
  * when the keyboard closes. It isn't placed, so screen readers don't read it either: Compose
- * leaves unplaced nodes out of what it gives them.
+ * leaves unplaced nodes out of what it gives them. The field and what's typed in it matter more
+ * than the heading, and the scout typing in the field knows which page they're on.
+ *
+ * The field alone and one match need at least 120dp, so no layout shows a whole match above that
+ * keyboard; closing it shows the matches. The heading gives way only to [search], not to a match
+ * as well: matches differ in height, so a page a little taller keeps the heading and shows part
+ * of a match or none until the keyboard closes. Scrolling the heading away would have left part
+ * of it above the field. Making the page one list, like the other pages, would have scrolled the
+ * field back behind the keyboard each time new matches are shown from the top.
  *
  * The rule takes [search]'s height with no line wrapped, which stays the same as the scout types.
  * Its laid-out height doesn't: the field's label can wrap until the scout types, and the count's
@@ -291,7 +299,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
 /**
  * How long the scout must stop typing before screen readers hear a new count. TalkBack doesn't
  * let new speech cut off a polite live region, so a count spoken while the scout types holds
- * back their keyboard's feedback on the next key.
+ * back their keyboard's feedback on the next key, by 1 to 4 seconds (#71).
  */
 internal val TypingPause = 1.seconds
 

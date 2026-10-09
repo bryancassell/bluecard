@@ -28,6 +28,9 @@ import org.junit.runner.RunWith
 /**
  * Checks the slides in a real NavDisplay: laid out right-to-left, as MainActivityTest can't, since
  * the app's strings only lay out left-to-right so far, and when Back interrupts one.
+ *
+ * It doesn't run the accessibility checks (AccessibilityChecks): one of its frame-by-frame checks
+ * fails under the native graphics they need. The screens' own tests check what they show.
  */
 @RunWith(AndroidJUnit4::class)
 class PageTransitionsTest {

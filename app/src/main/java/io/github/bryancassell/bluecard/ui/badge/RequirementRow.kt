@@ -49,7 +49,8 @@ private val numberStyle: TextStyle
 
 /**
  * A list of requirements' rows. Every number's box is as wide as the widest number needs at the
- * current font size, so the summaries after them line up.
+ * current font size, so the summaries after them line up, even when sibling numbers differ in
+ * width, such as `1b(9)` and `1b(10)` (#131).
  */
 @Composable
 fun RequirementRows(
@@ -82,7 +83,9 @@ fun RequirementRows(
  * log has the rows or the amount it asks for, under the count of what's done, how many merit
  * badges count toward it, for one that asks for them, and "Not needed" when it no longer is.
  * Screen readers read "Completed", "In progress", "Not completed", "Not recorded" or "Not needed"
- * as its state. The scout marks a requirement complete on its page.
+ * as its state. The scout marks a requirement complete on its page. A checkbox on the row let the
+ * scout mark many parts without leaving the list, such as Personal Fitness 3's seven, but was
+ * dropped after using the app (#103).
  */
 @Composable
 private fun RequirementRow(
@@ -174,6 +177,14 @@ private fun trackerProgressLabels(count: TrackerCount): List<String> {
  * The mark on the corner tells the states apart by more than color. It's [minWidth] wide, room
  * for the widest number in its list, but still widens to fit its own number if that measures
  * wider. It grows taller with the font size. The marks are drawn only: its row reads the state.
+ *
+ * A small check beside the chevron was easy to miss (#123). Filled versus outlined stands out
+ * without a new color or more width, and a choice the scout didn't pick no longer looks like work
+ * left. Until the tint, a requirement looked untouched until all of it was done, including one
+ * waiting only on its own work, and Badge detail showed nothing of progress below the top level
+ * (#158, #151). The tint barely stands out from the page, so the half circle tells it from an
+ * untouched box by shape, not color alone (WCAG 1.4.1), and pairs with the check: half done,
+ * then done.
  */
 @Composable
 private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {

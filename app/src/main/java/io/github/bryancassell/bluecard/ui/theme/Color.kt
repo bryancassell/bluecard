@@ -89,7 +89,8 @@ internal val BlueCardLightColorScheme = lightColorScheme(
  *   quieter text as much as in light mode.
  * - The background and surfaces are Scouting America Dark Blue, #003366, and darker shades of
  *   it. Dark Blue is the highest, so every text color meets WCAG AA on all of them
- *   (BlueCardColorSchemeTest checks each pair).
+ *   (BlueCardColorSchemeTest checks each pair). Dark Blue itself, rather than Material's dark
+ *   grey or a navy grey, keeps the dark scheme looking like the card (#108).
  * - `surfaceVariant` is the neutral variant palette's tone 20: a color no surface shares, as in
  *   the light scheme, and no lighter than Dark Blue. Material's tone 30 is below 4.5:1 for Pale
  *   Blue text.

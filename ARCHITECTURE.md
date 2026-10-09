@@ -3,10 +3,9 @@
 This is the high-level technical design for BlueCard. It explains how the app is
 structured to meet [`PRD.md`](PRD.md). It is a map, not a detailed spec: it
 records the technical decisions, the conventions new code must follow, and why.
-How each part works is in the comments of the code that builds it; for a part
-not built yet, such as export and import, its feature issue fills in the
-details. Choices about how the app looks and behaves are in
-[`PRD.md`](PRD.md#design-decisions).
+How each part works is in the comments of the code that builds it, and
+[`CLAUDE.md`](CLAUDE.md#what-goes-where) says what belongs here. Choices about
+how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 
 Sources were checked on 2026-09-28. "Recommended" in this document means Android's
 own documentation says so, and each such claim links to the page.
@@ -45,9 +44,6 @@ own documentation says so, and each such claim links to the page.
 - [Data model](#data-model)
   - [Completion](#completion)
 - [Key flows](#key-flows)
-  - [First launch](#first-launch)
-  - [Home summary](#home-summary)
-  - [Browse and search](#browse-and-search)
   - [Recording progress](#recording-progress)
   - [PDF report](#pdf-report)
   - [Clearing data](#clearing-data)
@@ -61,7 +57,6 @@ own documentation says so, and each such claim links to the page.
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
   - [Instrumented tests in CI](#instrumented-tests-in-ci)
-  - [Coverage](#coverage)
 - [Release build](#release-build)
 - [Debug builds](#debug-builds)
 - [Decisions](#decisions)
@@ -183,20 +178,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   A page that closes itself once its save succeeds does so from UI state too
   (see [Recording progress](#recording-progress)).
 - **A date that must be current when the scout acts is read then**, not held in
-  UI state, which updates only when the page's data changes. The date picker's
-  latest date works this way: screens pass their ViewModel's `today()` down, and
-  the picker calls it as it opens, so a page left open past midnight offers the
-  new day. It's a read, not an event, and an exception to state flowing down.
+  UI state: screens pass their ViewModel's `today()` down, and the date picker
+  calls it as it opens (`PickDate` in `ui/badge/CompletionDate.kt`).
 - **What a page remembers survives the system stopping the app.** It's kept in
   the ViewModel's `SavedStateHandle`, as a text field's text is (see
-  [Text fields](#text-fields)): for example the date Requirement detail brings
-  back to an unchecked requirement, and Badge detail's and Rank detail's
-  unmarked dates. A date is kept as its epoch day and read with
-  `dateFromEpochDay` (`ui/SavedStateDate.kt`), which, like `restoredText`,
-  ignores a value of another kind, as a backstop to
-  [#83](https://github.com/bryancassell/bluecard/issues/83). A key observed
-  with `getStateFlow` is set to null to forget it, not removed: `remove` drops
-  the flow, so the screen would stop following the key.
+  [Text fields](#text-fields)). A date, such as Badge detail's unmarked date, is
+  kept as its epoch day and read with `dateFromEpochDay`
+  (`ui/SavedStateDate.kt`). A key observed with
+  `getStateFlow` is set to null to forget it, not removed: `remove` drops the
+  flow, so the screen would stop following the key.
 
 ### Load and save failures
 
@@ -206,11 +196,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   `catchLoadFailure` (`ui/LoadFailure.kt`), and the screen shows a message in
   place of its content. When the profile can't be read, the navigation root
   shows the message in place of the whole app. This follows "Show errors on the
-  screen" in the UI layer guide, which keeps errors in UI state. The message has
-  no "Try again" button, which limits when a screen loads again
-  (`catchLoadFailure`). Data management shows no such message: it loads only
-  whether a badge or rank is started, for its Clear all button, which its
-  export and import don't need.
+  screen" in the UI layer guide, which keeps errors in UI state.
 - **Save failures are a UI state too.** When something can't be saved, a
   repository throws an `IOException`. ViewModels that save progress launch each
   write with a `TaskRunner` (`ui/TaskFailure.kt`), which puts a `TaskFailure` in
@@ -219,73 +205,27 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   [Handle ViewModel events](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
   which says ViewModel events "should always result in a UI state update". The
   screen keeps showing what's stored, so a change that failed visibly didn't
-  happen. Data management runs its import and clear as it runs its export,
-  with its own messages in one snackbar, rather than with a `TaskRunner`.
-- **Screen readers hear each snackbar from its live region.** Material 3
-  (1.4.0) gives each snackbar a polite live region and the pane title "Alert",
-  and composes each one as a new node. TalkBack read every failed save on
-  Onboarding, retries included
-  ([#234](https://github.com/bryancassell/bluecard/issues/234)): Compose sent a
-  subtree change from the new snackbar, and TalkBack reads a live region's text
-  on any change it's the source of. It skipped "Alert" when a snackbar replaced
-  one still showing, since the pane title hadn't changed, so don't rely on a
-  snackbar's pane title. That doesn't mean every new live-region node is
-  announced: a screen message composed in its own branch wasn't (below).
-- **A message that takes a screen's place is a live region composed while the
-  screen loads** ([#69](https://github.com/bryancassell/bluecard/issues/69)),
-  so screen readers announce it as it appears. `ScreenMessage`
-  (`ui/ScreenMessage.kt`) is a polite live region with no text while loading,
-  and the message once loading fails or the content is unavailable. While it
-  has no text, it's hidden from screen readers: Compose lets them focus any
-  node with text, even empty text, and a hidden node is still tracked. A screen
-  shows its loading, load-failed and unavailable states from one `when` branch
-  that calls `LoadingOrMessage`, so the node stays the same as its text
-  changes. The navigation root, which shows nothing while loading, calls
-  `ScreenMessage` itself the same way. Compose sends a live region's change only for a node it has already
-  seen (`sendSemanticsPropertyChangeEvents` in
-  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). A
-  message composed as a new node, as in its own branch, isn't announced.
-  Compose also reports a node's first layout as a change to it, which TalkBack
-  reads in a live region (see [Live regions](#live-regions)), so this and the
-  cases below that aren't announced are being checked again in
-  [#281](https://github.com/bryancassell/bluecard/issues/281).
-  - **Live regions are what Android points to.** When Android 16 deprecated
-    `announceForAccessibility`, its
-    [behavior changes](https://developer.android.com/about/versions/16/behavior-changes-all)
-    pointed to live regions "to inform the user of changes to critical UI",
-    and to pane titles "for significant UI changes like window changes".
-  - **Two cases aren't announced.** A failure after a screen has loaded
-    replaces the screen's content, not its loading state, so the message is a
-    new node. That's rare, and TalkBack should still read the message as its
-    focus moves off the content that went away, but that wasn't checked. A
-    screen composed already showing the message, such as after rotation,
-    doesn't announce it again; it was announced when it first appeared.
-  - **A pane title was tried first.** Compose announces a pane even as a new
-    node, but TalkBack treated the message like a window: it said "BlueCard",
-    the window's title, whenever the message went away. Compose also throws
-    when it has to merge a pane title into a parent, which happens only with a
-    screen reader on.
-- **Any other exception is a bug and still crashes the app.** The app has no
-  crash reporting of its own. Once BlueCard is on Google Play, a crash is the
-  only way a bug reaches the developer without a scout reporting it:
-  [Android vitals](https://developer.android.com/topic/performance/vitals)
-  reports crashes from users who allow it, but not caught exceptions. Testers
-  of the GitHub test builds report crashes by hand (see
-  [Release build](#release-build)). Each
-  caught load or save failure is logged with `Log.w`, so logcat and bug reports
-  show which data failed and why.
-- **Android vitals is the only automatic crash reporting**
-  ([#63](https://github.com/bryancassell/bluecard/issues/63)). It needs no code
-  in the app. A tool that sends reports automatically, such as Firebase
-  Crashlytics or ACRA over HTTP, needs the `INTERNET` permission, which
-  requirement 1 rules out. Scouts can be younger than 13, and Google Play's
+  happen. Data management, with several kinds of message, runs its own (`work`
+  in `DataManagementViewModel`).
+- **A message that takes a screen's place comes from `LoadingOrMessage`**
+  (`ui/ScreenMessage.kt`), called from the same `when` branch as the screen's
+  loading state, so screen readers announce it as it appears
+  ([#69](https://github.com/bryancassell/bluecard/issues/69)). It's a live
+  region composed with no text while the screen loads: Compose announces a live
+  region only when a node it has already seen changes. The navigation root
+  calls `ScreenMessage` itself the same way.
+- **Any other exception is a bug and still crashes the app**, so it reaches
+  [Android vitals](https://developer.android.com/topic/performance/vitals) once
+  BlueCard is on Google Play, the only automatic crash reporting
+  ([#63](https://github.com/bryancassell/bluecard/issues/63)). Caught
+  exceptions don't, so each caught load or save failure is logged with `Log.w`.
+  A tool that sends reports itself needs the `INTERNET` permission, which
+  requirement 1 rules out, and Google Play's
   [Families policy](https://support.google.com/googleplay/android-developer/answer/9893335)
-  says an app whose audience includes children "must not implement APIs or SDKs
-  that are not approved for use in child-directed services". ACRA can also email
-  a report that the scout reviews and sends from their own email app, which
-  needs no `INTERNET` permission. It was left out: it adds a library that runs
-  in its own process and a dialog after every crash, and it reports only what
-  scouts choose to send.
+  limits the SDKs an app for children can use. ACRA's email reports need
+  neither, but add a library in its own process and a dialog after every crash.
+  Testers of GitHub builds report crashes by hand (see
+  [Release build](#release-build)).
 
 ### Text fields
 
@@ -311,31 +251,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   `TextLengthLimit`.
 - **The keyboard's action key moves through a page's fields.** On a page with
   more than one field, each one-line field sets `ImeAction.Next`, and the last
-  text field `ImeAction.Done`; a multi-line field keeps Enter. Next uses
-  Compose's default focus order, which skips buttons in touch mode, so a
-  tracker entry's Next goes past a date's buttons to the next text field
-  ([#182](https://github.com/bryancassell/bluecard/issues/182)).
-- **A tracker entry's last field, and a requirement's notes, scroll into view
-  together with the Save button under them** (`KeepInViewWhileFocused` in
-  `ui/KeepInViewWhileFocused.kt`). As the keyboard opens, Compose keeps
-  only a focused field's cursor in view, which can leave the Save button under
-  the field behind the keyboard
-  ([#172](https://github.com/bryancassell/bluecard/issues/172),
-  [#178](https://github.com/bryancassell/bluecard/issues/178)). They're
-  brought into view together only when they fit, so a field too tall for both
-  still keeps its cursor in view. They're also brought into view only once the
-  keyboard has stopped moving: while a request runs, Compose stops following
-  the cursor, and a phone showed a tall field's cursor left behind the
-  keyboard. When the keyboard stops with the viewport grown, they're asked for
-  only if a request is still owed, so a number pad shorter than the letters
-  doesn't leave Save behind it
-  ([#244](https://github.com/bryancassell/bluecard/issues/244),
-  [#253](https://github.com/bryancassell/bluecard/issues/253)), and the page
-  isn't pulled back after the scout scrolled away. Telling that the keyboard
-  is moving takes
-  `WindowInsets.imeAnimationTarget`, which is `@ExperimentalLayoutApi`, so this
-  function opts in. A change to that API would fail the build when Compose is
-  updated.
+  text field `ImeAction.Done`; a multi-line field keeps Enter.
+- **A page's last field and the Save button under it go in
+  `KeepInViewWhileFocused`** (`ui/KeepInViewWhileFocused.kt`), as a tracker
+  entry's last field and a requirement's notes do. Compose keeps only a focused
+  field's cursor in view, which can leave Save behind the keyboard.
 
 ### Navigation
 
@@ -343,19 +263,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   which the recommendations page names for single-activity apps with more than
   one screen. Each destination is a `@Serializable` key, and ViewModels are
   scoped to back stack entries with `lifecycle-viewmodel-navigation3`.
-- **The back stack is saved without reflection.** Every key implements the
-  sealed `BlueCardNavKey`, and the back stack is a `NavBackStack<BlueCardNavKey>`
-  saved with that interface's compiler-written serializer (`rememberBackStack`
-  in `NavKeys.kt`). Navigation 3's `rememberNavBackStack` was not used: without
-  a `SavedStateConfiguration` it finds keys by class name with reflection, which
-  R8's renaming could break in the release build alone, where local tests can't
-  see it ([#203](https://github.com/bryancassell/bluecard/issues/203)). With
-  one, it registers keys in a `SerializersModule` (`subclassesOfSealed` is
-  experimental) and accepts any `NavKey`. Navigation adds keys only as
-  `BlueCardNavKey`s (`rememberNavigateFrom`), so the compiler rejects a key
-  that the back stack couldn't save. A key missing `@Serializable` still
-  compiles, but the sealed serializer leaves it out, so `NavKeysTest` checks
-  every subclass is saved and restored.
+- **The back stack is saved without reflection**, so R8 can't break it in the
+  release build alone ([#203](https://github.com/bryancassell/bluecard/issues/203)).
+  Every key implements the sealed `BlueCardNavKey`, whose compiler-written
+  serializer saves the back stack (`rememberBackStack` in `NavKeys.kt`), and
+  screens add keys with `rememberNavigateFrom`. `NavKeysTest` checks that every
+  key is saved and restored, so a new key goes in its list.
 - **Home is the fixed start destination.** Until a profile is saved, the
   navigation root shows Onboarding in place of the back stack, because the
   [navigation principles](https://developer.android.com/guide/navigation/principles#fixed_start_destination)
@@ -367,72 +280,29 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   suggests holding the first frame for loading "a small amount of data, such as
   loading in-app settings from a local disk".
 - **Screens' `SavedStateHandle`s don't start with the launching intent's
-  extras.** `MainActivity` is exported, and `ComponentActivity` passes the
-  intent's extras to every screen's ViewModel as default arguments, so any app
-  could fill a screen's saved state. BlueCard uses neither intent extras nor
-  default arguments, so `MainActivity` overrides
-  `defaultViewModelCreationExtras` to leave them empty
-  ([#83](https://github.com/bryancassell/bluecard/issues/83)). That covers
-  every ViewModel created with the activity's creation extras, as Hilt and
-  Navigation 3 create them. The activity's default factory still passes the
-  extras to a ViewModel created without creation extras, so create none that
-  way; overriding the factory instead would replace Hilt's.
-- **Pages slide the full width of their area, side by side**
-  (`ui/navigation/PageTransitions.kt`), as Navigation 3's
-  [animation guide](https://developer.android.com/guide/navigation/navigation-3/animate-destinations)
-  shows. A back swipe doesn't move the pages: the navigation root handles Back
-  with its own `BackHandler`, added before the screens so that a handler a
-  screen adds goes first (`BlueCardNavDisplay.kt`). Why the pages move this
-  way, against Material 3's advice, is in
-  [`PRD.md`](PRD.md#design-decisions).
+  extras**, which any app could fill, since `MainActivity` is exported
+  ([#83](https://github.com/bryancassell/bluecard/issues/83)). `MainActivity`
+  leaves them out of its `defaultViewModelCreationExtras`, which covers every
+  ViewModel Hilt and Navigation 3 create. So create no ViewModel without
+  creation extras: the activity's default factory would still pass it them.
+- **Pages slide side by side** (`ui/navigation/PageTransitions.kt`); why,
+  against Material 3's advice, is in [`PRD.md`](PRD.md#design-decisions). The
+  navigation root handles Back with its own `BackHandler`, added before the
+  screens so that a handler a screen adds goes first (`BlueCardNavDisplay.kt`).
 - **The navigation root decides whether Back asks before discarding unsaved
   changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
   arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no
-  back handler of their own: one is added and turned on only as its page is
-  drawn, a frame or more behind the back stack, so a quick Back would ask on a
-  page sliding away, or close one with unsaved changes before it's drawn again.
-- **A page that's left with input focus doesn't hand it to the next one.**
-  Out of touch mode, Compose clears the view's focus as a focused item leaves
-  composition, Android's `View.clearFocus()` asks the view to take focus
-  again, and Compose gives it to the first item that can take it, on whichever
-  page is shown. Focus went from Badges' search field to a Home button, and
-  from there back to the search field, which opened the keyboard, and TalkBack
-  followed it ([#285](https://github.com/bryancassell/bluecard/issues/285)).
-  A phone leaves touch mode on a key press, such as Enter or Tab, and
-  TalkBack's gestures don't bring it back: only a touch that reaches the app
-  does. So when the page shown changes while one of its items has focus, a
-  focus target around the pages takes it (`BlueCardNavDisplay`). It can take
-  focus only as it's given it there, or as a page's focused item goes
-  (below), and keeps it only until focus moves on:
-  Compose moves focus out to a parent that can take it on Back
-  (`FocusDirection.Exit`), so Back would stop there rather than leave the
-  page, and Tab would stop there as it starts on a page or wraps around. A
-  page that's sliding away can't take focus
-  (`rememberRefuseFocusWhileLeavingNavEntryDecorator`), or a key pressed
-  during the slide could focus it, and its focus would go to the focus target
-  as the page went, rather than into the page arriving.
-- **A page that clears input focus doesn't hand it to its first item.** Save
-  closes the keyboard with `FocusManager.clearFocus()`, which clears the
-  view's focus the same way. With a hardware keyboard, focus went to a
-  requirement page's Completed checkbox, and in local tests, a page that
-  closes once saved gave its first field focus as it went
-  ([#297](https://github.com/bryancassell/bluecard/issues/297)). So the
-  focus target around the pages takes focus from any `clearFocus()` on a
-  page, and a page can close the keyboard that way. It does so even while it
-  has focus itself, as after a page opened from a field closes again. A
-  screen reader or switch can then press Save without moving focus.
-- **Nor does a page whose focused item goes.** A focused item that leaves
-  composition or can no longer take focus, such as a button that's disabled
-  as it's pressed, loses focus without Compose asking `onExit`, and Android
-  then asks the view to take focus again
-  ([#301](https://github.com/bryancassell/bluecard/issues/301)). So the
-  focus target around the pages can also take focus as a page loses it that
-  way, but only briefly, until a task posted then runs: Android asks in the
-  same message, if it asks at all. From Android 9 it doesn't ask in touch
-  mode, and a target still able to take focus would take the request from a
-  later key press that leaves touch mode, an empty stop. A focusable View
-  before the `ComposeView` would also answer Android's request when a key is
-  pressed with nothing focused, and as the app starts.
+  back handler of their own, which would turn on a frame or more behind the
+  back stack.
+- **Input focus doesn't pass to the first item of whichever page is shown.**
+  Out of touch mode, when a focused item leaves or a page clears focus, Android
+  asks the view to take focus again, and Compose gives it to that first item
+  ([#285](https://github.com/bryancassell/bluecard/issues/285),
+  [#297](https://github.com/bryancassell/bluecard/issues/297),
+  [#301](https://github.com/bryancassell/bluecard/issues/301)). So a focus
+  target around the pages (`BlueCardNavDisplay`) takes it then, and a page can
+  close the keyboard with `FocusManager.clearFocus()`. A page sliding away
+  can't take focus (`rememberRefuseFocusWhileLeavingNavEntryDecorator`).
 
 ### Double taps
 
@@ -445,19 +315,14 @@ both taps of a double tap can reach it.
   also ignore touches while they animate out, and for the double-tap timeout as
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
-  ([#61](https://github.com/bryancassell/bluecard/issues/61)).
-- **The merge's full-screen dialog ignores touches for the double-tap timeout
-  as it opens** (`IgnoreTouchesAsItOpens` in `ui/data/ImportDialogs.kt`), as
-  screens do, so the second tap on the import dialog's Merge doesn't choose an
-  option under the finger.
+  ([#61](https://github.com/bryancassell/bluecard/issues/61)). The merge's
+  full-screen dialog does the same as it opens (`IgnoreTouchesAsItOpens`).
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
-  open another app. After a tap, it ignores taps for the double-tap timeout,
-  so a browser doesn't open two tabs, or an email app two drafts
-  ([#97](https://github.com/bryancassell/bluecard/issues/97)). Data
-  management's Edit and Clear all go through it too (`OtherAppStarter.tap`), so
-  a tap just after Export or Import doesn't open a page or dialog under the file
-  picker.
+  open another app. After a tap, it ignores taps for the double-tap timeout
+  ([#97](https://github.com/bryancassell/bluecard/issues/97)). A control beside
+  them, such as Data management's Clear all, goes through it too
+  (`OtherAppStarter.tap`), so its dialog doesn't open under the other app.
 
 ### Language and layout direction
 
@@ -471,12 +336,9 @@ both taps of a double tap can reach it.
   (`rememberCompletionDateFormatter`) are formatted in it too, so a sentence
   never mixes two languages: on a Persian phone, English strings read "Do 2 of
   3", not "Do ۲ of ۳". Code outside Compose, such as the PDF report, uses
-  `stringsLanguageResources` and `completionDateFormatter` (`text/`). The
-  screens' resources come from the same function, so the PDF and the screens
-  can't format a string differently.
-  `StringsLanguageTagTest` checks that each `strings.xml` names its own
-  language: a wrong tag, such as "en" left in a translation, would replace the
-  whole translation with English.
+  `stringsLanguageResources` and `completionDateFormatter` (`text/`). Each
+  translation's `strings.xml` must name its own language
+  (`StringsLanguageTagTest`).
 - **Punctuation that joins text comes from `strings.xml` too**
   ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
   " · " between a tracker row's values or the ": " after a label, so a
@@ -498,81 +360,49 @@ both taps of a double tap can reach it.
 ### Screen reader labels
 
 - **A label that replaces a button's text goes on the `Text` inside it**: the
-  button's content is a `ButtonText` (`ui/ButtonText.kt`), which sets it as the
-  text's `contentDescription`, never on the button's modifier
+  button's content is a `ButtonText` (`ui/ButtonText.kt`), never a description
+  on the button's modifier, which TalkBack read as well as the text
   ([#166](https://github.com/bryancassell/bluecard/issues/166),
-  [#256](https://github.com/bryancassell/bluecard/issues/256)). Compose gives
-  TalkBack the button's parts in turn, so a description on the button became a
-  part of its own: TalkBack read "Edit name and unit. Edit. Button". On the
-  text, it replaces the text's label. Tests of such a label check the `Text`
-  node in the unmerged tree, and that the button has only one description: the
-  merged node has the description wherever it's set.
+  [#256](https://github.com/bryancassell/bluecard/issues/256)). Tests check it
+  with `assertButtonReadOnceAs` (`testing/ButtonText.kt`).
 - **Something read as one, with lines one under another, that can be partly
   scrolled off screen has a label of its own**, set with `clearAndSetSemantics`,
   rather than merging its parts': Home's rank card, and list rows such as a
   badge's, a requirement's and a tracker row. The label is `readAsOneLabel`
-  (`ui/ReadAsOne.kt`) of the text it shows, in reading order, or what stands in
-  for what it can't show in words, such as the rank card's trail, but not what
-  it reads as its state. Compose gives TalkBack a merged node's own properties
-  and its parts as nodes of their own (`getInfoText` in
-  `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and marks
-  a part off screen as not visible to the user. TalkBack leaves those parts out:
-  with only the rank card's last line on screen, as Home came back scrolled
-  down, it read only that line
-  ([#305](https://github.com/bryancassell/bluecard/issues/305)), and a
-  requirement row read its count without its number and summary
-  ([#312](https://github.com/bryancassell/bluecard/issues/312)). Compose gives
-  screen readers none of the parts it clears, so a part such as a progress bar
-  read as the row's state needs no `hideFromAccessibility` of its own. Something
-  with one line of text, such as a counselor's phone number or a button, merges
-  its parts as usual: it loses its text only when nothing but its padding is on
-  screen, as every button can. The Merge dialog's options don't follow this yet
-  ([#323](https://github.com/bryancassell/bluecard/issues/323)). Tests find such
-  a node by a line it shows, in the unmerged tree, which keeps its parts
-  (`onReadAsOne` in `testing/ReadAsOne.kt`). They read it as TalkBack does,
-  scrolled until only its last line shows, with `readWithOnlyItsLastLineShown`
-  (`testing/SpokenLabel.kt`).
+  (`ui/ReadAsOne.kt`) of the text it shows, in reading order, but not what it
+  reads as its state. Merged, TalkBack left out the parts scrolled off screen
+  ([#305](https://github.com/bryancassell/bluecard/issues/305),
+  [#312](https://github.com/bryancassell/bluecard/issues/312)). Something with
+  one line of text, such as a button, merges its parts as usual: it loses its
+  text only when nothing but its padding is on screen. Tests find such a node
+  with `onReadAsOne` (`testing/ReadAsOne.kt`), and read it scrolled until only
+  its last line shows (`readWithOnlyItsLastLineShown` in
+  `testing/SpokenLabel.kt`).
 
 ### Live regions
 
 - **A live region that mustn't be read out as its screen appears becomes one
-  only when its text first changes.** Compose reports each change to a node's
-  size or position, its first layout included, as a change to that node
-  (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose
-  UI 1.12.1). TalkBack reads a live region on any change it's the source of,
-  whatever changed and whether or not it's on screen yet
-  (`EventTypeWindowContentChangedFeedbackRule` in TalkBack's source). So a live
-  region is read when it appears, and whenever it moves within its parent or
-  resizes. That's how each new snackbar is read (see
-  [Load and save failures](#load-and-save-failures)). A polite live region
-  read as its screen appears holds back the screen's heading, since new speech
-  can't cut it off: Badges' count held it back by about 2 seconds
-  ([#278](https://github.com/bryancassell/bluecard/issues/278), `MatchCount`
-  in `BadgesScreen.kt`). Whether `ScreenMessage` and the import dialog's
-  `UnearnedRanks` need the same is
-  [#281](https://github.com/bryancassell/bluecard/issues/281).
+  only when its text first changes** (`MatchCount` in `BadgesScreen.kt`).
+  Compose reports a node's first layout, and each later change to its size or
+  position, as a change to it, and TalkBack reads a live region on any change
+  it's the source of. Badges' count, a live region from the start, held back
+  the screen's heading by about 2 seconds
+  ([#278](https://github.com/bryancassell/bluecard/issues/278)).
 - **Set a live region from a value read while composing, not from a state read
   in the `semantics` block.** Compose updates a `semantics` block as soon as a
-  state it reads changes, before the next frame composes the new text. TalkBack
-  read out the old count then, before the new one.
+  state it reads changes, before the next frame composes the new text, so
+  TalkBack read out the old text.
 - **In local tests, `LiveRegionReadouts` (`testing/LiveRegion.kt`) lists what
-  TalkBack would read out**, looking at each event's source as it's sent. To
-  see the state between a change and the next frame, wait a frame at a time
-  and idle the main looper in between, as `BadgesScreenTest` does: Robolectric
-  otherwise runs the next frame before Compose's posted accessibility check.
+  TalkBack would read out**, as `BadgesScreenTest` uses it.
 
 ### Lists
 
 - **A lazy list given a new `LazyListState` while it stays on screen sets its
-  own `collectionInfo`** from the items it shows. TalkBack reads that size as
-  focus enters the list ("In list. 6 items"). `LazyColumn`'s semantics node
-  takes a new state without invalidating semantics
-  (`LazyLayoutSemanticsModifierNode.update()`, Compose 1.12.1), so its count
-  can stay the old state's: on Badges, which gives each new set of matches a
-  new state, TalkBack kept hearing the full catalog's size after a search
-  ([#304](https://github.com/bryancassell/bluecard/issues/304)). A list that
-  keeps one state, such as Ranks, keeps Compose's count, which follows its
-  items.
+  own `collectionInfo`** from the items it shows, since `LazyColumn` can keep
+  the old state's count, which TalkBack reads as focus enters the list
+  ([#304](https://github.com/bryancassell/bluecard/issues/304), Badges in
+  `BadgesScreen.kt`). A list that keeps one state, such as Ranks, keeps
+  Compose's count.
 
 ### Theme
 
@@ -581,35 +411,21 @@ both taps of a double tap can reach it.
   `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
   chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
   takes no colors from the wallpaper (no dynamic color).
-- **The date picker's dialog is our own**, around Material's `DatePicker`
-  (`CompletionDatePickerDialog`). Material's `DatePickerDialog` is always as
-  wide as its calendar, so on a narrower window its last days were off the
-  screen ([#306](https://github.com/bryancassell/bluecard/issues/306)). Ours
-  is built the same way, on `BasicAlertDialog`, with the same surface, height
-  cap and buttons, but sized to the window, and with OK below Cancel if they
-  don't fit side by side ([`PRD.md`](PRD.md#design-decisions)'s Date
-  picker's buttons). `BasicAlertDialog` is
-  `@ExperimentalMaterial3Api`, so the function opts in, and a change to it
-  would fail the build when Compose is updated. A change to
-  `DatePickerDialog` wouldn't reach ours, so compare the two when updating
-  Material 3.
+- **Dates are picked in our own dialog**, `CompletionDatePickerDialog`, not
+  Material's `DatePickerDialog`, which is always as wide as its calendar
+  ([#306](https://github.com/bryancassell/bluecard/issues/306)). Compare the two
+  when updating Material 3.
 - **Before Compose draws**, the window theme and splash screen follow dark mode
   through `values-night`: the dark scheme's background (`@color/background`,
   which must match each scheme's `background`), a dark window theme, and the
   splash screen's white system bar icons. Once the app draws,
   `enableEdgeToEdge()` picks the bar icons from dark mode.
 - **The status bar's background is the Scaffold's top bar**
-  (`StatusBarBackground` in `BlueCardApp`), in `surfaceContainer`, as
-  [`PRD.md`](PRD.md#design-decisions)'s Status bar row chooses. As the top bar,
-  its height is where every page starts, so no page pads itself for the status
-  bar. It takes its height from the Scaffold's own window insets
-  (`ScaffoldDefaults.contentWindowInsets`), not the status bar's, so a window's
-  caption bar or a taller camera cutout can't cover the page.
-- **A full-screen dialog sets its own system bar icons.** A Compose `Dialog`
-  has its own window, which doesn't get the icons `enableEdgeToEdge()` gives
-  the activity's, and Android takes the bar icons from it as the top
-  full-screen window. Without them, Android 8's navigation bar has white icons
-  on the light page
+  (`StatusBarBackground` in `BlueCardApp`), as
+  [`PRD.md`](PRD.md#design-decisions)'s Status bar row chooses, so no page pads
+  itself for the status bar.
+- **A full-screen dialog sets its own system bar icons**, since its window
+  doesn't get the ones `enableEdgeToEdge()` gives the activity's
   ([#299](https://github.com/bryancassell/bluecard/issues/299)). `MergeDialog`
   calls `UseSystemBarIconsForTheme` (in `ui/data/ImportDialogs.kt`). Move it to
   `ui/` when a second full-screen dialog needs it.
@@ -617,13 +433,10 @@ both taps of a double tap can reach it.
   surface containers are lighter than the page, and `surfaceContainerLowest`
   is darker. A container that should stand out from the page, such as the
   status card, uses `surfaceBright`, the brightest surface in both.
-- **No surface shares `surfaceVariant`'s color.** Material picks a container's
-  content color by matching its color against the scheme's, and checks
-  `surfaceVariant` before the surface containers. A card sharing its color
-  would get `onSurfaceVariant` text.
 - **`BlueCardColorSchemeTest` checks both schemes:** the PRD's contrast rule
   for every text color on every surface, that `surfaceBright` is the brightest
-  surface, and that every other surface gets `onSurface` text.
+  surface, and that every other surface gets `onSurface` text, which one
+  sharing `surfaceVariant`'s color wouldn't.
 
 ## Data layer
 
@@ -679,36 +492,16 @@ both taps of a double tap can reach it.
   wrapped,** so they still crash as bugs. `RoomProgressRepository` says which
   SQLite errors count.
 - **A damaged database is set aside, and the scout is told**
-  ([#70](https://github.com/bryancassell/bluecard/issues/70)). When SQLite
-  finds the database file damaged (corrupt), Android's default handler, which
-  Room 2.8 keeps, deletes it. `SetAsideDamagedDatabaseFactory` gives Room a
-  handler that moves it instead, with the files SQLite keeps beside it, such as
-  the write-ahead log that holds the latest saves, to a folder of its own in
-  `damaged-progress/`, in the no-backup directory
-  (`FileDamagedProgressRepository`). Each folder is named by when its copy was
-  set aside, and none is replaced, since an earlier copy may hold more progress
-  than a later one. If the files can't be moved, they're deleted as before.
-  Either way the scout sees a notice until they dismiss it (see
-  [`PRD.md`](PRD.md#design-decisions)), which a file in `damaged-progress/`
-  keeps across launches.
-  - **Damage found while opening:** SQLite then creates a new, empty database,
-    and the notice shows straight away.
-  - **Damage found while reading or writing:** that read or write fails with an
-    `IOException`, as other storage failures do, so the screen shows its
-    load-failed message, and the notice shows straight away. The handler
-    closes the database first, as Android's does, but Room keeps using its one
-    closed connection (checked with Room 2.8.5). So the next read or write,
-    such as when the scout reopens the app while its process is still running,
-    throws an exception the repository treats as a bug, and the app crashes.
-    It opens a new database when it starts again. Damage is rare, so this was
-    chosen over reporting those exceptions as storage failures until the app
-    restarts, or moving every read to a new database.
-    SQLite's [How To Corrupt](https://www.sqlite.org/howtocorrupt.html) page
-    lists causes such as failing storage; neither it nor Android publishes how
-    often it happens.
-  - **The damaged copy isn't backed up,** so a phone restored from a backup
-    gets neither it nor a notice about it. Nothing reads it yet; it's kept so
-    its progress could be recovered later.
+  ([#70](https://github.com/bryancassell/bluecard/issues/70)). Android's
+  default corruption handler, which Room 2.8 keeps, deletes the database.
+  `SetAsideDamagedDatabaseFactory` gives Room one that moves it, with the files
+  SQLite keeps beside it, to a folder of its own in `damaged-progress/`, in the
+  no-backup directory (`FileDamagedProgressRepository`). Every copy is kept,
+  since an earlier one may hold more progress. Nothing reads them yet; they're
+  kept so their progress could be recovered later. The scout sees a notice
+  until they dismiss it (see [`PRD.md`](PRD.md#design-decisions)). Damage found
+  while the database is open leaves Room's connection closed, so the next read
+  or write crashes the app, which starts again with a new database.
 
 ### Dependency injection
 
@@ -755,15 +548,15 @@ io.github.bryancassell.bluecard
 | Screen | PRD journey |
 |---|---|
 | **Onboarding** | First launch: ask for name and unit number. Shown until the profile is saved. |
-| **Home** | Name, unit, and a card with the scout's rank, a trail of every rank, and the rank in progress, opening its Rank detail. A progress summary: how many badges are completed and in progress, and Eagle-required progress. Below the summary, each badge in progress, in the same row as on Badges, with its progress bar, opening its Badge detail. Links to Badges, Ranks and Data management. |
+| **Home** | Name, unit, and a card with the scout's rank, opening the rank in progress's Rank detail. A progress summary, and each badge in progress, opening its Badge detail. Links to Badges, Ranks and Data management. |
 | **Badges** | Browse all current badges and search by name or description, with a progress bar on each badge in progress. One screen: the list filters as the scout types. |
-| **Badge detail** | A progress bar while the badge is in progress, summary, Eagle-required flag, link to the official page, a status card (where the badge stands, "mark completed on a prior date" while it isn't complete, and "Share report" and "Save report" once it is), counselor details (tapping the phone or email opens the phone or email app), and requirement list with completion state, each opening the requirement's page. At the bottom, once the badge is started, a button clears its progress. |
+| **Badge detail** | Summary, Eagle-required flag, official link, progress bar, a status card for marking it completed and for its report, counselor details, and the requirement list, each opening the requirement's page. Clear progress. |
 | **Ranks** | The seven ranks, Scout through Eagle Scout, in the order they're earned, in the same rows as Badges, each with its status and progress bar ([Ranks](#ranks)). |
-| **Rank detail** | Like Badge detail without the counselor or Eagle-required label: summary, official link, progress bar, a status card with how it's earned ("mark earned on a prior date", the rank above that counts it as earned, the date it was earned on, or the rank below it waits on) and "Share report" and "Save report" once earned, the requirement list, and Clear progress. |
-| **Requirement detail** | Every requirement's own page: whether it's complete, with a checkbox and completion date for one the scout marks complete by hand, a completion date for one completed by its fixed-row tracker, its sub-requirements with their completion state, its tracker's rows, and the scout's notes. At the bottom, once anything is recorded, a button clears its progress and that of the requirements under it. |
+| **Rank detail** | Like Badge detail without the counselor or Eagle-required label: summary, official link, progress bar, a status card for marking it earned and for its report, the requirement list, and Clear progress. |
+| **Requirement detail** | Every requirement's own page: whether it's complete and when, its sub-requirements, its tracker's rows, the scout's notes, and Clear progress. |
 | **Tracker entry** | One row of a requirement's tracker, to fill in, change or delete: a field for each of the tracker's columns. |
 | **Edit counselor** | The badge's merit badge counselor: name, phone and email, each optional. Opened from Badge detail; closes once saved. |
-| **Data management** | A button that opens Edit name and unit, export, import, and last, a button that clears all progress. Clearing a single badge or a single requirement's progress lives on the badge and requirement screens. |
+| **Data management** | Edit name and unit, export, import, and clearing all progress. |
 | **Edit name and unit** | The scout's name and unit number, both required. Opened from Data management; closes once saved. |
 
 Badge detail and each requirement's page show one level of the requirement
@@ -782,101 +575,54 @@ way.
 
 ### Content and links
 
-- **Our own words only.** For each badge, the catalog has our own short
-  summary, and for each requirement our own one-line summary. Official wording
-  is kept only where it's the plain, obvious way to say something, such as
-  names and lists ([what counts as copying](docs/catalog.md#what-counts-as-copying)).
-  No badge images or logos are included. Both are because Scouting America's
+- **Our own words only, and no badge images or logos.** Scouting America's
   [trademarks](https://licensingbsa.org/trademarks/) and terms of use require
-  written permission.
-- **The official page URL is stored per badge** rather than built from the
-  name, because the URLs don't always match (Fish and Wildlife Management lives
-  at `/merit-badges/fish-wildlife-management/`). Official pages have no
-  per-requirement anchors, so requirement links go to the badge page.
-  scouting.org has no page for each rank, so a rank's URL is its requirements
-  PDF, the official wording a scout would otherwise look up.
+  written permission to reuse them (req. 2). So the catalog has our own
+  summaries, keeps official wording only where it's the plain way to say
+  something ([what counts as copying](docs/catalog.md#what-counts-as-copying)),
+  and links each badge and rank to its official page for the full text.
 
 ### Trackers
 
-Requirements such as Personal Fitness's 12-week exercise log or Personal
-Management's 13-week budget need repeated entries. The catalog describes a
-tracker generically (its columns and their types: date, number, text or
-multi-line text, and optionally a number of rows or weeks), and the app renders
-and stores any tracker the same way. New trackers then need only catalog data,
-not new code (req. 7). Multi-line text is a type of its own, not a flag on
-text, so each `when` over the types (the field, the row's summary, the report
-and import) has to decide how to handle it.
+Requirements such as Personal Fitness's 12-week exercise log need repeated
+entries. The catalog describes a tracker generically, by its columns and their
+types and optionally its number of rows, and the app renders and stores any
+tracker the same way, so a new tracker needs only catalog data (req. 7).
 
-A number column of a log can have a total the requirement asks for, such as
-Life 4's 6 hours of service (`TrackerColumn.total`), which
-`data/progress/TrackerTotals.kt` adds the column up against (PRD.md's Tracker
-totals).
-
-- **Completion doesn't read totals.** It reads only what the scout marked and
-  which rows are filled in, so a total is only a guide
-  ([#193](https://github.com/bryancassell/bluecard/issues/193)). A fixed-row
-  tracker can't have a total, because its requirement needs every row and its
-  row shows how many are filled in.
-- **The progress bar counts a total's units, with the check-off as one more
-  part** (`data/progress/FractionDone.kt`), as it counts a log's rows below,
-  so the amount can't fill the requirement's share before it's complete
-  ([#292](https://github.com/bryancassell/bluecard/issues/292)). A total can
-  be part of another (`ColumnTotal.partOf`, Life 4's conservation hours within
-  its hours). The catalog names the part, because the app can't tell from the
-  numbers whether one column's values are included in another's. The catalog
-  test keeps a log to one total and its part, since the bar can't add up
-  different units, and keeps totals off a requirement with children, whose
-  children decide the bar.
-- **Numbers are stored as the scout typed them**: digits of any script, with a
-  point, a comma or the Arabic decimal separator, whichever their keyboard
-  offers (`DECIMAL_SEPARATORS`). So they're read with `storedNumber` when
-  they're added up, and import rejects a file with a value `storedNumber` can't
-  read ([#233](https://github.com/bryancassell/bluecard/issues/233)). One
-  stored while a catalog edited during development had the column as text may
-  not be a number, and isn't counted. They're added as `BigDecimal`, so 0.1 and
-  0.2 hours make 0.3.
-
-A log can also have the number of rows its requirement asks for
-(`TrackerDefinition.rowsNeeded`, PRD.md's Rows a log needs,
-[#284](https://github.com/bryancassell/bluecard/issues/284)). Every count of a
-tracker's rows is out of `rowsOutOf`, its fixed rows or that number, so the
-screens and the report agree.
-
-- **Completion doesn't read it either**, because some rows may not count, such
-  as Second Class 1a's activities that aren't outdoors.
-- **The progress bar counts its rows, with the check-off as one more part**
-  (`data/progress/FractionDone.kt`), so the rows can't fill the requirement's
-  share before it's complete. The catalog test keeps it off a requirement with
-  children, whose children decide the bar, and off a log with a total, whose
-  row shows the total instead.
-- **The row's "Still to do" line uses the bar's measure**
-  (`Requirement.hasEnoughLogged`), for rows and totals alike, so a change to
-  how a log's number is counted changes both
-  ([#293](https://github.com/bryancassell/bluecard/issues/293)).
+- **Completion doesn't read a log's totals or `rowsNeeded`.** It reads only
+  what the scout marked and which rows are filled in. A log's requirement may
+  ask for more than its rows or amount, and some rows may not count, such as
+  Second Class 1a's activities that aren't outdoors, so the scout checks it
+  off. Totals and `rowsNeeded` only guide the scout and fill the progress bar
+  (`data/progress/FractionDone.kt`,
+  [#193](https://github.com/bryancassell/bluecard/issues/193)).
+- **A number column's values are stored as the scout typed them**, in any
+  script's digits and with whichever decimal separator their keyboard offers,
+  so code that reads one as a number uses `storedNumber`
+  ([#233](https://github.com/bryancassell/bluecard/issues/233)).
+- **Every count of a tracker's rows is out of `rowsOutOf`**, its fixed rows or
+  `rowsNeeded`, so the screens and the report agree.
 
 ### Requirement versions
 
 Scouting America updates many badges each January 1 and can make safety changes
 at any time
 ([announcement](https://www.scouting.org/program-updates/important-update-merit-badge-requirements-moving-online/)).
-The Guide to Advancement (section 7.0.4.3, quoted on the
-[2026 update page](https://www.scouting.org/program-updates/scouts-bsa-advancement-updates-effective-january-1-2026/))
-says scouts who start a badge after a change must use the new requirements,
-while scouts who started before it may finish on the previous requirements or
-switch to the new ones.
+Scouts who start a badge after a change must use the new requirements, while
+those who started before it may finish on the previous ones (Guide to
+Advancement 7.0.4.3, quoted on the
+[2026 update page](https://www.scouting.org/program-updates/scouts-bsa-advancement-updates-effective-january-1-2026/)).
 
-- **Each badge has requirement versions**, identified by effective date.
-- **The first release ships only current requirements.** From then on, when a
-  badge's requirements change, the app update adds the new version and keeps
-  every version it has shipped, so a badge already on an older version never
-  loses its requirements.
-- **Each badge the scout works on records its version**: the newest, or the
-  one before it, as the PRD's journeys ask. Older versions stay in the catalog
-  for badges already on them, but aren't offered.
-- **A badge stays on its version** when an app update brings newer
-  requirements, so recorded progress keeps matching its requirements. The scout
-  can switch it to the newest version themselves, which starts its requirement
-  progress fresh (see [`PRD.md`](PRD.md#design-decisions)).
+- **Each badge has requirement versions**, identified by effective date. The
+  first release ships only current requirements. From then on, an app update
+  that changes a badge's requirements adds the new version and keeps every
+  version it has shipped, so a badge already on an older one never loses its
+  requirements.
+- **Each started badge records its version and stays on it** when an update
+  brings newer requirements, so recorded progress keeps matching its
+  requirements. Only the newest version and the one before it are offered, and
+  switching to the newest starts the badge's requirement progress fresh (see
+  [`PRD.md`](PRD.md#design-decisions)).
 
 ### Requirement IDs
 
@@ -884,92 +630,57 @@ A requirement is identified by its official number (such as `4c(1)`), which is
 unique within a requirements version. Progress is stored against the badge ID,
 its version and the requirement number; because switching versions starts
 requirement progress fresh, numbers only need to be unique within one version.
-
 A rank's parent that the official PDF leaves out, such as Scout `1` above
-`1a`–`1f`, is numbered too, so ranks nest like badges
-([#286](https://github.com/bryancassell/bluecard/issues/286)). Like an option's
-letter (Cycling `6B`), its number comes from the official text: here, from the
-lettered requirements that imply it.
+`1a`–`1f`, gets the number its lettered requirements imply
+([#286](https://github.com/bryancassell/bluecard/issues/286)).
 
 ### Shipping and authoring
 
-- **The catalog is a JSON file bundled in `assets/`**, loaded into memory at
-  startup (about 140 badges, small enough that search is a simple in-memory
-  filter). It is updated by releasing a new app version. It is kept separate
-  from the progress database, so catalog updates never require database
+- **The catalog is a JSON file bundled in `assets/`**, loaded into memory on
+  first use. About 140 badges is small enough that search is a simple
+  in-memory filter. It's updated by releasing a new app version, and kept
+  apart from the progress database, so catalog updates never need database
   migrations.
-- **The project writes all the summaries itself.** That is about 140 badges, a
-  content project of its own, so the catalog grows in stages, in no particular
-  order; the app treats whatever is in the file as the full list. A unit test
-  validates the file (unique IDs, valid structure, a URL for every badge and
-  rank).
-- **Scouts BSA Test Lab pilot badges are left out** until they become
-  official: the catalog has no way to mark a badge as a pilot, and ranks'
-  merit badge counts (Star 3, Life 3) would credit one. The unit test enforces
-  it by requiring each badge's URL to be a `/merit-badges/` page, which pilots
-  don't have.
-- **Discontinued badges aren't handled yet:** the Badges list shows every badge
-  in the catalog. Once shipped, a badge can't be removed, because progress is
-  stored against it, so hiding discontinued badges from scouts who haven't
-  started them is tracked in
-  [#55](https://github.com/bryancassell/bluecard/issues/55).
+- **A shipped badge, rank or version is never removed**, because progress is
+  stored against it. The catalog grows in stages, and the app treats whatever
+  is in the file as the full list. `BundledCatalogTest` validates the file
+  ([`docs/catalog.md`](docs/catalog.md#checking-your-changes)).
 
 ### Ranks
 
-The catalog also has a list of the seven ranks, Scout through Eagle, in the
-order they're earned, written by the same rules as badges, plus a few of their
-own for linking, numbering and out-of-date official text
-([`docs/catalog.md`](docs/catalog.md#rank),
+The catalog also lists the seven ranks, Scout through Eagle, in the order
+they're earned ([`docs/catalog.md`](docs/catalog.md#rank),
 [#193](https://github.com/bryancassell/bluecard/issues/193)). Most of what a
-badge has carries over: numbered requirements with sub-requirements, trackers,
-requirement versions and completion. So a `Rank` uses the same
-`RequirementsVersion`, `Requirement` and `TrackerDefinition` types as a
-`MeritBadge`, and both are an `Advancement`, which the code that serves both
-works on.
+badge has carries over, so a `Rank` uses the same `RequirementsVersion`,
+`Requirement` and `TrackerDefinition` types as a `MeritBadge`, and both are an
+`Advancement`, which the code that serves both works on.
 
 - **Rank progress shares the badge progress tables** (`badge_progress`,
   `requirement_progress`, `tracker_entry`), keyed by the rank's ID, so ranks
-  needed no schema change. Badge and rank IDs must therefore be unique across
-  both, which the catalog test checks. Revisit this if it gets in the way.
+  needed no schema change or new export format. Badge and rank IDs must be
+  unique across both, which the catalog test checks. Whatever reads every
+  progress row, such as export and Clear all, reads ranks' too.
 - **"Badge" in the progress layer means a badge or a rank** (`BadgeProgress`,
   `badgeId`, `badgeStart`), matching its tables. Code above it says
-  `advancement` where it means either, such as the `advancementId` of
-  Requirement detail and Tracker entry, which find it among both
-  (`getAdvancements` in `data/catalog/CatalogRepository.kt`). A screen or count
-  for one kind reads only that kind (`getBadges` or `getRanks`), so a rank never
-  shows up as a badge.
-- **What reads every progress row reads ranks' too.** Export lists a started
-  rank with the badges, under the file's `badges` key, and import checks each
-  one against the badges and ranks in the catalog, so ranks needed no new
-  export format version ([Export and import](#export-and-import)). Clear all
-  clears rank progress too, and a started rank turns it on.
-- **A rank's status depends on the other ranks** (`data/progress/RankStatus.kt`),
-  because ranks are earned in order. A rank is earned once it's complete
-  ([Completion](#completion)) and the rank below it is earned, or once it or a
-  rank above it is marked earned on a prior date, so the earned ranks are
-  always the lowest ones. The lowest rank not earned is in progress, even
-  before it's started. Like completion, nothing about it is stored, so
+  `advancement` where it means either (`getAdvancements` in
+  `data/catalog/CatalogRepository.kt`). A screen or count for one kind reads
+  only that kind (`getBadges` or `getRanks`), so a rank never shows up as a
+  badge.
+- **A rank's status depends on the other ranks and on badges** (`standings` in
+  `data/progress/RankStatus.kt`): ranks are earned in order, and a rank's
+  requirement that asks for merit badges counts the badges the scout has
+  completed ([Completion](#completion)). Nothing about it is stored, so
   unmarking a rank undoes what its mark counted as earned. Every screen asks
-  `standings` for a rank's status and bar, as they ask `BadgeStatus.kt` for a
-  badge's, so they agree. A page that shows a rank reads every rank's progress
-  (`observeAllProgress`), not only its own, as does one that can clear or
-  delete what a rank counts ([Clearing data](#clearing-data)).
-- **Merit badge requirements** (`Requirement.meritBadges`) complete from the
-  badges the scout has completed, not from anything recorded on the rank
-  ([Completion](#completion)), so `standings` takes the scout's
-  `EarnedBadges`.
+  `standings`, and a page that shows a rank, or can clear or delete what a
+  rank counts, reads every badge's and rank's progress
+  (`observeAllProgress`), not only its own ([Clearing data](#clearing-data)).
 - **Only a rank's requirement records who signed off on it**
   (`RequirementProgress.signedOffBy`,
-  [#248](https://github.com/bryancassell/bluecard/issues/248)). It's a column
-  of the shared table that a badge's requirement leaves null, which import
-  checks (see [`PRD.md`](PRD.md#design-decisions) for why only ranks have it).
-  It's saved with the notes in one write (`setRequirementSignOffAndComment`),
-  so their one Save can't save one and fail the other.
-- **Time in rank** (`Requirement.monthsInRank`, `data/progress/TimeInRank.kt`)
-  is counted from the date `standings` gives the rank below, so it agrees with
-  Rank detail about when that rank was earned. Like a tracker's total, it's
-  only a guide: completion doesn't read it, so the scout checks the requirement
-  off ([#193](https://github.com/bryancassell/bluecard/issues/193)).
+  [#248](https://github.com/bryancassell/bluecard/issues/248)): a column of
+  the shared table that a badge's requirement leaves null, which import
+  checks. It's saved with the notes in one write
+  (`setRequirementSignOffAndComment`), so their one Save can't save one and
+  fail the other.
 
 ## Data model
 
@@ -979,321 +690,128 @@ At a high level. The exact fields are in the code.
 - **Catalog** (JSON, read-only): `MeritBadge` or `Rank` (each an `Advancement`)
   → `RequirementsVersion` → `Requirement` (a tree) → optional
   `TrackerDefinition`.
-- **Progress** (Room, database file `bluecard.db`), keyed by catalog IDs
+- **Progress** (Room, database file `bluecard.db`,
+  `data/progress/Progress.kt`): `BadgeProgress`, with its
+  `RequirementProgress` and `TrackerEntry` rows, keyed by catalog IDs
   (strings), so progress survives catalog updates. Only a started badge has
   progress; its requirement progress and tracker entries are deleted with it.
-  - `BadgeProgress`: badge ID, requirements version (its effective date, recorded
-    when the badge is started), started date, counselor (name, phone, email, all
-    optional), and the date it was marked completed on a prior date, if any.
-  - `RequirementProgress`: badge ID, requirement number, whether it is complete
-    (or, for a requirement with own work, whether that's complete, and for one
-    completed by its fixed-row tracker alone, whether the scout gave its
-    completion date), completion date (optional), notes (`comment`,
-    optional), and, for a rank's requirement, who signed off on it
-    (`signedOffBy`, optional).
-  - `TrackerEntry`: an ID that only grows, badge ID, requirement number, the row
-    it fills in a tracker with a fixed number of rows (null in a log), the date
-    it was first saved, and the row's values keyed by the catalog's column IDs,
-    all stored as text (a date as `YYYY-MM-DD`).
 
 ### Completion
 
-Completion is derived, not stored (`data/progress/Completion.kt`), from
-requirement progress, tracker entries and the catalog:
+Completion is derived, not stored, from requirement progress, tracker entries
+and the catalog (`completion` in `data/progress/Completion.kt`), so editing or
+clearing progress can't leave a stale completion state behind. So is what
+depends on it, each worked out in one place so every screen agrees: a badge's
+status (`BadgeStatus.kt`), a rank's (`RankStatus.kt`, [Ranks](#ranks)), how
+much of a badge is done, for its progress bar (`FractionDone.kt`), and which
+requirements version a badge is worked on (`BadgeVersion.kt`), all in
+`data/progress/`.
 
-- A requirement with children is complete when enough of them are, even if it
-  also has a tracker. One that also asks for work of its own (`ownWork` in the
-  catalog) needs the scout to mark that complete too. One without children but
-  with a fixed-row tracker is complete when every row has an entry, and its own
-  work, if any, is marked complete. A rank's requirement that asks for merit
-  badges is complete once the scout has completed enough of them (below). Any
-  other requirement, including one with a log, is complete when the scout
-  marked it complete.
-- A badge is complete when all its top-level requirements are, or when it was
-  marked completed on a prior date.
-- The completion date is when the last requirement or own work it needed was
-  completed, or the prior date for a badge marked that way. A requirement with a
-  fixed-row tracker is completed on the date the scout gave it, if they gave
-  one, or else on the date its last row was first saved. One that also has own
-  work is completed on the date the scout gave that, because a row's date is
-  only when it was typed in, which can be long after the work
-  ([#229](https://github.com/bryancassell/bluecard/issues/229)).
-- A requirement has part done (`hasPartDone`) once anything in it that the scout
-  records is: its own work, a requirement under it at any depth, a row of a
-  tracker on it or under it, or a badge that counts toward the merit badges it
-  asks for. Its row shows this until it's complete.
-
-A requirement's own work is stored as that requirement's own
-`RequirementProgress`, as for one marked complete by hand, so it needs no new
-table. The catalog marks the requirements that have own work, rather than every
-requirement with children needing a check, because most only group their
-children. The work can't be a child of its own, because it would need a number
-the official page doesn't have
-([#143](https://github.com/bryancassell/bluecard/issues/143)), unlike a rank's
-added parent, whose number its lettered requirements imply
-([Requirement IDs](#requirement-ids)).
-
-The date the scout gives a requirement completed by its fixed-row tracker is
-stored the same way: `completed` with the date, or with none once they remove
-it. For that requirement, `completed` only means they gave a date, and doesn't
-complete it, so the date isn't tied to the rows
-(`ProgressRepository.setCompletedFromRowsDate`). This needed no migration or new
-export format. A mark left from before
-[#105](https://github.com/bryancassell/bluecard/issues/105), when these
-requirements had a checkbox, becomes the date the scout gave
-([#116](https://github.com/bryancassell/bluecard/issues/116)).
-
-A requirement with a fixed-row tracker and own work stores only the own work,
-as a requirement with children does, so its rows get no date of their own: the
-own work's date is the requirement's. A date for the rows as well would have
-needed a new column, with a migration and a new export format, while the own
-work is usually the step after the rows, such as summing them up.
-
-A rank's requirement that asks for merit badges (`Requirement.meritBadges`,
-such as Star 3's six, at least four of them Eagle-required) is the only
-completion that depends on other items' progress
-([#193](https://github.com/bryancassell/bluecard/issues/193)). Completion and
-the progress bar take the scout's completed badges as `EarnedBadges`
-(`data/progress/EarnedBadges.kt`), worked out once per change in progress
-rather than in each requirement. Whether an Eagle "one of" group counts once
-comes from the catalog (`eagleGroupsCountOnce`), not the code, so each
-requirement can follow its own official wording, and a group counts once
-through the same `eagleSlots` as Home. `EarnedBadges` is a parameter that
-defaults to none, because a badge's requirements never ask for badges, which
-the catalog test checks. So only the code that serves ranks passes it, and
-`standings` requires it. Nothing about the requirement is stored, so a page
-that shows a rank reads every badge's progress as well as every rank's.
-
-Because nothing about completion is saved, editing or clearing progress can't
-leave a stale completion state behind.
-
-A badge's status (not started, in progress or completed) is derived the same
-way, in `data/progress/BadgeStatus.kt`, so every screen that shows it agrees. A
-rank's status is too, from the ranks below and above it as well
-(`data/progress/RankStatus.kt`, [Ranks](#ranks)).
-So is how much of a badge is done, for its progress bar
-(`data/progress/FractionDone.kt`), with partial credit for each part of a
-requirement that's done (see [`PRD.md`](PRD.md#design-decisions)'s Badge
-progress bar). Whether a badge shows the bar comes from its status, not from
-how much is done.
-Which requirements version a badge is worked on (the one it was started on, or
-the newest for a badge not started yet) comes from `data/progress/BadgeVersion.kt`.
+- **A requirement's own work** (`ownWork` in the catalog) is stored as that
+  requirement's own `RequirementProgress`, so it needed no new table. A
+  requirement with a fixed-row tracker and own work stores only the own work,
+  whose date is the requirement's, since a row's date is only when it was
+  typed in ([#229](https://github.com/bryancassell/bluecard/issues/229)). A
+  date for the rows as well would have needed a new column, with a migration
+  and a new export format, while the own work is usually the step after the
+  rows.
+- **A rank's requirement that asks for merit badges**
+  (`Requirement.meritBadges`) is the only completion that depends on other
+  items' progress
+  ([#193](https://github.com/bryancassell/bluecard/issues/193)). Completion
+  and the progress bar take the scout's completed badges as `EarnedBadges`, a
+  parameter that defaults to none, so only the code that serves ranks passes
+  it. Whether an Eagle "one of" group counts once comes from the catalog
+  (`eagleGroupsCountOnce`), not the code, so each requirement follows its own
+  official wording.
 
 ## Key flows
 
-### First launch
-
-`MainActivityViewModel` reads `ProfileRepository`. While there is no profile,
-the navigation root shows Onboarding instead of the back stack; once the profile
-is saved, it shows the back stack, which starts at Home. If the profile can't be
-read, it shows the load-failed message instead (see
-[Load and save failures](#load-and-save-failures)).
-
-### Home summary
-
-The Home ViewModel combines the profile, the catalog and the scout's progress.
-It works out every rank's standing with `standings`, as Ranks does
-([Ranks](#ranks)), for the rank card (`ui/home/RankCard.kt`): the highest rank
-earned, a trail of every rank, and the rank in progress. It counts
-badges completed and in progress, and Eagle-required progress against the
-Eagle-required badges in the catalog, counting each Eagle "one of" group
-once (`eagleSlots` in `data/catalog/Catalog.kt`, which Eagle 3 counts by too;
-see [`PRD.md`](PRD.md#design-decisions)). It also lists every badge in
-progress, in the row Badges uses
-(`ui/badges/BadgeRow.kt`).
-
-### Browse and search
-
-The Badges ViewModel combines the catalog, the scout's progress and the search
-text, to list the matching badges with each one's status from
-`data/progress/BadgeStatus.kt`. Matching is in `ui/badges/BadgeSearch.kt`, and
-how screen readers hear the number of matches is in `BadgesScreen.kt`
-(`MatchCount`).
-
 ### Recording progress
 
-- **Screens call `ProgressRepository` functions** (set completed date, set
-  notes, add tracker row, set counselor, mark badge completed on a date) and
-  observe progress as a `Flow`, so they update as soon as data is saved.
+- **Screens call `ProgressRepository` functions** and observe progress as a
+  `Flow`, so they update as soon as data is saved.
 - **Recording anything starts the badge or rank**, on the requirements version
   its pages show until then (the newest), dated today (`badgeStart` in
-  `data/progress/BadgeVersion.kt`). There's no separate "start" step.
-  `markRequirementCompleted`, `setRequirementSignOffAndComment`,
-  `addTrackerEntry`, `setCounselor` and `setCompletedOnPriorDate` take a
-  `BadgeStart`, and `ProgressRepository` starts the badge in the same
-  transaction as the write, so a save that fails doesn't leave the badge
-  started. Other functions that
-  record progress should take one when a screen first calls them.
-- **The repository cleans up what the scout types:** it trims spaces around
-  each value and drops blank ones (`normalizedText`, `normalizedTrackerValues`,
-  `Counselor.normalized`).
+  `data/progress/BadgeVersion.kt`). There's no separate "start" step. The
+  functions that record progress take a `BadgeStart`, and
+  `ProgressRepository` starts the badge in the same transaction as the write,
+  so a save that fails doesn't leave the badge started. A new function that a
+  screen can call before the badge is started should take one too.
+- **The repository cleans up what the scout types,** not the screens: it trims
+  spaces around each value and drops blank ones (`normalizedText`,
+  `normalizedTrackerValues`, `Counselor.normalized`).
 - **A page that closes once its save succeeds closes itself from UI state**
-  (`saved` or `done` in its UI state), following the UI layer guide's
-  [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events)
-  of navigating from UI state, so a save that fails keeps the page open with the
-  scout's edit. Edit counselor, Tracker entry and Edit name and unit work this
-  way; Requirement detail stays open after its notes are saved.
+  (`saved` or `done`), following the UI layer guide's
+  [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
+  so a save that fails keeps the page open with the scout's edit.
 
 ### PDF report
 
-Once a badge is complete, Badge detail offers "Share report" and "Save report",
-and Rank detail does once a rank is earned. `PdfReportRepository` reads the
-profile, the catalog and the progress (`data/report/AdvancementReport.kt`) and
-lays out the pages with `StaticLayout` (`ReportLayout.kt`), in the strings'
+`PdfReportRepository` builds a badge's or rank's report from the profile, the
+catalog and the progress, lays it out with `StaticLayout` in the strings'
 language and direction (see
-[Language and layout direction](#language-and-layout-direction)).
-`PdfDocumentWriter` draws them onto framework `PdfDocument` pages and writes the
-PDF. `androidx.pdf` is not used: it is for viewing PDFs, is still in beta, and
-requires API 28 (BlueCard's minimum is 26).
-
-- **Share** it through the
-  [Android Sharesheet](https://developer.android.com/training/sharing/send)
-  (`ACTION_SEND` with a
-  [`FileProvider`](https://developer.android.com/training/secure-file-sharing/setup-sharing)
-  content URI to a file in the cache directory's `reports/` folder).
-- **Save** it to a location the scout chooses with the
-  [system file picker](https://developer.android.com/training/data-storage/shared/documents-files)
-  (`ActivityResultContracts.CreateDocument`). The save runs in the app's scope,
-  as progress writes do (see [Writes](#writes)), so it finishes if the scout
-  leaves the page.
-
-Neither needs storage permissions. A report that can't be created or saved
-shows a snackbar, as a failed save does (`TaskRunner`).
-
-A rank's report reads every rank's and badge's progress, as Rank detail does,
-and asks `standings` for the rank's standing ([Ranks](#ranks)). So it says how
-the rank was earned as the page does, and a rank has a report exactly when the
-page offers one: once it's earned, even when it's counted as earned with a rank
-above it and isn't started.
+[Language and layout direction](#language-and-layout-direction)), and draws it
+onto framework `PdfDocument` pages. `androidx.pdf` isn't used: it's for viewing
+PDFs, is still in beta, and needs API 28. Sharing goes through the
+[Android Sharesheet](https://developer.android.com/training/sharing/send) with
+a `FileProvider` URI, and saving through the
+[system file picker](https://developer.android.com/training/data-storage/shared/documents-files),
+so neither needs storage permissions (req. 5).
 
 ### Clearing data
 
-`ProgressRepository` deletes all progress, one badge's progress, or the progress
-of a requirement and every one under it (`clearRequirements`), each in one
-transaction, after a confirmation dialog. Every removal of what the scout
-recorded asks first with the shared `ConfirmDialog` (`ui/ConfirmDialog.kt`),
-opened by a button with `removalButtonColors` (`removalOutlinedButtonColors`
-for Data management's outlined Clear all). Discarding unsaved changes asks with
-it too, opened by Back (see [Navigation](#navigation)). Badge detail and
-Requirement detail share their Clear progress button and its dialog
-(`ui/badge/ClearProgress.kt`) with Rank detail, which clears a rank as Badge
-detail clears a badge. The dialog names the ranks the clear would stop counting
-as earned, which all three pages ask `noLongerEarned`
-(`data/progress/RankStatus.kt`), so they agree. Clearing a badge or one of its
-requirements can leave a rank's merit badges short, so Badge detail and
-Requirement detail read every badge's and rank's progress
-(`observeAllProgress`), as Rank detail does. Deleting a fixed-row tracker's
-row can un-earn ranks too, so Tracker entry asks `noLongerEarned` as well, and
-shares its dialog's sentence (`withUnearnedRanks` in `ClearProgress.kt`). It
-follows every badge's and rank's progress only for a saved row of a requirement
-that `needsEveryRow`, the only kind whose deletion can un-earn one, and
-otherwise reads its own badge's progress once, with its form. Clearing progress does not clear the profile.
-Clearing a requirement leaves its badge started, and clearing a badge deletes
-its `BadgeProgress`, so it's no longer started. A page can show a badge for a
-moment after it's cleared, so a function a page calls then does nothing for a
-badge that isn't started, rather than throw: `markRequirementNotCompleted`,
-`removeCompletedOnPriorDate` and the report functions. Clearing doesn't delete a report shared before from the
-cache: an app it was shared with, such as an email app that reads it only when
-it sends, may still need it.
+- **Every removal of what the scout recorded asks first** with the shared
+  `ConfirmDialog` (`ui/ConfirmDialog.kt`), opened by a button with
+  `removalButtonColors`. Discarding unsaved changes asks with it too (see
+  [Navigation](#navigation)).
+- **A removal that could un-earn a rank names the ranks in its dialog**, from
+  `noLongerEarned` (`data/progress/RankStatus.kt`), so every page that can
+  clear or delete what a rank counts reads every badge's and rank's progress.
+  Badge detail, Requirement detail and Rank detail share their Clear progress
+  button and its dialog (`ui/badge/ClearProgress.kt`).
+- **A function a page can call just after a clear does nothing for a badge
+  that isn't started**, rather than throw, since a page can show a badge for a
+  moment after it's cleared (`ProgressRepository`).
 
 ### Export and import
 
-Export writes a single JSON document (a format version, the profile and all
-progress) to a user-chosen file with `ActivityResultContracts.CreateDocument`,
-as Save report does (`data/Documents.kt`). Import reads one with
-`ActivityResultContracts.OpenDocument`, asking only for documents that can be
-opened as a file (`CATEGORY_OPENABLE`), checks the format version and validates
-it before changing anything, since import can replace all current data (see
-[`PRD.md`](PRD.md#design-decisions)). Once it's checked, the scout chooses to
+Export writes one JSON document (a format version, the profile and all
+progress) to a file the scout chooses, and import reads one back
+(`data/backup/BackupFormat.kt`). Import checks the whole file before it changes
+anything, since it can replace all current data. Then the scout chooses to
 merge it with their data or replace everything with it.
 
 - **Any change to the format needs a new format version**
-  (`BACKUP_FORMAT_VERSION` in `data/backup/BackupFormat.kt`), even an added
-  field. Every field is required and unknown fields are rejected, so an older
-  app turns away a newer file rather than importing it without what it doesn't
-  know. So does raising a field's length limit, which import holds a file to.
-  A file's version is read first, since a newer format may lay the rest out
-  differently.
+  (`BACKUP_FORMAT_VERSION`), even an added field. Every field is required and
+  unknown fields are rejected, so an older app turns away a newer file rather
+  than importing it without what it doesn't know. So does raising a field's
+  length limit, which import holds a file to.
 - **Import still reads older format versions,** so exports made before a
-  format change keep importing, without what was added since. Version 2 added
-  a requirement's sign-off
-  ([#248](https://github.com/bryancassell/bluecard/issues/248)), so a version
-  1 file is read with `explicitNulls = false` (`backupJsonV1`): a missing field
-  that can be null reads as null, and a sign-off in one is rejected. That also
-  takes a version 1 file missing another such field, which only a hand-edited
-  file could be, as a smaller cost than a reader of its own: a class for the
-  old layout leaves the serialization plugin's constructor and encoder for it
-  untested, and a tree of each requirement can overflow the stack.
-- **Import checks the whole file before it changes anything:** that it's JSON
-  in this format, and that it holds only what this version of the app could
-  have recorded. Each badge or rank, and its requirements version, must be in
-  the catalog: a newer app's catalog can add some without a new format version,
-  so a file with one the catalog doesn't have is reported as from a newer
-  version too. Each requirement, tracker row and column must be in that
-  version, each tracker entry must have a value, a date or number column must
-  hold a date or number, only a rank's requirement can have a sign-off, and no
-  text can be longer than its field takes, so none is cut short when the scout
-  edits it.
-- **Import cleans up text as the app does when the scout saves it,** rather
-  than rejecting a file for it ([`PRD.md`](PRD.md#design-decisions)): it's
-  trimmed, and each line break in single-line text (the name, unit number,
-  counselor's fields, a requirement's sign-off and a tracker's text columns)
-  is replaced with a space, as its field replaces them (see
-  [Text fields](#text-fields)). Length limits apply to the text as it's
-  stored. A number column's value must then be a number, so
-  even a lone "." is rejected, though saving leaves one out: the field never
-  saves one, and dropping it without dropping other non-numbers would take a
-  rule of its own ([#233](https://github.com/bryancassell/bluecard/issues/233)).
-  A tracker entry with no value left once cleaned up is rejected too, rather
-  than dropped ([#239](https://github.com/bryancassell/bluecard/issues/239)).
-  Only a development build can export one: a row saved before its field
-  replaced pasted line breaks
-  ([#155](https://github.com/bryancassell/bluecard/pull/155)) whose only value
-  is a next line (U+0085), which `trim()` keeps but import makes a space.
-- **The file is decoded as it's read, never into a tree of the whole file,**
-  and its size is capped, so a large or deeply nested file picked by mistake
-  can't use up the app's memory or stack.
-- **Progress is replaced in one transaction, then the profile is saved**
-  (`ProgressRepository.replaceAll`). The profile is in DataStore, so the two
-  can't share a transaction. If replacing progress fails, nothing has changed;
-  if saving the profile then fails, the progress is already the file's, and
-  importing again replaces both.
+  format change keep importing, without what was added since. A version 1 file
+  is read with `explicitNulls = false` (`backupJsonV1`), one `Json` setting
+  rather than a reader of its own.
 - **A merge needs no change dates**
   ([#28](https://github.com/bryancassell/bluecard/issues/28)): the scout
   chooses a side for each badge and rank whose progress differs
-  (`mergeConflicts` in `data/backup/Merge.kt`), so the export format didn't
-  change. Picking the newer side automatically would take a database
-  migration, a new format version and a record of what was deleted, or
-  progress cleared on one side would come back from the other. The choices are
-  held in the ViewModel with the file, not in saved state.
-  - **A merge writes what was decided from the phone's data as read when the
-    scout chose to merge** (`MergeChoices.progressToMerge`), so a badge
-    cleared on the phone since then isn't added back unasked. The transaction
-    still keeps a badge started since then, rather than replacing it.
-- **The file has no tracker entry IDs.** Entries are listed in the order they
-  were added, and an import gives them new IDs in that order, so each log keeps
-  its order and IDs keep growing.
+  (`data/backup/Merge.kt`, `ui/data/MergeChoices.kt`). Picking the newer side
+  automatically would take a database migration, a new format version and a
+  record of what was deleted, or progress cleared on one side would come back
+  from the other.
 
 ### Backup
 
 Android [Auto Backup](https://developer.android.com/identity/data/autobackup)
 stays on, so the Room database and DataStore file are backed up to the scout's
-Google Drive (end-to-end encrypted on Android 9+ with a screen lock) and
-restored on a new phone. This is Android's system backup, not app sync, and the
-scout can turn it off in system settings.
+Google Drive and restored on a new phone (req. 4). This is Android's system
+backup, not app sync, and the scout can turn it off in system settings.
 
-- **The manifest sets `android:allowBackup` explicitly,** as the Auto Backup
-  docs
-  [recommend](https://developer.android.com/identity/data/autobackup#EnablingAutoBackup).
-- **Backup rules include only the databases directory and the DataStore
-  directory,** for both cloud backup and device-to-device transfer
-  (`res/xml/data_extraction_rules.xml` on Android 12 and higher,
-  `res/xml/backup_rules.xml` on Android 11 and lower). A library that stores
-  data in either directory would be backed up too, so check new dependencies
-  for that.
-- **Backup isn't limited to phones that can encrypt it end to end**
-  (`disableIfNoEncryptionCapabilities`), so every scout who keeps backup on can
-  move their records.
+- **Backup rules include only the databases and DataStore directories**
+  (`res/xml/data_extraction_rules.xml` and `res/xml/backup_rules.xml`). A
+  library that stores data in either directory would be backed up too, so
+  check new dependencies for that.
+- **Backup isn't limited to phones that can encrypt it end to end,** so every
+  scout who keeps backup on can move their records.
 
 ## Testing approach
 
@@ -1311,325 +829,129 @@ How the architecture supports the testing rules in `CLAUDE.md`.
   implementation's test and the fake's test both extend it, so the fake used by
   other features' tests behaves like the real repository.
 - **Failures in tests.** Fakes have switches that make their reads
-  (`failLoads`: catalog, profile, progress; `failReads`: backup files) or
-  writes (`failSaves`: profile, progress, report, backup) throw an
-  `IOException`, for testing each screen's failure states. The profile and
-  progress contract tests check that the real repositories throw one too.
+  (`failLoads`, `failReads`) or writes (`failSaves`) throw an `IOException`,
+  for testing each screen's failure states. The profile and progress contract
+  tests check that the real repositories throw one too.
 
 ### ViewModel tests
 
-- **ViewModel tests** are local JVM tests against fake repositories, using
-  `kotlinx-coroutines-test` and a `MainDispatcherRule`, as in the
-  [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
-  They check each UI state and each event.
-- **They run with Robolectric,** because their load- and save-failure tests
-  reach `android.util.Log`, whose methods throw in plain local tests. The
-  alternative, `returnDefaultValues`, makes every Android method return null or
-  zero instead; the
-  [local tests guide](https://developer.android.com/training/testing/local-tests)
-  says it "might allow failing tests to pass" and adds: "Only use it as a last
-  resort."
-- **Saved state** is tested with `ViewModelScenario` from
-  `lifecycle-viewmodel-testing`, whose `recreate()` saves state, passes it
-  through a `Parcel` and restores it into a new ViewModel
-  (`TextFieldSavedStateTest`).
+ViewModel tests are local JVM tests against fake repositories, using
+`kotlinx-coroutines-test` and a `MainDispatcherRule`, and check each UI state
+and each event. They run with Robolectric, because their failure tests reach
+`android.util.Log`, whose methods throw in plain local tests. The alternative,
+`returnDefaultValues`, makes every Android method return null or zero, which
+the [local tests guide](https://developer.android.com/training/testing/local-tests)
+says "might allow failing tests to pass".
 
 ### Hilt in tests
 
-Tests that launch a Hilt activity use `HiltAndroidRule` and Hilt's test
-application, and `@TestInstallIn` modules replace production bindings such as
-the coroutine dispatcher. A test class that needs fakes removes the modules
-that bind those repositories with `@UninstallModules` and supplies the fakes
-with `@BindValue`, as `MainActivityTest` does. `ProfileModule` binds only the
-profile repository. `DataModule` binds the catalog, progress and
-damaged-progress repositories together, so a test that fakes one of them
-supplies all three. `BackupModule` binds only the backup repository, so such a
-test still exports and imports through the real one.
+A test that launches a Hilt activity replaces production bindings with
+`@TestInstallIn` modules, or removes a module with `@UninstallModules` and
+supplies fakes with `@BindValue`, as `MainActivityTest` does
+([`docs/toolchain.md`](docs/toolchain.md#tests-local-vs-instrumented)). Each
+module's KDoc says which repositories it binds, and so which a test fakes
+together.
 
 ### Room and migration tests
 
-- **Room repository tests use Robolectric** with an in-memory database. The
-  [Room testing guide](https://developer.android.com/training/data-storage/room/testing-db)
-  recommends plain JVM tests with Room's Kotlin Multiplatform setup instead.
-  That needs a JVM target, where the in-memory builder takes no `Context`. This
-  module is Android-only, and every in-memory builder in Room's Android artifact
-  takes a `Context`, so the tests use Robolectric to supply one (checked with
-  Room 2.8.5).
-- **Migration tests** (`MigrationTest`) run locally too, with Room's
-  `MigrationTestHelper`. Debug builds carry the schemas as assets for them
-  (`app/build.gradle.kts`); release builds don't.
-  - After a database version bump, the first test run can merge assets
-    before Room writes the new schema, and `MigrationTest` fails. Run it
-    again. Room's schema copy declares no outputs, so Gradle can't order
-    other tasks after it or see the new file in the same build. Working
-    around that needed more build code than a rerun is worth
-    ([#96](https://github.com/bryancassell/bluecard/issues/96)).
-- **Damaged database tests** (`SetAsideDamagedDatabaseFactoryTest`) run
-  locally too. Robolectric runs Android's SQLite code, which calls the
-  corruption handler for a file that isn't a database, or one whose pages are
-  overwritten, as on a phone.
+Room repository tests (`RoomProgressRepositoryTest`), migration tests
+(`MigrationTest`) and damaged database tests
+(`SetAsideDamagedDatabaseFactoryTest`) run locally with Robolectric, which
+runs Android's SQLite code.
 
 ### Compose UI and screenshot tests
 
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
-  interaction, fed by fake repositories or fixed UI state. A test that depends
-  on how text is measured, such as whether a long label wraps, uses
-  Robolectric's native graphics (`@GraphicsMode(NATIVE)`), since its default
-  graphics measure every character as 1px wide. Robolectric shows no keyboard,
-  so a test of what stays above it moves one as a phone does
-  (`OnScreenKeyboard` in `testing/`). It sends the page's view the keyboard's
-  final insets, then its insets frame by frame through the platform's
-  `WindowInsetsAnimation` events. A keyboard that appears in one step doesn't show the behavior that
-  depends on frames, such as the page following the cursor. With its default
-  graphics, Robolectric shows a page out of touch mode, where buttons can take
-  focus. Native graphics start in touch mode, as a phone is while the scout
-  taps it, so a test of where focus goes on a phone uses them, as every
-  screen's tests do (below). A test of a hardware keyboard asks for keyboard
-  mode (`InputModeManager`).
-- **Each screen's and dialog's tests run Google's accessibility checks**
+  interaction, fed by fake repositories or fixed UI state. Robolectric shows no
+  keyboard, so a test of what stays above it moves one as a phone does
+  (`OnScreenKeyboard` in `testing/`).
+- **Each screen's and dialog's tests use Robolectric's native graphics**
+  (`@GraphicsMode(NATIVE)`). Its default graphics measure every character as
+  1px wide, and show a page out of touch mode, where buttons can take focus.
+  Native graphics start in touch mode, as a phone is while the scout taps it;
+  a test of a hardware keyboard asks for keyboard mode (`InputModeManager`).
+- **They run Google's accessibility checks**
   ([ATF](https://github.com/google/Accessibility-Test-Framework-for-Android))
-  on every window, dialogs included, before each click, scroll, touch, key or
-  text input and again on the state the test ends in. Compose doesn't run them
-  before a semantics action, a focus request, or replacing or clearing a
-  field's text. A control with no label for screen readers or a touch target
-  under 48dp fails the test, so it doesn't wait for someone to try the page
-  with TalkBack. The class applies the `AccessibilityChecks` rule
-  (`testing/`) inside its compose rule. Compose's own
-  `enableAccessibilityChecks()` checks nothing under Robolectric, where ATF
-  skips composables, so the rule works around that through a hook restricted
-  to Compose's own libraries
-  ([#196](https://github.com/bryancassell/bluecard/issues/196) compares the
-  options). The checks also need Robolectric's native graphics,
-  so these classes use them, and a test in them that reads pixels runs on SDK
-  36, as screenshot tests do. The workaround relies on details that aren't
-  public API, so `AccessibilityChecksTest` checks that each kind of problem
-  still fails a test. Native graphics and the checks added no measurable time
-  to the suite (checked with Compose UI 1.12.1, ATF 4.1.1 and Robolectric
-  4.17).
-  - **Only errors fail a test, and contrast isn't checked.** ATF checks
-    contrast only from screenshots, so the rule takes none. Taken in these
-    tests, they gave hundreds of warnings that weren't about the app's colors:
-    most screen tests use Material's default theme, and disabled buttons and
-    text partway through fading in were counted too. `BlueCardColorSchemeTest`
-    checks the app's colors instead ([Theme](#theme)).
-  - **Navigation tests and other components' tests don't run them**, such as
-    `MainActivityTest`, `PageTransitionsTest` and the text field tests. What
-    they show is checked by the screens' and dialogs' own tests. Under native
-    graphics, launching `MainActivity` never finishes, because Robolectric
-    keeps drawing frames, and one of `PageTransitionsTest`'s frame-by-frame
-    checks fails.
-  - **Any other result that can't be fixed yet is suppressed** in the rule's
-    validator (`setSuppressingResultMatcher`), matching only that result, with
-    a comment linking its issue.
-- **Every test that picks a day from the date picker uses a screen as wide as
-  its calendar** (`DATE_PICKER_SCREEN`, a small phone's 360dp). On a narrower
-  one, such as Robolectric's default screen (`NARROW_SCREEN`, 320dp wide like
-  a phone's at its largest display size), the picker opens to typing the date
-  instead ([#306](https://github.com/bryancassell/bluecard/issues/306)).
-  `testing/DatePicker.kt` has the helpers these tests share, such as
-  `assertIsWhollyDisplayed` to check nothing is cut off.
+  with the `AccessibilityChecks` rule (`testing/`), so a control with no label
+  for screen readers or a touch target under 48dp fails the test rather than
+  waiting for someone to try the page with TalkBack. Navigation tests and
+  other components' tests, such as `MainActivityTest`, don't, and say why.
+- **A test that reads pixels runs on SDK 36** (`@Config(sdk = [36])`), because
+  on SDK 37 Robolectric 4.17 draws only a class's first screenshot.
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
-  check looks that semantics can't tell apart, such as a requirement row's
-  number box in each state (`RequirementRowScreenshotTest`). They run locally
-  with Robolectric's native graphics on a fixed screen (`w360dp-h640dp-xhdpi`)
-  and on SDK 36 (`@Config(sdk = [36])`), because on SDK 37 Robolectric 4.17
-  draws only a class's first screenshot and leaves the rest blank. Every test
-  run, `./gradlew check` and
-  CI included, compares them against the reference images committed in
-  `app/src/test/screenshots/`. After an intended change,
-  `./gradlew recordRoborazziDebug` records them again, and the new images are
-  reviewed in the diff. A failed comparison writes the new image and one
-  comparing the two to `app/build/outputs/roborazzi/`, which CI uploads.
+  check only looks that semantics can't tell apart, such as a requirement
+  row's number box in each state, on a fixed screen (`w360dp-h640dp-xhdpi`).
+  Every test run compares them against reference images committed in
+  `app/src/test/screenshots/`
+  ([`docs/toolchain.md`](docs/toolchain.md#tests-local-vs-instrumented)).
 
 ### Catalog, report and backup tests
 
-- **Catalog tests** parse the bundled JSON file and validate its structure.
-- **Report tests are split, because `PdfDocument` doesn't run under
-  Robolectric.** Its native code isn't there, so it throws "document is
-  closed!" (checked with Robolectric 4.17). Local tests check the layout and
-  drawing with Robolectric's native graphics (`ReportLayoutTest`), and
-  `PdfReportRepositoryTest` uses a fake PDF writer. An instrumented test
-  (`PdfDocumentWriterTest`) writes a real PDF and reads it back, in CI and
-  with `./gradlew connectedAndroidTest` (see
-  [Instrumented tests in CI](#instrumented-tests-in-ci)).
-- **Backup tests:** `BackupFormatTest` pins the export format and checks each
-  of import's rules. `JsonBackupRepositoryTest` writes and reads documents
-  through a test documents provider, and checks that an export imported into an
-  empty Room database restores the same data.
+`PdfDocument` doesn't run under Robolectric, so report tests are split: local
+tests check the layout and drawing (`ReportLayoutTest`) and use a fake PDF
+writer (`PdfReportRepositoryTest`), and an instrumented test
+(`PdfDocumentWriterTest`) writes a real PDF and reads it back.
+`PdfDocumentWriter` is left out of the per-class coverage check, as are the
+classes Hilt and Room generate.
 
 ### Instrumented tests in CI
 
 CI's **Instrumented tests** job runs `app/src/androidTest` on a Gradle Managed
-Device: a Pixel 6 emulator on API 37 with the Google APIs image and 16 KB
-pages, defined in `app/build.gradle.kts`. AGP downloads the image, starts the
-emulator, runs the tests and shuts it down. The same task runs locally, with
-the image for the computer's own ABI.
-
-- **API 37, the target SDK.** The lighter Automated Test Device images go up to
-  API 36 only (checked October 2026). The tests need API 35 or higher anyway:
-  `PdfRenderer` reads a page's text from Android 15 on.
-- **16 KB pages.** The app ships AndroidX native libraries, and Google Play
-  requires apps targeting Android 15 or higher to support 16 KB pages. Google's
-  later API 37 images (37.1 and 37.2) come only with 16 KB pages.
-- **Gradle Managed Devices, not `reactivecircus/android-emulator-runner`.** That
-  action couldn't boot any API 37 image: in #14's trial its emulator was still
-  booting after 20 minutes, and its maintainers report the same. A managed
-  device booted API 37 and ran the tests in about 3 minutes.
-- **Only Build writes the Gradle cache.** `setup-gradle`'s basic cache gives
-  every job the same key, and only the first job to save it wins, so any other
-  job sets `cache-read-only: true`.
-- **The emulator isn't cached** (#5). Every run, the setup task downloads the
-  emulator and the 2.1 GB system image and cold-boots the emulator to save a
-  snapshot, about 3 minutes that partly overlap building the APKs. #276
-  measured caching it in October 2026, with the Gradle cache restored:
-  - No cache: the job took about 4m10s.
-  - The emulator, image, AVD and snapshot (a 4.4 GB entry): about 3m50s,
-    since restoring took over a minute.
-  - Only the AVD and snapshot (2.5 GB), keyed by the installed emulator and
-    image versions: about 3m35s. The snapshot loaded on every runner CPU
-    tried.
-
-  Build takes about 6 minutes and runs at the same time, so neither made CI
-  finish sooner. Each would also use a quarter to almost half of the
-  repository's 10 GB of Actions cache, which the Gradle caches need. If Build
-  ever finishes before this job,
-  revisit the AVD-only cache, which is in #276's history.
-
-### Coverage
-
-Classes that Hilt and Room generate (for example `Hilt_*`, `*_Factory`,
-`*_Impl`) are excluded from the per-class 80% coverage rule, and so is
-`PdfDocumentWriter`, which only runs on a device.
+Device: a Pixel 6 emulator on API 37, the target SDK, with the Google APIs
+image and 16 KB pages, the page size Google Play requires
+(`app/build.gradle.kts`).
+[`docs/toolchain.md`](docs/toolchain.md#continuous-integration) says why the
+other emulator options didn't work, and why the emulator isn't cached.
 
 ## Release build
 
 - **R8 shrinks, optimizes and obfuscates the release build's code, and unused
-  resources are removed** (`isMinifyEnabled` and `isShrinkResources` in
-  `app/build.gradle.kts`, with `proguard-android-optimize.txt`), as Android's
+  resources are removed** (`app/build.gradle.kts`), as Android's
   [app optimization guide](https://developer.android.com/topic/performance/app-optimization/enable-app-optimization)
-  recommends. It took the APK from 10.1 MB to 2.1 MB
-  ([#197](https://github.com/bryancassell/bluecard/issues/197)).
+  recommends ([#197](https://github.com/bryancassell/bluecard/issues/197)).
 - **Only a release build runs shrunk code.** The debug app and local tests
   don't, so they can't find what R8 breaks at runtime. CI builds the release
-  app, so it catches R8's build errors. Runtime problems need a release build
-  on an emulator, checked as described in
-  [`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build).
-- **Code reached only through reflection needs a keep rule** in
-  `app/proguard-rules.pro`, as narrow as possible, with a comment saying what
-  needs it. None is needed yet: Hilt, Room, DataStore and
-  kotlinx.serialization ship rules for what they reach by reflection or by
-  name.
-- **Navigation keys' class names aren't kept.** The back stack is saved without
-  reflection (see [Navigation](#navigation)), so R8's renaming doesn't affect
-  it. Renaming a key in the source changes what is saved, but Android drops an
-  app's saved state when the app is updated (checked on Android 37), so state
-  saved by one version is never read by another.
-- **Crash reports in Android vitals are deobfuscated by Play,** from the R8
-  mapping file that AGP puts in the app bundle
-  ([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
-  so it needs no separate upload.
-- **Gradle leaves the release build unsigned. Publishing signs it with
-  `apksigner`, which asks for the release key's password.** The password never
-  reaches a Gradle build, which runs third-party plugins and the code of
-  whatever branch is checked out, Dependabot's included.
-  [Sign your app](https://developer.android.com/studio/publish/app-signing)
-  keeps the password in a properties file that Gradle reads, where every build
-  on the machine, and malware that collects such files, could read it too.
-  This doesn't stop code running as the developer, such as a build of another
-  branch, from tampering with the APK that gets signed or the tools that sign
-  it; only a separate account or machine would. Contributors and CI build the
-  same unsigned APK, so `./gradlew build` works for anyone. If CI signs later,
-  it can run `apksigner` the same way.
-- **The release key is RSA 4096 in a PKCS12 keystore, valid for 10,000
-  days.** Sign your app asks for at least 25 years. For a `minSdk` of 24 or
-  higher, `apksigner` signs with APK Signature Scheme v2, which every Android
-  version BlueCard supports checks, and v3, without a v1 signature.
+  app, so it catches R8's build errors; runtime problems need a release build
+  checked by hand
+  ([`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build)). Code
+  reached only through reflection needs a keep rule in
+  `app/proguard-rules.pro`.
+- **Gradle leaves the release build unsigned.** Publishing signs it with
+  `apksigner`, so the release key's password never reaches a Gradle build,
+  which runs third-party plugins and whatever branch is checked out, and
+  anyone can build the release app.
 - **Test builds are GitHub pre-releases**
-  ([#238](https://github.com/bryancassell/bluecard/issues/238)), for friends
-  and family to test without a Google Play Console account.
-  [`docs/toolchain.md`](docs/toolchain.md#publishing-a-test-release) says how
-  to publish one. Android vitals only reports crashes from Play installs, so
-  testers report crashes by hand. Each release carries its R8 mapping file,
-  to retrace a crash reproduced with that release.
-- **Moving to Google Play means choosing the app signing key.** Play App
-  Signing can generate a key of its own, which Play recommends, but Android
-  won't update an app from an APK signed with a different key: testers would
-  export their data, uninstall, install from Play and import. Play can take
-  BlueCard's release key instead, so testers update in place.
+  ([#238](https://github.com/bryancassell/bluecard/issues/238)), so friends
+  and family can test without a Google Play Console account. Moving to Play
+  means choosing between Play's own signing key, which makes testers
+  reinstall, and handing Play BlueCard's
+  ([`docs/toolchain.md`](docs/toolchain.md#publishing-a-test-release)).
 
 ## Debug builds
 
-Debug builds install as their own app, next to a release build. They also run
-two tools that point out mistakes while the app is in use, StrictMode and
-LeakCanary, which release builds don't have.
-[`docs/toolchain.md`](docs/toolchain.md#debug-tools) says where to see what
-they report.
+Debug builds install as their own app, next to a release build, and run two
+tools that point out mistakes while the app is in use, StrictMode and
+LeakCanary. Release builds have neither.
+[`docs/toolchain.md`](docs/toolchain.md#debug-tools) says how to use them.
 
 - **Debug builds have their own application ID,
   `io.github.bryancassell.bluecard.debug`**
-  ([#245](https://github.com/bryancassell/bluecard/issues/245)), from
-  `applicationIdSuffix` in `app/build.gradle.kts`, as in
-  [Configure build variants](https://developer.android.com/build/build-variants#build-types).
-  A test release is signed with the release key and a debug build with the
-  machine's debug key, and Android won't update an app from an APK signed with
-  a different key. With one ID, installing either build on a phone with the
-  other meant uninstalling it, which deletes its data. Now the two install side
-  by side, each with its own data and backup.
-  - **Names that must be unique on the phone, such as a content provider's
-    authority, are built from the application ID**: `${applicationId}` in the
-    manifest and `context.packageName` in code, as the report FileProvider's
-    authority is in both. Two installed apps can't declare the same authority,
-    so a fixed one would stop the two builds installing side by side.
-  - **The launcher name is "BlueCard Debug", on an orange icon** in place of
-    the blue one, from `app/src/debug/res/values`. Launchers cut the name to
-    about "BlueCard De…", so the color is what tells the icons apart at a
-    glance. Themed icons are monochrome, so with those on, only the name
-    differs.
-- **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)**
-  is turned on in `BlueCardApplication` when the app is debuggable, as in
-  [Now in Android](https://github.com/android/nowinandroid/blob/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/NiaApplication.kt).
-  It checks `ApplicationInfo.FLAG_DEBUGGABLE`, since AGP no longer generates
-  `BuildConfig` by default.
-  - The thread policy reports disk and network access on the main thread. It
-    logs each violation and flashes the screen, as in the
-    [core app quality](https://developer.android.com/develop/adaptive-apps/quality-guidelines/core-app-quality#strictmode)
-    StrictMode test.
-  - The VM policy reports streams and cursors that are never closed, leaked
-    activities, and a `content://` URI sent to another app without a
-    permission grant. It logs each one.
-  - Both use `detectAll()`, which turns on new checks as `targetSdk` rises.
-    So neither crashes the app (`penaltyDeath()`). Now in Android
-    [removed it](https://github.com/android/nowinandroid/pull/1857) after
-    crashes from code it doesn't own, and under Robolectric a VM policy's
-    `penaltyDeath()` ends the whole test run.
-  - Fix a violation, or permit it as narrowly as possible, such as
-    `StrictMode.allowThreadDiskReads()` around one call, with a comment saying
-    why. The reference says not to "feel compelled to fix everything that
-    StrictMode finds."
-  - Local tests can't rely on StrictMode being on or off. Under Robolectric,
-    its policies outlive the test that set them. Main-thread violations stop
-    being logged once a test ends before StrictMode has logged one. So
-    `BlueCardApplicationTest` turns StrictMode off and starts the app again
-    before each check.
-- **[LeakCanary](https://square.github.io/leakcanary/)** is a
-  `debugImplementation` dependency and starts itself. It reports activities and
-  windows that are still in memory after they're destroyed. It
-  [doesn't watch ViewModels](https://github.com/square/leakcanary/blob/v2.14/leakcanary-object-watcher-android-androidx/src/main/java/leakcanary/internal/AndroidXFragmentDestroyWatcher.kt#L62-L67)
-  in an app without fragments.
-  - Its launcher icon is off (`src/debug/res/values/leak_canary.xml`), so
-    `adb shell monkey` and `getLaunchIntentForPackage()` open `MainActivity`.
-  - Its heap dumps hold whatever is in memory, and it may save them in the
-    phone's public Download folder, so test with made-up records.
-  - It brings in [Plumber](https://square.github.io/leakcanary/changelog/#plumber-android-is-a-new-artifact-that-fixes-known-android-leaks),
-    which works around known leaks in Android itself, in debug builds only.
-    So LeakCanary doesn't report those leaks, though release builds still have
-    them.
-  - It keeps its results in `leaks.db` in the databases directory, so a debug
-    build's backup includes them along with the scout's data.
-  - It stays on 2.x until 3.0 is stable.
-  - Instrumented tests don't fail on leaks (`DetectLeaksAfterTestSuccess`).
-    They run only locally, and each check dumps the heap. LeakCanary still
-    runs in them, but doesn't dump the heap while JUnit is loaded.
+  ([#245](https://github.com/bryancassell/bluecard/issues/245)). A test
+  release and a debug build are signed with different keys, so with one ID,
+  installing either meant uninstalling the other, which deletes its data.
+  Their launcher name is "BlueCard Debug", on an orange icon, since launchers
+  cut the name short.
+- **Names that must be unique on the phone, such as a content provider's
+  authority, are built from the application ID** (`${applicationId}` in the
+  manifest, `context.packageName` in code), so the two builds can install side
+  by side.
+- **[StrictMode](https://developer.android.com/reference/android/os/StrictMode)
+  logs every violation and never crashes the app**; `BlueCardApplication` says
+  why. Fix a violation, or permit it as narrowly as possible, such as
+  `StrictMode.allowThreadDiskReads()` around one call, with a comment saying
+  why.
+- **[LeakCanary](https://square.github.io/leakcanary/)** reports activities
+  and windows that are still in memory after they're destroyed.
 
 ## Decisions
 
@@ -1640,36 +962,35 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 |---|---|---|
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
-| [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
-| [Focus between pages](#navigation) | A focus target around the pages takes input focus from a page that's left with it, that clears it as Save does, or whose focused item goes, and can't take focus otherwise. A page sliding away can't take focus | Out of touch mode, Compose gave focus to the next page's first item, which opened the keyboard on Badges. Save's `clearFocus()`, and a focused button that went or was disabled, gave it to the page's own first item. A target that could always take focus would stop Back leaving a page, and be an empty stop for Tab |
-| [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>`, saved with the sealed interface's serializer, not `rememberNavBackStack` | No reflection, so R8 can't break saving the back stack and local tests cover it. The compiler rejects a key outside `BlueCardNavKey`, and `NavKeysTest` one missing `@Serializable`. Needs no experimental API, unlike registering keys in a `SavedStateConfiguration` with `subclassesOfSealed` |
-| [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
+| [Navigation](#navigation) | Navigation 3 | Named by the recommendations page; stable since 1.0.0 |
+| [Focus between pages](#navigation) | A focus target around the pages takes the focus a page lets go of | Otherwise Compose gives it to a page's first item, which opened the keyboard on Badges |
+| [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
+| [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | The DataStore guide's criteria; BlueCard doesn't need Room 3's Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
-| [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; official wording only where it's the plain way to say something; no official images | Scouting America's terms of use and trademarks |
-| [Requirement versions](#requirement-versions) | Every shipped version stays in the catalog; each started badge records its version and stays on it until the scout switches | Scouting America's advancement rules allow finishing on the previous requirements; keeps recorded progress matched to its requirements |
-| [Ranks](#ranks) | Ranks share badges' catalog types, as an `Advancement`, and their progress tables, keyed by ID | Most of the badge machinery carries over to ranks with no schema change |
-| [Requirement IDs](#requirement-ids) | A requirement's official number, or for a rank's parent the PDF leaves out, the number its lettered requirements imply; unique within its requirements version | Less to author and easy to check against the official page; switching versions starts progress fresh, so IDs don't need to match across versions |
-| [Badge completion](#completion) | Derived from requirement progress and the catalog, never stored | Nothing to keep in sync when progress is edited or cleared |
-| [Own work with rows](#completion) | A requirement with a fixed-row tracker and own work stores only the own work, whose date is the requirement's | No new column, migration or export format; a row's date is only when it was typed in |
-| [Rank status](#ranks) | Derived in one place from every rank's progress, never stored, including the ranks a rank marked earned counts as earned | Ranks are earned in order, so a rank's status depends on the others; unmarking a rank can't leave one below it earned by mistake |
-| [Rank sign-off](#ranks) | A nullable `requirement_progress` column that only a rank's requirement fills, saved with the notes in one write | No new table; the notes' one Save can't save one field and fail the other |
-| [Text fields](#text-fields) | State-based (`TextFieldState`), held in the ViewModel; its text kept in `SavedStateHandle` by a saved state provider | The text field guide recommends state-based fields and holding their state in ViewModels. The provider reads the text only when the system saves state, so it keeps every change without anything collecting the screen's state. `SavedStateHandle.saveable` would too, but it's experimental |
-| [Load failures](#load-and-save-failures) | A screen that can't read stored data (`IOException`) shows a message in place of its content; any other exception crashes | The UI layer guide keeps errors in UI state. On Google Play, crashes reach Android vitals, while caught exceptions would go unreported because the app has no crash reporting of its own |
-| [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals reports crashes, and testers of GitHub builds report them by hand | Needs no code. Automatic reports need the `INTERNET` permission (req. 1), and Google Play's Families policy limits the SDKs an app for children can use. ACRA's email reports would add a library and a dialog after every crash |
-| [Damaged database](#storage-errors) | Room's corruption handler is replaced by one that moves the files to the no-backup directory, keeping every copy, rather than deleting them. Damage found while the database is open leaves Room's connection closed, so the next read or write crashes | Progress is never lost without the scout knowing. Damage is rare, so the closed connection isn't replaced while the app runs |
-| [Save failures](#load-and-save-failures) | A snackbar from UI state; what's on screen keeps showing what's stored | The UI layer guide's pattern for messages from the ViewModel |
-| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region, composed with no text while the screen loads | Compose announces a live region only when a node it has seen changes. A pane title, tried first, made TalkBack say "BlueCard" whenever the message went away |
-| [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text is set on the `Text` inside it | TalkBack read one set on the button and then the text too |
-| [Live regions](#live-regions) | A live region that mustn't be read out as its screen appears becomes one with its first new text | Compose reports a node's first layout as a change, and TalkBack reads a live region on any change it's the source of. The count on Badges held back the heading by 2 seconds |
+| [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official images | Scouting America's terms of use and trademarks |
+| [Requirement versions](#requirement-versions) | Every shipped version stays; a started badge stays on its version until the scout switches | The advancement rules allow finishing on the previous requirements |
+| [Ranks](#ranks) | Ranks share badges' catalog types and progress tables | The badge machinery carries over with no schema change |
+| [Requirement IDs](#requirement-ids) | The official number, unique within its requirements version | Easy to check against the official page |
+| [Badge completion](#completion) | Derived from progress and the catalog, never stored | Nothing to keep in sync when progress changes |
+| [Own work with rows](#completion) | A fixed-row requirement's own work is stored as the requirement's progress | No new column, migration or export format |
+| [Rank status](#ranks) | Derived in one place from every rank's progress, never stored | A rank's status depends on the others |
+| [Rank sign-off](#ranks) | A `requirement_progress` column, saved with the notes in one write | No new table, and one Save can't half-fail |
+| [Text fields](#text-fields) | `TextFieldState` held in the ViewModel, its text kept in `SavedStateHandle` | The text field guide's recommendation |
+| [Load failures](#load-and-save-failures) | An `IOException` reading data shows a message in the screen's place; anything else crashes | Errors belong in UI state; crashes reach Android vitals |
+| [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals | Automatic reports need the `INTERNET` permission (req. 1) |
+| [Damaged database](#storage-errors) | Damaged files are set aside, never deleted, and the scout is told | Progress is never lost without the scout knowing |
+| [Save failures](#load-and-save-failures) | A snackbar from UI state; the screen keeps showing what's stored | The UI layer guide's pattern for ViewModel messages |
+| [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region | Screen readers hear it as it appears |
+| [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text goes on the `Text` inside it | TalkBack read one on the button and then the text too |
+| [Live regions](#live-regions) | A live region that mustn't be read as its screen appears becomes one with its first new text | Compose reports a node's first layout as a change |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
-| [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON via kotlinx.serialization | No storage permissions needed; kotlinx.serialization JSON is stable and Kotlin's official library |
-| [Older export formats](#export-and-import) | Still read; version 1 with `explicitNulls = false` | Exports from before a format change keep importing, with one `Json` setting rather than a reader of their own |
-| [Backup](#backup) | Android Auto Backup on, with rules that include only the databases and DataStore directories; not limited to phones that can encrypt the backup | Scouts keep their records across phone changes; this is system backup, not app sync |
-| [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, compared against committed images on every test run, only for looks that semantics can't show | `CLAUDE.md` asks for screenshot tests where semantics can't tell states apart. They run with the other local tests, with no device or emulator |
-| [PDF report tests](#catalog-report-and-backup-tests) | Layout and drawing tested locally with Robolectric's native graphics. `PdfDocumentWriter` tested on an emulator by an instrumented test, outside the coverage check | `PdfDocument` doesn't run under Robolectric |
-| [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with the Google APIs image and 16 KB pages, in its own required CI job | Tests on the target SDK and on the page size Play requires. The emulator action used before couldn't boot API 37 images, and the lighter test images stop at API 36 |
-| [Emulator cache in CI](#instrumented-tests-in-ci) | None: each run downloads the emulator and image and makes a new snapshot | Build takes longer than the instrumented tests job, so a cache doesn't make CI finish sooner, and it would take 2.5–4.4 GB of the 10 GB of Actions cache that the Gradle caches need |
-| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates the code and removes unused resources; checked at runtime by hand on an emulator | Android's app optimization guide recommends it for every release build. CI's emulator runs only the debug build's instrumented tests, and there are no device tests of the app's screens, so automated tests of the shrunk app would be new work of their own |
-| [Release signing](#release-build) | BlueCard's own key, applied by `apksigner` when publishing; Gradle always builds the release unsigned. Test builds are GitHub pre-releases | The key's password never reaches a Gradle build, and anyone can build the release app. Friends and family can test without a Play Console account. Moving to Play means choosing between Play's own key, which makes testers reinstall, and handing Play this one |
-| [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug`, and their launcher name is "BlueCard Debug", on an orange icon. Names that must be unique on the phone, such as provider authorities, are built from the application ID | A debug build and a test release are signed with different keys. With one ID, neither could replace the other without uninstalling it and its data. The color tells the icons apart, since launchers cut the name short |
-| [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only. StrictMode logs every violation and flashes the screen for main-thread ones; it never crashes the app | They catch main-thread disk access, unclosed streams and leaks while the app is in use. Crashing on violations broke Now in Android when new checks or code it didn't own set them off |
+| [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
+| [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |
+| [Backup](#backup) | Auto Backup of the databases and DataStore only | Records survive a phone change, with no app sync |
+| [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
+| [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator | `PdfDocument` doesn't run under Robolectric |
+| [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked by hand | The app optimization guide recommends it |
+| [Release signing](#release-build) | `apksigner` signs when publishing, and Gradle builds unsigned; test builds are GitHub pre-releases | The key's password never reaches a Gradle build |
+| [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug` | A debug build and a test release install side by side |
+| [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only; StrictMode never crashes | They catch disk access and leaks while the app is in use |

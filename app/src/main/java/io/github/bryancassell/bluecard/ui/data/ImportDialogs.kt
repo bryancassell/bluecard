@@ -114,7 +114,9 @@ fun MergeDialog(
         onDismissRequest = close,
         // Drawn behind the system bars, as the app's window is, rather than leaving them over
         // the dimmed page below. Its status bar takes its top row's color, with no band as pages
-        // have: the list scrolls under the top row, clear of the clock (PRD.md's Status bar).
+        // have: the top row already keeps the list, which scrolls under it, clear of the clock,
+        // and shares its color with the status bar, as Material's top app bar does before a page
+        // scrolls under it.
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false
@@ -172,8 +174,9 @@ fun MergeDialog(
  * Gives a full-screen dialog's system bars icons that show on its page: dark on the light page,
  * light on the dark one, as enableEdgeToEdge() chooses for MainActivity's. Android takes the
  * icons from the top full-screen window, which is the dialog's, and that window doesn't get
- * MainActivity's: on Android 8 its navigation bar icons were white on the light page. The window
- * draws no bar backgrounds, so the dialog's own page, its surface color, shows behind the bars.
+ * MainActivity's: on Android 8 its navigation bar icons were white on the light page (#299). The
+ * window draws no bar backgrounds, so the dialog's own page, its surface color, shows behind the
+ * bars.
  */
 @Composable
 private fun UseSystemBarIconsForTheme() {
@@ -211,8 +214,8 @@ private fun IgnoreTouchesAsItOpens(content: @Composable () -> Unit) {
 
 /**
  * The ranks that merging as chosen would un-earn, such as "Star will no longer count as
- * earned.", as the removal dialogs name them. It's composed with none too, hidden, so screen
- * readers announce it as it appears (as ScreenMessage explains), and takes no space then.
+ * earned.", as the removal dialogs name them (#259). It's composed with none too, hidden, so
+ * screen readers announce it as it appears (as ScreenMessage explains), and takes no space then.
  */
 @Composable
 private fun UnearnedRanks(names: List<String>) {

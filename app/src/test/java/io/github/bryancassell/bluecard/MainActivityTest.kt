@@ -127,6 +127,10 @@ import org.robolectric.shadows.ShadowToast
  * application, so test modules (such as TestDispatchersModule) replace real ones, and
  * this class swaps the repositories for fakes and fixes the date. Each test starts with no
  * saved profile, as on a fresh install, a one-badge catalog and no progress.
+ *
+ * It doesn't run the accessibility checks (AccessibilityChecks), which need native graphics:
+ * under them, launching MainActivity never finishes, because Robolectric keeps drawing frames.
+ * Each screen's and dialog's own tests check what it shows.
  */
 @HiltAndroidTest
 @UninstallModules(

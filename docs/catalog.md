@@ -22,15 +22,17 @@ code. Why the catalog works this way is in
   requirements are on Scouting America's Test Lab pages rather than a
   `/merit-badges/` page, aren't added: they count toward ranks only once they
   become official, and their requirements are taken down when the pilot ends.
-  When one becomes official, add it like any new badge, dated the day it became
+  The catalog has no way to mark a badge as a pilot, so Star 3 and Life 3 would
+  count one. `BundledCatalogTest` fails for a badge whose `officialUrl` isn't a
+  `/merit-badges/` page. When one becomes official, add it like any new badge, dated the day it became
   official rather than the day its pilot began (see
   [Dating a version](#dating-a-version)).
 - **Current requirements only, until the first release.** Write each badge's
   current requirements as its only version.
 - **After the first release, keep every shipped version.** When a badge's
   requirements change, add the new version and leave the old one in place:
-  scouts' progress is saved against it. Never remove a shipped version or
-  change its requirement numbers or structure, and don't add or remove
+  scouts' progress is saved against it. Never remove a shipped badge, rank or
+  version, or change a version's requirement numbers or structure, and don't add or remove
   `ownWork` or `meritBadges` on one, or change `meritBadges`' numbers:
   completion is worked out from the catalog each time, so it would change which
   badges and ranks scouts have completed.

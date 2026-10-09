@@ -10,8 +10,12 @@ import io.github.bryancassell.bluecard.R
  * order, leaving out any that are null. The parts are the text it shows, or what stands in for
  * something it can't show in words, such as the rank card's trail, but not what it reads as its
  * state. It's set with `clearAndSetSemantics`, in place of its parts' text: Compose gives
- * TalkBack a merged node's parts as nodes of their own, and TalkBack leaves out those scrolled
- * off screen (ARCHITECTURE.md, Screen reader labels).
+ * TalkBack a merged node's own properties and its parts as nodes of their own (`getInfoText` in
+ * `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1), and marks a part off
+ * screen as not visible to the user. TalkBack leaves those parts out, so the rank card and a
+ * requirement row partly scrolled off screen were read without their first lines (#305, #312).
+ * Compose gives screen readers none of the parts it clears, so a part read as the state, such as
+ * a progress bar, needs no `hideFromAccessibility` of its own.
  */
 @Composable
 @ReadOnlyComposable

@@ -1,0 +1,46 @@
+# Fails a pull request that makes ARCHITECTURE.md or PRD.md longer, unless it
+# has the grows-docs label. Both grew to twice their size once, mostly by
+# copying reasons that code comments already gave (#140). CLAUDE.md's "What goes
+# where" says what belongs in each, and the label records that the developer
+# agreed to the growth.
+name: Docs
+
+on:
+  pull_request:
+    # labeled and unlabeled run the check again when the label changes.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  doc-growth:
+    name: Doc growth
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out the pull request merged into main. Its first parent is main
+      # as it was merged with, so comparing with it counts only this PR's changes.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      # Counts words, so rewrapping a paragraph or lengthening a link isn't growth.
+      - name: Compare with main
+        env:
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'grows-docs') }}
+        run: |
+          grew=""
+          for f in ARCHITECTURE.md PRD.md; do
+            before=$(git show "HEAD^1:$f" | wc -w)
+            after=$(wc -w < "$f")
+            echo "$f: $before words on main, $after with this PR"
+            if [ "$after" -gt "$before" ]; then grew="$grew $f"; fi
+          done
+          if [ -n "$grew" ] && [ "$APPROVED" != true ]; then
+            echo "::error::This PR makes$grew longer. Put what concerns one class, function or bug in a comment at the code (CLAUDE.md, What goes where), or add the grows-docs label once the developer agrees."
+            exit 1
+          fi

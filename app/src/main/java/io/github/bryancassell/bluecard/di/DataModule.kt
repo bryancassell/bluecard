@@ -11,7 +11,11 @@ import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressReposito
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
 
-/** Binds each repository interface to its implementation. */
+/**
+ * Binds the catalog, progress and damaged-progress repositories to their implementations. A UI
+ * test that fakes one of them (`@UninstallModules(DataModule::class)` and `@BindValue`) supplies
+ * all three.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 interface DataModule {

@@ -82,7 +82,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     }
     // The only back handler here, added before the screens, so any a screen adds goes first.
     // NavDisplay is given no handler of its own, so a back swipe doesn't move the pages;
-    // releasing it plays Back's slide.
+    // releasing it plays Back's slide, or asks first on a page with unsaved changes. When the
+    // pages followed the finger, a released swipe finished slowly beside opening a page, so the
+    // swipe gives up predictive back's peek at the page underneath (#104).
     BackHandler(enabled = shownBackStack.size > 1, onBack = goBack)
     val decoratedEntries = rememberDecoratedNavEntries(
         backStack = shownBackStack,
@@ -200,7 +202,12 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // Android's View.clearFocus() then asks the view to take focus again, and Compose gives it to
     // the first item that can take it. As Badges was left, that was its search field, which
     // opened the keyboard, and TalkBack followed it (#285). After Save on a requirement's page, it
-    // was the Completed checkbox (#297), and after Remove date there too (#301).
+    // was the Completed checkbox (#297), and after Remove date there too (#301). A phone leaves
+    // touch mode on a key press, such as Enter or Tab, and TalkBack's gestures don't bring it
+    // back: only a touch that reaches the app does. Handing focus to the button that takes a gone
+    // one's place, such as from Unmark to Mark completed, would keep the scout's place, but each
+    // would need its own code. Nothing focused is what a page change leaves, and it covers any
+    // button that goes later.
     val holder = remember { FocusRequester() }
     val page = remember { FocusRequester() }
     var hasFocus by remember { mutableStateOf(false) }
@@ -216,7 +223,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // Android 9) Android asks the view to take focus again before that message is done. The
     // holder can take it until a task posted then runs, after that message. If Android doesn't
     // ask, nothing has focus, and the holder isn't left able to take it: a later key press that
-    // leaves touch mode asks too.
+    // leaves touch mode asks too. A focusable View before the ComposeView, to take Android's
+    // request, would also take it when a key is pressed with nothing focused, and as the app
+    // starts.
     val view = LocalView.current
     var isTakingFocusBack by remember { mutableStateOf(false) }
     // Tab and Shift+Tab clear focus as they wrap around, asking onExit below first, and then move
@@ -243,8 +252,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             // item's parents, from the innermost out. Moving focus to the holder, or cancelling
             // the clear when the holder already has it, leaves the view's focus alone. This is
             // around the holder, so it's asked while the holder has focus too, as after a page
-            // opened from a field closes again. Tab clears focus as it wraps around, going Next or
-            // Previous, and still reaches the page's first or last item.
+            // opened from a field closes again, and a screen reader or switch presses Save
+            // without moving focus. Tab clears focus as it wraps around, going Next or Previous,
+            // and still reaches the page's first or last item.
             .focusProperties {
                 onExit = {
                     if (requestedFocusDirection == FocusDirection.Exit) {

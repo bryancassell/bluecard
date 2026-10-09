@@ -83,7 +83,8 @@ class BackupRulesTest {
 
     @Test
     fun ruleSets_haveNoConditions() {
-        // Backup isn't limited to phones that can encrypt it (ARCHITECTURE.md, "Backup").
+        // Backup isn't limited to phones that can encrypt it, so every scout who keeps backup on
+        // can move their records.
         for (ruleSet in listOf(fullBackupContent, cloudBackup, deviceTransfer)) {
             assertEquals(emptyList<String>(), ruleSet.conditions)
         }

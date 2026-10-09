@@ -36,7 +36,7 @@ fun rememberOtherAppStarter(): OtherAppStarter {
  * After each start, it ignores further starts for the double-tap timeout
  * (`ViewConfiguration.doubleTapTimeoutMillis`). The other app takes a moment to cover
  * BlueCard, so otherwise both taps of a double tap could start it, and a browser could open
- * two tabs, or an email app two drafts. A screen passes the one starter to each of its
+ * two tabs, or an email app two drafts (#97). A screen passes the one starter to each of its
  * controls that opens another app, so a quick tap on a second one is ignored too. A start that
  * finds no app counts too, so a double tap shows its message once, and the next tap tries
  * again.

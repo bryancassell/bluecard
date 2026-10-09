@@ -58,9 +58,13 @@ private const val OLDEST_BACKUP_FORMAT_VERSION = 1
 private val backupJson = Json
 
 // The same for a version 1 file, except that a missing field that can be null reads as null, so
-// its requirements read without a sign-off, which it didn't have. explicitNulls is experimental:
-// a kotlinx.serialization update that renames or removes it fails the build, and one that changes
-// what it does fails decodeBackup_ofAVersion1Export_readsItWithoutSignOffs.
+// its requirements read without a sign-off, which it didn't have. That also takes a version 1
+// file missing another such field, which only a hand-edited file could be, as a smaller cost than
+// a reader of its own: a class for the old layout would leave the serialization plugin's
+// constructor and encoder for it untested, and a tree of each requirement can overflow the
+// stack. explicitNulls is experimental: a kotlinx.serialization update that renames or removes it
+// fails the build, and one that changes what it does fails
+// decodeBackup_ofAVersion1Export_readsItWithoutSignOffs.
 @OptIn(ExperimentalSerializationApi::class)
 private val backupJsonV1 = Json { explicitNulls = false }
 
@@ -70,8 +74,8 @@ private val formatVersionJson = Json { ignoreUnknownKeys = true }
 /**
  * [backup] as an export's JSON: the format version, the profile, and each started badge with
  * its requirements and tracker entries. A started rank is listed with the badges, as its progress
- * is stored with theirs (ARCHITECTURE.md, Ranks). Dates are in ISO form, such as "2026-01-01". Tracker
- * entries are listed in the order they were added, in place of their IDs.
+ * is stored with theirs, so ranks needed no new format version. Dates are in ISO form, such as
+ * "2026-01-01". Tracker entries are listed in the order they were added, in place of their IDs.
  */
 fun encodeBackup(backup: Backup): String =
     backupJson.encodeToString(BackupJson.serializer(), backup.toJson())
@@ -91,12 +95,22 @@ fun encodeBackup(backup: Backup): String =
  * - The name and unit number aren't blank, and no text is longer than its field takes (such as
  *   [NOTES_MAX_LENGTH]), so none is cut short when the scout edits it.
  *
+ * The app's fields never save a date column value that isn't a date, or a number column value
+ * that isn't a number, and only a catalog edited during development can leave one. So rejecting
+ * it keeps the scout's exports importable without changing a file's data unseen (#233). A
+ * tracker entry without a value is rejected for the same reason (#239). The one export from
+ * before single-line fields replaced pasted line breaks that this rejects has a row whose only
+ * value is a pasted next-line character, which becomes a space. Only a development build can
+ * have one.
+ *
  * Text is cleaned up as the app does when the scout saves it: it's trimmed ([normalizedText]),
  * and a single-line text field's line breaks are spaces, as the field replaces them
- * ([lineBreaksAsSpaces]). A field's length limit applies to the text as it's stored.
+ * ([lineBreaksAsSpaces]). A one-line field never shows a line break, so a space keeps the text
+ * the scout sees, and an export saved before those fields replaced pasted line breaks still
+ * imports (#156). A field's length limit applies to the text as it's stored.
  *
  * A file in an older format version imports without what was added since, such as a version 1
- * file without sign-offs.
+ * file without sign-offs (#248).
  *
  * The JSON is decoded as it's read, never into a tree of the whole file, so a large or deeply
  * nested file that isn't an export can't use up the app's memory or stack.
@@ -297,7 +311,8 @@ private fun TrackerEntryJson.toEntry(
         if (columns.getValue(column) == TrackerColumnType.TEXT) lineBreaksAsSpaces(value) else value
     }
     val stored = normalizedTrackerValues(typed)
-    // The app can't save a row with nothing in its fields.
+    // The app can't save a row with nothing in its fields: Save is off while they're all empty
+    // (#239).
     requireValid(stored.isNotEmpty())
     requireValid(stored.all { (column, value) -> columns.getValue(column).takes(value) })
     return TrackerEntry(
@@ -316,7 +331,9 @@ private fun TrackerColumnType.takes(value: String) = when (this) {
     TrackerColumnType.MULTILINE_TEXT -> value.length <= TRACKER_MULTILINE_TEXT_MAX_LENGTH
 
     // The field takes digits with at most one decimal separator, and a number without a digit
-    // isn't saved, so what's stored is a number as storedNumber reads it.
+    // isn't saved, so what's stored is a number as storedNumber reads it. A lone "." is rejected
+    // rather than left out as saving does: dropping it without dropping other values that
+    // aren't numbers would take a rule of its own (#233).
     TrackerColumnType.NUMBER ->
         value.length <= TRACKER_NUMBER_MAX_LENGTH && storedNumber(value) != null
 

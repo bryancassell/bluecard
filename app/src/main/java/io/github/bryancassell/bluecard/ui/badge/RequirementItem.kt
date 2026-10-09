@@ -42,7 +42,9 @@ data class RequirementItem(
     /**
      * Whether nothing toward it was recorded: it's still needed and no part of it is done, but
      * the scout marked the badge or rank completed on a prior date, without recording its
-     * requirements.
+     * requirements. "Not completed" beside "Completed on" read as a badge complete with nothing
+     * done. One with parts recorded stays "Not completed", since "Not recorded" would contradict
+     * the parts listed under it.
      */
     val notRecorded: Boolean = false,
     /**
@@ -64,7 +66,12 @@ data class RequirementItem(
      * Our summary of its [ownWork] while that's all that's left of it: it's still needed and
      * every sub-requirement it needs is complete, or every row of its tracker is filled in.
      * Otherwise null. It stays on a badge marked completed on a prior date, where it says what
-     * was never recorded.
+     * was never recorded. With only its own work left, "(6 of 6 complete)" beside a box that
+     * wasn't complete read as finished, and the scout had to open the page to find what was left
+     * (#167). Counting the own work as one more part of [completeCount] instead read "Do 1 of 3
+     * (1 of 2 complete)" on a choice, as if a second sub-requirement were needed (#254). The row
+     * shows it whole, as a summary often ends with what's left, such as the counselor's
+     * inspection.
      */
     val stillToDo: String? = null,
     /**
@@ -72,7 +79,10 @@ data class RequirementItem(
      * scout marks it complete by hand and has the number of rows or the amount it asks for in its
      * log ([hasEnoughLogged]). Those don't complete it, as it may ask for more, such as
      * Tenderfoot 6b's plan. It stays on a badge marked completed on a prior date, as [stillToDo]
-     * does.
+     * does. Without it, "30 of 30 days" beside a box that wasn't complete read as finished
+     * (#293). Unlike [stillToDo], the line doesn't name the rest of the requirement: the summary
+     * above it says what it asks for, and many logs, such as Second Class 4's, ask for nothing
+     * past the rows.
      */
     val checkOffLeft: Boolean = false,
     /**
@@ -147,7 +157,12 @@ fun Requirement.toItem(
     )
 }
 
-/** How many of the children it needs are complete, or null if none are. */
+/**
+ * How many of the children it needs are complete, or null if none are. It counts toward the number
+ * needed, and never past it, so it says how close the requirement is. It's left out while none
+ * are: "0 of 3" beside a tinted box, when only a requirement further down is complete, would read
+ * as nothing done (#158).
+ */
 private fun Requirement.completeCount(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,

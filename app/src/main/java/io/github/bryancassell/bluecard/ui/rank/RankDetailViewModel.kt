@@ -172,7 +172,7 @@ class RankDetailViewModel @AssistedInject constructor(
     /**
      * Undoes [markEarned], and with it what the mark counted as earned below it. What's recorded
      * for the rank stays. The page remembers the date it showed
-     * ([RankDetailUiState.Ready.unmarkedDate]).
+     * ([RankDetailUiState.Ready.unmarkedDate]), so it asks nothing first, as for a badge.
      */
     fun unmarkEarned() {
         val shown = (uiState.value as? RankDetailUiState.Ready)?.earnedOnPriorDate

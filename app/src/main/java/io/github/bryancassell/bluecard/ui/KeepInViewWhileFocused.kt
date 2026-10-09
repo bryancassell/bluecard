@@ -30,9 +30,12 @@ import kotlinx.coroutines.flow.filterIsInstance
  * [scrollState] viewport: as it takes focus, once the keyboard has opened, which shrinks the
  * viewport, and as a field in it grows. Otherwise the page keeps only a focused field's cursor in
  * view, as it does for the fields above. A page puts its last field and Save button in it, so
- * Save stays above the keyboard while the scout types there.
+ * Save stays above the keyboard while the scout types there (#172, #178). The line being typed
+ * matters more than Save, which is a scroll away. Scrolling keeps the page laid out as before; a
+ * bar fixed above the keyboard would have taken room from the fields while typing.
  */
-// imeAnimationTarget is experimental, and the only way to tell the keyboard is still moving.
+// imeAnimationTarget is experimental, and the only way to tell the keyboard is still moving. A
+// change to it would fail the build when Compose is updated.
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun KeepInViewWhileFocused(scrollState: ScrollState, content: @Composable ColumnScope.() -> Unit) {
@@ -64,7 +67,7 @@ fun KeepInViewWhileFocused(scrollState: ScrollState, content: @Composable Column
         // A viewport that grew, as when the keyboard closes, can't have hidden them. Asking then
         // would pull the page back to them after the scout has scrolled away. An owed request is
         // still asked for: a keyboard that got shorter before it finished, as a number pad can,
-        // would otherwise leave Save behind the keyboard.
+        // would otherwise leave Save behind the keyboard (#244, #253).
         val viewportGrew = viewportHeight > settledViewportHeight
         settledViewportHeight = viewportHeight
         requestOwed = hasFocus && height <= viewportHeight && (!viewportGrew || requestOwed)

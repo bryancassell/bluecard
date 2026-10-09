@@ -10,6 +10,10 @@
     which holds the profile. The cache directory, where PDF reports are
     generated, is never backed up, so it needs no rule.
     https://developer.android.com/identity/data/autobackup
+
+    Cloud backup isn't limited to phones that can encrypt it end to end
+    (disableIfNoEncryptionCapabilities), so every scout who keeps backup on can
+    move their records.
 -->
 <data-extraction-rules>
     <cloud-backup>

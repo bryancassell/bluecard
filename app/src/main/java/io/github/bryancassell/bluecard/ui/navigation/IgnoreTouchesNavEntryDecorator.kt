@@ -24,7 +24,7 @@ import kotlinx.coroutines.delay
  * NavDisplay draws both screens during a transition: side by side as pages slide, or one over
  * the other as they crossfade. Without this, the second tap of a double tap that opened a
  * screen would press whatever is under the finger on it, and a tap could reach a leaving
- * screen's controls wherever they're still drawn.
+ * screen's controls wherever they're still drawn (#61).
  *
  * An arriving screen takes taps once the timeout ends, even while it's still sliding in.
  * `dropUnlessResumed`, which #56 dropped, ignored taps for the whole animation. Taps further

@@ -122,6 +122,8 @@ private fun Fields(
             // Lets screen reader users jump to it.
             modifier = Modifier.semantics { heading() }
         )
+        // Done only closes the keyboard, where Onboarding's also saves: as on the counselor's
+        // page, the scout decides when to save, since saving closes the page.
         ProfileFields(name = name, unitNumber = unitNumber)
         Button(
             onClick = {

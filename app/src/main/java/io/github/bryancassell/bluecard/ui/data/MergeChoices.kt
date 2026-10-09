@@ -30,7 +30,13 @@ class MergeSources(
 /**
  * What a merge of the file the scout chose asks them to choose, where the phone and the file
  * differ: the name and unit number, and each badge and rank started on both. Each starts on the
- * phone's.
+ * phone's, so a merge changes nothing already on the phone unless the scout picks the file's.
+ *
+ * The export doesn't record when anything changed, so the app can't tell which side is newer,
+ * and the scout decides (#28). For the same reason it can't tell a badge cleared on the phone
+ * since the export from one never started there, so the merge adds it back, and the scout can
+ * clear it again. Each badge and rank comes whole from one side, never combined, which keeps its
+ * progress matching its requirements version, as switching versions does.
  */
 data class MergeChoices(
     val sources: MergeSources,
@@ -55,7 +61,10 @@ data class MergeChoices(
 
     /**
      * The file's progress the merge takes: on each badge and rank the phone hadn't started, and
-     * each the scout chose the file's for.
+     * each the scout chose the file's for. It's worked out from the phone's progress as read when
+     * the scout chose to merge, so a badge cleared on the phone since then isn't added back
+     * unasked. The merge still keeps a badge started since then, rather than replacing it
+     * (`ProgressRepository.merge`).
      */
     val progressToMerge: List<BadgeProgressDetails>
         get() {
@@ -93,7 +102,10 @@ data class AdvancementChoice(
 data class ProgressSummary(
     /** Whether the badge is completed, or the rank earned. */
     val done: Boolean,
-    /** The date it was completed or earned on, if it is and the date is known. */
+    /**
+     * The date it was completed or earned on, if it is and the date is known, which tells apart
+     * two sides that are both done.
+     */
     val doneOn: LocalDate? = null,
     /** How much of it is done, from 0 to 1, while it isn't; null if that can't be measured. */
     val fractionDone: Float? = null,

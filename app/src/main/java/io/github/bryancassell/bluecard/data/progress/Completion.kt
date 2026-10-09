@@ -28,8 +28,10 @@ val Requirement.needsEveryRow: Boolean get() = children.isEmpty() && tracker?.ro
 
 /**
  * Whether this requirement is complete once every row of its tracker is filled in: it
- * [needsEveryRow] and has no [own work][Requirement.ownWork]. The scout can give the date it was
- * completed on, as for one they mark by hand ([completion]).
+ * [needsEveryRow] and has no [own work][Requirement.ownWork]. Its rows are its parts, like
+ * sub-requirements, so it has no checkbox (#105). The scout can give the date it was completed
+ * on, as for one they mark by hand ([completion]): rows typed in after the work, as when copying a
+ * paper log, dated it, and the badge with it, the day they were typed (#116).
  */
 val Requirement.completesFromRows: Boolean get() = needsEveryRow && ownWork == null
 
@@ -54,6 +56,12 @@ fun Requirement.hasEveryRow(trackerEntries: Map<String, List<TrackerEntry>>): Bo
  * that also has own work needs the scout to mark that complete too, and its date is the one they
  * gave the own work, since the rows' dates are only when they were typed in. Any other
  * requirement is complete when the scout marked it complete ([isMarkedByHand]).
+ *
+ * Without own work, enough children alone completed requirements whose main work wasn't done,
+ * and the badge with them (#143), and rows completed a requirement before its closing step, such
+ * as a summary, was done (#229). Rows are often typed in after the work, as when copying a paper
+ * log, so dating the requirement by them would undo #116. A date for the rows as well as the own
+ * work would have put two dates on one page.
  */
 fun Requirement.completion(
     progress: Map<String, RequirementProgress>,
@@ -152,7 +160,11 @@ private fun Requirement.childrenCompletion(
     return Completion(if (dates.size >= needed) dates[needed - 1] else null)
 }
 
-/** Complete once each of the [rowCount] rows has an entry, on the latest date one was added. */
+/**
+ * Complete once each of the [rowCount] rows has an entry, on the latest date one was added. Not
+ * on a date column's date: most fixed-row trackers have none, such as Personal Management 2a and
+ * 2c, and Family Life 3's is the week's start.
+ */
 private fun rowsCompletion(entries: List<TrackerEntry>, rowCount: Int): Completion? {
     val filled = filledRows(entries, rowCount).values
     if (filled.size < rowCount) return null

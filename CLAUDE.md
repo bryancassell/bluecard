@@ -1,6 +1,18 @@
 The product requirements document for this project is in PRD.md
 
-The architecture design for this project is in ARCHITECTURE.md. Read its table of contents first, then only the sections you need. Follow it for new features, and update it in the same PR when a design decision changes. Keep it to technical decisions, the conventions new code must follow, and why: explain how code works in its comments, and record choices about how the app looks and behaves in PRD.md's Design decisions.
+The architecture design for this project is in ARCHITECTURE.md. Read its table of contents first, then only the sections you need. Follow it for new features, and update it in the same PR when a design decision changes.
+
+## What goes where
+
+Both documents grew back to twice their size once, mostly by copying reasons that code comments already gave ([#140](https://github.com/bryancassell/bluecard/issues/140)). Each kind of text has one home:
+
+- **ARCHITECTURE.md:** what someone changing a different part of the app must know. That means the technical decisions and conventions that more than one place follows, each with its reason in a sentence or two. Each row of its Decisions table is one line that links to its section.
+- **PRD.md's Design decisions:** choices about how the app looks and behaves. Each row gives the choice in a sentence or two, the main reason, and issue links.
+- **A comment at the code:** anything that concerns one class, one function or one bug. That includes how it works, why it's built that way, alternatives that were tried, library internals and the versions they were checked against, and the issue link. A comment gives its own reason rather than sending the reader to ARCHITECTURE.md or PRD.md for it.
+- **docs/toolchain.md:** build, CI, signing and release process. **docs/catalog.md:** the catalog's format and how to write it.
+- **Issues and PRs:** how a bug was found and fixed, and whether an issue is still open.
+
+Before adding to ARCHITECTURE.md or PRD.md, check that the text isn't already in a comment, and remove what the addition makes redundant. A PR that makes either file longer needs the developer's agreement and the `grows-docs` label; CI's Doc growth check fails without it.
 
 # Claude Code Workflow
 
