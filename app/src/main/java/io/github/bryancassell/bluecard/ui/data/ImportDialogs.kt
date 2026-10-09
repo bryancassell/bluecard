@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.data
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -172,12 +172,12 @@ fun MergeDialog(
  * light on the dark one, as enableEdgeToEdge() chooses for MainActivity's. Android takes the
  * icons from the top full-screen window, which is the dialog's, and that window doesn't get
  * MainActivity's: on Android 8 its navigation bar icons were white on the light page. The window
- * draws no bar backgrounds, so the dialog's own page shows behind the bars.
+ * draws no bar backgrounds, so the dialog's own page, its surface color, shows behind the bars.
  */
 @Composable
 private fun UseSystemBarIconsForTheme() {
     val window = (LocalView.current.parent as DialogWindowProvider).window
-    val light = !isSystemInDarkTheme()
+    val light = MaterialTheme.colorScheme.surface.luminance() > 0.5f
     SideEffect {
         WindowCompat.getInsetsController(window, window.decorView).run {
             isAppearanceLightStatusBars = light
