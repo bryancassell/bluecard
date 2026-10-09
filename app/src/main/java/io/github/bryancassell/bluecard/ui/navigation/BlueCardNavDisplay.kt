@@ -89,7 +89,8 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
         // cleared when the entry leaves the back stack, and ignore touches on screens that
         // are animating, so a double tap can't press a control on the screen it opened. Keep
-        // focus out of a screen that's leaving, so it can't pass to the next one.
+        // focus out of a screen that's leaving, so a key can't move focus onto it, to be lost as
+        // it goes.
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
@@ -213,8 +214,9 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // disabled, loses focus without Compose asking onExit below. Compose then clears the view's
     // focus, at once or once the change is applied, and out of touch mode (or in any mode before
     // Android 9) Android asks the view to take focus again before that message is done. The
-    // holder can take it until then. If Android doesn't ask, nothing has focus, and the holder
-    // isn't left able to take it: a later key press that leaves touch mode asks too.
+    // holder can take it until a task posted then runs, after that message. If Android doesn't
+    // ask, nothing has focus, and the holder isn't left able to take it: a later key press that
+    // leaves touch mode asks too.
     val view = LocalView.current
     var isTakingFocusBack by remember { mutableStateOf(false) }
     // Tab and Shift+Tab clear focus as they wrap around, asking onExit below first, and then move

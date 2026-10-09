@@ -402,7 +402,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   TalkBack's gestures don't bring it back: only a touch that reaches the app
   does. So when the page shown changes while one of its items has focus, a
   focus target around the pages takes it (`BlueCardNavDisplay`). It can take
-  focus only as it's given it there, and keeps it only until focus moves on:
+  focus only as it's given it there, or as a page's focused item goes
+  (below), and keeps it only until focus moves on:
   Compose moves focus out to a parent that can take it on Back
   (`FocusDirection.Exit`), so Back would stop there rather than leave the
   page, and Tab would stop there as it starts on a page or wraps around. A
@@ -423,18 +424,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
 - **Nor does a page whose focused item goes.** A focused item that leaves
   composition or can no longer take focus, such as a button that's disabled
   as it's pressed, loses focus without Compose asking `onExit`, and Android
-  then asks the view to take focus again. On the emulator, Remove date, Mark
-  completed, Unmark and Clear progress gave focus to the page's first item
+  then asks the view to take focus again
   ([#301](https://github.com/bryancassell/bluecard/issues/301)). So the
-  focus target around the pages can take focus as a page loses it that way,
-  until that message is done: Android asks in the same message, if it asks
-  at all. It doesn't from Android 9 in touch mode, and a target still able to
-  take focus would take the request from a later key press that leaves touch
-  mode, an empty stop. Tab's wrap-around, which clears focus too, isn't
-  caught. Handing focus to the button that takes the pressed one's place
-  would keep the scout's place, but each button would need its own code. A
-  focusable View before the `ComposeView` would also answer Android's request
-  when a key is pressed with nothing focused, and as the app starts.
+  focus target around the pages can also take focus as a page loses it that
+  way, but only briefly, until a task posted then runs: Android asks in the
+  same message, if it asks at all. From Android 9 it doesn't ask in touch
+  mode, and a target still able to take focus would take the request from a
+  later key press that leaves touch mode, an empty stop. A focusable View
+  before the `ComposeView` would also answer Android's request when a key is
+  pressed with nothing focused, and as the app starts.
 
 ### Double taps
 

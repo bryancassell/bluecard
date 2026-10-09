@@ -1237,7 +1237,10 @@ class MainActivityTest {
 
     private fun press(key: Key) = composeTestRule.onRoot().performKeyInput { pressKey(key) }
 
-    /** Gives [node] input focus, as Tab would, and presses Enter, as a hardware keyboard does. */
+    /**
+     * Scrolls [node] into view on its page, gives it input focus as Tab would, and presses Enter,
+     * as a hardware keyboard does.
+     */
     private fun pressWithEnter(node: SemanticsNodeInteraction) {
         node.performScrollTo().performSemanticsAction(SemanticsActions.RequestFocus)
             .assertIsFocused()
@@ -1403,10 +1406,15 @@ class MainActivityTest {
 
     private fun saveNotesButton() = composeTestRule.onNodeWithText("Save notes")
 
-    // Out of touch mode, opens Camping's first requirement.
-    private fun openRequirementOutOfTouchMode() {
+    // Out of touch mode, opens Camping's page.
+    private fun openCampingOutOfTouchMode() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
         openCamping()
+    }
+
+    // Out of touch mode, opens Camping's first requirement.
+    private fun openRequirementOutOfTouchMode() {
+        openCampingOutOfTouchMode()
         composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
     }
 
@@ -1563,6 +1571,19 @@ class MainActivityTest {
         completedCheckbox().assertIsFocused()
     }
 
+    // Focus is now on the focus target around the pages, which Back mustn't stop at.
+    @Test
+    fun back_afterRemovingADate_leavesThePage() {
+        removeDateWithEnter()
+        // pressBack() doesn't wait for Compose, so let focus settle first.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        completedCheckbox().assertDoesNotExist()
+        composeTestRule.onNodeWithText("First.").assertExists()
+    }
+
     // Once focus moves on, the focus target around the pages can't take it again, which would
     // stop Back.
     @Test
@@ -1582,8 +1603,7 @@ class MainActivityTest {
     // place.
     @Test
     fun enterOnMarkCompleted_outOfTouchMode_focusesNothingOnceADateIsPicked() {
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
-        openCamping()
+        openCampingOutOfTouchMode()
         pressWithEnter(composeTestRule.onNodeWithText("Mark completed"))
 
         composeTestRule.onNodeWithText("OK").performClick()
@@ -1595,8 +1615,7 @@ class MainActivityTest {
     // Unmark and Change date leave composition, as Mark completed takes their place.
     @Test
     fun enterOnUnmark_outOfTouchMode_focusesNothing() {
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
-        openCamping()
+        openCampingOutOfTouchMode()
         composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
