@@ -49,6 +49,7 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
@@ -206,9 +207,11 @@ class TrackerEntryScreenTest {
 
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(TrackerEntryUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = TrackerEntryUiState.LoadFailed }
     }
@@ -224,9 +227,11 @@ class TrackerEntryScreenTest {
 
     @Test
     fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(TrackerEntryUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "This entry isn't in the tracker anymore."
         ) { uiState = TrackerEntryUiState.Unavailable }
     }

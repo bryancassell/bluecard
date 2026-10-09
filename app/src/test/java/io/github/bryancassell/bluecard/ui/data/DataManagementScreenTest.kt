@@ -48,11 +48,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.assertShows
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
+import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
 import io.github.bryancassell.bluecard.text.typedText
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.time.LocalDate
@@ -614,6 +616,26 @@ class DataManagementScreenTest {
             .onNodeWithText("Scout and Tenderfoot will no longer count as earned.")
             .assertIsDisplayed()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, Polite))
+    }
+
+    // The line joins a dialog that's already open, in place of nothing.
+    @Test
+    fun ranksTheMergeWouldUnearn_areReadOut_asTheScoutsChoiceUnearnsThem() {
+        val readouts = LiveRegionReadouts()
+        showMergeChoices(choices)
+        readouts.listenTo(
+            (composeTestRule.onNode(isDialog()).fetchSemanticsNode().root as ViewRootForTest).view
+        )
+        composeTestRule.waitRunningPostedWork()
+        readouts.sinceLastCall()
+
+        uiState = ready.copy(mergeChoices = choices.copy(unearnedRanks = listOf("Scout")))
+        composeTestRule.waitRunningPostedWork()
+
+        assertEquals(
+            listOf("Scout will no longer count as earned."),
+            readouts.sinceLastCall().distinct()
+        )
     }
 
     // A screen reader user moving from control to control doesn't hear the heading, so each

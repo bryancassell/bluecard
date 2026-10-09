@@ -232,9 +232,11 @@ class BadgesScreenTest {
 
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(BadgesUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = BadgesUiState.LoadFailed }
     }

@@ -35,7 +35,8 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
@@ -104,17 +105,13 @@ fun BadgeDetailScreen(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        BadgeDetailUiState.Loading,
-        BadgeDetailUiState.LoadFailed,
-        BadgeDetailUiState.Unavailable -> LoadingOrMessage(
-            message = when (uiState) {
-                BadgeDetailUiState.LoadFailed -> stringResource(R.string.load_failed)
-                BadgeDetailUiState.Unavailable -> stringResource(R.string.requirements_unavailable)
-                else -> null
-            },
-            modifier = modifier
-        )
+        BadgeDetailUiState.Loading -> ScreenLoadingIndicator(modifier)
+
+        BadgeDetailUiState.LoadFailed ->
+            ScreenMessage(stringResource(R.string.load_failed), modifier)
+
+        BadgeDetailUiState.Unavailable ->
+            ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
 
         is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
             BadgeDetails(

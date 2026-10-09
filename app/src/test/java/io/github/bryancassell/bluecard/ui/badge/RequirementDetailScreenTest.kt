@@ -59,6 +59,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
@@ -349,9 +350,11 @@ class RequirementDetailScreenTest {
 
     @Test
     fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(RequirementDetailUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "This requirement isn't in the requirements this badge or rank uses."
         ) { uiState = RequirementDetailUiState.Unavailable }
     }
@@ -368,9 +371,11 @@ class RequirementDetailScreenTest {
 
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(RequirementDetailUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = RequirementDetailUiState.LoadFailed }
     }

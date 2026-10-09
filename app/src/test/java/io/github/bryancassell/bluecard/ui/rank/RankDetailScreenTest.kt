@@ -38,6 +38,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.onReadAsOne
@@ -191,9 +192,11 @@ class RankDetailScreenTest {
 
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(RankDetailUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = RankDetailUiState.LoadFailed }
     }
@@ -208,9 +211,11 @@ class RankDetailScreenTest {
 
     @Test
     fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(RankDetailUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "This rank's requirements aren't in this version of BlueCard."
         ) { uiState = RankDetailUiState.Unavailable }
     }

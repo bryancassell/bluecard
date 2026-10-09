@@ -47,7 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
@@ -189,13 +190,9 @@ private fun SearchAndCount(uiState: BadgesUiState, query: TextFieldState) {
 @Composable
 private fun BadgesContent(uiState: BadgesUiState, onOpenBadge: (badgeId: String) -> Unit) {
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        BadgesUiState.Loading, BadgesUiState.LoadFailed -> LoadingOrMessage(
-            message = when (uiState) {
-                BadgesUiState.LoadFailed -> stringResource(R.string.load_failed)
-                else -> null
-            }
-        )
+        BadgesUiState.Loading -> ScreenLoadingIndicator()
+
+        BadgesUiState.LoadFailed -> ScreenMessage(stringResource(R.string.load_failed))
 
         // MatchCount says so.
         BadgesUiState.NoMatches -> Unit

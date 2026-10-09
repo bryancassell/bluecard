@@ -29,7 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.BadgeRow
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
@@ -74,14 +75,9 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        HomeUiState.Loading, HomeUiState.LoadFailed -> LoadingOrMessage(
-            message = when (uiState) {
-                HomeUiState.LoadFailed -> stringResource(R.string.load_failed)
-                else -> null
-            },
-            modifier = modifier
-        )
+        HomeUiState.Loading -> ScreenLoadingIndicator(modifier)
+
+        HomeUiState.LoadFailed -> ScreenMessage(stringResource(R.string.load_failed), modifier)
 
         is HomeUiState.Ready -> Column(
             modifier = modifier
