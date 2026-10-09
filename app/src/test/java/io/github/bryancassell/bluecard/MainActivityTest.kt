@@ -1237,6 +1237,14 @@ class MainActivityTest {
 
     private fun press(key: Key) = composeTestRule.onRoot().performKeyInput { pressKey(key) }
 
+    /** Gives [node] input focus, as Tab would, and presses Enter, as a hardware keyboard does. */
+    private fun pressWithEnter(node: SemanticsNodeInteraction) {
+        node.performScrollTo().performSemanticsAction(SemanticsActions.RequestFocus)
+            .assertIsFocused()
+
+        press(Key.Enter)
+    }
+
     /**
      * Out of touch mode, gives Badges' search field focus and goes Back to Home. A phone is out
      * of touch mode after a key press, and stays so while TalkBack is on, since its gestures
@@ -1426,9 +1434,8 @@ class MainActivityTest {
     @Test
     fun enterOnSaveNotes_outOfTouchMode_focusesNothing() {
         typeNotesOutOfTouchMode()
-        saveNotesButton().performSemanticsAction(SemanticsActions.RequestFocus).assertIsFocused()
 
-        press(Key.Enter)
+        pressWithEnter(saveNotesButton())
 
         assertNothingFocused()
     }
@@ -1517,14 +1524,6 @@ class MainActivityTest {
         typeAnUnsavedNight()
 
         saveOutOfTouchModeAndClose(fieldOnThePage = "Weather")
-    }
-
-    /** Gives [node] input focus, as Tab would, and presses Enter, as a hardware keyboard does. */
-    private fun pressWithEnter(node: SemanticsNodeInteraction) {
-        node.performScrollTo().performSemanticsAction(SemanticsActions.RequestFocus)
-            .assertIsFocused()
-
-        press(Key.Enter)
     }
 
     /**
@@ -1618,9 +1617,11 @@ class MainActivityTest {
         assertNothingFocused()
     }
 
-    // Clear all is disabled once confirmed, with nothing left to clear.
-    @Test
-    fun enterOnClearAll_outOfTouchMode_focusesNothingOnceConfirmed() {
+    /**
+     * Out of touch mode, presses Clear all in Data management with a key and confirms. It's
+     * disabled once confirmed, with nothing left to clear.
+     */
+    private fun clearAllWithEnter() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
         runBlocking {
             progressRepository.startBadge(
@@ -1636,7 +1637,25 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Clear").performClick()
 
         composeTestRule.onNodeWithText("Clear all").assertIsNotEnabled()
+    }
+
+    @Test
+    fun enterOnClearAll_outOfTouchMode_focusesNothingOnceConfirmed() {
+        clearAllWithEnter()
+
         assertNothingFocused()
+    }
+
+    // A disabled button gives up focus at once, not once the change is applied as a removed one
+    // does.
+    @Test
+    fun tab_afterClearingAll_movesFocusIntoThePage() {
+        clearAllWithEnter()
+
+        press(Key.Tab)
+
+        // Edit, for the scout's name and unit number.
+        composeTestRule.onNodeWithText("Edit").assertIsFocused()
     }
 
     // In touch mode, Android doesn't ask the view to take focus again as a focused item goes, so
@@ -1658,7 +1677,7 @@ class MainActivityTest {
         // straight to Compose, and setInTouchMode() doesn't reach a window that's showing.
         scenario.onActivity { it.window.decorView.requestFocusFromTouch() }
 
-        composeTestRule.onAllNodes(isFocused()).assertCountEquals(1)
+        rankCard("Next: Scout").assertIsFocused()
     }
 
     @Test

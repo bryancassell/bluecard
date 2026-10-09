@@ -431,10 +431,12 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   pages can take focus until something has it, and Android's request for the
   view to take focus again gives it to the target. Tab and Shift+Tab clear
   focus too as they wrap around, but ask the group's `onExit` first, so the
-  target isn't offered focus then. In touch mode Android doesn't ask, so the
-  target isn't offered it either: a key press that leaves touch mode asks the
-  view to take focus going down (`ViewRootImpl.leaveTouchMode()`), and the
-  target would take that. The alternative, a focusable View before the
+  target isn't offered focus then. From Android 9, Android doesn't ask in
+  touch mode, so the target isn't offered it either: a key press that leaves
+  touch mode asks the view to take focus going down
+  (`ViewRootImpl.leaveTouchMode()`), and the target would take that. Before
+  Android 9, `View.clearFocus()` asks in touch mode too, so the target takes
+  it there. The alternative, a focusable View before the
   `ComposeView` that answers Android's request, would also answer it when a
   key is pressed with nothing focused, and as the app starts.
 
