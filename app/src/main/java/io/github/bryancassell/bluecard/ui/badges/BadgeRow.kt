@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.hideFromAccessibility
@@ -68,29 +69,31 @@ fun AdvancementRow(
     val percentDone = fractionDone?.let { percentDoneDescription(it) }
     BoxWithConstraints(modifier) {
         val typography = MaterialTheme.typography
-        // In the styles ListItem gives its slots, and the row's width less the 16dp ListItem puts
-        // at each end and before the status.
-        val statusUnder = status?.takeUnless {
-            statusFitsBeside(
-                status = it,
-                statusStyle = typography.labelSmall,
-                lines = listOfNotNull(
-                    name to typography.bodyLarge,
-                    detail?.let { detail -> detail to typography.bodyMedium }
-                ),
-                width = maxWidth - 16.dp * 3
-            )
+        // In the styles ListItem gives its slots, and the width it leaves the text and status:
+        // the row's, less its padding at both ends together and before the status, each rounded
+        // to pixels on its own as ListItem rounds them.
+        val besideWidth = with(LocalDensity.current) {
+            constraints.maxWidth - (ListItemPadding * 2).roundToPx() - ListItemPadding.roundToPx()
         }
+        val statusUnder = status != null && !statusFitsBeside(
+            status = status,
+            statusStyle = typography.labelSmall,
+            lines = listOfNotNull(
+                name to typography.bodyLarge,
+                detail?.let { it to typography.bodyMedium }
+            ),
+            width = besideWidth
+        )
         ListItem(
             headlineContent = { Text(name) },
-            supportingContent = if (detail == null && statusUnder == null && fractionDone == null) {
+            supportingContent = if (detail == null && !statusUnder && fractionDone == null) {
                 null
             } else {
                 {
                     Column {
                         detail?.let { Text(it) }
                         // Read after the detail, as it is beside it.
-                        statusUnder?.let { Text(it, style = typography.labelSmall) }
+                        if (statusUnder) Text(status, style = typography.labelSmall)
                         fractionDone?.let {
                             BadgeProgressBar(
                                 fractionDone = it,
@@ -103,7 +106,7 @@ fun AdvancementRow(
                     }
                 }
             },
-            trailingContent = status.takeIf { statusUnder == null }?.let { { Text(it) } },
+            trailingContent = status?.takeUnless { statusUnder }?.let { { Text(it) } },
             // Screen readers announce the row as a button that opens the badge or rank. Compose
             // reports a progress bar's percentage only from the bar's own node, not from the row
             // it's merged into, so the row says how much is done as its state.
@@ -113,3 +116,9 @@ fun AdvancementRow(
         )
     }
 }
+
+/**
+ * The padding Material's ListItem puts at each end and before its trailing content, which it
+ * keeps internal.
+ */
+private val ListItemPadding = 16.dp
