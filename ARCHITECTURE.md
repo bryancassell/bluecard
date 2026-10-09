@@ -420,10 +420,23 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   page, and a page can close the keyboard that way. It does so even while it
   has focus itself, as after a page opened from a field closes again. A
   screen reader or switch can then press Save without moving focus.
-  It can't when a focused item leaves composition or can no longer take
-  focus, such as a button that's disabled, since Compose clears focus then
-  without asking. Those still hand focus to the page's first item
-  ([#301](https://github.com/bryancassell/bluecard/issues/301)).
+- **Nor does a page whose focused item goes.** When a focused item leaves
+  composition or can no longer take focus, such as a button that's disabled
+  as it's pressed, Compose clears focus without asking `onExit`, and clears
+  the view's focus at once or once the change is applied. On the emulator,
+  Remove date, Mark completed, Unmark and Clear progress gave focus to the
+  page's first item
+  ([#301](https://github.com/bryancassell/bluecard/issues/301)). So as a
+  page's focused item goes out of touch mode, the focus target around the
+  pages can take focus until something has it, and Android's request for the
+  view to take focus again gives it to the target. Tab and Shift+Tab clear
+  focus too as they wrap around, but ask the group's `onExit` first, so the
+  target isn't offered focus then. In touch mode Android doesn't ask, so the
+  target isn't offered it either: a key press that leaves touch mode asks the
+  view to take focus going down (`ViewRootImpl.leaveTouchMode()`), and the
+  target would take that. The alternative, a focusable View before the
+  `ComposeView` that answers Android's request, would also answer it when a
+  key is pressed with nothing focused, and as the app starts.
 
 ### Double taps
 
@@ -1612,7 +1625,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
-| [Focus between pages](#navigation) | A focus target around the pages takes input focus from a page that's left with it, or that clears it as Save does, and can't take focus otherwise. A page sliding away can't take focus | Out of touch mode, Compose gave focus to the next page's first item, which opened the keyboard on Badges. Save's `clearFocus()` gave it to the page's own first item. A target that could always take focus would stop Back leaving a page, and be an empty stop for Tab |
+| [Focus between pages](#navigation) | A focus target around the pages takes input focus from a page that's left with it, that clears it as Save does, or whose focused item goes, and can't take focus otherwise. A page sliding away can't take focus | Out of touch mode, Compose gave focus to the next page's first item, which opened the keyboard on Badges. Save's `clearFocus()`, and a focused button that went or was disabled, gave it to the page's own first item. A target that could always take focus would stop Back leaving a page, and be an empty stop for Tab |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>`, saved with the sealed interface's serializer, not `rememberNavBackStack` | No reflection, so R8 can't break saving the back stack and local tests cover it. The compiler rejects a key outside `BlueCardNavKey`, and `NavKeysTest` one missing `@Serializable`. Needs no experimental API, unlike registering keys in a `SavedStateConfiguration` with `subclassesOfSealed` |
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
