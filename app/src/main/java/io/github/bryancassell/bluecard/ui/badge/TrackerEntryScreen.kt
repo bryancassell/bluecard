@@ -90,7 +90,8 @@ fun TrackerEntryRoute(
  * One row of a requirement's tracker, to fill in or change: a field for each of the tracker's
  * columns, in the text [fields] or, for a date, with a date picker. Save and Delete close the
  * page ([onClose]) once they're done; Delete asks first. Back with unsaved changes asks too,
- * then closes it without saving them.
+ * then closes it without saving them. A row has a page of its own because four or more fields
+ * don't fit in a dialog or a table row on a phone once the keyboard is up.
  */
 @Composable
 fun TrackerEntryScreen(
@@ -205,8 +206,15 @@ private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = TRACKER_N
 /**
  * The field for one column: a date with a picker, or a text field for text or a number. A
  * multi-line text field is drawn like the requirement notes field, and its keyboard keeps Enter
- * for a new line. A one-line field's keyboard has Next, or Done on the [lastTextField]. Next
- * moves to the next text field, past a date's buttons, which can't take focus in touch mode.
+ * for a new line. A one-line field scrolls sideways, so the scout saw only a few words of a
+ * description, and a list of chores ran together (#168).
+ *
+ * A one-line field's keyboard has Next, or Done on the [lastTextField], so the scout doesn't have
+ * to tap each field, as on the counselor and name and unit pages. Next moves to the next text
+ * field in Compose's default focus order, past a date's buttons, which can't take focus in touch
+ * mode (#182). Going to the date's button would have closed the keyboard, and opening the date
+ * picker from Next would have been unexpected. With a hardware keyboard, Next stops on the date's
+ * buttons too, so they can be reached without touching the screen.
  */
 @Composable
 private fun TrackerField(

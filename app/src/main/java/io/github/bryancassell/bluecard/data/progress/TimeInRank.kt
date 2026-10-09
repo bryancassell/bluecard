@@ -15,7 +15,9 @@ data class TimeInRank(
 ) {
     /**
      * When the scout becomes eligible to complete the requirement, or why that isn't known. It's
-     * only a guide: the scout checks the requirement off, before or after it.
+     * only a guide: the scout checks the requirement off, before or after it. A scout who took a
+     * position of responsibility after earning the rank below is eligible later, and on Star 5
+     * and Life 5 a leadership project can replace the months (#193).
      */
     sealed interface Eligibility {
         data object RankBelowNotEarned : Eligibility

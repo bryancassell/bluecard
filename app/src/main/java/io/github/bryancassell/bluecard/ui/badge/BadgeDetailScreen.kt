@@ -219,7 +219,8 @@ private fun BadgeDetails(
  *   unmarked, if any, or at today.
  * - Once it's marked, the date, with buttons to change it ([onMark]) or unmark the badge
  *   ([onUnmark]).
- * - For a badge complete from its requirements, the date they were completed on.
+ * - For a badge complete from its requirements, the date they were completed on, with no button
+ *   to mark it, which would add nothing.
  *
  * Once it's complete, the [reportButtons] follow.
  */

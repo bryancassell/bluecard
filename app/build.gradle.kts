@@ -29,15 +29,16 @@ android {
 
     buildTypes {
         debug {
-            // Installs next to a release build, which is signed with another key.
-            // See ARCHITECTURE.md (Debug builds).
+            // Installs next to a release build, which is signed with another key, so neither has
+            // to be uninstalled, with its data, to install the other (#245).
             applicationIdSuffix = ".debug"
             // Record JaCoCo coverage data when local tests run.
             enableUnitTestCoverage = true
         }
         release {
-            // R8 shrinks, optimizes and obfuscates the code, and unused resources are removed.
-            // See ARCHITECTURE.md (Release build).
+            // R8 shrinks, optimizes and obfuscates the code, and unused resources are removed, as
+            // Android's app optimization guide recommends. It took the APK from 10.1 MB to 2.1 MB
+            // (#197).
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -89,7 +90,10 @@ android {
     // adds the schemas to instrumented tests' assets only, and migration tests run locally,
     // where Robolectric reads the debug build's assets. So debug builds carry the schemas too;
     // release builds don't. Nothing makes merging assets wait for Room to copy a new database
-    // version's schema here, so the first test run after a version bump can miss it (#96).
+    // version's schema here, so the first test run after a version bump can miss it, and
+    // MigrationTest fails until it runs again (#96). Room's schema copy declares no outputs, so
+    // Gradle can't order other tasks after it, and working around that needed more build code
+    // than a rerun is worth.
     sourceSets.getByName("debug").assets.directories.add("$projectDir/schemas")
 
     testCoverage {

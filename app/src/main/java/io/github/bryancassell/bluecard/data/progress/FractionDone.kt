@@ -26,7 +26,9 @@ import java.math.BigDecimal
  * - One without children but with a log with [totals][TrackerColumn.total] has a part for each
  *   unit of the amount it asks for ([amountDone]), such as each of Star 4's 6 hours, which units
  *   past that amount don't add to, plus one for checking it off, as for a log that asks for a
- *   number of rows.
+ *   number of rows. Totals added nothing until checked off, while Second Class 4's "6 of 10
+ *   animals" added 6 of 11 parts (#292). Counting each unit, as for rows, keeps the two alike,
+ *   though checking it off weighs more on a small amount: it's half of Tenderfoot 7b's one hour.
  * - A rank's requirement that asks for merit badges counts the badges needed that the scout's
  *   [earnedBadges] give it ([MeritBadgeCredit.counted]).
  * - Any other requirement is marked complete by hand ([isMarkedByHand]), so it has no parts.
@@ -70,7 +72,9 @@ fun Requirement.fractionDone(
  * number of rows or the amount it asks for in its log ([TrackerDefinition.rowsNeeded],
  * [TrackerColumn.total]), such as Tenderfoot 6b's 30 days or Star 4's 6 hours, as [fractionDone]
  * counts them. They don't complete it: the scout checks it off once all of it is done. Life 4 has
- * its 6 hours once 3 of them are on conservation ([amountDone]).
+ * its 6 hours once 3 of them are on conservation ([amountDone]). "6 of 6 hours" reads as finished
+ * as "30 of 30 days" does (#293), but above "2 of 3 conservation hours" it doesn't, so it waits
+ * for every total.
  */
 fun Requirement.hasEnoughLogged(trackerEntries: Map<String, List<TrackerEntry>>): Boolean {
     if (!isMarkedByHand) return false
@@ -100,7 +104,10 @@ private fun beforeCheckOff(done: Float, needed: Int): Float =
  * 6 hours, and the amount, or null if it has no [total][TrackerColumn.total]. A log has one
  * total, and at most one more that's [part of][ColumnTotal.partOf] it (docs/catalog.md). Then the
  * total counts no more than the part and the rest of its amount: Life 4's 6 hours with no
- * conservation hours count as 3, as its 3 conservation hours are still to do.
+ * conservation hours count as 3, as its 3 conservation hours are still to do. That keeps the bar
+ * in step with the hours still to do: counting only the 6 hours would leave it still while the
+ * scout did the conservation hours, and counting both totals would count a conservation hour
+ * twice.
  */
 private fun TrackerDefinition.amountDone(entries: List<TrackerEntry>): Pair<BigDecimal, Int>? {
     val totals = columns.mapNotNull { column -> column.total?.let { column to it } }
@@ -117,6 +124,10 @@ private fun TrackerDefinition.amountDone(entries: List<TrackerEntry>): Pair<BigD
  * average of its top-level requirements' [fractionDone], so each weighs the same. One marked
  * completed on a prior date is all done. A rank's requirements that ask for merit badges count
  * the scout's [earnedBadges].
+ *
+ * Counting only complete top-level requirements would leave the bar still while the scout works
+ * through a big one, such as First Aid 3's 17 parts, and counting every part the same would let
+ * one big requirement outweigh the rest (#159).
  */
 fun BadgeProgressDetails.fractionDone(
     version: RequirementsVersion,

@@ -207,11 +207,14 @@ private fun RankDetails(
  * - Once it's marked, the date, with buttons to change it ([onMark]) or unmark the rank
  *   ([onUnmark]).
  * - For a rank that counts as earned only with a rank above it, says so, with a button to give
- *   it a date of its own ([onMark]).
+ *   it a date of its own ([onMark]), which time in rank, such as Star's months as First Class,
+ *   counts from.
  * - For a rank earned from its requirements, the date they were completed on.
  *
  * Each picker opens at the date the scout just unmarked, if any, or at today. Once it's earned,
- * the [reportButtons] follow.
+ * the [reportButtons] follow. Without the date, a rank earned from its requirements looked like
+ * one not started, and without the rank it's waiting on, a complete rank's full bar didn't say
+ * why it wasn't earned (#211).
  */
 @Composable
 private fun EarnedStatus(
@@ -274,7 +277,8 @@ private fun EarnedStatus(
 /**
  * The status of a rank that isn't earned: "In progress" for the next rank to earn, as on Ranks,
  * or else "Started" once anything counts toward it ([RankDetailUiState.Ready.started]), or "Not
- * started".
+ * started". Badges count toward Star, Life and Eagle before anything is recorded for them, so
+ * "Not started" would contradict their rows.
  */
 @StringRes
 private fun notEarnedStatus(uiState: RankDetailUiState.Ready): Int = when {

@@ -18,7 +18,17 @@ sealed interface BlueCardNavKey : NavKey
  * The back stack, starting on Home, remembered across configuration changes and process death.
  * It's saved with [BlueCardNavKey]'s serializer, so no reflection is used: each key is saved by
  * its serial name, which the compiler writes in as a string, so R8 renaming the class doesn't
- * change it.
+ * change it. Renaming a key in the source does, but Android drops an app's saved state when the
+ * app is updated (checked on Android 17, API 37), so state saved by one version is never read
+ * by another.
+ *
+ * Navigation 3's `rememberNavBackStack` finds keys by class name with reflection, which R8's
+ * renaming could break in the release build alone, where local tests can't see it (#203). Given
+ * a `SavedStateConfiguration`, it registers keys in a `SerializersModule` instead, but that needs
+ * the experimental `subclassesOfSealed`, and it accepts any `NavKey`. This back stack takes only
+ * a [BlueCardNavKey], so the compiler rejects a key it couldn't save. A key missing @Serializable
+ * still compiles, but the sealed serializer leaves it out, so NavKeysTest checks that every key
+ * is saved and restored.
  */
 @Composable
 fun rememberBackStack(): NavBackStack<BlueCardNavKey> =

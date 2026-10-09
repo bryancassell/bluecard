@@ -52,13 +52,20 @@ data class AdvancementReport(
     val earnedWith: String?,
     /** The badge's counselor, or null if the scout entered none. A rank has none. */
     val counselor: Counselor?,
-    /** Every requirement of the version, in catalog order, with its sub-requirements. */
+    /**
+     * Every requirement of the version, in catalog order, with its sub-requirements, including
+     * those not completed or not needed, so a counselor reading it sees the whole badge.
+     */
     val requirements: List<ReportRequirement>,
-    /** The day the report was created. */
+    /** The day the report was created, which tells an old copy from a new one. */
     val createdDate: LocalDate
 )
 
-/** A requirement in a report, with what the scout recorded for it. */
+/**
+ * A requirement in a report, with what the scout recorded for it. A time in rank requirement's
+ * eligibility date isn't in it: that's only a guide, and the requirement's own date says when it
+ * was done.
+ */
 data class ReportRequirement(
     val number: String,
     val summary: String,
@@ -108,7 +115,8 @@ data class ReportTrackerRow(
 /**
  * A rank's requirement that asks for merit badges ([Requirement.meritBadges]): how far the
  * scout's completed badges go toward it, and every badge they've completed, in name order
- * ([EarnedBadges.inNameOrder]), as its page lists them.
+ * ([EarnedBadges.inNameOrder]), as its page lists them. So a report made after a later rank lists
+ * that rank's badges too, and their dates tell them apart.
  */
 data class ReportMeritBadges(val credit: MeritBadgeCredit, val badges: List<EarnedBadge>)
 

@@ -20,9 +20,16 @@ import org.robolectric.shadows.ShadowBuild
  * Runs Google's Accessibility Test Framework (ATF) checks on every window, dialogs included,
  * before each click, scroll, touch, key or text input the test performs, and again on the state
  * the test ends in. Compose runs them before those actions only: a semantics action, a focus
- * request, or replacing or clearing a field's text runs none. They catch problems such as a control with no label for screen readers
- * or a touch target smaller than 48dp, and fail the test with ATF's
- * `AccessibilityViewCheckException`. They take no screenshots, so ATF's contrast checks don't run.
+ * request, or replacing or clearing a field's text runs none. They catch problems such as a
+ * control with no label for screen readers or a touch target smaller than 48dp, and fail the test
+ * with ATF's `AccessibilityViewCheckException`. Only errors fail it.
+ *
+ * They take no screenshots, so ATF's contrast checks don't run. Taken in these tests, screenshots
+ * gave hundreds of warnings that weren't about the app's colors: most screen tests use
+ * Material's default theme, and disabled buttons and text partway through fading in were counted
+ * too. `BlueCardColorSchemeTest` checks the app's colors instead. A result that can't be fixed yet
+ * is suppressed with the validator's `setSuppressingResultMatcher`, matching only that result,
+ * with a comment linking its issue.
  *
  * Compose's own `enableAccessibilityChecks()` checks nothing under Robolectric: ATF sees
  * `Build.FINGERPRINT` is "robolectric" and looks only at Views, never at composables
@@ -30,7 +37,8 @@ import org.robolectric.shadows.ShadowBuild
  * this gives ATF another fingerprint while it checks, and only then, because Compose's test code
  * reads it too. ATF also finds nothing under Robolectric's default graphics, so the test class
  * needs `@GraphicsMode(NATIVE)`. `AccessibilityChecksTest` fails if an update stops the checks
- * finding problems.
+ * finding problems. #196 compares the other options. Native graphics and the checks added no
+ * measurable time to the suite (checked with Compose UI 1.12.1, ATF 4.1.1 and Robolectric 4.17).
  *
  * The page must still be showing when the test ends, so this rule runs inside [composeTestRule]:
  * `@get:Rule(order = 0)` on that and `@get:Rule(order = 1)` on this.

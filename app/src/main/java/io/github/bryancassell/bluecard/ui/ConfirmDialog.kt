@@ -12,9 +12,10 @@ import io.github.bryancassell.bluecard.R
 
 /**
  * Asks the scout to confirm removing something they recorded or typed, which can't be undone.
- * The confirm button, labeled [confirmLabel], is red, the theme's error color, so it stands
- * apart from Cancel. The caller closes the dialog: [onConfirm] and [onDismiss] (Cancel, Back or
- * a tap outside) are each called once per tap.
+ * Every removal asks with it, so they're all alike. The confirm button, labeled [confirmLabel],
+ * is red, the theme's error color, so it stands apart from Cancel. The caller closes the
+ * dialog: [onConfirm] and [onDismiss] (Cancel, Back or a tap outside) are each called once per
+ * tap.
  */
 @Composable
 fun ConfirmDialog(

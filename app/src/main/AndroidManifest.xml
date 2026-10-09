@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- allowBackup is set explicitly, as the Auto Backup docs recommend:
+         https://developer.android.com/identity/data/autobackup#EnablingAutoBackup -->
     <application
         android:name=".BlueCardApplication"
         android:allowBackup="true"

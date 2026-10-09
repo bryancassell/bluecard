@@ -33,7 +33,9 @@ import kotlinx.coroutines.withContext
  * [ReportRepository] that lays reports out with [layOutReport] and writes them with
  * [pdfWriter], which is Android's PdfDocument outside tests. A report to share is written to
  * the cache folder's `reports` folder, which `FileProvider` shares (`res/xml/report_paths.xml`),
- * named after its badge or rank, so each has one file that the next report replaces.
+ * named after its badge or rank, so each has one file that the next report replaces. Clearing
+ * progress doesn't delete it: an app it was shared with, such as an email app that reads it only
+ * when it sends, may still need it.
  *
  * Saving runs in [externalScope], so a report finishes saving even if the scout leaves the
  * screen ([runOutlivingCaller]).
@@ -129,7 +131,11 @@ class PdfReportRepository @Inject constructor(
         /** The cache folder that reports to share are written to. */
         const val REPORTS_FOLDER = "reports"
 
-        /** The authority of the `FileProvider` that shares reports, set in the manifest. */
+        /**
+         * The authority of the `FileProvider` that shares reports, set in the manifest. It's
+         * built from the application ID, because two installed apps can't declare the same one,
+         * and a debug build installs next to a release build.
+         */
         fun fileProviderAuthority(context: Context) = "${context.packageName}.reports"
     }
 }

@@ -45,6 +45,10 @@ fun eagleRequiredCountLabel(credit: MeritBadgeCredit): String = pluralStringReso
  * scout has completed and how many of them count as Eagle-required, how many more they need,
  * then the badges they've completed, in [badges]' order, each of which opens its page
  * ([onOpenBadge]) and says whether it counts as Eagle-required toward the requirement.
+ *
+ * Every completed badge counts, so every one is listed, not only the first that were enough. Each
+ * opens so its date can be fixed. On Eagle 3, a group's other badges aren't labeled
+ * Eagle-required, so the labels add up to the count.
  */
 @Composable
 fun MeritBadgeSection(
@@ -104,7 +108,9 @@ fun MeritBadgeSection(
 
 /**
  * "Needs 2 more merit badges", "Needs 2 more Eagle-required merit badges", or "Needs 3 more merit
- * badges, 1 of them Eagle-required", or null once the scout has enough.
+ * badges, 1 of them Eagle-required", or null once the scout has enough. The two counts alone can
+ * mislead: a scout with 5 of 6 badges but 2 of 4 Eagle-required could think one more badge would
+ * do, where this says it takes two, both Eagle-required.
  */
 @Composable
 @ReadOnlyComposable

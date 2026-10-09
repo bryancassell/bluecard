@@ -14,8 +14,9 @@ val DECIMAL_SEPARATORS = setOf('.', ',', '\u066B')
 /**
  * A number column's stored value as a number, or null if it isn't one. The scout types digits of
  * any script, with at most one decimal separator ([DECIMAL_SEPARATORS]), and it's stored as
- * typed. Import holds a backup to the same rule, but a value from elsewhere may not be a number,
- * such as one stored while a catalog edited during development had the column as text.
+ * typed (#233), so code that reads one as a number uses this. Import holds a backup to the same
+ * rule, but a value from elsewhere may not be a number, such as one stored while a catalog edited
+ * during development had the column as text.
  */
 fun storedNumber(text: String): BigDecimal? {
     val digits = text.map { char ->
@@ -44,7 +45,7 @@ fun TrackerDefinition.totals(entries: List<TrackerEntry>): List<TrackerTotal> =
 /**
  * This column's values added up over the [entries] recorded for its requirement. Only a log has
  * totals (docs/catalog.md), so every entry is a row. A value that isn't a number
- * ([storedNumber]) isn't counted.
+ * ([storedNumber]) isn't counted. They're added as [BigDecimal], so 0.1 and 0.2 hours make 0.3.
  */
 fun TrackerColumn.sumOver(entries: List<TrackerEntry>): BigDecimal =
     entries.sumOf { it.values[id]?.let(::storedNumber) ?: BigDecimal.ZERO }

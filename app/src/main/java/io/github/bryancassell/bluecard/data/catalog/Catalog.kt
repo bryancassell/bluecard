@@ -40,7 +40,10 @@ sealed interface Advancement {
     /** Our own short description. */
     val summary: String
 
-    /** Its official Scouting America page. */
+    /**
+     * Its official Scouting America page. It's stored rather than built from the name, which it
+     * doesn't always match: Fish and Wildlife Management's ends in `fish-wildlife-management/`.
+     */
     val officialUrl: String
     val requirementVersions: List<RequirementsVersion>
 }
@@ -88,8 +91,13 @@ data class Requirement(
     val tracker: TrackerDefinition? = null,
     /**
      * Our own one-line summary of the work it asks for besides its children, such as a course
-     * to take before them, or null if it asks for none. Only a requirement with children has
-     * one.
+     * to take before them, or null if it asks for none. Only a requirement with children, or with
+     * a tracker with a fixed number of rows, has one (docs/catalog.md).
+     *
+     * The catalog names the requirements that have it, rather than every requirement with
+     * children needing a check, because most only group their children. It isn't a child of its
+     * own, which would need a number the official page doesn't have (#143). The scout's mark is
+     * stored as the requirement's own `RequirementProgress`, so it needed no new table.
      */
     val ownWork: String? = null,
     /**
@@ -123,7 +131,10 @@ data class MeritBadgesNeeded(
     /**
      * Whether the badges of an Eagle "one of" group count once toward [eagleRequired]
      * ([eagleSlots]), as for Eagle 3, which needs one of each group. Otherwise every
-     * Eagle-required badge counts, as for Star 3 and Life 3.
+     * Eagle-required badge counts, as for Star 3 and Life 3, so Hiking and Swimming count as two.
+     * Each follows its official wording: Star and Life let the scout "choose any of the merit
+     * badges on the required list for Eagle", and Eagle lets them "choose only one" of each
+     * either-or choice, counting the rest as electives.
      */
     val eagleGroupsCountOnce: Boolean = false
 )
@@ -158,7 +169,10 @@ data class TrackerDefinition(
     val rowCount: Int? = null,
     /**
      * In a log, how many rows its requirement asks for, such as at least 10 animals, or null.
-     * It's only a guide: the scout can record more, and still checks the requirement off.
+     * It's only a guide: the scout can record more, and still checks the requirement off, since a
+     * row may not meet the requirement's conditions, such as Second Class 1a's outdoor
+     * activities. A log that asks for a set number has it too, so Second Class 1a doesn't read
+     * "3 activities" above Second Class 4's "6 of 10 animals".
      */
     val rowsNeeded: Int? = null
 ) {
@@ -223,7 +237,11 @@ enum class TrackerColumnType {
     @SerialName("text")
     TEXT,
 
-    /** Text of more than one line, such as a description or a list. */
+    /**
+     * Text of more than one line, such as a description or a list. It's a type of its own rather
+     * than a flag on [TEXT], so each `when` over the types, such as the field, the row's summary,
+     * the report and import, has to decide how to handle it.
+     */
     @SerialName("multiline-text")
     MULTILINE_TEXT
 }

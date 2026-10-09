@@ -90,11 +90,11 @@ interface ProgressRepository {
     )
 
     /**
-     * Sets who signed off on the requirement, and its comment, in a single write. Each is stored as
-     * [normalizedText]: null or blank removes it. Only a rank's requirement has a sign-off, which
-     * this doesn't check, so a caller passes null for a badge's: import rejects one.
-     * A badge that hasn't been started is started with [start], as in
-     * [markRequirementCompleted].
+     * Sets who signed off on the requirement, and its comment, in a single write, so the page's one
+     * Save can't save one and fail the other. Each is stored as [normalizedText]: null or blank
+     * removes it. Only a rank's requirement has a sign-off, which this doesn't check, so a caller
+     * passes null for a badge's: import rejects one. A badge that hasn't been started is started
+     * with [start], as in [markRequirementCompleted].
      */
     suspend fun setRequirementSignOffAndComment(
         badgeId: String,

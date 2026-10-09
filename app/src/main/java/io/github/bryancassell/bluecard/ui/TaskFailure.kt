@@ -97,6 +97,14 @@ fun TaskFailureSnackbar(
  *
  * Each message must be its own object, as a [TaskFailure] is, so one that follows another is
  * shown too, even if it's the same kind.
+ *
+ * Screen readers hear every snackbar, even one that replaces another still showing, from the
+ * polite live region Material gives each one (#234). Not from its pane title, "Alert": TalkBack
+ * skipped that when a snackbar replaced one still showing, since the title hadn't changed.
+ * Material 3 (1.4.0) composes each snackbar as a new node, which Compose reports as a change,
+ * and TalkBack reads a live region's text on any change it's the source of. That doesn't mean
+ * every new live-region node is announced: a screen message composed in its own branch isn't
+ * ([ScreenMessage]).
  */
 @Composable
 fun <T : Any> MessageSnackbarHost(

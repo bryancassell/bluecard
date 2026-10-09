@@ -46,7 +46,10 @@ val LocalUnsavedChanges = staticCompositionLocalOf<UnsavedChanges> {
  * Asks before Back discards the page's unsaved changes. The page calls it whatever it shows,
  * with whether its fields have [changed], so a page that stops showing them, such as when it
  * can't load, closes on Back. With changes, Back opens a [ConfirmDialog] with [message], whose
- * red Discard button calls [onDiscard] to close the page.
+ * red Discard button calls [onDiscard] to close the page. It asks even when Save is off, as with
+ * a blank name or every field of a saved tracker row emptied. Back discarded edits with no
+ * warning before (#99). Saving on Back instead would close the page before a failed save could
+ * be reported, and would leave no way to throw an edit away.
  */
 @Composable
 fun ConfirmDiscardOnBack(

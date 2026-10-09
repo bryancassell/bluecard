@@ -47,7 +47,7 @@ sealed interface TrackerEntryUiState {
          * a fixed-row tracker's row can leave its requirement incomplete: for a rank's
          * requirement, that un-earns its rank and those above it earned in order after it, and
          * for a badge's, those with merit badge requirements the badge completes, and those above
-         * them.
+         * them. The row's page doesn't show them (#259).
          */
         val unearnedByDelete: List<String> = emptyList(),
         /** The entry was saved or deleted, so the screen closes. */

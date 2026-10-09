@@ -44,6 +44,11 @@ import io.github.bryancassell.bluecard.ui.statusFitsBeside
  * The scout's rank, a trail of every rank, and the rank in progress, which tapping the card
  * opens. It's in the theme's primary color, so it doesn't read as one of the merit badge cards or
  * rows below it. Once every rank is earned, it opens nothing.
+ *
+ * It's first on Home, as rank is the scout's main standing and merit badges count toward it
+ * (#193). As a row like Ranks', the rank in progress read as one more badge in progress (#231):
+ * the color sets it apart, and the trail shows what no badge has, that ranks are earned in order.
+ * Like a badge in progress on Home, it opens straight to what's left to do.
  */
 @Composable
 fun RankCard(

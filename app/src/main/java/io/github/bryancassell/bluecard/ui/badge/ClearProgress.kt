@@ -55,7 +55,9 @@ fun ClearProgress(
 /**
  * A removal dialog's [message], followed by a sentence naming the ranks the removal would un-earn
  * ([unearnedRanks]), if any: "What you recorded for it will be removed. Star will no longer count
- * as earned."
+ * as earned." A sentence of its own keeps the longer messages readable, such as a requirement's
+ * with unsaved notes. Clearing can un-earn ranks the page doesn't show, as when a badge completes
+ * a rank's merit badge requirement (#219).
  */
 @Composable
 fun withUnearnedRanks(message: String, unearnedRanks: List<String>): String =

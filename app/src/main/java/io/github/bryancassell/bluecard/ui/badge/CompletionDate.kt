@@ -74,8 +74,14 @@ fun rememberCompletionDateFormatter(): DateTimeFormatter {
  * [suggested], if given, or else at [today]. Dates after [today] can't be picked. It's read as the
  * picker opens, so a page left open past midnight offers the new day. Screen readers
  * read the date's [label], if it has one, after each button's text, such as "Add date: Week
- * starting": moving from control to control, they don't hear a label shown above the date. The
- * text is in [textStyle].
+ * starting": moving from control to control, they don't hear a label shown above the date, as on
+ * Data management (#166). It comes after the button's text, as WCAG 2.5.3 recommends for voice
+ * control users (#256). The text is in [textStyle].
+ *
+ * Most date columns are named just "Date", so their buttons read "Add date: Date". No tracker has
+ * two date columns to tell apart, but leaving the label out only for "Date" would compare against
+ * catalog text, in every translation too, and naming the columns more specifically, such as "Date
+ * of hike", would change what sighted scouts see across many badges (#263).
  */
 @Composable
 fun EditableDate(
@@ -97,7 +103,8 @@ fun EditableDate(
         )
         // Lines the buttons' text up with the date's. If they don't fit side by side, as at the
         // largest text and display size, the second goes below the first rather than squeezing
-        // its label until a word breaks (#307), as far below as the date picker's OK goes.
+        // its label until a word breaks, as "Unmar" / "k" did (#307), as far below as the date
+        // picker's OK goes. They're read and focused in the same order either way.
         FlowRow(
             modifier = Modifier.padding(horizontal = 4.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -170,11 +177,16 @@ internal fun PickDate(
  * dates would read out of order.
  *
  * On a window narrower than the calendar, such as a phone's at the largest display size, the
- * scout types the date instead, with the keyboard down until they tap the field.
+ * scout types the date instead, as Material suggests where space is short, with the keyboard down
+ * until they tap the field, so they first see the whole dialog, Cancel included. Smaller touch
+ * targets would have kept the calendar, but the largest display size is chosen by those who most
+ * need big ones (#306).
  */
 // BasicAlertDialog is what Material's DatePickerDialog is built on, so the dialog is otherwise
 // the same, and screen readers hear it the same. Material's is always as wide as the calendar,
-// so on a narrower window its last days and OK were off the screen (#306).
+// so on a narrower window its last days and OK were off the screen (#306). BasicAlertDialog is
+// experimental, so a change to it would fail the build when Compose is updated. A change to
+// DatePickerDialog wouldn't reach this one, so compare the two when updating Material 3.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompletionDatePickerDialog(
@@ -246,7 +258,12 @@ private fun DatePickerSurface(
             // On a short window, such as a phone's in landscape, the dialog is shorter than the
             // picker. Material would then clip the month's first and last weeks, leaving days
             // under 48dp tall or hidden (#282), so the picker scrolls instead, as Material's own
-            // sample does, and the buttons stay below it.
+            // sample does, and the buttons stay below it. The sample also suggests opening to
+            // typing on a short window, but opening the calendar wherever it fits keeps the
+            // picker the same when the phone turns, and the keyboard down until the scout
+            // chooses to type. It opens scrolled to the top, so the selected day can be a swipe
+            // away: opening at its week would depend on Material's private layout sizes, which
+            // an update could change.
             Box(Modifier.weight(1f, fill = false)) {
                 DatePicker(
                     state = state,
@@ -274,7 +291,9 @@ private val NarrowMargin = 16.dp
 
 /**
  * Cancel and OK, at the end of a row as in Material's DatePickerDialog. If they don't fit side by
- * side, OK goes below Cancel, unlike Material's (PRD.md's Date picker's buttons). OK gives
+ * side, OK goes below Cancel, so they're read and focused in the same order either way, unlike
+ * Material's dialogs, the app's others included, which put OK above Cancel. They fit side by side
+ * on every phone at the largest text size, so only a narrower window stacks them. OK gives
  * [onConfirm] the date [state] has selected.
  */
 @Composable

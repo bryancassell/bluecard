@@ -19,10 +19,28 @@ import androidx.compose.ui.unit.dp
  * nothing while [text] is null.
  *
  * Screen readers announce the message as it appears, because it's a polite live region whose
- * text changes. Compose announces a live region only when a node it has already seen changes, not
- * when a new one appears (`sendSemanticsPropertyChangeEvents` in
+ * text changes. Without that, TalkBack read the message only when its focus happened to move onto
+ * it, so with its focus on a heading that stays, as on Badges, nothing told the scout (#69).
+ * TalkBack may read it a second time as its focus moves off something that went away, such as
+ * the loading indicator. A pane title was tried first: TalkBack treated the message like a window
+ * and said "BlueCard" whenever it went away.
+ *
+ * Compose announces a live region only when a node it has already seen changes, not when a new
+ * one appears (`sendSemanticsPropertyChangeEvents` in
  * `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI 1.12.1). So compose it while the
- * screen loads too, with no text, from the same call, as [LoadingOrMessage] does.
+ * screen loads too, with no text, from the same call, as [LoadingOrMessage] does. A failure after
+ * the screen has loaded replaces its content, so that message is a new node and isn't announced;
+ * that's rare. Nor is a message the screen is composed with, as after rotation: it was announced
+ * when it first appeared. Compose also reports a node's first layout as a change to it, which
+ * TalkBack reads in a live region (see `MatchCount` in BadgesScreen.kt), so these two cases are
+ * being checked again in #281.
+ *
+ * A live region is what Android points to: when Android 16 deprecated `announceForAccessibility`,
+ * its behavior changes (https://developer.android.com/about/versions/16/behavior-changes-all)
+ * pointed to live regions "to inform the user of changes to critical UI", and to pane titles "for
+ * significant UI changes like window changes". Besides TalkBack's "BlueCard", the pane title made
+ * Compose throw when it had to merge the title into a parent, which happens only with a screen
+ * reader on.
  *
  * While it has no text, it's hidden from screen readers, which would otherwise stop on it when
  * swiping: Compose lets them focus any node with text, even empty text. A hidden node is still

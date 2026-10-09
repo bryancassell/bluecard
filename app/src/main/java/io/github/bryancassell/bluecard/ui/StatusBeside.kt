@@ -12,8 +12,10 @@ import androidx.compose.ui.unit.Constraints
  * Whether a [status], such as "In progress", fits on one line beside [lines] of text, each in its
  * own style, in [width] pixels, without a line breaking in the middle of a word. Squeezed
  * narrower than a word, a line breaks it, as "Swimmi" / "ng" did at the largest text and display
- * size (#307), so the status goes under the lines instead. The width is in pixels so the caller
- * can take away its padding and gaps rounded as its layout rounds them.
+ * size (#307), so the status goes under the lines instead. Moving it only when a word would break
+ * keeps rows as they were at the default sizes, where a long name wraps between its words beside
+ * the status. The width is in pixels so the caller can take away its padding and gaps rounded as
+ * its layout rounds them.
  */
 // Each line is laid out as it would be beside the status, rather than compared with its longest
 // word: Compose takes the longest word to end at a hyphen, as in "Eagle-required", where

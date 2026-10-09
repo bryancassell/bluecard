@@ -69,8 +69,8 @@ data class AdvancementRequirements<out A : Advancement>(
 /**
  * Badge or rank [id] from this catalog with the scout's [progress] on it, or null if the
  * catalog doesn't have it or the version it was started on. Only a catalog edited during
- * development can cause that: released catalogs keep every badge, rank and version they shipped
- * (ARCHITECTURE.md, Requirement versions).
+ * development can cause that: released catalogs keep every badge, rank and version they shipped,
+ * since progress is stored against them.
  */
 fun <A : Advancement> List<A>.advancementRequirements(
     id: String,

@@ -230,8 +230,11 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     /**
      * Changes the date this requirement, or its own work, was completed on, once marked complete;
-     * null removes it. For one that [completesFromRows], the date is kept while a row is deleted
-     * ([ProgressRepository.setCompletedFromRowsDate]).
+     * null removes it. For one that [completesFromRows], the date the scout changes or removes
+     * is kept while a row is deleted, and once every row is filled in again
+     * ([ProgressRepository.setCompletedFromRowsDate]), since deleting a row is often a fix, not
+     * undoing the work. Clearing the requirement goes back to the date the last row was first
+     * saved.
      */
     fun setCompletedDate(date: LocalDate?) {
         // The date shows only once the page has. One that completesFromRows has a fixed number of

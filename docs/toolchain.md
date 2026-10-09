@@ -159,6 +159,17 @@ Dependabot proposes those updates instead.
 - **`MainDispatcherRule`** (`app/src/test/.../testing/`) replaces the main
   dispatcher in ViewModel tests, as in Android's
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
+- **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
+  are local tests too. Every test run, `./gradlew build` and CI included,
+  compares them against the reference images in `app/src/test/screenshots/`. A
+  failed comparison writes the new image, and one comparing the two, to
+  `app/build/outputs/roborazzi/`, which CI uploads with its reports. After an
+  intended change, `./gradlew recordRoborazziDebug` records them again; review
+  the new images in the diff.
+- **Migration tests after a database version bump.** The first test run can
+  merge assets before Room writes the new schema, so `MigrationTest` fails.
+  Run the tests again
+  ([#96](https://github.com/bryancassell/bluecard/issues/96)).
 - **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.
   Use them only for behavior that needs a real Android runtime. They are slower
   and need a device, so `./gradlew build` does not run them.
@@ -321,9 +332,13 @@ A crash's stack trace shows R8's short names. `retrace` turns them back into
 the source names, with the mapping file that the build wrote:
 `retrace app/build/outputs/mapping/release/mapping.txt <stack trace file>`.
 Each release build writes a new mapping file, so retrace before building
-again. Testers can't see a stack trace, so to retrace a crash a tester
-reports, reproduce it with their release's APK and use the mapping file
-attached to that release. `retrace` comes with the Android SDK Command-line
+again. Testers can't see a stack trace, and Android vitals only reports
+crashes from Play installs, so testers report crashes by hand. To retrace one,
+reproduce it with their release's APK and use the mapping file attached to
+that release. Once BlueCard is on Google Play, Play deobfuscates Android
+vitals' crash reports from the mapping file that AGP puts in the app bundle
+([Play Console Help](https://support.google.com/googleplay/android-developer/answer/9848633)),
+so it needs no separate upload. `retrace` comes with the Android SDK Command-line
 Tools, which the Standard setup doesn't install: add them in Android Studio's
 **SDK Manager → SDK Tools → Android SDK Command-line Tools (latest)**.
 
@@ -335,6 +350,22 @@ as pre-releases. Gradle builds the APK unsigned, and `apksigner` signs it with
 BlueCard's release key, asking for the key's password (see
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#release-build)). Only a machine with the
 release key can publish one.
+
+The password never reaches a Gradle build, which runs third-party plugins and
+the code of whatever branch is checked out, Dependabot's included.
+[Sign your app](https://developer.android.com/studio/publish/app-signing) keeps
+the password in a properties file that Gradle reads, where every build on the
+machine, and malware that collects such files, could read it too. This doesn't
+stop code running as the developer, such as a build of another branch, from
+tampering with the APK that gets signed or the tools that sign it; only a
+separate account or machine would. If CI signs releases later, it can run
+`apksigner` the same way.
+
+Moving to Google Play means choosing the app signing key. Play App Signing can
+generate a key of its own, which Play recommends, but Android won't update an
+app from an APK signed with a different key: testers would export their data,
+uninstall, install from Play and import. Play can take BlueCard's release key
+instead, so testers update in place.
 
 [Android developer verification](https://developer.android.com/developer-verification)
 reaches the US in 2027. From then on, register the package name and the
@@ -361,7 +392,10 @@ first.
    On another machine, copy `bluecard-release.p12` from the backup into
    `~/keys` in place of the `keytool` command. Anyone can read the
    certificate's name (`CN=BlueCard`) from the APK, so it names the app rather
-   than a person.
+   than a person. The key is valid for 10,000 days, since Sign your app asks
+   for at least 25 years. For a `minSdk` of 24 or higher, `apksigner` signs
+   with APK Signature Scheme v2, which every Android version BlueCard supports
+   checks, and v3, without a v1 signature.
 
 2. Save the keystore file and its password together in a password manager.
    Keep the password only there, not in a file that a build could read.
@@ -511,8 +545,25 @@ icon and choose **Leaks**. On Android 13 and higher, LeakCanary asks for
 permission to show notifications the first time it has something to report.
 Android Studio's Profiler can also run it
 ([Capture a heap dump](https://developer.android.com/studio/profile/capture-heap-dump)).
-A heap dump holds whatever is in memory, so look for leaks with made-up
-records, not a real scout's.
+A heap dump holds whatever is in memory, and LeakCanary may save it in the
+phone's public Download folder, so look for leaks with made-up records, not a
+real scout's.
+
+What LeakCanary doesn't report:
+
+- **ViewModels.** It
+  [doesn't watch them](https://github.com/square/leakcanary/blob/v2.14/leakcanary-object-watcher-android-androidx/src/main/java/leakcanary/internal/AndroidXFragmentDestroyWatcher.kt#L62-L67)
+  in an app without fragments.
+- **Known leaks in Android itself.** It brings in
+  [Plumber](https://square.github.io/leakcanary/changelog/#plumber-android-is-a-new-artifact-that-fixes-known-android-leaks),
+  which works around them in debug builds only, so release builds still have
+  them.
+- **Leaks in instrumented tests.** They don't use `DetectLeaksAfterTestSuccess`,
+  since each check dumps the heap. LeakCanary still runs in them, but doesn't
+  dump the heap while JUnit is loaded.
+
+LeakCanary keeps its results in `leaks.db` in the databases directory, so a
+debug build's backup includes them along with the scout's data.
 
 ## Continuous integration
 
@@ -525,10 +576,47 @@ moved, merge it into the branch and wait for the checks again:
 - **Build** runs `./gradlew build`, the same command as locally.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
-  [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes about
-  6 minutes, a little less than Build: Gradle builds the app and test APKs
+  [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to
+  5 minutes, less than Build's 6 to 9: Gradle builds the app and test APKs
   while it downloads the emulator and system image, then boots the emulator
   and runs the tests.
+
+A second workflow (`.github/workflows/docs.yml`) has one quick job, which must
+pass too:
+
+- **Doc growth** fails when a pull request makes `ARCHITECTURE.md` or `PRD.md`
+  longer, counted in words, unless it has the `grows-docs` label.
+  [`CLAUDE.md`](../CLAUDE.md#what-goes-where) says what belongs in each; add
+  the label only once the developer agrees. Adding or removing the label runs
+  the check again.
+
+The Instrumented tests job's emulator choices:
+
+- **A Gradle Managed Device, not `reactivecircus/android-emulator-runner`.**
+  That action couldn't boot any API 37 image: in
+  [#14](https://github.com/bryancassell/bluecard/issues/14)'s trial its
+  emulator was still booting after 20 minutes, and its maintainers report the
+  same. A managed device booted API 37 and ran the tests in about 3 minutes.
+- **The Google APIs image.** The lighter Automated Test Device images go up to
+  API 36 only (checked October 2026). The tests need API 35 or higher anyway:
+  `PdfRenderer` reads a page's text from Android 15 on. Google's later API 37
+  images (37.1 and 37.2) come only with 16 KB pages.
+- **No emulator cache**
+  ([#5](https://github.com/bryancassell/bluecard/issues/5)). Every run, the
+  setup task downloads the emulator and the 2.1 GB system image and
+  cold-boots the emulator to save a snapshot, about 3 minutes that partly
+  overlap building the APKs.
+  [#276](https://github.com/bryancassell/bluecard/issues/276) measured caching
+  it in October 2026, with the Gradle cache restored. With no cache, the job
+  took about 4m10s. Caching the emulator, image, AVD and snapshot (a 4.4 GB
+  entry) took about 3m50s, since restoring took over a minute. Caching only
+  the AVD and snapshot (2.5 GB), keyed by the installed emulator and image
+  versions, took about 3m35s, and the snapshot loaded on every runner CPU
+  tried. Build takes 6 to 9 minutes and runs at the same time, so neither
+  made CI finish sooner, and each would use a quarter to almost half of the
+  repository's 10 GB of Actions cache, which the Gradle caches need. If Build
+  ever finishes before this job, revisit the AVD-only cache, which is in
+  #276's history.
 
 When a job fails, its reports are attached to the run: lint and local test
 reports as `reports`, instrumented test reports as `instrumented-test-reports`.

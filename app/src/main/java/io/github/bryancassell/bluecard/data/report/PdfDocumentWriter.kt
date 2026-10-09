@@ -5,9 +5,10 @@ import java.io.OutputStream
 import javax.inject.Inject
 
 /**
- * Writes a report's pages with Android's [PdfDocument]. PdfDocument needs a device, so this
- * is checked by an instrumented test (androidTest/.../PdfDocumentWriterTest) and left out of
- * the local tests' coverage check.
+ * Writes a report's pages with Android's [PdfDocument]. PdfDocument needs a device: Robolectric
+ * doesn't have its native code, so it throws "document is closed!" (checked with Robolectric
+ * 4.17). So this is checked by an instrumented test (androidTest/.../PdfDocumentWriterTest) and
+ * left out of the local tests' coverage check.
  */
 class PdfDocumentWriter @Inject constructor() : ReportPdfWriter {
     override fun write(pages: List<ReportPage>, out: OutputStream) {

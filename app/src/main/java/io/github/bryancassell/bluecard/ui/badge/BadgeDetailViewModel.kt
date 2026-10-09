@@ -139,8 +139,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
 
     /**
      * Clears everything recorded for the badge, including its counselor, so it isn't started
-     * anymore. The page then shows the requirements of the newest version. A report still being
-     * created to share is dropped, so the share sheet doesn't open with what was cleared.
+     * anymore. The page stays open, which shows the scout what the clear did, as clearing a
+     * requirement does, and then shows the requirements of the newest version. A report still
+     * being created to share is dropped, so the share sheet doesn't open with what was cleared.
      */
     fun clear() {
         // Forgotten even if the clear fails, as the scout meant it to be.
@@ -151,7 +152,9 @@ class BadgeDetailViewModel @AssistedInject constructor(
     /**
      * Marks the badge completed on [date] without recording its requirements, as for a badge
      * earned before the scout used the app, or changes the date it's marked with. A badge that
-     * isn't started is started, as when anything is recorded.
+     * isn't started is started, as when anything is recorded. The date isn't checked against its
+     * requirements' dates: completion dates are informational, not a formal requirement, and a
+     * scout may record a requirement's details after the badge was earned (#41).
      */
     fun markCompleted(date: LocalDate) {
         report.follow(
@@ -168,7 +171,8 @@ class BadgeDetailViewModel @AssistedInject constructor(
 
     /**
      * Undoes [markCompleted]. What's recorded for the badge stays. The page remembers the date it
-     * showed ([BadgeDetailUiState.Ready.unmarkedDate]).
+     * showed ([BadgeDetailUiState.Ready.unmarkedDate]), so unlike clearing it asks nothing first:
+     * asking would slow a one-tap change.
      */
     fun unmarkCompleted() {
         val shown = (uiState.value as? BadgeDetailUiState.Ready)?.completedOnPriorDate

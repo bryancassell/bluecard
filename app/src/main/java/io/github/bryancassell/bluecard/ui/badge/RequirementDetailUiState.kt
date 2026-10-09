@@ -46,7 +46,9 @@ sealed interface RequirementDetailUiState {
         val earnedBadges: List<EarnedBadge>? = null,
         /**
          * Whether it has a field for who signed off on it, as a rank's requirement does, which
-         * saves with the comment.
+         * saves with the comment. Every one does, including one with sub-requirements or one
+         * complete from merit badges, since a leader signs off each rank requirement. A badge's
+         * has none: its counselor is recorded once, on Badge detail.
          */
         val hasSignOffField: Boolean = false,
         /**

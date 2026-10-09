@@ -36,7 +36,10 @@ import org.junit.runner.RunWith
 
 /**
  * Runs the repository contract against Room with an in-memory database. Robolectric
- * provides the Context that Room needs on Android (see ARCHITECTURE.md, Room and migration tests).
+ * provides the Context that Room needs on Android. The Room testing guide recommends plain JVM
+ * tests with Room's Kotlin Multiplatform setup instead, whose JVM target has an in-memory builder
+ * that takes no Context. This module is Android-only, and every in-memory builder in Room's
+ * Android artifact takes a Context (checked with Room 2.8.5).
  */
 @RunWith(AndroidJUnit4::class)
 class RoomProgressRepositoryTest : ProgressRepositoryContract() {

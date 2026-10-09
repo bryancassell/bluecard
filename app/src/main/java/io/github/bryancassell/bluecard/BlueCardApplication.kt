@@ -11,8 +11,11 @@ class BlueCardApplication : Application() {
     override fun onCreate() {
         // Debug builds report disk access on the main thread, objects never closed and
         // leaked activities as they happen. They only log and flash the screen, never
-        // crash: see ARCHITECTURE.md (Debug builds). Set before super.onCreate(), where
-        // Hilt builds the dependency graph, so that's checked too.
+        // crash: detectAll() turns on new checks as targetSdk rises, Now in Android removed
+        // penaltyDeath() after crashes from code it doesn't own, and under Robolectric a VM
+        // policy's penaltyDeath() ends the whole test run. It checks FLAG_DEBUGGABLE, since AGP
+        // no longer generates BuildConfig by default. Set before super.onCreate(), where Hilt
+        // builds the dependency graph, so that's checked too.
         if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             StrictMode.setThreadPolicy(
                 StrictMode.ThreadPolicy.Builder()

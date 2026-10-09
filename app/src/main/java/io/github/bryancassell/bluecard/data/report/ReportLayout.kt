@@ -24,8 +24,8 @@ import io.github.bryancassell.bluecard.text.totalFormat
 import io.github.bryancassell.bluecard.text.typedText
 import java.time.LocalDate
 
-// A badge's or rank's report, laid out on US Letter pages. Sizes are in PDF points, 1/72 of an
-// inch.
+// A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
+// Sizes are in PDF points, 1/72 of an inch.
 
 /** The width of a report's pages: 8.5 inches. */
 const val PAGE_WIDTH = 612
@@ -337,9 +337,9 @@ private class ReportComposer(private val resources: Resources) {
     }
 
     /**
-     * The paragraphs, placed on as many pages as they need, each with its page number. A
-     * paragraph that doesn't fit at the foot of a page continues on the next one, unless it's
-     * kept with the paragraph after it.
+     * The paragraphs, placed on as many pages as they need, each with its page number, which
+     * keeps printed pages in order. A paragraph that doesn't fit at the foot of a page continues
+     * on the next one, unless it's kept with the paragraph after it.
      */
     fun pages(): List<ReportPage> {
         val layouts = paragraphs.map { layOut(it, it.text) }

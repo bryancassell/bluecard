@@ -4,7 +4,10 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import java.time.LocalDate
 
-/** How far the scout has got with a rank. Ranks are earned in order, Scout through Eagle. */
+/**
+ * How far the scout has got with a rank. Ranks are earned in order, Scout through Eagle, so while
+ * the scout can record requirements for any rank, only one is next (#193).
+ */
 enum class RankStatus {
     /** Not earned, and not the next rank to earn. */
     NotEarned,
@@ -28,7 +31,8 @@ data class RankStanding(
     /**
      * The rank above this one that the scout marked earned on a prior date, which counts this
      * one as earned, when nothing else does: it isn't marked itself, and its requirements aren't
-     * complete. Null otherwise. The nearest of them, if there's more than one.
+     * complete. Null otherwise. The nearest of them, if there's more than one. So a scout who
+     * starts using BlueCard as a Life Scout marks only Life (#193).
      */
     val earnedWith: Rank? = null,
     /**
@@ -95,7 +99,8 @@ fun List<Rank>.standings(
             rank = rank,
             status = status,
             // One not started has nothing recorded, though badges can count toward it. Its bar
-            // shows only while it's in progress.
+            // shows only while it's in progress: otherwise one earned badge would put bars on
+            // Star, Life and Eagle at once.
             fractionDone = when {
                 earned || version == null -> null
 

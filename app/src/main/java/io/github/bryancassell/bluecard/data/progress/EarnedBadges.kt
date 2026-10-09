@@ -9,7 +9,8 @@ import java.time.LocalDate
 
 /**
  * The merit badges the scout has completed, in catalog order, which count toward a rank's
- * requirements that ask for merit badges ([Requirement.meritBadges]).
+ * requirements that ask for merit badges ([Requirement.meritBadges]). They're worked out once per
+ * change in progress ([earnedBadges]), not in each requirement.
  */
 data class EarnedBadges(val badges: List<EarnedBadge>) {
     /** How far these badges go toward the [needed] merit badges. */

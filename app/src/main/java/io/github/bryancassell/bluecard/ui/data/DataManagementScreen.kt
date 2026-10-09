@@ -72,7 +72,8 @@ fun DataManagementRoute(
 /**
  * Changing the scout's name and unit number, export and import of the scout's data, and
  * clearing all their progress. Edit opens a page to change the name and unit number
- * ([onEditProfile]). Export saves the data to a file the scout creates with the system file
+ * ([onEditProfile]), here with the scout's other data rather than on Home, as they change
+ * rarely (#160). Export saves the data to a file the scout creates with the system file
  * picker ([onExport]), suggesting a name with [today]'s date, read as it opens. Import reads a
  * file they pick ([onImport]) and, once it's checked, asks whether to merge it with their data
  * ([onMerge]) or replace everything with it ([onReplace]). A merge then asks which to keep, the
@@ -127,7 +128,8 @@ fun DataManagementScreen(
                 heading = R.string.data_management_profile_heading,
                 description = R.string.data_management_profile_description,
                 button = R.string.data_management_profile_edit,
-                // Screen reader users moving from control to control don't hear the heading.
+                // Screen reader users moving from control to control don't hear the heading, so
+                // "Edit" alone didn't say what it edits (#166).
                 buttonDescription = R.string.data_management_profile_edit_description,
                 enabled = !uiState.working,
                 // Through the screen's OtherAppStarter, so a tap just after Export or Import
@@ -156,6 +158,8 @@ fun DataManagementScreen(
                 heading = R.string.data_management_clear_heading,
                 description = R.string.data_management_clear_description,
                 button = R.string.data_management_clear,
+                // Disabled rather than hidden, unlike the other clears' buttons, so the scout can
+                // see where clearing everything lives.
                 enabled = uiState.canClear && !uiState.working,
                 // Through the screen's OtherAppStarter, so a tap just after Export or Import
                 // doesn't open the dialog under the file picker, to be confirmed after it.
@@ -163,6 +167,7 @@ fun DataManagementScreen(
                 colors = removalOutlinedButtonColors()
             )
         }
+        // The page doesn't change after an import or Clear all, so a message confirms it (#45).
         val message = uiState.message
         MessageSnackbarHost(
             message = message,

@@ -11,8 +11,15 @@ import androidx.compose.ui.unit.IntOffset
 
 // Pages slide the full width of their area, side by side, as Navigation 3's animation guide
 // shows: https://developer.android.com/guide/navigation/navigation-3/animate-destinations
-// SlideDirection.Start and End mirror the slides in a right-to-left layout. PRD.md (Design
-// decisions) says why BlueCard doesn't use the platform's shorter slides, as Material 3 advises.
+// SlideDirection.Start and End mirror the slides in a right-to-left layout. Navigation 3's
+// defaults, a 700 ms crossfade and a 70% shrink on the back gesture, looked strange (#104).
+// Material 3's transition patterns
+// (https://m3.material.io/styles/motion/transitions/transition-patterns) say "Both Android and
+// iOS should use platform defaults for forward and backward navigation" between "screens at
+// consecutive levels of hierarchy", and "Sliding content the full width of the screen is
+// excessive for a high frequency transition." The platform's slides move 96dp and fade, but on a
+// Pixel 9 opening a page felt too short, the back swipe's fade looked bad, and a swipe from the
+// right edge that didn't slide the page looked broken.
 //
 // FastOutSlowInEasing is tween's default, and what Material's first duration guidance
 // (https://m1.material.io/motion/duration-easing.html) calls the standard curve. It says "Large,
