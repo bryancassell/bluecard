@@ -1282,7 +1282,8 @@ class MainActivityTest {
         assertNothingFocused()
     }
 
-    // A Home item that took focus here would pass it to Badges' first item as Home went.
+    // A Home item that took focus here would lose it as Home went, to the focus target around the
+    // pages.
     @Test
     fun tab_whilePagesSlide_movesFocusIntoTheArrivingPage() {
         leaveBadgesWithSearchFocused()
@@ -1402,11 +1403,16 @@ class MainActivityTest {
 
     private fun saveNotesButton() = composeTestRule.onNodeWithText("Save notes")
 
-    // Out of touch mode, types in a requirement's notes, ready to save them.
-    private fun typeNotesOutOfTouchMode() {
+    // Out of touch mode, opens Camping's first requirement.
+    private fun openRequirementOutOfTouchMode() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
         openCamping()
         composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+    }
+
+    // Out of touch mode, types in a requirement's notes, ready to save them.
+    private fun typeNotesOutOfTouchMode() {
+        openRequirementOutOfTouchMode()
         notesField().performClick().performTextInput("Planned it with my patrol.")
         saveNotesButton().performScrollTo()
     }
@@ -1531,9 +1537,7 @@ class MainActivityTest {
      * leaves composition as it's pressed, and Add date takes Change date's place.
      */
     private fun removeDateWithEnter() {
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        openRequirementOutOfTouchMode()
         completedCheckbox().performClick()
 
         pressWithEnter(composeTestRule.onNodeWithText("Remove date"))
@@ -1605,9 +1609,7 @@ class MainActivityTest {
     // Clear progress leaves composition once the scout confirms.
     @Test
     fun enterOnClearProgress_outOfTouchMode_focusesNothingOnceConfirmed() {
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
-        openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        openRequirementOutOfTouchMode()
         completedCheckbox().performClick()
         pressWithEnter(composeTestRule.onNodeWithText("Clear progress"))
 
@@ -1658,10 +1660,10 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Edit").assertIsFocused()
     }
 
-    // In touch mode, Android doesn't ask the view to take focus again as a focused item goes, so
-    // the focus target around the pages mustn't be left able to take it. A key press that leaves
-    // touch mode asks the view to take focus going down, and the target would take it. Onboarding's
-    // fields are disabled once saved, as Home replaces the page.
+    // From Android 9, in touch mode, Android doesn't ask the view to take focus again as a focused
+    // item goes, so the focus target around the pages mustn't be left able to take it. A later key
+    // press that leaves touch mode asks the view to take focus going down, and the target would
+    // take it. Onboarding's fields are disabled once saved, as Home replaces the page.
     @Test
     fun leavingTouchMode_afterAFocusedFieldWasDisabled_focusesThePagesFirstItem() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(true)

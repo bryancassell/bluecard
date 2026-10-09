@@ -408,8 +408,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   page, and Tab would stop there as it starts on a page or wraps around. A
   page that's sliding away can't take focus
   (`rememberRefuseFocusWhileLeavingNavEntryDecorator`), or a key pressed
-  during the slide could focus it, and its focus would pass to the next page
-  as it went.
+  during the slide could focus it, and its focus would go to the focus target
+  as the page went, rather than into the page arriving.
 - **A page that clears input focus doesn't hand it to its first item.** Save
   closes the keyboard with `FocusManager.clearFocus()`, which clears the
   view's focus the same way. With a hardware keyboard, focus went to a
@@ -420,25 +420,21 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   page, and a page can close the keyboard that way. It does so even while it
   has focus itself, as after a page opened from a field closes again. A
   screen reader or switch can then press Save without moving focus.
-- **Nor does a page whose focused item goes.** When a focused item leaves
+- **Nor does a page whose focused item goes.** A focused item that leaves
   composition or can no longer take focus, such as a button that's disabled
-  as it's pressed, Compose clears focus without asking `onExit`, and clears
-  the view's focus at once or once the change is applied. On the emulator,
-  Remove date, Mark completed, Unmark and Clear progress gave focus to the
-  page's first item
-  ([#301](https://github.com/bryancassell/bluecard/issues/301)). So as a
-  page's focused item goes out of touch mode, the focus target around the
-  pages can take focus until something has it, and Android's request for the
-  view to take focus again gives it to the target. Tab and Shift+Tab clear
-  focus too as they wrap around, but ask the group's `onExit` first, so the
-  target isn't offered focus then. From Android 9, Android doesn't ask in
-  touch mode, so the target isn't offered it either: a key press that leaves
-  touch mode asks the view to take focus going down
-  (`ViewRootImpl.leaveTouchMode()`), and the target would take that. Before
-  Android 9, `View.clearFocus()` asks in touch mode too, so the target takes
-  it there. The alternative, a focusable View before the
-  `ComposeView` that answers Android's request, would also answer it when a
-  key is pressed with nothing focused, and as the app starts.
+  as it's pressed, loses focus without Compose asking `onExit`, and Android
+  then asks the view to take focus again. On the emulator, Remove date, Mark
+  completed, Unmark and Clear progress gave focus to the page's first item
+  ([#301](https://github.com/bryancassell/bluecard/issues/301)). So the
+  focus target around the pages can take focus as a page loses it that way,
+  until that message is done: Android asks in the same message, if it asks
+  at all. It doesn't from Android 9 in touch mode, and a target still able to
+  take focus would take the request from a later key press that leaves touch
+  mode, an empty stop. Tab's wrap-around, which clears focus too, isn't
+  caught. Handing focus to the button that takes the pressed one's place
+  would keep the scout's place, but each button would need its own code. A
+  focusable View before the `ComposeView` would also answer Android's request
+  when a key is pressed with nothing focused, and as the app starts.
 
 ### Double taps
 

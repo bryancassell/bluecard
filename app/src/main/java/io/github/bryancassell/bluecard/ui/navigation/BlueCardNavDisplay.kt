@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.foundation.focusGroup
@@ -211,11 +210,11 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     var isTakingFocus by remember { mutableStateOf(false) }
     var isHolding by remember { mutableStateOf(false) }
     // A focused item that leaves composition, or can no longer take focus, such as a button that's
-    // disabled, loses focus without Compose asking onExit below. Out of touch mode, the view is
-    // then asked to take focus again, at once or once the change is applied, and it goes to the
-    // holder. From Android 9, it isn't asked in touch mode, and nothing has focus. The holder isn't
-    // left able to take focus then: a key press that leaves touch mode asks the view to take focus
-    // too.
+    // disabled, loses focus without Compose asking onExit below. Compose then clears the view's
+    // focus, at once or once the change is applied, and out of touch mode (or in any mode before
+    // Android 9) Android asks the view to take focus again before that message is done. The
+    // holder can take it until then. If Android doesn't ask, nothing has focus, and the holder
+    // isn't left able to take it: a later key press that leaves touch mode asks too.
     val view = LocalView.current
     var isTakingFocusBack by remember { mutableStateOf(false) }
     // Tab and Shift+Tab clear focus as they wrap around, asking onExit below first, and then move
@@ -260,12 +259,12 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             .focusRequester(holder)
             .onFocusChanged {
                 if (hasFocus && !it.hasFocus) {
-                    // As View.clearFocus() decides whether to ask.
-                    isTakingFocusBack = !isWrapping &&
-                        (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !view.isInTouchMode)
+                    if (!isWrapping) {
+                        isTakingFocusBack = true
+                        view.post { isTakingFocusBack = false }
+                    }
                     isWrapping = false
                 }
-                if (it.hasFocus) isTakingFocusBack = false
                 hasFocus = it.hasFocus
                 isHolding = it.isFocused
             }

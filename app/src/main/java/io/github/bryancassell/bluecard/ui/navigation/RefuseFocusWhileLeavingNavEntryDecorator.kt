@@ -14,10 +14,9 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
  * Returns a decorator that keeps input focus out of a screen while it animates out.
  *
  * NavDisplay draws the leaving screen beside the new one until its transition ends, so a key
- * such as Tab could move focus onto it. As the leaving screen is then removed, Compose gives
- * focus to the first item on the new screen that can take it (see BlueCardNavDisplay), which on
- * Badges is the search field (#285). A key that would move focus into a leaving screen does
- * nothing.
+ * such as Tab could move focus onto it. As the leaving screen is then removed, its focus would go
+ * to the focus target around the screens (see BlueCardNavDisplay), not into the new screen. A key
+ * that would move focus into a leaving screen does nothing.
  */
 @Composable
 fun <T : Any> rememberRefuseFocusWhileLeavingNavEntryDecorator(): NavEntryDecorator<T> = remember {
