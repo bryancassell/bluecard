@@ -41,13 +41,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.hideFromAccessibility
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -56,6 +53,7 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.ui.AnnouncedText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
@@ -216,28 +214,23 @@ private fun IgnoreTouchesAsItOpens(content: @Composable () -> Unit) {
 
 /**
  * The ranks that merging as chosen would un-earn, such as "Star will no longer count as
- * earned.", as the removal dialogs name them (#259). It's composed with none too, hidden, so
- * screen readers announce it as it appears (as ScreenMessage explains), and takes no space then.
+ * earned.", as the removal dialogs name them (#259). Screen readers announce it as it appears,
+ * but not again after the phone rotates ([AnnouncedText]). It's composed with none too, hidden,
+ * and takes no space then, for the reason LoadingOrMessage gives for its message, which no longer
+ * holds.
  */
 @Composable
 private fun UnearnedRanks(names: List<String>) {
     val text = names.takeIf { it.isNotEmpty() }?.let {
         stringResource(R.string.merge_unearns, rememberBadgeNameListFormatter().format(it))
     }
-    Text(
-        text = text.orEmpty(),
-        modifier = Modifier
-            .then(
-                if (text == null) {
-                    Modifier.height(0.dp)
-                } else {
-                    Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
-                }
-            )
-            .semantics {
-                liveRegion = LiveRegionMode.Polite
-                if (text == null) hideFromAccessibility()
-            }
+    AnnouncedText(
+        text = text,
+        modifier = if (text == null) {
+            Modifier.height(0.dp)
+        } else {
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
+        }
     )
 }
 

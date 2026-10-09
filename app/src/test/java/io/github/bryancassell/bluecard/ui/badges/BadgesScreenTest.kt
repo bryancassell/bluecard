@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badges
 
-import android.os.Looper
 import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -69,13 +68,13 @@ import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
+import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -196,27 +195,6 @@ class BadgesScreenTest {
     }
 
     private fun catchUp() = waitFor(0)
-
-    // Longer than Compose takes to send accessibility events, which it sends at most every
-    // 100 ms.
-    private val accessibilityEventsSent = 500L
-
-    /**
-     * Waits at least [milliseconds] a frame at a time, running the work posted to the main thread
-     * between frames, as a phone does. Compose sends accessibility events from posted work, which
-     * can run before the next frame composes the rest of a change.
-     */
-    private fun waitRunningPostedWork(milliseconds: Long) {
-        val clock = composeTestRule.mainClock
-        val autoAdvance = clock.autoAdvance
-        clock.autoAdvance = false
-        val end = clock.currentTime + milliseconds
-        while (clock.currentTime < end) {
-            clock.advanceTimeByFrame()
-            shadowOf(Looper.getMainLooper()).idle()
-        }
-        clock.autoAdvance = autoAdvance
-    }
 
     private val many = (1..200).map {
         BadgeListItem("badge-$it", "Badge $it", eagle = null, BadgeStatus.NotStarted)
@@ -785,7 +763,7 @@ class BadgesScreenTest {
 
         uiState = BadgesUiState.Ready(badges)
         // Past the typing pause too, when the screen sets the count it announces.
-        waitRunningPostedWork(TypingPause.inWholeMilliseconds + accessibilityEventsSent)
+        composeTestRule.waitRunningPostedWork(TypingPause.inWholeMilliseconds)
 
         announcedCount().assert(hasText("4 merit badges"))
         assertEquals(emptyList<String>(), readouts.sinceLastCall())
@@ -797,7 +775,7 @@ class BadgesScreenTest {
         val readouts = LiveRegionReadouts()
         show(BadgesUiState.Ready(badges), readouts)
 
-        waitRunningPostedWork(TypingPause.inWholeMilliseconds + accessibilityEventsSent)
+        composeTestRule.waitRunningPostedWork(TypingPause.inWholeMilliseconds)
 
         announcedCount().assert(hasText("4 merit badges"))
         assertEquals(emptyList<String>(), readouts.sinceLastCall())
@@ -811,7 +789,7 @@ class BadgesScreenTest {
         show(BadgesUiState.Ready(badges), readouts)
 
         uiState = BadgesUiState.Ready(badges.take(1))
-        waitRunningPostedWork(TypingPause.inWholeMilliseconds + accessibilityEventsSent)
+        composeTestRule.waitRunningPostedWork(TypingPause.inWholeMilliseconds)
 
         // Compose sends both the new text and the new size, and TalkBack skips the second.
         assertEquals(listOf("1 merit badge"), readouts.sinceLastCall().distinct())
@@ -895,7 +873,7 @@ class BadgesScreenTest {
         // The ViewModel lists every badge again a moment later.
         uiState = BadgesUiState.Ready(badges)
         // Less than the typing pause.
-        waitRunningPostedWork(accessibilityEventsSent)
+        composeTestRule.waitRunningPostedWork()
 
         assertEquals(listOf("4 merit badges"), readouts.sinceLastCall().distinct())
     }
