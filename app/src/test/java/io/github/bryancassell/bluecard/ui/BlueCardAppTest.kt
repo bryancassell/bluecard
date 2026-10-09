@@ -21,6 +21,7 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.MainActivityUiState
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.ui.theme.BlueCardDarkColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
@@ -74,11 +75,13 @@ class BlueCardAppTest {
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
         var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
+        val readouts = LiveRegionReadouts()
         composeTestRule.setContent {
             BlueCardApp(uiState, onDismissDamagedProgressNotice = {})
         }
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = MainActivityUiState.LoadFailed }
     }

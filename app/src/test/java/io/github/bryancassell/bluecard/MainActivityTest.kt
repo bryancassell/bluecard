@@ -99,6 +99,7 @@ import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
 import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
@@ -394,6 +395,23 @@ class MainActivityTest {
         ).assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         home().assertDoesNotExist()
+    }
+
+    // MainActivity's Scaffold composes the message as it measures, after the content it's given.
+    // It must still find the text it showed before the phone rotated, or TalkBack reads it out
+    // again (#281). Its own tests can't recreate it as MainActivity does, from onCreate (#329).
+    @Test
+    fun loadFailedMessage_afterThePhoneRotates_isntALiveRegion() {
+        fakeProfileRepository.failLoads = true
+        launch()
+        val message = "Couldn't load your data. Try closing and reopening BlueCard."
+        composeTestRule.onNodeWithText(message).assert(isPoliteLiveRegion)
+
+        scenario.recreate()
+
+        composeTestRule.onNodeWithText(message)
+            .assertIsDisplayed()
+            .assert(!SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion))
     }
 
     @Test

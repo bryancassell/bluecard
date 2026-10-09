@@ -20,8 +20,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The Merge dialog shown again after the phone rotates. A dialog saves its content's state with
- * the activity, apart from the screen under it, so the activity is recreated here, as on a phone.
+ * The Merge dialog shown again after the phone rotates. The activity is recreated here, as on a
+ * phone, since the line's text is retained, which StateRestorationTester doesn't keep.
  */
 @RunWith(AndroidJUnit4::class)
 class MergeDialogRotationTest {

@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -114,9 +115,11 @@ class EditCounselorScreenTest {
 
     @Test
     fun loadFailed_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(EditCounselorUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "Couldn't load your data. Try closing and reopening BlueCard."
         ) { uiState = EditCounselorUiState.LoadFailed }
     }
@@ -133,9 +136,11 @@ class EditCounselorScreenTest {
 
     @Test
     fun unavailable_isAnnouncedWhenItReplacesLoading() {
+        val readouts = LiveRegionReadouts()
         show(EditCounselorUiState.Loading)
 
         composeTestRule.assertAnnouncedWhenShown(
+            readouts,
             "This badge's requirements aren't in this version of BlueCard."
         ) { uiState = EditCounselorUiState.Unavailable }
     }

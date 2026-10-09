@@ -39,7 +39,8 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
-import io.github.bryancassell.bluecard.ui.LoadingOrMessage
+import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
+import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.singleLineInput
@@ -95,20 +96,13 @@ fun EditCounselorScreen(
         onDiscard = onDiscard
     )
     when (uiState) {
-        // One branch, so screen readers hear the message (see LoadingOrMessage).
-        EditCounselorUiState.Loading,
-        EditCounselorUiState.LoadFailed,
-        EditCounselorUiState.Unavailable -> LoadingOrMessage(
-            message = when (uiState) {
-                EditCounselorUiState.LoadFailed -> stringResource(R.string.load_failed)
+        EditCounselorUiState.Loading -> ScreenLoadingIndicator(modifier)
 
-                EditCounselorUiState.Unavailable ->
-                    stringResource(R.string.requirements_unavailable)
+        EditCounselorUiState.LoadFailed ->
+            ScreenMessage(stringResource(R.string.load_failed), modifier)
 
-                else -> null
-            },
-            modifier = modifier
-        )
+        EditCounselorUiState.Unavailable ->
+            ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
 
         // Ends the page above the keyboard, so every field can be scrolled into view.
         is EditCounselorUiState.Ready -> Box(modifier = modifier.imePadding()) {

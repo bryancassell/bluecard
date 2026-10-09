@@ -12,32 +12,36 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert.assertEquals
 import org.robolectric.Shadows.shadowOf
 
 /** A polite live region, which screen readers announce when it changes. */
 val isPoliteLiveRegion =
     SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
 
-private val isHidden = SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
-
 /**
- * Runs [show], which brings up [message], and checks that screen readers announce it: it's a
- * polite live region, in the node composed hidden in its place while the screen loaded (see
- * `LoadingOrMessage`).
+ * Runs [show], which brings up [message] in [view], and checks that TalkBack reads it out once,
+ * and nothing else, as [readouts] lists. Create [readouts] before setting the content.
  */
-fun SemanticsNodeInteractionsProvider.assertAnnouncedWhenShown(message: String, show: () -> Unit) {
+fun ComposeTestRule.assertAnnouncedWhenShown(
+    readouts: LiveRegionReadouts,
+    message: String,
+    view: View = onRoot().hostView(),
+    show: () -> Unit
+) {
     onNodeWithText(message).assertDoesNotExist()
-    val hiddenBefore = onAllNodes(isHidden).fetchSemanticsNodes().map { it.id }
-    val wasHiddenBefore = SemanticsMatcher("was hidden in its place before it was shown") {
-        it.id in hiddenBefore
-    }
+    readouts.listenTo(view)
+    waitRunningPostedWork()
+    readouts.sinceLastCall()
+
     show()
-    onNodeWithText(message).assert(isPoliteLiveRegion and !isHidden).assert(wasHiddenBefore)
+    waitRunningPostedWork()
+
+    assertEquals(listOf(message), readouts.sinceLastCall())
 }
 
 /** Turns on a screen reader, as far as Compose can tell. Call it before setting the content. */
@@ -68,8 +72,8 @@ class LiveRegionReadouts {
     }
 
     /**
-     * Listens to the events [view] sends. Call it while composing [view]'s content, before it
-     * sends any.
+     * Listens to the events [view] sends. Call it before [view] sends the ones a test looks at:
+     * while composing its content, for its first layout's.
      *
      * Each event's source is looked at as the event is sent. TalkBack looks at it a little later,
      * so it can see the same state, and one that lasted only until the next frame was read out

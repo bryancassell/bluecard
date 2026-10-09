@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -215,22 +214,17 @@ private fun IgnoreTouchesAsItOpens(content: @Composable () -> Unit) {
 /**
  * The ranks that merging as chosen would un-earn, such as "Star will no longer count as
  * earned.", as the removal dialogs name them (#259). Screen readers announce it as it appears,
- * but not again after the phone rotates ([AnnouncedText]). It's composed with none too, hidden,
- * and takes no space then, for the reason LoadingOrMessage gives for its message, which no longer
- * holds.
+ * but not again after the phone rotates ([AnnouncedText]). Nothing while there are none.
  */
 @Composable
 private fun UnearnedRanks(names: List<String>) {
-    val text = names.takeIf { it.isNotEmpty() }?.let {
-        stringResource(R.string.merge_unearns, rememberBadgeNameListFormatter().format(it))
-    }
+    if (names.isEmpty()) return
     AnnouncedText(
-        text = text,
-        modifier = if (text == null) {
-            Modifier.height(0.dp)
-        } else {
-            Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
-        }
+        text = stringResource(
+            R.string.merge_unearns,
+            rememberBadgeNameListFormatter().format(names)
+        ),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
     )
 }
 
