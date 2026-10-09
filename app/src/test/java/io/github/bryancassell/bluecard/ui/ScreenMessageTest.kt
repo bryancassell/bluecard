@@ -96,7 +96,7 @@ class ScreenMessageTest {
         message = loadFailed
         composeTestRule.waitRunningPostedWork()
 
-        assertEquals(listOf(loadFailed), readouts.sinceLastCall().distinct())
+        assertEquals(listOf(loadFailed), readouts.sinceLastCall())
     }
 
     // As when the scout comes back to a page whose data failed to load while they were on a later
@@ -106,7 +106,7 @@ class ScreenMessageTest {
         show(loadFailed)
         composeTestRule.waitRunningPostedWork()
 
-        assertEquals(listOf(loadFailed), readouts.sinceLastCall().distinct())
+        assertEquals(listOf(loadFailed), readouts.sinceLastCall())
     }
 
     // Read out again, it held back the screen's heading by about 3 seconds.
@@ -136,7 +136,7 @@ class ScreenMessageTest {
         message = loadFailed
         composeTestRule.waitRunningPostedWork()
 
-        assertEquals(listOf(loadFailed), readouts.sinceLastCall().distinct())
+        assertEquals(listOf(loadFailed), readouts.sinceLastCall())
     }
 
     @Test
@@ -152,7 +152,7 @@ class ScreenMessageTest {
 
         assertEquals(
             listOf("This badge's requirements aren't available."),
-            readouts.sinceLastCall().distinct()
+            readouts.sinceLastCall()
         )
     }
 
@@ -168,7 +168,7 @@ class ScreenMessageTest {
         restart()
         composeTestRule.waitRunningPostedWork()
 
-        assertEquals(listOf(loadFailed), readouts.sinceLastCall().distinct())
+        assertEquals(listOf(loadFailed), readouts.sinceLastCall())
     }
 
     // The text rememberIsNewText is given, and what it gave back last.

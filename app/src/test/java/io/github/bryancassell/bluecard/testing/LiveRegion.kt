@@ -24,23 +24,24 @@ val isPoliteLiveRegion =
     SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
 
 /**
- * Runs [show], which brings up [message], and checks that TalkBack reads it out, and nothing else,
- * as [readouts] lists. Create [readouts] before setting the content.
+ * Runs [show], which brings up [message] in [view], and checks that TalkBack reads it out once,
+ * and nothing else, as [readouts] lists. Create [readouts] before setting the content.
  */
 fun ComposeTestRule.assertAnnouncedWhenShown(
     readouts: LiveRegionReadouts,
     message: String,
+    view: View = onRoot().hostView(),
     show: () -> Unit
 ) {
     onNodeWithText(message).assertDoesNotExist()
-    readouts.listenTo(onRoot().hostView())
+    readouts.listenTo(view)
     waitRunningPostedWork()
     readouts.sinceLastCall()
 
     show()
     waitRunningPostedWork()
 
-    assertEquals(listOf(message), readouts.sinceLastCall().distinct())
+    assertEquals(listOf(message), readouts.sinceLastCall())
 }
 
 /** Turns on a screen reader, as far as Compose can tell. Call it before setting the content. */

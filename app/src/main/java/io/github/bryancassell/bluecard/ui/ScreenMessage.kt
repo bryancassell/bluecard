@@ -68,8 +68,7 @@ fun ScreenLoadingIndicator(modifier: Modifier = Modifier) {
 
 /**
  * Whether [text] is new where it's shown, so a live region showing it should be read out: this
- * place didn't show it last, even before the phone rotated. A place that leaves the composition
- * forgets what it showed.
+ * place didn't show it last, even before the phone rotated.
  *
  * Compose reports a node's first layout, and each later change to its size or position, as a
  * change to it (`onLayoutChange` in `AndroidComposeViewAccessibilityDelegateCompat`, Compose UI
@@ -78,10 +77,20 @@ fun ScreenLoadingIndicator(modifier: Modifier = Modifier) {
  * that held back the screen's heading by about 3 seconds (#281). A screen composed showing text
  * it hadn't shown, such as a failure while the scout was on a later page, is still read out.
  *
- * What a place showed is retained through a rotation, but not after the system stops BlueCard,
- * unlike what a page remembers (ARCHITECTURE.md, Screen state). Saved with `rememberSaveable`, it
- * waited to be restored until its place was next composed, which could be long after a restart:
- * once a screen had loaded in between, a later failure with the same text wasn't read out (#329).
+ * What a place showed is retained, so it lasts through a rotation. Compose keeps what leaves the
+ * composition from when the activity stops, as it does to rotate, until the first frame after it
+ * resumes, for the same place to take back (`LifecycleRetainedValuesStoreOwner`, Compose UI
+ * 1.12.1). A place that leaves at any other time forgets what it showed. Nothing is kept after the
+ * system stops BlueCard, unlike what a page remembers (ARCHITECTURE.md, Screen state). Saved with
+ * `rememberSaveable`, it waited to be restored until its place was next composed, which could be
+ * long after a restart: once a screen had loaded in between, a later failure with the same text
+ * wasn't read out (#329).
+ *
+ * A window without a view ID, such as a dialog's, takes the first free set of retained values as
+ * it attaches. So two dialogs shown again after a rotation in the other order would swap theirs,
+ * and a live region in one would be read out again. The Merge dialog keeps its turn: the dialogs
+ * that can show with it, its "Discard changes?" and the modal damaged-progress notice, open after
+ * it, and are composed after it when shown again.
  *
  * It's worked out once per text, so a live region stays one for as long as its text, however late
  * TalkBack looks at it.
