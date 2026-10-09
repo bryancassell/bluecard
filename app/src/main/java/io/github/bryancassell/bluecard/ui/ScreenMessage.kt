@@ -36,21 +36,29 @@ import androidx.compose.ui.unit.dp
  * significant UI changes like window changes". Besides TalkBack's "BlueCard", the pane title made
  * Compose throw when it had to merge the title into a parent, which happens only with a screen
  * reader on.
+ */
+@Composable
+fun ScreenMessage(text: String?, modifier: Modifier = Modifier) {
+    AnnouncedText(text, modifier.padding(16.dp))
+}
+
+/**
+ * [text], which screen readers announce as it appears, but not again after the phone rotates: a
+ * polite live region while [rememberIsNewText] says the text is new. Nothing while [text] is
+ * null.
  *
  * While it has no text, it's hidden from screen readers, which would otherwise stop on it when
  * swiping: Compose lets them focus any node with text, even empty text.
  */
 @Composable
-fun ScreenMessage(text: String?, modifier: Modifier = Modifier) {
+fun AnnouncedText(text: String?, modifier: Modifier = Modifier) {
     val isNew = rememberIsNewText(text)
     Text(
         text = text.orEmpty(),
-        modifier = modifier
-            .padding(16.dp)
-            .semantics {
-                if (isNew) liveRegion = LiveRegionMode.Polite
-                if (text == null) hideFromAccessibility()
-            }
+        modifier = modifier.semantics {
+            if (isNew) liveRegion = LiveRegionMode.Polite
+            if (text == null) hideFromAccessibility()
+        }
     )
 }
 

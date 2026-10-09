@@ -207,10 +207,11 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   screen keeps showing what's stored, so a change that failed visibly didn't
   happen. Data management, with several kinds of message, runs its own (`work`
   in `DataManagementViewModel`).
-- **A message that takes a screen's place comes from `LoadingOrMessage`**
-  (`ui/ScreenMessage.kt`). It's a live region, so screen readers announce it
-  as it appears ([#69](https://github.com/bryancassell/bluecard/issues/69)),
-  but not again after the phone rotates (see [Live regions](#live-regions)).
+- **A message that takes a screen's place is a `ScreenMessage`**
+  (`ui/ScreenMessage.kt`), which each screen shows with `LoadingOrMessage`.
+  It's a live region, so screen readers announce it as it appears
+  ([#69](https://github.com/bryancassell/bluecard/issues/69)), but not again
+  after the phone rotates (see [Live regions](#live-regions)).
 - **Any other exception is a bug and still crashes the app**, so it reaches
   [Android vitals](https://developer.android.com/topic/performance/vitals) once
   BlueCard is on Google Play. That's the only automatic crash reporting, since
@@ -374,16 +375,13 @@ both taps of a double tap can reach it.
 
 ### Live regions
 
-- **A live region is set only for text the scout should hear as it appears.**
-  Compose reports a node's first layout, and each later change to its size or
+- **A live region is set only when its text should be read out.** Compose
+  reports a node's first layout, and each later change to its size or
   position, as a change to it, and TalkBack reads a live region on any change
   it's the source of. So Badges' count becomes one only when its text first
   changes (`MatchCount` in `BadgesScreen.kt`), and a message only for text
   other than what its place showed last, even before the phone rotated
-  (`rememberIsNewText` in `ui/ScreenMessage.kt`). Read out as their screens
-  appeared, each held back the heading by 2 to 3 seconds
-  ([#278](https://github.com/bryancassell/bluecard/issues/278),
-  [#281](https://github.com/bryancassell/bluecard/issues/281)).
+  (`rememberIsNewText` in `ui/ScreenMessage.kt`).
 - **Set a live region from a value read while composing, not from a state read
   in the `semantics` block.** Compose updates a `semantics` block as soon as a
   state it reads changes, before the next frame composes the new text, so
@@ -978,7 +976,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Save failures](#load-and-save-failures) | A snackbar from UI state; the screen keeps showing what's stored | The UI layer guide's pattern for ViewModel messages |
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region | Screen readers hear it as it appears, but not again after rotation |
 | [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text goes on the `Text` inside it | TalkBack read one on the button and then the text too |
-| [Live regions](#live-regions) | A live region is set only for text the scout should hear as it appears | Compose reports a node's first layout as a change |
+| [Live regions](#live-regions) | A live region is set only when its text should be read out | Compose reports a node's first layout as a change |
 | [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
 | [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |

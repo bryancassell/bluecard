@@ -90,10 +90,15 @@ class LiveRegionReadouts {
                     val liveRegion = child.accessibilityNodeProvider
                         ?.createAccessibilityNodeInfo(sourceId)
                         ?.takeIf { it.liveRegion != View.ACCESSIBILITY_LIVE_REGION_NONE }
-                    // TalkBack reads a content description in place of the text, and nothing
-                    // from a live region with neither.
+                    // TalkBack reads a content description in place of the text. Without one,
+                    // it reads the text and then each child's, which this doesn't list, so a test
+                    // can't pass on a readout it missed.
                     val readout = liveRegion?.run {
-                        contentDescription.takeUnless { it.isNullOrEmpty() } ?: text
+                        val description = contentDescription.takeUnless { it.isNullOrEmpty() }
+                        check(description != null || childCount == 0) {
+                            "TalkBack would read this live region's children too: $this"
+                        }
+                        description ?: text
                     }
                     if (!readout.isNullOrEmpty()) readouts += readout.toString()
                 }
