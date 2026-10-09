@@ -518,7 +518,9 @@ records, not a real scout's.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
 pushes to `main`. Two jobs run side by side, and both must pass before a pull
-request can merge:
+request can merge. The pull request must also be up to date with `main`, so
+the checks have run on what `main` will have after the merge; if `main` has
+moved, merge it into the branch and wait for the checks again:
 
 - **Build** runs `./gradlew build`, the same command as locally.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
