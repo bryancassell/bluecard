@@ -2,16 +2,19 @@ package io.github.bryancassell.bluecard.testing
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityRecord
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
 import org.robolectric.Shadows.shadowOf
@@ -23,14 +26,13 @@ val isPoliteLiveRegion =
 private val isHidden = SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
 
 /**
- * Runs [show], which brings up [message], and checks that screen readers announce it: it's in a
- * polite live region that was already composed, hidden while it was empty, which Compose announces
- * when its text changes, unlike a new one (see `ScreenMessage`).
+ * Runs [show], which brings up [message], and checks that screen readers announce it: it's a
+ * polite live region, in the node composed hidden in its place while the screen loaded (see
+ * `LoadingOrMessage`).
  */
 fun SemanticsNodeInteractionsProvider.assertAnnouncedWhenShown(message: String, show: () -> Unit) {
     onNodeWithText(message).assertDoesNotExist()
-    val hiddenBefore = onAllNodes(isPoliteLiveRegion and isHidden).fetchSemanticsNodes()
-        .map { it.id }
+    val hiddenBefore = onAllNodes(isHidden).fetchSemanticsNodes().map { it.id }
     val wasHiddenBefore = SemanticsMatcher("was hidden in its place before it was shown") {
         it.id in hiddenBefore
     }
@@ -87,7 +89,10 @@ class LiveRegionReadouts {
                     val liveRegion = child.accessibilityNodeProvider
                         ?.createAccessibilityNodeInfo(sourceId)
                         ?.takeIf { it.liveRegion != View.ACCESSIBILITY_LIVE_REGION_NONE }
-                    if (liveRegion != null) readouts += liveRegion.text.toString()
+                    // TalkBack reads a content description in place of the text, and nothing
+                    // from a live region with neither.
+                    val readout = liveRegion?.run { contentDescription ?: text }
+                    if (!readout.isNullOrEmpty()) readouts += readout.toString()
                 }
                 return super.onRequestSendAccessibilityEvent(host, child, event)
             }
@@ -98,4 +103,28 @@ class LiveRegionReadouts {
     fun sinceLastCall(): List<String> = readouts.drop(readoutsListed).also {
         readoutsListed = readouts.size
     }
+}
+
+/**
+ * Waits [milliseconds], then as long as Compose takes to send the accessibility events for what
+ * changed, a frame at a time, running the work posted to the main thread between frames, as a
+ * phone does. Compose sends accessibility events from posted work, at most every 100 ms, which can
+ * run before the next frame composes the rest of a change.
+ *
+ * State the test changed is applied before each frame, as Compose applies a change made outside
+ * composition straight away on a phone (`GlobalSnapshotManager`). The test clock applies it only
+ * after one of its coroutines resumes, so with none waiting, a change made just before this went
+ * unseen, though only after other test classes had run.
+ */
+fun ComposeTestRule.waitRunningPostedWork(milliseconds: Long = 0) {
+    val clock = mainClock
+    val autoAdvance = clock.autoAdvance
+    clock.autoAdvance = false
+    val end = clock.currentTime + milliseconds + 500
+    while (clock.currentTime < end) {
+        Snapshot.sendApplyNotifications()
+        clock.advanceTimeByFrame()
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+    clock.autoAdvance = autoAdvance
 }
