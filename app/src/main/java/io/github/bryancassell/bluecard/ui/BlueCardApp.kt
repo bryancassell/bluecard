@@ -1,9 +1,16 @@
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -21,7 +28,12 @@ import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 fun BlueCardApp(uiState: MainActivityUiState, onDismissDamagedProgressNotice: () -> Unit) {
     ProvideStringsLanguageResources {
         BlueCardTheme {
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            val insets = ScaffoldDefaults.contentWindowInsets
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                topBar = { StatusBarBackground(insets) },
+                contentWindowInsets = insets
+            ) { innerPadding ->
                 when (uiState) {
                     // Composed while loading too, with no text, so screen readers hear the
                     // message (see ScreenMessage).
@@ -50,4 +62,22 @@ fun BlueCardApp(uiState: MainActivityUiState, onDismissDamagedProgressNotice: ()
             }
         }
     }
+}
+
+/**
+ * Fills the space behind the status bar in a color set apart from the page's: Material's color for
+ * a top app bar that a page has scrolled under. A page scrolled up to the bar ends at its edge; on
+ * the page's own color, its cut-off text ran into the clock. As the Scaffold's top bar, its height
+ * is where every page starts, so it's as tall as the top of the Scaffold's [insets], which pages
+ * would start below without it: the status bar, or a window's caption bar or a camera cutout where
+ * either is taller.
+ */
+@Composable
+private fun StatusBarBackground(insets: WindowInsets) {
+    Spacer(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsTopHeight(insets)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+    )
 }

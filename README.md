@@ -28,7 +28,7 @@ they turn backup off in the phone's settings.
   <img src="docs/images/home.png" width="250"
     alt="Home screen: a card with the Tenderfoot rank, a trail of the ranks from Scout to Eagle Scout, and Second Class next, then one badge completed and two in progress, Eagle-required progress, and the Camping and Cooking badges in progress">
   <img src="docs/images/badge-detail.png" width="250"
-    alt="Camping badge page: progress bar, Eagle-required label, the counselor's contact details, and the first requirements, two of them complete">
+    alt="Camping badge page: progress bar, Eagle-required label, a card saying the badge is in progress with a button to mark it completed, the counselor's contact details, and the first requirements, two of them complete">
   <img src="docs/images/tracker.png" width="250"
     alt="Camping requirement 9a: a log of three campouts, with a button to add another">
 </p>
