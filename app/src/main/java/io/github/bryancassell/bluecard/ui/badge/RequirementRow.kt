@@ -25,13 +25,14 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.readAsOneLabel
 
 // Composables shared by the Badge detail and Requirement detail screens.
 
@@ -119,6 +120,7 @@ private fun RequirementRow(
             add(eagleRequiredCountLabel(it))
         }
     }
+    val label = readAsOneLabel(item.number, item.summary, *lines.toTypedArray())
     ListItem(
         leadingContent = { RequirementNumber(item, numberWidth) },
         headlineContent = { Text(item.summary) },
@@ -128,28 +130,26 @@ private fun RequirementRow(
             {
                 Column {
                     lines.forEach { Text(it) }
-                    if (item.notNeeded) {
-                        Text(
-                            stringResource(R.string.requirement_not_needed),
-                            // Screen readers read it once, first, as the row's state.
-                            modifier = Modifier.clearAndSetSemantics {}
-                        )
-                    }
+                    // Screen readers read it as the row's state.
+                    if (item.notNeeded) Text(stringResource(R.string.requirement_not_needed))
                 }
             }
         },
         trailingContent = {
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
         },
-        // ListItem already reads as one item to screen readers, announced as a button that
-        // opens the requirement.
+        // Screen readers read the row as one button that opens the requirement, with a label
+        // of its own: TalkBack leaves out parts scrolled off screen (#312).
         modifier = Modifier
             .clickable(
                 onClickLabel = stringResource(R.string.requirement_open),
                 role = Role.Button,
                 onClick = { onOpen(item.number) }
             )
-            .semantics { stateDescription = state }
+            .clearAndSetSemantics {
+                contentDescription = label
+                stateDescription = state
+            }
     )
 }
 

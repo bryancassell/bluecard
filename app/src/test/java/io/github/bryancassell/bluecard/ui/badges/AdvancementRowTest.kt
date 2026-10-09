@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasProgressBarRangeInfo
@@ -79,10 +80,6 @@ class AdvancementRowTest {
         return layouts.single().lineCount
     }
 
-    /** The row's texts in the order screen readers read them. */
-    private fun rowTexts() = composeTestRule.onNode(hasClickAction()).fetchSemanticsNode()
-        .config[SemanticsProperties.Text].map { it.text }
-
     // At the largest text and display size, "In progress" left too little room beside it for
     // "Swimming" and "Eagle-required".
     @Config(qualifiers = NARROW_SCREEN, fontScale = 2f)
@@ -102,7 +99,8 @@ class AdvancementRowTest {
         assertTrue((bar.top + bar.bottom) / 2 > status.bottom)
         assertEquals(name.left, status.left)
         // Read in the same order as when it's beside them.
-        assertEquals(listOf("Swimming", "Eagle-required", "In progress"), rowTexts())
+        composeTestRule.onNode(hasClickAction())
+            .assertContentDescriptionEquals("Swimming. Eagle-required. In progress")
     }
 
     // As in Star 3's list of badges.

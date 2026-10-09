@@ -97,6 +97,8 @@ import io.github.bryancassell.bluecard.di.ReportModule
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
+import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
@@ -317,7 +319,7 @@ class MainActivityTest {
     private fun openCamping() {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.onReadAsOne("Camping").performClick()
     }
 
     // The checkbox on a requirement's own page.
@@ -327,7 +329,7 @@ class MainActivityTest {
     // Opens the requirement with this summary, marks it complete on its page, and goes back.
     // Badge detail's status card can push the requirement down the page.
     private fun completeOnItsPage(summary: String) {
-        composeTestRule.onNodeWithText(summary).performScrollTo().performClick()
+        composeTestRule.onReadAsOne(summary).performScrollTo().performClick()
         completedCheckbox().performClick()
         composeTestRule.waitForIdle()
         pressBack()
@@ -346,7 +348,7 @@ class MainActivityTest {
      */
     private fun assertHomeBackAtCamping() {
         home().assertExists()
-        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsDisplayed()
+        composeTestRule.onReadAsOne("Camping").assertIsDisplayed()
     }
 
     /** Badges is showing, and Badge detail isn't. */
@@ -514,8 +516,8 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
         assertFieldEmpty("Search merit badges")
-        composeTestRule.onNodeWithText("Camping").performClick()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Camping").performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         assertFieldEmpty("Notes")
     }
 
@@ -525,7 +527,7 @@ class MainActivityTest {
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
-        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.onReadAsOne("Camping").performClick()
         composeTestRule.onNodeWithText("Add counselor").performScrollTo().performClick()
         assertFieldEmpty("Name")
         assertFieldEmpty("Phone")
@@ -562,7 +564,7 @@ class MainActivityTest {
 
         home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Merit badges").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Camping").assertIsDisplayed()
     }
 
     @Test
@@ -578,7 +580,7 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Merit badges").performScrollTo().performClick()
 
-        composeTestRule.onNodeWithText("In progress").assertIsDisplayed()
+        composeTestRule.onReadAsOne("In progress").assertIsDisplayed()
     }
 
     @Test
@@ -587,7 +589,7 @@ class MainActivityTest {
 
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
         // Under the status card, down the page.
-        composeTestRule.onNodeWithText("First.").performScrollTo().assertIsDisplayed()
+        composeTestRule.onReadAsOne("First.").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Merit badges").assertDoesNotExist()
     }
 
@@ -602,7 +604,7 @@ class MainActivityTest {
         }
         launchWithProfile()
 
-        composeTestRule.onNodeWithText("Camping").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Camping").performScrollTo().performClick()
 
         home().assertDoesNotExist()
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
@@ -643,7 +645,7 @@ class MainActivityTest {
     fun onDeviceWithOtherDigits_numbersUseStringsLanguageDigits() {
         openCamping()
 
-        composeTestRule.onNodeWithText("Do 1 of 2").performScrollTo().assertIsDisplayed()
+        composeTestRule.onReadAsOne("Do 1 of 2").performScrollTo().assertIsDisplayed()
     }
 
     // The activity takes the strings' language's direction, so on a right-to-left device its
@@ -674,7 +676,7 @@ class MainActivityTest {
 
         openCamping()
 
-        // ListItem merges its texts into one node, so find each in the unmerged tree.
+        // The row has a label of its own in place of its texts, so find each in the unmerged tree.
         val number = composeTestRule.onNodeWithText("1", useUnmergedTree = true)
             .getBoundsInRoot()
         val text = composeTestRule.onNodeWithText("First.", useUnmergedTree = true)
@@ -768,35 +770,35 @@ class MainActivityTest {
     fun openRequirement_showsRequirementDetail() {
         openCamping()
 
-        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Second.").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Choice A.").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Choice A.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Our summary of Camping.").assertDoesNotExist()
     }
 
     @Test
     fun openSubRequirement_showsItsOwnPage() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Second.").performScrollTo().performClick()
 
-        composeTestRule.onNodeWithText("Choice B.").performClick()
+        composeTestRule.onReadAsOne("Choice B.").performClick()
 
         composeTestRule.onNodeWithText("Requirement 2b").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Part of B.").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Part of B.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
 
     @Test
     fun back_fromRequirementDetail_returnsToBadgeDetail() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Second.").performScrollTo().performClick()
         composeTestRule.waitForIdle()
 
         pressBack()
 
         // Back on Badge detail, where it was left: scrolled down to the requirement.
-        composeTestRule.onNodeWithText("Second.").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Second.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Our summary of Camping.").assertExists()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
@@ -809,31 +811,31 @@ class MainActivityTest {
         openCamping()
         completeOnItsPage("First.")
         // The badge in progress's bar pushes its requirements down the page.
-        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Second.").performScrollTo().performClick()
 
         // Requirement 2 needs one of its two choices.
         completeOnItsPage("Choice A.")
 
-        composeTestRule.onNode(hasText("Choice A.") and hasStateDescription("Completed"))
+        composeTestRule.onReadAsOne("Choice A.").assert(hasStateDescription("Completed"))
             .assertIsDisplayed()
-        composeTestRule.onNode(hasText("Choice B.") and hasStateDescription("Not needed"))
+        composeTestRule.onReadAsOne("Choice B.").assert(hasStateDescription("Not needed"))
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
         // The completed badge's report buttons push its requirements down the page.
-        composeTestRule.onNode(hasText("Second.") and hasStateDescription("Completed"))
+        composeTestRule.onReadAsOne("Second.").assert(hasStateDescription("Completed"))
             .performScrollTo()
             .assertIsDisplayed()
         composeTestRule.waitForIdle()
         pressBack()
-        composeTestRule.onNode(hasText("Camping") and hasText("Completed")).assertIsDisplayed()
+        composeTestRule.onReadAsOne("Camping").assert(hasLine("Completed")).assertIsDisplayed()
     }
 
     @Test
     fun requirementPage_recordsCompletionDateAndComment() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
 
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Completed on May 20, 2026").assertIsDisplayed()
@@ -848,7 +850,7 @@ class MainActivityTest {
         // Back on the badge's page, the requirement's row shows it's complete.
         composeTestRule.waitForIdle()
         pressBack()
-        composeTestRule.onNode(hasText("First.") and hasStateDescription("Completed"))
+        composeTestRule.onReadAsOne("First.").assert(hasStateDescription("Completed"))
             .assertIsDisplayed()
     }
 
@@ -857,7 +859,7 @@ class MainActivityTest {
     // Launches the app, opens a new night on Camping 1's tracker and types in it, without saving.
     private fun typeAnUnsavedNight() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
         weatherField().performTextInput("Rained all night.")
         composeTestRule.waitForIdle()
@@ -868,7 +870,7 @@ class MainActivityTest {
     @Test
     fun trackerRow_isAddedAndCounted() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Night 1").assertIsDisplayed()
@@ -877,7 +879,7 @@ class MainActivityTest {
 
         // Saving closes the row's page.
         composeTestRule.onNodeWithText("1 night").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNode(hasText("Night 1") and hasText("Rained all night."))
+        composeTestRule.onReadAsOne("Night 1").assert(hasLine("Rained all night."))
             .performScrollTo()
             .assertIsDisplayed()
         assertEquals(
@@ -886,7 +888,7 @@ class MainActivityTest {
         )
         composeTestRule.waitForIdle()
         pressBack()
-        composeTestRule.onNode(hasText("First.") and hasText("1 night")).assertIsDisplayed()
+        composeTestRule.onReadAsOne("First.").assert(hasLine("1 night")).assertIsDisplayed()
     }
 
     @Test
@@ -902,16 +904,16 @@ class MainActivityTest {
             )
         }
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
 
-        composeTestRule.onNodeWithText("Night 1").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Night 1").performScrollTo().performClick()
         weatherField().performTextInput(" Saw a meteor.")
         composeTestRule.onNodeWithText("Save").performScrollTo().performClick()
-        composeTestRule.onNode(hasText("Night 1") and hasText("Clear skies. Saw a meteor."))
+        composeTestRule.onReadAsOne("Night 1").assert(hasLine("Clear skies. Saw a meteor."))
             .performScrollTo()
             .assertIsDisplayed()
 
-        composeTestRule.onNodeWithText("Night 1").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Night 1").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Delete").performScrollTo().performClick()
         composeTestRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
 
@@ -1016,7 +1018,7 @@ class MainActivityTest {
         openCamping()
         // Saved straight away, so Back doesn't ask about it.
         completeOnItsPage("First.")
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         field("Notes").performScrollTo().performTextInput("Planned it with my patrol.")
         composeTestRule.waitForIdle()
 
@@ -1026,7 +1028,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Discard").performClick()
 
         // Back on Badge detail, where it was left: scrolled down to the requirement.
-        composeTestRule.onNodeWithText("First.").assertIsDisplayed()
+        composeTestRule.onReadAsOne("First.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Our summary of Camping.").assertExists()
         composeTestRule.onNodeWithText("Requirement 1").assertDoesNotExist()
         assertEquals(
@@ -1061,14 +1063,14 @@ class MainActivityTest {
     @Test
     fun back_justAfterOpeningAPage_closesIt_withoutAskingAboutUnsavedNotes() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Second.").performScrollTo().performClick()
         field("Notes").performScrollTo().performTextInput("Chose B.")
-        composeTestRule.onNodeWithText("Choice B.").performScrollTo()
+        composeTestRule.onReadAsOne("Choice B.").performScrollTo()
         composeTestRule.waitForIdle()
 
         // Back before the next frame, while Requirement 2 is still the page drawn.
         composeTestRule.mainClock.autoAdvance = false
-        composeTestRule.onNodeWithText("Choice B.").performClick()
+        composeTestRule.onReadAsOne("Choice B.").performClick()
         scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         composeTestRule.mainClock.autoAdvance = true
 
@@ -1081,7 +1083,7 @@ class MainActivityTest {
     @Test
     fun twoBacksBeforeTheNextFrame_fromAPageOverUnsavedNotes_askAboutThem() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         field("Notes").performScrollTo().performTextInput("Planned it with my patrol.")
         composeTestRule.onNodeWithText("Add night").performScrollTo().performClick()
         weatherField().assertIsDisplayed()
@@ -1104,7 +1106,7 @@ class MainActivityTest {
     @Test
     fun onDeviceInOtherLanguage_datesUseStringsLanguage() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
 
         completedCheckbox().performClick()
 
@@ -1119,7 +1121,7 @@ class MainActivityTest {
     fun onRightToLeftDevice_datePickerIsRightToLeft() {
         assertDeviceIsRightToLeft()
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         completedCheckbox().performClick()
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
@@ -1135,7 +1137,7 @@ class MainActivityTest {
     @Test
     fun datePicker_restoredWithAnEarlierToday_cantConfirmADayItDoesntOffer() {
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         // It opens at the completion date, today.
@@ -1164,7 +1166,7 @@ class MainActivityTest {
     fun datePicker_restoredOnANarrowerWindow_switchesToTypingTheDate() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         composeTestRule.pickerDay("May 12, 2026").performClick()
@@ -1194,7 +1196,7 @@ class MainActivityTest {
     fun datePicker_restoredTypingOnAWiderWindow_keepsTheKeyboardDownUntilTheScoutSwitches() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
         openCamping()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
         completedCheckbox().performClick()
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         composeTestRule.pickerDateField()
@@ -1366,7 +1368,7 @@ class MainActivityTest {
         }
 
         // Camping, the catalog's only badge.
-        composeTestRule.onNode(hasText("Camping") and hasClickAction()).assertIsFocused()
+        composeTestRule.onReadAsOne("Camping").assertIsFocused()
     }
 
     @Test
@@ -1415,7 +1417,7 @@ class MainActivityTest {
     // Out of touch mode, opens Camping's first requirement.
     private fun openRequirementOutOfTouchMode() {
         openCampingOutOfTouchMode()
-        composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("First.").performScrollTo().performClick()
     }
 
     // Out of touch mode, types in a requirement's notes, ready to save them.
@@ -1491,7 +1493,7 @@ class MainActivityTest {
         pressBack()
 
         notesField().assertDoesNotExist()
-        composeTestRule.onNodeWithText("First.").assertExists()
+        composeTestRule.onReadAsOne("First.").assertExists()
     }
 
     /**
@@ -1581,7 +1583,7 @@ class MainActivityTest {
         pressBack()
 
         completedCheckbox().assertDoesNotExist()
-        composeTestRule.onNodeWithText("First.").assertExists()
+        composeTestRule.onReadAsOne("First.").assertExists()
     }
 
     // Once focus moves on, the focus target around the pages can't take it again, which would
@@ -1596,7 +1598,7 @@ class MainActivityTest {
         pressBack()
 
         completedCheckbox().assertDoesNotExist()
-        composeTestRule.onNodeWithText("First.").assertExists()
+        composeTestRule.onReadAsOne("First.").assertExists()
     }
 
     // Mark completed leaves composition once a date is picked, as Change date and Unmark take its
@@ -1798,7 +1800,7 @@ class MainActivityTest {
     private fun openScout() {
         launchWithProfile()
         composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Scout").performClick()
+        composeTestRule.onReadAsOne("Scout").performClick()
     }
 
     @Test
@@ -1809,9 +1811,9 @@ class MainActivityTest {
 
         home().assertDoesNotExist()
         composeTestRule.onNode(isHeading() and hasText("Ranks")).assertIsDisplayed()
-        composeTestRule.onNode(hasText("Scout") and hasText("In progress")).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Camping").assertDoesNotExist()
+        composeTestRule.onReadAsOne("Scout").assert(hasLine("In progress")).assertIsDisplayed()
+        composeTestRule.onReadAsOne("Tenderfoot").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Camping", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -1834,7 +1836,7 @@ class MainActivityTest {
         openScout()
 
         composeTestRule.onNodeWithText("Our summary of Scout.").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Scout's first.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Scout's first.").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Requirement 1").assertIsDisplayed()
         composeTestRule.onNodeWithText("Our summary of Scout.").assertDoesNotExist()
@@ -1847,7 +1849,7 @@ class MainActivityTest {
 
         pressBack()
 
-        composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Tenderfoot").assertIsDisplayed()
         composeTestRule.onNodeWithText("Our summary of Scout.").assertDoesNotExist()
     }
 
@@ -1861,8 +1863,8 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
         pressBack()
 
-        composeTestRule.onNode(hasText("Scout") and hasText("Earned")).assertIsDisplayed()
-        composeTestRule.onNode(hasText("Tenderfoot") and hasText("In progress"))
+        composeTestRule.onReadAsOne("Scout").assert(hasLine("Earned")).assertIsDisplayed()
+        composeTestRule.onReadAsOne("Tenderfoot").assert(hasLine("In progress"))
             .assertIsDisplayed()
     }
 
@@ -1925,10 +1927,10 @@ class MainActivityTest {
         }
         launchWithProfile()
         composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
-        composeTestRule.onNodeWithText("Tenderfoot").performClick()
-        composeTestRule.onNodeWithText("Earn a merit badge.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Tenderfoot").performClick()
+        composeTestRule.onReadAsOne("Earn a merit badge.").performScrollTo().performClick()
 
-        composeTestRule.onNodeWithText("Camping").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Camping").performScrollTo().performClick()
 
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
         composeTestRule.waitForIdle()
@@ -1954,10 +1956,10 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Ranks").performScrollTo().performClick()
 
-        tapTwiceInOneFrame("Scout")
+        tapTwiceInOneFrame(composeTestRule.onReadAsOne("Scout"))
         pressBack()
 
-        composeTestRule.onNodeWithText("Tenderfoot").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Tenderfoot").assertIsDisplayed()
     }
 
     @Test
@@ -2014,9 +2016,9 @@ class MainActivityTest {
             )
         }
         launchWithProfile()
-        composeTestRule.onNodeWithText("Camping").performScrollTo()
+        composeTestRule.onReadAsOne("Camping").performScrollTo()
 
-        tapTwiceInOneFrame("Camping")
+        tapTwiceInOneFrame(composeTestRule.onReadAsOne("Camping"))
         pressBack()
 
         assertHomeBackAtCamping()
@@ -2123,14 +2125,14 @@ class MainActivityTest {
     @Test
     fun doubleTap_onRequirement_opensItOnce() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performScrollTo()
+        composeTestRule.onReadAsOne("Second.").performScrollTo()
 
-        tapTwiceInOneFrame("Second.")
+        tapTwiceInOneFrame(composeTestRule.onReadAsOne("Second."))
         pressBack()
 
         // Back on Badge detail, where it was left: scrolled down to the requirement. A second
         // copy of its page would still show.
-        composeTestRule.onNodeWithText("Second.").assertIsDisplayed()
+        composeTestRule.onReadAsOne("Second.").assertIsDisplayed()
         composeTestRule.onNodeWithText("Our summary of Camping.").assertExists()
         composeTestRule.onNodeWithText("Requirement 2").assertDoesNotExist()
     }
@@ -2138,9 +2140,9 @@ class MainActivityTest {
     @Test
     fun doubleTap_onSubRequirement_opensItOnce() {
         openCamping()
-        composeTestRule.onNodeWithText("Second.").performScrollTo().performClick()
+        composeTestRule.onReadAsOne("Second.").performScrollTo().performClick()
 
-        tapTwiceInOneFrame("Choice B.")
+        tapTwiceInOneFrame(composeTestRule.onReadAsOne("Choice B."))
         pressBack()
 
         composeTestRule.onNodeWithText("Requirement 2").assertIsDisplayed()
@@ -2168,7 +2170,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Merit badges").performClick()
         composeTestRule.mainClock.advanceTimeBy(350)
         home().assertExists()
-        composeTestRule.onNodeWithText("Camping").performClick()
+        composeTestRule.onReadAsOne("Camping").performClick()
         composeTestRule.mainClock.autoAdvance = true
 
         composeTestRule.onNodeWithText("Our summary of Camping.").assertIsDisplayed()
@@ -2178,7 +2180,7 @@ class MainActivityTest {
     fun tap_onBadgesLeavingForOnboarding_doesNothing() {
         launchWithProfile()
         composeTestRule.onNodeWithText("Merit badges").performClick()
-        val camping = composeTestRule.onNodeWithText("Camping").assertIsDisplayed()
+        val camping = composeTestRule.onReadAsOne("Camping").assertIsDisplayed()
 
         // The profile goes missing, and the scout taps a badge while Badges animates out.
         composeTestRule.mainClock.autoAdvance = false
@@ -2196,7 +2198,7 @@ class MainActivityTest {
     }
 
     // Badge detail's heading also says "Camping", so match the list's row.
-    private fun campingRow() = composeTestRule.onNode(hasText("Camping") and hasClickAction())
+    private fun campingRow() = composeTestRule.onReadAsOne("Camping")
 
     @Test
     fun openingPage_slidesItInFromTheRight_andThePageLeftSlidesLeft() {
