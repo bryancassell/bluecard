@@ -118,19 +118,14 @@ Dependabot proposes those updates instead.
 
 **When lint itself crashes.** Now and then a lint task, such as
 `lintAnalyzeDebugUnitTest`, fails with "Unexpected failure during lint analysis
-of … (this is a bug in lint or one of the libraries it depends on)" or "Could
-not initialize class com.intellij.ide.plugins.PluginEnabler". That's lint
-crashing, not a problem lint found in the code. First save the build's output.
-For the first message, it has the crash's full stack trace
-(`android.lint.printStackTrace` in `gradle.properties`), which a bug report to
-Google needs. Lint's report files have only a few lines of it. Then run the
-command again with `--no-daemon`. Lint runs inside the Gradle daemon and keeps
-its state there from one build to the next. A plain rerun can crash the same
-way or, after 20 crashes in that daemon, pass without checking the files lint
-crashed on. `--no-daemon` runs the build in a new JVM, which starts lint
-afresh, and unlike `./gradlew --stop`, it leaves other builds' daemons
-running. The daemon that crashed keeps lint's state until it exits, so if a
-later build crashes the same way, add `--no-daemon` again.
+of … (this is a bug in lint or one of the libraries it depends on)". That's
+lint crashing, not a problem lint found in the code. Running the same command
+again has passed in every case reported so far. A bug report to Google needs
+lint's whole message. Gradle keeps each build's output in
+`~/.gradle/daemon/<Gradle version>/daemon-<pid>.out.log` for 14 days, so the
+message is there after the console has lost it:
+`grep -l "Unexpected failure during lint" ~/.gradle/daemon/*/*.out.log` finds
+it.
 
 ## Project layout
 
