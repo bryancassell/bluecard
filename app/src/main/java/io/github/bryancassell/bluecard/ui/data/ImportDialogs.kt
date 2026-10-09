@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -34,7 +35,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -48,6 +51,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
@@ -114,6 +119,7 @@ fun MergeDialog(
             decorFitsSystemWindows = false
         )
     ) {
+        UseSystemBarIconsForTheme()
         Surface(modifier = Modifier.fillMaxSize()) {
             IgnoreTouchesAsItOpens {
                 Column(modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -157,6 +163,25 @@ fun MergeDialog(
                 },
                 onDismiss = { confirmingDiscard = false }
             )
+        }
+    }
+}
+
+/**
+ * Gives a full-screen dialog's system bars icons that show on its page: dark on the light page,
+ * light on the dark one, as enableEdgeToEdge() chooses for MainActivity's. Android takes the
+ * icons from the top full-screen window, which is the dialog's, and that window doesn't get
+ * MainActivity's: on Android 8 its navigation bar icons were white on the light page. The window
+ * draws no bar backgrounds, so the dialog's own page, its surface color, shows behind the bars.
+ */
+@Composable
+private fun UseSystemBarIconsForTheme() {
+    val window = (LocalView.current.parent as DialogWindowProvider).window
+    val light = MaterialTheme.colorScheme.surface.luminance() > 0.5f
+    SideEffect {
+        WindowCompat.getInsetsController(window, window.decorView).run {
+            isAppearanceLightStatusBars = light
+            isAppearanceLightNavigationBars = light
         }
     }
 }
