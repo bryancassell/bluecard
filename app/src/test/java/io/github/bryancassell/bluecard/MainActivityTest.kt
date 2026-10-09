@@ -1238,6 +1238,17 @@ class MainActivityTest {
     private fun press(key: Key) = composeTestRule.onRoot().performKeyInput { pressKey(key) }
 
     /**
+     * Scrolls [node] into view on its page, gives it input focus as Tab would, and presses Enter,
+     * as a hardware keyboard does.
+     */
+    private fun pressWithEnter(node: SemanticsNodeInteraction) {
+        node.performScrollTo().performSemanticsAction(SemanticsActions.RequestFocus)
+            .assertIsFocused()
+
+        press(Key.Enter)
+    }
+
+    /**
      * Out of touch mode, gives Badges' search field focus and goes Back to Home. A phone is out
      * of touch mode after a key press, and stays so while TalkBack is on, since its gestures
      * don't touch the app. Robolectric starts out of touch mode anyway; this says so for the tests.
@@ -1274,7 +1285,8 @@ class MainActivityTest {
         assertNothingFocused()
     }
 
-    // A Home item that took focus here would pass it to Badges' first item as Home went.
+    // A Home item that took focus here would lose it as Home went, to the focus target around the
+    // pages.
     @Test
     fun tab_whilePagesSlide_movesFocusIntoTheArrivingPage() {
         leaveBadgesWithSearchFocused()
@@ -1394,11 +1406,21 @@ class MainActivityTest {
 
     private fun saveNotesButton() = composeTestRule.onNodeWithText("Save notes")
 
-    // Out of touch mode, types in a requirement's notes, ready to save them.
-    private fun typeNotesOutOfTouchMode() {
+    // Out of touch mode, opens Camping's page.
+    private fun openCampingOutOfTouchMode() {
         InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
         openCamping()
+    }
+
+    // Out of touch mode, opens Camping's first requirement.
+    private fun openRequirementOutOfTouchMode() {
+        openCampingOutOfTouchMode()
         composeTestRule.onNodeWithText("First.").performScrollTo().performClick()
+    }
+
+    // Out of touch mode, types in a requirement's notes, ready to save them.
+    private fun typeNotesOutOfTouchMode() {
+        openRequirementOutOfTouchMode()
         notesField().performClick().performTextInput("Planned it with my patrol.")
         saveNotesButton().performScrollTo()
     }
@@ -1426,9 +1448,8 @@ class MainActivityTest {
     @Test
     fun enterOnSaveNotes_outOfTouchMode_focusesNothing() {
         typeNotesOutOfTouchMode()
-        saveNotesButton().performSemanticsAction(SemanticsActions.RequestFocus).assertIsFocused()
 
-        press(Key.Enter)
+        pressWithEnter(saveNotesButton())
 
         assertNothingFocused()
     }
@@ -1517,6 +1538,167 @@ class MainActivityTest {
         typeAnUnsavedNight()
 
         saveOutOfTouchModeAndClose(fieldOnThePage = "Weather")
+    }
+
+    /**
+     * Out of touch mode, presses Remove date on a requirement's page with a key. The button
+     * leaves composition as it's pressed, and Add date takes Change date's place.
+     */
+    private fun removeDateWithEnter() {
+        openRequirementOutOfTouchMode()
+        completedCheckbox().performClick()
+
+        pressWithEnter(composeTestRule.onNodeWithText("Remove date"))
+
+        composeTestRule.onNodeWithText("Add date").assertExists()
+    }
+
+    // Otherwise, Android's View.clearFocus() asks the view to take focus again, and the page's
+    // first item, the Completed checkbox, took it.
+    @Test
+    fun enterOnRemoveDate_outOfTouchMode_focusesNothing() {
+        removeDateWithEnter()
+
+        assertNothingFocused()
+    }
+
+    @Test
+    fun tab_afterRemovingADate_movesFocusIntoThePage() {
+        removeDateWithEnter()
+
+        press(Key.Tab)
+
+        completedCheckbox().assertIsFocused()
+    }
+
+    // Focus is now on the focus target around the pages, which Back mustn't stop at.
+    @Test
+    fun back_afterRemovingADate_leavesThePage() {
+        removeDateWithEnter()
+        // pressBack() doesn't wait for Compose, so let focus settle first.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        completedCheckbox().assertDoesNotExist()
+        composeTestRule.onNodeWithText("First.").assertExists()
+    }
+
+    // Once focus moves on, the focus target around the pages can't take it again, which would
+    // stop Back.
+    @Test
+    fun back_afterRemovingADateAndTabbingIntoThePage_leavesThePage() {
+        removeDateWithEnter()
+        press(Key.Tab)
+        // pressBack() doesn't wait for Compose, so let focus settle first.
+        composeTestRule.waitForIdle()
+
+        pressBack()
+
+        completedCheckbox().assertDoesNotExist()
+        composeTestRule.onNodeWithText("First.").assertExists()
+    }
+
+    // Mark completed leaves composition once a date is picked, as Change date and Unmark take its
+    // place.
+    @Test
+    fun enterOnMarkCompleted_outOfTouchMode_focusesNothingOnceADateIsPicked() {
+        openCampingOutOfTouchMode()
+        pressWithEnter(composeTestRule.onNodeWithText("Mark completed"))
+
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        composeTestRule.onNodeWithText("Unmark").assertExists()
+        assertNothingFocused()
+    }
+
+    // Unmark and Change date leave composition, as Mark completed takes their place.
+    @Test
+    fun enterOnUnmark_outOfTouchMode_focusesNothing() {
+        openCampingOutOfTouchMode()
+        composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("OK").performClick()
+
+        pressWithEnter(composeTestRule.onNodeWithText("Unmark"))
+
+        composeTestRule.onNodeWithText("Mark completed").assertExists()
+        assertNothingFocused()
+    }
+
+    // Clear progress leaves composition once the scout confirms.
+    @Test
+    fun enterOnClearProgress_outOfTouchMode_focusesNothingOnceConfirmed() {
+        openRequirementOutOfTouchMode()
+        completedCheckbox().performClick()
+        pressWithEnter(composeTestRule.onNodeWithText("Clear progress"))
+
+        composeTestRule.onNodeWithText("Clear").performClick()
+
+        composeTestRule.onNodeWithText("Clear progress").assertDoesNotExist()
+        assertNothingFocused()
+    }
+
+    /**
+     * Out of touch mode, presses Clear all in Data management with a key and confirms. It's
+     * disabled once confirmed, with nothing left to clear.
+     */
+    private fun clearAllWithEnter() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
+        runBlocking {
+            progressRepository.startBadge(
+                "camping",
+                requirementsVersion = LocalDate.of(2026, 1, 1),
+                startedDate = LocalDate.of(2026, 3, 1)
+            )
+        }
+        launchWithProfile()
+        composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
+        pressWithEnter(composeTestRule.onNodeWithText("Clear all"))
+
+        composeTestRule.onNodeWithText("Clear").performClick()
+
+        composeTestRule.onNodeWithText("Clear all").assertIsNotEnabled()
+    }
+
+    @Test
+    fun enterOnClearAll_outOfTouchMode_focusesNothingOnceConfirmed() {
+        clearAllWithEnter()
+
+        assertNothingFocused()
+    }
+
+    // A disabled button gives up focus at once, not once the change is applied as a removed one
+    // does.
+    @Test
+    fun tab_afterClearingAll_movesFocusIntoThePage() {
+        clearAllWithEnter()
+
+        press(Key.Tab)
+
+        // Edit, for the scout's name and unit number.
+        composeTestRule.onNodeWithText("Edit").assertIsFocused()
+    }
+
+    // From Android 9, in touch mode, Android doesn't ask the view to take focus again as a focused
+    // item goes, so the focus target around the pages mustn't be left able to take it. A later key
+    // press that leaves touch mode asks the view to take focus going down, and the target would
+    // take it. Onboarding's fields are disabled once saved, as Home replaces the page.
+    @Test
+    fun leavingTouchMode_afterAFocusedFieldWasDisabled_focusesThePagesFirstItem() {
+        InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
+        launch()
+        field("Name").performTextInput("Alex Scout")
+        field("Unit number").performTextInput("123")
+        field("Unit number").assertIsFocused()
+        composeTestRule.onNodeWithText("Get started").performClick()
+        home().assertIsDisplayed()
+        assertNothingFocused()
+
+        // As a key press does on a phone (ViewRootImpl.leaveTouchMode()). Robolectric's keys go
+        // straight to Compose, and setInTouchMode() doesn't reach a window that's showing.
+        scenario.onActivity { it.window.decorView.requestFocusFromTouch() }
+
+        rankCard("Next: Scout").assertIsFocused()
     }
 
     @Test

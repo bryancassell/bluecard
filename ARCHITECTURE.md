@@ -402,14 +402,15 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   TalkBack's gestures don't bring it back: only a touch that reaches the app
   does. So when the page shown changes while one of its items has focus, a
   focus target around the pages takes it (`BlueCardNavDisplay`). It can take
-  focus only as it's given it there, and keeps it only until focus moves on:
+  focus only as it's given it there, or as a page's focused item goes
+  (below), and keeps it only until focus moves on:
   Compose moves focus out to a parent that can take it on Back
   (`FocusDirection.Exit`), so Back would stop there rather than leave the
   page, and Tab would stop there as it starts on a page or wraps around. A
   page that's sliding away can't take focus
   (`rememberRefuseFocusWhileLeavingNavEntryDecorator`), or a key pressed
-  during the slide could focus it, and its focus would pass to the next page
-  as it went.
+  during the slide could focus it, and its focus would go to the focus target
+  as the page went, rather than into the page arriving.
 - **A page that clears input focus doesn't hand it to its first item.** Save
   closes the keyboard with `FocusManager.clearFocus()`, which clears the
   view's focus the same way. With a hardware keyboard, focus went to a
@@ -420,10 +421,18 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   page, and a page can close the keyboard that way. It does so even while it
   has focus itself, as after a page opened from a field closes again. A
   screen reader or switch can then press Save without moving focus.
-  It can't when a focused item leaves composition or can no longer take
-  focus, such as a button that's disabled, since Compose clears focus then
-  without asking. Those still hand focus to the page's first item
-  ([#301](https://github.com/bryancassell/bluecard/issues/301)).
+- **Nor does a page whose focused item goes.** A focused item that leaves
+  composition or can no longer take focus, such as a button that's disabled
+  as it's pressed, loses focus without Compose asking `onExit`, and Android
+  then asks the view to take focus again
+  ([#301](https://github.com/bryancassell/bluecard/issues/301)). So the
+  focus target around the pages can also take focus as a page loses it that
+  way, but only briefly, until a task posted then runs: Android asks in the
+  same message, if it asks at all. From Android 9 it doesn't ask in touch
+  mode, and a target still able to take focus would take the request from a
+  later key press that leaves touch mode, an empty stop. A focusable View
+  before the `ComposeView` would also answer Android's request when a key is
+  pressed with nothing focused, and as the app starts.
 
 ### Double taps
 
@@ -1612,7 +1621,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
 | [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page and used by Now in Android; stable since 1.0.0 |
-| [Focus between pages](#navigation) | A focus target around the pages takes input focus from a page that's left with it, or that clears it as Save does, and can't take focus otherwise. A page sliding away can't take focus | Out of touch mode, Compose gave focus to the next page's first item, which opened the keyboard on Badges. Save's `clearFocus()` gave it to the page's own first item. A target that could always take focus would stop Back leaving a page, and be an empty stop for Tab |
+| [Focus between pages](#navigation) | A focus target around the pages takes input focus from a page that's left with it, that clears it as Save does, or whose focused item goes, and can't take focus otherwise. A page sliding away can't take focus | Out of touch mode, Compose gave focus to the next page's first item, which opened the keyboard on Badges. Save's `clearFocus()`, and a focused button that went or was disabled, gave it to the page's own first item. A target that could always take focus would stop Back leaving a page, and be an empty stop for Tab |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>`, saved with the sealed interface's serializer, not `rememberNavBackStack` | No reflection, so R8 can't break saving the back stack and local tests cover it. The compiler rejects a key outside `BlueCardNavKey`, and `NavKeysTest` one missing `@Serializable`. Needs no experimental API, unlike registering keys in a `SavedStateConfiguration` with `subclassesOfSealed` |
 | [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | DataStore guide's own criteria; Room 2.8 over Room 3 because BlueCard doesn't need Kotlin Multiplatform |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
