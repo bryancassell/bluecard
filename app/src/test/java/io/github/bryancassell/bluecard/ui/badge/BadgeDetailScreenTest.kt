@@ -1163,6 +1163,11 @@ class BadgeDetailScreenTest {
         val (changeDate, unmark) = buttons
         assertTrue(unmark.top >= changeDate.bottom)
         assertEquals(changeDate.left, unmark.left)
+        // As far apart as the date picker's stacked buttons.
+        val (changeDateButton, unmarkButton) = listOf("Change date", "Unmark").map {
+            composeTestRule.onNodeWithText(it).getBoundsInRoot()
+        }
+        assertEquals(12f, (unmarkButton.top - changeDateButton.bottom).value, 0.5f)
     }
 
     @Test

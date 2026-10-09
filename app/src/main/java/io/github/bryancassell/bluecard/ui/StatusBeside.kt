@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.ui
 
 import android.icu.text.BreakIterator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -25,10 +26,13 @@ fun statusFitsBeside(
     width: Int
 ): Boolean {
     val measurer = rememberTextMeasurer()
-    val besideWidth = width - measurer.measure(status, statusStyle).size.width
-    return besideWidth > 0 && lines.none { (text, style) ->
-        measurer.measure(text, style, constraints = Constraints(maxWidth = besideWidth))
-            .breaksAWord()
+    // The measurer is new for a new density, font or layout direction.
+    return remember(measurer, status, statusStyle, lines, width) {
+        val besideWidth = width - measurer.measure(status, statusStyle).size.width
+        besideWidth > 0 && lines.none { (text, style) ->
+            measurer.measure(text, style, constraints = Constraints(maxWidth = besideWidth))
+                .breaksAWord()
+        }
     }
 }
 

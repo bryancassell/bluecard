@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
@@ -69,12 +70,7 @@ fun AdvancementRow(
     val percentDone = fractionDone?.let { percentDoneDescription(it) }
     BoxWithConstraints(modifier) {
         val typography = MaterialTheme.typography
-        // In the styles ListItem gives its slots, and the width it leaves the text and status:
-        // the row's, less its padding at both ends together and before the status, each rounded
-        // to pixels on its own as ListItem rounds them.
-        val besideWidth = with(LocalDensity.current) {
-            constraints.maxWidth - (ListItemPadding * 2).roundToPx() - ListItemPadding.roundToPx()
-        }
+        // In the styles ListItem gives its headline, supporting text and trailing content.
         val statusUnder = status != null && !statusFitsBeside(
             status = status,
             statusStyle = typography.labelSmall,
@@ -82,7 +78,7 @@ fun AdvancementRow(
                 name to typography.bodyLarge,
                 detail?.let { it to typography.bodyMedium }
             ),
-            width = besideWidth
+            width = with(LocalDensity.current) { listItemTextWidth(constraints.maxWidth) }
         )
         ListItem(
             headlineContent = { Text(name) },
@@ -118,7 +114,14 @@ fun AdvancementRow(
 }
 
 /**
- * The padding Material's ListItem puts at each end and before its trailing content, which it
- * keeps internal.
+ * The width Material's ListItem leaves its text and trailing content together in a row [rowWidth]
+ * pixels wide: the row's, less its padding at both ends together and before the trailing content,
+ * each rounded to pixels on its own as ListItem rounds them.
  */
+// Material keeps ListItem's padding internal, so AdvancementRowTest checks this against its
+// layout, along with the slots' text styles.
+internal fun Density.listItemTextWidth(rowWidth: Int): Int =
+    rowWidth - (ListItemPadding * 2).roundToPx() - ListItemPadding.roundToPx()
+
+/** The padding ListItem puts at each end and before its trailing content. */
 private val ListItemPadding = 16.dp

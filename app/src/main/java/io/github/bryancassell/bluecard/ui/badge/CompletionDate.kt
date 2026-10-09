@@ -97,8 +97,11 @@ fun EditableDate(
         )
         // Lines the buttons' text up with the date's. If they don't fit side by side, as at the
         // largest text and display size, the second goes below the first rather than squeezing
-        // its label until a word breaks (#307).
-        FlowRow(modifier = Modifier.padding(horizontal = 4.dp)) {
+        // its label until a word breaks (#307), as far below as the date picker's OK goes.
+        FlowRow(
+            modifier = Modifier.padding(horizontal = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             val pickText = if (date == null) {
                 R.string.requirement_add_date
             } else {

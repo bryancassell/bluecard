@@ -1,5 +1,16 @@
 package io.github.bryancassell.bluecard.ui.badges
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -10,7 +21,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
@@ -127,5 +141,50 @@ class AdvancementRowTest {
         assertTrue(status.left >= name.right)
         assertTrue(status.top < name.bottom)
         assertEquals(2, lineCount("Citizenship in the Community"))
+    }
+
+    // Material keeps ListItem's padding and its slots' text styles internal, so the row copies
+    // them to decide where the status goes. This checks the copies against ListItem itself, at a
+    // density where rounding each part of the padding on its own differs from rounding their sum.
+    @Test
+    fun theWidthAndStylesTheRowAssumes_areListItems() {
+        val density = Density(2.8f)
+        var row = 0
+        var text = 0
+        var trailing = 0
+        val styles = mutableMapOf<String, TextStyle>()
+        lateinit var typography: Typography
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalDensity provides density) {
+                BlueCardTheme {
+                    typography = MaterialTheme.typography
+                    ListItem(
+                        headlineContent = {
+                            styles["headline"] = LocalTextStyle.current
+                            Box(Modifier.fillMaxWidth().onSizeChanged { text = it.width })
+                        },
+                        supportingContent = { styles["supporting"] = LocalTextStyle.current },
+                        trailingContent = {
+                            styles["trailing"] = LocalTextStyle.current
+                            Box(Modifier.width(40.dp).onSizeChanged { trailing = it.width })
+                        },
+                        modifier = Modifier.onSizeChanged { row = it.width }
+                    )
+                }
+            }
+        }
+
+        composeTestRule.runOnIdle {
+            assertEquals(density.listItemTextWidth(row), text + trailing)
+            // Each slot's style already has everything the row measures it in.
+            mapOf(
+                "headline" to typography.bodyLarge,
+                "supporting" to typography.bodyMedium,
+                "trailing" to typography.labelSmall
+            ).forEach { (slot, measuredIn) ->
+                val style = styles.getValue(slot)
+                assertEquals(slot, style, style.merge(measuredIn))
+            }
+        }
     }
 }
