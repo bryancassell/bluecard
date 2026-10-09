@@ -3,9 +3,7 @@ package io.github.bryancassell.bluecard.ui.data
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.view.View
 import android.view.ViewConfiguration
-import android.view.ViewGroup
 import androidx.activity.ComponentDialog
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
@@ -45,7 +43,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.core.app.ActivityOptionsCompat
-import androidx.core.view.children
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
@@ -54,6 +51,7 @@ import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.assertShows
 import io.github.bryancassell.bluecard.testing.hasLine
+import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
@@ -464,17 +462,14 @@ class DataManagementScreenTest {
     private fun inDialog(matcher: SemanticsMatcher) = matcher and hasAnyAncestor(isDialog())
 
     /**
-     * Whether a node is the option for the phone's or the file's ([label]) that shows and reads
-     * [details]. It's found in the unmerged tree, which keeps the lines an option shows: its own
-     * semantics have only its label.
+     * The option that shows the first of [details], checked to be the phone's or the file's
+     * ([label]) and to show and read each of [details].
      */
-    private fun isOption(label: String, vararg details: String) = details.fold(
-        inDialog(isSelectable() and hasAnyDescendant(hasText(label)))
-    ) { matcher, detail -> matcher and hasLine(detail) }
-
-    /** The option for the phone's or the file's ([label]) that holds [details] ([isOption]). */
-    private fun option(label: String, vararg details: String) =
-        composeTestRule.onNode(isOption(label, *details), useUnmergedTree = true).performScrollTo()
+    private fun option(label: String, vararg details: String) = composeTestRule
+        .onReadAsOne(details.first())
+        .assert(inDialog(isSelectable() and hasAnyDescendant(hasText(label))))
+        .assert(details.map(::hasLine).reduce(SemanticsMatcher::and))
+        .performScrollTo()
 
     @Test
     fun mergeChoices_showEachChoice_underItsHeading_withWhatEachSideHolds() {
@@ -644,31 +639,22 @@ class DataManagementScreenTest {
             .assert(hasContentDescription("Scout, the file. Earned"))
     }
 
-    /**
-     * The Merge dialog's Compose view, which gives screen readers its nodes. It's in the
-     * dialog's own window, not the page's.
-     */
-    private fun mergeDialogView(): View {
-        fun composeView(view: View): View? = when (view) {
-            is ViewRootForTest -> view
-            is ViewGroup -> view.children.firstNotNullOfOrNull(::composeView)
-            else -> null
-        }
-        val window = checkNotNull(ShadowDialog.getLatestDialog().window)
-        return checkNotNull(composeView(window.decorView))
-    }
-
-    // TalkBack can focus an option without scrolling it into view, as when its focus wraps round.
+    // TalkBack can focus an option without scrolling it into view, as when the scout touches the
+    // part that shows.
     @Test
     fun mergeOption_partlyScrolledOff_isReadWhole() {
         turnOnScreenReader()
         showMergeChoices(choices)
+        // The dialog's own Compose view, in its own window, gives screen readers its nodes.
+        val dialogView = (
+            composeTestRule.onNode(isDialog()).fetchSemanticsNode().root as ViewRootForTest
+            ).view
 
         assertEquals(
             "Name and unit, this phone. Sam Scout. Unit: Crew 7",
             composeTestRule.readWithOnlyItsLastLineShown(
-                mergeDialogView(),
-                isSelectable() and hasAnyDescendant(hasText("Sam Scout")),
+                dialogView,
+                hasClickAction() and hasAnyDescendant(hasText("Sam Scout")),
                 firstLine = "This phone",
                 lastLine = "Unit: Crew 7"
             )
@@ -685,8 +671,7 @@ class DataManagementScreenTest {
         val doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
 
         // Near the top, so no scrolling, which would wait on the clock this test holds.
-        val filesProfile =
-            composeTestRule.onNode(isOption("The file", "Sam Lee"), useUnmergedTree = true)
+        val filesProfile = composeTestRule.onReadAsOne("Sam Lee")
 
         filesProfile.performClick()
         composeTestRule.mainClock.advanceTimeBy(doubleTapTimeout / 2)
