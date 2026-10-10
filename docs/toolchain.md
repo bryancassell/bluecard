@@ -337,7 +337,7 @@ quick check by hand.
    - Onboarding, then browse and search the badges and open one.
    - Record a counselor, a requirement's completion, and a tracker entry.
    - Create a badge's and a rank's PDF reports, then save and share them.
-   - Edit the profile from Home.
+   - Edit the name and unit, from Home's Manage data.
    - Export, clear all data, then import the export.
    - Restore after process death: open a requirement page, press Home, run
      `adb shell am kill io.github.bryancassell.bluecard`, then reopen the app

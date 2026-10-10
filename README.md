@@ -35,8 +35,10 @@ they turn backup off in the phone's settings.
 
 ## Status
 
-BlueCard is in development and hasn't been released yet. The catalog doesn't
-include every merit badge yet.
+BlueCard is in testing: test releases for friends and family are on the
+[Releases](https://github.com/bryancassell/bluecard/releases) page, and it
+isn't on Google Play yet. The catalog has every current merit badge, but not
+Scouting America's Test Lab pilot badges.
 
 ## Supported devices
 
