@@ -80,8 +80,10 @@ itself.
 The plan uses AVDs of its own, named `QA_*`, so a run never takes over an
 emulator that another Claude session is using. Each is started with
 `-read-only`, which keeps every change in temporary files that are deleted
-when the emulator stops. So every assignment starts on a freshly set up phone,
-and two assignments can run on the same AVD at once.
+when the emulator stops. So every lane starts on a freshly set up phone, and
+two lanes can run on the same AVD at once. Within a lane, `ui.py reset` puts
+the phone back for the next assignment, though other apps keep what they
+learned, such as having shown their first-run screens.
 
 | AVD | Device profile | System image | Why |
 |---|---|---|---|
@@ -205,7 +207,10 @@ triage.
 2. **Tools.** Export `ANDROID_HOME` and `JAVA_HOME` as in
    [Creating the AVDs](#creating-the-avds), and put
    `$ANDROID_HOME/platform-tools` on `PATH`, in each command: the Bash tool
-   doesn't read `~/.zshrc`, and Gradle and `apksigner` need Java. Check that
+   doesn't read `~/.zshrc`, and Gradle and `apksigner` need Java. Set
+   `BUILD_TOOLS` too, as in step 1 of
+   [Checking a release build](toolchain.md#checking-a-release-build), for
+   `aapt2` and `apksigner`. Check that
    `cmdline-tools/latest/bin/avdmanager` exists, and stop and ask for the
    [one-time setup](#one-time-setup) if not. Check `gh auth status`.
 3. **The tester agent.** Testers run as the `qa-tester` subagent,
@@ -365,7 +370,7 @@ format versions.
 
 TalkBack ignores `input tap` and `input swipe`, and `uiautomator dump`
 interferes with it, so with TalkBack on, don't use `ui.py` commands that read
-the screen (`screen`, `tap`, `wait`, `scroll-to`). Use:
+the screen (`screen`, `expect`, `tap`, `wait`, `scroll-to`). Use:
 
 - `ui.py S talkback on` and `talkback off`.
 - `ui.py S tb right` and `tb left` to move to the next or previous item,
@@ -557,15 +562,15 @@ Start from the seed, on Camping.
   Bugling is in progress, on Badges and on Home. Uncheck it. → Still in
   progress. (PRD: Starting a badge)
 - **REQ-9 Date picker on a narrow window.** (Largest display size only.) On
-  6a, Change date. → The picker opens for typing the date: a "Date" field
-  holding the current date, no button to switch to the calendar, the
-  keyboard down until the field is tapped, and Cancel then OK. Type a date a
-  few days ago, digits only (see "Settings varied on the devices"),
-  OK. → That date shows. Change date, and turn to landscape. → It stays on
-  typing, now with the button to switch to the calendar. Cancel, Change date
-  again in landscape, then turn back to portrait. → The calendar in
-  landscape, then typing once it's turned back. (PRD: Date picker on a
-  narrow window)
+  6a, check Completed if it isn't, then Change date. → The picker opens for
+  typing the date: a "Date" field holding the current date, no button to
+  switch to the calendar, the keyboard down until the field is tapped, and
+  Cancel then OK. Type a date a few days ago, digits only (see "Settings
+  varied on the devices"), OK. → That date shows. Change date, and turn to
+  landscape. → It stays on typing, now with the button to switch to the
+  calendar. Cancel, Change date again in landscape, then turn back to
+  portrait. → The calendar in landscape, then typing once it's turned back.
+  (PRD: Date picker on a narrow window)
 - **REQ-10 Key presses.** Open 6a afresh, checked with a date. Press Tab
   (`ui.py S key TAB`) three times, checking each with `expect`: Completed,
   Change date, then Remove date are focused. Don't go past it into Notes,
@@ -600,7 +605,8 @@ Start from the seed.
   tracker's requirement with own work takes the own work's date, not the
   rows' (PRD: A requirement's own work). Delete Hike 2. → The others keep
   their numbers, and 5 is no longer complete.
-- **TRK-6 Multi-line column.** Hiking 5, a row's Notes: type four lines. →
+- **TRK-6 Multi-line column.** Hiking 5, a row's last field, "What you saw
+  and any challenges": type four lines. →
   The field grows past its starting height; on the requirement page the row's
   summary shows the line breaks as spaces.
 - **TRK-7 Unsaved row.** Start a new campout, type a place, press Back. →
@@ -855,8 +861,8 @@ in reading order; nothing is read twice in a row.
   regions)
 - **A11Y-8 Rows partly off the screen.** Swiping doesn't test this, since
   TalkBack scrolls what it focuses into view; touching does. Pick the point
-  to touch from a cropped screenshot: `screen --coords` gives only each
-  item's center, which may be off the screen. With TalkBack off,
+  to touch from a cropped screenshot: the bounds `screen --coords` gives
+  include the part under the status and navigation bars. With TalkBack off,
   `scroll-to "Merit badges" --exact` on Home, which leaves a strip of the
   rank card under the status bar. Turn TalkBack on, `tb right` so focus
   isn't on the card, and touch the strip. → The card is read whole,
@@ -917,8 +923,9 @@ style of the repository's other bug reports, such as
   - Happened <every time (3 of 3) / N of M tries>. <Devices and settings where it didn't happen.>
 
   ## Logs
-  <Crash stack trace, if any, as reported. Retrace it with the mapping file if one was kept:
-  `retrace app/build/outputs/mapping/release/mapping.txt <file>`.>
+  <Crash stack trace, if any, as reported. Retrace it with the build's mapping file: for a
+  build of what's checked out, `retrace app/build/outputs/mapping/release/mapping.txt <file>`;
+  for a tag, the `bluecard-<version>-mapping.txt` attached to its release.>
 
   Found by a run of the [QA test plan](https://github.com/bryancassell/bluecard/blob/main/docs/qa-test-plan.md) on <date>.
   ```
@@ -940,6 +947,8 @@ the developer can decide.
   in a case that assignment runs.
 - **A change to the backup format** leaves `scripts/qa/seed.json` alone: import
   must keep reading older versions, and the seed checks that it does.
+  `QaSeedTest` fails if a catalog change, such as a renumbered requirement,
+  stops the seed importing; fix the seed in the same pull request.
   Replace it only when a new version adds something the seed should show,
   and keep the old one for a case of its own.
 - **A change to `minSdk` or `targetSdk`** changes the AVDs' system images.

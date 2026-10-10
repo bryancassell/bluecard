@@ -73,7 +73,8 @@ class Entry:
     def describe(self, coords=False):
         flags = f" [{','.join(self.flags)}]" if self.flags else ""
         label = f'"{self.label}"' if self.label else "(no label)"
-        return f"{label}{flags}" + (f" @{self.center[0]},{self.center[1]}" if coords else "")
+        return f"{label}{flags}" + (f" @{self.center[0]},{self.center[1]} in {','.join(map(str, self.bounds))}"
+                                    if coords else "")
 
     __str__ = describe
 
@@ -194,7 +195,7 @@ def launch(serial, package=PACKAGE, timeout=15):
     # The QA AVDs have no hardware keys, and monkey refuses to run while it may press them.
     out = shell(serial, f"monkey -p {package} --pct-syskeys 0 -c android.intent.category.LAUNCHER 1", check=False)
     deadline = time.time() + timeout
-    while package not in focused_window(serial):
+    while package + "/" not in focused_window(serial):  # Not the debug app's ".debug/".
         if time.time() > deadline:
             sys.exit(f"{package} didn't come to the front. monkey said:\n{out.strip()}")
         time.sleep(0.5)
@@ -240,12 +241,26 @@ def pick(text, entries, exact=False, nth=1):
     return candidates[nth - 1], candidates
 
 
+# The app draws edge to edge, so a control can reach under the status bar or the navigation bar,
+# where a tap goes to the bar instead: Home, on a 3-button bar. Taps and scrolls keep to the
+# screen's height between these fractions, clear of both bars on every QA device.
+CLEAR_TOP, CLEAR_BOTTOM = 0.06, 0.9
+
+
+def tap_point(serial, entry):
+    """Where to tap ENTRY: its center, moved clear of the system bars while still on it."""
+    _, height = screen_size(serial)
+    top, bottom = entry.bounds[1], entry.bounds[3]
+    y = min(max(entry.center[1], int(height * CLEAR_TOP)), int(height * CLEAR_BOTTOM))
+    return entry.center[0], min(max(y, top + 1), bottom - 1)
+
+
 def tap(serial, text, exact=False, nth=1, long=False):
     """Taps the control or text matching TEXT, and returns a line saying what was tapped."""
     entry, candidates = pick(text, read_screen(serial), exact, nth)
     if entry is None:
         sys.exit(f'nothing on screen matches "{text}". Run "screen" to see what is there.')
-    x, y = entry.center
+    x, y = tap_point(serial, entry)
     shell(serial, f"input swipe {x} {y} {x} {y} 800" if long else f"input tap {x} {y}")
     note = f" (match {nth} of {len(candidates)})" if len(candidates) > 1 else ""
     return f"tapped {entry}{note}"
@@ -276,6 +291,12 @@ def cmd_wait(args):
 EXPECT_FLAGS = {"disabled", "enabled", "checked", "unchecked", "focused", "selected", "tap", "field"}
 
 
+def has_state(entry, flag):
+    if flag == "enabled":
+        return entry.interactive and "disabled" not in entry.flags
+    return flag in entry.flags
+
+
 def cmd_expect(args):
     """Checks that each TEXT is on screen, in one read, and prints only what isn't as expected.
 
@@ -291,17 +312,15 @@ def cmd_expect(args):
             text, flags = item, set()
         matches = find(entries, text, args.exact)
         if args.gone:
-            if matches:
-                problems.append(f"still shown: {matches[0]}")
+            # With states, such as "Save notes=enabled", only a match in all of them counts.
+            shown = [e for e in matches if all(has_state(e, f) for f in flags)]
+            if shown:
+                problems.append(f"still shown: {shown[0]}")
             continue
         if not matches:
             problems.append(f'missing: "{text}"')
             continue
-        def has(entry, flag):
-            if flag == "enabled":
-                return entry.interactive and "disabled" not in entry.flags
-            return flag in entry.flags
-        if flags and not any(all(has(e, f) for f in flags) for e in matches):
+        if flags and not any(all(has_state(e, f) for f in flags) for e in matches):
             problems.append(f"not {','.join(sorted(flags))}: " + "; ".join(map(str, matches[:3])))
     if problems:
         print("\n".join(problems))
@@ -333,19 +352,29 @@ def cmd_swipe(args):
 def scroll_to(serial, text, exact=False, up=False, max_swipes=15):
     direction = "down" if up else "up"
     previous = None
+    nudged = False
     for _ in range(max_swipes + 1):
         entries = read_screen(serial)
-        matches = find(entries, text, exact)
-        if matches:
-            return f"found {matches[0]}"
-        labels = [e.label for e in entries]
-        if labels == previous:
-            sys.exit(f'reached the end without finding "{text}"')
-        previous = labels
         scrollables = [e for e in entries if "scroll" in e.flags]
         # The largest scrollable area is the page; smaller ones are rows such as the rank trail.
         area = max(scrollables, key=lambda e: (e.bounds[2] - e.bounds[0]) * (e.bounds[3] - e.bounds[1])).bounds \
             if scrollables else None
+        matches = find(entries, text, exact)
+        if matches:
+            height = screen_size(serial)[1]
+            y = matches[0].center[1]
+            if nudged or height * CLEAR_TOP <= y <= height * CLEAR_BOTTOM:
+                return f"found {matches[0]}"
+            # Found, but half under a system bar, where a tap would reach the bar: one more
+            # swipe, toward the middle, brings it clear.
+            nudged = True
+            swipe(serial, "up" if y > height * CLEAR_BOTTOM else "down", area)
+            time.sleep(0.6)
+            continue
+        labels = [e.label for e in entries]
+        if labels == previous:
+            sys.exit(f'reached the end without finding "{text}"')
+        previous = labels
         swipe(serial, direction, area)
         time.sleep(0.6)
     sys.exit(f'"{text}" not found after {max_swipes} swipes')

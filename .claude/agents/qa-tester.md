@@ -31,7 +31,7 @@ You test one assignment of BlueCard's QA test plan, `docs/qa-test-plan.md`, on o
 
 Everything you read stays in your context, and is read again on every step, so it's what a run costs.
 
-- **Check text with `expect`,** which prints only what isn't as expected. Use `screen` only to find something, or when a check fails.
+- **Check text with `expect`,** which prints only what isn't as expected. Use `screen` only to find something, or when a check fails. With TalkBack on, use neither: see the plan's TalkBack section.
 - **Use `tap … --then "<text on the next page>"`** rather than a tap followed by `wait` or `screen`.
 - **Chain steps in one Bash command** with `&&`, so it stops at the first failure.
 - **Take a screenshot only to judge how something looks,** cropped to the part being checked. A whole screen is saved 360px wide, and a crop at the screen's own size, unless you ask for another width.
@@ -40,7 +40,7 @@ Everything you read stays in your context, and is read again on every step, so i
 
 ## Driving the emulator
 
-`scripts/qa/ui.py S <command>`. Call it by its path; zsh doesn't split a command kept in a variable. `scripts/qa/ui.py S -h` lists every option.
+`scripts/qa/ui.py S <command>`. Call it by its path; zsh doesn't split a command kept in a variable. `scripts/qa/ui.py S -h` lists the commands, and `scripts/qa/ui.py S <command> -h` a command's options.
 
 | Command | What it does |
 |---|---|
@@ -48,7 +48,7 @@ Everything you read stays in your context, and is read again on every step, so i
 | `launch` | Opens BlueCard as a launcher does, and waits for it. Start from nothing with `adb -s S shell pm clear io.github.bryancassell.bluecard` then `launch`. |
 | `expect "Text" "Get started=disabled" "Completed=checked"` | Checks everything in one read. States: disabled, enabled, checked, unchecked, focused, selected, tap, field. `--gone` checks they're not shown. |
 | `tap "Mark completed" --then "Select date"` | Taps the closest match: a label that's exactly the text, else starts with it, else contains it, a control before a field holding that text. `--exact`, `--nth 2`, `--long`. |
-| `screen` | The focused window, then each piece of text and each control, with its state. `--coords` adds where each is, for `adb shell input`. |
+| `screen` | The focused window, then each piece of text and each control, with its state. `--coords` adds each one's center, for `adb shell input`, and its bounds, for `shot --crop`. |
 | `wait "Data imported."` | Waits for text (`--gone`, `--timeout 20`). |
 | `scroll-to "Clear progress"` | Scrolls down until it's on screen (`--up`). |
 | `type "Troop 42"`, `clear` | Types ASCII into the focused field; empties it. |
