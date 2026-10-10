@@ -67,6 +67,7 @@ The other commands are listed in
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the app is built, and the conventions new code follows |
 | [`docs/toolchain.md`](docs/toolchain.md) | Machine setup, build commands, the testing rules the build checks, CI, the backup and release-build checks done by hand, and publishing test releases |
 | [`docs/catalog.md`](docs/catalog.md) | How to write the catalog's merit badges, ranks and requirements |
+| [`docs/qa-test-plan.md`](docs/qa-test-plan.md) | The test plan Claude runs on emulators before each release |
 
 ## Disclaimer
 

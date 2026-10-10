@@ -1,0 +1,111 @@
+{
+  "formatVersion": 2,
+  "profile": {"name": "Alexandra Montgomery-Fitzgerald", "unitNumber": "Troop 1234"},
+  "badges": [
+    {
+      "badgeId": "camping",
+      "requirementsVersion": "2024-01-01",
+      "startedDate": "2026-03-14",
+      "counselor": {"name": "Pat Rivera", "phone": "555-0142", "email": "pat.rivera@example.com"},
+      "completedOnPriorDate": null,
+      "requirements": [
+        {"number": "1a", "completed": true, "completedDate": "2026-03-14", "notes": null, "signedOffBy": null},
+        {"number": "1b", "completed": true, "completedDate": "2026-03-14", "notes": null, "signedOffBy": null},
+        {"number": "1c", "completed": true, "completedDate": "2026-03-21", "notes": "Showed Pat my first-aid kit.", "signedOffBy": null},
+        {"number": "2", "completed": true, "completedDate": "2026-04-02", "notes": null, "signedOffBy": null},
+        {"number": "4a", "completed": true, "completedDate": "2026-05-09", "notes": "Planned the May campout with the patrol.\nMenu, duty roster and gear list are in my binder.", "signedOffBy": null},
+        {"number": "9", "completed": false, "completedDate": null, "notes": "Need 8 more nights before summer camp.", "signedOffBy": null}
+      ],
+      "trackerEntries": [
+        {"requirementNumber": "9a", "rowNumber": null, "addedDate": "2026-03-16", "values": {"date": "2026-03-13", "place": "Spring camporee", "nights": "2", "shelter": "Tent"}},
+        {"requirementNumber": "9a", "rowNumber": null, "addedDate": "2026-05-11", "values": {"date": "2026-05-08", "place": "Lake Wenatchee State Park", "nights": "3", "shelter": "Tent"}},
+        {"requirementNumber": "9a", "rowNumber": null, "addedDate": "2026-07-20", "values": {"date": "2026-07-12", "place": "Camp Parsons summer camp", "nights": "7", "shelter": "Platform tent"}}
+      ]
+    },
+    {
+      "badgeId": "hiking",
+      "requirementsVersion": "2023-01-01",
+      "startedDate": "2026-05-02",
+      "counselor": {"name": "Jordan Kim", "phone": null, "email": "jordan.kim@example.com"},
+      "completedOnPriorDate": null,
+      "requirements": [
+        {"number": "1a", "completed": true, "completedDate": "2026-05-02", "notes": null, "signedOffBy": null},
+        {"number": "1b", "completed": true, "completedDate": "2026-05-02", "notes": null, "signedOffBy": null}
+      ],
+      "trackerEntries": [
+        {"requirementNumber": "5", "rowNumber": 1, "addedDate": "2026-05-18", "values": {"date": "2026-05-16", "route": "Rattlesnake Ledge, 10 miles", "weather": "Sunny", "notes": "Steep at the end."}},
+        {"requirementNumber": "5", "rowNumber": 2, "addedDate": "2026-06-14", "values": {"date": "2026-06-13", "route": "Mount Si, 10 miles", "weather": "Overcast"}},
+        {"requirementNumber": "5", "rowNumber": 3, "addedDate": "2026-08-02", "values": {"date": "2026-08-01", "route": "Snow Lake, 10 miles"}}
+      ]
+    },
+    {
+      "badgeId": "first-aid",
+      "requirementsVersion": "2025-01-01",
+      "startedDate": "2025-11-20",
+      "counselor": null,
+      "completedOnPriorDate": "2025-11-20",
+      "requirements": [],
+      "trackerEntries": []
+    },
+    {
+      "badgeId": "swimming",
+      "requirementsVersion": "2026-01-01",
+      "startedDate": "2026-07-30",
+      "counselor": {"name": "Sam Ortiz", "phone": "555-0199", "email": null},
+      "completedOnPriorDate": "2026-07-30",
+      "requirements": [],
+      "trackerEntries": []
+    },
+    {
+      "badgeId": "personal-fitness",
+      "requirementsVersion": "2026-01-01",
+      "startedDate": "2026-09-01",
+      "counselor": null,
+      "completedOnPriorDate": null,
+      "requirements": [],
+      "trackerEntries": [
+        {"requirementNumber": "7a", "rowNumber": null, "addedDate": "2026-09-01", "values": {"date": "2026-09-01", "activity": "Run", "minutes": "30"}},
+        {"requirementNumber": "7a", "rowNumber": null, "addedDate": "2026-09-03", "values": {"date": "2026-09-03", "activity": "Swim", "minutes": "45", "notes": "Pool laps"}}
+      ]
+    },
+    {
+      "badgeId": "space-exploration",
+      "requirementsVersion": "2026-01-01",
+      "startedDate": "2026-08-15",
+      "counselor": null,
+      "completedOnPriorDate": null,
+      "requirements": [
+        {"number": "3", "completed": true, "completedDate": "2026-08-29", "notes": "Flew an Estes Alpha III to about 300 feet.", "signedOffBy": null},
+        {"number": "3a", "completed": true, "completedDate": "2026-08-15", "notes": null, "signedOffBy": null},
+        {"number": "3b", "completed": true, "completedDate": "2026-08-15", "notes": null, "signedOffBy": null},
+        {"number": "5a", "completed": true, "completedDate": "2026-09-05", "notes": null, "signedOffBy": null}
+      ],
+      "trackerEntries": []
+    },
+    {
+      "badgeId": "tenderfoot",
+      "requirementsVersion": "2022-08-01",
+      "startedDate": "2026-02-10",
+      "counselor": null,
+      "completedOnPriorDate": "2026-02-10",
+      "requirements": [],
+      "trackerEntries": []
+    },
+    {
+      "badgeId": "second-class",
+      "requirementsVersion": "2022-08-01",
+      "startedDate": "2026-02-11",
+      "counselor": null,
+      "completedOnPriorDate": null,
+      "requirements": [
+        {"number": "2a", "completed": true, "completedDate": "2026-03-14", "notes": null, "signedOffBy": "Scoutmaster Lee"},
+        {"number": "2b", "completed": true, "completedDate": "2026-03-14", "notes": "Cooked foil dinners.", "signedOffBy": "ASM Patel"},
+        {"number": "3", "completed": false, "completedDate": null, "notes": null, "signedOffBy": "Scoutmaster Lee"}
+      ],
+      "trackerEntries": [
+        {"requirementNumber": "1a", "rowNumber": null, "addedDate": "2026-03-16", "values": {"date": "2026-03-13", "activity": "Spring camporee", "place": "Camp Edwards", "nights": "2"}},
+        {"requirementNumber": "7a", "rowNumber": 1, "addedDate": "2026-04-01", "values": {"start": "2026-03-01", "activities": "Ran three times a week."}}
+      ]
+    }
+  ]
+}
