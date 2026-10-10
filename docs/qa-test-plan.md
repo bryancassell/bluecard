@@ -359,8 +359,9 @@ screen something to show. After importing it:
 - **Personal Fitness:** 7a's log has 2 entries.
 - **Space Exploration:** 3's own work and 3a, 3b checked; 5a checked.
 - **Ranks:** Tenderfoot marked earned on Feb 10, 2026, so Scout is "Counted
-  as earned with Tenderfoot"; Second Class started, with sign-offs on 2a, 2b
-  and 3, a 1a log entry and 1 of 4 rows in 7a.
+  as earned with Tenderfoot"; Second Class started: 2a and 2b complete and
+  signed off, 3 signed off but not complete (its box is empty), a 1a log
+  entry and 1 of 4 rows in 7a.
 
 Start from it with `scripts/qa/ui.py S seed`. If Home doesn't show these
 after importing it, that's a bug: import must keep reading files in older
@@ -387,7 +388,8 @@ the screen (`screen`, `expect`, `tap`, `wait`, `scroll-to`). Use:
 - Screenshots, to see where TalkBack's focus outline is.
 
 After `talkback on`, run `tb-speech` every second or so until it prints
-something, before the first gesture: gestures sent sooner are lost. Turn TalkBack on before
+what's on screen, such as "BlueCard", and not only "TalkBack on", before the
+first gesture: gestures sent sooner are lost. Turn TalkBack on before
 opening the page a case checks: turned on over an
 open page, it can miss the first change there, such as a box being checked.
 To reach a page deep in the app quickly, open the page before it with taps,
@@ -419,7 +421,9 @@ as a new bug. The coordinator checks the full list.
 
 Cases tagged **[smoke]** are the ones run when a suite runs as smoke. Each
 case starts from where the one before it left off, unless it says where to
-start.
+start. A case run without the one before it, as in a smoke run or an
+assignment that names cases, starts where its suite does, such as from the
+seed on Camping, and opens what it names: "On 6a" is Camping → 6 → 6a.
 
 ### ONB: Onboarding and profile
 
@@ -441,8 +445,8 @@ start.
   between the splash screen and Home.
 - **ONB-5 Editing the name and unit.** Manage data → Edit. → The "Name and
   unit" page, with both fields filled in. Change the unit to "Troop 7" and
-  Save. → The page closes; Home shows "Unit: Troop 7". (PRD: Changing the name
-  and unit number)
+  Save. → Data management again (which has a "Name and unit" heading too);
+  Back → Home shows "Unit: Troop 7". (PRD: Changing the name and unit number)
 - **ONB-6 Discarding an edit.** Edit again, change the name, press Back. →
   "Discard changes?" with Cancel and a red Discard. Cancel keeps the page and
   the edit; Back then Discard closes it, and the name is unchanged. Clearing
@@ -477,15 +481,19 @@ Start from the seed.
   badges" heading, the search field, "142 merit badges", badges in name order
   from American Business. Camping, Hiking, Personal Fitness and Space
   Exploration show "In progress" with a bar; First Aid and Swimming show
-  "Completed". Eagle-required badges say so. Scroll to the end: the last badge
-  is visible above the navigation bar.
+  "Completed". Eagle-required badges say so, such as Camping, Cooking and
+  First Aid, and others, such as Chess, don't; Cycling, Hiking and Swimming
+  each say "Eagle-required (one of Cycling, Hiking, and Swimming)". Scroll to
+  the end: the last badge is visible above the navigation bar.
 - **FIND-2 [smoke] Search by name.** Type "camp". → Camping is listed, with
   the count line saying how many match. (PRD: Badge search)
-- **FIND-3 Search rules.** Each of these, after Clear search:
-  - "fit" → Personal Fitness (word start), not badges with "fit" inside a
-    word.
-  - "art" → doesn't list badges just because their summary says "part" or
-    "start".
+- **FIND-3 Search rules.** Each of these, after Clear search. The list
+  doesn't show summaries, so check the whole result:
+  - "fit" → Personal Fitness and Snow Sports (a word in its summary starts
+    with "fit"), and nothing else.
+  - "art" → Art, Artificial Intelligence (AI), Graphic Arts and Sculpture,
+    and nothing else: not Canoeing or Family Life, whose summaries have "art"
+    only inside a word.
   - "SCIENCE ANIMAL" → Animal Science (any order, any case).
   - "xyzzy" → no badges, and a line saying none match.
 - **FIND-4 Search by summary.** Search a word that's only in a summary, such
@@ -512,8 +520,9 @@ Start from the seed.
   `ui.py S starts`); on API 26, in its WebView Browser Tester. Back returns to
   Camping.
 - **BADGE-3 Phone and email.** Tap the phone number. → The phone app opens
-  with 555-0142 to dial, without calling. Back. Tap the email. → An email app
-  opens with a `mailto:pat.rivera@example.com` link (`starts`); on a fresh
+  with 555-0142 to dial, without calling. Back until BlueCard shows: the
+  dialer's first Back can just close its dialpad. Tap the email. → An email
+  app opens with a `mailto:pat.rivera@example.com` link (`starts`); on a fresh
   emulator Gmail shows its tour, since it has no account. If no app can send
   email, a message says so. (PRD: Counselor details)
 - **BADGE-4 Editing the counselor.** Edit counselor. → Name, phone and email,
@@ -533,8 +542,9 @@ Start from the seed, on Camping.
 - **REQ-1 [smoke] Marking complete.** Open requirement 6, then 6a. →
   Requirement 6a, its summary, a "Completed" checkbox, and Notes. Check it. →
   "Completed on" today, with Change date and Remove date. Back to 6. → 6a's
-  box is filled with a check, and 6's row says "(1 of 5 complete)". (PRD:
-  Marking a requirement complete, Counting complete sub-requirements)
+  box is filled with a check. Back to Camping. → 6's row says "(1 of 5
+  complete)". (PRD: Marking a requirement complete, Counting complete
+  sub-requirements)
 - **REQ-2 [smoke] Changing the date.** On 6a, Change date. → The date picker,
   at the current date, with dates after today disabled. Pick a date a few
   days ago, OK. → That date shows.
@@ -600,11 +610,11 @@ Start from the seed.
   after it, the remaining campouts are numbered 1 to 3, and the total drops.
 - **TRK-5 [smoke] Fixed rows.** Hiking → 5. → Five rows, Hike 1 to Hike 5,
   three filled in, its own-work checkbox above them. Fill in Hikes 4 and 5. →
-  5 isn't complete until its own work is checked too; check it, and change
-  its date to a day last week. → Complete, on that day: a fixed-row
-  tracker's requirement with own work takes the own work's date, not the
-  rows' (PRD: A requirement's own work). Delete Hike 2. → The others keep
-  their numbers, and 5 is no longer complete.
+  5 still isn't complete at 5 of 5, since its own work isn't checked. Check
+  it, and change its date to a day last week. → Complete, on that day: a
+  fixed-row tracker's requirement with own work takes the own work's date,
+  not the rows' (PRD: A requirement's own work). Delete Hike 2. → The others
+  keep their numbers, and 5 is no longer complete.
 - **TRK-6 Multi-line column.** Hiking 5, a row's last field, "What you saw
   and any challenges": type four lines. →
   The field grows past its starting height; on the requirement page the row's
@@ -742,9 +752,10 @@ Start from the seed.
   (`adb -s S shell "input tap X Y; input tap X Y"`). → One Badge detail
   opens; one Back returns to Badges. Do the same on Official requirements. →
   `starts` shows one VIEW start from BlueCard. (ARCHITECTURE.md: Double taps)
-- **NAV-4 Rotation.** On a tracker row with typed, unsaved text, turn to
-  landscape and back with `user_rotation` (see "Settings varied on the
-  devices"). → The text and the page stay. Rotate on a scrolled page too,
+- **NAV-4 Rotation.** On a tracker row with typed, unsaved text, turn the
+  screen with `user_rotation 1` and back with `user_rotation 0` (see "Settings
+  varied on the devices"): on a tablet, that's to portrait and back to
+  landscape. → The text and the page stay. Rotate on a scrolled page too,
   such as Badges partway down. → It keeps its place. Also rotate with a
   dialog open (Clear progress). → The dialog stays.
 - **NAV-5 Folding.** (Foldable only.) Unfolded, start a new campout and type a
@@ -759,17 +770,27 @@ Start from the seed.
 ### WALK: Every screen
 
 Open every screen with the assignment's setting on, take one screenshot of
-each (more where a page scrolls), and look at it. Start from the seed.
+each (more where a page scrolls), and look at it. Do screen 1 first: with
+the setting on, `pm clear` BlueCard and `launch` it. Then seed, with the
+language set back to English for it if the setting changed it, and go on
+from screen 2.
 Screenshots at the default 360px wide are enough to see these problems in
 portrait; in landscape, use `--width 800`. Take a closer, cropped one only to
-make sure of one.
+make sure of one. A screenshot taken just after tapping a field can catch the
+keyboard still opening: if it does, take it again.
 
 On each screen, look for:
 
 - Text cut off, overlapping other text, or running off the screen. A name or
   summary may wrap; it must not be cut short without an ellipsis.
-- Anything hidden behind the status bar, navigation bar, camera cutout or
-  keyboard, or that can't be scrolled to.
+- Anything hidden behind the status bar, navigation bar or camera cutout, or
+  that can't be scrolled to.
+- The field being typed in hidden behind the keyboard. While the scout types
+  in a page's last field, Save even partly behind the keyboard fails too,
+  though it could be scrolled to, unless the keyboard's Done saves, as on
+  Onboarding, or the field and Save don't both fit above the keyboard.
+  Anything else behind the keyboard passes if it can be scrolled to. (PRD:
+  Save while typing in a tracker row)
 - A page without a band behind the status bar, a little darker than the page
   (lighter in dark mode), or one that scrolls under the status bar rather
   than being cut off at the band's edge. The full-screen Merge dialog has no
@@ -799,15 +820,17 @@ The screens, and how to reach them:
 5. Requirement detail: Camping 9 (sub-requirements and notes), Camping 9a (a
    log), Hiking 5 (fixed rows and own work), Camping 3 (Do 1 of 3), Camping
    6a checked (a date's buttons).
-6. Tracker entry: a new campout, with the keyboard open on the last field.
+6. Tracker entry: a new campout, with a character typed in the last field.
 7. The date picker, from Mark completed on Chess. Where the window is
    narrower than its calendar, as at the largest display size, it opens for
    typing the date, with no button to switch to the calendar, and the keyboard
    stays down until the field is tapped. (PRD: Date picker on a narrow window)
-8. Edit counselor, on Camping.
+8. Edit counselor, on Camping, with a character typed in Email, its last
+   field.
 9. Ranks; Rank detail for Scout (counted as earned), Second Class and Star;
    Second Class 2a (Signed off by); Star 3 (merit badges).
-10. Data management; Edit name and unit.
+10. Data management; Edit name and unit, with a character typed in Unit
+    number.
 11. Dialogs: Clear progress on Camping, Discard changes on Edit counselor,
     and Import's Merge or Replace all, after picking the seed file.
 12. The merge dialog: change the unit number (Manage data → Edit name and
@@ -857,8 +880,10 @@ in reading order; nothing is read twice in a row.
   → Each option is read whole: the choice's name, "this phone" or "the
   file", how far that side got, and whether it's selected. Double-tap Second Class's "The file". → "Second Class
   will no longer count as earned." is read once. Turn to landscape and back.
-  → It isn't read again. (PRD: Merging an import; ARCHITECTURE.md: Live
-  regions)
+  → It isn't read again. Then turn TalkBack off and tap Merge: with the
+  file's side picked, that puts Second Class back as the seed has it, for
+  A11Y-8, where Back would leave it earned. (PRD: Merging an import;
+  ARCHITECTURE.md: Live regions)
 - **A11Y-8 Rows partly off the screen.** Swiping doesn't test this, since
   TalkBack scrolls what it focuses into view; touching does. Pick the point
   to touch from a cropped screenshot: the bounds `screen --coords` gives

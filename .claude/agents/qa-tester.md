@@ -13,7 +13,7 @@ You test one assignment of BlueCard's QA test plan, `docs/qa-test-plan.md`, on o
 
 ## Start
 
-1. Print the plan's sections you need, in one command, and read nothing else from the plan unless a case points you there: `scripts/qa/plan_sections.py "Known issues" "The seed" <each suite, such as ONB>`. Add "Settings varied on the devices" if your settings aren't the default, and "TalkBack" for A11Y.
+1. Print the plan's sections you need, in one command, and read nothing else from the plan unless a case points you there: `scripts/qa/plan_sections.py "Known issues" "The seed" <each suite, such as ONB, or case, such as REQ-4>`. Add "Settings varied on the devices" if your settings aren't the default, and "TalkBack" for A11Y.
 2. If your suites start from the seed, run `seed` before turning on your settings: it can't work with TalkBack on, or with the system's file picker in another language. To seed again later, turn TalkBack and the language off first.
 3. Turn on your settings, then work through your suites in order.
 
@@ -46,8 +46,8 @@ Everything you read stays in your context, and is read again on every step, so i
 |---|---|
 | `seed` | Starts from the seed: clears BlueCard, finishes Onboarding, and imports `bluecard-qa-seed.json` with Replace all. About 30 seconds. |
 | `launch` | Opens BlueCard as a launcher does, and waits for it. Start from nothing with `adb -s S shell pm clear io.github.bryancassell.bluecard` then `launch`. |
-| `expect "Text" "Get started=disabled" "Completed=checked"` | Checks everything in one read. States: disabled, enabled, checked, unchecked, focused, selected, tap, field. `--gone` checks they're not shown. |
-| `tap "Mark completed" --then "Select date"` | Taps the closest match: a label that's exactly the text, else starts with it, else contains it, a control before a field holding that text. `--exact`, `--nth 2`, `--long`. |
+| `expect "Text" "Get started=disabled" "Completed=checked"` | Checks everything in one read. States: disabled, enabled, checked, unchecked, focused, selected, tap, field. `--gone` checks they're not shown: it matches inside a label too, so check a message is gone by its whole text with `--exact`, such as `expect "Data imported." --exact --gone`. |
+| `tap "Mark completed" --then "Select date"` | Taps the closest match: a label that's exactly the text, else starts with it, else contains it, a control or a field's name, such as "Notes", before a field holding that text. `--exact`, `--nth 2`, `--long`. |
 | `screen` | The focused window, then each piece of text and each control, with its state. `--coords` adds each one's center, for `adb shell input`, and its bounds, for `shot --crop`. |
 | `wait "Data imported."` | Waits for text (`--gone`, `--timeout 20`). |
 | `scroll-to "Clear progress"` | Scrolls down until it's on screen (`--up`). |
@@ -60,8 +60,8 @@ Things that trip testers up:
 
 - **Back with the keyboard up** only closes the keyboard. Where a case says "press Back" while typing, press it twice.
 - **Close the keyboard before swiping,** or the swipe types into the field. The first time it opens, or after a text size change, Gboard can show a tip over the next field. If tapping doesn't dismiss it, press Back and tap the field again.
-- **To tap a field holding text,** use its hint or a control beside it, such as "Clear search": `tap` takes another control with matching text first.
-- **On a seeded Home,** Merit badges, Ranks and Manage data are below the fold: `scroll-to` them first, with `--exact`, or it stops at the first label containing the words, such as the rank card's "2 of 7 ranks earned".
+- **A field holding text** is listed by its text and named by its label, such as `"Line one" (named "Notes") [field]`. Tap it by its name: `tap "Notes"`.
+- **`scroll-to` stops at the first label containing the words.** On a seeded Home, Merit badges, Ranks and Manage data are below the fold: `scroll-to` them with `--exact`, or it stops at the rank card's "2 of 7 ranks earned". A badge's row is its name, a period and more, so add the period: `scroll-to "Hiking."`, or it stops at Cycling, which mentions Hiking.
 - **`screen` can't show** a requirement row's state (its number's box, "Not needed") or a progress bar: crop a screenshot for those. It can't read web pages either; use a screenshot. Don't use the Android CLI's `android layout` or `android screen capture --annotate`: they leave a helper running that stops `screen` working until `adb -s S shell am force-stop com.android.cli.interact.instrumentation`.
 - **The system file picker** opens at Recent files on a fresh emulator: tap "Show roots", then Downloads. A saved file is in `/sdcard/Download/`.
 - **Other apps** stop at their first-run screens on a fresh emulator: Chrome at its welcome, Gmail at its tour. Check that the right app opened with `starts`, and go Back.
