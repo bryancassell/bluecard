@@ -14,7 +14,8 @@ You test one assignment of BlueCard's QA test plan, `docs/qa-test-plan.md`, on o
 ## Start
 
 1. Print the plan's sections you need, in one command, and read nothing else from the plan unless a case points you there: `scripts/qa/plan_sections.py "Known issues" "The seed" <each suite, such as ONB>`. Add "Settings varied on the devices" if your settings aren't the default, and "TalkBack" for A11Y.
-2. Turn on your settings, then work through your suites in order.
+2. If your suites start from the seed, run `seed` before turning on your settings: it can't work with TalkBack on, or with the system's file picker in another language. To seed again later, turn TalkBack and the language off first.
+3. Turn on your settings, then work through your suites in order.
 
 ## Rules
 
@@ -33,8 +34,8 @@ Everything you read stays in your context, and is read again on every step, so i
 - **Check text with `expect`,** which prints only what isn't as expected. Use `screen` only to find something, or when a check fails.
 - **Use `tap … --then "<text on the next page>"`** rather than a tap followed by `wait` or `screen`.
 - **Chain steps in one Bash command** with `&&`, so it stops at the first failure.
-- **Take a screenshot only to judge how something looks,** cropped to the part being checked. Screenshots are 360px wide unless you ask for more.
-- **Don't `sleep`:** `wait` and `--then` wait only as long as needed.
+- **Take a screenshot only to judge how something looks,** cropped to the part being checked. A whole screen is saved 360px wide, and a crop at the screen's own size, unless you ask for another width.
+- **Don't `sleep` to wait for the app:** `wait` and `--then` wait only as long as needed. Sleep only for a time a case gives, such as NAV-1's 10 seconds, or between `tb-speech` reads.
 - **Read a PRD row only when a case fails or is unclear:** `grep -n '^| <row name>' PRD.md`.
 
 ## Driving the emulator

@@ -298,7 +298,9 @@ def cmd_expect(args):
             problems.append(f'missing: "{text}"')
             continue
         def has(entry, flag):
-            return "disabled" not in entry.flags if flag == "enabled" else flag in entry.flags
+            if flag == "enabled":
+                return entry.interactive and "disabled" not in entry.flags
+            return flag in entry.flags
         if flags and not any(all(has(e, f) for f in flags) for e in matches):
             problems.append(f"not {','.join(sorted(flags))}: " + "; ".join(map(str, matches[:3])))
     if problems:
@@ -356,8 +358,9 @@ def cmd_scroll_to(args):
 def type_text(serial, text):
     if not text.isascii():
         sys.exit("adb's input text takes only ASCII. Paste other text through the clipboard instead.")
-    # input text reads %s as a space; the rest is quoted for the device's shell.
-    escaped = text.replace("%", "\\%").replace(" ", "%s").replace("'", "'\\''")
+    # input text reads %s as a space, and has no way to type "%s" itself. The rest is quoted for
+    # the device's shell.
+    escaped = text.replace(" ", "%s").replace("'", "'\\''")
     shell(serial, f"input text '{escaped}'")
 
 
@@ -398,8 +401,10 @@ def cmd_shot(args):
         right, bottom = min(right, width - 1), min(bottom, height - 1)
         subprocess.run(["sips", "-c", str(bottom - top), str(right - left), "--cropOffset", str(top), str(left),
                         args.out, "--out", args.out], capture_output=True, check=True)
-    if args.width:
-        subprocess.run(["sips", "--resampleWidth", str(args.width), args.out, "--out", args.out],
+    # A crop is for a closer look, so it keeps the screen's pixels unless a width is asked for.
+    width = args.width if args.width is not None else (0 if args.crop else 360)
+    if width:
+        subprocess.run(["sips", "--resampleWidth", str(width), args.out, "--out", args.out],
                        capture_output=True, check=True)
     print(f"saved {args.out}")
 
@@ -423,6 +428,15 @@ def cmd_starts(args):
 SEED_FILE = "bluecard-qa-seed.json"
 
 
+def close_keyboard(serial):
+    """Presses Back once the keyboard is up. Back before it shows would leave the page instead."""
+    for _ in range(10):
+        if "mInputShown=true" in shell(serial, "dumpsys input_method | grep mInputShown", check=False):
+            shell(serial, "input keyevent KEYCODE_BACK")
+            return
+        time.sleep(0.3)
+
+
 def cmd_seed(args):
     """Starts from the seed: clears the app, finishes Onboarding, and imports the seed with Replace all."""
     s = args.serial
@@ -434,7 +448,7 @@ def cmd_seed(args):
     for field, text in (("Name", "QA Scout"), ("Unit number", "Troop 1")):
         tap(s, field)
         type_text(s, text)
-        shell(s, "input keyevent KEYCODE_BACK")
+        close_keyboard(s)
     fields = [e.label for e in read_screen(s) if "field" in e.flags]
     if fields != ["QA Scout", "Troop 1"]:
         sys.exit(f"Onboarding's fields didn't take the text: {fields}")
@@ -560,7 +574,15 @@ def cmd_tb_gesture(args):
 def cmd_tb_speech(args):
     """Prints what TalkBack spoke since the log was last cleared. Needs TalkBack's verbose log."""
     if args.clear:
-        adb(args.serial, "logcat", "-c")
+        # Only the main buffer, where TalkBack logs: the crash buffer must keep BlueCard's crashes.
+        # logd can refuse for a moment while it's busy, as on API 26 just after a seed.
+        for _ in range(3):
+            if subprocess.run([ADB, "-s", args.serial, "logcat", "-b", "main", "-c"],
+                              capture_output=True).returncode == 0:
+                break
+            time.sleep(0.5)
+        else:
+            sys.exit("couldn't clear the log")
         print("log cleared")
         return
     out = adb(args.serial, "logcat", "-d", "-v", "time")
@@ -625,7 +647,7 @@ def main():
     p = sub.add_parser("shot", help="save a screenshot, optionally cropped and scaled down")
     p.add_argument("out")
     p.add_argument("--crop", help="left,top,right,bottom in the screen's pixels, as screen --coords gives them")
-    p.add_argument("--width", type=int, default=360, help="scale to this width (0 keeps full size)")
+    p.add_argument("--width", type=int, help="scale to this width: 360 by default, or full size with --crop; 0 keeps full size")
 
     p = sub.add_parser("starts", help="list recent activity starts, such as a link opening the browser")
     p.add_argument("--last", type=int, default=5)

@@ -119,7 +119,7 @@ command. When Google ships a newer API 37 image, update both names.
 
 ### Starting and stopping an emulator
 
-Each assignment gets its own emulator, on a console port from 5580 up (5580,
+Each lane gets its own emulator, on a console port from 5580 up (5580,
 5582, 5584), which other sessions' emulators don't use (they take 5554 up).
 Before using a port, check that `adb devices` doesn't list it.
 
@@ -134,7 +134,8 @@ until [ "$(adb -s $SERIAL shell getprop sys.boot_completed | tr -d '\r')" = 1 ];
 until adb -s $SERIAL shell ls /sdcard/Download > /dev/null 2>&1; do sleep 2; done
 ```
 
-Stop it with `adb -s $SERIAL emu kill` once its tester has reported back.
+Stop it with `adb -s $SERIAL emu kill` once the last tester on it has
+reported back.
 Always pass `-s $SERIAL`: another session may have its own emulator running.
 
 Android Studio, if it's open, sometimes restarts the adb server (seen in the
@@ -198,6 +199,9 @@ triage.
 
 1. **Run directory.** `RUN_DIR=build/qa/$(date +%Y-%m-%d-%H%M)`, made with
    `mkdir -p`. `build/` is ignored by git. Testers save screenshots there.
+   The Bash tool doesn't keep variables between commands, so note the
+   directory's name and set `RUN_DIR` to it, not to `$(date …)` again, in
+   each later command.
 2. **Tools.** Export `ANDROID_HOME` and `JAVA_HOME` as in
    [Creating the AVDs](#creating-the-avds), and put
    `$ANDROID_HOME/platform-tools` on `PATH`, in each command: the Bash tool
@@ -223,7 +227,10 @@ triage.
 6. **AVDs.** Create any that are missing.
 7. **Previous release.** `gh release list --limit 5`. If there's a release
    older than the build under test, A5 tests updating from it; download its
-   APK into `$RUN_DIR/previous/`.
+   APK into `$RUN_DIR/previous/`. If the build under test is signed with the
+   debug key, sign the previous APK with it too, or Android won't update one
+   with the other:
+   `"$BUILD_TOOLS/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android --out "$RUN_DIR/previous/previous-debug.apk" "$RUN_DIR/previous/<its APK>"`.
 
 ### 2. Run the assignments
 
@@ -241,13 +248,16 @@ third is free.
    adb -s $SERIAL push scripts/qa/seed.json /sdcard/Download/bluecard-qa-seed.json
    ```
 
-2. **Start a tester** for the lane's next assignment with the Agent tool:
+2. **Start a tester** for the lane's next assignment, after
+   `mkdir -p "$RUN_DIR/<ID>"`, with the Agent tool:
    `subagent_type: "qa-tester"`, in the background, with this prompt:
 
    ```text
    Run assignment <ID> of docs/qa-test-plan.md.
    - Emulator: <SERIAL> (<AVD>, Android <version>), with the build under test installed
      (version <versionName>, <commit>) and the seed in /sdcard/Download.
+   - Build under test: <APK path>. Previous release (A5 only): <its APK path, signed
+     with the same key>, or none.
    - Settings: <settings from the Assignments table>.
    - Suites: <suites from the Assignments table>.
    - Run directory: <RUN_DIR>/<ID>/
@@ -257,8 +267,9 @@ third is free.
    If the lane's next assignment is on the same AVD, run
    `scripts/qa/ui.py $SERIAL reset`, which puts back the default settings,
    clears BlueCard and the logs, and leaves the app and the seed installed,
-   then start the next tester. Otherwise stop the emulator and start the
-   next AVD's.
+   then start the next tester. After A5, whose REL cases install other APKs,
+   uninstall BlueCard and install the build under test again before `reset`.
+   Otherwise stop the emulator and start the next AVD's.
 
 If a tester stops early, such as from a crash it can't get past, start a new
 tester for what's left, on a reset emulator, and tell it what the first one
@@ -520,8 +531,8 @@ Start from the seed, on Camping.
   box is filled with a check, and 6's row says "(1 of 5 complete)". (PRD:
   Marking a requirement complete, Counting complete sub-requirements)
 - **REQ-2 [smoke] Changing the date.** On 6a, Change date. → The date picker,
-  at the current date, with dates after today disabled. Pick a date earlier
-  this month, OK. → That date shows.
+  at the current date, with dates after today disabled. Pick a date a few
+  days ago, OK. → That date shows.
 - **REQ-3 Unchecking.** On 6a, type a note and Save notes. Uncheck 6a. → The
   date goes away; the note stays. Check it again. → The date picked in REQ-2
   comes back. (PRD: Unchecking a requirement)
@@ -548,8 +559,8 @@ Start from the seed, on Camping.
 - **REQ-9 Date picker on a narrow window.** (Largest display size only.) On
   6a, Change date. → The picker opens for typing the date: a "Date" field
   holding the current date, no button to switch to the calendar, the
-  keyboard down until the field is tapped, and Cancel then OK. Type a date
-  earlier this month, digits only (see "Settings varied on the devices"),
+  keyboard down until the field is tapped, and Cancel then OK. Type a date a
+  few days ago, digits only (see "Settings varied on the devices"),
   OK. → That date shows. Change date, and turn to landscape. → It stays on
   typing, now with the button to switch to the calendar. Cancel, Change date
   again in landscape, then turn back to portrait. → The calendar in
@@ -859,12 +870,9 @@ in reading order; nothing is read twice in a row.
 ### REL: Release and data safety
 
 - **REL-1 Updating from the previous release.** Only when there's a previous
-  release (the coordinator says). Uninstall the build under test, and install
-  the previous release's APK. If the build under test is signed with the
-  debug key, re-sign the previous APK with it first, or Android won't update
-  one with the other:
-  `apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --out previous-debug.apk previous.apk`.
-  Import the seed, then install the build under test over it with
+  release (the coordinator gives its APK, signed with the same key as the
+  build under test). Uninstall the build under test, and install the
+  previous release's APK. Import the seed, then install the build under test over it with
   `adb -s S install -r`. → The app opens on Home with the seed's data, and
   NAV-1 still passes.
 - **REL-2 Auto Backup and restore.** As in

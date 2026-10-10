@@ -904,9 +904,10 @@ other emulator options didn't work, and why the emulator isn't cached.
   recommends ([#197](https://github.com/bryancassell/bluecard/issues/197)).
 - **Only a release build runs shrunk code.** The debug app and local tests
   don't, so they can't find what R8 breaks at runtime. CI builds the release
-  app, so it catches R8's build errors; the
-  [QA test plan](docs/qa-test-plan.md) checks a release build at runtime.
-  Code reached only through reflection needs a keep rule in
+  app, so it catches R8's build errors; runtime problems need a release build
+  checked by hand
+  ([`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build)). Code
+  reached only through reflection needs a keep rule in
   `app/proguard-rules.pro`.
 - **Gradle leaves the release build unsigned.** Publishing signs it with
   `apksigner`, so the release key's password never reaches a Gradle build,
@@ -982,7 +983,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |
-| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked on emulators | The app optimization guide recommends it |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked by hand | The app optimization guide recommends it |
 | [Release signing](#release-build) | `apksigner` signs when publishing, and Gradle builds unsigned; test builds are GitHub pre-releases | The key's password never reaches a Gradle build |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug` | A debug build and a test release install side by side |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only; StrictMode never crashes | They catch disk access and leaks while the app is in use |

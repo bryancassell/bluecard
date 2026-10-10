@@ -32,8 +32,9 @@ def main():
             if printing_level is not None and level <= printing_level:
                 printing_level = None
             matches = [name for name in names if title.startswith(name)]
+            # A match inside a section already printing is found too, though it starts nothing new.
+            found.update(matches)
             if matches and printing_level is None:
-                found.update(matches)
                 printing_level = level
         if printing_level is not None:
             print(line)
