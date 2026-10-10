@@ -57,7 +57,6 @@ own documentation says so, and each such claim links to the page.
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
   - [Instrumented tests in CI](#instrumented-tests-in-ci)
-  - [Release QA](#release-qa)
 - [Release build](#release-build)
 - [Debug builds](#debug-builds)
 - [Decisions](#decisions)
@@ -897,59 +896,6 @@ image and 16 KB pages, the page size Google Play requires
 [`docs/toolchain.md`](docs/toolchain.md#continuous-integration) says why the
 other emulator options didn't work, and why the emulator isn't cached.
 
-### Release QA
-
-Before each release, Claude runs [`docs/qa-test-plan.md`](docs/qa-test-plan.md)
-([#290](https://github.com/bryancassell/bluecard/issues/290)): written test
-cases for every PRD journey, worked through on the release build on emulators
-of the oldest and target Android versions, a small phone, a tablet and a
-foldable, with dark mode, large text, a right-to-left language and TalkBack.
-It files an issue for each bug it finds.
-
-- **Written cases that Claude follows and judges, not scripted UI tests.** The
-  local tests check behavior; what's left is what they can't see: R8's effect
-  at runtime, real screen sizes and settings, other apps such as the file
-  picker and share sheet, and TalkBack. Judging a layout or a spoken label
-  takes a reader. Scripted device tests (Espresso, or Maestro flows) would
-  check fixed assertions on each device, at the cost of a second test suite to
-  keep up with every UI change.
-- **Not the Android CLI's journeys, for now.** Google's
-  [Journeys](https://developer.android.com/tools/agents/android-cli/journeys)
-  are natural-language test cases in XML that an agent runs, and Android
-  Studio runs them with Gemini as a Studio Labs preview. A journey ends at its
-  first failed step, and its checks look only at the screen as it is, without
-  scrolling, which suits one test of one flow more than a QA pass that keeps
-  going to find every bug. The format is documented only in the CLI's
-  `android-cli` skill so far. Revisit once Journeys is stable: the suites'
-  cases would translate into journeys one for one.
-- **The release build, signed with the debug key by default,** since R8 only
-  runs there. It isn't debuggable, so the plan forces no failures with
-  `run-as`; the local tests cover failure states.
-- **AVDs of the plan's own, started read-only.** Every assignment starts on a
-  freshly set up phone, two can share an AVD, and a run never touches an
-  emulator another session is using.
-- **Testers are subagents, one emulator each,** reporting in text, so the
-  coordinating session keeps the context to merge findings and check them
-  against existing issues before filing.
-- **Testers are kept short and lean.** In the trial run, nine testers made
-  1,685 model calls that read 183 million input tokens, almost all of it
-  context read again on each call, against 65,000 output tokens. So each
-  assignment is a suite or two, since a tester's cost grows with the square
-  of its steps. Testers run as a project subagent,
-  `.claude/agents/qa-tester.md`, which holds their instructions and gives them
-  only Bash and Read, without CLAUDE.md, at medium effort: a general-purpose
-  subagent started each call with about 28,000 tokens of system prompt and
-  tool definitions; this one starts with about 7,000. `ui.py` gives them
-  checks that print only what's wrong (`expect`), and starts from the seed in
-  one command (`seed`). Rerun this way, the trial's A1 and A7 read 15 million
-  input tokens instead of 60 million, in 69 tester-minutes instead of 105.
-- **`scripts/qa/ui.py` drives the emulator** with `uiautomator dump` and
-  `input`, and sends TalkBack's gestures through the emulator console, since
-  TalkBack ignores `input`. The Android CLI's `android layout` reads the
-  screen in about 1 second, against 2 for `uiautomator dump`, but it doesn't
-  say whether a control is disabled, and the helper it leaves running on the
-  emulator stops `uiautomator` working.
-
 ## Release build
 
 - **R8 shrinks, optimizes and obfuscates the release build's code, and unused
@@ -958,9 +904,9 @@ It files an issue for each bug it finds.
   recommends ([#197](https://github.com/bryancassell/bluecard/issues/197)).
 - **Only a release build runs shrunk code.** The debug app and local tests
   don't, so they can't find what R8 breaks at runtime. CI builds the release
-  app, so it catches R8's build errors; the [QA test plan](#release-qa) checks a
-  release build at runtime. Code
-  reached only through reflection needs a keep rule in
+  app, so it catches R8's build errors; the
+  [QA test plan](docs/qa-test-plan.md) checks a release build at runtime.
+  Code reached only through reflection needs a keep rule in
   `app/proguard-rules.pro`.
 - **Gradle leaves the release build unsigned.** Publishing signs it with
   `apksigner`, so the release key's password never reaches a Gradle build,
@@ -1036,8 +982,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |
-| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked by the QA test plan | The app optimization guide recommends it |
+| [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked on emulators | The app optimization guide recommends it |
 | [Release signing](#release-build) | `apksigner` signs when publishing, and Gradle builds unsigned; test builds are GitHub pre-releases | The key's password never reaches a Gradle build |
-| [Release QA](#release-qa) | A written test plan that Claude runs on the release build on emulators | Checks what local tests can't: R8 at runtime, screen sizes, settings, TalkBack |
 | [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug` | A debug build and a test release install side by side |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only; StrictMode never crashes | They catch disk access and leaks while the app is in use |

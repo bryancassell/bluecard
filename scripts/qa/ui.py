@@ -131,7 +131,12 @@ def collect_interactive_only(node, entries):
 
 
 def read_screen(serial):
-    """Returns the screen's entries. uiautomator can't dump while the screen is animating, so retry."""
+    """Returns the screen's entries. uiautomator can't dump while the screen is animating, so retry.
+
+    The Android CLI's `android layout` reads the screen in about 1 second, against 2 for this,
+    but it doesn't say whether a control is disabled, and the helper it leaves running on the
+    emulator stops uiautomator working.
+    """
     out = ""
     for _ in range(8):
         out = shell(serial, f"uiautomator dump {DUMP_PATH}", check=False)

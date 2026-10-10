@@ -21,6 +21,7 @@ updating AGP or a library that uses reflection.
 - [Test suites](#test-suites): the test cases
 - [Filing issues](#filing-issues)
 - [Keeping the plan current](#keeping-the-plan-current)
+- [Why the plan works this way](#why-the-plan-works-this-way)
 
 ## Running the plan
 
@@ -151,7 +152,7 @@ read-only emulator forgets them when it stops.
 |---|---|---|
 | Dark mode | `adb shell cmd uimode night yes` | API 29 and higher. |
 | Largest text | `adb shell settings put system font_scale 2.0` | 2.0 is the largest in Settings on API 34 and higher; use 1.3 on API 26. |
-| Largest display size | `adb shell wm density <width_px ÷ 2>`, such as 540 on a 1080-wide screen | Android's largest display size keeps the screen at least 320dp wide. Undo with `wm density reset`. |
+| Largest display size | `adb shell wm density <width_px ÷ 2>`, such as 540 on a 1080-wide screen | Android's largest display size keeps the screen at least 320dp wide. Undo with `wm density reset`. That's narrower than the date picker's calendar, so in portrait the picker opens for typing the date, in a field holding the date already. Clear it, and type the digits only, month first, such as `10022026`: the field adds the slashes. |
 | Landscape | `adb shell settings put system accelerometer_rotation 0` then `adb shell settings put system user_rotation 1` | `user_rotation 0` is portrait again. A tablet's natural orientation is landscape, so on it 0 is landscape. `ui.py launch` keeps the setting; if the screen turns back anyway, such as after a trip to the launcher, set it again. |
 | Right-to-left device language | `adb shell cmd locale set-device-locale fa-IR` | Persian: right-to-left, with its own digits. BlueCard has no Persian strings, so it must stay in English, left to right, with Latin digits, in its dialogs and PDFs too ([ARCHITECTURE.md: Language and layout direction](../ARCHITECTURE.md#language-and-layout-direction)). System screens, such as the file picker, change. So does the date picker, by design: it shows Material 3's labels and dates in the device's language and direction (`CompletionDatePickerDialog`), while its OK and Cancel stay English. Undo with `en-US`. API 34 and higher. |
 | TalkBack | `scripts/qa/ui.py $SERIAL talkback on` | See [TalkBack](#talkback). |
@@ -171,7 +172,7 @@ until the lane moves to another AVD.
 | Lane | ID | AVD | Settings | Suites |
 |---|---|---|---|---|
 | 1 | A1 | `QA_Phone_API37` | Default | [ONB](#onb-onboarding-and-profile), [HOME](#home-home), [FIND](#find-browse-and-search) |
-| 1 | A2 | `QA_Phone_API37` | Default | [BADGE](#badge-badge-page-and-counselor), [REQ](#req-recording-requirements), [TRK](#trk-trackers) |
+| 1 | A2 | `QA_Phone_API37` | Default | [BADGE](#badge-badge-page-and-counselor), [REQ](#req-recording-requirements) except REQ-9, [TRK](#trk-trackers) |
 | 1 | A3 | `QA_Phone_API37` | Default | [DONE](#done-completing-a-badge-and-reports), [RANK](#rank-ranks) |
 | 1 | A4 | `QA_Phone_API37` | Default | [CLR](#clr-clearing), [DATA](#data-export-and-import) |
 | 1 | A5 | `QA_Phone_API37` | Default | [NAV](#nav-navigation-and-restoring-state) except NAV-5, [REL](#rel-release-and-data-safety) |
@@ -183,7 +184,7 @@ until the lane moves to another AVD.
 | 2 | A11 | `QA_Tablet_API37` | Portrait | [WALK](#walk-every-screen), then ONB, FIND, DONE and DATA as smoke |
 | 3 | A12 | `QA_Phone_API37` | Dark mode | [WALK](#walk-every-screen) |
 | 3 | A13 | `QA_Phone_API37` | Right-to-left language | [WALK](#walk-every-screen), then FIND-1, FIND-2 and DONE-3 |
-| 3 | A14 | `QA_Phone_API37` | Largest text and display size | [WALK](#walk-every-screen), then TRK-1 and REQ-4 |
+| 3 | A14 | `QA_Phone_API37` | Largest text and display size | [WALK](#walk-every-screen), then TRK-1, REQ-4 and REQ-9 |
 | 3 | A15 | `QA_Phone_API37` | Landscape | [WALK](#walk-every-screen) |
 | 3 | A16 | `QA_Foldable_API37` | Unfolded, then folded | [WALK](#walk-every-screen) unfolded, NAV-5 (folding), then FIND, REQ and TRK as smoke, folded |
 
@@ -358,42 +359,43 @@ the screen (`screen`, `tap`, `wait`, `scroll-to`). Use:
 - `ui.py S talkback on` and `talkback off`.
 - `ui.py S tb right` and `tb left` to move to the next or previous item,
   `tb double-tap` to activate the item in focus, and `tb up` or `tb down` to
-  change what swiping moves by. They're sent as touches through the emulator
-  console, which TalkBack treats as a finger.
+  change what swiping moves by. `tb tap X Y` touches a point, so TalkBack
+  focuses what's there: find X and Y with `screen --coords` before turning
+  TalkBack on. They're sent as touches through the emulator console, which
+  TalkBack treats as a finger, and work only in portrait.
+- `ui.py S key BACK` for Back.
 - `ui.py S tb-speech --clear` before a gesture, then `ui.py S tb-speech` to
-  print what TalkBack said, with times.
+  print what TalkBack said, with times. Read it after each gesture, and
+  again a moment later if it's short: speech can take a second or two to
+  reach the log, especially just after a page changes.
 - Screenshots, to see where TalkBack's focus outline is.
+
+After `talkback on`, run `tb-speech` every second or so until it prints
+something, before the first gesture: gestures sent sooner are lost. Turn TalkBack on before
+opening the page a case checks: turned on over an
+open page, it can miss the first change there, such as a box being checked.
+To reach a page deep in the app quickly, open the page before it with taps,
+turn TalkBack on, then touch the row (`tb tap X Y`) and `tb double-tap`.
 
 `tb-speech` reads TalkBack's log, which needs **Log output level: Verbose**.
 A fresh emulator logs only errors. Set it while TalkBack is still off, so
 `ui.py` taps work:
 
-1. `adb -s S shell am start -n com.google.android.marvin.talkback/com.android.talkback.TalkBackPreferencesActivity`
-2. `scroll-to` and tap "Advanced settings", then "Developer settings", then
-   "Log output level".
+1. `adb -s S shell am start -n com.google.android.marvin.talkback/com.android.talkback.TalkBackPreferencesActivity`.
+   If BlueCard is still on screen, run it again.
+2. `scroll-to` and tap "Advanced settings", then `scroll-to` and tap
+   "Developer settings", then tap "Log output level".
 3. Tap "VERBOSE", then "Yes, enable verbose logging". The setting then reads
    "Log output level | VERBOSE".
 
-Turning TalkBack on may then ask to allow notifications, with TalkBack's
-focus on "Don't allow": `tb double-tap` dismisses it.
+Turning TalkBack on may ask to allow notifications, sometimes every time,
+with TalkBack's focus on "Don't allow": `tb double-tap` dismisses it.
 
 ### Known issues
 
 Open issues a tester is likely to run into. Report a match as the issue, not
 as a new bug. The coordinator checks the full list.
 
-- [#299](https://github.com/bryancassell/bluecard/issues/299): on API 26, the
-  Merge dialog's navigation bar buttons are white on its light page.
-- [#306](https://github.com/bryancassell/bluecard/issues/306): at the largest
-  text and display size, the date picker runs off the right edge.
-- [#307](https://github.com/bryancassell/bluecard/issues/307): at the largest
-  text and display size, labels break mid-word, such as "Unmar" / "k".
-- [#308](https://github.com/bryancassell/bluecard/issues/308): in landscape,
-  Badges' search field is squeezed behind the keyboard.
-- [#315](https://github.com/bryancassell/bluecard/issues/315): scrolled
-  pages draw under the status bar, over the clock and icons.
-- [#281](https://github.com/bryancassell/bluecard/issues/281): whether some
-  messages are read out when a page is shown already showing them.
 - [#148](https://github.com/bryancassell/bluecard/issues/148): a
   requirement's own-work checkbox moves when it completes the requirement.
 
@@ -543,6 +545,23 @@ Start from the seed, on Camping.
 - **REQ-8 Starting a badge.** Open Bugling, a requirement, and check it. →
   Bugling is in progress, on Badges and on Home. Uncheck it. → Still in
   progress. (PRD: Starting a badge)
+- **REQ-9 Date picker on a narrow window.** (Largest display size only.) On
+  6a, Change date. → The picker opens for typing the date: a "Date" field
+  holding the current date, no button to switch to the calendar, the
+  keyboard down until the field is tapped, and Cancel then OK. Type a date
+  earlier this month, digits only (see "Settings varied on the devices"),
+  OK. → That date shows. Change date, and turn to landscape. → It stays on
+  typing, now with the button to switch to the calendar. Cancel, Change date
+  again in landscape, then turn back to portrait. → The calendar in
+  landscape, then typing once it's turned back. (PRD: Date picker on a
+  narrow window)
+- **REQ-10 Key presses.** Open 6a afresh, checked with a date. Press Tab
+  (`ui.py S key TAB`) three times, checking each with `expect`: Completed,
+  Change date, then Remove date are focused. Don't go past it into Notes,
+  where Tab types a tab character, as in any multi-line field.
+  Press Enter. → The date goes, and nothing has focus: `screen` shows
+  nothing "focused". Another Tab focuses Completed, the page's first
+  control. (PRD: Focus after Save, or a button that goes)
 
 ### TRK: Trackers
 
@@ -724,8 +743,9 @@ Start from the seed.
 
 Open every screen with the assignment's setting on, take one screenshot of
 each (more where a page scrolls), and look at it. Start from the seed.
-Screenshots at the default 360px wide are enough to see these problems; take
-a closer, cropped one only to make sure of one.
+Screenshots at the default 360px wide are enough to see these problems in
+portrait; in landscape, use `--width 800`. Take a closer, cropped one only to
+make sure of one.
 
 On each screen, look for:
 
@@ -733,7 +753,16 @@ On each screen, look for:
   summary may wrap; it must not be cut short without an ellipsis.
 - Anything hidden behind the status bar, navigation bar, camera cutout or
   keyboard, or that can't be scrolled to.
-- Buttons squeezed, wrapped mid-word, or pushed off a dialog.
+- A page without a band behind the status bar, a little darker than the page
+  (lighter in dark mode), or one that scrolls under the status bar rather
+  than being cut off at the band's edge. The full-screen Merge dialog has no
+  band: its status bar is the color of its top row. (PRD: Status bar)
+- Buttons squeezed, wrapped mid-word, or pushed off a dialog. Two buttons that
+  don't fit side by side, such as Change date and Unmark, go one under the
+  other. A row's status, such as "In progress", goes on a line of its own
+  where a word beside it would otherwise break; a name that wraps between
+  its words can stay beside it. (PRD: A date's buttons, Status in a narrow
+  row)
 - Text, or the status and navigation bars' icons, hard to read against the
   background, especially in dark mode and in dialogs. (PRD: Colors)
 - A layout that's broken for the screen size: content in a narrow strip, or
@@ -744,21 +773,29 @@ The screens, and how to reach them:
 
 1. Onboarding (from nothing), with the keyboard open on the Name field.
 2. Home, scrolled through.
-3. Badges, then with "camp" searched and the keyboard open.
+3. Badges, then with "camp" searched and the keyboard open. On a phone in
+   landscape, the "Merit badges" heading goes while the keyboard is open, and
+   the search field and count move to the top; the heading comes back as the
+   keyboard closes. (PRD: Search on a short window)
 4. Badge detail: Camping (scroll through), Chess (not started), First Aid
    (completed, with report buttons).
 5. Requirement detail: Camping 9 (sub-requirements and notes), Camping 9a (a
-   log), Hiking 5 (fixed rows and own work), Camping 3 (Do 1 of 3).
+   log), Hiking 5 (fixed rows and own work), Camping 3 (Do 1 of 3), Camping
+   6a checked (a date's buttons).
 6. Tracker entry: a new campout, with the keyboard open on the last field.
-7. The date picker, from Mark completed on Chess.
+7. The date picker, from Mark completed on Chess. Where the window is
+   narrower than its calendar, as at the largest display size, it opens for
+   typing the date, with no button to switch to the calendar, and the keyboard
+   stays down until the field is tapped. (PRD: Date picker on a narrow window)
 8. Edit counselor, on Camping.
 9. Ranks; Rank detail for Scout (counted as earned), Second Class and Star;
    Second Class 2a (Signed off by); Star 3 (merit badges).
 10. Data management; Edit name and unit.
 11. Dialogs: Clear progress on Camping, Discard changes on Edit counselor,
     and Import's Merge or Replace all, after picking the seed file.
-12. The merge dialog: change the unit number, check Camping 6a, then Manage
-    data → Import → `bluecard-qa-seed.json` → Merge.
+12. The merge dialog: change the unit number (Manage data → Edit name and
+    unit), check Camping 6 → 6a, then Manage data → Import →
+    `bluecard-qa-seed.json` → Merge.
 13. The share sheet, from First Aid's Share report (not on API 26, which
     opens Gmail instead).
 
@@ -787,6 +824,8 @@ in reading order; nothing is read twice in a row.
 - **A11Y-3 Requirement.** Open Camping → 6 → 6a. Move to "Completed" and
   double-tap. → It's read as a check box, and its new state is read after
   the double-tap. The date buttons read "Change date" and "Remove date".
+  Type a note and double-tap Save notes. → TalkBack stays on Save notes.
+  (PRD: Focus after Save, or a button that goes)
 - **A11Y-4 Tracker entry.** Add a campout. → The date button reads "Add date:
   Start date"; each field is read with its label. (PRD: Trackers)
 - **A11Y-5 Dialog.** Camping → Clear progress. → Focus moves into the dialog;
@@ -795,6 +834,27 @@ in reading order; nothing is read twice in a row.
 - **A11Y-6 Data management.** → Edit is read as "Edit name and unit"; Export,
   Import and Clear all are each read as a button with its name. Import the seed with Replace
   all. → "Data imported." is read. (PRD: Changing the name and unit number)
+- **A11Y-7 Merge dialog.** With TalkBack off, open Second Class → Mark earned
+  → a date → OK, then Manage data → Import → `bluecard-qa-seed.json` →
+  Merge. Turn TalkBack on, and swipe through the dialog to its end and back.
+  → Each option is read whole: the choice's name, "this phone" or "the
+  file", how far that side got, and whether it's selected. Double-tap Second Class's "The file". → "Second Class
+  will no longer count as earned." is read once. Turn to landscape and back.
+  → It isn't read again. (PRD: Merging an import; ARCHITECTURE.md: Live
+  regions)
+- **A11Y-8 Rows partly off the screen.** Swiping doesn't test this, since
+  TalkBack scrolls what it focuses into view; touching does. Pick the point
+  to touch from a cropped screenshot: `screen --coords` gives only each
+  item's center, which may be off the screen. With TalkBack off,
+  `scroll-to "Merit badges" --exact` on Home, which leaves a strip of the
+  rank card under the status bar. Turn TalkBack on, `tb right` so focus
+  isn't on the card, and touch the strip. → The card is read whole,
+  "Tenderfoot" included. Turn TalkBack off, open Camping, and scroll it if
+  needed so a requirement row's last line is hidden at the bottom of the
+  screen. Turn TalkBack on, and touch the row. → It's read whole, its number
+  and summary included. Double-tap it, then go Back. → Wherever TalkBack's
+  focus lands, it's read with its name, not just "Button". (ARCHITECTURE.md:
+  Screen reader labels; PRD: Focus when the page changes)
 
 ### REL: Release and data safety
 
@@ -866,6 +926,10 @@ the developer can decide.
 
 - **A new screen or journey** adds a case to its suite, and a line to
   [WALK](#walk-every-screen).
+- **A new or changed row in PRD.md's Design decisions** that a scout would
+  see or hear changes the case that checks it, or adds one. Where it shows
+  only with a setting, such as large text or landscape, it goes in WALK or
+  in a case that assignment runs.
 - **A change to the backup format** leaves `scripts/qa/seed.json` alone: import
   must keep reading older versions, and the seed checks that it does.
   Replace it only when a new version adds something the seed should show,
@@ -879,3 +943,32 @@ the developer can decide.
   `.claude/agents/qa-tester.md` and `scripts/qa/ui.py`.
 - **A long assignment** is split: a tester's cost grows with the square of
   how many steps it takes.
+
+## Why the plan works this way
+
+- **Written cases that Claude follows and judges, not scripted UI tests.** The
+  local tests check behavior; what's left is what they can't see: R8's effect
+  at runtime, real screen sizes and settings, other apps such as the file
+  picker and share sheet, and TalkBack. Judging a layout or a spoken label
+  takes a reader. Scripted device tests (Espresso, or Maestro flows) would
+  check fixed assertions on each device, at the cost of a second test suite to
+  keep up with every UI change.
+- **Not the Android CLI's journeys, for now.** Google's
+  [Journeys](https://developer.android.com/tools/agents/android-cli/journeys)
+  are natural-language test cases in XML that an agent runs, and Android
+  Studio runs them with Gemini as a Studio Labs preview. A journey ends at its
+  first failed step, and its checks look only at the screen as it is, without
+  scrolling, which suits one test of one flow more than a QA pass that keeps
+  going to find every bug. The format is documented only in the CLI's
+  `android-cli` skill so far. Revisit once Journeys is stable: the suites'
+  cases would translate into journeys one for one.
+- **Testers are kept short and lean.** In the trial run, nine testers made
+  1,685 model calls that read 183 million input tokens, almost all of it
+  context read again on each call, against 65,000 output tokens. Testers run
+  as `.claude/agents/qa-tester.md`, with only Bash and Read, without
+  CLAUDE.md, at medium effort: a general-purpose subagent started each call
+  with about 28,000 tokens of system prompt and tool definitions; this one
+  starts with about 7,000. `ui.py` gives them checks that print only what's
+  wrong (`expect`), and starts from the seed in one command (`seed`). Rerun
+  this way, the trial's A1 and A7 read 15 million input tokens instead of 60
+  million, in 69 tester-minutes instead of 105.
