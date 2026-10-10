@@ -556,8 +556,8 @@ Start from the seed, on Camping.
 - **REQ-4 [smoke] Notes.** On 6a, type two lines of notes (use `key ENTER`
   between them). → "Save notes" turns on, and the field and Save stay above
   the keyboard. Save notes. → Save notes turns off; leave and reopen 6a, and
-  the notes are there. Back with unsaved notes asks "Discard changes?". (PRD: Requirement
-  notes, Save while typing in a requirement's notes)
+  the notes are there. Back with unsaved notes asks "Discard changes?".
+  (PRD: Requirement notes, Save while typing)
 - **REQ-5 Do N of M.** Open 3 ("Do 1 of 3"). → Its own work's checkbox above
   "Do 1 of 3" and the sub-requirements. Check 3a. → 3b and 3c show "Not
   needed", but 3 isn't complete until its own work is checked too; on Camping,
@@ -604,7 +604,7 @@ Start from the seed.
 - **TRK-2 Keyboard.** On a new row, tap the first text field. → Next moves to
   the next field; the last one-line field has Done. While typing in the last
   field, it and Save stay above the keyboard. (PRD: Moving between a tracker
-  row's fields, Save while typing in a tracker row)
+  row's fields, Save while typing)
 - **TRK-3 Number field.** In Nights, type letters and "1.2.3". → Only digits
   and one decimal separator are taken.
 - **TRK-4 Editing and deleting.** Open Campout 2, change the place, Save. →
@@ -790,9 +790,9 @@ On each screen, look for:
 - The field being typed in hidden behind the keyboard. While the scout types
   in a page's last field, Save even partly behind the keyboard fails too,
   though it could be scrolled to, unless the keyboard's Done saves, as on
-  Onboarding, or the field and Save don't both fit above the keyboard.
+  Onboarding, or the field is too tall for both to fit above the keyboard.
   Anything else behind the keyboard passes if it can be scrolled to. (PRD:
-  Save while typing in a tracker row)
+  Save while typing)
 - A page without a band behind the status bar, a little darker than the page
   (lighter in dark mode), or one that scrolls under the status bar rather
   than being cut off at the band's edge. The full-screen Merge dialog has no
