@@ -416,14 +416,15 @@ as a new bug. The coordinator checks the full list.
 
 - [#148](https://github.com/bryancassell/bluecard/issues/148): a
   requirement's own-work checkbox moves when it completes the requirement.
+- [#333](https://github.com/bryancassell/bluecard/issues/333): at the
+  largest text and display size, Save on Edit name and unit and Edit
+  counselor is behind the keyboard while typing in the last field.
 
 ## Test suites
 
 Cases tagged **[smoke]** are the ones run when a suite runs as smoke. Each
 case starts from where the one before it left off, unless it says where to
-start. A case run without the one before it, as in a smoke run or an
-assignment that names cases, starts where its suite does, such as from the
-seed on Camping, and opens what it names: "On 6a" is Camping → 6 → 6a.
+start; the tester agent's Start says where a case run on its own starts.
 
 ### ONB: Onboarding and profile
 
@@ -447,13 +448,14 @@ seed on Camping, and opens what it names: "On 6a" is Camping → 6 → 6a.
   unit" page, with both fields filled in. Change the unit to "Troop 7" and
   Save. → Data management again (which has a "Name and unit" heading too);
   Back → Home shows "Unit: Troop 7". (PRD: Changing the name and unit number)
-- **ONB-6 Discarding an edit.** Edit again, change the name, press Back. →
-  "Discard changes?" with Cancel and a red Discard. Cancel keeps the page and
-  the edit; Back then Discard closes it, and the name is unchanged. Clearing
-  the name keeps Save off, and Back still asks. (PRD: Unsaved changes on Back)
-- **ONB-7 Spaces and long text.** Edit the name to "  Sam  " and Save. → Home
-  shows "Sam", trimmed. Paste or type a very long name. → The field stops at
-  its limit, and Home wraps it without cutting it off.
+- **ONB-6 Discarding an edit.** Manage data → Edit again, change the name,
+  press Back. → "Discard changes?" with Cancel and a red Discard. Cancel
+  keeps the page and the edit; Back then Discard closes it, and the name is
+  unchanged. Clearing the name keeps Save off, and Back still asks. (PRD:
+  Unsaved changes on Back)
+- **ONB-7 Spaces and long text.** Edit the name to "  Sam  ", Save, and
+  Back. → Home shows "Sam", trimmed. Paste or type a very long name. → The
+  field stops at its limit, and Home wraps it without cutting it off.
 
 ### HOME: Home
 

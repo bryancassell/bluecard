@@ -43,14 +43,20 @@ def shell(serial, command, check=True):
 class Entry:
     """One thing on screen: a control with the text inside it, or a piece of text on its own."""
 
-    def __init__(self, node, label, interactive):
+    def __init__(self, node, label, interactive, lists=()):
         self.label = label
         self.interactive = interactive
         self.cls = node.get("class", "").rsplit(".", 1)[-1]
         self.package = node.get("package", "")
-        left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds", "[0,0][0,0]")))
+        left, top, right, bottom = node_bounds(node)
         self.bounds = (left, top, right, bottom)
-        self.center = ((left + right) // 2, (top + bottom) // 2)
+        # A row scrolled partly under something that stays put above its list, such as Badges'
+        # count line, still gives bounds reaching under it, where a tap goes to that instead. So
+        # its center is the middle of the part inside the scrolling lists it's in.
+        for _, list_top, _, list_bottom in lists:
+            top, bottom = max(top, list_top), min(bottom, list_bottom)
+        self.span = (top, bottom) if top < bottom else (self.bounds[1], self.bounds[3])
+        self.center = ((left + right) // 2, sum(self.span) // 2)
         flags = []
         if node.get("checkable") == "true":
             flags.append("checked" if node.get("checked") == "true" else "unchecked")
@@ -69,9 +75,10 @@ class Entry:
         if node.get("password") == "true":
             flags.append("password")
         self.flags = flags
-        # A field's own text is what's typed in it. Its name, such as "Notes", is text inside it,
-        # which uiautomator doesn't give as the field's hint.
-        self.name = " | ".join(descendant_labels(node)) if self.cls == "EditText" else ""
+        # A field's own text is what's typed in it. Its name, such as "Notes", is the first text
+        # inside it, before any under it such as "Required"; uiautomator gives no hint.
+        names = descendant_labels(node) if self.cls == "EditText" else []
+        self.name = names[0] if names else ""
 
     def describe(self, coords=False):
         flags = f" [{','.join(self.flags)}]" if self.flags else ""
@@ -82,6 +89,10 @@ class Entry:
                                     if coords else "")
 
     __str__ = describe
+
+
+def node_bounds(node):
+    return tuple(map(int, re.findall(r"\d+", node.get("bounds", "[0,0][0,0]"))))
 
 
 def own_label(node):
@@ -109,31 +120,33 @@ def descendant_labels(node):
     return labels
 
 
-def collect(node, entries):
+def collect(node, entries, lists=()):
+    """Lists NODE's text and controls. LISTS are the bounds of the scrolling lists it's in."""
     if node.tag == "node":
         if is_interactive(node):
             label = own_label(node)
             # A scrollable container's text is listed item by item below, not joined into one label.
             if not label and node.get("scrollable") != "true":
                 label = " | ".join(descendant_labels(node))
-            entries.append(Entry(node, label, True))
+            entries.append(Entry(node, label, True, lists))
             if node.get("scrollable") != "true":
                 for child in node:
-                    collect_interactive_only(child, entries)
+                    collect_interactive_only(child, entries, lists)
                 return
+            lists += (node_bounds(node),)
         elif own_label(node):
-            entries.append(Entry(node, own_label(node), False))
+            entries.append(Entry(node, own_label(node), False, lists))
     for child in node:
-        collect(child, entries)
+        collect(child, entries, lists)
 
 
-def collect_interactive_only(node, entries):
+def collect_interactive_only(node, entries, lists):
     """Lists the controls inside a control, whose text the outer control's label already has."""
     if is_interactive(node):
-        collect(node, entries)
+        collect(node, entries, lists)
     else:
         for child in node:
-            collect_interactive_only(child, entries)
+            collect_interactive_only(child, entries, lists)
 
 
 def read_screen(serial):
@@ -167,19 +180,22 @@ def focused_window(serial):
     return match.group(1) if match else out.strip().splitlines()[0] if out.strip() else "unknown"
 
 
-def find(entries, text, exact=False, name=lambda e: e.label):
-    """Entries whose label (or NAME) is TEXT, else starts with it, else contains it, ignoring case.
+def find(entries, text, exact=False, names=lambda e: (e.label, e.name)):
+    """Entries whose label or field name is TEXT, else starts with it, else contains it, ignoring case.
 
     Taking the closest matches first means "Merit badges" finds the button rather than the
     "Your merit badges" heading, without needing --exact.
     """
     wanted = text.casefold()
-    exact_matches = [e for e in entries if name(e).casefold() == wanted]
+
+    def matching(test):
+        return [e for e in entries if any(name and test(name.casefold()) for name in names(e))]
+
+    exact_matches = matching(lambda name: name == wanted)
     if exact:
         return exact_matches
-    starting = [e for e in entries if name(e).casefold().startswith(wanted)]
-    containing = [e for e in entries if wanted in name(e).casefold()]
-    return exact_matches or starting or containing
+    return (exact_matches or matching(lambda name: name.startswith(wanted))
+            or matching(lambda name: wanted in name))
 
 
 def screen_size(serial):
@@ -237,8 +253,8 @@ def pick(text, entries, exact=False, nth=1):
     # "Chess | In progress" row, comes before a search field holding "chess". A field's name is
     # matched along with the controls, so "Notes" finds the field before "Save notes", which
     # only contains it.
-    candidates = (find(usable, text, exact, name=lambda e: e.name if "field" in e.flags else e.label)
-                  or find([e for e in usable if "field" in e.flags], text, exact)
+    candidates = (find(usable, text, exact, names=lambda e: (e.name if "field" in e.flags else e.label,))
+                  or find([e for e in usable if "field" in e.flags], text, exact, names=lambda e: (e.label,))
                   or find(entries, text, exact))
     if not candidates:
         return None, candidates
@@ -253,36 +269,20 @@ def pick(text, entries, exact=False, nth=1):
 CLEAR_TOP, CLEAR_BOTTOM = 0.06, 0.9
 
 
-def visible_span(entry, entries):
-    """ENTRY's top and bottom, cut to the scrolling list it's in.
-
-    A row scrolled partly under something that stays put above the list, such as Badges' count
-    line, still gives its bounds as reaching under it, where a tap goes to that instead.
-    """
-    top, bottom = entry.bounds[1], entry.bounds[3]
-    for e in entries:
-        left, list_top, right, list_bottom = e.bounds
-        if ("scroll" in e.flags and e is not entry and left <= entry.bounds[0] and entry.bounds[2] <= right
-                and list_top < bottom and top < list_bottom):
-            top, bottom = max(top, list_top), min(bottom, list_bottom)
-    return (top, bottom) if top < bottom else (entry.bounds[1], entry.bounds[3])
-
-
-def tap_point(serial, entry, entries):
-    """Where to tap ENTRY: the middle of what shows of it, clear of the system bars while still on it."""
+def tap_point(serial, entry):
+    """Where to tap ENTRY: its center, moved clear of the system bars while still on it."""
     _, height = screen_size(serial)
-    top, bottom = visible_span(entry, entries)
-    y = min(max((top + bottom) // 2, int(height * CLEAR_TOP)), int(height * CLEAR_BOTTOM))
+    top, bottom = entry.span
+    y = min(max(entry.center[1], int(height * CLEAR_TOP)), int(height * CLEAR_BOTTOM))
     return entry.center[0], min(max(y, top + 1), bottom - 1)
 
 
 def tap(serial, text, exact=False, nth=1, long=False):
     """Taps the control or text matching TEXT, and returns a line saying what was tapped."""
-    entries = read_screen(serial)
-    entry, candidates = pick(text, entries, exact, nth)
+    entry, candidates = pick(text, read_screen(serial), exact, nth)
     if entry is None:
         sys.exit(f'nothing on screen matches "{text}". Run "screen" to see what is there.')
-    x, y = tap_point(serial, entry, entries)
+    x, y = tap_point(serial, entry)
     shell(serial, f"input swipe {x} {y} {x} {y} 800" if long else f"input tap {x} {y}")
     note = f" (match {nth} of {len(candidates)})" if len(candidates) > 1 else ""
     return f"tapped {entry}{note}"

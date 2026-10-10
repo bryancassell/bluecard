@@ -14,8 +14,8 @@ You test one assignment of BlueCard's QA test plan, `docs/qa-test-plan.md`, on o
 ## Start
 
 1. Print the plan's sections you need, in one command, and read nothing else from the plan unless a case points you there: `scripts/qa/plan_sections.py "Known issues" "The seed" <each suite, such as ONB, or case, such as REQ-4>`. Add "Settings varied on the devices" if your settings aren't the default, and "TalkBack" for A11Y.
-2. If your suites start from the seed, run `seed` before turning on your settings: it can't work with TalkBack on, or with the system's file picker in another language. To seed again later, turn TalkBack and the language off first.
-3. Turn on your settings, then work through your suites in order.
+2. If your suites start from the seed, run `seed` before turning on your settings, except in WALK, which says when. It can't work with TalkBack on, or with the system's file picker in another language: to seed again later, turn those off first.
+3. Turn on your settings, then work through your suites in order. Each case starts where the one before it left off, unless it says where to start. A case run without the one before it, as in a smoke run or an assignment that names cases, starts where its suite does, such as from the seed on Camping, and opens what it names: "On 6a" is Camping → 6 → 6a.
 
 ## Rules
 
@@ -61,7 +61,7 @@ Things that trip testers up:
 - **Back with the keyboard up** only closes the keyboard. Where a case says "press Back" while typing, press it twice.
 - **Close the keyboard before swiping,** or the swipe types into the field. The first time it opens, or after a text size change, Gboard can show a tip over the next field. If tapping doesn't dismiss it, press Back and tap the field again.
 - **A field holding text** is listed by its text and named by its label, such as `"Line one" (named "Notes") [field]`. Tap it by its name: `tap "Notes"`.
-- **`scroll-to` stops at the first label containing the words.** On a seeded Home, Merit badges, Ranks and Manage data are below the fold: `scroll-to` them with `--exact`, or it stops at the rank card's "2 of 7 ranks earned". A badge's row is its name, a period and more, so add the period: `scroll-to "Hiking."`, or it stops at Cycling, which mentions Hiking.
+- **`scroll-to` stops at the first label containing the words.** On a seeded Home, Merit badges, Ranks and Manage data are below the fold: `scroll-to` them with `--exact`, or it stops at the rank card's "2 of 7 ranks earned". A badge's row says more after its name and a period once it's Eagle-required or started, so `scroll-to "Hiking"` stops at Cycling, whose row mentions Hiking: use `scroll-to "Hiking."`, or `--exact` for a row that's only a name, such as "Chess".
 - **`screen` can't show** a requirement row's state (its number's box, "Not needed") or a progress bar: crop a screenshot for those. It can't read web pages either; use a screenshot. Don't use the Android CLI's `android layout` or `android screen capture --annotate`: they leave a helper running that stops `screen` working until `adb -s S shell am force-stop com.android.cli.interact.instrumentation`.
 - **The system file picker** opens at Recent files on a fresh emulator: tap "Show roots", then Downloads. A saved file is in `/sdcard/Download/`.
 - **Other apps** stop at their first-run screens on a fresh emulator: Chrome at its welcome, Gmail at its tour. Check that the right app opened with `starts`, and go Back.
