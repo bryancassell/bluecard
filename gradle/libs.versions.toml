@@ -3,7 +3,7 @@
 
 [versions]
 agp = "9.4.1"
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 coreKtx = "1.19.1"
 lifecycle = "2.11.0"
 activityCompose = "1.13.0"
@@ -29,7 +29,7 @@ accessibilityTestFramework = "4.1.1"
 roborazzi = "1.76.0"
 # Debug builds only; see ARCHITECTURE.md (Debug builds). 3.0 is still in alpha.
 leakcanary = "2.14"
-spotless = "8.10.3"
+spotless = "8.10.4"
 # ktlint is run by Spotless; this pins the ktlint engine version.
 ktlint = "1.8.0"
 # Coverage engine used by both AGP (test data) and Gradle (verification).
