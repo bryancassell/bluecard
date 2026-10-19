@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.withTransaction
+import androidx.room.execSQL
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
@@ -50,7 +52,10 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private val databases = mutableListOf<BlueCardDatabase>()
 
     private fun open(builder: RoomDatabase.Builder<BlueCardDatabase>) =
-        builder.build().also { databases += it }
+        builder.setDriver(androidx.sqlite.driver.bundled.BundledSQLiteDriver()).build().also {
+            databases +=
+                it
+        }
 
     private val database = open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
 
@@ -147,13 +152,15 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
      * SQLite reports a trigger's RAISE(ABORT) as a constraint violation:
      * https://www.sqlite.org/lang_createtrigger.html
      */
-    private fun failRequirementWrites() {
-        database.openHelper.writableDatabase.execSQL(
-            """
-            CREATE TRIGGER fail_requirement_writes BEFORE INSERT ON requirement_progress
-            BEGIN SELECT RAISE(ABORT, 'Test failure'); END
-            """
-        )
+    private suspend fun failRequirementWrites() {
+        database.useWriterConnection {
+            it.execSQL(
+                """
+                CREATE TRIGGER fail_requirement_writes BEFORE INSERT ON requirement_progress
+                BEGIN SELECT RAISE(ABORT, 'Test failure'); END
+                """
+            )
+        }
     }
 
     @Test
@@ -209,9 +216,11 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val holding = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
         val other = launch(Dispatchers.IO) {
-            database.withTransaction {
-                holding.complete(Unit)
-                release.await()
+            database.useWriterConnection { connection ->
+                connection.immediateTransaction {
+                    holding.complete(Unit)
+                    release.await()
+                }
             }
         }
         holding.await()
@@ -238,7 +247,13 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     fun writes_happenInTheOrderTheyreMade() = runTest(timeout = 10.seconds) {
         val dispatcher = HeldDispatcher()
         val repository =
-            RoomProgressRepository(database, CoroutineScope(SupervisorJob() + dispatcher))
+            RoomProgressRepository(
+                database,
+                CoroutineScope(
+                    SupervisorJob() + dispatcher +
+                        CoroutineExceptionHandler { _, e -> crash.complete(e) }
+                )
+            )
 
         val writes = (1..20).map { i ->
             launch(start = CoroutineStart.UNDISPATCHED) {
@@ -246,7 +261,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             }
         }
         dispatcher.release()
-        writes.joinAll()
+        runCatching { writes.joinAll() }
+        if (crash.isCompleted) throw AssertionError("SPIKE write failed", crash.await())
 
         val progress = repository.observeProgress("archery").first()!!
         assertEquals("Draft 20", progress.requirements.single().comment)

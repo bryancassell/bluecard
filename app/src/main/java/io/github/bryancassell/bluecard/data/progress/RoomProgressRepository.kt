@@ -5,7 +5,8 @@ import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatatypeMismatchException
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteMisuseException
-import androidx.room.withTransaction
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
@@ -195,9 +196,11 @@ class RoomProgressRepository @Inject constructor(
         start: BadgeStart,
         action: suspend () -> T
     ): T = writing {
-        database.withTransaction {
-            if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
-            action()
+        database.useWriterConnection { connection ->
+            connection.immediateTransaction {
+                if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
+                action()
+            }
         }
     }
 
@@ -207,6 +210,10 @@ class RoomProgressRepository @Inject constructor(
      */
     private suspend fun <T> ifStarted(badgeId: String, notStarted: T, action: suspend () -> T): T =
         writing {
-            database.withTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
+            database.useWriterConnection { connection ->
+                connection.immediateTransaction {
+                    if (dao.isStarted(badgeId)) action() else notStarted
+                }
+            }
         }
 }
