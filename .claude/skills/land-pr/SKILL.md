@@ -24,6 +24,25 @@ Ask with AskUserQuestion, recommended option first, whenever the answer is the d
 
 Don't ask what the code, the docs or a convention already answers. Ask when the question comes up, not in a batch at the end. Record each answer in the PR description, in the section it affects: for example, the approach chosen and why under `## What`.
 
+## How to ask
+
+The developer decides from what the question shows them, so show what you found, not a summary of it. Before each AskUserQuestion call, write the context in a message, then ask. If one call asks more than one question, give each its own context under its `header`.
+
+The context covers:
+
+- **Previous decisions.** Rows of PRD.md's Design decisions and ARCHITECTURE.md's Decisions table that bear on the question, quoted, with their sections and issue links. Earlier issues and PRs where the same choice came up, found with `gh issue list --state all --search`, `gh pr list --state all --search` and `git log --grep`, with what was chosen and why. Answers the developer already gave on this PR. If you found none, say what you searched for.
+- **Existing patterns.** How the code already handles the same case, as `path:line` with a short excerpt, and how many places follow it. Name any place that does it differently.
+- **Best practices.** What the Android, Kotlin, Compose or library documentation recommends, with a link to the page, and where the project already departs from it and why. If it's from memory rather than a page you read, say so.
+- **The options.** For each: what it changes (code, what people see or hear, tests, words gained by ARCHITECTURE.md or PRD.md), what it costs or risks, and how it affects planned work, such as an open issue that builds on this one. Then your recommendation, with its reason tied to the points above.
+
+For a review finding, quote its whole comment as posted, not a summary: the heading, the body and any suggested change, with the file, the line and the comment's link, from `gh api 'repos/{owner}/{repo}/pulls/<PR number>/comments'`. Then say what you checked: whether the state it describes can happen, what fixing it would change, and why you'd decline it. A round 1 finding on the same code, and the reply to it, is a previous decision.
+
+For a test or CI failure, quote the failing output, link the run, and say whether the test passes on `main`.
+
+In the AskUserQuestion call, each option's description gives its main tradeoff in a sentence. Use an option's `preview` to show the code it would leave, such as a finding's suggested change beside the code you'd keep.
+
+Quote and give lines only from what you read in this session. A wrong quote misleads more than none.
+
 ## 1. Read the issue
 
 1. `gh issue view N --comments`. Look for work already started: `gh pr list --state all --search '"(#N)" in:title'` for its PRs, and `git branch --list '*/N-*'` for local branches. If a PR is still open or a branch exists, ask whether to continue it. To continue, check out its branch and pick up at the first step not yet done: an open PR skips step 3, and its description's review sections show which rounds have run.
