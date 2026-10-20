@@ -1,12 +1,14 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
+import android.database.SQLException
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.room.useReaderConnection
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteException
+import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
@@ -216,6 +218,28 @@ class SetAsideDamagedDatabaseDriverTest {
         it.setLength((pages + 1L) * pageSize)
         it.seek(28)
         it.writeInt(pages + 1)
+    }
+
+    @Test
+    fun connectionWhoseLogLimitsFail_isClosed_andTheErrorGoesOn() {
+        val full = SQLException("Error code: 13, message: database or disk is full")
+        var closed = false
+        val failing = object : SQLiteDriver {
+            override fun open(fileName: String) = object : SQLiteConnection {
+                override fun prepare(sql: String): SQLiteStatement = throw full
+
+                override fun close() {
+                    closed = true
+                }
+            }
+        }
+
+        val error = runCatching {
+            SetAsideDamagedDatabaseDriver(failing, damagedProgress).open(file.path)
+        }.exceptionOrNull()
+
+        assertEquals(full, error)
+        assertTrue(closed)
     }
 
     @Test

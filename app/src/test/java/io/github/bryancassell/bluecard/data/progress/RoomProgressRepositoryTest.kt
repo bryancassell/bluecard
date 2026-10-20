@@ -253,6 +253,16 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     }
 
     @Test
+    fun writing_whenSomethingOtherThanSQLiteFails_throwsTheBugUnwrapped() = runTest {
+        val bug = IllegalArgumentException("Test failure")
+
+        val error = runCatching { failingRequirementWrites(bug).startAndRecord() }
+            .exceptionOrNull()
+
+        assertTrue("Expected the bug, got $error", error is IllegalArgumentException)
+    }
+
+    @Test
     fun writing_whenCancelled_staysCancelled_evenIfCausedByAStorageFailure() = runTest {
         val cancelled = CancellationException("Cancelled").apply { initCause(IOException()) }
 
