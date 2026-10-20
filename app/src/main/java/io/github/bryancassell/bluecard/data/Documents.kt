@@ -4,7 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
-import android.util.Log
+import io.github.bryancassell.bluecard.di.WarningLog
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
@@ -21,21 +21,25 @@ private const val TAG = "Documents"
  *
  * Throws what making the content throws, or an [IOException] if the document can't be opened
  * or written. Either way, it doesn't leave behind the empty document the file picker made, or
- * one that opening emptied.
+ * one that opening emptied. If that can't be deleted, that's written to [log].
  */
-suspend fun ContentResolver.saveDocument(destination: Uri, content: suspend () -> ByteArray?) {
+suspend fun ContentResolver.saveDocument(
+    destination: Uri,
+    log: WarningLog,
+    content: suspend () -> ByteArray?
+) {
     val bytes: ByteArray
     val out: OutputStream
     try {
         bytes = content() ?: run {
             // The file picker made an empty document for the content, which isn't left behind.
-            deleteIfEmpty(destination)
+            deleteIfEmpty(destination, log)
             return
         }
         out = openForWriting(destination)
     } catch (e: Exception) {
         // The file picker made an empty document for the content, which isn't left behind.
-        deleteIfEmpty(destination)
+        deleteIfEmpty(destination, log)
         throw e
     }
     try {
@@ -43,7 +47,7 @@ suspend fun ContentResolver.saveDocument(destination: Uri, content: suspend () -
     } catch (e: Exception) {
         // Opening it emptied it, so it's empty or partial, and the scout could send it
         // without noticing that it failed.
-        delete(destination)
+        delete(destination, log)
         throw e
     }
 }
@@ -86,7 +90,7 @@ private fun ContentResolver.openForWriting(destination: Uri): OutputStream = try
  * Deletes [destination] if its provider says it's empty, as the file picker makes it. If it
  * doesn't say, it's kept, in case it's a file the scout chose to replace.
  */
-private fun ContentResolver.deleteIfEmpty(destination: Uri) {
+private fun ContentResolver.deleteIfEmpty(destination: Uri, log: WarningLog) {
     val size = try {
         // The form of query that providers take since Android O: DocumentsProvider refuses
         // the older one.
@@ -96,22 +100,22 @@ private fun ContentResolver.deleteIfEmpty(destination: Uri) {
         }
     } catch (e: Exception) {
         // As in delete.
-        Log.w(TAG, "Couldn't find the size of the document that failed", e)
+        log.warn(TAG, "Couldn't find the size of the document that failed", e)
         null
     }
-    if (size == 0L) delete(destination)
+    if (size == 0L) delete(destination, log)
 }
 
 /**
  * Deletes [destination], if its provider lets it. If it doesn't, the save's own failure is
- * what the scout is told about, so this one is only logged.
+ * what the scout is told about, so this one is only written to [log].
  */
-private fun ContentResolver.delete(destination: Uri) {
+private fun ContentResolver.delete(destination: Uri, log: WarningLog) {
     try {
         DocumentsContract.deleteDocument(this, destination)
     } catch (e: Exception) {
         // deleteDocument rethrows whatever the provider throws, such as an
         // UnsupportedOperationException when it can't delete.
-        Log.w(TAG, "Couldn't delete the document that failed", e)
+        log.warn(TAG, "Couldn't delete the document that failed", e)
     }
 }

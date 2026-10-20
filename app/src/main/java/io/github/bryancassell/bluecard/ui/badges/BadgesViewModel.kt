@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.textFieldState
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 class BadgesViewModel(
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
+    log: WarningLog,
     // Keeps the search if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -41,7 +43,7 @@ class BadgesViewModel(
                 matches.map { it.toListItem(progressById[it.badge.id]) }
             )
         }
-    }.catchLoadFailure(BadgesUiState.LoadFailed)
+    }.catchLoadFailure(BadgesUiState.LoadFailed, log)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgesUiState.Loading)
 
     private companion object {

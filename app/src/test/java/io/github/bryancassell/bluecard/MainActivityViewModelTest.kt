@@ -1,10 +1,10 @@
 package io.github.bryancassell.bluecard
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.FakeDamagedProgressRepository
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -17,14 +17,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
-@RunWith(AndroidJUnit4::class)
 class MainActivityViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val log = FakeWarningLog()
 
     /**
      * Collects uiState, as the activity does, so WhileSubscribed starts it. From the
@@ -41,7 +39,7 @@ class MainActivityViewModelTest {
 
             override suspend fun saveProfile(profile: Profile) = Unit
         }
-        val viewModel = MainActivityViewModel(loading, FakeDamagedProgressRepository())
+        val viewModel = MainActivityViewModel(loading, FakeDamagedProgressRepository(), log)
         startCollecting(viewModel)
 
         assertEquals(MainActivityUiState.Loading, viewModel.uiState.value)
@@ -51,7 +49,8 @@ class MainActivityViewModelTest {
     fun uiState_whenProfileCantBeRead_isLoadFailed() = runTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository().apply { failLoads = true },
-            FakeDamagedProgressRepository()
+            FakeDamagedProgressRepository(),
+            log
         )
         startCollecting(viewModel)
 
@@ -61,7 +60,7 @@ class MainActivityViewModelTest {
     @Test
     fun uiState_withoutProfile_isNotSetUp() = runTest {
         val viewModel =
-            MainActivityViewModel(FakeProfileRepository(), FakeDamagedProgressRepository())
+            MainActivityViewModel(FakeProfileRepository(), FakeDamagedProgressRepository(), log)
         startCollecting(viewModel)
 
         assertEquals(
@@ -74,7 +73,8 @@ class MainActivityViewModelTest {
     fun uiState_withProfile_isSetUp() = runTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
-            FakeDamagedProgressRepository()
+            FakeDamagedProgressRepository(),
+            log
         )
         startCollecting(viewModel)
 
@@ -87,7 +87,7 @@ class MainActivityViewModelTest {
     @Test
     fun uiState_whenProfileIsSaved_becomesSetUp() = runTest {
         val repository = FakeProfileRepository()
-        val viewModel = MainActivityViewModel(repository, FakeDamagedProgressRepository())
+        val viewModel = MainActivityViewModel(repository, FakeDamagedProgressRepository(), log)
         startCollecting(viewModel)
 
         repository.saveProfile(Profile("Alex Scout", "123"))
@@ -102,7 +102,8 @@ class MainActivityViewModelTest {
     fun uiState_whenProgressWasSetAside_showsNotice() = runTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
-            FakeDamagedProgressRepository(noticePending = true)
+            FakeDamagedProgressRepository(noticePending = true),
+            log
         )
         startCollecting(viewModel)
 
@@ -117,7 +118,8 @@ class MainActivityViewModelTest {
         val damagedProgress = FakeDamagedProgressRepository()
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
-            damagedProgress
+            damagedProgress,
+            log
         )
         startCollecting(viewModel)
 
@@ -134,7 +136,8 @@ class MainActivityViewModelTest {
         val damagedProgress = FakeDamagedProgressRepository(noticePending = true)
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
-            damagedProgress
+            damagedProgress,
+            log
         )
         startCollecting(viewModel)
 

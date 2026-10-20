@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import java.io.File
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
@@ -38,6 +39,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         FileDamagedProgressRepository(
             context,
             clock,
+            FakeWarningLog(),
             CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
             ioDispatcher
         )

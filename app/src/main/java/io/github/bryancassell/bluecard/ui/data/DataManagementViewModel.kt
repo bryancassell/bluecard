@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.ui.data
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.backup.Backup
@@ -10,6 +9,7 @@ import io.github.bryancassell.bluecard.data.backup.BackupRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
@@ -35,7 +35,8 @@ class DataManagementViewModel(
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: ZonedClock
+    private val clock: ZonedClock,
+    private val log: WarningLog
 ) : ViewModel() {
     /** Everything in [uiState] but [DataManagementUiState.canClear]. */
     private val _uiState = MutableStateFlow(DataManagementUiState())
@@ -49,7 +50,7 @@ class DataManagementViewModel(
      */
     private val canClear = progressRepository.observeAllProgress()
         .map { it.isNotEmpty() }
-        .catchLoadFailure(false)
+        .catchLoadFailure(false, log)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val uiState: StateFlow<DataManagementUiState> =
@@ -157,8 +158,8 @@ class DataManagementViewModel(
      * Runs [action], marking the screen as working until it and any other action under way are
      * done, since one can start before another ends, as when two taps open two file pickers. If
      * it throws an [IOException], which repositories throw when a file or the scout's data can't
-     * be read or saved, logs it and shows [failure]. Any other exception is a bug, so it still
-     * crashes the app, as in TaskRunner.
+     * be read or saved, writes it to [log] and shows [failure]. Any other exception is a bug, so
+     * it still crashes the app, as in TaskRunner.
      */
     private fun work(failure: Kind, action: suspend () -> Unit) {
         running++
@@ -167,9 +168,7 @@ class DataManagementViewModel(
             try {
                 action()
             } catch (e: IOException) {
-                // The app reports caught exceptions nowhere else, so logcat and bug reports are
-                // the only way to tell what failed and why.
-                Log.w(TAG, "Export, import or clear failed: $failure", e)
+                log.warn(TAG, "Export, import or clear failed: $failure", e)
                 show(failure)
             } finally {
                 running--

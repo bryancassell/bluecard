@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -32,6 +33,7 @@ class EditCounselorViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
+    log: WarningLog,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -50,7 +52,7 @@ class EditCounselorViewModel(
     /** The counselor's email address field. */
     val email = fields[EMAIL]
 
-    private val saves = TaskRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope, log)
 
     /** Whether the fields have been saved and the page hasn't closed yet. */
     private val saved = MutableStateFlow(false)
@@ -79,7 +81,7 @@ class EditCounselorViewModel(
             saved = isSaved,
             saveFailure = saveFailure
         )
-    }.catchLoadFailure(EditCounselorUiState.LoadFailed).stateIn(
+    }.catchLoadFailure(EditCounselorUiState.LoadFailed, log).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         EditCounselorUiState.Loading

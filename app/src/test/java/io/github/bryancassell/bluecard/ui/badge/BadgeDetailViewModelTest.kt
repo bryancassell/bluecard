@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
@@ -48,12 +49,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the report tests use Android's Uri, and the tests of the system stopping
+// the app restore saved state, which is a Bundle on Android. Both throw in plain local tests
+// (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class BadgeDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val log = FakeWarningLog()
 
     private val oldest = LocalDate(2024, 1, 1)
     private val older = LocalDate(2025, 1, 1)
@@ -135,6 +139,7 @@ class BadgeDetailViewModelTest {
         progress,
         reportRepository,
         clock,
+        log,
         savedStateHandle
     )
 
@@ -163,6 +168,7 @@ class BadgeDetailViewModelTest {
             progressRepository,
             reportRepository,
             clock,
+            log,
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -524,6 +530,7 @@ class BadgeDetailViewModelTest {
                 progressRepository,
                 reportRepository,
                 clock,
+                log,
                 createSavedStateHandle()
             )
         }.use { scenario ->

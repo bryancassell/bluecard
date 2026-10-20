@@ -20,6 +20,7 @@ import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import kotlinx.coroutines.CompletableDeferred
@@ -45,12 +46,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the failure tests reach android.util.Log, which throws in plain local
-// tests, and Uri is Android's (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because Uri is Android's, and throws in plain local tests (see ARCHITECTURE.md,
+// ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class DataManagementViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val log = FakeWarningLog()
 
     private val today = LocalDate(2026, 10, 1)
     private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
@@ -103,7 +106,8 @@ class DataManagementViewModelTest {
             catalogRepository,
             profileRepository,
             progress,
-            clock
+            clock,
+            log
         ).also { viewModel ->
             backgroundScope.launch(mainDispatcherRule.testDispatcher) {
                 viewModel.uiState.collect {}

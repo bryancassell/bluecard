@@ -218,7 +218,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   requirement 1 rules out
   ([#63](https://github.com/bryancassell/bluecard/issues/63) weighs the
   others). Caught exceptions don't reach it, so each caught load or save
-  failure is logged with `Log.w`.
+  failure is logged.
 
 ### Text fields
 
@@ -510,8 +510,8 @@ fails the build for a missing dependency, as Hilt did.
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
   `androidModule`, for what needs a `Context`. Besides the repositories, they
   provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
-  `CoroutineScope` (`@ApplicationScope`) and a `ZonedClock`, the dispatcher
-  and clock so tests can replace them.
+  `CoroutineScope` (`@ApplicationScope`), a `ZonedClock` and a `WarningLog`,
+  all but the scope so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could
@@ -837,12 +837,12 @@ How the architecture supports the testing rules in `CLAUDE.md`.
 
 ### ViewModel tests
 
-ViewModel tests are local JVM tests against fake repositories, using
+ViewModel tests are local JVM tests against fakes, using
 `kotlinx-coroutines-test` and a `MainDispatcherRule`, and check each UI state
-and each event. They run with Robolectric, because their failure tests reach
-`android.util.Log`, whose methods throw in plain local tests. The alternative,
-`returnDefaultValues`, makes every Android method return null or zero, which
-the [local tests guide](https://developer.android.com/training/testing/local-tests)
+and event. Android's methods throw in plain local tests, so those that reach
+`Uri` or saved state (a `Bundle`) run with Robolectric. The alternative,
+`returnDefaultValues`, makes Android's methods return null or zero, which the
+[local tests guide](https://developer.android.com/training/testing/local-tests)
 says "might allow failing tests to pass".
 
 ### Koin in tests

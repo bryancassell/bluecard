@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -40,14 +41,15 @@ class BadgeDetailViewModel(
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
     private val clock: ZonedClock,
+    log: WarningLog,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val badgeId = key.badgeId
 
-    private val report = ReportTasks(viewModelScope, reportRepository, badgeId)
-    private val saves = TaskRunner(viewModelScope)
+    private val report = ReportTasks(viewModelScope, reportRepository, badgeId, log)
+    private val saves = TaskRunner(viewModelScope, log)
 
     /**
      * The page as worked out from the catalog and progress, before [uiState] adds the date just
@@ -109,7 +111,7 @@ class BadgeDetailViewModel(
         } else {
             state
         }
-    }.catchLoadFailure(BadgeDetailUiState.LoadFailed)
+    }.catchLoadFailure(BadgeDetailUiState.LoadFailed, log)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 
     /**

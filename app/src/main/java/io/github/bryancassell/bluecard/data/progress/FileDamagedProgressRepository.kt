@@ -2,10 +2,10 @@ package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.util.Log
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import java.io.File
 import java.io.IOException
@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 class FileDamagedProgressRepository(
     private val context: Context,
     private val clock: ZonedClock,
+    private val log: WarningLog,
     @param:ApplicationScope private val externalScope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
@@ -84,9 +85,9 @@ class FileDamagedProgressRepository(
                 for (file in sqliteFiles(database).filter { it.exists() }) {
                     Files.move(file.toPath(), copy.resolve(file.name))
                 }
-                Log.w(TAG, "Set aside a damaged database: $database")
+                log.warn(TAG, "Set aside a damaged database: $database")
             } catch (e: IOException) {
-                Log.w(TAG, "Couldn't set aside a damaged database, so deleted it: $database", e)
+                log.warn(TAG, "Couldn't set aside a damaged database, so deleted it: $database", e)
                 SQLiteDatabase.deleteDatabase(database)
             }
             noticePending.value = true
@@ -107,7 +108,7 @@ class FileDamagedProgressRepository(
             Files.createDirectories(folder.toPath())
             damageFile.createNewFile()
         } catch (e: IOException) {
-            Log.w(TAG, "Couldn't record a damaged database", e)
+            log.warn(TAG, "Couldn't record a damaged database", e)
         }
     }
 

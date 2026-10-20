@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -28,12 +29,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load- and save-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class EditProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val log = FakeWarningLog()
 
     private val alex = Profile("Alex Scout", "123")
     private val profileRepository = FakeProfileRepository(alex)
@@ -43,14 +46,14 @@ class EditProfileViewModelTest {
     private fun viewModel(
         profileRepository: ProfileRepository = this.profileRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle()
-    ) = EditProfileViewModel(profileRepository, savedStateHandle)
+    ) = EditProfileViewModel(profileRepository, log, savedStateHandle)
 
     /**
      * Can save the ViewModel's state and restore it into a new one, as when the system stops
      * the app.
      */
     private fun scenario() = viewModelScenario {
-        EditProfileViewModel(profileRepository, createSavedStateHandle())
+        EditProfileViewModel(profileRepository, log, createSavedStateHandle())
     }
 
     /**

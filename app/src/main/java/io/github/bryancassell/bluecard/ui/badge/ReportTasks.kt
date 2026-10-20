@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.net.Uri
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import kotlinx.coroutines.CoroutineScope
@@ -18,9 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 class ReportTasks(
     scope: CoroutineScope,
     private val reportRepository: ReportRepository,
-    private val advancementId: String
+    private val advancementId: String,
+    log: WarningLog
 ) {
-    private val runner = TaskRunner(scope)
+    private val runner = TaskRunner(scope, log)
     private val toShare = MutableStateFlow<Uri?>(null)
 
     /** The report, once it's ready to share, until the screen has opened the share sheet. */

@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import kotlin.time.Duration.Companion.days
@@ -50,12 +51,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class RequirementDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val log = FakeWarningLog()
 
     private val older = LocalDate(2025, 1, 1)
     private val newest = LocalDate(2026, 1, 1)
@@ -177,6 +180,7 @@ class RequirementDetailViewModelTest {
         catalog,
         progress,
         clock,
+        log,
         savedStateHandle
     )
 
@@ -194,6 +198,7 @@ class RequirementDetailViewModelTest {
             catalog,
             progressRepository,
             clock,
+            log,
             createSavedStateHandle()
         )
     }
@@ -344,6 +349,7 @@ class RequirementDetailViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
+            log,
             savedStateHandle
         )
         startCollecting(viewModel)
@@ -1065,6 +1071,7 @@ class RequirementDetailViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
+            log,
             SavedStateHandle(mapOf("comment" to "From an intent."))
         )
         startCollecting(viewModel)

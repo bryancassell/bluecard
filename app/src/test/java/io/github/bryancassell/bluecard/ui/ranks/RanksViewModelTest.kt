@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.ranks
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -11,6 +10,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
@@ -20,14 +20,12 @@ import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
-@RunWith(AndroidJUnit4::class)
 class RanksViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val log = FakeWarningLog()
 
     private val version = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -71,7 +69,7 @@ class RanksViewModelTest {
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private val viewModel by lazy { RanksViewModel(catalogRepository, progressRepository) }
+    private val viewModel by lazy { RanksViewModel(catalogRepository, progressRepository, log) }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -93,7 +91,7 @@ class RanksViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = RanksViewModel(loading, progressRepository)
+        val viewModel = RanksViewModel(loading, progressRepository, log)
         startCollecting(viewModel)
 
         assertEquals(RanksUiState.Loading, viewModel.uiState.value)

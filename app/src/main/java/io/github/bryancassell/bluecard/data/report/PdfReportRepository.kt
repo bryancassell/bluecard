@@ -14,6 +14,7 @@ import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.stringsLanguageResources
 import java.io.ByteArrayOutputStream
@@ -45,6 +46,7 @@ class PdfReportRepository(
     private val profileRepository: ProfileRepository,
     private val pdfWriter: ReportPdfWriter,
     private val clock: ZonedClock,
+    private val log: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
@@ -81,7 +83,7 @@ class PdfReportRepository(
      * ([report]), as when the badge or rank was just cleared.
      */
     private suspend fun save(advancementId: String, destination: Uri) =
-        context.contentResolver.saveDocument(destination) {
+        context.contentResolver.saveDocument(destination, log) {
             report(advancementId)?.let { report ->
                 ByteArrayOutputStream().also {
                     write(report, stringsLanguageResources(context), it)

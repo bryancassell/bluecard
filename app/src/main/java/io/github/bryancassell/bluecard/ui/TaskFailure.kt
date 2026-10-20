@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.util.Log
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -9,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import io.github.bryancassell.bluecard.di.WarningLog
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -31,7 +31,7 @@ class TaskFailure
  * share or save, in [scope]. Keeps the latest one that failed until its screen has shown it
  * with [TaskFailureSnackbarHost] or [TaskFailureSnackbar].
  */
-class TaskRunner(private val scope: CoroutineScope) {
+class TaskRunner(private val scope: CoroutineScope, private val log: WarningLog) {
     private val _failure = MutableStateFlow<TaskFailure?>(null)
 
     /** The latest task that failed, or null once the screen has shown it. */
@@ -39,16 +39,15 @@ class TaskRunner(private val scope: CoroutineScope) {
 
     /**
      * Launches [task]. If it throws an [IOException], which repositories throw when they can't
-     * read or save the scout's data or write a report, logs it and reports it in [failure]. Any
-     * other exception is a bug, so it still crashes the app, as in [catchLoadFailure].
+     * read or save the scout's data or write a report, writes it to [log] and reports it in
+     * [failure]. Any other exception is a bug, so it still crashes the app, as in
+     * [catchLoadFailure].
      */
     fun launch(task: suspend () -> Unit): Job = scope.launch {
         try {
             task()
         } catch (e: IOException) {
-            // The app reports caught exceptions nowhere else, so logcat and bug reports are
-            // the only way to tell what failed and why.
-            Log.w(TAG, "Task failed", e)
+            log.warn(TAG, "Task failed", e)
             _failure.value = TaskFailure()
         }
     }

@@ -11,6 +11,7 @@ import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
+import io.github.bryancassell.bluecard.di.WarningLog
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.CharacterCodingException
@@ -32,12 +33,13 @@ class JsonBackupRepository(
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
+    private val log: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : BackupRepository {
     override suspend fun exportBackup(destination: Uri) = externalScope.runOutlivingCaller {
         withContext(ioDispatcher) {
-            context.contentResolver.saveDocument(destination) {
+            context.contentResolver.saveDocument(destination, log) {
                 encodeBackup(currentBackup()).encodeToByteArray()
             }
         }
