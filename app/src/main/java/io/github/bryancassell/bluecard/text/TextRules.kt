@@ -18,7 +18,8 @@ interface TextRules {
      * clusters), or else the nearest such boundary before it, so a cut there never splits an
      * emoji made of several code points or a letter from its accent mark. The start and end of
      * the text are boundaries. Asked about one offset rather than the whole text, so a huge paste
-     * costs little more than a short one.
+     * costs little more than a short one. [offset] is from 0 to the text's length, as for
+     * [characterBoundaryAtOrAfter] and [isLineBreak].
      */
     fun characterBoundaryAtOrBefore(text: String, offset: Int): Int
 

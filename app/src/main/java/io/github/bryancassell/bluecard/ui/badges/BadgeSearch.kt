@@ -2,8 +2,7 @@ package io.github.bryancassell.bluecard.ui.badges
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 
-// Anything but a letter or digit: the code points that Character.isLetterOrDigit() rejects. Regex,
-// unlike Character, is in Kotlin's common library, which code shared with iOS can use (#341).
+// Anything but a letter or digit: the code points that Character.isLetterOrDigit() rejects.
 private val nonWordCharacters = Regex("[^\\p{L}\\p{Nd}]+")
 
 /**
@@ -27,20 +26,24 @@ fun MeritBadge.matchesSearch(words: List<String>): Boolean = words.all { word ->
 private fun String.hasWordStartingWith(prefix: String): Boolean {
     var index = indexOf(prefix, ignoreCase = true)
     while (index >= 0) {
-        // By code point, as searchWords splits, so a letter outside the Basic Multilingual
-        // Plane counts as one letter rather than two surrogates.
-        if (index == 0 || nonWordCharacters.matchesAt(this, codePointStartBefore(index))) {
-            return true
-        }
+        if (index == 0 || !isWordCharacterBefore(index)) return true
         index = indexOf(prefix, startIndex = index + 1, ignoreCase = true)
     }
     return false
 }
 
-/** Where the code point before [index] starts: one char back, or two for a surrogate pair. */
-private fun String.codePointStartBefore(index: Int): Int =
+/**
+ * Whether the code point before [index] is a letter or digit. By code point, as [searchWords]
+ * splits, so a letter outside the Basic Multilingual Plane counts as one letter rather than two
+ * surrogates.
+ */
+// Java's Character.isLetterOrDigit(Int) isn't in Kotlin's common library, which code shared with
+// iOS can use (#341). Char.isLetterOrDigit() is, but can't tell what a surrogate pair is, so a
+// pair goes to the regex searchWords splits on. Only a pair does: a matcher for every match
+// would cost far more than a Char check, on every keystroke.
+private fun String.isWordCharacterBefore(index: Int): Boolean =
     if (index >= 2 && this[index - 1].isLowSurrogate() && this[index - 2].isHighSurrogate()) {
-        index - 2
+        !nonWordCharacters.matchesAt(this, index - 2)
     } else {
-        index - 1
+        this[index - 1].isLetterOrDigit()
     }

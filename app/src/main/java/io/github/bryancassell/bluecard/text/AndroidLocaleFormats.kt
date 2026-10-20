@@ -18,14 +18,19 @@ import kotlinx.datetime.toJavaLocalDate
  * such as the PDF report, makes its own.
  */
 class AndroidLocaleFormats(private val locale: Locale) : LocaleFormats {
+    // Each is made when it's first needed: the PDF report, for one, never formats a list, and
+    // ICU loads a locale's list patterns the first time.
+
     // kotlinx-datetime leaves localized formats out of its scope.
-    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-        .withLocale(locale)
-        .withDecimalStyle(DecimalStyle.of(locale))
+    private val dateFormatter by lazy {
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+            .withLocale(locale)
+            .withDecimalStyle(DecimalStyle.of(locale))
+    }
 
-    private val listFormatter = ListFormatter.getInstance(locale)
+    private val listFormatter by lazy { ListFormatter.getInstance(locale) }
 
-    private val bidiFormatter = BidiFormatter.getInstance(locale)
+    private val bidiFormatter by lazy { BidiFormatter.getInstance(locale) }
 
     override fun formatDate(date: LocalDate): String = dateFormatter.format(date.toJavaLocalDate())
 
