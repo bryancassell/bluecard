@@ -175,9 +175,9 @@ it.
   each test, and stops Koin when the test ends (`onTerminate()`). A test that
   launches `MainActivity` replaces definitions before launching it, with
   `loadKoinModules(module { single<ProgressRepository> { fake } })`, for that
-  test only (see `MainActivityTest`). It replaces the IO dispatcher
-  (`named<IoDispatcher>()`) with a `TestDispatcher` too, so the real
-  repositories it keeps don't work on background threads.
+  test only (see `MainActivityTest`). It loads `testIoDispatcherModule`
+  (`testing/`) too, so the real repositories it keeps work on the test's
+  thread.
 - **`MainDispatcherRule`** (`app/src/test/.../testing/`) replaces the main
   dispatcher in ViewModel tests, as in Android's
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).

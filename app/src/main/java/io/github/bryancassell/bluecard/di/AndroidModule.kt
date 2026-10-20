@@ -19,9 +19,7 @@ import io.github.bryancassell.bluecard.data.report.PdfDocumentWriter
 import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.create
@@ -53,8 +51,8 @@ private fun progressDatabase(
 // One for the app: DataStore allows only one instance per file in a process.
 private fun profileDataStore(
     context: Context,
-    @IoDispatcher ioDispatcher: CoroutineDispatcher
+    @ApplicationScope scope: CoroutineScope
 ): DataStore<Preferences> = DataStoreProfileRepository.createDataStore(
-    scope = CoroutineScope(ioDispatcher + SupervisorJob()),
+    scope = scope,
     produceFile = { context.preferencesDataStoreFile(DataStoreProfileRepository.FILE_NAME) }
 )

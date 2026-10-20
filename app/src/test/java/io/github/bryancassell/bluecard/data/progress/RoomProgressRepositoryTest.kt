@@ -358,6 +358,28 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertEquals("Draft 20", progress.requirements.single().comment)
     }
 
+    // Each screen with its own repository: the last write, made through the other one, waits
+    // for those made before it, as a clear does for a save of notes made on another screen.
+    @Test
+    fun writeThroughAnotherRepository_waitsForTheWritesMadeBeforeIt() =
+        runTest(timeout = 10.seconds) {
+            val dispatcher = HeldDispatcher()
+            val scope = CoroutineScope(SupervisorJob() + dispatcher)
+            val (first, second) = List(2) { RoomProgressRepository(database, scope) }
+
+            val writes = (1..20).map { i ->
+                launch(start = CoroutineStart.UNDISPATCHED) {
+                    (if (i < 20) first else second)
+                        .setRequirementSignOffAndComment("archery", "1", null, "Draft $i", start)
+                }
+            }
+            dispatcher.release()
+            writes.joinAll()
+
+            val progress = repository.observeProgress("archery").first()!!
+            assertEquals("Draft 20", progress.requirements.single().comment)
+        }
+
     /**
      * Holds the work dispatched to it until [release], then starts it newest first: the worst
      * order a thread pool could start it in. Work dispatched after that runs on the IO

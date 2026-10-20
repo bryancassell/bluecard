@@ -86,7 +86,6 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportRepository
-import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
@@ -95,16 +94,14 @@ import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
+import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
 import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -115,7 +112,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.loadKoinModules
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
@@ -217,20 +213,20 @@ class MainActivityTest {
 
     // BlueCardApplication has started Koin with the production definitions. Nothing has been
     // built from them yet, so everything the activity creates gets these instead.
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun replaceDependencies() {
         loadKoinModules(
-            module {
-                single<ProfileRepository> { fakeProfileRepository }
-                single<CatalogRepository> { catalogRepository }
-                single<ProgressRepository> { progressRepository }
-                single<DamagedProgressRepository> { fakeDamagedProgressRepository }
-                single<ReportRepository> { fakeReportRepository }
-                single<Clock> { fakeClock }
-                // Instead of background threads, for the export and import that run for real.
-                single<CoroutineDispatcher>(named<IoDispatcher>()) { UnconfinedTestDispatcher() }
-            }
+            listOf(
+                testIoDispatcherModule,
+                module {
+                    single<ProfileRepository> { fakeProfileRepository }
+                    single<CatalogRepository> { catalogRepository }
+                    single<ProgressRepository> { progressRepository }
+                    single<DamagedProgressRepository> { fakeDamagedProgressRepository }
+                    single<ReportRepository> { fakeReportRepository }
+                    single<Clock> { fakeClock }
+                }
+            )
         )
     }
 

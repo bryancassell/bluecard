@@ -10,7 +10,6 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
@@ -147,24 +146,17 @@ class RoomProgressRepository(
     }
 
     /**
-     * Lets writes in one at a time, in the order they were made (it's first come, first served).
-     * It orders every screen's writes because the app has one RoomProgressRepository (a single
-     * in appModule): with one per screen, a save of notes could run ahead of a clear made on
-     * another screen.
-     */
-    private val writeOrder = Mutex()
-
-    /**
      * Runs [write] in [externalScope] and waits for it. If the caller is cancelled, only the
      * wait is: the write still finishes ([runOutlivingCaller]). Reports a database that can't be
      * written, such as one that can't be opened or a full disk, as an [IOException], in the same
      * way as [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too,
      * but it crashes the app through [externalScope] even if the caller is gone.
      */
-    // Started in the caller's thread, so writes queue for writeOrder in the order they're made.
+    // Started in the caller's thread, so writes queue for the database's writeOrder in the order
+    // they're made.
     private suspend fun <T> writing(write: suspend () -> T): T = externalScope.runOutlivingCaller {
         try {
-            writeOrder.withLock { write() }
+            database.writeOrder.withLock { write() }
         } catch (e: Exception) {
             throw if (e.isStorageFailure()) IOException(e) else e
         }

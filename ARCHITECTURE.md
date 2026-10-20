@@ -464,10 +464,10 @@ both taps of a double tap can reach it.
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
   A storage failure after the scout has left the screen goes unreported, but a
   bug still crashes the app.
-- **Writes happen in the order they're made.** Each takes a first-come,
-  first-served lock (`writing` in `RoomProgressRepository`), so a new write
-  must go through it too: otherwise it could run ahead of writes already
-  queued, such as a save of notes ahead of a clear.
+- **Writes happen in the order they're made.** Each takes the database's
+  first-come, first-served lock (`writing` in `RoomProgressRepository`), so a
+  new write must go through it too: otherwise it could run ahead of writes
+  already queued, such as a save of notes ahead of a clear.
 
 ### Storage errors
 
@@ -511,8 +511,7 @@ fails the build for a missing dependency, as Hilt did.
   `androidModule`, for what needs a `Context`. Besides the repositories, they
   provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
   `CoroutineScope` (`@ApplicationScope`) and a `Clock`, the dispatcher and clock
-  so tests can replace them. Repositories are `single`s, as [Writes](#writes)
-  needs.
+  so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could

@@ -36,12 +36,6 @@ class AppModuleTest {
     }
 
     @Test
-    fun progressRepository_isOneForTheApp() {
-        // So writes from every screen queue on its one lock, in the order they're made.
-        assertSame(koin.get<ProgressRepository>(), koin.get<ProgressRepository>())
-    }
-
-    @Test
     fun profileRepository_isDataStoreProfileRepository() {
         assertTrue(koin.get<ProfileRepository>() is DataStoreProfileRepository)
     }
