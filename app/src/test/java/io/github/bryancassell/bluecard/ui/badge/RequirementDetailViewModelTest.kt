@@ -26,9 +26,7 @@ import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
@@ -37,6 +35,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -53,13 +57,13 @@ class RequirementDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val older = LocalDate.of(2025, 1, 1)
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val older = LocalDate(2025, 1, 1)
+    private val newest = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
     private val badgeStart = BadgeStart(newest, started)
-    private val today = LocalDate.of(2026, 5, 20)
-    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
+    private val today = LocalDate(2026, 5, 20)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
     private val camping = MeritBadge(
         id = "camping",
@@ -326,7 +330,7 @@ class RequirementDetailViewModelTest {
 
     @Test
     fun startedOnVersionMissingFromCatalog_isUnavailable() = runTest {
-        progressRepository.startBadge("camping", LocalDate.of(2024, 1, 1), started)
+        progressRepository.startBadge("camping", LocalDate(2024, 1, 1), started)
         val viewModel = viewModel("2")
         startCollecting(viewModel)
 
@@ -587,9 +591,9 @@ class RequirementDetailViewModelTest {
         assertEquals(today, viewModel.today())
 
         // The page stays open past midnight.
-        clock.now += Duration.ofDays(1)
+        clock.now += 1.days
 
-        assertEquals(today.plusDays(1), viewModel.today())
+        assertEquals(today.plus(1, DateTimeUnit.DAY), viewModel.today())
     }
 
     @Test
@@ -833,7 +837,11 @@ class RequirementDetailViewModelTest {
             progressRepository.setCompletedOnPriorDate("tenderfoot", day, badgeStart)
 
             assertEquals(
-                TimeInRank(4, "Tenderfoot", TimeInRank.Eligibility.From(day.plusMonths(4))),
+                TimeInRank(
+                    4,
+                    "Tenderfoot",
+                    TimeInRank.Eligibility.From(day.plus(4, DateTimeUnit.MONTH))
+                ),
                 viewModel.ready().timeInRank
             )
         }

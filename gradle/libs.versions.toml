@@ -20,6 +20,7 @@ room3 = "3.0.3"
 # The SQLite that Room's driver bundles; the androidx.sqlite that Room 3.0.3 depends on.
 sqlite = "2.7.1"
 kotlinxSerialization = "1.11.0"
+kotlinxDatetime = "0.8.0"
 datastore = "1.2.1"
 coreSplashscreen = "1.2.0"
 junit = "4.13.2"
@@ -59,6 +60,7 @@ koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmo
 # @InjectedParam and @Qualifier, which the compiler plugin reads.
 koin-annotations = { group = "io.insert-koin", name = "koin-annotations", version.ref = "koin" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 # The Compose BOM pins compatible versions of every Compose library, so the

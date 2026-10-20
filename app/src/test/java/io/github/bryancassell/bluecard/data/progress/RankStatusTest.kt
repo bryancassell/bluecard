@@ -6,14 +6,16 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class RankStatusTest {
-    private val version = LocalDate.of(2026, 1, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val version = LocalDate(2026, 1, 1)
+    private val day = LocalDate(2026, 4, 15)
 
     // Each rank needs requirements 1 and 2.
     private fun rank(id: String) = Rank(
@@ -123,7 +125,7 @@ class RankStatusTest {
 
     @Test
     fun earnedRank_isEarnedOnTheDateItsLastRequirementWasCompleted() {
-        val later = day.plusDays(3)
+        val later = day.plus(3, DateTimeUnit.DAY)
         val scoutProgress = progress(scout, "1", "2").second.let {
             it.copy(
                 requirements = it.requirements.map { done ->
@@ -149,7 +151,7 @@ class RankStatusTest {
     // The date it was marked with, not the date its requirements were completed on.
     @Test
     fun markedRank_completeFromItsRequirementsToo_isEarnedOnTheDateItWasMarkedWith() {
-        val marked = LocalDate.of(2025, 6, 1)
+        val marked = LocalDate(2025, 6, 1)
 
         assertEquals(
             marked,
@@ -219,7 +221,7 @@ class RankStatusTest {
 
     @Test
     fun rankWithMeritBadges_isEarnedOnceTheScoutHasEnough_onTheLastDateItNeeded() {
-        val later = day.plusDays(10)
+        val later = day.plus(10, DateTimeUnit.DAY)
         val progress = mapOf(progress(scout, "1", "2"), progress(star, "1"))
 
         assertEquals(
@@ -370,7 +372,7 @@ class RankStatusTest {
     @Test
     fun versionMissingFromCatalog_isntEarned_andHasNoBar() {
         val standings = ranks.standings(
-            mapOf(progress(scout, "1", "2", startedOn = LocalDate.of(2024, 1, 1)))
+            mapOf(progress(scout, "1", "2", startedOn = LocalDate(2024, 1, 1)))
         )
 
         assertEquals(RankStanding(scout, RankStatus.InProgress), standings[0])
@@ -378,7 +380,7 @@ class RankStatusTest {
 
     @Test
     fun versionMissingFromCatalog_markedEarned_isEarned() {
-        val missing = LocalDate.of(2024, 1, 1)
+        val missing = LocalDate(2024, 1, 1)
         val standings = ranks.standings(
             mapOf(progress(tenderfoot, startedOn = missing, earnedOnPriorDate = day))
         )

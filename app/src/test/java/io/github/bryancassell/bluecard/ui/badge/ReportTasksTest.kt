@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
-import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -12,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ReportTasksTest {
     private val progressRepository = FakeProgressRepository().apply {
-        runBlocking { startBadge("chess", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1)) }
+        runBlocking { startBadge("chess", LocalDate(2026, 1, 1), LocalDate(2026, 3, 1)) }
     }
     private val reportRepository = FakeReportRepository(progressRepository)
     private val chessReport = FakeReportRepository.reportUri("chess")

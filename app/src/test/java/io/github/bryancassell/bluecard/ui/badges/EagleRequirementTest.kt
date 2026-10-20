@@ -3,7 +3,7 @@ package io.github.bryancassell.bluecard.ui.badges
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -18,7 +18,7 @@ class EagleRequirementTest {
             eagleRequired = eagleRequired,
             eagleGroup = eagleGroup,
             requirementVersions = listOf(
-                RequirementsVersion(LocalDate.of(2026, 1, 1), listOf(Requirement("1", "First.")))
+                RequirementsVersion(LocalDate(2026, 1, 1), listOf(Requirement("1", "First.")))
             )
         )
 

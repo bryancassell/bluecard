@@ -29,7 +29,7 @@ import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.data.progress.storedNumber
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable

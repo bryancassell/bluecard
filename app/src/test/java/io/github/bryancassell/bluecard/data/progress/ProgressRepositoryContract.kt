@@ -1,10 +1,10 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import java.io.IOException
-import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -25,10 +25,10 @@ abstract class ProgressRepositoryContract {
     /** A repository that can't save progress. */
     protected abstract fun unwritableRepository(): ProgressRepository
 
-    private val version = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
-    private val laterDay = LocalDate.of(2026, 4, 18)
+    private val version = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
+    private val laterDay = LocalDate(2026, 4, 18)
 
     // Recording functions that can start a badge take one; most tests start the badge first.
     private val badgeStart = BadgeStart(version, started)
@@ -74,7 +74,7 @@ abstract class ProgressRepositoryContract {
     @Test
     fun startBadge_again_keepsExistingProgress() = test {
         repository.setCounselor(BADGE, Counselor(name = "Pat"), badgeStart)
-        repository.startBadge(BADGE, LocalDate.of(2027, 1, 1), day)
+        repository.startBadge(BADGE, LocalDate(2027, 1, 1), day)
 
         val badge = progress()!!.badge
         assertEquals(version, badge.requirementsVersion)
@@ -331,7 +331,7 @@ abstract class ProgressRepositoryContract {
 
     @Test
     fun recordingWithStart_onAStartedBadge_keepsItsVersionAndDate() = test {
-        val later = BadgeStart(LocalDate.of(2027, 1, 1), day)
+        val later = BadgeStart(LocalDate(2027, 1, 1), day)
 
         repository.markRequirementCompleted(BADGE, "1", day, later)
         repository.setRequirementSignOffAndComment(BADGE, "2", null, "Hi", later)

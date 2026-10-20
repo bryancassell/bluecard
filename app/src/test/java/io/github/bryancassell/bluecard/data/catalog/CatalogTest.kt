@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.data.catalog
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -99,7 +99,7 @@ class CatalogTest {
                     eagleGroup = "cycling-hiking-swimming",
                     requirementVersions = listOf(
                         RequirementsVersion(
-                            effectiveDate = LocalDate.of(2026, 1, 1),
+                            effectiveDate = LocalDate(2026, 1, 1),
                             requirements = listOf(
                                 Requirement(
                                     number = "1",
@@ -156,7 +156,7 @@ class CatalogTest {
                     officialUrl = "https://www.scouting.org/tenderfoot/",
                     requirementVersions = listOf(
                         RequirementsVersion(
-                            effectiveDate = LocalDate.of(2026, 1, 1),
+                            effectiveDate = LocalDate(2026, 1, 1),
                             requirements = listOf(
                                 Requirement(number = "1", summary = "Pack for a campout."),
                                 Requirement(
@@ -232,7 +232,7 @@ class CatalogTest {
     fun localDateSerializer_writesIsoDate() {
         assertEquals(
             "\"2026-01-01\"",
-            Json.encodeToString(LocalDateSerializer, LocalDate.of(2026, 1, 1))
+            Json.encodeToString(LocalDateSerializer, LocalDate(2026, 1, 1))
         )
     }
 

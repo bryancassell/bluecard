@@ -1,12 +1,12 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import java.io.IOException
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import kotlinx.datetime.LocalDate
 
 /**
  * An in-memory [ProgressRepository] for other features' tests. ProgressRepositoryContract

@@ -45,7 +45,7 @@ import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -71,7 +71,7 @@ class RankDetailScreenTest {
     private var unmarks = 0
     private var clears = 0
     private val saveFailuresShown = mutableListOf<TaskFailure>()
-    private val today = LocalDate.of(2026, 5, 20)
+    private val today = LocalDate(2026, 5, 20)
     private var reportShareRequests = 0
     private var reportsShared = 0
     private val reportsSaved = mutableListOf<Uri>()
@@ -117,7 +117,7 @@ class RankDetailScreenTest {
     private val started = ready.copy(fractionDone = 0.25f, canClear = true, started = true)
     private val marked = ready.copy(
         status = RankStatus.Earned,
-        earnedOnPriorDate = LocalDate.of(2025, 8, 1),
+        earnedOnPriorDate = LocalDate(2025, 8, 1),
         canClear = true
     )
     private val earnedWithLife = ready.copy(status = RankStatus.Earned, earnedWith = "Life")
@@ -305,7 +305,7 @@ class RankDetailScreenTest {
         composeTestRule.pickerDay("May 21, 2026").assertIsNotEnabled()
         pickDay("May 10, 2026")
 
-        assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
+        assertEquals(listOf(LocalDate(2026, 5, 10)), marks)
         text("OK").assertDoesNotExist()
     }
 
@@ -347,13 +347,13 @@ class RankDetailScreenTest {
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markEarned_afterUnmarking_opensAtTheDateUnmarked() {
-        show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
+        show(ready.copy(unmarkedDate = LocalDate(2026, 4, 15)))
 
         text("Mark earned").performScrollTo().performClick()
         composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
         text("OK").performClick()
 
-        assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
+        assertEquals(listOf(LocalDate(2026, 4, 15)), marks)
     }
 
     @Test
@@ -377,7 +377,7 @@ class RankDetailScreenTest {
         text("Change date").performScrollTo().performClick()
         composeTestRule.pickerDay("August 1, 2025").assert(isSelected)
         pickDay("August 5, 2025")
-        assertEquals(listOf(LocalDate.of(2025, 8, 5)), marks)
+        assertEquals(listOf(LocalDate(2025, 8, 5)), marks)
 
         text("Unmark").performScrollTo().performClick()
         assertEquals(1, unmarks)
@@ -396,7 +396,7 @@ class RankDetailScreenTest {
         composeTestRule.pickerDay("May 20, 2026").assert(isSelected)
         pickDay("May 10, 2026")
 
-        assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
+        assertEquals(listOf(LocalDate(2026, 5, 10)), marks)
         assertEquals(0, unmarks)
     }
 
@@ -404,7 +404,7 @@ class RankDetailScreenTest {
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun rankEarnedWithARankAbove_addDate_afterUnmarking_opensAtTheDateUnmarked() {
-        show(earnedWithLife.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
+        show(earnedWithLife.copy(unmarkedDate = LocalDate(2026, 4, 15)))
 
         text("Add date").performScrollTo().performClick()
 
@@ -413,7 +413,7 @@ class RankDetailScreenTest {
 
     @Test
     fun rankEarnedFromItsRequirements_saysWhen() {
-        show(earned.copy(earnedOn = LocalDate.of(2026, 4, 15)))
+        show(earned.copy(earnedOn = LocalDate(2026, 4, 15)))
 
         text("Earned on Apr 15, 2026").performScrollTo().assertIsDisplayed()
         text("Change date").assertDoesNotExist()
@@ -438,7 +438,7 @@ class RankDetailScreenTest {
         text("Already earned Tenderfoot?").assertDoesNotExist()
         text("Mark earned").performScrollTo().performClick()
         pickDay("May 10, 2026")
-        assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
+        assertEquals(listOf(LocalDate(2026, 5, 10)), marks)
     }
 
     @Test
@@ -479,7 +479,7 @@ class RankDetailScreenTest {
 
     @Test
     fun earnedRank_offersToShareAndSaveItsReport() {
-        show(earned.copy(earnedOn = LocalDate.of(2026, 4, 15)))
+        show(earned.copy(earnedOn = LocalDate(2026, 4, 15)))
 
         assertOffersReport()
     }

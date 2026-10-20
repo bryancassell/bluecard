@@ -9,7 +9,7 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -17,10 +17,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MergeChoicesTest {
-    private val version = LocalDate.of(2026, 1, 1)
-    private val oldVersion = LocalDate.of(2025, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val version = LocalDate(2026, 1, 1)
+    private val oldVersion = LocalDate(2025, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
     private val profile = Profile("Alex Scout", "Troop 12")
 
     private fun requirements(effective: LocalDate) = RequirementsVersion(

@@ -14,7 +14,7 @@ import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.status
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * What a merge works from, which the screen doesn't show: the catalog's [badges] and [ranks],

@@ -8,7 +8,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -131,7 +131,7 @@ class FractionDoneTest {
     )
 
     private fun row(number: String, rowNumber: Int?) =
-        TrackerEntry(0, BADGE, number, rowNumber, mapOf("income" to "10"), LocalDate.of(2026, 5, 1))
+        TrackerEntry(0, BADGE, number, rowNumber, mapOf("income" to "10"), LocalDate(2026, 5, 1))
 
     private fun entriesOf(vararg entries: TrackerEntry) = entries.groupBy { it.requirementNumber }
 
@@ -211,7 +211,7 @@ class FractionDoneTest {
         "6",
         null,
         mapOf("hours" to hours, "conservation" to conservation),
-        LocalDate.of(2026, 5, 1)
+        LocalDate(2026, 5, 1)
     )
 
     @Test
@@ -423,7 +423,7 @@ class FractionDoneTest {
     }
 
     private val version = RequirementsVersion(
-        LocalDate.of(2026, 1, 1),
+        LocalDate(2026, 1, 1),
         listOf(leaf("1"), allOf, twoOf, weeks)
     )
 
@@ -474,7 +474,7 @@ class FractionDoneTest {
 
     @Test
     fun badge_completedOnPriorDate_isAllDone() {
-        val priorDate = badge(completedOnPriorDate = LocalDate.of(2026, 3, 1))
+        val priorDate = badge(completedOnPriorDate = LocalDate(2026, 3, 1))
         assertEquals(1f, priorDate.fractionDone(version))
     }
 
@@ -513,14 +513,14 @@ class FractionDoneTest {
 
     @Test
     fun whileInProgress_completedOnPriorDate_isNull() {
-        val priorDate = badge(completedOnPriorDate = LocalDate.of(2026, 3, 1))
+        val priorDate = badge(completedOnPriorDate = LocalDate(2026, 3, 1))
         assertNull(personalFitness.fractionDoneWhileInProgress(priorDate))
     }
 
     @Test
     fun whileInProgress_onAVersionMissingFromTheCatalog_isNull() {
         // The badge is in progress, but there are no requirements to measure it against.
-        val missing = LocalDate.of(2020, 1, 1)
+        val missing = LocalDate(2020, 1, 1)
         val onMissingVersion = BadgeProgressDetails(
             BadgeProgress(BADGE, missing, missing),
             listOf(done("1")),

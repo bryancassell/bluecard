@@ -510,8 +510,8 @@ fails the build for a missing dependency, as Hilt did.
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
   `androidModule`, for what needs a `Context`. Besides the repositories, they
   provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
-  `CoroutineScope` (`@ApplicationScope`) and a `Clock`, the dispatcher and clock
-  so tests can replace them.
+  `CoroutineScope` (`@ApplicationScope`) and a `ZonedClock`, the dispatcher
+  and clock so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could

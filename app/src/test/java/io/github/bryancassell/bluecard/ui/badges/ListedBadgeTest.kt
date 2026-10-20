@@ -7,7 +7,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -96,6 +96,6 @@ class ListedBadgeTest {
     }
 
     private companion object {
-        val VERSION: LocalDate = LocalDate.of(2026, 1, 1)
+        val VERSION: LocalDate = LocalDate(2026, 1, 1)
     }
 }

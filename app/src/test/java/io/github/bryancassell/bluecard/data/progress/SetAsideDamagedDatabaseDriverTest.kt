@@ -14,16 +14,16 @@ import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.bryancassell.bluecard.di.DeviceClock
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -52,7 +52,7 @@ class SetAsideDamagedDatabaseDriverTest {
 
     private val damagedProgress = FileDamagedProgressRepository(
         context,
-        Clock.systemUTC(),
+        DeviceClock,
         CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
         Dispatchers.Unconfined
     )
@@ -175,7 +175,7 @@ class SetAsideDamagedDatabaseDriverTest {
     private suspend fun saveProgress(database: BlueCardDatabase) {
         repeat(300) {
             database.progressDao().insertBadge(
-                BadgeProgress("badge-$it-${"x".repeat(200)}", VERSION, LocalDate.of(2026, 3, 1))
+                BadgeProgress("badge-$it-${"x".repeat(200)}", VERSION, LocalDate(2026, 3, 1))
             )
         }
         database.close()
@@ -312,6 +312,6 @@ class SetAsideDamagedDatabaseDriverTest {
     }
 
     private companion object {
-        val VERSION: LocalDate = LocalDate.of(2026, 1, 1)
+        val VERSION: LocalDate = LocalDate(2026, 1, 1)
     }
 }

@@ -4,7 +4,7 @@ import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** What the Rank detail screen shows. */
 sealed interface RankDetailUiState {

@@ -1,12 +1,12 @@
 package io.github.bryancassell.bluecard.data.catalog
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class CatalogValidatorTest {
     private val requirement = Requirement(number = "1", summary = "Do the thing.")
-    private val version = RequirementsVersion(LocalDate.of(2026, 1, 1), listOf(requirement))
+    private val version = RequirementsVersion(LocalDate(2026, 1, 1), listOf(requirement))
     private val badge = MeritBadge(
         id = "first-aid",
         name = "First Aid",
@@ -74,7 +74,7 @@ class CatalogValidatorTest {
             eagleGroup = "cycling-hiking-swimming",
             requirementVersions = listOf(
                 version.copy(requirements = listOf(requirement, choice)),
-                version.copy(effectiveDate = LocalDate.of(2025, 1, 1))
+                version.copy(effectiveDate = LocalDate(2025, 1, 1))
             )
         )
         val secondClass = rank.copy(

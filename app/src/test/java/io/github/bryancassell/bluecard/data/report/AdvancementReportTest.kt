@@ -21,7 +21,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import java.math.BigDecimal
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -29,10 +29,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AdvancementReportTest {
-    private val older = LocalDate.of(2025, 1, 1)
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val today = LocalDate.of(2026, 9, 30)
+    private val older = LocalDate(2025, 1, 1)
+    private val newest = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val today = LocalDate(2026, 9, 30)
     private val profile = Profile("Alex Scout", "123")
 
     private val date = TrackerColumn("date", "Date", TrackerColumnType.DATE)
@@ -138,7 +138,7 @@ class AdvancementReportTest {
 
     @Test
     fun badgeOnVersionMissingFromCatalog_hasNoReport() {
-        val progress = progress(version = LocalDate.of(2020, 1, 1))
+        val progress = progress(version = LocalDate(2020, 1, 1))
 
         assertNull(camping.report(profile, progress, today))
     }
@@ -157,8 +157,8 @@ class AdvancementReportTest {
         val report = report(
             progress(
                 listOf(
-                    completed("1", LocalDate.of(2026, 4, 1), "Planned with my patrol."),
-                    completed("2a", LocalDate.of(2026, 4, 2)),
+                    completed("1", LocalDate(2026, 4, 1), "Planned with my patrol."),
+                    completed("2a", LocalDate(2026, 4, 2)),
                     completed("2c", null),
                     RequirementProgress("camping", "2b", comment = "Next month.")
                 )
@@ -166,7 +166,7 @@ class AdvancementReportTest {
         )
 
         val one = report.requirement("1")
-        assertEquals(Completion(LocalDate.of(2026, 4, 1)), one.completion)
+        assertEquals(Completion(LocalDate(2026, 4, 1)), one.completion)
         assertEquals("Planned with my patrol.", one.comment)
         // Completed, without a date.
         assertEquals(Completion(null), report.requirement("2c").completion)
@@ -182,7 +182,7 @@ class AdvancementReportTest {
     @Test
     fun requirementNotCompleted_inACompletedOne_isNotNeeded() {
         val report = report(
-            progress(listOf(completed("2a", LocalDate.of(2026, 4, 2)), completed("2c", null)))
+            progress(listOf(completed("2a", LocalDate(2026, 4, 2)), completed("2c", null)))
         )
 
         assertTrue(report.requirement("2b").notNeeded)
@@ -205,7 +205,7 @@ class AdvancementReportTest {
         )
         val report = withOwnWork.report(
             profile,
-            progress(listOf(completed("2a", LocalDate.of(2026, 4, 2)), completed("2c", null))),
+            progress(listOf(completed("2a", LocalDate(2026, 4, 2)), completed("2c", null))),
             today
         )!!
 
@@ -216,7 +216,7 @@ class AdvancementReportTest {
     @Test
     fun badge_isCompletedOnItsLastRequirementsDate() {
         val all = listOf("1", "2a", "2b", "3", "4b").mapIndexed { index, number ->
-            completed(number, LocalDate.of(2026, 5, index + 1))
+            completed(number, LocalDate(2026, 5, index + 1))
         }
         val rows = (1..3).map {
             TrackerEntry(
@@ -225,20 +225,20 @@ class AdvancementReportTest {
                 requirementNumber = "4a",
                 rowNumber = it,
                 values = emptyMap(),
-                addedDate = LocalDate.of(2026, 6, it)
+                addedDate = LocalDate(2026, 6, it)
             )
         }
 
         val report = report(progress(all, rows))
 
-        assertEquals(Completion(LocalDate.of(2026, 6, 3)), report.completion)
+        assertEquals(Completion(LocalDate(2026, 6, 3)), report.completion)
     }
 
     @Test
     fun badgeMarkedCompletedOnPriorDate_isCompletedThen() {
-        val report = report(progress(completedOnPriorDate = LocalDate.of(2025, 8, 1)))
+        val report = report(progress(completedOnPriorDate = LocalDate(2025, 8, 1)))
 
-        assertEquals(Completion(LocalDate.of(2025, 8, 1)), report.completion)
+        assertEquals(Completion(LocalDate(2025, 8, 1)), report.completion)
     }
 
     // As the screens show it, so the counselor doesn't read the badge as complete with nothing
@@ -247,7 +247,7 @@ class AdvancementReportTest {
     fun requirementStillNeeded_onABadgeMarkedCompletedOnPriorDate_isNotRecorded() {
         // 2 is complete, so 2b isn't needed.
         val done = listOf(completed("1", null), completed("2a", null), completed("2c", null))
-        val marked = LocalDate.of(2025, 8, 1)
+        val marked = LocalDate(2025, 8, 1)
 
         val report = report(progress(done, completedOnPriorDate = marked))
 
@@ -263,7 +263,7 @@ class AdvancementReportTest {
         val progress = progress(
             listOf(completed("4b", null)),
             listOf(trip),
-            completedOnPriorDate = LocalDate.of(2025, 8, 1)
+            completedOnPriorDate = LocalDate(2025, 8, 1)
         )
 
         assertEquals(listOf("1", "2", "2a", "2b", "2c", "4a"), report(progress).notRecorded())
@@ -449,14 +449,14 @@ class AdvancementReportTest {
     fun rankEarnedFromItsRequirements_isEarnedOnTheirLastDate_withNoCounselor() {
         val report = rankReport(
             "scout",
-            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate.of(2026, 4, 1))))
+            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate(2026, 4, 1))))
         )!!
 
         assertEquals(ReportKind.Rank, report.kind)
         assertEquals("Scout", report.name)
         assertEquals(profile, report.profile)
         assertEquals(newest, report.requirementsVersion)
-        assertEquals(Completion(LocalDate.of(2026, 4, 1)), report.completion)
+        assertEquals(Completion(LocalDate(2026, 4, 1)), report.completion)
         assertNull(report.earnedWith)
         assertNull(report.counselor)
         assertEquals(today, report.createdDate)
@@ -490,7 +490,7 @@ class AdvancementReportTest {
 
     @Test
     fun rankMarkedEarned_isEarnedThen_andWhatsNotRecordedSaysSo() {
-        val marked = LocalDate.of(2025, 8, 1)
+        val marked = LocalDate(2025, 8, 1)
         val report = rankReport(
             "tenderfoot",
             rankProgress("tenderfoot", markedOn = marked)
@@ -506,7 +506,7 @@ class AdvancementReportTest {
     fun rankCountedAsEarnedWithARankAbove_saysSo_andWhatsNotRecordedSaysSo() {
         val report = rankReport(
             "scout",
-            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1))
+            rankProgress("tenderfoot", markedOn = LocalDate(2025, 8, 1))
         )!!
 
         assertNull(report.completion)
@@ -526,17 +526,17 @@ class AdvancementReportTest {
                     rankCompleted(
                         "tenderfoot",
                         "1",
-                        LocalDate.of(2026, 4, 1),
+                        LocalDate(2026, 4, 1),
                         "At camp.",
                         signedOffBy = "Mr. Rivera"
                     )
                 ),
-                markedOn = LocalDate.of(2026, 6, 1)
+                markedOn = LocalDate(2026, 6, 1)
             )
         )!!
 
         val pitch = report.requirement("1")
-        assertEquals(Completion(LocalDate.of(2026, 4, 1)), pitch.completion)
+        assertEquals(Completion(LocalDate(2026, 4, 1)), pitch.completion)
         assertEquals("At camp.", pitch.comment)
         assertEquals("Mr. Rivera", pitch.signedOffBy)
         assertNull(pitch.meritBadges)
@@ -547,23 +547,23 @@ class AdvancementReportTest {
     fun requirementThatAsksForMeritBadges_listsEveryBadgeCompleted_inNameOrder() {
         val report = rankReport(
             "tenderfoot",
-            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate.of(2026, 4, 1)))),
+            rankProgress("scout", listOf(rankCompleted("scout", "1", LocalDate(2026, 4, 1)))),
             rankProgress(
                 "tenderfoot",
-                listOf(rankCompleted("tenderfoot", "1", LocalDate.of(2026, 4, 2)))
+                listOf(rankCompleted("tenderfoot", "1", LocalDate(2026, 4, 2)))
             ),
-            badgeCompleted("chess", LocalDate.of(2026, 5, 1)),
-            badgeCompleted("camping", LocalDate.of(2026, 5, 3))
+            badgeCompleted("chess", LocalDate(2026, 5, 1)),
+            badgeCompleted("camping", LocalDate(2026, 5, 3))
         )!!
 
-        assertEquals(Completion(LocalDate.of(2026, 5, 3)), report.completion)
+        assertEquals(Completion(LocalDate(2026, 5, 3)), report.completion)
         val badgesNeeded = report.requirement("2")
-        assertEquals(Completion(LocalDate.of(2026, 5, 3)), badgesNeeded.completion)
+        assertEquals(Completion(LocalDate(2026, 5, 3)), badgesNeeded.completion)
         val meritBadges = badgesNeeded.meritBadges!!
         assertEquals(2, meritBadges.credit.completed)
         assertEquals(1, meritBadges.credit.eagleRequired)
         assertEquals(
-            listOf("Camping" to LocalDate.of(2026, 5, 3), "Chess" to LocalDate.of(2026, 5, 1)),
+            listOf("Camping" to LocalDate(2026, 5, 3), "Chess" to LocalDate(2026, 5, 1)),
             meritBadges.badges.map { it.badge.name to it.completedOn }
         )
     }
@@ -572,7 +572,7 @@ class AdvancementReportTest {
     fun requirementThatAsksForMeritBadges_withNoneCompleted_listsNone() {
         val report = rankReport(
             "tenderfoot",
-            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1))
+            rankProgress("tenderfoot", markedOn = LocalDate(2025, 8, 1))
         )!!
 
         val badgesNeeded = report.requirement("2")
@@ -586,8 +586,8 @@ class AdvancementReportTest {
     fun requirementThatAsksForMeritBadges_withABadge_onAMarkedRank_isNotNotRecorded() {
         val report = rankReport(
             "tenderfoot",
-            rankProgress("tenderfoot", markedOn = LocalDate.of(2025, 8, 1)),
-            badgeCompleted("chess", LocalDate.of(2026, 5, 1))
+            rankProgress("tenderfoot", markedOn = LocalDate(2025, 8, 1)),
+            badgeCompleted("chess", LocalDate(2026, 5, 1))
         )!!
 
         assertFalse(report.requirement("2").notRecorded)
@@ -600,9 +600,9 @@ class AdvancementReportTest {
         val progress = BadgeProgressDetails(
             BadgeProgress(
                 "scout",
-                LocalDate.of(2020, 1, 1),
+                LocalDate(2020, 1, 1),
                 started,
-                completedOnPriorDate = LocalDate.of(2025, 8, 1)
+                completedOnPriorDate = LocalDate(2025, 8, 1)
             ),
             emptyList(),
             emptyList()

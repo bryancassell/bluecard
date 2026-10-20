@@ -20,13 +20,11 @@ import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
-import java.time.Clock
-import java.time.LocalDate
-import java.time.ZoneOffset
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -38,6 +36,9 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,8 +66,8 @@ class PdfReportRepositoryTest {
     val folder = TemporaryFolder()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val today = LocalDate.of(2026, 9, 30)
+    private val newest = LocalDate(2026, 1, 1)
+    private val today = LocalDate(2026, 9, 30)
 
     private val chess = MeritBadge(
         id = "chess",
@@ -109,7 +110,7 @@ class PdfReportRepositoryTest {
         progressRepository,
         profileRepository,
         pdfWriter,
-        Clock.fixed(today.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneOffset.UTC),
+        FakeClock(today.atStartOfDayIn(TimeZone.UTC)),
         ioDispatcher,
         externalScope
     )
@@ -161,9 +162,9 @@ class PdfReportRepositoryTest {
 
     @Before
     fun completeChess() = runTest {
-        val start = BadgeStart(newest, LocalDate.of(2026, 3, 1))
-        progressRepository.markRequirementCompleted("chess", "1a", LocalDate.of(2026, 4, 1), start)
-        progressRepository.markRequirementCompleted("chess", "1b", LocalDate.of(2026, 4, 2), start)
+        val start = BadgeStart(newest, LocalDate(2026, 3, 1))
+        progressRepository.markRequirementCompleted("chess", "1a", LocalDate(2026, 4, 1), start)
+        progressRepository.markRequirementCompleted("chess", "1b", LocalDate(2026, 4, 2), start)
         progressRepository.setRequirementSignOffAndComment("chess", "1c", null, "Next week.", start)
     }
 
@@ -497,7 +498,7 @@ class PdfReportRepositoryTest {
         "Tenderfoot",
         Requirement("1", "Earn a merit badge.", meritBadges = MeritBadgesNeeded(1, 0))
     )
-    private val rankStart = BadgeStart(newest, LocalDate.of(2026, 3, 1))
+    private val rankStart = BadgeStart(newest, LocalDate(2026, 3, 1))
 
     @Before
     fun addRanks() {
@@ -509,7 +510,7 @@ class PdfReportRepositoryTest {
         progressRepository.markRequirementCompleted(
             "scout",
             "1",
-            LocalDate.of(2026, 4, 5),
+            LocalDate(2026, 4, 5),
             rankStart
         )
 
@@ -531,10 +532,10 @@ class PdfReportRepositoryTest {
         progressRepository.markRequirementCompleted(
             "scout",
             "1",
-            LocalDate.of(2026, 4, 5),
+            LocalDate(2026, 4, 5),
             rankStart
         )
-        progressRepository.startBadge("tenderfoot", newest, LocalDate.of(2026, 3, 1))
+        progressRepository.startBadge("tenderfoot", newest, LocalDate(2026, 3, 1))
 
         repository.createReportToShare("tenderfoot")
 
@@ -548,7 +549,7 @@ class PdfReportRepositoryTest {
     // page redraws: Tenderfoot is complete, but Scout isn't earned.
     @Test
     fun forAStartedRankNotEarned_makesNoReport() = runTest {
-        progressRepository.startBadge("tenderfoot", newest, LocalDate.of(2026, 3, 1))
+        progressRepository.startBadge("tenderfoot", newest, LocalDate(2026, 3, 1))
         val (document, file) = createdDocument()
 
         assertNull(repository.createReportToShare("tenderfoot"))
@@ -563,7 +564,7 @@ class PdfReportRepositoryTest {
     fun rankCountedAsEarnedWithARankAbove_hasAReport_thatSaysSo() = runTest {
         progressRepository.setCompletedOnPriorDate(
             "tenderfoot",
-            LocalDate.of(2025, 8, 1),
+            LocalDate(2025, 8, 1),
             rankStart
         )
 
@@ -576,7 +577,7 @@ class PdfReportRepositoryTest {
 
     @Test
     fun rankReport_onVersionMissingFromCatalog_throwsIllegalState() = runTest {
-        progressRepository.setCompletedOnPriorDate("scout", LocalDate.of(2025, 8, 1), rankStart)
+        progressRepository.setCompletedOnPriorDate("scout", LocalDate(2025, 8, 1), rankStart)
         catalogRepository.ranks = listOf(scout.copy(requirementVersions = emptyList()))
 
         assertThrows<IllegalStateException> { repository.createReportToShare("scout") }

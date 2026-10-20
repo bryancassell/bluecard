@@ -14,18 +14,18 @@ import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.stringsLanguageResources
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDate
 
 /**
  * [ReportRepository] that lays reports out with [layOutReport] and writes them with
@@ -44,7 +44,7 @@ class PdfReportRepository(
     private val progressRepository: ProgressRepository,
     private val profileRepository: ProfileRepository,
     private val pdfWriter: ReportPdfWriter,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
@@ -99,7 +99,7 @@ class PdfReportRepository(
         }
         val badges = catalogRepository.getBadges()
         val ranks = catalogRepository.getRanks()
-        val today = LocalDate.now(clock)
+        val today = clock.today()
         val badge = badges.find { it.id == advancementId }
         val report = if (badge != null) {
             val progress = progressRepository.observeProgress(advancementId).first() ?: return null

@@ -42,7 +42,7 @@ import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

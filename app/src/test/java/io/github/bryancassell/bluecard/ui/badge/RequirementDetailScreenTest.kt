@@ -74,7 +74,7 @@ import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -95,7 +95,7 @@ class RequirementDetailScreenTest {
     val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     /** What the page reads as today when the picker opens, which a test can move on. */
-    private var today = LocalDate.of(2026, 5, 20)
+    private var today = LocalDate(2026, 5, 20)
 
     private val openedRequirements = mutableListOf<String>()
     private val openedTrackerEntries = mutableListOf<Pair<Long?, Int?>>()
@@ -220,12 +220,12 @@ class RequirementDetailScreenTest {
     /** [withOwnWork] with its own work marked complete, but not enough sub-requirements. */
     private val ownWorkDone = withOwnWork.copy(
         requirement = ready.requirement.copy(ownWork = OwnWork("Pack your gear.", true)),
-        completedDate = LocalDate.of(2026, 4, 15)
+        completedDate = LocalDate(2026, 4, 15)
     )
 
     private val completedLeaf = leaf.copy(
         requirement = leaf.requirement.copy(completed = true),
-        completedDate = LocalDate.of(2026, 4, 15)
+        completedDate = LocalDate(2026, 4, 15)
     )
 
     /**
@@ -244,7 +244,7 @@ class RequirementDetailScreenTest {
         timeInRank = TimeInRank(
             4,
             "First Class",
-            TimeInRank.Eligibility.From(LocalDate.of(2027, 1, 1))
+            TimeInRank.Eligibility.From(LocalDate(2027, 1, 1))
         )
     )
 
@@ -763,8 +763,8 @@ class RequirementDetailScreenTest {
 
     private val weeksFilledIn = withWeeks.copy(
         requirement = withWeeks.requirement.copy(completed = true),
-        completedDate = LocalDate.of(2026, 4, 15),
-        rowsCompletedDate = LocalDate.of(2026, 4, 12),
+        completedDate = LocalDate(2026, 4, 15),
+        rowsCompletedDate = LocalDate(2026, 4, 12),
         tracker = withWeeks.tracker?.copy(
             count = TrackerCount(3, 3, "weeks"),
             rows = (1..3).map {
@@ -818,7 +818,7 @@ class RequirementDetailScreenTest {
                     completed = true,
                     ownWork = OwnWork("Compare the weeks.", true)
                 ),
-                completedDate = LocalDate.of(2026, 4, 15)
+                completedDate = LocalDate(2026, 4, 15)
             )
         )
 
@@ -841,7 +841,7 @@ class RequirementDetailScreenTest {
         composeTestRule.pickerDay("April 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 10)), dateChanges)
+        assertEquals(listOf<LocalDate?>(LocalDate(2026, 4, 10)), dateChanges)
     }
 
     @Test
@@ -865,7 +865,7 @@ class RequirementDetailScreenTest {
         ).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 12)), dateChanges)
+        assertEquals(listOf<LocalDate?>(LocalDate(2026, 4, 12)), dateChanges)
     }
 
     // As when a row was saved before database version 3, which recorded no date.
@@ -961,7 +961,7 @@ class RequirementDetailScreenTest {
                 timeInRank = TimeInRank(
                     1,
                     "First Class",
-                    TimeInRank.Eligibility.From(LocalDate.of(2026, 10, 1))
+                    TimeInRank.Eligibility.From(LocalDate(2026, 10, 1))
                 )
             )
         )
@@ -977,7 +977,7 @@ class RequirementDetailScreenTest {
         show(
             withTimeInRank.copy(
                 requirement = withTimeInRank.requirement.copy(completed = true),
-                completedDate = LocalDate.of(2026, 11, 2)
+                completedDate = LocalDate(2026, 11, 2)
             )
         )
 
@@ -1022,9 +1022,9 @@ class RequirementDetailScreenTest {
         ),
         earnedBadges = listOf(
             EarnedBadge(badge("camping", "Camping", true), null, countsOnceAsEagleRequired = true),
-            EarnedBadge(badge("chess", "Chess"), LocalDate.of(2026, 2, 1), false),
-            EarnedBadge(badge("hiking", "Hiking", true), LocalDate.of(2026, 3, 1), true),
-            EarnedBadge(badge("swimming", "Swimming", true), LocalDate.of(2026, 4, 15), false)
+            EarnedBadge(badge("chess", "Chess"), LocalDate(2026, 2, 1), false),
+            EarnedBadge(badge("hiking", "Hiking", true), LocalDate(2026, 3, 1), true),
+            EarnedBadge(badge("swimming", "Swimming", true), LocalDate(2026, 4, 15), false)
         )
     )
 
@@ -1266,7 +1266,7 @@ class RequirementDetailScreenTest {
         composeTestRule.pickerDay("April 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 4, 10)), dateChanges)
+        assertEquals(listOf<LocalDate?>(LocalDate(2026, 4, 10)), dateChanges)
         composeTestRule.onNodeWithText("OK").assertDoesNotExist()
     }
 
@@ -1295,34 +1295,34 @@ class RequirementDetailScreenTest {
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(completedLeaf.copy(completedDate = null))
-        today = LocalDate.of(2026, 5, 21)
+        today = LocalDate(2026, 5, 21)
 
         composeTestRule.onNodeWithText("Add date").performScrollTo().performClick()
         composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
+        assertEquals(listOf<LocalDate?>(LocalDate(2026, 5, 21)), dateChanges)
     }
 
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_onAPageOpenPastMidnight_offersTheNewDay() {
-        show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 18)))
-        today = LocalDate.of(2026, 5, 21)
+        show(completedLeaf.copy(completedDate = LocalDate(2026, 5, 18)))
+        today = LocalDate(2026, 5, 21)
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.pickerDay("May 21, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf<LocalDate?>(LocalDate.of(2026, 5, 21)), dateChanges)
+        assertEquals(listOf<LocalDate?>(LocalDate(2026, 5, 21)), dateChanges)
     }
 
     // As when it was recorded while the device's clock was ahead.
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun changeDate_ofADateAfterToday_opensAtToday() {
-        show(completedLeaf.copy(completedDate = LocalDate.of(2026, 5, 22)))
+        show(completedLeaf.copy(completedDate = LocalDate(2026, 5, 22)))
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         composeTestRule.pickerDay(
@@ -1352,7 +1352,7 @@ class RequirementDetailScreenTest {
     @Config(qualifiers = "w891dp-h411dp-land")
     @Test
     fun datePicker_onAShortWindow_scrollsToEveryDay() {
-        show(completedLeaf.copy(completedDate = LocalDate.of(2025, 11, 12)))
+        show(completedLeaf.copy(completedDate = LocalDate(2025, 11, 12)))
 
         composeTestRule.onNodeWithText("Change date").performScrollTo().performClick()
         composeTestRule.pickerDay("November 1, 2025").assertIsWhollyDisplayed()
@@ -1365,7 +1365,7 @@ class RequirementDetailScreenTest {
         composeTestRule.pickerDay("November 30, 2025").assertIsWhollyDisplayed().performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf<LocalDate?>(LocalDate.of(2025, 11, 30)), dateChanges)
+        assertEquals(listOf<LocalDate?>(LocalDate(2025, 11, 30)), dateChanges)
     }
 
     @Test

@@ -1,22 +1,26 @@
 package io.github.bryancassell.bluecard.ui
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class SavedStateDateTest {
+    // The first and last dates LocalDate can hold. kotlinx-datetime keeps its MIN and MAX internal.
+    private val first = LocalDate(-999_999_999, 1, 1)
+    private val last = LocalDate(999_999_999, 12, 31)
+
     @Test
     fun epochDay_isItsDate() {
-        val day = LocalDate.of(2026, 4, 15)
+        val day = LocalDate(2026, 4, 15)
 
-        assertEquals(day, dateFromEpochDay(day.toEpochDay()))
+        assertEquals(day, dateFromEpochDay(day.toEpochDays()))
     }
 
     @Test
     fun firstAndLastDaysLocalDateCanHold_areDates() {
-        assertEquals(LocalDate.MIN, dateFromEpochDay(LocalDate.MIN.toEpochDay()))
-        assertEquals(LocalDate.MAX, dateFromEpochDay(LocalDate.MAX.toEpochDay()))
+        assertEquals(first, dateFromEpochDay(first.toEpochDays()))
+        assertEquals(last, dateFromEpochDay(last.toEpochDays()))
     }
 
     @Test
@@ -33,8 +37,8 @@ class SavedStateDateTest {
 
     @Test
     fun dayOutsideTheDatesLocalDateCanHold_isIgnored() {
-        assertNull(dateFromEpochDay(LocalDate.MIN.toEpochDay() - 1))
-        assertNull(dateFromEpochDay(LocalDate.MAX.toEpochDay() + 1))
+        assertNull(dateFromEpochDay(first.toEpochDays() - 1))
+        assertNull(dateFromEpochDay(last.toEpochDays() + 1))
         assertNull(dateFromEpochDay(Long.MAX_VALUE))
     }
 }

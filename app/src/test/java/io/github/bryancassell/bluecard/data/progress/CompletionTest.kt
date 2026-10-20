@@ -7,7 +7,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -15,7 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CompletionTest {
-    private fun day(n: Int) = LocalDate.of(2026, 5, n)
+    private fun day(n: Int) = LocalDate(2026, 5, n)
 
     private fun leaf(number: String) = Requirement(number = number, summary = "Do $number.")
 

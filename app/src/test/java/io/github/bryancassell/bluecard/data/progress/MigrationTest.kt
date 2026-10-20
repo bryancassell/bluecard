@@ -8,9 +8,9 @@ import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -91,8 +91,8 @@ class MigrationTest {
             assertEquals(
                 BadgeProgress(
                     "personal-fitness",
-                    LocalDate.of(2026, 1, 1),
-                    LocalDate.of(2026, 3, 1)
+                    LocalDate(2026, 1, 1),
+                    LocalDate(2026, 3, 1)
                 ),
                 progress.badge
             )
@@ -173,7 +173,7 @@ class MigrationTest {
                         "scout",
                         "1a",
                         completed = true,
-                        completedDate = LocalDate.of(2026, 3, 2),
+                        completedDate = LocalDate(2026, 3, 2),
                         comment = "At the first meeting."
                     )
                 ),

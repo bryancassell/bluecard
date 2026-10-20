@@ -23,7 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** Test tag of a badge's or rank's status card, for its screenshot tests. */
 internal const val STATUS_CARD_TAG = "statusCard"

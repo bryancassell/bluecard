@@ -1,9 +1,8 @@
 package io.github.bryancassell.bluecard.data.catalog
 
 import java.text.Collator
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
 import java.util.Locale
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -267,7 +266,7 @@ object LocalDateSerializer : KSerializer<LocalDate> {
         val text = decoder.decodeString()
         return try {
             LocalDate.parse(text)
-        } catch (e: DateTimeParseException) {
+        } catch (e: IllegalArgumentException) {
             // Report bad dates like any other malformed catalog JSON.
             throw SerializationException("\"$text\" is not a date in YYYY-MM-DD form", e)
         }

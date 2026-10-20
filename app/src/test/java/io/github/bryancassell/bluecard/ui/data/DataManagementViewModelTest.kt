@@ -22,8 +22,6 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
-import java.time.LocalDate
-import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +30,13 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -47,11 +52,11 @@ class DataManagementViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val today = LocalDate.of(2026, 10, 1)
-    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
+    private val today = LocalDate(2026, 10, 1)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
-    private val version = LocalDate.of(2026, 1, 1)
-    private val badgeStart = BadgeStart(version, LocalDate.of(2026, 3, 1))
+    private val version = LocalDate(2026, 1, 1)
+    private val badgeStart = BadgeStart(version, LocalDate(2026, 3, 1))
 
     private val backupRepository = FakeBackupRepository()
     private val catalogRepository = FakeCatalogRepository(
@@ -139,9 +144,9 @@ class DataManagementViewModelTest {
         val viewModel = viewModel()
         assertEquals(today, viewModel.today())
 
-        clock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+        clock.now = today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(TimeZone.UTC)
 
-        assertEquals(today.plusDays(1), viewModel.today())
+        assertEquals(today.plus(1, DateTimeUnit.DAY), viewModel.today())
     }
 
     @Test

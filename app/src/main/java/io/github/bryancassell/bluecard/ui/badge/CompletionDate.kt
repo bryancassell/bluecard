@@ -49,13 +49,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.text.completionDateFormatter
+import io.github.bryancassell.bluecard.text.CompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.ButtonText
 import io.github.bryancassell.bluecard.ui.stringsLocale
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
@@ -63,9 +64,9 @@ import java.time.format.DateTimeFormatter
  * (ARCHITECTURE.md, Language and layout direction).
  */
 @Composable
-fun rememberCompletionDateFormatter(): DateTimeFormatter {
+fun rememberCompletionDateFormatter(): CompletionDateFormatter {
     val locale = stringsLocale()
-    return remember(locale) { completionDateFormatter(locale) }
+    return remember(locale) { CompletionDateFormatter(locale) }
 }
 
 /**
@@ -347,7 +348,7 @@ private class NotAfter(private val today: LocalDate) : SelectableDates {
 
 // The date picker gives dates as the start of their day in UTC, in milliseconds.
 
-private fun LocalDate.toPickerMillis() = atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+private fun LocalDate.toPickerMillis() = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
 
 private fun Long.toPickerDate(): LocalDate =
-    Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
+    Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date

@@ -27,13 +27,13 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.storedDate
+import io.github.bryancassell.bluecard.text.CompletionDateFormatter
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
 import io.github.bryancassell.bluecard.text.totalFormat
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.stringsLocale
 import io.github.bryancassell.bluecard.ui.typedText
 import java.text.NumberFormat
-import java.time.format.DateTimeFormatter
 
 // A requirement's tracker, on its page and in its row.
 
@@ -123,7 +123,7 @@ fun TrackerSection(
 private fun TrackerRowItem(
     rowTitle: String,
     row: TrackerRow,
-    formatter: DateTimeFormatter,
+    formatter: CompletionDateFormatter,
     onOpen: () -> Unit
 ) {
     val title = stringResource(R.string.tracker_row_title, rowTitle, row.number)
@@ -155,7 +155,10 @@ private fun TrackerRowItem(
  * line break in a value, as in multi-line text, is a space.
  */
 @Composable
-private fun trackerValuesText(values: List<TrackerValue>, formatter: DateTimeFormatter): String? {
+private fun trackerValuesText(
+    values: List<TrackerValue>,
+    formatter: CompletionDateFormatter
+): String? {
     val separator = stringResource(R.string.tracker_value_separator)
     return values.takeIf { it.isNotEmpty() }?.map { value ->
         when (value.type) {

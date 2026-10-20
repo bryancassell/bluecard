@@ -3,7 +3,7 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -23,7 +23,7 @@ class ProgressTest {
 
     @Test
     fun storedDate_readsYearMonthDay() {
-        assertEquals(LocalDate.of(2026, 9, 12), storedDate("2026-09-12"))
+        assertEquals(LocalDate(2026, 9, 12), storedDate("2026-09-12"))
     }
 
     @Test
@@ -68,7 +68,7 @@ class ProgressTest {
 
     @Test
     fun withoutRequirements_dropsTheirProgressAndEntries_andKeepsTheRest() {
-        val day = LocalDate.of(2026, 4, 15)
+        val day = LocalDate(2026, 4, 15)
         val badge = BadgeProgress("camping", day, day, counselor = Counselor("Pat Lee"))
         val kept = RequirementProgress("camping", "1", completed = true, comment = "Kept.")
         val keptEntry = entry(1)
@@ -86,7 +86,7 @@ class ProgressTest {
 
     @Test
     fun withoutTrackerEntry_dropsIt_andKeepsTheRest() {
-        val day = LocalDate.of(2026, 4, 15)
+        val day = LocalDate(2026, 4, 15)
         val badge = BadgeProgress("camping", day, day)
         val requirement = RequirementProgress("camping", "1", completed = true)
         val progress = BadgeProgressDetails(badge, listOf(requirement), listOf(entry(1), entry(2)))
