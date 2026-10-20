@@ -1,10 +1,7 @@
 package io.github.bryancassell.bluecard.di
 
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.TimeZone
+import kotlin.time.Clock
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,42 +16,37 @@ class DeviceClockTest {
     }
 
     @Test
-    fun clock_isInDevicesTimeZone() {
+    fun timeZone_isDevicesTimeZone() {
         TimeZone.setDefault(TimeZone.getTimeZone(PAGO_PAGO))
 
-        assertEquals(PAGO_PAGO, DeviceClock.zone)
+        assertEquals(PAGO_PAGO, DeviceClock.timeZone.id)
     }
 
     @Test
-    fun clock_afterDevicesTimeZoneChanges_isInTheNewZone() {
+    fun today_afterDevicesTimeZoneChanges_isInTheNewZone() {
         TimeZone.setDefault(TimeZone.getTimeZone(PAGO_PAGO))
         val clock = DeviceClock
-        val todayBefore = LocalDate.now(clock)
+        val todayBefore = clock.today()
 
         TimeZone.setDefault(TimeZone.getTimeZone(KIRITIMATI))
 
-        assertEquals(KIRITIMATI, clock.zone)
+        assertEquals(KIRITIMATI, clock.timeZone.id)
         // Kiritimati's date is always a day or two ahead of Pago Pago's.
-        assertTrue(LocalDate.now(clock).isAfter(todayBefore))
+        assertTrue(clock.today() > todayBefore)
     }
 
     @Test
-    fun clock_isTheSystemTime() {
-        val before = Instant.now()
-        val read = DeviceClock.instant()
-        val after = Instant.now()
+    fun now_isTheSystemTime() {
+        val before = Clock.System.now()
+        val read = DeviceClock.now()
+        val after = Clock.System.now()
 
         assertTrue(read in before..after)
     }
 
-    @Test
-    fun withZone_isTheSystemClockInThatZone() {
-        assertEquals(Clock.system(KIRITIMATI), DeviceClock.withZone(KIRITIMATI))
-    }
-
     private companion object {
         // UTC−11 and UTC+14, neither with daylight saving time, so their dates always differ.
-        val PAGO_PAGO: ZoneId = ZoneId.of("Pacific/Pago_Pago")
-        val KIRITIMATI: ZoneId = ZoneId.of("Pacific/Kiritimati")
+        const val PAGO_PAGO = "Pacific/Pago_Pago"
+        const val KIRITIMATI = "Pacific/Kiritimati"
     }
 }

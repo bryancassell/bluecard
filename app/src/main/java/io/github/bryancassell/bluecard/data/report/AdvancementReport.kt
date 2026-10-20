@@ -24,7 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.readsAsMarked
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import io.github.bryancassell.bluecard.data.progress.totals
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** What a report is on, which its title and file name say. */
 enum class ReportKind { MeritBadge, Rank }

@@ -3,14 +3,14 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.bryancassell.bluecard.data.catalog.Rank
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class TimeInRankTest {
-    private val version = LocalDate.of(2026, 1, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val version = LocalDate(2026, 1, 1)
+    private val day = LocalDate(2026, 4, 15)
 
     private val active = Requirement("1", "Be active for four months.", monthsInRank = 4)
     private val lead = Requirement("2", "Lead.")
@@ -63,15 +63,15 @@ class TimeInRankTest {
     @Test
     fun rankBelowMarkedEarned_countsTheMonthsFromItsDate() {
         assertEquals(
-            TimeInRank(4, "First Class", TimeInRank.Eligibility.From(LocalDate.of(2026, 9, 1))),
-            starTimeInRank(progress(firstClass, earnedOnPriorDate = LocalDate.of(2026, 5, 1)))
+            TimeInRank(4, "First Class", TimeInRank.Eligibility.From(LocalDate(2026, 9, 1))),
+            starTimeInRank(progress(firstClass, earnedOnPriorDate = LocalDate(2026, 5, 1)))
         )
     }
 
     @Test
     fun rankBelowEarnedFromItsRequirements_countsTheMonthsFromWhenTheyWereCompleted() {
         assertEquals(
-            TimeInRank.Eligibility.From(LocalDate.of(2026, 8, 15)),
+            TimeInRank.Eligibility.From(LocalDate(2026, 8, 15)),
             starEligibility(progress(firstClass, "1", "2"))
         )
     }
@@ -79,8 +79,8 @@ class TimeInRankTest {
     @Test
     fun aDayTheMonthDoesntHave_movesToItsLast() {
         assertEquals(
-            TimeInRank.Eligibility.From(LocalDate.of(2027, 2, 28)),
-            starEligibility(progress(firstClass, earnedOnPriorDate = LocalDate.of(2026, 10, 31)))
+            TimeInRank.Eligibility.From(LocalDate(2027, 2, 28)),
+            starEligibility(progress(firstClass, earnedOnPriorDate = LocalDate(2026, 10, 31)))
         )
     }
 
@@ -104,9 +104,9 @@ class TimeInRankTest {
     @Test
     fun rankBelowGivenItsOwnDate_underAMarkedRank_countsFromThatDate() {
         assertEquals(
-            TimeInRank.Eligibility.From(LocalDate.of(2026, 7, 10)),
+            TimeInRank.Eligibility.From(LocalDate(2026, 7, 10)),
             starEligibility(
-                progress(firstClass, earnedOnPriorDate = LocalDate.of(2026, 3, 10)),
+                progress(firstClass, earnedOnPriorDate = LocalDate(2026, 3, 10)),
                 progress(life, earnedOnPriorDate = day)
             )
         )

@@ -24,14 +24,13 @@ import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.data.progress.withoutTrackerEntry
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.keepText
 import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import io.github.bryancassell.bluecard.ui.restoredText
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +42,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
 /**
@@ -58,7 +58,7 @@ class TrackerEntryViewModel(
     @InjectedParam key: TrackerEntryDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     // Keeps unsaved values if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -288,7 +288,7 @@ class TrackerEntryViewModel(
     }
 
     /** The latest date the scout can pick, read from the clock each time. */
-    fun today(): LocalDate = LocalDate.now(clock)
+    fun today(): LocalDate = clock.today()
 
     /**
      * Saves the fields as the row, then closes the page. Does nothing if they can't be saved

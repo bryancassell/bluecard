@@ -21,14 +21,19 @@ import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.navigation.RankDetail
-import java.time.LocalDate
-import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -45,13 +50,13 @@ class RankDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val older = LocalDate.of(2025, 1, 1)
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val older = LocalDate(2025, 1, 1)
+    private val newest = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
     private val rankStart = BadgeStart(newest, started)
-    private val today = LocalDate.of(2026, 5, 20)
-    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
+    private val today = LocalDate(2026, 5, 20)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
     // Each rank's newest version needs requirements 1 and 2.
     private fun rank(id: String, name: String) = Rank(
@@ -184,7 +189,7 @@ class RankDetailViewModelTest {
 
     @Test
     fun startedOnVersionMissingFromCatalog_isUnavailable() = runTest {
-        progressRepository.startBadge("tenderfoot", LocalDate.of(2024, 1, 1), started)
+        progressRepository.startBadge("tenderfoot", LocalDate(2024, 1, 1), started)
         val viewModel = viewModel()
         startCollecting(viewModel)
 
@@ -809,8 +814,8 @@ class RankDetailViewModelTest {
         val viewModel = viewModel()
         assertEquals(today, viewModel.today())
 
-        clock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+        clock.now = today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(TimeZone.UTC)
 
-        assertEquals(today.plusDays(1), viewModel.today())
+        assertEquals(today.plus(1, DateTimeUnit.DAY), viewModel.today())
     }
 }

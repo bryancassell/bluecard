@@ -10,11 +10,10 @@ import io.github.bryancassell.bluecard.data.backup.BackupRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.io.IOException
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 /**
  * Exports the scout's data to a file, and imports a file they exported: merging it with their
@@ -35,7 +35,7 @@ class DataManagementViewModel(
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: Clock
+    private val clock: ZonedClock
 ) : ViewModel() {
     /** Everything in [uiState] but [DataManagementUiState.canClear]. */
     private val _uiState = MutableStateFlow(DataManagementUiState())
@@ -60,7 +60,7 @@ class DataManagementViewModel(
     private var running = 0
 
     /** Today, read from the clock each time, for the name suggested for an export. */
-    fun today(): LocalDate = LocalDate.now(clock)
+    fun today(): LocalDate = clock.today()
 
     /** Exports the scout's data to [destination], a document they chose to create. */
     fun export(destination: Uri) = work(Kind.ExportFailed) {

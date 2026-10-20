@@ -12,7 +12,7 @@ import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.standings
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -21,11 +21,11 @@ import org.junit.Test
 
 class AdvancementRequirementsTest {
     private val older = RequirementsVersion(
-        LocalDate.of(2025, 1, 1),
+        LocalDate(2025, 1, 1),
         listOf(Requirement("1", "An older first requirement."))
     )
     private val newest = RequirementsVersion(
-        LocalDate.of(2026, 1, 1),
+        LocalDate(2026, 1, 1),
         listOf(
             Requirement("1", "Plan a campout."),
             Requirement(
@@ -56,7 +56,7 @@ class AdvancementRequirementsTest {
     private val catalog = listOf(badge("chess", newest), camping)
 
     private fun startedOn(version: LocalDate, vararg done: String) = BadgeProgressDetails(
-        BadgeProgress("camping", version, startedDate = LocalDate.of(2026, 3, 1)),
+        BadgeProgress("camping", version, startedDate = LocalDate(2026, 3, 1)),
         done.map { RequirementProgress("camping", it, completed = true) },
         emptyList()
     )
@@ -75,7 +75,7 @@ class AdvancementRequirementsTest {
         assertFalse(catalog.advancementRequirements("camping", started)!!.completedOnPriorDate)
 
         val marked = started.copy(
-            badge = started.badge.copy(completedOnPriorDate = LocalDate.of(2025, 8, 1))
+            badge = started.badge.copy(completedOnPriorDate = LocalDate(2025, 8, 1))
         )
         val found = catalog.advancementRequirements("camping", marked)!!
 
@@ -181,7 +181,7 @@ class AdvancementRequirementsTest {
 
     @Test
     fun versionMissingFromCatalog_isNull() {
-        assertNull(catalog.advancementRequirements("camping", startedOn(LocalDate.of(2024, 1, 1))))
+        assertNull(catalog.advancementRequirements("camping", startedOn(LocalDate(2024, 1, 1))))
     }
 
     @Test
@@ -253,8 +253,8 @@ class AdvancementRequirementsTest {
         BadgeProgress(
             id,
             newest.effectiveDate,
-            startedDate = LocalDate.of(2026, 3, 1),
-            completedOnPriorDate = LocalDate.of(2025, 8, 1)
+            startedDate = LocalDate(2026, 3, 1),
+            completedOnPriorDate = LocalDate(2025, 8, 1)
         ),
         emptyList(),
         emptyList()
@@ -310,7 +310,7 @@ class AdvancementRequirementsTest {
     fun among_rank_countsTheBadgesTheScoutHasCompleted() {
         val earned = EarnedBadges(
             listOf(
-                EarnedBadge(camping, LocalDate.of(2026, 5, 1), countsOnceAsEagleRequired = false)
+                EarnedBadge(camping, LocalDate(2026, 5, 1), countsOnceAsEagleRequired = false)
             )
         )
 
@@ -324,7 +324,7 @@ class AdvancementRequirementsTest {
     fun among_badge_countsNoBadges() {
         val earned = EarnedBadges(
             listOf(
-                EarnedBadge(camping, LocalDate.of(2026, 5, 1), countsOnceAsEagleRequired = false)
+                EarnedBadge(camping, LocalDate(2026, 5, 1), countsOnceAsEagleRequired = false)
             )
         )
 

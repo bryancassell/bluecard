@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * How far the scout has got with a rank. Ranks are earned in order, Scout through Eagle, so while

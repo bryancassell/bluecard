@@ -2,8 +2,8 @@ package io.github.bryancassell.bluecard.text
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.util.Locale
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -11,19 +11,19 @@ import org.junit.runner.RunWith
 // Robolectric, because BidiFormatter reads the locale's direction from Android's TextUtils.
 @RunWith(AndroidJUnit4::class)
 class FormattingTest {
-    private val day = LocalDate.of(2026, 4, 15)
+    private val day = LocalDate(2026, 4, 15)
 
     @Test
-    fun completionDateFormatter_writesTheDateOut() {
-        assertEquals("Apr 15, 2026", completionDateFormatter(Locale.US).format(day))
+    fun completionDate_isWrittenOut() {
+        assertEquals("Apr 15, 2026", CompletionDateFormatter(Locale.US).format(day))
     }
 
     // A device in the strings' language keeps its choice of digits (stringsLocales).
     @Test
-    fun completionDateFormatter_usesTheLocalesDigits() {
+    fun completionDate_usesTheLocalesDigits() {
         val locale = Locale.forLanguageTag("en-US-u-nu-arab")
 
-        assertEquals("Apr ١٥, ٢٠٢٦", completionDateFormatter(locale).format(day))
+        assertEquals("Apr ١٥, ٢٠٢٦", CompletionDateFormatter(locale).format(day))
     }
 
     private fun total(text: String, locale: Locale = Locale.US) =

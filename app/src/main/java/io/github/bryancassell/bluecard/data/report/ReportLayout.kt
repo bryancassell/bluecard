@@ -19,10 +19,10 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.storedDate
-import io.github.bryancassell.bluecard.text.completionDateFormatter
+import io.github.bryancassell.bluecard.text.CompletionDateFormatter
 import io.github.bryancassell.bluecard.text.totalFormat
 import io.github.bryancassell.bluecard.text.typedText
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 // A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
 // Sizes are in PDF points, 1/72 of an inch.
@@ -104,7 +104,7 @@ private class ReportComposer(private val resources: Resources) {
         TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
     // Dates and totals are written as on screen.
-    private val dateFormatter = completionDateFormatter(locale)
+    private val dateFormatter = CompletionDateFormatter(locale)
     private val totalFormat = totalFormat(locale)
 
     // Between a tracker row's values, as on screen.

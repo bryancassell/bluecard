@@ -8,8 +8,8 @@ import androidx.room3.PrimaryKey
 import androidx.room3.Relation
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.parseOrNull
 
 // What the scout records, stored in Room. Badges and requirements are identified by
 // catalog IDs: a badge's ID and a requirement's official number within the badge's
@@ -203,11 +203,7 @@ fun normalizedTrackerValues(values: Map<String, String>): Map<String, String> =
  * YYYY-MM-DD, but a value from elsewhere may not be, such as one stored while a catalog edited
  * during development had the column as text. It's shown as it is instead.
  */
-fun storedDate(text: String): LocalDate? = try {
-    LocalDate.parse(text)
-} catch (e: DateTimeParseException) {
-    null
-}
+fun storedDate(text: String): LocalDate? = LocalDate.parseOrNull(text)
 
 /** A started badge with everything recorded for it. */
 data class BadgeProgressDetails(

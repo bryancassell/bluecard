@@ -17,7 +17,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import java.io.IOException
-import java.time.LocalDate
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
@@ -34,6 +33,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -75,7 +75,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> crash.complete(e) }
     )
 
-    private val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 4, 15))
+    private val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 4, 15))
 
     override val repository = RoomProgressRepository(database, externalScope)
 
@@ -145,7 +145,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val session = dao.insertTrackerEntry(
             TrackerEntry(0, "personal-management", "9", null, mapOf("notes" to "Met"))
         )
-        val today = LocalDate.of(2026, 9, 30)
+        val today = LocalDate(2026, 9, 30)
 
         // Changed by its row, and by its entry's ID.
         repository.addTrackerEntry(
@@ -193,7 +193,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun recordingThatFailsPartWay_leavesTheBadgeUnstarted() = runTest {
         failRequirementWrites()
-        val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 4, 15))
+        val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 4, 15))
 
         runCatching { repository.markRequirementCompleted("archery", "1", null, start) }
 
@@ -221,7 +221,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
     @Test
     fun writing_thatBreaksAConstraint_throwsTheBugUnwrapped() = runTest {
-        val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1))
+        val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 3, 1))
         repository.startBadge("archery", start.requirementsVersion, start.startedDate)
         failRequirementWrites()
 

@@ -16,13 +16,15 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingViewModel
 import io.github.bryancassell.bluecard.ui.profile.EditProfileViewModel
 import io.github.bryancassell.bluecard.ui.rank.RankDetailViewModel
 import io.github.bryancassell.bluecard.ui.ranks.RanksViewModel
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import org.koin.core.annotation.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -48,7 +50,7 @@ val appModule = module {
     single<CoroutineDispatcher>(named<IoDispatcher>()) { Dispatchers.IO }
     single<CoroutineScope>(named<ApplicationScope>()) { create(::applicationScope) }
     // Dates such as "today" are read from it, so tests can fix the date.
-    single<Clock> { DeviceClock }
+    single<ZonedClock> { DeviceClock }
 
     single<RoomProgressRepository>() bind ProgressRepository::class
     single<DataStoreProfileRepository>() bind ProfileRepository::class
@@ -76,15 +78,24 @@ val appModule = module {
 internal fun applicationScope(@IoDispatcher ioDispatcher: CoroutineDispatcher): CoroutineScope =
     CoroutineScope(SupervisorJob() + ioDispatcher)
 
+/** A clock with the time zone its dates, such as today's, are read in. */
+interface ZonedClock : Clock {
+    /**
+     * The zone now. Read it each time it's needed, rather than keeping it, as the device's can
+     * change while a page is open.
+     */
+    val timeZone: TimeZone
+
+    fun today(): LocalDate = todayIn(timeZone)
+}
+
 /**
- * The system clock in the device's time zone at the moment it's read. [Clock.systemDefaultZone]
- * keeps the zone it was made in, so a page left open through a time zone change, as when a scout
- * travels to camp, would go on using the old zone for "today" (#79).
+ * The system clock in the device's time zone at the moment it's read. A zone read once, when the
+ * clock was made, would go on giving "today" in the old zone on a page left open through a time
+ * zone change, as when a scout travels to camp (#79).
  */
-internal object DeviceClock : Clock() {
-    override fun getZone(): ZoneId = ZoneId.systemDefault()
+internal object DeviceClock : ZonedClock {
+    override val timeZone: TimeZone get() = TimeZone.currentSystemDefault()
 
-    override fun withZone(zone: ZoneId): Clock = Clock.system(zone)
-
-    override fun instant(): Instant = Instant.now()
+    override fun now(): Instant = Clock.System.now()
 }

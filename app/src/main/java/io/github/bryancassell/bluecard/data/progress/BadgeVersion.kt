@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * The requirements version this badge or rank is worked on, from the scout's [progress] on it

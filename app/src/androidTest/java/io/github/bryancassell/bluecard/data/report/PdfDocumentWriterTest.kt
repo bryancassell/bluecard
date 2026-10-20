@@ -13,7 +13,7 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import java.io.File
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -43,8 +43,8 @@ class PdfDocumentWriterTest {
         profile = Profile("Alex Scout", "123"),
         kind = ReportKind.MeritBadge,
         name = "Camping",
-        requirementsVersion = LocalDate.of(2026, 1, 1),
-        completion = Completion(LocalDate.of(2026, 6, 3)),
+        requirementsVersion = LocalDate(2026, 1, 1),
+        completion = Completion(LocalDate(2026, 6, 3)),
         earnedWith = null,
         counselor = Counselor("Pat Lee", "555-0100", "pat@example.com"),
         requirements = (1..40).map {
@@ -52,7 +52,7 @@ class PdfDocumentWriterTest {
                 number = "$it",
                 summary = "Requirement number $it of the badge.",
                 requiredCount = null,
-                completion = Completion(LocalDate.of(2026, 4, 1)),
+                completion = Completion(LocalDate(2026, 4, 1)),
                 notNeeded = false,
                 notRecorded = false,
                 signedOffBy = null,
@@ -65,7 +65,7 @@ class PdfDocumentWriterTest {
                 children = emptyList()
             )
         },
-        createdDate = LocalDate.of(2026, 9, 30)
+        createdDate = LocalDate(2026, 9, 30)
     )
 
     private val pages = layOutReport(report, context.resources)

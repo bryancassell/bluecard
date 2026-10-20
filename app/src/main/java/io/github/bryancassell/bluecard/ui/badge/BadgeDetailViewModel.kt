@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
@@ -19,14 +20,13 @@ import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
 /**
@@ -39,7 +39,7 @@ class BadgeDetailViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
     private val savedStateHandle: SavedStateHandle
@@ -175,7 +175,7 @@ class BadgeDetailViewModel(
      */
     fun unmarkCompleted() {
         val shown = (uiState.value as? BadgeDetailUiState.Ready)?.completedOnPriorDate
-        if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
+        if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDays()
         report.follow(saves.launch { progressRepository.removeCompletedOnPriorDate(badgeId) })
     }
 
@@ -185,7 +185,7 @@ class BadgeDetailViewModel(
     }
 
     /** The latest date the badge can be marked completed on, read from the clock each time. */
-    fun today(): LocalDate = LocalDate.now(clock)
+    fun today(): LocalDate = clock.today()
 
     private companion object {
         /**

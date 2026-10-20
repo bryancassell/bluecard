@@ -18,17 +18,19 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
-import java.time.Clock
-import java.time.LocalDate
-import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -45,12 +47,12 @@ class EditCounselorViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val older = LocalDate.of(2025, 1, 1)
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
+    private val older = LocalDate(2025, 1, 1)
+    private val newest = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
     private val badgeStart = BadgeStart(newest, started)
-    private val today = LocalDate.of(2026, 5, 20)
-    private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    private val today = LocalDate(2026, 5, 20)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
     private val camping = MeritBadge(
         id = "camping",
@@ -173,7 +175,7 @@ class EditCounselorViewModelTest {
 
     @Test
     fun startedOnVersionMissingFromCatalog_isUnavailable() = runTest {
-        progressRepository.startBadge("camping", LocalDate.of(2023, 1, 1), started)
+        progressRepository.startBadge("camping", LocalDate(2023, 1, 1), started)
         val viewModel = viewModel()
         startCollecting(viewModel)
 

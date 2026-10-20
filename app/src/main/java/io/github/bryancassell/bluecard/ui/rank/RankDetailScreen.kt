@@ -44,7 +44,7 @@ import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
 import io.github.bryancassell.bluecard.ui.navigation.RankDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

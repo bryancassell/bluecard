@@ -12,25 +12,29 @@ import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.FakeClock
-import java.time.Clock
-import java.time.LocalDate
-import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CompletionRecorderTest {
-    private val older = LocalDate.of(2025, 1, 1)
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
-    private val today = LocalDate.of(2026, 5, 20)
-    private val clock = Clock.fixed(today.atTime(12, 0).toInstant(ZoneOffset.UTC), ZoneOffset.UTC)
+    private val older = LocalDate(2025, 1, 1)
+    private val newest = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
+    private val today = LocalDate(2026, 5, 20)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
     private val camping = MeritBadge(
         id = "camping",
@@ -122,11 +126,11 @@ class CompletionRecorderTest {
 
     @Test
     fun checkingAsMidnightPasses_startsTheBadgeTheDayItsDated() = runTest {
-        val fakeClock = FakeClock(today.atTime(23, 59, 59).toInstant(ZoneOffset.UTC))
+        val fakeClock = FakeClock(today.atTime(23, 59, 59).toInstant(TimeZone.UTC))
         // Midnight passes while the catalog loads, after the check reads the clock.
         val slowCatalog = object : CatalogRepository by catalogRepository {
             override suspend fun getBadges(): List<MeritBadge> {
-                fakeClock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+                fakeClock.now = today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(TimeZone.UTC)
                 return catalogRepository.getBadges()
             }
         }

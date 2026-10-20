@@ -58,8 +58,8 @@ import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
 import io.github.bryancassell.bluecard.text.typedText
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
-import java.time.LocalDate
 import java.util.Locale
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -123,7 +123,7 @@ class DataManagementScreenTest {
     private val started = ready.copy(canClear = true)
 
     /** The date the screen reads when Export is tapped. */
-    private var today = LocalDate.of(2026, 10, 1)
+    private var today = LocalDate(2026, 10, 1)
     private val backup = Backup(Profile("Sam Scout", "Crew 7"), emptyList())
 
     /** The UI state shown, which a test can change after [show]. */
@@ -259,7 +259,7 @@ class DataManagementScreenTest {
     @Test
     fun export_namesTheFileWithTheDayItsTapped() {
         show()
-        today = LocalDate.of(2026, 10, 2)
+        today = LocalDate(2026, 10, 2)
 
         exportButton().performClick()
 
@@ -425,7 +425,7 @@ class DataManagementScreenTest {
                 "Camping",
                 isRank = false,
                 phone = ProgressSummary(done = false, fractionDone = 0.4f),
-                file = ProgressSummary(done = true, doneOn = LocalDate.of(2026, 4, 15))
+                file = ProgressSummary(done = true, doneOn = LocalDate(2026, 4, 15))
             ),
             AdvancementChoice(
                 "cooking",
@@ -434,12 +434,12 @@ class DataManagementScreenTest {
                 // One that can't be measured, on requirements this version doesn't have.
                 phone = ProgressSummary(
                     done = false,
-                    requirementsVersion = LocalDate.of(2025, 1, 1)
+                    requirementsVersion = LocalDate(2025, 1, 1)
                 ),
                 file = ProgressSummary(
                     done = false,
                     fractionDone = 0.25f,
-                    requirementsVersion = LocalDate.of(2026, 1, 1)
+                    requirementsVersion = LocalDate(2026, 1, 1)
                 )
             ),
             AdvancementChoice(

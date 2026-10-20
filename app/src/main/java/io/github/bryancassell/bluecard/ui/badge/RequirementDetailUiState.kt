@@ -3,7 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.TaskFailure
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** What the Requirement detail screen shows. */
 sealed interface RequirementDetailUiState {

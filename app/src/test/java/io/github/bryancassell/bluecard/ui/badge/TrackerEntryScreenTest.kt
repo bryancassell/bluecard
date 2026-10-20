@@ -57,7 +57,7 @@ import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.ui.TaskFailure
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -77,7 +77,7 @@ class TrackerEntryScreenTest {
     val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
     /** What the page reads as today when the picker opens, which a test can move on. */
-    private var today = LocalDate.of(2026, 5, 20)
+    private var today = LocalDate(2026, 5, 20)
 
     private val columns = listOf(
         TrackerColumn("date", "Date", TrackerColumnType.DATE),
@@ -128,7 +128,7 @@ class TrackerEntryScreenTest {
     /** A saved entry, with a date. */
     private val savedEntry = newEntry.copy(
         rowNumber = 2,
-        dates = mapOf("date" to LocalDate.of(2026, 4, 15)),
+        dates = mapOf("date" to LocalDate(2026, 4, 15)),
         hasSavedEntry = true,
         canDelete = true
     )
@@ -487,7 +487,7 @@ class TrackerEntryScreenTest {
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(
-            listOf<Pair<String, LocalDate?>>("date" to LocalDate.of(2026, 5, 11)),
+            listOf<Pair<String, LocalDate?>>("date" to LocalDate(2026, 5, 11)),
             dateChanges
         )
     }
@@ -496,14 +496,14 @@ class TrackerEntryScreenTest {
     @Test
     fun addDate_onAPageOpenPastMidnight_opensAtTheNewDay() {
         show(newEntry)
-        today = LocalDate.of(2026, 5, 21)
+        today = LocalDate(2026, 5, 21)
 
         button("Add date").performClick()
         composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.onNodeWithText("OK").performClick()
 
         assertEquals(
-            listOf<Pair<String, LocalDate?>>("date" to LocalDate.of(2026, 5, 21)),
+            listOf<Pair<String, LocalDate?>>("date" to LocalDate(2026, 5, 21)),
             dateChanges
         )
     }
@@ -531,7 +531,7 @@ class TrackerEntryScreenTest {
             TrackerColumn("end", "End", TrackerColumnType.DATE)
         )
         show(
-            newEntry.copy(columns = dateColumns, dates = mapOf("end" to LocalDate.of(2026, 4, 15))),
+            newEntry.copy(columns = dateColumns, dates = mapOf("end" to LocalDate(2026, 4, 15))),
             fields = dateColumns.associate { it.id to TextFieldState() }
         )
 

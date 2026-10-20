@@ -86,6 +86,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
@@ -96,12 +97,13 @@ import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
-import java.time.Clock
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -146,7 +148,7 @@ class MainActivityTest {
                 eagleRequired = true,
                 requirementVersions = listOf(
                     RequirementsVersion(
-                        LocalDate.of(2026, 1, 1),
+                        LocalDate(2026, 1, 1),
                         listOf(
                             Requirement(
                                 "1",
@@ -189,7 +191,7 @@ class MainActivityTest {
                 officialUrl = "https://www.scouting.org/$name.pdf",
                 requirementVersions = listOf(
                     RequirementsVersion(
-                        LocalDate.of(2026, 1, 1),
+                        LocalDate(2026, 1, 1),
                         listOf(Requirement("1", "$name's first.")) +
                             listOfNotNull(earn.takeIf { name == "Tenderfoot" })
                     )
@@ -205,9 +207,9 @@ class MainActivityTest {
     // PdfDocument only runs on a device.
     private val fakeReportRepository = FakeReportRepository(progressRepository, catalogRepository)
 
-    private val today = LocalDate.of(2026, 5, 20)
+    private val today = LocalDate(2026, 5, 20)
 
-    private val fakeClock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
+    private val fakeClock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
     private lateinit var scenario: ActivityScenario<MainActivity>
 
@@ -224,7 +226,7 @@ class MainActivityTest {
                     single<ProgressRepository> { progressRepository }
                     single<DamagedProgressRepository> { fakeDamagedProgressRepository }
                     single<ReportRepository> { fakeReportRepository }
-                    single<Clock> { fakeClock }
+                    single<ZonedClock> { fakeClock }
                 }
             )
         )
@@ -577,8 +579,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.startBadge(
                 "camping",
-                requirementsVersion = LocalDate.of(2026, 1, 1),
-                startedDate = LocalDate.of(2026, 3, 1)
+                requirementsVersion = LocalDate(2026, 1, 1),
+                startedDate = LocalDate(2026, 3, 1)
             )
         }
         launchWithProfile()
@@ -603,8 +605,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.startBadge(
                 "camping",
-                requirementsVersion = LocalDate.of(2026, 1, 1),
-                startedDate = LocalDate.of(2026, 3, 1)
+                requirementsVersion = LocalDate(2026, 1, 1),
+                startedDate = LocalDate(2026, 3, 1)
             )
         }
         launchWithProfile()
@@ -716,8 +718,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.setCompletedOnPriorDate(
                 "camping",
-                LocalDate.of(2025, 8, 1),
-                BadgeStart(LocalDate.of(2026, 1, 1), today)
+                LocalDate(2025, 8, 1),
+                BadgeStart(LocalDate(2026, 1, 1), today)
             )
         }
         openCamping()
@@ -905,7 +907,7 @@ class MainActivityTest {
                 null,
                 mapOf("weather" to "Clear skies."),
                 today,
-                BadgeStart(LocalDate.of(2026, 1, 1), today)
+                BadgeStart(LocalDate(2026, 1, 1), today)
             )
         }
         openCamping()
@@ -1148,7 +1150,7 @@ class MainActivityTest {
         // It opens at the completion date, today.
         composeTestRule.pickerDay("May 20, 2026")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
-        fakeClock.now -= Duration.ofDays(1)
+        fakeClock.now -= 1.days
 
         scenario.recreate()
 
@@ -1159,7 +1161,7 @@ class MainActivityTest {
         composeTestRule.pickerDay("May 19, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
         composeTestRule.waitForIdle()
-        assertEquals(LocalDate.of(2026, 5, 19), runBlocking { recorded("1") }?.completedDate)
+        assertEquals(LocalDate(2026, 5, 19), runBlocking { recorded("1") }?.completedDate)
     }
 
     // The app is recreated when its window changes size, as when it's split or folded, and the
@@ -1190,7 +1192,7 @@ class MainActivityTest {
             .assertIsNotFocused()
         composeTestRule.onNodeWithText("OK").performClick()
         composeTestRule.waitForIdle()
-        assertEquals(LocalDate.of(2026, 5, 12), runBlocking { recorded("1") }?.completedDate)
+        assertEquals(LocalDate(2026, 5, 12), runBlocking { recorded("1") }?.completedDate)
     }
 
     // As when the phone turns from a window too narrow for the calendar to one it fits. The
@@ -1654,8 +1656,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.startBadge(
                 "camping",
-                requirementsVersion = LocalDate.of(2026, 1, 1),
-                startedDate = LocalDate.of(2026, 3, 1)
+                requirementsVersion = LocalDate(2026, 1, 1),
+                startedDate = LocalDate(2026, 3, 1)
             )
         }
         launchWithProfile()
@@ -1718,8 +1720,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.startBadge(
                 "camping",
-                requirementsVersion = LocalDate.of(2026, 1, 1),
-                startedDate = LocalDate.of(2026, 3, 1)
+                requirementsVersion = LocalDate(2026, 1, 1),
+                startedDate = LocalDate(2026, 3, 1)
             )
         }
 
@@ -1926,8 +1928,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.setCompletedOnPriorDate(
                 "camping",
-                LocalDate.of(2025, 8, 1),
-                BadgeStart(LocalDate.of(2026, 1, 1), today)
+                LocalDate(2025, 8, 1),
+                BadgeStart(LocalDate(2026, 1, 1), today)
             )
         }
         launchWithProfile()
@@ -2016,8 +2018,8 @@ class MainActivityTest {
         runBlocking {
             progressRepository.startBadge(
                 "camping",
-                requirementsVersion = LocalDate.of(2026, 1, 1),
-                startedDate = LocalDate.of(2026, 3, 1)
+                requirementsVersion = LocalDate(2026, 1, 1),
+                startedDate = LocalDate(2026, 3, 1)
             )
         }
         launchWithProfile()
