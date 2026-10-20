@@ -20,6 +20,8 @@ import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
+import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.TextRules
 import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -125,5 +127,10 @@ class AndroidModuleTest {
     @Test
     fun backupRepository_isJsonBackupRepository() {
         assertTrue(koin.get<BackupRepository>() is JsonBackupRepository)
+    }
+
+    @Test
+    fun textRules_isAndroidTextRules() {
+        assertTrue(koin.get<TextRules>() is AndroidTextRules)
     }
 }

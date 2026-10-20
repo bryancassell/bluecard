@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
 import io.github.bryancassell.bluecard.data.catalog.eagleSlots
+import io.github.bryancassell.bluecard.text.TextRules
 import kotlinx.datetime.LocalDate
 
 /**
@@ -47,8 +48,8 @@ data class EarnedBadges(val badges: List<EarnedBadge>) {
      * These badges in name order ([badgeNameOrder]), as a rank's requirement that asks for merit
      * badges lists them, on its page and in the report.
      */
-    fun inNameOrder(): List<EarnedBadge> =
-        badges.sortedWith(compareBy(badgeNameOrder()) { it.badge })
+    fun inNameOrder(textRules: TextRules): List<EarnedBadge> =
+        badges.sortedWith(compareBy(badgeNameOrder(textRules)) { it.badge })
 
     companion object {
         /** No badges, which is all a badge's requirements need: none of them ask for badges. */

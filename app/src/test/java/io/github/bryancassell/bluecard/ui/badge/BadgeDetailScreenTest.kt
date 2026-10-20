@@ -77,6 +77,7 @@ import io.github.bryancassell.bluecard.testing.hasNoLine
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -185,7 +186,7 @@ class BadgeDetailScreenTest {
         layoutDirection: LayoutDirection = LayoutDirection.Ltr
     ) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             view = LocalView.current
             CompositionLocalProvider(
                 LocalLayoutDirection provides layoutDirection,
@@ -356,7 +357,7 @@ class BadgeDetailScreenTest {
     @Config(sdk = [36])
     @Test
     fun eagleLabel_isOnTheTagsFill() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme { NoActionsBadgeDetailScreen(ready) }
         }
 
@@ -370,7 +371,7 @@ class BadgeDetailScreenTest {
     @Test
     fun longEagleLabel_atLargeFontSize_wrapsWithoutBeingCutOff() {
         val group = EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming"))
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             val density = Density(LocalDensity.current.density, fontScale = 2f)
             CompositionLocalProvider(LocalDensity provides density) {
                 NoActionsBadgeDetailScreen(ready.copy(eagle = group))

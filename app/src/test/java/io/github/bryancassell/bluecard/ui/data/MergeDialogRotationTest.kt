@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.testing.ProvideText
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import org.junit.Rule
 import org.junit.Test
@@ -44,13 +45,15 @@ class MergeDialogRotationTest {
     private fun showMergeDialog() {
         composeTestRule.activityRule.scenario.onActivity {
             it.setContent {
-                MergeDialog(
-                    choices,
-                    onChooseProfile = {},
-                    onChooseProgress = { _, _ -> },
-                    onConfirm = {},
-                    onDismiss = {}
-                )
+                ProvideText {
+                    MergeDialog(
+                        choices,
+                        onChooseProfile = {},
+                        onChooseProgress = { _, _ -> },
+                        onConfirm = {},
+                        onDismiss = {}
+                    )
+                }
             }
         }
     }

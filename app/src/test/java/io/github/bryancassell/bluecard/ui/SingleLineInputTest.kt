@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.text.TextRange
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,10 +28,10 @@ class SingleLineInputTest {
 
     @Before
     fun showField() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BasicTextField(
                 state = state,
-                inputTransformation = singleLineInput(maxLength = 6),
+                inputTransformation = rememberSingleLineInput(maxLength = 6),
                 lineLimits = TextFieldLineLimits.SingleLine
             )
         }

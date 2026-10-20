@@ -31,6 +31,7 @@ import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -64,7 +65,7 @@ class EditCounselorScreenTest {
 
     private fun show(state: EditCounselorUiState) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             back.Content {
                 EditCounselorScreen(
                     uiState = uiState,

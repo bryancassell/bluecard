@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,13 +26,10 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.storedDate
-import io.github.bryancassell.bluecard.text.CompletionDateFormatter
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
-import io.github.bryancassell.bluecard.text.totalFormat
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
-import io.github.bryancassell.bluecard.ui.stringsLocale
 import io.github.bryancassell.bluecard.ui.typedText
-import java.text.NumberFormat
 
 // A requirement's tracker, on its page and in its row.
 
@@ -48,18 +44,11 @@ fun trackerCountLabel(count: TrackerCount): String = when (val outOf = count.out
     else -> stringResource(R.string.tracker_count_of, count.recorded, outOf, count.rows)
 }
 
-/** Formats a tracker's totals in the strings' language ([totalFormat]). */
+/** "4.5 of 6 hours", with the total in the strings' language ([LocalLocaleFormats]). */
 @Composable
-fun rememberTotalFormat(): NumberFormat {
-    val locale = stringsLocale()
-    return remember(locale) { totalFormat(locale) }
-}
-
-/** "4.5 of 6 hours", with the total written by [format] ([rememberTotalFormat]). */
-@Composable
-fun trackerTotalLabel(total: TrackerTotal, format: NumberFormat): String = stringResource(
+fun trackerTotalLabel(total: TrackerTotal): String = stringResource(
     R.string.tracker_total,
-    format.format(total.sum),
+    LocalLocaleFormats.current.formatTotal(total.sum),
     total.total.needed,
     total.total.neededLabel
 )
@@ -87,19 +76,17 @@ fun TrackerSection(
         )
         if (tracker.count.totals.isNotEmpty()) {
             Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
-                val format = rememberTotalFormat()
                 tracker.count.totals.forEach {
                     Text(
-                        text = trackerTotalLabel(it, format),
+                        text = trackerTotalLabel(it),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
-        val formatter = rememberCompletionDateFormatter()
         tracker.rows.forEach { row ->
-            TrackerRowItem(tracker.rowTitle, row, formatter, onOpen = { onOpenRow(row) })
+            TrackerRowItem(tracker.rowTitle, row, onOpen = { onOpenRow(row) })
         }
         if (tracker.addsRows) {
             OutlinedButton(onClick = onAddRow, modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -115,19 +102,11 @@ fun TrackerSection(
     }
 }
 
-/**
- * A tracker row: its title, such as "Week 3", and its values, if it has any, with dates written
- * by [formatter].
- */
+/** A tracker row: its title, such as "Week 3", and its values, if it has any. */
 @Composable
-private fun TrackerRowItem(
-    rowTitle: String,
-    row: TrackerRow,
-    formatter: CompletionDateFormatter,
-    onOpen: () -> Unit
-) {
+private fun TrackerRowItem(rowTitle: String, row: TrackerRow, onOpen: () -> Unit) {
     val title = stringResource(R.string.tracker_row_title, rowTitle, row.number)
-    val values = trackerValuesText(row.values, formatter)
+    val values = trackerValuesText(row.values)
     // Its values in full, though only two lines of them show.
     val label = readAsOneLabel(title, values)
     ListItem(
@@ -155,15 +134,13 @@ private fun TrackerRowItem(
  * line break in a value, as in multi-line text, is a space.
  */
 @Composable
-private fun trackerValuesText(
-    values: List<TrackerValue>,
-    formatter: CompletionDateFormatter
-): String? {
+private fun trackerValuesText(values: List<TrackerValue>): String? {
     val separator = stringResource(R.string.tracker_value_separator)
+    val formats = LocalLocaleFormats.current
     return values.takeIf { it.isNotEmpty() }?.map { value ->
         when (value.type) {
             TrackerColumnType.DATE ->
-                storedDate(value.text)?.let { formatter.format(it) } ?: typedText(value.text)
+                storedDate(value.text)?.let(formats::formatDate) ?: typedText(value.text)
 
             // The scout typed it.
             TrackerColumnType.NUMBER, TrackerColumnType.TEXT, TrackerColumnType.MULTILINE_TEXT ->

@@ -23,6 +23,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.MainActivityUiState
 import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.theme.BlueCardDarkColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import org.junit.Assert.assertEquals
@@ -45,7 +46,11 @@ class BlueCardAppTest {
     @Test
     fun loading_showsNeitherOnboardingNorHome() {
         composeTestRule.setContent {
-            BlueCardApp(MainActivityUiState.Loading, onDismissDamagedProgressNotice = {})
+            BlueCardApp(
+                MainActivityUiState.Loading,
+                AndroidTextRules(),
+                onDismissDamagedProgressNotice = {}
+            )
         }
 
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
@@ -62,7 +67,11 @@ class BlueCardAppTest {
     @Test
     fun loadFailed_showsMessageOnly() {
         composeTestRule.setContent {
-            BlueCardApp(MainActivityUiState.LoadFailed, onDismissDamagedProgressNotice = {})
+            BlueCardApp(
+                MainActivityUiState.LoadFailed,
+                AndroidTextRules(),
+                onDismissDamagedProgressNotice = {}
+            )
         }
 
         composeTestRule.onNodeWithText(
@@ -77,7 +86,7 @@ class BlueCardAppTest {
         var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
         val readouts = LiveRegionReadouts()
         composeTestRule.setContent {
-            BlueCardApp(uiState, onDismissDamagedProgressNotice = {})
+            BlueCardApp(uiState, AndroidTextRules(), onDismissDamagedProgressNotice = {})
         }
 
         composeTestRule.assertAnnouncedWhenShown(
@@ -129,7 +138,11 @@ class BlueCardAppTest {
         lateinit var view: View
         composeTestRule.setContent {
             view = LocalView.current
-            BlueCardApp(MainActivityUiState.LoadFailed, onDismissDamagedProgressNotice = {})
+            BlueCardApp(
+                MainActivityUiState.LoadFailed,
+                AndroidTextRules(),
+                onDismissDamagedProgressNotice = {}
+            )
         }
         val inset = 24.dp
         val insetPx = with(composeTestRule.density) { inset.roundToPx() }

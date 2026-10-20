@@ -48,7 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
-import io.github.bryancassell.bluecard.ui.singleLineInput
+import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
@@ -200,7 +200,6 @@ private fun BadgesContent(uiState: BadgesUiState, onOpenBadge: (badgeId: String)
         // A lazy list composes only the rows on screen, so the full catalog scrolls
         // smoothly. Keys keep each row's state with its badge.
         is BadgesUiState.Ready -> {
-            val listFormatter = rememberBadgeNameListFormatter()
             // New matches are shown from the top. Otherwise the list would keep the first
             // badge on screen in place and hide the matches above it. The same badges,
             // such as when the scout comes back from one, keep their scroll position.
@@ -226,7 +225,6 @@ private fun BadgesContent(uiState: BadgesUiState, onOpenBadge: (badgeId: String)
                 items(uiState.badges, key = { it.id }) { badge ->
                     BadgeRow(
                         badge = badge,
-                        listFormatter = listFormatter,
                         onClick = { onOpenBadge(badge.id) }
                     )
                 }
@@ -239,7 +237,7 @@ private fun BadgesContent(uiState: BadgesUiState, onOpenBadge: (badgeId: String)
  * Longer than any search needs. The field's text is saved with the screen's state, which has
  * a size limit, so a huge paste mustn't reach it.
  */
-private val SearchInput = singleLineInput(maxLength = 100)
+private const val SEARCH_MAX_LENGTH = 100
 
 @Composable
 private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
@@ -275,7 +273,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
                 }
             }
         },
-        inputTransformation = SearchInput,
+        inputTransformation = rememberSingleLineInput(maxLength = SEARCH_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         // Asks the keyboard not to autocorrect the start of a word into a different word
         // that no longer matches. Some keyboards ignore this: Gboard still corrects typos

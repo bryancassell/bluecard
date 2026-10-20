@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
-import io.github.bryancassell.bluecard.text.typedText
 
 // Text the scout types, such as their name, may be in another language than the app's strings,
 // and so in another direction: a Persian name reads right-to-left while the screen is laid out
@@ -20,8 +19,8 @@ fun typedTextFieldStyle(): TextStyle =
 
 /**
  * [text] the scout typed, to show on its own or inside one of the app's strings. It's wrapped
- * so it keeps its own direction within the strings' language's.
+ * so it keeps its own direction within the strings' language's ([LocalLocaleFormats]).
  */
 @Composable
 @ReadOnlyComposable
-fun typedText(text: String): String = typedText(text, stringsLocale())
+fun typedText(text: String): String = LocalLocaleFormats.current.typedText(text)

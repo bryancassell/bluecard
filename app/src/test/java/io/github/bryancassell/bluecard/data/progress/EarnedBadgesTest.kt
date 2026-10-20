@@ -4,6 +4,7 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -89,7 +90,12 @@ class EarnedBadgesTest {
             )
         )
 
-        assertEquals(listOf(camping, chess, swimming), earned.inNameOrder().map { it.badge })
+        assertEquals(
+            listOf(camping, chess, swimming),
+            earned.inNameOrder(AndroidTextRules()).map {
+                it.badge
+            }
+        )
     }
 
     // Ranks' progress is read with the badges'. A rank isn't in the badge catalog, so it's left

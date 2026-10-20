@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Rule
 import org.junit.Test
@@ -62,7 +63,7 @@ class RankCardScreenshotTest {
             eagleTotal = 13,
             badgesInProgress = emptyList()
         )
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                     RankCard(uiState, onOpenRank = {}, modifier = Modifier.testTag(CARD))

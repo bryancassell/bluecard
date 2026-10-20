@@ -14,6 +14,7 @@ import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badges.eagleGroups
@@ -41,6 +42,7 @@ class BadgeDetailViewModel(
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
     private val clock: ZonedClock,
+    textRules: TextRules,
     warningLog: WarningLog,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
@@ -59,7 +61,7 @@ class BadgeDetailViewModel(
         // What depends only on the catalog is worked out once, not on every progress change.
         flow {
             val catalog = catalogRepository.getBadges()
-            emit(Triple(catalog, catalog.eagleGroups(), catalogRepository.getRanks()))
+            emit(Triple(catalog, catalog.eagleGroups(textRules), catalogRepository.getRanks()))
         },
         // Every badge's and rank's, since the badges the scout has completed decide which ranks
         // clearing this one would un-earn.

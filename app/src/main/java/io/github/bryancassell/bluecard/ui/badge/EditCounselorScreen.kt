@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +42,7 @@ import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
-import io.github.bryancassell.bluecard.ui.singleLineInput
+import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -196,7 +195,7 @@ private fun CounselorField(
     maxLength: Int,
     keyboardOptions: KeyboardOptions
 ) {
-    val input = remember(maxLength) { singleLineInput(maxLength) }
+    val input = rememberSingleLineInput(maxLength)
     OutlinedTextField(
         state = state,
         textStyle = typedTextFieldStyle(),

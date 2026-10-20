@@ -164,8 +164,7 @@ private fun RequirementRow(
 @Composable
 private fun trackerProgressLabels(count: TrackerCount): List<String> {
     if (count.totals.isEmpty()) return listOf(trackerCountLabel(count))
-    val format = rememberTotalFormat()
-    return count.totals.map { trackerTotalLabel(it, format) }
+    return count.totals.map { trackerTotalLabel(it) }
 }
 
 /**

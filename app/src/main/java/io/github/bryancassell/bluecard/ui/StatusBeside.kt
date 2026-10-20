@@ -1,12 +1,12 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.icu.text.BreakIterator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
+import io.github.bryancassell.bluecard.text.TextRules
 
 /**
  * Whether a [status], such as "In progress", fits on one line beside [lines] of text, each in its
@@ -28,19 +28,20 @@ fun statusFitsBeside(
     width: Int
 ): Boolean {
     val measurer = rememberTextMeasurer()
+    val textRules = LocalTextRules.current
     // The measurer is new for a new density, font or layout direction.
-    return remember(measurer, status, statusStyle, lines, width) {
+    return remember(measurer, textRules, status, statusStyle, lines, width) {
         val besideWidth = width - measurer.measure(status, statusStyle).size.width
         besideWidth > 0 && lines.none { (text, style) ->
             measurer.measure(text, style, constraints = Constraints(maxWidth = besideWidth))
-                .breaksAWord()
+                .breaksAWord(textRules)
         }
     }
 }
 
 /** Whether a line ends where the text has no line break opportunity: in the middle of a word. */
-private fun TextLayoutResult.breaksAWord(): Boolean {
+private fun TextLayoutResult.breaksAWord(textRules: TextRules): Boolean {
     if (lineCount == 1) return false
-    val breaks = BreakIterator.getLineInstance().apply { setText(layoutInput.text.text) }
-    return (0 until lineCount - 1).any { !breaks.isBoundary(getLineEnd(it)) }
+    val text = layoutInput.text.text
+    return (0 until lineCount - 1).any { !textRules.isLineBreak(text, getLineEnd(it)) }
 }

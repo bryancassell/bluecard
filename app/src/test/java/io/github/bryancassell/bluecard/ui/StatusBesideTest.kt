@@ -6,6 +6,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -31,7 +32,7 @@ class StatusBesideTest {
      */
     private fun fits(vararg lines: String, width: TextMeasurer.() -> Int): Boolean {
         var fits: Boolean? = null
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             fits = statusFitsBeside(
                 status = "Done",
                 statusStyle = style,

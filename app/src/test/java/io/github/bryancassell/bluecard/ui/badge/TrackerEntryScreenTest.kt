@@ -56,6 +56,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.pickerDay
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
@@ -141,7 +142,7 @@ class TrackerEntryScreenTest {
         fields: Map<String, TextFieldState> = this.fields
     ) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             inputModeManager = LocalInputModeManager.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboardController) {
                 keyboard.Content {

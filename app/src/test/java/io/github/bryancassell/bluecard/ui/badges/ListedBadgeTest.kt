@@ -7,6 +7,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -52,7 +53,7 @@ class ListedBadgeTest {
                 ListedBadge(hiking, EagleRequirement.OneOf(listOf("Cycling", "Hiking"))),
                 ListedBadge(zoology, eagle = null)
             ),
-            catalog.inListOrder()
+            catalog.inListOrder(AndroidTextRules())
         )
     }
 

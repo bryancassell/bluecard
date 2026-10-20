@@ -32,6 +32,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.paragraphDirection
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -69,7 +70,7 @@ class OnboardingScreenTest {
     private lateinit var view: View
 
     private fun show(uiState: OnboardingUiState) {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             view = LocalView.current
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 OnboardingScreen(

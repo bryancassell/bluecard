@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.LocalUnsavedChanges
 import io.github.bryancassell.bluecard.ui.UnsavedChanges
 import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
@@ -38,7 +39,7 @@ class RemovalButtonScreenshotTest {
 
     @Test
     fun clearProgressIsRed() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
                     RequirementDetailScreen(
@@ -79,7 +80,7 @@ class RemovalButtonScreenshotTest {
     @Test
     fun deleteIsRed() {
         val columns = listOf(TrackerColumn("activity", "Activity", TrackerColumnType.TEXT))
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
                     TrackerEntryScreen(
@@ -112,7 +113,7 @@ class RemovalButtonScreenshotTest {
 
     @Test
     fun clearAllIsRed() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 DataManagementScreen(
                     uiState = DataManagementUiState(canClear = true),

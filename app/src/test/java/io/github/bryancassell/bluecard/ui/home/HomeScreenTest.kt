@@ -42,6 +42,7 @@ import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.hasNoLine
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
@@ -114,7 +115,7 @@ class HomeScreenTest {
 
     private fun show(state: HomeUiState) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             view = LocalView.current
             HomeScreen(
                 uiState = uiState,

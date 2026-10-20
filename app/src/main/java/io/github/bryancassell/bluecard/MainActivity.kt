@@ -12,12 +12,15 @@ import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.text.stringsLocale
 import io.github.bryancassell.bluecard.ui.BlueCardApp
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModel()
+    private val textRules: TextRules by inject()
 
     // ComponentActivity gives the extras of the intent that opened it to every ViewModel's
     // SavedStateHandle as default arguments, and Navigation 3 passes them on to every screen.
@@ -52,7 +55,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            BlueCardApp(uiState, viewModel::dismissDamagedProgressNotice)
+            BlueCardApp(uiState, textRules, viewModel::dismissDamagedProgressNotice)
         }
     }
 }

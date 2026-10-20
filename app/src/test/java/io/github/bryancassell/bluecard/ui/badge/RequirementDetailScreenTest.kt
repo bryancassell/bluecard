@@ -71,6 +71,7 @@ import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
@@ -258,7 +259,7 @@ class RequirementDetailScreenTest {
 
     private fun show(state: RequirementDetailUiState) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             view = LocalView.current
             keyboard.Content {
                 back.Content {

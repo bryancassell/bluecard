@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.di.WarningLog
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.ListedBadge
 import io.github.bryancassell.bluecard.ui.badges.inListOrder
@@ -32,6 +33,7 @@ class HomeViewModel(
     profileRepository: ProfileRepository,
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
+    textRules: TextRules,
     warningLog: WarningLog
 ) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = combine(
@@ -40,7 +42,7 @@ class HomeViewModel(
         // every profile or progress change.
         flow {
             val badges = catalogRepository.getBadges()
-            emit(Triple(badges, badges.inListOrder(), catalogRepository.getRanks()))
+            emit(Triple(badges, badges.inListOrder(textRules), catalogRepository.getRanks()))
         },
         progressRepository.observeAllProgress()
     ) { profile, (badges, listedBadges, ranks), progress ->

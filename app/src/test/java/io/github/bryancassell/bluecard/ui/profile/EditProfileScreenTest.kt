@@ -30,6 +30,7 @@ import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -65,7 +66,7 @@ class EditProfileScreenTest {
 
     private fun show(state: EditProfileUiState) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             back.Content {
                 EditProfileScreen(
                     uiState = uiState,

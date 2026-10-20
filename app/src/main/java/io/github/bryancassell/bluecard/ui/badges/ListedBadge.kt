@@ -5,6 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.progress.status
+import io.github.bryancassell.bluecard.text.TextRules
 
 /**
  * A badge in the catalog as lists show it, on Badges and on Home: with how it counts toward
@@ -28,7 +29,8 @@ data class ListedBadge(val badge: MeritBadge, val eagle: EagleRequirement?) {
  * This catalog's badges in the order lists show them, [badgeNameOrder]. It depends only on the
  * catalog, so screens work it out once rather than on every progress change.
  */
-fun List<MeritBadge>.inListOrder(): List<ListedBadge> {
-    val eagleGroups = eagleGroups()
-    return sortedWith(badgeNameOrder()).map { ListedBadge(it, it.eagleRequirement(eagleGroups)) }
+fun List<MeritBadge>.inListOrder(textRules: TextRules): List<ListedBadge> {
+    val eagleGroups = eagleGroups(textRules)
+    return sortedWith(badgeNameOrder(textRules))
+        .map { ListedBadge(it, it.eagleRequirement(eagleGroups)) }
 }

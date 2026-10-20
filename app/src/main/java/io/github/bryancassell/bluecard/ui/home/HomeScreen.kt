@@ -32,7 +32,6 @@ import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.BadgeRow
-import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.typedText
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -141,7 +140,6 @@ private fun Summary(uiState: HomeUiState.Ready, modifier: Modifier = Modifier) {
 /** The badges in progress, in the same rows as on Badges. */
 @Composable
 private fun BadgesInProgress(badges: List<BadgeListItem>, onOpenBadge: (badgeId: String) -> Unit) {
-    val listFormatter = rememberBadgeNameListFormatter()
     // Screen readers say when focus enters and leaves the list and how many badges it has,
     // as on Badges.
     Column(
@@ -154,7 +152,6 @@ private fun BadgesInProgress(badges: List<BadgeListItem>, onOpenBadge: (badgeId:
             key(badge.id) {
                 BadgeRow(
                     badge = badge,
-                    listFormatter = listFormatter,
                     onClick = { onOpenBadge(badge.id) }
                 )
             }

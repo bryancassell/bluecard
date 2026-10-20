@@ -21,7 +21,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
@@ -190,8 +189,8 @@ class StringsLanguageTest {
     @Test
     fun onDeviceWithStringsLanguageSecond_usesThatLocale() {
         val text = onDevice("fa-IR,en-GB") {
-            val badges = rememberBadgeNameListFormatter()
-                .format(listOf("Cycling", "Hiking", "Swimming"))
+            val badges =
+                LocalLocaleFormats.current.formatList(listOf("Cycling", "Hiking", "Swimming"))
             "${stringResource(R.string.requirement_choice, 2, 3)}; $badges"
         }
 

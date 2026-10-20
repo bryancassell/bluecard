@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.rank.RankDetailScreen
 import io.github.bryancassell.bluecard.ui.rank.RankDetailUiState
@@ -82,7 +83,7 @@ class StatusCardScreenshotTest {
             waitingOn = "Scout",
             canClear = true
         )
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 RankDetailScreen(
                     uiState = rank,
@@ -104,7 +105,7 @@ class StatusCardScreenshotTest {
 
     /** The status card of Badge detail showing [uiState]. */
     private fun capture(uiState: BadgeDetailUiState) {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 BadgeDetailScreen(
                     uiState = uiState,

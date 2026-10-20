@@ -67,6 +67,7 @@ import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
 import org.junit.Assert.assertEquals
@@ -128,7 +129,7 @@ class BadgesScreenTest {
 
     private fun show(state: BadgesUiState, readouts: LiveRegionReadouts? = null) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             view = LocalView.current
             // Before the first layout, whose events Compose sends after the frame.
             SideEffect { readouts?.listenTo(view) }
@@ -702,7 +703,7 @@ class BadgesScreenTest {
     // heading starts at the right, as in a Column.
     @Test
     fun rightToLeftLayout_putsHeadingAtTheRight() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 BadgesScreen(BadgesUiState.Ready(badges), query = query, onOpenBadge = {})
             }
