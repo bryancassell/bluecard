@@ -5,9 +5,9 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
-import java.time.Clock
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * Marks requirement [number] of badge or rank [advancementId] completed or not, for the page that
@@ -24,7 +24,7 @@ class CompletionRecorder(
     private val number: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     private val savedStateHandle: SavedStateHandle
 ) {
     /**
@@ -33,7 +33,7 @@ class CompletionRecorder(
      */
     suspend fun setCompleted(completed: Boolean) {
         if (completed) {
-            val today = LocalDate.now(clock)
+            val today = clock.today()
             val date = when (val unchecked = savedStateHandle.get<Any?>(UNCHECKED_DATE)) {
                 // One that had no date, kept as null, or none unchecked on this page.
                 null -> if (UNCHECKED_DATE in savedStateHandle) null else today
@@ -53,7 +53,7 @@ class CompletionRecorder(
             // Only one that was completed has a date to bring back. One unchecked twice, as by
             // a quick double tap, keeps the date from the first time.
             if (before?.completed == true) {
-                savedStateHandle[UNCHECKED_DATE] = before.completedDate?.toEpochDay()
+                savedStateHandle[UNCHECKED_DATE] = before.completedDate?.toEpochDays()
             }
         }
     }

@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * A completed requirement or badge, with the date it was completed on, or null when a

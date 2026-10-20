@@ -5,12 +5,12 @@ import androidx.sqlite.SQLiteException
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
-import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.LocalDate
 
 /**
  * [ProgressRepository] backed by Room.

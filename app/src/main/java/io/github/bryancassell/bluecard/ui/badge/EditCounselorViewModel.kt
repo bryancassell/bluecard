@@ -8,19 +8,19 @@ import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
 /**
@@ -31,7 +31,7 @@ class EditCounselorViewModel(
     @InjectedParam key: EditCounselor,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -99,7 +99,7 @@ class EditCounselorViewModel(
             progressRepository.setCounselor(
                 badgeId,
                 counselor,
-                catalogRepository.getBadges().badgeStart(badgeId, LocalDate.now(clock))
+                catalogRepository.getBadges().badgeStart(badgeId, clock.today())
             )
             // A field changed while it saved stays open to be saved too, rather than being lost.
             if (typed().normalized() == counselor.normalized()) saved.value = true

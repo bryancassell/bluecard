@@ -11,7 +11,7 @@ import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -452,7 +452,7 @@ class RequirementItemTest {
                     null,
                     emptyList()
                 ),
-                LocalDate.of(2026, 5, 1),
+                LocalDate(2026, 5, 1),
                 counts
             )
         }

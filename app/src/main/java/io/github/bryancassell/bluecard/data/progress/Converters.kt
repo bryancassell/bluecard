@@ -1,7 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import androidx.room3.ColumnTypeConverter
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 
 /** How Room stores types SQLite doesn't have. */

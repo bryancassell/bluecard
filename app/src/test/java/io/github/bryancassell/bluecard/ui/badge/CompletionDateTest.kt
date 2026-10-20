@@ -24,7 +24,7 @@ import io.github.bryancassell.bluecard.testing.assertIsWhollyDisplayed
 import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -47,14 +47,14 @@ class CompletionDateTest {
     @get:Rule(order = 1)
     val accessibilityChecks = AccessibilityChecks(composeTestRule)
 
-    private val today = LocalDate.of(2026, 5, 20)
+    private val today = LocalDate(2026, 5, 20)
     private val picked = mutableListOf<LocalDate>()
     private var dismissals = 0
 
     private fun showPicker() {
         composeTestRule.setContent {
             CompletionDatePickerDialog(
-                initial = LocalDate.of(2026, 5, 18),
+                initial = LocalDate(2026, 5, 18),
                 today = today,
                 onConfirm = { picked += it },
                 onDismiss = { dismissals++ }
@@ -92,7 +92,7 @@ class CompletionDateTest {
         composeTestRule.pickerDateField().performTextReplacement("05102026")
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf(LocalDate.of(2026, 5, 10)), picked)
+        assertEquals(listOf(LocalDate(2026, 5, 10)), picked)
     }
 
     @Config(qualifiers = NARROW_SCREEN)

@@ -1,7 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 /**
  * Everything the scout records about their badges.

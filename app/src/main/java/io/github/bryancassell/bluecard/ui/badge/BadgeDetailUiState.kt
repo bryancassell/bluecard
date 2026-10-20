@@ -6,7 +6,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** What the Badge detail screen shows. */
 sealed interface BadgeDetailUiState {

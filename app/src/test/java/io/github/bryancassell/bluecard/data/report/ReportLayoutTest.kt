@@ -24,8 +24,8 @@ import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.util.Locale
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -83,29 +83,29 @@ class ReportLayoutTest {
         profile = profile,
         kind = ReportKind.MeritBadge,
         name = "Camping",
-        requirementsVersion = LocalDate.of(2026, 1, 1),
-        completion = Completion(LocalDate.of(2026, 6, 3)),
+        requirementsVersion = LocalDate(2026, 1, 1),
+        completion = Completion(LocalDate(2026, 6, 3)),
         earnedWith = null,
         counselor = counselor,
         requirements = requirements,
-        createdDate = LocalDate.of(2026, 9, 30)
+        createdDate = LocalDate(2026, 9, 30)
     )
 
     /** A rank's report, earned on Jun 3, 2026 unless [completion] says otherwise. */
     private fun rankReport(
         requirements: List<ReportRequirement> = emptyList(),
-        completion: Completion? = Completion(LocalDate.of(2026, 6, 3)),
+        completion: Completion? = Completion(LocalDate(2026, 6, 3)),
         earnedWith: String? = null
     ) = AdvancementReport(
         profile = Profile("Alex Scout", "123"),
         kind = ReportKind.Rank,
         name = "Star",
-        requirementsVersion = LocalDate.of(2026, 1, 1),
+        requirementsVersion = LocalDate(2026, 1, 1),
         completion = completion,
         earnedWith = earnedWith,
         counselor = null,
         requirements = requirements,
-        createdDate = LocalDate.of(2026, 9, 30)
+        createdDate = LocalDate(2026, 9, 30)
     )
 
     private val camping = report(
@@ -113,7 +113,7 @@ class ReportLayoutTest {
             requirement(
                 "1",
                 "Plan a campout.",
-                Completion(LocalDate.of(2026, 4, 1)),
+                Completion(LocalDate(2026, 4, 1)),
                 comment = "Planned with my patrol."
             ),
             requirement(
@@ -122,7 +122,7 @@ class ReportLayoutTest {
                 Completion(null),
                 requiredCount = 2,
                 children = listOf(
-                    requirement("2a", "Cook a meal.", Completion(LocalDate.of(2026, 4, 2))),
+                    requirement("2a", "Cook a meal.", Completion(LocalDate(2026, 4, 2))),
                     requirement("2b", "Lead a hike.", notNeeded = true),
                     requirement("2c", "Pitch a tent.", Completion(null))
                 )
@@ -130,7 +130,7 @@ class ReportLayoutTest {
             requirement(
                 "3",
                 "Keep a camping log.",
-                Completion(LocalDate.of(2026, 6, 3)),
+                Completion(LocalDate(2026, 6, 3)),
                 tracker = ReportTracker(
                     log,
                     listOf(
@@ -246,7 +246,7 @@ class ReportLayoutTest {
                     requirement(
                         "1",
                         "Earn Scout.",
-                        Completion(LocalDate.of(2026, 4, 1)),
+                        Completion(LocalDate(2026, 4, 1)),
                         comment = "At the troop meeting.",
                         signedOffBy = "Mr. Rivera"
                     )
@@ -288,7 +288,7 @@ class ReportLayoutTest {
             completion = null
         )
         val badges = listOf(
-            EarnedBadge(eagleRequiredBadge, LocalDate.of(2026, 5, 3), true),
+            EarnedBadge(eagleRequiredBadge, LocalDate(2026, 5, 3), true),
             EarnedBadge(electiveBadge, null, false)
         )
         val lines = layOut(
@@ -328,7 +328,7 @@ class ReportLayoutTest {
             completion = null
         )
         // Eagle-required, but not the first of its group completed.
-        val badges = listOf(EarnedBadge(eagleRequiredBadge, LocalDate.of(2026, 5, 3), false))
+        val badges = listOf(EarnedBadge(eagleRequiredBadge, LocalDate(2026, 5, 3), false))
         val lines = layOut(
             rankReport(
                 listOf(
@@ -473,7 +473,7 @@ class ReportLayoutTest {
             requirement(
                 "$it",
                 "Requirement number $it of the badge.",
-                Completion(LocalDate.of(2026, 4, 1)),
+                Completion(LocalDate(2026, 4, 1)),
                 comment = "A comment on requirement $it, ".repeat((it + count) % 7 + 1)
             )
         }
@@ -519,7 +519,7 @@ class ReportLayoutTest {
             requirement(
                 "$number",
                 "Requirement number $number of the badge.",
-                Completion(LocalDate.of(2026, 4, 1)),
+                Completion(LocalDate(2026, 4, 1)),
                 tracker = (1..(number + nameWords) % 4).let { rows ->
                     ReportTracker(
                         log,

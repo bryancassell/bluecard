@@ -11,6 +11,7 @@ import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.badge.ReportTasks
@@ -18,14 +19,13 @@ import io.github.bryancassell.bluecard.ui.badge.advancementRequirementsAmong
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import io.github.bryancassell.bluecard.ui.navigation.RankDetail
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
 /**
@@ -39,7 +39,7 @@ class RankDetailViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     // Keeps the date to open the date picker at if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -175,7 +175,7 @@ class RankDetailViewModel(
      */
     fun unmarkEarned() {
         val shown = (uiState.value as? RankDetailUiState.Ready)?.earnedOnPriorDate
-        if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDay()
+        if (shown != null) savedStateHandle[UNMARKED_DATE] = shown.toEpochDays()
         report.follow(saves.launch { progressRepository.removeCompletedOnPriorDate(rankId) })
     }
 
@@ -185,7 +185,7 @@ class RankDetailViewModel(
     }
 
     /** The latest date the rank can be marked earned on, read from the clock each time. */
-    fun today(): LocalDate = LocalDate.now(clock)
+    fun today(): LocalDate = clock.today()
 
     private companion object {
         /**

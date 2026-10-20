@@ -3,15 +3,15 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class BadgeStatusTest {
-    private val oldVersion = LocalDate.of(2025, 1, 1)
-    private val newVersion = LocalDate.of(2026, 1, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val oldVersion = LocalDate(2025, 1, 1)
+    private val newVersion = LocalDate(2026, 1, 1)
+    private val day = LocalDate(2026, 4, 15)
 
     // The old version needs only requirement 1; the new one needs 1 and 2.
     private val badge = MeritBadge(
@@ -73,7 +73,7 @@ class BadgeStatusTest {
     fun versionMissingFromCatalog_isInProgress() {
         assertEquals(
             BadgeStatus.InProgress,
-            badge.status(progress(LocalDate.of(2024, 1, 1), "1", "2"))
+            badge.status(progress(LocalDate(2024, 1, 1), "1", "2"))
         )
     }
 
@@ -81,7 +81,7 @@ class BadgeStatusTest {
     fun versionMissingFromCatalog_completedOnPriorDate_isCompleted() {
         assertEquals(
             BadgeStatus.Completed,
-            badge.status(progress(LocalDate.of(2024, 1, 1), completedOnPriorDate = day))
+            badge.status(progress(LocalDate(2024, 1, 1), completedOnPriorDate = day))
         )
     }
 
@@ -98,17 +98,17 @@ class BadgeStatusTest {
 
     @Test
     fun completion_whenMarkedCompletedOnPriorDate_isOnThatDate() {
-        val prior = LocalDate.of(2025, 6, 1)
+        val prior = LocalDate(2025, 6, 1)
 
         assertEquals(
             Completion(prior),
-            badge.completion(progress(LocalDate.of(2024, 1, 1), completedOnPriorDate = prior))
+            badge.completion(progress(LocalDate(2024, 1, 1), completedOnPriorDate = prior))
         )
     }
 
     @Test
     fun completion_onAVersionMissingFromCatalog_isNull() {
-        assertNull(badge.completion(progress(LocalDate.of(2024, 1, 1), "1", "2")))
+        assertNull(badge.completion(progress(LocalDate(2024, 1, 1), "1", "2")))
     }
 
     private companion object {

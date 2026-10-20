@@ -24,15 +24,15 @@ import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class BackupFormatTest {
-    private val version = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val version = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
 
     private fun badge(id: String, vararg requirements: Requirement) = MeritBadge(
         id = id,
@@ -366,7 +366,7 @@ class BackupFormatTest {
             emptyList()
         )
         val newerVersion = camping.copy(
-            badge = camping.badge.copy(requirementsVersion = LocalDate.of(2027, 1, 1))
+            badge = camping.badge.copy(requirementsVersion = LocalDate(2027, 1, 1))
         )
         for (progress in listOf(archery, newerVersion)) {
             val newer = backup.copy(progress = listOf(swimming, progress))

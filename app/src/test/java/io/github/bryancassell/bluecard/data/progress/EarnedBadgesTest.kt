@@ -4,16 +4,16 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class EarnedBadgesTest {
-    private val version = LocalDate.of(2026, 1, 1)
-    private val march = LocalDate.of(2026, 3, 1)
-    private val april = LocalDate.of(2026, 4, 1)
-    private val may = LocalDate.of(2026, 5, 1)
+    private val version = LocalDate(2026, 1, 1)
+    private val march = LocalDate(2026, 3, 1)
+    private val april = LocalDate(2026, 4, 1)
+    private val may = LocalDate(2026, 5, 1)
 
     // Each badge needs requirement 1.
     private fun badge(id: String, eagleGroup: String? = null, eagleRequired: Boolean = false) =

@@ -1,7 +1,9 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.catalog.Requirement
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 
 /**
  * The time a rank's requirement asks the scout to spend in the rank below it
@@ -46,7 +48,9 @@ fun List<RankStanding>.timeInRank(rankId: String, requirement: Requirement): Tim
         rankBelow = below.rank.name,
         eligibility = when {
             // A day the month doesn't have moves to its last: Aug 31 plus 6 months is Feb 28.
-            earnedOn != null -> TimeInRank.Eligibility.From(earnedOn.plusMonths(months.toLong()))
+            earnedOn != null -> TimeInRank.Eligibility.From(
+                earnedOn.plus(months, DateTimeUnit.MONTH)
+            )
 
             below.status == RankStatus.Earned -> TimeInRank.Eligibility.RankBelowHasNoDate
 

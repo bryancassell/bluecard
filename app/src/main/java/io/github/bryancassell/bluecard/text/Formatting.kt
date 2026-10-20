@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DecimalStyle
 import java.time.format.FormatStyle
 import java.util.Locale
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 
 // Formats shared by the screens and the PDF report, so both write dates, totals and the scout's
 // text the same way. Compose code uses the functions that build on these:
@@ -18,10 +20,15 @@ import java.util.Locale
  * 2026", in [locale], the strings' locale ([stringsLocale]), with its digits
  * (ARCHITECTURE.md, Language and layout direction).
  */
-fun completionDateFormatter(locale: Locale): DateTimeFormatter =
-    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+class CompletionDateFormatter(locale: Locale) {
+    // kotlinx-datetime leaves localized formats out of its scope, so java.time writes the date
+    // until #341 puts formatting behind an interface.
+    private val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
         .withLocale(locale)
         .withDecimalStyle(DecimalStyle.of(locale))
+
+    fun format(date: LocalDate): String = formatter.format(date.toJavaLocalDate())
+}
 
 /**
  * Formats a tracker column's values added up, such as the 4.5 in "4.5 of 6 hours", in [locale],

@@ -4,7 +4,7 @@ import android.content.res.Resources
 import android.net.Uri
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * Export and import of everything the scout entered: their profile and all their progress, in

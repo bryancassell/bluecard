@@ -32,7 +32,6 @@ import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import java.io.File
 import java.io.IOException
-import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -48,6 +47,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -67,8 +67,8 @@ class JsonBackupRepositoryTest {
     val folder = TemporaryFolder()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val start = BadgeStart(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1))
-    private val day = LocalDate.of(2026, 4, 15)
+    private val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 3, 1))
+    private val day = LocalDate(2026, 4, 15)
     private val profile = Profile("Alex Scout", "Troop 12")
 
     private fun badge(id: String, vararg requirements: Requirement) = MeritBadge(

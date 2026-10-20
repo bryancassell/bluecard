@@ -27,9 +27,7 @@ import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.keepText
 import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
@@ -37,6 +35,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -53,11 +59,11 @@ class TrackerEntryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val newest = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
+    private val newest = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
     private val badgeStart = BadgeStart(newest, started)
-    private val today = LocalDate.of(2026, 5, 20)
-    private val clock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
+    private val today = LocalDate(2026, 5, 20)
+    private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
 
     // Trackers defined only here, in test catalog data, as a new one would be in the catalog.
     private val sessionColumns = listOf(
@@ -235,9 +241,9 @@ class TrackerEntryViewModelTest {
         assertEquals(today, viewModel.today())
 
         // The page stays open past midnight.
-        clock.now += Duration.ofDays(1)
+        clock.now += 1.days
 
-        assertEquals(today.plusDays(1), viewModel.today())
+        assertEquals(today.plus(1, DateTimeUnit.DAY), viewModel.today())
     }
 
     @Test
@@ -248,7 +254,7 @@ class TrackerEntryViewModelTest {
         startCollecting(viewModel)
 
         assertEquals(2, viewModel.ready().rowNumber)
-        assertEquals(mapOf("date" to LocalDate.of(2026, 4, 12)), viewModel.ready().dates)
+        assertEquals(mapOf("date" to LocalDate(2026, 4, 12)), viewModel.ready().dates)
         assertEquals(
             listOf("2026-04-12", "Swim", "45"),
             sessionColumns.map {
@@ -297,7 +303,7 @@ class TrackerEntryViewModelTest {
         viewModel.type("activity", " Run ")
         assertFalse(viewModel.ready().changed)
 
-        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+        viewModel.setDate("date", LocalDate(2026, 5, 1))
         assertTrue(viewModel.ready().changed)
     }
 
@@ -414,7 +420,7 @@ class TrackerEntryViewModelTest {
         startCollecting(viewModel)
         viewModel.type("activity", " Run ")
         viewModel.type("minutes", "30")
-        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+        viewModel.setDate("date", LocalDate(2026, 5, 1))
 
         viewModel.save()
 
@@ -455,7 +461,7 @@ class TrackerEntryViewModelTest {
         startCollecting(viewModel)
         viewModel.type("activity", "Run")
         viewModel.type("minutes", "30")
-        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+        viewModel.setDate("date", LocalDate(2026, 5, 1))
 
         viewModel.save()
 
@@ -483,17 +489,17 @@ class TrackerEntryViewModelTest {
         val slowCatalog = object : CatalogRepository by catalogRepository {
             override suspend fun getBadges(): List<MeritBadge> {
                 if (midnightPassesOnLoad) {
-                    clock.now = today.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC)
+                    clock.now = today.plus(1, DateTimeUnit.DAY).atStartOfDayIn(TimeZone.UTC)
                 }
                 return catalogRepository.getBadges()
             }
         }
-        clock.now = today.atTime(23, 59, 59).toInstant(ZoneOffset.UTC)
+        clock.now = today.atTime(23, 59, 59).toInstant(TimeZone.UTC)
         val viewModel = viewModel(catalog = slowCatalog)
         startCollecting(viewModel)
         viewModel.type("activity", "Run")
         viewModel.type("minutes", "30")
-        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+        viewModel.setDate("date", LocalDate(2026, 5, 1))
         midnightPassesOnLoad = true
 
         viewModel.save()
@@ -588,7 +594,7 @@ class TrackerEntryViewModelTest {
 
     @Test
     fun filledFixedRow_startsWithItsValues_andSaveChangesIt_keepingItsDate() = runTest {
-        val added = today.minusDays(7)
+        val added = today.minus(7, DateTimeUnit.DAY)
         val id = progressRepository.addTrackerEntry(
             "personal-fitness",
             "2",
@@ -844,8 +850,8 @@ class TrackerEntryViewModelTest {
         val viewModel = viewModel()
         startCollecting(viewModel)
 
-        viewModel.setDate("date", LocalDate.of(2026, 5, 1))
-        assertEquals(mapOf("date" to LocalDate.of(2026, 5, 1)), viewModel.ready().dates)
+        viewModel.setDate("date", LocalDate(2026, 5, 1))
+        assertEquals(mapOf("date" to LocalDate(2026, 5, 1)), viewModel.ready().dates)
         assertTrue(viewModel.ready().canSave)
 
         viewModel.setDate("date", null)
@@ -957,14 +963,14 @@ class TrackerEntryViewModelTest {
         scenario(id).use { scenario ->
             startCollecting(scenario.viewModel)
             scenario.viewModel.type("activity", "Run, then edited.")
-            scenario.viewModel.setDate("date", LocalDate.of(2026, 5, 1))
+            scenario.viewModel.setDate("date", LocalDate(2026, 5, 1))
 
             scenario.recreate()
             val restored = scenario.viewModel
             startCollecting(restored)
 
             assertEquals("Run, then edited.", restored.text("activity"))
-            assertEquals(mapOf("date" to LocalDate.of(2026, 5, 1)), restored.ready().dates)
+            assertEquals(mapOf("date" to LocalDate(2026, 5, 1)), restored.ready().dates)
             assertTrue(restored.ready().canSave)
         }
     }

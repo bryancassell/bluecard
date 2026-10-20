@@ -3,7 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.ui.TaskFailure
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** What the Tracker entry screen shows. */
 sealed interface TrackerEntryUiState {

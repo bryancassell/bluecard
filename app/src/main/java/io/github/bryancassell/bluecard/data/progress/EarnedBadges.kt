@@ -5,7 +5,7 @@ import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
 import io.github.bryancassell.bluecard.data.catalog.eagleSlots
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * The merit badges the scout has completed, in catalog order, which count toward a rank's

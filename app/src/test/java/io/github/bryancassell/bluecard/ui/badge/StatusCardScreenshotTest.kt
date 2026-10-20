@@ -10,7 +10,7 @@ import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.rank.RankDetailScreen
 import io.github.bryancassell.bluecard.ui.rank.RankDetailUiState
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,8 +56,8 @@ class StatusCardScreenshotTest {
     fun badgeMarkedCompleted() = capture(
         badge.copy(
             status = BadgeStatus.Completed,
-            completedOnPriorDate = LocalDate.of(2025, 8, 1),
-            completedOn = LocalDate.of(2025, 8, 1),
+            completedOnPriorDate = LocalDate(2025, 8, 1),
+            completedOn = LocalDate(2025, 8, 1),
             canClear = true
         )
     )
@@ -126,6 +126,6 @@ class StatusCardScreenshotTest {
     }
 
     private companion object {
-        val TODAY: LocalDate = LocalDate.of(2026, 5, 20)
+        val TODAY: LocalDate = LocalDate(2026, 5, 20)
     }
 }

@@ -18,11 +18,11 @@ import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
-import java.time.LocalDate
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -38,9 +38,9 @@ class HomeViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val version = LocalDate.of(2026, 1, 1)
-    private val started = LocalDate.of(2026, 3, 1)
-    private val day = LocalDate.of(2026, 4, 15)
+    private val version = LocalDate(2026, 1, 1)
+    private val started = LocalDate(2026, 3, 1)
+    private val day = LocalDate(2026, 4, 15)
     private val badgeStart = BadgeStart(version, started)
 
     // Named differently from their ids, so tests can tell the two apart.

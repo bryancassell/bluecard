@@ -5,7 +5,6 @@ import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
-import java.time.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertSame
@@ -27,7 +26,7 @@ class AppModuleTest {
 
     @Test
     fun clock_isDeviceClock() {
-        assertSame(DeviceClock, koin.get<Clock>())
+        assertSame(DeviceClock, koin.get<ZonedClock>())
     }
 
     @Test

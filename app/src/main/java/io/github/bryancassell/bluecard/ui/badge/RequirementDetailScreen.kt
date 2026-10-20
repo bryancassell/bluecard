@@ -49,7 +49,7 @@ import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

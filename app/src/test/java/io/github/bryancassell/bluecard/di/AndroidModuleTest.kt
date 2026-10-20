@@ -21,10 +21,10 @@ import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
 import java.io.File
-import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -58,7 +58,7 @@ class AndroidModuleTest {
     @Test
     fun database_isStoredInDatabaseFile() = runTest {
         database.value.progressDao().insertBadge(
-            BadgeProgress("camping", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1))
+            BadgeProgress("camping", LocalDate(2026, 1, 1), LocalDate(2026, 3, 1))
         )
         database.value.close()
 

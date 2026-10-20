@@ -6,11 +6,11 @@ import android.util.Log
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
+import io.github.bryancassell.bluecard.di.ZonedClock
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-import java.time.Clock
-import java.time.temporal.ChronoUnit
+import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
  */
 class FileDamagedProgressRepository(
     private val context: Context,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     @param:ApplicationScope private val externalScope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
@@ -116,7 +116,7 @@ class FileDamagedProgressRepository(
 
     /** When a copy is set aside, such as "2026-10-02T090607Z-", then a unique suffix. */
     private fun copyNamePrefix() =
-        clock.instant().truncatedTo(ChronoUnit.SECONDS).toString().replace(":", "") + "-"
+        Instant.fromEpochSeconds(clock.now().epochSeconds).toString().replace(":", "") + "-"
 
     /**
      * The write-ahead log, shared-memory and rollback journal files SQLite keeps beside the

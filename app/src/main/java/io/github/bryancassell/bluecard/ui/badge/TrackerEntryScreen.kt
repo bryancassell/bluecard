@@ -57,7 +57,7 @@ import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

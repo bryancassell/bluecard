@@ -329,7 +329,7 @@ both taps of a double tap can reach it.
   (`rememberCompletionDateFormatter`) are formatted in it too, so a sentence
   never mixes two languages: on a Persian phone, English strings read "Do 2 of
   3", not "Do ۲ of ۳". Code outside Compose, such as the PDF report, uses
-  `stringsLanguageResources` and `completionDateFormatter` (`text/`). Each
+  `stringsLanguageResources` and `CompletionDateFormatter` (`text/`). Each
   translation's `strings.xml` must name its own language
   (`StringsLanguageTagTest`).
 - **Punctuation that joins text comes from `strings.xml` too**
@@ -510,8 +510,8 @@ fails the build for a missing dependency, as Hilt did.
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
   `androidModule`, for what needs a `Context`. Besides the repositories, they
   provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
-  `CoroutineScope` (`@ApplicationScope`) and a `Clock`, the dispatcher and clock
-  so tests can replace them.
+  `CoroutineScope` (`@ApplicationScope`) and a `ZonedClock`, the dispatcher
+  and clock so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could

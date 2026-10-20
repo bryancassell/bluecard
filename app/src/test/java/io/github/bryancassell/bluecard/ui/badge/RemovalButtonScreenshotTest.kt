@@ -14,7 +14,7 @@ import io.github.bryancassell.bluecard.ui.UnsavedChanges
 import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
 import io.github.bryancassell.bluecard.ui.data.DataManagementUiState
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,7 +34,7 @@ class RemovalButtonScreenshotTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val today = LocalDate.of(2026, 5, 20)
+    private val today = LocalDate(2026, 5, 20)
 
     @Test
     fun clearProgressIsRed() {

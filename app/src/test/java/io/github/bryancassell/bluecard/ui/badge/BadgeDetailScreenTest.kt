@@ -84,7 +84,7 @@ import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import java.math.BigDecimal
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -114,7 +114,7 @@ class BadgeDetailScreenTest {
     private var unmarks = 0
 
     /** What the page reads as today when the picker opens, which a test can move on. */
-    private var today = LocalDate.of(2026, 5, 20)
+    private var today = LocalDate(2026, 5, 20)
     private var reportShareRequests = 0
     private var reportsShared = 0
     private val reportsSaved = mutableListOf<Uri>()
@@ -1039,8 +1039,8 @@ class BadgeDetailScreenTest {
     private val completed = ready.copy(status = BadgeStatus.Completed)
 
     private val marked = completed.copy(
-        completedOnPriorDate = LocalDate.of(2025, 8, 1),
-        completedOn = LocalDate.of(2025, 8, 1)
+        completedOnPriorDate = LocalDate(2025, 8, 1),
+        completedOn = LocalDate(2025, 8, 1)
     )
 
     @Config(qualifiers = DATE_PICKER_SCREEN)
@@ -1055,7 +1055,7 @@ class BadgeDetailScreenTest {
         composeTestRule.pickerDay("May 10, 2026").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf(LocalDate.of(2026, 5, 10)), marks)
+        assertEquals(listOf(LocalDate(2026, 5, 10)), marks)
         composeTestRule.onNodeWithText("OK").assertDoesNotExist()
     }
 
@@ -1079,7 +1079,7 @@ class BadgeDetailScreenTest {
 
     @Test
     fun badgeCompleteFromItsRequirements_saysWhen_aboveItsReport() {
-        show(completed.copy(completedOn = LocalDate.of(2026, 4, 15)))
+        show(completed.copy(completedOn = LocalDate(2026, 4, 15)))
 
         composeTestRule.onNodeWithText("Completed on Apr 15, 2026").performScrollTo()
             .assertIsDisplayed()
@@ -1114,13 +1114,13 @@ class BadgeDetailScreenTest {
     @Config(qualifiers = DATE_PICKER_SCREEN)
     @Test
     fun markCompleted_afterUnmarking_opensAtTheDateUnmarked() {
-        show(ready.copy(unmarkedDate = LocalDate.of(2026, 4, 15)))
+        show(ready.copy(unmarkedDate = LocalDate(2026, 4, 15)))
 
         composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
         composeTestRule.pickerDay("April 15, 2026").assert(isSelected)
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf(LocalDate.of(2026, 4, 15)), marks)
+        assertEquals(listOf(LocalDate(2026, 4, 15)), marks)
     }
 
     @Test
@@ -1138,13 +1138,13 @@ class BadgeDetailScreenTest {
     @Test
     fun markCompleted_onAPageOpenPastMidnight_offersTheNewDay() {
         show(ready)
-        today = LocalDate.of(2026, 5, 21)
+        today = LocalDate(2026, 5, 21)
 
         composeTestRule.onNodeWithText("Mark completed").performScrollTo().performClick()
         composeTestRule.pickerDay("May 22, 2026").assertIsNotEnabled()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf(LocalDate.of(2026, 5, 21)), marks)
+        assertEquals(listOf(LocalDate(2026, 5, 21)), marks)
     }
 
     @Test
@@ -1173,7 +1173,7 @@ class BadgeDetailScreenTest {
         composeTestRule.pickerDay("August 5, 2025").performClick()
         composeTestRule.onNodeWithText("OK").performClick()
 
-        assertEquals(listOf(LocalDate.of(2025, 8, 5)), marks)
+        assertEquals(listOf(LocalDate(2025, 8, 5)), marks)
     }
 
     @Test

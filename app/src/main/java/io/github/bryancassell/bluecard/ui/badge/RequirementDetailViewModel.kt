@@ -25,13 +25,12 @@ import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.timeInRank
 import io.github.bryancassell.bluecard.data.progress.withoutRequirements
+import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
-import java.time.Clock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -39,6 +38,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
 /**
@@ -50,7 +50,7 @@ class RequirementDetailViewModel(
     @InjectedParam key: RequirementDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
-    private val clock: Clock,
+    private val clock: ZonedClock,
     // Keeps an unsaved sign-off and comment, and the date to bring back to an unchecked
     // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
@@ -319,7 +319,7 @@ class RequirementDetailViewModel(
     }
 
     /** The latest date the scout can give as a completion date, read from the clock each time. */
-    fun today(): LocalDate = LocalDate.now(clock)
+    fun today(): LocalDate = clock.today()
 
     private companion object {
         const val SIGNED_OFF_BY = "signedOffBy"
