@@ -22,7 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.RankStatus
@@ -43,17 +42,20 @@ import io.github.bryancassell.bluecard.ui.badge.ShareReport
 import io.github.bryancassell.bluecard.ui.badge.StatusCard
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
+import io.github.bryancassell.bluecard.ui.navigation.RankDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 /** Connects the Rank detail screen to its ViewModel. */
 @Composable
 fun RankDetailRoute(
-    rankId: String,
+    key: RankDetail,
     onOpenRequirement: (number: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RankDetailViewModel =
-        hiltViewModel<RankDetailViewModel, RankDetailViewModel.Factory> { it.create(rankId) }
+        koinViewModel<RankDetailViewModel> { parametersOf(key) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RankDetailScreen(

@@ -52,7 +52,7 @@ own documentation says so, and each such claim links to the page.
 - [Testing approach](#testing-approach)
   - [Fakes and contract tests](#fakes-and-contract-tests)
   - [ViewModel tests](#viewmodel-tests)
-  - [Hilt in tests](#hilt-in-tests)
+  - [Koin in tests](#koin-in-tests)
   - [Room and migration tests](#room-and-migration-tests)
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
@@ -276,7 +276,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   extras**, which any app could fill, since `MainActivity` is exported
   ([#83](https://github.com/bryancassell/bluecard/issues/83)). `MainActivity`
   leaves them out of its `defaultViewModelCreationExtras`, which covers every
-  ViewModel Hilt and Navigation 3 create. So create no ViewModel without
+  ViewModel Koin and Navigation 3 create. So create no ViewModel without
   creation extras: the activity's default factory would still pass it them.
 - **Pages slide side by side** (`ui/navigation/PageTransitions.kt`); why,
   against Material 3's advice, is in [`PRD.md`](PRD.md#design-decisions). The
@@ -449,8 +449,8 @@ both taps of a double tap can reach it.
   values; recorded progress is relational (badges → requirements → tracker rows).
 - **Room 3** (`androidx.room3`) with `BundledSQLiteDriver`: a SQLite the app
   ships, for iOS too
-  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Room and Hilt
-  both generate code, using the KSP Gradle plugin.
+  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Room
+  generates its code with the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
 
@@ -464,10 +464,10 @@ both taps of a double tap can reach it.
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
   A storage failure after the scout has left the screen goes unreported, but a
   bug still crashes the app.
-- **Writes happen in the order they're made.** Each takes a first-come,
-  first-served lock (`writing` in `RoomProgressRepository`), so a new write
-  must go through it too: otherwise it could run ahead of writes already
-  queued, such as a save of notes ahead of a clear.
+- **Writes happen in the order they're made.** Each takes the database's
+  first-come, first-served lock (`writing` in `RoomProgressRepository`), so a
+  new write must go through it too: otherwise it could run ahead of writes
+  already queued, such as a save of notes ahead of a clear.
 
 ### Storage errors
 
@@ -498,15 +498,24 @@ both taps of a double tap can reach it.
 
 ### Dependency injection
 
-[Hilt](https://developer.android.com/training/dependency-injection/hilt-android),
-using constructor injection. The
+[Koin](https://insert-koin.io/), using constructor injection: Hilt, which the
 [recommendations page](https://developer.android.com/topic/architecture/recommendations)
-says to use Hilt once an app has "multiple screens with ViewModels" or
-ViewModels scoped to the navigation back stack; BlueCard has both. Hilt
-modules bind each repository interface to its implementation and provide the
-Room database, DataStore, a coroutine dispatcher, an app-lifetime
-`CoroutineScope` (`@ApplicationScope`) and a `Clock` for today's date (the
-dispatcher and clock injected so tests can replace them).
+names, only works on Android, and code shared with iOS must work there too
+([#337](https://github.com/bryancassell/bluecard/issues/337)). Koin's
+[compiler plugin](https://insert-koin.io/docs/reference/koin-compiler/compile-safety)
+fails the build for a missing dependency, as Hilt did.
+
+- **Two modules list every definition** (`di/`): `appModule`, with no Android
+  imports, for common code
+  ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
+  `androidModule`, for what needs a `Context`. Besides the repositories, they
+  provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
+  `CoroutineScope` (`@ApplicationScope`) and a `Clock`, the dispatcher and clock
+  so tests can replace them.
+- **Screens create ViewModels with `koinViewModel()`**, passing their
+  navigation key with `parametersOf(key)` as the ViewModel's one
+  `@InjectedParam`. Koin matches arguments by type, so two of one type could
+  swap.
 
 ## Package layout
 
@@ -533,7 +542,7 @@ io.github.bryancassell.bluecard
 ├── text/               The strings' locales, dates and typed text formatted in them, and line
 │                       breaks as spaces, for the screens and for code outside Compose, such as
 │                       the PDF report and import
-└── di/                 Hilt modules
+└── di/                 Koin modules
 ```
 
 ## Screens
@@ -834,14 +843,11 @@ and each event. They run with Robolectric, because their failure tests reach
 the [local tests guide](https://developer.android.com/training/testing/local-tests)
 says "might allow failing tests to pass".
 
-### Hilt in tests
+### Koin in tests
 
-A test that launches a Hilt activity replaces production bindings with
-`@TestInstallIn` modules, or removes a module with `@UninstallModules` and
-supplies fakes with `@BindValue`, as `MainActivityTest` does
-([`docs/toolchain.md`](docs/toolchain.md#tests-local-vs-instrumented)). Each
-module's KDoc says which repositories it binds, and so which a test fakes
-together.
+A test that launches `MainActivity` replaces Koin's definitions with fakes
+before launching it, by loading a module of them, as `MainActivityTest` does
+([`docs/toolchain.md`](docs/toolchain.md#tests-local-vs-instrumented)).
 
 ### Room and migration tests
 
@@ -885,7 +891,7 @@ tests check the layout and drawing (`ReportLayoutTest`) and use a fake PDF
 writer (`PdfReportRepositoryTest`), and an instrumented test
 (`PdfDocumentWriterTest`) writes a real PDF and reads it back.
 `PdfDocumentWriter` is left out of the per-class coverage check, as are the
-classes Hilt and Room generate.
+classes Room generates.
 
 ### Instrumented tests in CI
 
@@ -959,7 +965,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Focus between pages](#navigation) | A focus target around the pages takes the focus a page lets go of | Otherwise Compose gives it to a page's first item, which opened the keyboard on Badges |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
 | [Persistence](#repositories) | Room 3 on `BundledSQLiteDriver` for progress; Preferences DataStore for the profile | The DataStore guide's criteria; the same SQLite on Android and iOS |
-| [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
+| [Dependency injection](#dependency-injection) | Koin, with its compiler plugin | Works on iOS, unlike Hilt, and still checks the graph at build time |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays; a started badge stays on its version until the scout switches | The advancement rules allow finishing on the previous requirements |
 | [Ranks](#ranks) | Ranks share badges' catalog types and progress tables | The badge machinery carries over with no schema change |

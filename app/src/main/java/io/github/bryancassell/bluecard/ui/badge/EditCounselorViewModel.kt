@@ -4,10 +4,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -16,6 +12,7 @@ import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,20 +21,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.annotation.InjectedParam
 
 /**
  * A badge's merit badge counselor, in fields the scout edits and then saves. Once saved, the
  * page closes.
  */
-@HiltViewModel(assistedFactory = EditCounselorViewModel.Factory::class)
-class EditCounselorViewModel @AssistedInject constructor(
-    @Assisted private val badgeId: String,
+class EditCounselorViewModel(
+    @InjectedParam key: EditCounselor,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val badgeId = key.badgeId
+
     // They start as the saved counselor once it loads, or as the unsaved fields the system
     // stopped the app with.
     private val fields = StoredTextFields(savedStateHandle, NAME, PHONE, EMAIL)
@@ -118,11 +117,6 @@ class EditCounselorViewModel @AssistedInject constructor(
     /** The scout has been told about [failure]. */
     fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(badgeId: String): EditCounselorViewModel
     }
 
     private companion object {

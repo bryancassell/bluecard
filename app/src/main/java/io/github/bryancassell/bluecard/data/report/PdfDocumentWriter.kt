@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.data.report
 
 import android.graphics.pdf.PdfDocument
 import java.io.OutputStream
-import javax.inject.Inject
 
 /**
  * Writes a report's pages with Android's [PdfDocument]. PdfDocument needs a device: Robolectric
@@ -10,7 +9,7 @@ import javax.inject.Inject
  * 4.17). So this is checked by an instrumented test (androidTest/.../PdfDocumentWriterTest) and
  * left out of the local tests' coverage check.
  */
-class PdfDocumentWriter @Inject constructor() : ReportPdfWriter {
+class PdfDocumentWriter : ReportPdfWriter {
     override fun write(pages: List<ReportPage>, out: OutputStream) {
         val document = PdfDocument()
         try {

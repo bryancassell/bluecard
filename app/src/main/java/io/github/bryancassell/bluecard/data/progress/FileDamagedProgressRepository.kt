@@ -3,7 +3,6 @@ package io.github.bryancassell.bluecard.data.progress
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
@@ -12,8 +11,6 @@ import java.io.IOException
 import java.nio.file.Files
 import java.time.Clock
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -31,9 +28,8 @@ import kotlinx.coroutines.withContext
  * A singleton, so the notice shows as soon as [setAside] runs, without the app reopening. The
  * notice file and [noticePending] change together, under this object's lock.
  */
-@Singleton
-class FileDamagedProgressRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
+class FileDamagedProgressRepository(
+    private val context: Context,
     private val clock: Clock,
     @param:ApplicationScope private val externalScope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher

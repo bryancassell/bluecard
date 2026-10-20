@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.data.backup
 
 import android.content.Context
 import android.net.Uri
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.openDocument
@@ -15,7 +14,6 @@ import io.github.bryancassell.bluecard.di.IoDispatcher
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.CharacterCodingException
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
@@ -29,8 +27,8 @@ import kotlinx.coroutines.withContext
  * Exporting and importing run in [externalScope], so each finishes even if the scout leaves
  * the screen ([runOutlivingCaller]).
  */
-class JsonBackupRepository @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class JsonBackupRepository(
+    private val context: Context,
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,

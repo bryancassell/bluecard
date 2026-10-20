@@ -44,7 +44,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
@@ -53,13 +52,14 @@ import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
+import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Badges screen to its ViewModel. */
 @Composable
 fun BadgesRoute(
     onOpenBadge: (badgeId: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: BadgesViewModel = hiltViewModel()
+    viewModel: BadgesViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     BadgesScreen(

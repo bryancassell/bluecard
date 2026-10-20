@@ -7,10 +7,6 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -32,6 +28,7 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.keepText
+import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import io.github.bryancassell.bluecard.ui.restoredText
 import java.time.Clock
 import java.time.LocalDate
@@ -46,6 +43,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.annotation.InjectedParam
 
 /**
  * One row of a requirement's tracker, for the scout to fill in, change or delete: in a log,
@@ -56,18 +54,19 @@ import kotlinx.coroutines.flow.stateIn
  * It reads what's saved when the page opens, and the page is a form: the scout saves it, which
  * closes the page, or leaves to discard their changes.
  */
-@HiltViewModel(assistedFactory = TrackerEntryViewModel.Factory::class)
-class TrackerEntryViewModel @AssistedInject constructor(
-    @Assisted("advancementId") private val advancementId: String,
-    @Assisted("number") private val number: String,
-    @Assisted private val entryId: Long?,
-    @Assisted private val rowNumber: Int?,
+class TrackerEntryViewModel(
+    @InjectedParam key: TrackerEntryDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps unsaved values if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val advancementId = key.advancementId
+    private val number = key.number
+    private val entryId = key.entryId
+    private val rowNumber = key.rowNumber
+
     private val _fields = mutableMapOf<String, TextFieldState>()
 
     /**
@@ -341,16 +340,6 @@ class TrackerEntryViewModel @AssistedInject constructor(
     /** The scout has been told about [failure]. */
     fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(
-            @Assisted("advancementId") advancementId: String,
-            @Assisted("number") number: String,
-            entryId: Long?,
-            rowNumber: Int?
-        ): TrackerEntryViewModel
     }
 
     private companion object {

@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -73,7 +74,7 @@ class EditCounselorViewModelTest {
         badgeId: String = "camping",
         savedStateHandle: SavedStateHandle = SavedStateHandle()
     ) = EditCounselorViewModel(
-        badgeId,
+        EditCounselor(badgeId),
         catalogRepository,
         progressRepository,
         clock,
@@ -86,7 +87,7 @@ class EditCounselorViewModelTest {
      */
     private fun scenario() = viewModelScenario {
         EditCounselorViewModel(
-            "camping",
+            EditCounselor("camping"),
             catalogRepository,
             progressRepository,
             clock,
@@ -133,7 +134,7 @@ class EditCounselorViewModelTest {
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
         val viewModel = EditCounselorViewModel(
-            "camping",
+            EditCounselor("camping"),
             loading,
             progressRepository,
             clock,
@@ -313,7 +314,7 @@ class EditCounselorViewModelTest {
      */
     private fun viewModelSavingOnlyAfter(allowSave: CompletableDeferred<Unit>) =
         EditCounselorViewModel(
-            "camping",
+            EditCounselor("camping"),
             catalogRepository,
             object : ProgressRepository by progressRepository {
                 override suspend fun setCounselor(
@@ -333,7 +334,7 @@ class EditCounselorViewModelTest {
     fun saved_isNoLongerAChange_beforeTheSavedCounselorIsRead() = runTest {
         // Saves, but the saved counselor is read only later.
         val viewModel = EditCounselorViewModel(
-            "camping",
+            EditCounselor("camping"),
             catalogRepository,
             object : ProgressRepository by progressRepository {
                 override suspend fun setCounselor(

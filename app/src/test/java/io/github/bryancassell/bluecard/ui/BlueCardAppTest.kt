@@ -35,7 +35,7 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * The Loading and LoadFailed states, and the status bar's background, which every state shows.
- * MainActivityTest covers Ready, which needs Hilt for the screens.
+ * MainActivityTest covers Ready, which needs Koin for the screens' ViewModels.
  */
 @RunWith(AndroidJUnit4::class)
 class BlueCardAppTest {

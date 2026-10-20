@@ -4,6 +4,7 @@ import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
+import kotlinx.coroutines.sync.Mutex
 
 // Each version's schema is in app/schemas/, and MigrationTest checks each migration.
 // Version 2 added TrackerEntry.rowNumber, version 3 TrackerEntry.addedDate, and version 4
@@ -24,6 +25,13 @@ import androidx.room3.RoomDatabase
 @ColumnTypeConverters(Converters::class)
 abstract class BlueCardDatabase : RoomDatabase() {
     abstract fun progressDao(): ProgressDao
+
+    /**
+     * Lets writes in one at a time, in the order they were made (it's first come, first served).
+     * It's the database's, so writes queue in order however many repositories use it: a save of
+     * notes can't run ahead of a clear made on another screen.
+     */
+    internal val writeOrder = Mutex()
 
     companion object {
         /**

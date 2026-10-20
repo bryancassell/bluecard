@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.eagleSlots
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -17,7 +16,6 @@ import io.github.bryancassell.bluecard.ui.badges.ListedBadge
 import io.github.bryancassell.bluecard.ui.badges.inListOrder
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.ranks.toListItem
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -29,8 +27,7 @@ import kotlinx.coroutines.flow.stateIn
  * progress and the badges they have in progress, kept up to date as the profile or progress
  * changes.
  */
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel(
     profileRepository: ProfileRepository,
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository

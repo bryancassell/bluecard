@@ -7,10 +7,6 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
@@ -33,6 +29,7 @@ import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,16 +39,15 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.annotation.InjectedParam
 
 /**
  * One requirement of a badge or rank and its sub-requirements, with the scout's progress:
  * whether it's complete and when, who signed off on it, for a rank's, their comment on it, and its
  * tracker.
  */
-@HiltViewModel(assistedFactory = RequirementDetailViewModel.Factory::class)
-class RequirementDetailViewModel @AssistedInject constructor(
-    @Assisted("advancementId") private val advancementId: String,
-    @Assisted("number") private val number: String,
+class RequirementDetailViewModel(
+    @InjectedParam key: RequirementDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
@@ -59,6 +55,9 @@ class RequirementDetailViewModel @AssistedInject constructor(
     // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val advancementId = key.advancementId
+    private val number = key.number
+
     private val fields = StoredTextFields(savedStateHandle, SIGNED_OFF_BY, COMMENT)
 
     /**
@@ -321,14 +320,6 @@ class RequirementDetailViewModel @AssistedInject constructor(
 
     /** The latest date the scout can give as a completion date, read from the clock each time. */
     fun today(): LocalDate = LocalDate.now(clock)
-
-    @AssistedFactory
-    interface Factory {
-        fun create(
-            @Assisted("advancementId") advancementId: String,
-            @Assisted("number") number: String
-        ): RequirementDetailViewModel
-    }
 
     private companion object {
         const val SIGNED_OFF_BY = "signedOffBy"

@@ -14,18 +14,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Ranks screen to its ViewModel. */
 @Composable
 fun RanksRoute(
     onOpenRank: (rankId: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RanksViewModel = hiltViewModel()
+    viewModel: RanksViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RanksScreen(uiState = uiState, onOpenRank = onOpenRank, modifier = modifier)

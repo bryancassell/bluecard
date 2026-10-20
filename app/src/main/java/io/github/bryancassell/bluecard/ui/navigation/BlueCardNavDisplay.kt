@@ -125,7 +125,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate =
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 BadgeDetailRoute(
-                    badgeId = key.badgeId,
+                    key = key,
                     onOpenRequirement = { navigate(RequirementDetail(key.badgeId, it)) },
                     onEditCounselor = { navigate(EditCounselor(key.badgeId)) }
                 )
@@ -139,7 +139,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate =
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 RankDetailRoute(
-                    rankId = key.rankId,
+                    key = key,
                     onOpenRequirement = { navigate(RequirementDetail(key.rankId, it)) }
                 )
             }
@@ -147,7 +147,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 // Once saved or discarded, the page closes, unless the scout has already gone
                 // back.
                 EditCounselorRoute(
-                    badgeId = key.badgeId,
+                    key = key,
                     onClose = { backStack.closeIfOnTop(key) }
                 )
             }
@@ -155,8 +155,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 val navigate =
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 RequirementDetailRoute(
-                    advancementId = key.advancementId,
-                    number = key.number,
+                    key = key,
                     onOpenRequirement = { navigate(RequirementDetail(key.advancementId, it)) },
                     onOpenTrackerEntry = { entryId, rowNumber ->
                         navigate(
@@ -170,10 +169,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             }
             entry<TrackerEntryDetail> { key ->
                 TrackerEntryRoute(
-                    advancementId = key.advancementId,
-                    number = key.number,
-                    entryId = key.entryId,
-                    rowNumber = key.rowNumber,
+                    key = key,
                     // Only while it's on top, so it can't close a screen opened after it.
                     onClose = { backStack.closeIfOnTop(key) }
                 )

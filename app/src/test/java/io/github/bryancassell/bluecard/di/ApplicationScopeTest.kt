@@ -12,9 +12,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class CoroutineScopesModuleTest {
+class ApplicationScopeTest {
     private val dispatcher = UnconfinedTestDispatcher()
-    private val scope = CoroutineScopesModule.provideApplicationScope(dispatcher)
+    private val scope = applicationScope(dispatcher)
 
     @Test
     fun applicationScope_runsOnGivenDispatcher() {

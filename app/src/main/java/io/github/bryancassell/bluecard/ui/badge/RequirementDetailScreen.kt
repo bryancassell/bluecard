@@ -34,7 +34,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
@@ -47,24 +46,24 @@ import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 /** Connects the Requirement detail screen to its ViewModel. */
 @Composable
 fun RequirementDetailRoute(
-    advancementId: String,
-    number: String,
+    key: RequirementDetail,
     onOpenRequirement: (number: String) -> Unit,
     onOpenTrackerEntry: (entryId: Long?, rowNumber: Int?) -> Unit,
     onOpenBadge: (badgeId: String) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RequirementDetailViewModel =
-        hiltViewModel<RequirementDetailViewModel, RequirementDetailViewModel.Factory> {
-            it.create(advancementId, number)
-        }
+        koinViewModel<RequirementDetailViewModel> { parametersOf(key) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RequirementDetailScreen(

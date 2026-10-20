@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
@@ -54,23 +53,23 @@ import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import java.time.LocalDate
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 /** Connects the Tracker entry screen to its ViewModel. */
 @Composable
 fun TrackerEntryRoute(
-    advancementId: String,
-    number: String,
-    entryId: Long?,
-    rowNumber: Int?,
+    key: TrackerEntryDetail,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TrackerEntryViewModel =
-        hiltViewModel<TrackerEntryViewModel, TrackerEntryViewModel.Factory> {
-            it.create(advancementId, number, entryId, rowNumber)
+        koinViewModel<TrackerEntryViewModel> {
+            parametersOf(key)
         }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

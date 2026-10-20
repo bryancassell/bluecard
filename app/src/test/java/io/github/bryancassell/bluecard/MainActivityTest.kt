@@ -64,11 +64,6 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import dagger.hilt.android.testing.BindValue
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.HiltTestApplication
-import dagger.hilt.android.testing.UninstallModules
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -91,10 +86,6 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportRepository
-import io.github.bryancassell.bluecard.di.ClockModule
-import io.github.bryancassell.bluecard.di.DataModule
-import io.github.bryancassell.bluecard.di.ProfileModule
-import io.github.bryancassell.bluecard.di.ReportModule
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
@@ -103,6 +94,7 @@ import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
+import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
 import java.time.Clock
 import java.time.Duration
@@ -115,51 +107,36 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.loadKoinModules
+import org.koin.dsl.module
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 /**
- * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
- * application, so test modules (such as TestDispatchersModule) replace real ones, and
- * this class swaps the repositories for fakes and fixes the date. Each test starts with no
- * saved profile, as on a fresh install, a one-badge catalog and no progress.
+ * Local UI test: Robolectric launches the activity on the JVM, once this class has swapped the
+ * repositories for fakes, the IO dispatcher for a test dispatcher and the clock for a fixed one.
+ * Each test starts with no saved profile, as on a fresh install, a one-badge catalog and no
+ * progress.
  *
  * It doesn't run the accessibility checks (AccessibilityChecks), which need native graphics:
  * under them, launching MainActivity never finishes, because Robolectric keeps drawing frames.
  * Each screen's and dialog's own tests check what it shows.
  */
-@HiltAndroidTest
-@UninstallModules(
-    ProfileModule::class,
-    DataModule::class,
-    ReportModule::class,
-    ClockModule::class
-)
-@Config(application = HiltTestApplication::class)
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
-    // Hilt must set up its components before the activity launches.
-    @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
-
     // An empty rule, so tests can save a profile before launching the activity.
-    @get:Rule(order = 1)
+    @get:Rule
     val composeTestRule = createEmptyComposeRule()
 
     private val fakeProfileRepository = FakeProfileRepository()
 
-    @BindValue
-    @JvmField
-    val profileRepository: ProfileRepository = fakeProfileRepository
-
-    @BindValue
-    @JvmField
-    val catalogRepository: CatalogRepository = FakeCatalogRepository(
+    private val catalogRepository: CatalogRepository = FakeCatalogRepository(
         listOf(
             MeritBadge(
                 id = "camping",
@@ -221,32 +198,37 @@ class MainActivityTest {
         }
     )
 
-    @BindValue
-    @JvmField
-    val progressRepository: ProgressRepository = FakeProgressRepository()
+    private val progressRepository: ProgressRepository = FakeProgressRepository()
 
     private val fakeDamagedProgressRepository = FakeDamagedProgressRepository()
 
-    @BindValue
-    @JvmField
-    val damagedProgressRepository: DamagedProgressRepository = fakeDamagedProgressRepository
-
     // PdfDocument only runs on a device.
     private val fakeReportRepository = FakeReportRepository(progressRepository, catalogRepository)
-
-    @BindValue
-    @JvmField
-    val reportRepository: ReportRepository = fakeReportRepository
 
     private val today = LocalDate.of(2026, 5, 20)
 
     private val fakeClock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
-    @BindValue
-    @JvmField
-    val clock: Clock = fakeClock
-
     private lateinit var scenario: ActivityScenario<MainActivity>
+
+    // BlueCardApplication has started Koin with the production definitions. Nothing has been
+    // built from them yet, so everything the activity creates gets these instead.
+    @Before
+    fun replaceDependencies() {
+        loadKoinModules(
+            listOf(
+                testIoDispatcherModule,
+                module {
+                    single<ProfileRepository> { fakeProfileRepository }
+                    single<CatalogRepository> { catalogRepository }
+                    single<ProgressRepository> { progressRepository }
+                    single<DamagedProgressRepository> { fakeDamagedProgressRepository }
+                    single<ReportRepository> { fakeReportRepository }
+                    single<Clock> { fakeClock }
+                }
+            )
+        )
+    }
 
     @After
     fun tearDown() {
@@ -259,7 +241,7 @@ class MainActivityTest {
     }
 
     private fun launchWithProfile() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launch()
     }
 
@@ -434,7 +416,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         assertEquals(
             Profile("Alex Scout", "123"),
-            runBlocking { profileRepository.observeProfile().first() }
+            runBlocking { fakeProfileRepository.observeProfile().first() }
         )
     }
 
@@ -457,7 +439,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
 
         // As when the app returns after a save that finished in the background.
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
 
         home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
@@ -506,7 +488,7 @@ class MainActivityTest {
         home().assertIsDisplayed()
         assertEquals(
             false,
-            runBlocking { damagedProgressRepository.observeNoticePending().first() }
+            runBlocking { fakeDamagedProgressRepository.observeNoticePending().first() }
         )
     }
 
@@ -534,7 +516,7 @@ class MainActivityTest {
 
     @Test
     fun launchExtras_doNotFillSearchOrComment() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
@@ -546,7 +528,7 @@ class MainActivityTest {
 
     @Test
     fun launchExtras_doNotFillCounselorFields() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
@@ -559,7 +541,7 @@ class MainActivityTest {
 
     @Test
     fun launchExtras_doNotFillNameAndUnitFields() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
@@ -1776,7 +1758,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Edit").performClick()
     }
 
-    private suspend fun profile() = profileRepository.observeProfile().first()
+    private suspend fun profile() = fakeProfileRepository.observeProfile().first()
 
     @Test
     fun nameAndUnit_savedOnTheirPage_showOnHome() {
@@ -2412,7 +2394,7 @@ class MainActivityTest {
         val welcomeAtRest = welcome().assertIsDisplayed().getBoundsInRoot()
 
         composeTestRule.mainClock.autoAdvance = false
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         composeTestRule.mainClock.advanceTimeBy(100)
         val welcomeFading = welcome().getBoundsInRoot()
         composeTestRule.mainClock.autoAdvance = true

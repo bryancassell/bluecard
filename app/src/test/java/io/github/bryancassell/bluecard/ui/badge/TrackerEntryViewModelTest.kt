@@ -26,6 +26,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.keepText
+import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -126,10 +127,7 @@ class TrackerEntryViewModelTest {
         progress: ProgressRepository = progressRepository,
         advancementId: String = "personal-fitness"
     ) = TrackerEntryViewModel(
-        advancementId,
-        number,
-        entryId,
-        rowNumber,
+        TrackerEntryDetail(advancementId, number, entryId, rowNumber),
         catalog,
         progress,
         clock,
@@ -142,10 +140,7 @@ class TrackerEntryViewModelTest {
      */
     private fun scenario(entryId: Long?) = viewModelScenario {
         TrackerEntryViewModel(
-            "personal-fitness",
-            "7a",
-            entryId,
-            null,
+            TrackerEntryDetail("personal-fitness", "7a", entryId, null),
             catalogRepository,
             progressRepository,
             clock,
@@ -1016,10 +1011,7 @@ class TrackerEntryViewModelTest {
         viewModelScenario<ViewModel> {
             if (restoring) {
                 TrackerEntryViewModel(
-                    "personal-fitness",
-                    "7a",
-                    id,
-                    null,
+                    TrackerEntryDetail("personal-fitness", "7a", id, null),
                     catalogRepository,
                     progressRepository,
                     clock,

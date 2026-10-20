@@ -20,6 +20,7 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.ui.navigation.RankDetail
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
@@ -84,7 +85,7 @@ class RankDetailViewModelTest {
         progress: ProgressRepository = progressRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle()
     ) = RankDetailViewModel(
-        rankId,
+        RankDetail(rankId),
         catalogRepository,
         progress,
         reportRepository,
@@ -113,7 +114,7 @@ class RankDetailViewModelTest {
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
         val viewModel = RankDetailViewModel(
-            "scout",
+            RankDetail("scout"),
             loading,
             progressRepository,
             reportRepository,
@@ -438,7 +439,7 @@ class RankDetailViewModelTest {
         // the app.
         viewModelScenario {
             RankDetailViewModel(
-                "tenderfoot",
+                RankDetail("tenderfoot"),
                 catalogRepository,
                 progressRepository,
                 reportRepository,
