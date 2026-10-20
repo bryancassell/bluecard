@@ -80,7 +80,10 @@ internal fun applicationScope(@IoDispatcher ioDispatcher: CoroutineDispatcher): 
 
 /** A clock with the time zone its dates, such as today's, are read in. */
 interface ZonedClock : Clock {
-    /** Read each time it's needed, as the device's can change while a page is open. */
+    /**
+     * The zone now. Read it each time it's needed, rather than keeping it, as the device's can
+     * change while a page is open.
+     */
     val timeZone: TimeZone
 
     fun today(): LocalDate = todayIn(timeZone)

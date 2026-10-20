@@ -14,13 +14,13 @@ class FormattingTest {
     private val day = LocalDate(2026, 4, 15)
 
     @Test
-    fun completionDateFormatter_writesTheDateOut() {
+    fun completionDate_isWrittenOut() {
         assertEquals("Apr 15, 2026", CompletionDateFormatter(Locale.US).format(day))
     }
 
     // A device in the strings' language keeps its choice of digits (stringsLocales).
     @Test
-    fun completionDateFormatter_usesTheLocalesDigits() {
+    fun completionDate_usesTheLocalesDigits() {
         val locale = Locale.forLanguageTag("en-US-u-nu-arab")
 
         assertEquals("Apr ١٥, ٢٠٢٦", CompletionDateFormatter(locale).format(day))

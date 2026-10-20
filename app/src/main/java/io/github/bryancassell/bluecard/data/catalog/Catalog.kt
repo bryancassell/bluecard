@@ -267,7 +267,8 @@ object LocalDateSerializer : KSerializer<LocalDate> {
         return try {
             LocalDate.parse(text)
         } catch (e: IllegalArgumentException) {
-            // Report bad dates like any other malformed catalog JSON.
+            // Report bad dates like any other malformed catalog JSON. kotlinx-datetime throws a
+            // DateTimeFormatException, which is internal (0.8.0), so this catches what it extends.
             throw SerializationException("\"$text\" is not a date in YYYY-MM-DD form", e)
         }
     }

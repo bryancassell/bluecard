@@ -9,6 +9,8 @@ import kotlinx.datetime.LocalDate
  * of the SavedStateHandles BlueCard creates, but one created another way could still get them.
  */
 fun dateFromEpochDay(value: Any?): LocalDate? = (value as? Long)?.let {
+    // kotlinx-datetime keeps LocalDate's first and last days internal, and fromEpochDays throws an
+    // IllegalArgumentException for a day outside them (0.8.0).
     try {
         LocalDate.fromEpochDays(it)
     } catch (e: IllegalArgumentException) {
