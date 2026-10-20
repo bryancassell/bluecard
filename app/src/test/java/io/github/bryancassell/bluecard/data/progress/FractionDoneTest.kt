@@ -269,6 +269,17 @@ class FractionDoneTest {
         assertTrue(sixHours.hasEnoughLogged(entriesOf(project("4"), project("5"))))
     }
 
+    @Test
+    fun hasEnoughLogged_addsDecimalsExactly() {
+        // As Doubles, these add up to 5.999999999999999 hours, and 2.9999999999999996 on
+        // conservation.
+        assertTrue(sixHours.hasEnoughLogged(entriesOf(*Array(10) { project("0.6") })))
+        val tenthsOnConservation = Array(10) { project("0.6", conservation = "0.3") }
+        assertTrue(sixHoursThreeOnConservation.hasEnoughLogged(entriesOf(*tenthsOnConservation)))
+        // Short by any amount isn't enough, though rounding to a few decimal places would make 6.
+        assertFalse(sixHours.hasEnoughLogged(entriesOf(project("5.9999999999"))))
+    }
+
     // As Life 4's row reads "6 of 6 hours" above "2 of 3 conservation hours" until both are.
     @Test
     fun hasEnoughLogged_withAPartOfATotal_onceBothAreReached() {
