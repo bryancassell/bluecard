@@ -1,15 +1,17 @@
 package io.github.bryancassell.bluecard.di
 
 import android.content.Context
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
-import java.io.File
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -50,12 +52,21 @@ class DatabaseModuleTest {
     }
 
     @Test
-    fun database_isStoredInDatabaseFile() {
-        val path = database.openHelper.writableDatabase.path!!
+    fun database_isStoredInDatabaseFile() = runTest {
+        database.progressDao().insertBadge(
+            BadgeProgress("camping", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 1))
+        )
+        database.close()
 
         // Installed apps keep their progress here: moving or renaming the file would lose it
         // on update, and the backup rules cover this location (see BackupRulesTest).
-        assertEquals(context.getDatabasePath("bluecard.db").canonicalFile, File(path).canonicalFile)
+        val stored = BundledSQLiteDriver().open(context.getDatabasePath("bluecard.db").path).use {
+            it.prepare("SELECT badgeId FROM badge_progress").use { badges ->
+                badges.step()
+                badges.getText(0)
+            }
+        }
+        assertEquals("camping", stored)
     }
 
     @Test

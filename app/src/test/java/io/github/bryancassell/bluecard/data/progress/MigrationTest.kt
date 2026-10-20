@@ -3,6 +3,8 @@ package io.github.bryancassell.bluecard.data.progress
 import android.content.Context
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -20,17 +22,24 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
     @get:Rule
     val helper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        BlueCardDatabase::class.java
+        context.getDatabasePath(DATABASE),
+        BundledSQLiteDriver(),
+        BlueCardDatabase::class
     )
 
-    private val context = ApplicationProvider.getApplicationContext<Context>()
+    /** Opens the migrated database as the app does. */
+    private fun open() = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE)
+        .setDriver(BundledSQLiteDriver())
+        .build()
 
     @Test
     fun migrate1To2_keepsTrackerEntries_asLogEntries() = runTest {
-        helper.createDatabase(DATABASE, 1).use {
+        helper.createDatabase(1).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -46,9 +55,9 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(DATABASE, 2, true).close()
+        helper.runMigrationsAndValidate(2).close()
 
-        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        val database = open()
         try {
             val progress = database.progressDao().observe("personal-fitness").first()!!
             assertEquals(
@@ -74,7 +83,7 @@ class MigrationTest {
 
     @Test
     fun migrate2To3_keepsTrackerEntries_withoutADate() = runTest {
-        helper.createDatabase(DATABASE, 2).use {
+        helper.createDatabase(2).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -90,9 +99,9 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(DATABASE, 3, true).close()
+        helper.runMigrationsAndValidate(3).close()
 
-        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        val database = open()
         try {
             val progress = database.progressDao().observe("personal-management").first()!!
             assertEquals(
@@ -109,7 +118,7 @@ class MigrationTest {
 
     @Test
     fun migrate3To4_keepsRequirementProgress_withoutASignOff() = runTest {
-        helper.createDatabase(DATABASE, 3).use {
+        helper.createDatabase(3).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -125,9 +134,9 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(DATABASE, 4, true).close()
+        helper.runMigrationsAndValidate(4).close()
 
-        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        val database = open()
         try {
             val progress = database.progressDao().observe("scout").first()!!
             assertEquals(

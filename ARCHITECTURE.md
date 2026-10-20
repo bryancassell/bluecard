@@ -447,11 +447,12 @@ both taps of a double tap can reach it.
 - **Storage choice:** the DataStore guide says it is "ideal for small datasets"
   and to "consider using Room" for larger or relational data. The profile is two
   values; recorded progress is relational (badges → requirements → tracker rows).
-- **Room 2.8** (`androidx.room`), not Room 3. The Room guide now shows Room 3, a
-  rewrite focused on Kotlin Multiplatform, which BlueCard doesn't need. Room 2.8
-  is still maintained and is what Google's
-  [Now in Android](https://github.com/android/nowinandroid) sample uses. Room
-  and Hilt both generate code, using the KSP Gradle plugin.
+- **Room 2.8** (`androidx.room`) on its SQLite driver API, with
+  `BundledSQLiteDriver`: a SQLite the app ships, for iOS too
+  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Android's own
+  driver deletes a damaged database. Room 3 is planned
+  ([#339](https://github.com/bryancassell/bluecard/issues/339)). Room and Hilt
+  both generate code, using the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
 
@@ -477,24 +478,25 @@ both taps of a double tap can reach it.
   [data layer guide](https://developer.android.com/topic/architecture/data-layer)
   ("Expose errors") says the data layer can expose errors "using custom
   exceptions". DataStore and the asset manager already throw `IOException`, and
-  `RoomProgressRepository` wraps Room's `SQLiteException` in one, for its reads
-  and its writes. ViewModels then catch it without depending on a storage API
+  `RoomProgressRepository` wraps SQLite's errors in one, for its reads and its
+  writes. ViewModels then catch it without depending on a storage API
   (req. 9) and show it as a UI state (see
   [Load and save failures](#load-and-save-failures)).
 - **Errors that can only come from a mistake in the app's code aren't
   wrapped,** so they still crash as bugs. `RoomProgressRepository` says which
-  SQLite errors count.
+  SQLite errors count. Driver errors are one class, told apart by result code
+  (`SQLiteErrors.kt`).
 - **A damaged database is set aside, and the scout is told**
-  ([#70](https://github.com/bryancassell/bluecard/issues/70)). Android's
-  default corruption handler, which Room 2.8 keeps, deletes the database.
-  `SetAsideDamagedDatabaseFactory` gives Room one that moves it, with the files
-  SQLite keeps beside it, to a folder of its own in `damaged-progress/`, in the
-  no-backup directory (`FileDamagedProgressRepository`). Every copy is kept,
-  since an earlier one may hold more progress. Nothing reads them yet; they're
+  ([#70](https://github.com/bryancassell/bluecard/issues/70)).
+  `SetAsideDamagedDatabaseDriver` checks the database when Room first opens it
+  in each app run, and moves a damaged one, with the files SQLite keeps beside
+  it, to a folder of its own in `damaged-progress/`, in the no-backup
+  directory (`FileDamagedProgressRepository`). Every copy is kept, since an
+  earlier one may hold more progress. Nothing reads them yet; they're
   kept so their progress could be recovered later. The scout sees a notice
   until they dismiss it (see [`PRD.md`](PRD.md#design-decisions)). Damage found
-  while the database is open leaves Room's connection closed, so the next read
-  or write crashes the app, which starts again with a new database.
+  while the database is open crashes the app, and the next launch sets it
+  aside.
 
 ### Dependency injection
 
@@ -847,8 +849,8 @@ together.
 
 Room repository tests (`RoomProgressRepositoryTest`), migration tests
 (`MigrationTest`) and damaged database tests
-(`SetAsideDamagedDatabaseFactoryTest`) run locally with Robolectric, which
-runs Android's SQLite code.
+(`SetAsideDamagedDatabaseDriverTest`) run locally with Robolectric, on the
+SQLite the app bundles (see `testing/BundledSqlitePerSandbox`).
 
 ### Compose UI and screenshot tests
 
@@ -958,7 +960,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page; stable since 1.0.0 |
 | [Focus between pages](#navigation) | A focus target around the pages takes the focus a page lets go of | Otherwise Compose gives it to a page's first item, which opened the keyboard on Badges |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
-| [Persistence](#repositories) | Room 2.8 for progress; Preferences DataStore for the profile | The DataStore guide's criteria; BlueCard doesn't need Room 3's Kotlin Multiplatform |
+| [Persistence](#repositories) | Room 2.8 on `BundledSQLiteDriver` for progress; Preferences DataStore for the profile | The DataStore guide's criteria; the same SQLite on Android and iOS |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays; a started badge stays on its version until the scout switches | The advancement rules allow finishing on the previous requirements |

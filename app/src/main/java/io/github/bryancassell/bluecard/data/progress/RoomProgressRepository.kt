@@ -1,11 +1,8 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import android.database.sqlite.SQLiteBindOrColumnIndexOutOfRangeException
-import android.database.sqlite.SQLiteConstraintException
-import android.database.sqlite.SQLiteDatatypeMismatchException
-import android.database.sqlite.SQLiteException
-import android.database.sqlite.SQLiteMisuseException
-import androidx.room.withTransaction
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
+import androidx.sqlite.SQLiteException
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
@@ -143,12 +140,8 @@ class RoomProgressRepository @Inject constructor(
 
     /**
      * Reports a database that can't be read, such as one that can't be opened, as the
-     * [IOException] that [ProgressRepository] documents. Android's SQLite reports those as
-     * [SQLiteException]s ([isStorageFailure]). Other exceptions are bugs and pass through: a
-     * missing migration, and the parent class `android.database.SQLException`, which Room's
-     * SQLite adapter throws only for misuse such as reading a closed statement. If Room is ever
-     * given a `SQLiteDriver`, every SQLite error arrives as that parent class, so this check
-     * needs revisiting.
+     * [IOException] that [ProgressRepository] documents ([isStorageFailure]). Other exceptions
+     * are bugs and pass through, such as a missing migration.
      */
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> = catch {
         throw if (it is SQLiteException && it.isStorageFailure()) IOException(it) else it
@@ -179,12 +172,19 @@ class RoomProgressRepository @Inject constructor(
      * interface means the app "is incorrectly coded" (https://www.sqlite.org/rescode.html).
      * This app also counts a constraint violation, an out-of-range parameter or column number
      * and a datatype mismatch as bugs: each write checks what it needs first, such as that the
-     * badge is started, so only a mistake in the code can cause one.
+     * badge is started, so only a mistake in the code can cause one. So is an error with no
+     * result code, which comes from Room rather than SQLite, such as a failed foreign key check.
+     *
+     * Damage crashes the app too, and the next launch sets the database aside
+     * ([SetAsideDamagedDatabaseDriver]). Reporting it as a load or save failure would leave the
+     * scout retrying on a database that stays damaged until the app restarts.
      */
-    private fun SQLiteException.isStorageFailure() = this !is SQLiteConstraintException &&
-        this !is SQLiteMisuseException &&
-        this !is SQLiteBindOrColumnIndexOutOfRangeException &&
-        this !is SQLiteDatatypeMismatchException
+    private fun SQLiteException.isStorageFailure() = when (resultCode) {
+        null, SQLITE_CONSTRAINT, SQLITE_MISMATCH, SQLITE_MISUSE, SQLITE_RANGE,
+        SQLITE_CORRUPT, SQLITE_NOTADB -> false
+
+        else -> true
+    }
 
     /**
      * Runs [action] once the badge is started, starting it with [start] first if it isn't,
@@ -195,7 +195,7 @@ class RoomProgressRepository @Inject constructor(
         start: BadgeStart,
         action: suspend () -> T
     ): T = writing {
-        database.withTransaction {
+        inTransaction {
             if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
             action()
         }
@@ -206,7 +206,9 @@ class RoomProgressRepository @Inject constructor(
      * [notStarted] if it isn't.
      */
     private suspend fun <T> ifStarted(badgeId: String, notStarted: T, action: suspend () -> T): T =
-        writing {
-            database.withTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
-        }
+        writing { inTransaction { if (dao.isStarted(badgeId)) action() else notStarted } }
+
+    /** Runs [action] in one transaction, on Room's writer connection. */
+    private suspend fun <T> inTransaction(action: suspend () -> T): T =
+        database.useWriterConnection { it.immediateTransaction { action() } }
 }
