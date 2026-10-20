@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,13 +28,15 @@ import org.koin.core.annotation.InjectedParam
  * page closes.
  */
 class EditCounselorViewModel(
-    @InjectedParam private val badgeId: String,
+    @InjectedParam key: EditCounselor,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val badgeId = key.badgeId
+
     // They start as the saved counselor once it loads, or as the unsaved fields the system
     // stopped the app with.
     private val fields = StoredTextFields(savedStateHandle, NAME, PHONE, EMAIL)

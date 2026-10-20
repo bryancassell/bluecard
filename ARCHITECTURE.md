@@ -506,14 +506,17 @@ names, only works on Android, and code shared with iOS must work there too
 fails the build for a missing dependency, as Hilt did.
 
 - **Two modules list every definition** (`di/`): `appModule`, with no Android
-  imports so it can move to common code, and `androidModule`, for what needs a
-  `Context`. Besides the repositories, they provide a coroutine dispatcher
-  (`@IoDispatcher`), an app-lifetime `CoroutineScope` (`@ApplicationScope`) and
-  a `Clock` for today's date, the dispatcher and clock so tests can replace
-  them. Each repository is one instance (`single`), so writes from every screen
-  share its lock ([Writes](#writes)).
-- **Screens create ViewModels with `koinViewModel()`**, passing navigation
-  arguments with `parametersOf(...)` to parameters marked `@InjectedParam`.
+  imports, for common code
+  ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
+  `androidModule`, for what needs a `Context`. Besides the repositories, they
+  provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
+  `CoroutineScope` (`@ApplicationScope`) and a `Clock`, the dispatcher and clock
+  so tests can replace them. Repositories are `single`s, as [Writes](#writes)
+  needs.
+- **Screens create ViewModels with `koinViewModel()`**, passing their
+  navigation key with `parametersOf(key)` as the ViewModel's one
+  `@InjectedParam`. Koin matches arguments by type, so two of one type could
+  swap.
 
 ## Package layout
 

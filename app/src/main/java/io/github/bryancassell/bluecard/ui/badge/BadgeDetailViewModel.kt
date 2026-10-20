@@ -18,6 +18,7 @@ import io.github.bryancassell.bluecard.ui.badges.eagleGroups
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
+import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +35,7 @@ import org.koin.core.annotation.InjectedParam
  * Once it's started, its progress can be cleared.
  */
 class BadgeDetailViewModel(
-    @InjectedParam private val badgeId: String,
+    @InjectedParam key: BadgeDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
@@ -43,6 +44,8 @@ class BadgeDetailViewModel(
     // background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val badgeId = key.badgeId
+
     private val report = ReportTasks(viewModelScope, reportRepository, badgeId)
     private val saves = TaskRunner(viewModelScope)
 

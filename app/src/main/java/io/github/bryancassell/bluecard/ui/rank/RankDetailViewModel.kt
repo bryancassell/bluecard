@@ -17,6 +17,7 @@ import io.github.bryancassell.bluecard.ui.badge.ReportTasks
 import io.github.bryancassell.bluecard.ui.badge.advancementRequirementsAmong
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
+import io.github.bryancassell.bluecard.ui.navigation.RankDetail
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +35,7 @@ import org.koin.core.annotation.InjectedParam
  * a prior date. Once it's started, its progress can be cleared.
  */
 class RankDetailViewModel(
-    @InjectedParam private val rankId: String,
+    @InjectedParam key: RankDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
@@ -42,6 +43,8 @@ class RankDetailViewModel(
     // Keeps the date to open the date picker at if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val rankId = key.rankId
+
     private val report = ReportTasks(viewModelScope, reportRepository, rankId)
     private val saves = TaskRunner(viewModelScope)
 

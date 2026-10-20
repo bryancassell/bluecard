@@ -28,6 +28,7 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.keepText
+import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import io.github.bryancassell.bluecard.ui.restoredText
 import java.time.Clock
 import java.time.LocalDate
@@ -54,16 +55,18 @@ import org.koin.core.annotation.InjectedParam
  * closes the page, or leaves to discard their changes.
  */
 class TrackerEntryViewModel(
-    @InjectedParam private val advancementId: String,
-    @InjectedParam private val number: String,
-    @InjectedParam private val entryId: Long?,
-    @InjectedParam private val rowNumber: Int?,
+    @InjectedParam key: TrackerEntryDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
     // Keeps unsaved values if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val advancementId = key.advancementId
+    private val number = key.number
+    private val entryId = key.entryId
+    private val rowNumber = key.rowNumber
+
     private val _fields = mutableMapOf<String, TextFieldState>()
 
     /**

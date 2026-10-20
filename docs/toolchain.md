@@ -80,7 +80,10 @@ Compiler plugins depend on the compiler's internals, so each release lists the
 Kotlin versions it was verified on
 ([compatibility](https://github.com/InsertKoinIO/koin-compiler-plugin#compatibility)).
 On a newer Kotlin it builds anyway, with a warning that names them; after
-raising Kotlin, raise `koinPlugin` too once a release verifies it.
+raising Kotlin, raise `koinPlugin` too once a release verifies it. After a
+constructor changes, an incremental build can report a missing dependency that
+isn't missing; `./gradlew clean build` checks again from scratch, as Koin's
+[troubleshooting](https://insert-koin.io/docs/setup/compiler-plugin) advises.
 
 **Room schemas** (`app/schemas/`). The Room Gradle plugin writes each database
 version's schema there as JSON. Commit these files: they show schema changes in

@@ -41,11 +41,7 @@ annotation class IoDispatcher
 @Retention(AnnotationRetention.BINARY)
 annotation class ApplicationScope
 
-/**
- * What the app is built from, apart from what needs Android to build ([androidModule]). Each
- * repository is one instance for the whole app, so writes from every screen queue on
- * [RoomProgressRepository]'s one lock.
- */
+/** What the app is built from, apart from what needs Android to build ([androidModule]). */
 val appModule = module {
     // Classes take the dispatcher instead of using Dispatchers directly, so tests can swap in a
     // test dispatcher.

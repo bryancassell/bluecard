@@ -40,6 +40,7 @@ import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
+import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
@@ -48,12 +49,12 @@ import org.koin.core.parameter.parametersOf
 /** Connects the Badge detail screen to its ViewModel. */
 @Composable
 fun BadgeDetailRoute(
-    badgeId: String,
+    key: BadgeDetail,
     onOpenRequirement: (number: String) -> Unit,
     onEditCounselor: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BadgeDetailViewModel =
-        koinViewModel<BadgeDetailViewModel> { parametersOf(badgeId) }
+        koinViewModel<BadgeDetailViewModel> { parametersOf(key) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     BadgeDetailScreen(

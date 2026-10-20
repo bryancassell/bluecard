@@ -42,6 +42,7 @@ import io.github.bryancassell.bluecard.ui.badge.ShareReport
 import io.github.bryancassell.bluecard.ui.badge.StatusCard
 import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
+import io.github.bryancassell.bluecard.ui.navigation.RankDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import java.time.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
@@ -50,11 +51,11 @@ import org.koin.core.parameter.parametersOf
 /** Connects the Rank detail screen to its ViewModel. */
 @Composable
 fun RankDetailRoute(
-    rankId: String,
+    key: RankDetail,
     onOpenRequirement: (number: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RankDetailViewModel =
-        koinViewModel<RankDetailViewModel> { parametersOf(rankId) }
+        koinViewModel<RankDetailViewModel> { parametersOf(key) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     RankDetailScreen(

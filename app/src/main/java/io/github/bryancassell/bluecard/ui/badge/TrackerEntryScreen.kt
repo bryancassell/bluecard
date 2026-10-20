@@ -53,6 +53,7 @@ import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.TextLengthLimit
+import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
@@ -63,15 +64,12 @@ import org.koin.core.parameter.parametersOf
 /** Connects the Tracker entry screen to its ViewModel. */
 @Composable
 fun TrackerEntryRoute(
-    advancementId: String,
-    number: String,
-    entryId: Long?,
-    rowNumber: Int?,
+    key: TrackerEntryDetail,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TrackerEntryViewModel =
         koinViewModel<TrackerEntryViewModel> {
-            parametersOf(advancementId, number, entryId, rowNumber)
+            parametersOf(key)
         }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

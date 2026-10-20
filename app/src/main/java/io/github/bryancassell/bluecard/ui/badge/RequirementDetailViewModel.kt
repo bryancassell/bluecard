@@ -29,6 +29,7 @@ import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
+import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.SharingStarted
@@ -46,8 +47,7 @@ import org.koin.core.annotation.InjectedParam
  * tracker.
  */
 class RequirementDetailViewModel(
-    @InjectedParam private val advancementId: String,
-    @InjectedParam private val number: String,
+    @InjectedParam key: RequirementDetail,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
@@ -55,6 +55,9 @@ class RequirementDetailViewModel(
     // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    private val advancementId = key.advancementId
+    private val number = key.number
+
     private val fields = StoredTextFields(savedStateHandle, SIGNED_OFF_BY, COMMENT)
 
     /**

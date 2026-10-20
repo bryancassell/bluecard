@@ -140,8 +140,6 @@ class MainActivityTest {
 
     private val fakeProfileRepository = FakeProfileRepository()
 
-    private val profileRepository: ProfileRepository = fakeProfileRepository
-
     private val catalogRepository: CatalogRepository = FakeCatalogRepository(
         listOf(
             MeritBadge(
@@ -208,18 +206,12 @@ class MainActivityTest {
 
     private val fakeDamagedProgressRepository = FakeDamagedProgressRepository()
 
-    private val damagedProgressRepository: DamagedProgressRepository = fakeDamagedProgressRepository
-
     // PdfDocument only runs on a device.
     private val fakeReportRepository = FakeReportRepository(progressRepository, catalogRepository)
-
-    private val reportRepository: ReportRepository = fakeReportRepository
 
     private val today = LocalDate.of(2026, 5, 20)
 
     private val fakeClock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
-
-    private val clock: Clock = fakeClock
 
     private lateinit var scenario: ActivityScenario<MainActivity>
 
@@ -230,12 +222,12 @@ class MainActivityTest {
     fun replaceDependencies() {
         loadKoinModules(
             module {
-                single<ProfileRepository> { profileRepository }
+                single<ProfileRepository> { fakeProfileRepository }
                 single<CatalogRepository> { catalogRepository }
                 single<ProgressRepository> { progressRepository }
-                single<DamagedProgressRepository> { damagedProgressRepository }
-                single<ReportRepository> { reportRepository }
-                single<Clock> { clock }
+                single<DamagedProgressRepository> { fakeDamagedProgressRepository }
+                single<ReportRepository> { fakeReportRepository }
+                single<Clock> { fakeClock }
                 // Instead of background threads, for the export and import that run for real.
                 single<CoroutineDispatcher>(named<IoDispatcher>()) { UnconfinedTestDispatcher() }
             }
@@ -253,7 +245,7 @@ class MainActivityTest {
     }
 
     private fun launchWithProfile() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launch()
     }
 
@@ -428,7 +420,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
         assertEquals(
             Profile("Alex Scout", "123"),
-            runBlocking { profileRepository.observeProfile().first() }
+            runBlocking { fakeProfileRepository.observeProfile().first() }
         )
     }
 
@@ -451,7 +443,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertIsDisplayed()
 
         // As when the app returns after a save that finished in the background.
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
 
         home().assertIsDisplayed()
         composeTestRule.onNodeWithText("Welcome to BlueCard").assertDoesNotExist()
@@ -500,7 +492,7 @@ class MainActivityTest {
         home().assertIsDisplayed()
         assertEquals(
             false,
-            runBlocking { damagedProgressRepository.observeNoticePending().first() }
+            runBlocking { fakeDamagedProgressRepository.observeNoticePending().first() }
         )
     }
 
@@ -528,7 +520,7 @@ class MainActivityTest {
 
     @Test
     fun launchExtras_doNotFillSearchOrComment() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
@@ -540,7 +532,7 @@ class MainActivityTest {
 
     @Test
     fun launchExtras_doNotFillCounselorFields() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Merit badges").performClick()
@@ -553,7 +545,7 @@ class MainActivityTest {
 
     @Test
     fun launchExtras_doNotFillNameAndUnitFields() {
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         launchWithExtrasNamedLikeTextFields()
 
         composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
@@ -1770,7 +1762,7 @@ class MainActivityTest {
         composeTestRule.onNodeWithText("Edit").performClick()
     }
 
-    private suspend fun profile() = profileRepository.observeProfile().first()
+    private suspend fun profile() = fakeProfileRepository.observeProfile().first()
 
     @Test
     fun nameAndUnit_savedOnTheirPage_showOnHome() {
@@ -2406,7 +2398,7 @@ class MainActivityTest {
         val welcomeAtRest = welcome().assertIsDisplayed().getBoundsInRoot()
 
         composeTestRule.mainClock.autoAdvance = false
-        runBlocking { profileRepository.saveProfile(Profile("Alex Scout", "123")) }
+        runBlocking { fakeProfileRepository.saveProfile(Profile("Alex Scout", "123")) }
         composeTestRule.mainClock.advanceTimeBy(100)
         val welcomeFading = welcome().getBoundsInRoot()
         composeTestRule.mainClock.autoAdvance = true

@@ -42,6 +42,7 @@ import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
+import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
 import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import org.koin.compose.viewmodel.koinViewModel
@@ -50,11 +51,11 @@ import org.koin.core.parameter.parametersOf
 /** Connects the Edit counselor screen to its ViewModel. */
 @Composable
 fun EditCounselorRoute(
-    badgeId: String,
+    key: EditCounselor,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: EditCounselorViewModel =
-        koinViewModel<EditCounselorViewModel> { parametersOf(badgeId) }
+        koinViewModel<EditCounselorViewModel> { parametersOf(key) }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     EditCounselorScreen(

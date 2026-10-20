@@ -34,7 +34,8 @@ val androidModule = module {
 
     single<AssetCatalogRepository>() bind CatalogRepository::class
     // The database sets damaged progress aside with this same instance, so the notice shows
-    // without the app reopening.
+    // without the app reopening. So a test that fakes DamagedProgressRepository fakes
+    // ProgressRepository too, or the real database tells the real one instead of the fake.
     single<FileDamagedProgressRepository>() bind DamagedProgressRepository::class
     single<PdfReportRepository>() bind ReportRepository::class
     single<PdfDocumentWriter>() bind ReportPdfWriter::class

@@ -21,16 +21,23 @@ import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import java.io.File
 import java.time.LocalDate
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.GlobalContext
+import org.koin.core.context.loadKoinModules
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 
 /** Checks what [androidModule] provides, from the Koin that BlueCardApplication starts. */
 @RunWith(AndroidJUnit4::class)
@@ -41,6 +48,17 @@ class AndroidModuleTest {
 
     // Built only by the tests that use it.
     private val database = lazy { koin.get<BlueCardDatabase>() }
+
+    // So no work the repositories start runs on a background thread after the test ends.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Before
+    fun useTestDispatcher() {
+        loadKoinModules(
+            module {
+                single<CoroutineDispatcher>(named<IoDispatcher>()) { UnconfinedTestDispatcher() }
+            }
+        )
+    }
 
     @After
     fun closeDatabase() {

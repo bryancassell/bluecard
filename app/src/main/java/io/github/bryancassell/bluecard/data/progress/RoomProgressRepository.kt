@@ -146,7 +146,12 @@ class RoomProgressRepository(
         throw if (it.isStorageFailure()) IOException(it) else it
     }
 
-    /** Lets writes in one at a time, in the order they were made (it's first come, first served). */
+    /**
+     * Lets writes in one at a time, in the order they were made (it's first come, first served).
+     * It orders every screen's writes because the app has one RoomProgressRepository (a single
+     * in appModule): with one per screen, a save of notes could run ahead of a clear made on
+     * another screen.
+     */
     private val writeOrder = Mutex()
 
     /**

@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
+import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
@@ -124,7 +125,7 @@ class BadgeDetailViewModelTest {
         progress: ProgressRepository = progressRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle()
     ) = BadgeDetailViewModel(
-        badgeId,
+        BadgeDetail(badgeId),
         catalogRepository,
         progress,
         reportRepository,
@@ -152,7 +153,7 @@ class BadgeDetailViewModelTest {
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
         val viewModel = BadgeDetailViewModel(
-            "camping",
+            BadgeDetail("camping"),
             loading,
             progressRepository,
             reportRepository,
@@ -513,7 +514,7 @@ class BadgeDetailViewModelTest {
         // the app.
         viewModelScenario {
             BadgeDetailViewModel(
-                "camping",
+                BadgeDetail("camping"),
                 catalogRepository,
                 progressRepository,
                 reportRepository,

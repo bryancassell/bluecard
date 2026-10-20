@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -168,8 +169,7 @@ class RequirementDetailViewModelTest {
         progress: ProgressRepository = progressRepository,
         advancementId: String = "camping"
     ) = RequirementDetailViewModel(
-        advancementId,
-        number,
+        RequirementDetail(advancementId, number),
         catalog,
         progress,
         clock,
@@ -186,8 +186,7 @@ class RequirementDetailViewModelTest {
         advancementId: String = "camping"
     ) = viewModelScenario {
         RequirementDetailViewModel(
-            advancementId,
-            number,
+            RequirementDetail(advancementId, number),
             catalog,
             progressRepository,
             clock,
@@ -337,8 +336,7 @@ class RequirementDetailViewModelTest {
     @Test
     fun badgeMissingFromCatalog_isUnavailable() = runTest {
         val viewModel = RequirementDetailViewModel(
-            "retired-badge",
-            "2",
+            RequirementDetail("retired-badge", "2"),
             catalogRepository,
             progressRepository,
             clock,
@@ -1055,8 +1053,7 @@ class RequirementDetailViewModelTest {
         )
         // A value keepText didn't keep.
         val viewModel = RequirementDetailViewModel(
-            "camping",
-            "1",
+            RequirementDetail("camping", "1"),
             catalogRepository,
             progressRepository,
             clock,
