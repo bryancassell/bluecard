@@ -600,8 +600,10 @@ tracker the same way, so a new tracker needs only catalog data (req. 7).
   [#193](https://github.com/bryancassell/bluecard/issues/193)).
 - **A number column's values are stored as the scout typed them**, in any
   script's digits and with whichever decimal separator their keyboard offers,
-  so code that reads one as a number uses `storedNumber`
-  ([#233](https://github.com/bryancassell/bluecard/issues/233)).
+  so code that reads one as a number uses `storedNumber`, which gives
+  bignum-kt's `BigDecimal`: java.math's on Android, and exact on iOS too
+  ([#233](https://github.com/bryancassell/bluecard/issues/233),
+  [#342](https://github.com/bryancassell/bluecard/issues/342)).
 - **Every count of a tracker's rows is out of `rowsOutOf`**, its fixed rows or
   `rowsNeeded`, so the screens and the report agree.
 

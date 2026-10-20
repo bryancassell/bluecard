@@ -1,10 +1,10 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.artificialpb.bignum.BigDecimal
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.math.BigDecimal
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -75,11 +75,35 @@ class TrackerTotalsTest {
     }
 
     @Test
+    fun totals_addDecimalsExactly() {
+        val tenths = listOf(entry(1, mapOf("hours" to "0.1")), entry(2, mapOf("hours" to "0.2")))
+        assertEquals(BigDecimal("0.3"), log.totals(tenths).first().sum)
+        // As Doubles, these add up to 5.999999999999999, short of the 6 hours.
+        val tenRows = List(10) { entry(it.toLong(), mapOf("hours" to "0.6")) }
+        assertEquals(BigDecimal("6.0"), log.totals(tenRows).first().sum)
+    }
+
+    @Test
+    fun totals_keepEveryDecimalPlaceAndDigit() {
+        // Each shows as 0, as a total is rounded down to two decimal places, but together they
+        // make 0.01.
+        val thousandths = List(2) { entry(it.toLong(), mapOf("hours" to "0.005")) }
+        assertEquals(BigDecimal("0.010"), log.totals(thousandths).first().sum)
+        // The longest number the field takes is already past what a Long holds.
+        val longest = "9".repeat(TRACKER_NUMBER_MAX_LENGTH)
+        val pastLong = listOf(entry(1, mapOf("hours" to longest)), entry(2, mapOf("hours" to "1")))
+        assertEquals(
+            BigDecimal("1" + "0".repeat(TRACKER_NUMBER_MAX_LENGTH)),
+            log.totals(pastLong).first().sum
+        )
+    }
+
+    @Test
     fun totals_withNoEntries_areZero() {
         assertEquals(
             listOf(
-                TrackerTotal(BigDecimal.ZERO, hours),
-                TrackerTotal(BigDecimal.ZERO, conservationHours)
+                TrackerTotal(BigDecimal("0"), hours),
+                TrackerTotal(BigDecimal("0"), conservationHours)
             ),
             log.totals(emptyList())
         )

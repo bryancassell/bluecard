@@ -23,6 +23,8 @@ kotlinxSerialization = "1.11.0"
 kotlinxDatetime = "0.8.0"
 datastore = "1.2.1"
 coreSplashscreen = "1.2.0"
+# Decimal numbers that common code can use; its BigDecimal is java.math's on Android.
+bignum = "1.0.5"
 junit = "4.13.2"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
@@ -55,6 +57,7 @@ androidx-sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", 
 androidx-sqlite-bundled-jvm = { group = "androidx.sqlite", name = "sqlite-bundled-jvm", version.ref = "sqlite" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+bignum = { group = "io.github.artificialpb", name = "bignum", version.ref = "bignum" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koin" }
 # @InjectedParam and @Qualifier, which the compiler plugin reads.
