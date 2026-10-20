@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -181,13 +182,16 @@ class RoomProgressRepository @Inject constructor(
      *
      * Before Room first opens the database, it locks a file beside it, and reports a lock file
      * it can't create or lock as an IllegalStateException caused by the IOException (checked in
-     * Room 2.8.5's ExclusiveLock and FileLock), so that's a storage failure too.
+     * Room 2.8.5's ExclusiveLock and FileLock), so that's a storage failure too. A cancellation
+     * is an IllegalStateException as well, but stays one.
      */
     private fun Throwable.isStorageFailure(): Boolean = when (this) {
         is SQLiteException -> !isDamage() && when (resultCode) {
             null, SQLITE_CONSTRAINT, SQLITE_MISMATCH, SQLITE_MISUSE, SQLITE_RANGE -> false
             else -> true
         }
+
+        is CancellationException -> false
 
         is IllegalStateException -> generateSequence(cause) { it.cause }.any { it is IOException }
 

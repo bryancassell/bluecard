@@ -36,7 +36,7 @@ class DataModuleTest {
     @Inject
     lateinit var damagedProgressRepository: DamagedProgressRepository
 
-    // The one the database's corruption handler sets damaged progress aside with.
+    // The one SetAsideDamagedDatabaseDriver sets damaged progress aside with.
     @Inject
     lateinit var fileDamagedProgressRepository: FileDamagedProgressRepository
 

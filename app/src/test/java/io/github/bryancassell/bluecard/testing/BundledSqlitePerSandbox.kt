@@ -24,12 +24,12 @@ class BundledSqlitePerSandbox : TestEnvironmentLifecyclePlugin {
     }
 
     private companion object {
-        val name = property("androidx.sqlite.driver.bundled.name")
-        val original = File(property("bluecard.bundledSqlite.dir"), name)
-
-        // Deleted when the JVM exits, in the reverse of the order they're registered in: the
-        // library, then its folder.
+        // Made when first needed, so a missing property's message shows at every test, rather
+        // than once and then behind "Could not initialize class". When the JVM exits, the
+        // library and then its folder are deleted: deleteOnExit runs in the reverse order.
         val sandboxCopy: File by lazy {
+            val name = property("androidx.sqlite.driver.bundled.name")
+            val original = File(property("bluecard.bundledSqlite.dir"), name)
             val folder = Files.createTempDirectory("bundled-sqlite").toFile()
             folder.deleteOnExit()
             original.copyTo(File(folder, name)).deleteOnExit()

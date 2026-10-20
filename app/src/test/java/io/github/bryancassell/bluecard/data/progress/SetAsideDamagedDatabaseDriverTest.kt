@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.progress
 import android.content.Context
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
+import androidx.room.useReaderConnection
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteException
@@ -110,10 +111,12 @@ class SetAsideDamagedDatabaseDriverTest {
         // after it's checked would.
         val driver = newDriver()
         val undamaged = saveProgressAndDamageIt(open(driver))
-        val repository = RoomProgressRepository(
-            open(driver),
-            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
-        )
+        val database = open(driver)
+        val repository =
+            RoomProgressRepository(
+                database,
+                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
@@ -121,6 +124,14 @@ class SetAsideDamagedDatabaseDriverTest {
         assertTrue(
             "Expected SQLite to find the damage, got $error",
             error is SQLiteException && error.isDamage()
+        )
+        // Even a statement that reads nothing fails after that, so nothing more is saved.
+        val next = runCatching {
+            database.useReaderConnection { it.usePrepared("SELECT 1") { select -> select.step() } }
+        }.exceptionOrNull()
+        assertTrue(
+            "Expected the same error, got $next",
+            next is SQLiteException && next.message == error?.message
         )
         assertTrue(damagedProgress.isDamageRecorded())
         assertEquals(emptyList<File>(), copies())
@@ -143,12 +154,7 @@ class SetAsideDamagedDatabaseDriverTest {
      * finds the damage when progress is read. Gives the file as it was before the damage.
      */
     private suspend fun saveProgressAndDamageIt(database: BlueCardDatabase = open()): ByteArray {
-        repeat(300) {
-            database.progressDao().insertBadge(
-                BadgeProgress("badge-$it-${"x".repeat(200)}", VERSION, LocalDate.of(2026, 3, 1))
-            )
-        }
-        database.close()
+        saveProgress(database)
         val (pageSize, lastTablePage) = BundledSQLiteDriver().open(file.path).use { sqlite ->
             sqlite.longFor("PRAGMA page_size") to
                 sqlite.longFor("SELECT max(rootpage) FROM sqlite_master")
@@ -163,9 +169,63 @@ class SetAsideDamagedDatabaseDriverTest {
         return undamaged
     }
 
+    /** Saves enough badges to fill several pages, then closes [database]. */
+    private suspend fun saveProgress(database: BlueCardDatabase) {
+        repeat(300) {
+            database.progressDao().insertBadge(
+                BadgeProgress("badge-$it-${"x".repeat(200)}", VERSION, LocalDate.of(2026, 3, 1))
+            )
+        }
+        database.close()
+    }
+
     private fun SQLiteConnection.longFor(sql: String) = prepare(sql).use {
         it.step()
         it.getLong(0)
+    }
+
+    @Test
+    fun databaseWithAPageNothingUses_staysInUse() = runTest {
+        saveProgress(open())
+        addPageNothingUses()
+        val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
+            sqlite.prepare("PRAGMA quick_check").use {
+                it.step()
+                it.getText(0)
+            }
+        }
+        assertTrue(check, check.endsWith(": never used"))
+
+        val progress = open().readProgress()
+
+        assertEquals(300, progress.size)
+        assertEquals(emptyList<File>(), copies())
+        assertFalse(damagedProgress.observeNoticePending().first())
+    }
+
+    /**
+     * Adds a page to the end of the database and counts it in the database's size, with nothing
+     * using it, as when a page leaks. SQLite trusts the size in the header
+     * (https://www.sqlite.org/fileformat2.html#in_header_database_size).
+     */
+    private fun addPageNothingUses() = RandomAccessFile(file, "rw").use {
+        it.seek(16)
+        val pageSize = it.readUnsignedShort().let { size -> if (size == 1) 65536 else size }
+        it.seek(28)
+        val pages = it.readInt()
+        it.setLength((pages + 1L) * pageSize)
+        it.seek(28)
+        it.writeInt(pages + 1)
+    }
+
+    @Test
+    fun connections_limitTheWriteAheadLog_asAndroidsSQLiteDoes() {
+        file.parentFile!!.mkdirs()
+
+        newDriver().open(file.path).use {
+            assertEquals(524288L, it.longFor("PRAGMA journal_size_limit"))
+            assertEquals(100L, it.longFor("PRAGMA wal_autocheckpoint"))
+        }
     }
 
     @Test
@@ -186,10 +246,11 @@ class SetAsideDamagedDatabaseDriverTest {
         assertEquals(emptyList<File>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
 
+        // Room tries again at the next read.
         file.delete()
         val damaged = ByteArray(8192) { 7 }
         file.writeBytes(damaged)
-        val progress = open(driver).readProgress()
+        val progress = repository.observeAllProgress().first()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertArrayEquals(damaged, setAside().readBytes())

@@ -18,6 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import java.io.IOException
 import java.time.LocalDate
+import java.util.concurrent.CancellationException
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -44,9 +45,9 @@ import org.junit.runner.RunWith
 
 /**
  * Runs the repository contract against Room with an in-memory database, on the SQLite the app
- * bundles (BundledSQLiteDriver). Robolectric provides the Context that Room needs on Android. The Room testing guide recommends plain JVM
- * tests with Room's Kotlin Multiplatform setup instead, whose JVM target has an in-memory builder
- * that takes no Context. This module is Android-only, and every in-memory builder in Room's
+ * bundles (BundledSQLiteDriver). Robolectric provides the Context that Room needs on Android.
+ * The Room testing guide recommends plain JVM tests with Room's Kotlin Multiplatform setup
+ * instead, whose JVM target has an in-memory builder that takes no Context. This module is Android-only, and every in-memory builder in Room's
  * Android artifact takes a Context (checked with Room 2.8.5).
  */
 @RunWith(AndroidJUnit4::class)
@@ -251,8 +252,18 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertEquals(noCode, error)
     }
 
+    @Test
+    fun writing_whenCancelled_staysCancelled_evenIfCausedByAStorageFailure() = runTest {
+        val cancelled = CancellationException("Cancelled").apply { initCause(IOException()) }
+
+        val error = runCatching { failingRequirementWrites(cancelled).startAndRecord() }
+            .exceptionOrNull()
+
+        assertTrue("Expected the cancellation, got $error", error is CancellationException)
+    }
+
     /** A repository whose writes of requirement progress throw [error]. */
-    private fun failingRequirementWrites(error: SQLException) = RoomProgressRepository(
+    private fun failingRequirementWrites(error: RuntimeException) = RoomProgressRepository(
         open(
             Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java),
             FailingRequirementWrites(error)
@@ -266,7 +277,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     }
 
     /** BundledSQLiteDriver, except that writes of requirement progress throw [error]. */
-    private class FailingRequirementWrites(private val error: SQLException) : SQLiteDriver {
+    private class FailingRequirementWrites(private val error: RuntimeException) : SQLiteDriver {
         private val driver = BundledSQLiteDriver()
 
         override fun open(fileName: String): SQLiteConnection {

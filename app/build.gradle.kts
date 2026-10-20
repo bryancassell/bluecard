@@ -214,7 +214,7 @@ tasks.withType<Test>().configureEach {
 // it loads <androidx.sqlite.driver.bundled.path>/<...name> instead when both are set, so the
 // tests get the host's library from sqlite-bundled-jvm, which registers the same JNI functions.
 // testing/BundledSqlitePerSandbox sets the path.
-val bundledSqliteJvm by configurations.creating {
+val bundledSqliteJvm = configurations.create("bundledSqliteJvm") {
     isCanBeConsumed = false
     isTransitive = false
     attributes {
@@ -232,7 +232,8 @@ val bundledSqliteHost = run {
     }
 }
 val extractBundledSqlite = tasks.register<Sync>("extractBundledSqlite") {
-    from({ zipTree(bundledSqliteJvm.singleFile) }) {
+    // Resolved when the task runs, not while Gradle plans the build.
+    from(zipTree(bundledSqliteJvm.elements.map { it.single().asFile })) {
         include("natives/${bundledSqliteHost.first}/*")
         eachFile { path = name }
     }
