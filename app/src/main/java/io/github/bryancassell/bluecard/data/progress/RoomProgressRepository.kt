@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import androidx.room.immediateTransaction
-import androidx.room.useWriterConnection
+import androidx.room3.withWriteTransaction
 import androidx.sqlite.SQLiteException
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
@@ -182,7 +181,7 @@ class RoomProgressRepository @Inject constructor(
      *
      * Before Room first opens the database, it locks a file beside it, and reports a lock file
      * it can't create or lock as an IllegalStateException caused by the IOException (checked in
-     * Room 2.8.5's ExclusiveLock and FileLock), so that's a storage failure too. A cancellation
+     * Room 3.0.3's ExclusiveMutex and FileLock), so that's a storage failure too. A cancellation
      * is an IllegalStateException as well, but stays one.
      */
     private fun Throwable.isStorageFailure(): Boolean = when (this) {
@@ -207,7 +206,7 @@ class RoomProgressRepository @Inject constructor(
         start: BadgeStart,
         action: suspend () -> T
     ): T = writing {
-        inTransaction {
+        database.withWriteTransaction {
             if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
             action()
         }
@@ -218,9 +217,7 @@ class RoomProgressRepository @Inject constructor(
      * [notStarted] if it isn't.
      */
     private suspend fun <T> ifStarted(badgeId: String, notStarted: T, action: suspend () -> T): T =
-        writing { inTransaction { if (dao.isStarted(badgeId)) action() else notStarted } }
-
-    /** Runs [action] in one transaction, on Room's writer connection. */
-    private suspend fun <T> inTransaction(action: suspend () -> T): T =
-        database.useWriterConnection { it.immediateTransaction { action() } }
+        writing {
+            database.withWriteTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
+        }
 }

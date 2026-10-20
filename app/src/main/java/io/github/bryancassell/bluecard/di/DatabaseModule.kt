@@ -1,7 +1,7 @@
 package io.github.bryancassell.bluecard.di
 
 import android.content.Context
-import androidx.room.Room
+import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import dagger.Module
 import dagger.Provides

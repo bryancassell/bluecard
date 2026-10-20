@@ -81,7 +81,8 @@ to work with Kotlin 2.4.
 version's schema there as JSON. Commit these files: they show schema changes in
 review, and future migration tests read them. Changing an entity means raising
 the database version and adding a migration, or existing users' data can't be
-opened.
+opened. CI fails if the build changes them, which also catches a Room update
+that computes a different identity hash for the same schema.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
 version lives in this one file. Build scripts refer to entries by alias, such
@@ -597,7 +598,8 @@ request can merge. The pull request must also be up to date with `main`, so
 the checks have run on what `main` will have after the merge; if `main` has
 moved, merge it into the branch and wait for the checks again:
 
-- **Build** runs `./gradlew build`, the same command as locally.
+- **Build** runs `./gradlew build`, the same command as locally, then checks
+  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to

@@ -1,20 +1,20 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import androidx.room.TypeConverter
+import androidx.room3.ColumnTypeConverter
 import java.time.LocalDate
 import kotlinx.serialization.json.Json
 
 /** How Room stores types SQLite doesn't have. */
 class Converters {
-    @TypeConverter
+    @ColumnTypeConverter
     fun localDateToString(date: LocalDate?): String? = date?.toString()
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun stringToLocalDate(text: String?): LocalDate? = text?.let(LocalDate::parse)
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun mapToJson(values: Map<String, String>): String = Json.encodeToString(values)
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun jsonToMap(json: String): Map<String, String> = Json.decodeFromString(json)
 }

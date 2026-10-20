@@ -1,11 +1,11 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import androidx.room.Embedded
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Entity
+import androidx.room3.ForeignKey
+import androidx.room3.Index
+import androidx.room3.PrimaryKey
+import androidx.room3.Relation
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import java.time.LocalDate
@@ -212,9 +212,9 @@ fun storedDate(text: String): LocalDate? = try {
 /** A started badge with everything recorded for it. */
 data class BadgeProgressDetails(
     @Embedded val badge: BadgeProgress,
-    @Relation(parentColumn = "badgeId", entityColumn = "badgeId")
+    @Relation(parentColumns = ["badgeId"], entityColumns = ["badgeId"])
     val requirements: List<RequirementProgress>,
-    @Relation(parentColumn = "badgeId", entityColumn = "badgeId")
+    @Relation(parentColumns = ["badgeId"], entityColumns = ["badgeId"])
     val trackerEntries: List<TrackerEntry>
 )
 

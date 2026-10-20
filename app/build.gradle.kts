@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.room)
+    alias(libs.plugins.room3)
     alias(libs.plugins.roborazzi)
     jacoco
 }
@@ -112,7 +112,7 @@ android {
 
 // Room writes each database version's schema here, for reviewing schema changes and
 // testing future migrations. Commit the generated files.
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
@@ -283,13 +283,13 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room3.runtime)
     // Strictly, so a Room update that needs a newer androidx.sqlite fails to resolve until
     // `sqlite` is raised with it: local tests load sqlite-bundled-jvm's library at that version.
     implementation(libs.androidx.sqlite.bundled) {
         version { strictly(libs.versions.sqlite.get()) }
     }
-    ksp(libs.androidx.room.compiler)
+    ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
@@ -306,7 +306,7 @@ dependencies {
     testImplementation(libs.androidx.lifecycle.viewmodel.testing)
     testImplementation(libs.hilt.android.testing)
     // MigrationTestHelper, which checks each database migration against the committed schemas.
-    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.androidx.room3.testing)
     bundledSqliteJvm(libs.androidx.sqlite.bundled.jvm)
     kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.junit)

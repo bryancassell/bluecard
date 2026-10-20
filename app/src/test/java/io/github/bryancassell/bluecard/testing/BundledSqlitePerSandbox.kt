@@ -12,7 +12,7 @@ import org.robolectric.pluginapi.TestEnvironmentLifecyclePlugin
  * BundledSQLiteDriver's classes and so the library again. A JVM loads a library file into only
  * one class loader, so a second sandbox would fail with "already loaded in another classloader".
  * A symbolic link wouldn't help, since the JVM compares canonical paths. The driver reads
- * androidx.sqlite.driver.bundled.path each time it loads the library (androidx.sqlite 2.6.2),
+ * androidx.sqlite.driver.bundled.path each time it loads the library (androidx.sqlite 2.7.1),
  * so this points it at the sandbox's copy before each test.
  *
  * Registered in META-INF/services. Robolectric loads this class once in each sandbox, so

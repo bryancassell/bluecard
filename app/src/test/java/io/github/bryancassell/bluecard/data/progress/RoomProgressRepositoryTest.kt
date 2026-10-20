@@ -2,11 +2,11 @@ package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
 import android.database.SQLException
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.execSQL
-import androidx.room.immediateTransaction
-import androidx.room.useWriterConnection
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
+import androidx.room3.executeSQL
+import androidx.room3.useWriterConnection
+import androidx.room3.withWriteTransaction
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteException
@@ -45,10 +45,11 @@ import org.junit.runner.RunWith
 
 /**
  * Runs the repository contract against Room with an in-memory database, on the SQLite the app
- * bundles (BundledSQLiteDriver). Robolectric provides the Context that Room needs on Android.
- * The Room testing guide recommends plain JVM tests with Room's Kotlin Multiplatform setup
- * instead, whose JVM target has an in-memory builder that takes no Context. This module is Android-only, and every in-memory builder in Room's
- * Android artifact takes a Context (checked with Room 2.8.5).
+ * bundles (BundledSQLiteDriver), under Robolectric. The Room testing guide recommends plain JVM
+ * tests instead. Room 3 can open the database without Robolectric, but on Android its errors are
+ * android.database.SQLException, and the local tests' android.jar drops their message, which
+ * holds the result code the repository sorts them by. On the JVM target of common code (#345),
+ * SQLiteException keeps its message.
  */
 @RunWith(AndroidJUnit4::class)
 class RoomProgressRepositoryTest : ProgressRepositoryContract() {
@@ -178,7 +179,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
      * https://www.sqlite.org/lang_createtrigger.html
      */
     private suspend fun failRequirementWrites() = database.useWriterConnection {
-        it.execSQL(
+        it.executeSQL(
             """
             CREATE TRIGGER fail_requirement_writes BEFORE INSERT ON requirement_progress
             BEGIN SELECT RAISE(ABORT, 'Test failure'); END
@@ -314,11 +315,9 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val holding = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
         val other = launch(Dispatchers.IO) {
-            database.useWriterConnection { connection ->
-                connection.immediateTransaction {
-                    holding.complete(Unit)
-                    release.await()
-                }
+            database.withWriteTransaction {
+                holding.complete(Unit)
+                release.await()
             }
         }
         holding.await()

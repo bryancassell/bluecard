@@ -2,9 +2,9 @@ package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
 import android.database.SQLException
-import androidx.room.Room
-import androidx.room.testing.MigrationTestHelper
-import androidx.room.useReaderConnection
+import androidx.room3.Room
+import androidx.room3.testing.MigrationTestHelper
+import androidx.room3.useReaderConnection
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteException

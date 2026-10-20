@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.pm.ProviderInfo
 import android.net.Uri
 import android.provider.DocumentsContract
-import androidx.room.Room
+import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
