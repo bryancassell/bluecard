@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
  */
 class MainActivityViewModel(
     profileRepository: ProfileRepository,
-    private val damagedProgressRepository: DamagedProgressRepository
+    private val damagedProgressRepository: DamagedProgressRepository,
+    warningLog: WarningLog
 ) : ViewModel() {
     val uiState: StateFlow<MainActivityUiState> = combine(
         profileRepository.observeProfile(),
@@ -28,7 +30,7 @@ class MainActivityViewModel(
             showDamagedProgressNotice = noticePending
         )
     }
-        .catchLoadFailure(MainActivityUiState.LoadFailed)
+        .catchLoadFailure(MainActivityUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainActivityUiState.Loading)
 
     fun dismissDamagedProgressNotice() {

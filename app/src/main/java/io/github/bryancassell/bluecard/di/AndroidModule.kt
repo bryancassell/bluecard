@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.di
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
@@ -29,6 +30,7 @@ import org.koin.plugin.module.dsl.single
 
 /** What the app is built from that needs Android to build, such as a [Context]. */
 val androidModule = module {
+    single<WarningLog> { LogcatWarningLog }
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }
 
@@ -41,6 +43,13 @@ val androidModule = module {
     single<PdfDocumentWriter>() bind ReportPdfWriter::class
     single<JsonBackupRepository>() bind BackupRepository::class
     single<AndroidTextRules>() bind TextRules::class
+}
+
+/** Writes warnings to logcat, which bug reports include. */
+internal object LogcatWarningLog : WarningLog {
+    override fun warn(tag: String, message: String, error: Throwable?) {
+        Log.w(tag, message, error)
+    }
 }
 
 private fun progressDatabase(

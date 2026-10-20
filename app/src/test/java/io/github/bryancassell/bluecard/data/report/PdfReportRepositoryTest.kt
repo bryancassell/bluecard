@@ -21,6 +21,7 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import java.io.File
@@ -113,6 +114,7 @@ class PdfReportRepositoryTest {
         pdfWriter,
         FakeClock(today.atStartOfDayIn(TimeZone.UTC)),
         AndroidTextRules(),
+        FakeWarningLog(),
         ioDispatcher,
         externalScope
     )

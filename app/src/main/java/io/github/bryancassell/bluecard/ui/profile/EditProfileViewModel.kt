@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.stateIn
  */
 class EditProfileViewModel(
     private val profileRepository: ProfileRepository,
+    warningLog: WarningLog,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -35,7 +37,7 @@ class EditProfileViewModel(
     /** The unit number field's text. */
     val unitNumber = fields[UNIT_NUMBER]
 
-    private val saves = TaskRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /** Whether the fields have been saved and the page hasn't closed yet. */
     private val saved = MutableStateFlow(false)
@@ -57,7 +59,7 @@ class EditProfileViewModel(
             saved = isSaved,
             saveFailure = saveFailure
         )
-    }.catchLoadFailure(EditProfileUiState.LoadFailed).stateIn(
+    }.catchLoadFailure(EditProfileUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         EditProfileUiState.Loading

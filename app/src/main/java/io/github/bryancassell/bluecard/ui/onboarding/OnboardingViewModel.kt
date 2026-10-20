@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.textFieldState
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class OnboardingViewModel(
     private val profileRepository: ProfileRepository,
+    warningLog: WarningLog,
     // Keeps what the scout typed if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -28,7 +30,7 @@ class OnboardingViewModel(
 
     private val saveStatus = MutableStateFlow(SaveStatus.Editing)
 
-    private val saves = TaskRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     val uiState: StateFlow<OnboardingUiState> = combine(
         snapshotFlow { name.text.toString() },

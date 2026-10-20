@@ -16,6 +16,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import java.util.Locale
@@ -30,12 +31,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class BadgesViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val version = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -72,7 +75,13 @@ class BadgesViewModelTest {
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private val viewModel by lazy {
-        BadgesViewModel(catalogRepository, progressRepository, AndroidTextRules(), savedStateHandle)
+        BadgesViewModel(
+            catalogRepository,
+            progressRepository,
+            AndroidTextRules(),
+            warningLog,
+            savedStateHandle
+        )
     }
 
     /**
@@ -111,8 +120,13 @@ class BadgesViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel =
-            BadgesViewModel(loading, progressRepository, AndroidTextRules(), savedStateHandle)
+        val viewModel = BadgesViewModel(
+            loading,
+            progressRepository,
+            AndroidTextRules(),
+            warningLog,
+            savedStateHandle
+        )
         startCollecting(viewModel)
 
         assertEquals(BadgesUiState.Loading, viewModel.uiState.value)
@@ -375,6 +389,7 @@ class BadgesViewModelTest {
                 catalogRepository,
                 progressRepository,
                 AndroidTextRules(),
+                warningLog,
                 createSavedStateHandle()
             )
         }.use { scenario ->

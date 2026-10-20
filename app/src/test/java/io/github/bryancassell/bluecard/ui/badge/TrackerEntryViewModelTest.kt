@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.keepText
 import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
@@ -52,12 +53,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class TrackerEntryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val newest = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -137,6 +140,7 @@ class TrackerEntryViewModelTest {
         catalog,
         progress,
         clock,
+        warningLog,
         savedStateHandle
     )
 
@@ -150,6 +154,7 @@ class TrackerEntryViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
+            warningLog,
             createSavedStateHandle()
         )
     }
@@ -1021,6 +1026,7 @@ class TrackerEntryViewModelTest {
                     catalogRepository,
                     progressRepository,
                     clock,
+                    warningLog,
                     createSavedStateHandle()
                 )
             } else {

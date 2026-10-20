@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.util.Log
+import io.github.bryancassell.bluecard.di.WarningLog
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.catch
 private const val TAG = "LoadFailure"
 
 /**
- * Logs an [IOException], which repositories throw when stored data can't be read, and emits
- * [failed] in its place. Any other exception is a bug, so it still crashes the app and
+ * Writes an [IOException], which repositories throw when stored data can't be read, to [warningLog], and
+ * emits [failed] in its place. Any other exception is a bug, so it still crashes the app and
  * reaches crash reports instead of hiding behind the load-failed message (see ARCHITECTURE.md,
  * Load and save failures).
  *
@@ -22,10 +22,8 @@ private const val TAG = "LoadFailure"
  * within 5 seconds shows the message again. A failure after a screen has loaded also stays until
  * the screen loads again. A "Try again" button would fix both.
  */
-fun <T> Flow<T>.catchLoadFailure(failed: T): Flow<T> = catch {
+fun <T> Flow<T>.catchLoadFailure(failed: T, warningLog: WarningLog): Flow<T> = catch {
     if (it !is IOException) throw it
-    // The app reports caught exceptions nowhere else, so logcat and bug reports are the
-    // only way to tell which data failed and why.
-    Log.w(TAG, "Couldn't load stored data", it)
+    warningLog.warn(TAG, "Couldn't load stored data", it)
     emit(failed)
 }

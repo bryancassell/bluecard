@@ -11,6 +11,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.status
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.ListedBadge
@@ -32,7 +33,8 @@ class HomeViewModel(
     profileRepository: ProfileRepository,
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
-    textRules: TextRules
+    textRules: TextRules,
+    warningLog: WarningLog
 ) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = combine(
         profileRepository.observeProfile(),
@@ -61,7 +63,7 @@ class HomeViewModel(
             eagleTotal = eagle.size,
             badgesInProgress = badgesInProgress(listedBadges, statusById, progressById)
         )
-    }.catchLoadFailure(HomeUiState.LoadFailed)
+    }.catchLoadFailure(HomeUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 }
 

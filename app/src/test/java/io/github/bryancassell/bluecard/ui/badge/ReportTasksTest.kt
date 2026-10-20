@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -18,8 +19,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because a failed task logs with android.util.Log, which throws in plain local
-// tests, and for Uri.
+// Robolectric, for Uri.
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class ReportTasksTest {
@@ -31,7 +31,8 @@ class ReportTasksTest {
     private val destination = Uri.parse("content://documents/chess-report.pdf")
 
     /** Tasks that run straight away, until the test ends, as on the Main dispatcher. */
-    private fun TestScope.reportTasks() = ReportTasks(backgroundScope, reportRepository, "chess")
+    private fun TestScope.reportTasks() =
+        ReportTasks(backgroundScope, reportRepository, "chess", FakeWarningLog())
 
     private fun runReportTest(test: suspend TestScope.() -> Unit) =
         runTest(UnconfinedTestDispatcher()) { test() }

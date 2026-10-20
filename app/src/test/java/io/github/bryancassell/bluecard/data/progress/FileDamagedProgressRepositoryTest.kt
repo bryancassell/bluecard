@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import java.io.File
+import java.nio.file.AccessDeniedException
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -32,12 +34,14 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     private val database = context.getDatabasePath(BlueCardDatabase.NAME)
     private val folder = File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME)
     private val clock = FakeClock(Instant.parse("2026-10-02T09:06:07.531Z"))
+    private val warningLog = FakeWarningLog()
 
     // Checks and changes files in place by default, so a test sees each when it's made.
     private fun newRepository(ioDispatcher: CoroutineDispatcher = Dispatchers.Unconfined) =
         FileDamagedProgressRepository(
             context,
             clock,
+            warningLog,
             CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
             ioDispatcher
         )
@@ -72,6 +76,16 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         assertFalse(database.exists())
         assertFalse(File(database.path + "-wal").exists())
         assertFalse(File(database.path + "-shm").exists())
+        assertEquals(
+            listOf(
+                FakeWarningLog.Warning(
+                    "DamagedProgress",
+                    "Set aside a damaged database: $database",
+                    null
+                )
+            ),
+            warningLog.warnings
+        )
     }
 
     @Test
@@ -147,6 +161,11 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         }
 
         assertFalse(repository.isDamageRecorded())
+        val warning = warningLog.warnings.single()
+        assertEquals("DamagedProgress", warning.tag)
+        assertEquals("Couldn't record a damaged database", warning.message)
+        // The folder that couldn't be made, rather than some other failure.
+        assertTrue("${warning.error}", warning.error is AccessDeniedException)
     }
 
     @Test
@@ -166,6 +185,15 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         assertFalse(database.exists())
         assertFalse(File(database.path + "-wal").exists())
         assertTrue(repository.observeNoticePending().first())
+        // The only record that the scout's progress was deleted rather than kept.
+        val warning = warningLog.warnings.single()
+        assertEquals("DamagedProgress", warning.tag)
+        assertEquals(
+            "Couldn't set aside a damaged database, so deleted it: $database",
+            warning.message
+        )
+        // The folder that couldn't be made, rather than some other failure.
+        assertTrue("${warning.error}", warning.error is AccessDeniedException)
     }
 
     @Test

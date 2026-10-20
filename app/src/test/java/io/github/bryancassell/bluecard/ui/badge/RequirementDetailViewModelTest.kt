@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
@@ -51,12 +52,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class RequirementDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val older = LocalDate(2025, 1, 1)
     private val newest = LocalDate(2026, 1, 1)
@@ -179,6 +182,7 @@ class RequirementDetailViewModelTest {
         progress,
         clock,
         AndroidTextRules(),
+        warningLog,
         savedStateHandle
     )
 
@@ -197,6 +201,7 @@ class RequirementDetailViewModelTest {
             progressRepository,
             clock,
             AndroidTextRules(),
+            warningLog,
             createSavedStateHandle()
         )
     }
@@ -348,6 +353,7 @@ class RequirementDetailViewModelTest {
             progressRepository,
             clock,
             AndroidTextRules(),
+            warningLog,
             savedStateHandle
         )
         startCollecting(viewModel)
@@ -1070,6 +1076,7 @@ class RequirementDetailViewModelTest {
             progressRepository,
             clock,
             AndroidTextRules(),
+            warningLog,
             SavedStateHandle(mapOf("comment" to "From an intent."))
         )
         startCollecting(viewModel)

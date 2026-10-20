@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.timeInRank
 import io.github.bryancassell.bluecard.data.progress.withoutRequirements
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.StoredTextFields
@@ -53,6 +54,7 @@ class RequirementDetailViewModel(
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
     textRules: TextRules,
+    warningLog: WarningLog,
     // Keeps an unsaved sign-off and comment, and the date to bring back to an unchecked
     // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
@@ -74,7 +76,7 @@ class RequirementDetailViewModel(
      */
     val comment = fields[COMMENT]
 
-    private val saves = TaskRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope, warningLog)
     private val recorder = CompletionRecorder(
         advancementId,
         number,
@@ -217,7 +219,7 @@ class RequirementDetailViewModel(
             unearnedByClear = recorded.unearnedByClear,
             saveFailure = saveFailure
         )
-    }.catchLoadFailure(RequirementDetailUiState.LoadFailed).stateIn(
+    }.catchLoadFailure(RequirementDetailUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         RequirementDetailUiState.Loading

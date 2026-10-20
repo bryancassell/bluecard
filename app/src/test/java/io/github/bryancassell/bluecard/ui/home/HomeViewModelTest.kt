@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.home
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -14,6 +13,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
@@ -30,14 +30,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-// Robolectric, because the load-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
-@RunWith(AndroidJUnit4::class)
 class HomeViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val version = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -103,7 +101,13 @@ class HomeViewModelTest {
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private val viewModel by lazy {
-        HomeViewModel(profileRepository, catalogRepository, progressRepository, AndroidTextRules())
+        HomeViewModel(
+            profileRepository,
+            catalogRepository,
+            progressRepository,
+            AndroidTextRules(),
+            warningLog
+        )
     }
 
     /**
@@ -132,8 +136,13 @@ class HomeViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel =
-            HomeViewModel(profileRepository, loading, progressRepository, AndroidTextRules())
+        val viewModel = HomeViewModel(
+            profileRepository,
+            loading,
+            progressRepository,
+            AndroidTextRules(),
+            warningLog
+        )
         startCollecting(viewModel)
 
         assertEquals(HomeUiState.Loading, viewModel.uiState.value)

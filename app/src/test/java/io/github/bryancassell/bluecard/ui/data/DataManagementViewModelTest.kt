@@ -20,8 +20,10 @@ import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
+import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -45,12 +47,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the failure tests reach android.util.Log, which throws in plain local
-// tests, and Uri is Android's (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because Uri is Android's, and throws in plain local tests (see ARCHITECTURE.md,
+// ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class DataManagementViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val today = LocalDate(2026, 10, 1)
     private val clock = FakeClock(today.atTime(12, 0).toInstant(TimeZone.UTC))
@@ -103,7 +107,8 @@ class DataManagementViewModelTest {
             catalogRepository,
             profileRepository,
             progress,
-            clock
+            clock,
+            warningLog
         ).also { viewModel ->
             backgroundScope.launch(mainDispatcherRule.testDispatcher) {
                 viewModel.uiState.collect {}
@@ -111,6 +116,18 @@ class DataManagementViewModelTest {
         }
 
     private fun DataManagementViewModel.messageKind() = uiState.value.message?.kind
+
+    /**
+     * Checks that the one warning written is for [failure], with the fake's exception that caused
+     * it, which says [cause].
+     */
+    private fun assertWarned(failure: Kind, cause: String) {
+        val warning = warningLog.warnings.single()
+        assertEquals("DataManagement", warning.tag)
+        assertEquals("Export, import or clear failed: $failure", warning.message)
+        assertTrue(warning.error is IOException)
+        assertEquals(cause, warning.error?.message)
+    }
 
     /** A view model that has read [export], an export of [file] the scout chose to import. */
     private fun TestScope.viewModelWithFileToImport(file: Backup = backup) = viewModel().apply {
@@ -199,6 +216,7 @@ class DataManagementViewModelTest {
 
         assertEquals(Kind.ExportFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
+        assertWarned(Kind.ExportFailed, "Save failed")
         viewModel.onMessageShown(viewModel.uiState.value.message!!)
         assertNull(viewModel.uiState.value.message)
     }
@@ -257,6 +275,7 @@ class DataManagementViewModelTest {
 
         assertEquals(Kind.ReadFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
+        assertWarned(Kind.ReadFailed, "Read failed")
     }
 
     @Test
@@ -305,6 +324,7 @@ class DataManagementViewModelTest {
 
         assertEquals(Kind.ImportFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
+        assertWarned(Kind.ImportFailed, "Save failed")
     }
 
     @Test
@@ -566,6 +586,7 @@ class DataManagementViewModelTest {
         viewModel.clearAll()
 
         assertEquals(Kind.ClearFailed, viewModel.messageKind())
+        assertWarned(Kind.ClearFailed, "Save failed")
         assertEquals(1, progressRepository.observeAllProgress().first().size)
         assertTrue(viewModel.uiState.value.canClear)
         assertFalse(viewModel.uiState.value.working)
