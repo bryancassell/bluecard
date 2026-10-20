@@ -20,9 +20,9 @@ class ReportTasks(
     scope: CoroutineScope,
     private val reportRepository: ReportRepository,
     private val advancementId: String,
-    log: WarningLog
+    warningLog: WarningLog
 ) {
-    private val runner = TaskRunner(scope, log)
+    private val runner = TaskRunner(scope, warningLog)
     private val toShare = MutableStateFlow<Uri?>(null)
 
     /** The report, once it's ready to share, until the screen has opened the share sheet. */

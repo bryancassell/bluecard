@@ -46,7 +46,7 @@ class PdfReportRepository(
     private val profileRepository: ProfileRepository,
     private val pdfWriter: ReportPdfWriter,
     private val clock: ZonedClock,
-    private val log: WarningLog,
+    private val warningLog: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
@@ -83,7 +83,7 @@ class PdfReportRepository(
      * ([report]), as when the badge or rank was just cleared.
      */
     private suspend fun save(advancementId: String, destination: Uri) =
-        context.contentResolver.saveDocument(destination, log) {
+        context.contentResolver.saveDocument(destination, warningLog) {
             report(advancementId)?.let { report ->
                 ByteArrayOutputStream().also {
                     write(report, stringsLanguageResources(context), it)

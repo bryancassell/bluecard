@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 class RanksViewModel(
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
-    log: WarningLog
+    warningLog: WarningLog
 ) : ViewModel() {
     val uiState: StateFlow<RanksUiState> = combine(
         flow { emit(catalogRepository.getRanks() to catalogRepository.getBadges()) },
@@ -28,6 +28,6 @@ class RanksViewModel(
         RanksUiState.Ready(
             ranks.standings(progressById, badges.earnedBadges(progressById)).map { it.toListItem() }
         )
-    }.catchLoadFailure(RanksUiState.LoadFailed, log)
+    }.catchLoadFailure(RanksUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RanksUiState.Loading)
 }

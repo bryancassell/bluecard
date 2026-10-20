@@ -218,7 +218,7 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   requirement 1 rules out
   ([#63](https://github.com/bryancassell/bluecard/issues/63) weighs the
   others). Caught exceptions don't reach it, so each caught load or save
-  failure is logged.
+  failure goes to `WarningLog`.
 
 ### Text fields
 

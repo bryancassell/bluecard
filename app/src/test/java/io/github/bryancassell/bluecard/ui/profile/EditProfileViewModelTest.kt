@@ -36,7 +36,7 @@ class EditProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val alex = Profile("Alex Scout", "123")
     private val profileRepository = FakeProfileRepository(alex)
@@ -46,14 +46,14 @@ class EditProfileViewModelTest {
     private fun viewModel(
         profileRepository: ProfileRepository = this.profileRepository,
         savedStateHandle: SavedStateHandle = SavedStateHandle()
-    ) = EditProfileViewModel(profileRepository, log, savedStateHandle)
+    ) = EditProfileViewModel(profileRepository, warningLog, savedStateHandle)
 
     /**
      * Can save the ViewModel's state and restore it into a new one, as when the system stops
      * the app.
      */
     private fun scenario() = viewModelScenario {
-        EditProfileViewModel(profileRepository, log, createSavedStateHandle())
+        EditProfileViewModel(profileRepository, warningLog, createSavedStateHandle())
     }
 
     /**

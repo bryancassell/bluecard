@@ -36,7 +36,7 @@ class DataManagementViewModel(
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
-    private val log: WarningLog
+    private val warningLog: WarningLog
 ) : ViewModel() {
     /** Everything in [uiState] but [DataManagementUiState.canClear]. */
     private val _uiState = MutableStateFlow(DataManagementUiState())
@@ -50,7 +50,7 @@ class DataManagementViewModel(
      */
     private val canClear = progressRepository.observeAllProgress()
         .map { it.isNotEmpty() }
-        .catchLoadFailure(false, log)
+        .catchLoadFailure(false, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val uiState: StateFlow<DataManagementUiState> =
@@ -158,7 +158,7 @@ class DataManagementViewModel(
      * Runs [action], marking the screen as working until it and any other action under way are
      * done, since one can start before another ends, as when two taps open two file pickers. If
      * it throws an [IOException], which repositories throw when a file or the scout's data can't
-     * be read or saved, writes it to [log] and shows [failure]. Any other exception is a bug, so
+     * be read or saved, writes it to [warningLog] and shows [failure]. Any other exception is a bug, so
      * it still crashes the app, as in TaskRunner.
      */
     private fun work(failure: Kind, action: suspend () -> Unit) {
@@ -168,7 +168,7 @@ class DataManagementViewModel(
             try {
                 action()
             } catch (e: IOException) {
-                log.warn(TAG, "Export, import or clear failed: $failure", e)
+                warningLog.warn(TAG, "Export, import or clear failed: $failure", e)
                 show(failure)
             } finally {
                 running--

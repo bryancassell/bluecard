@@ -52,7 +52,7 @@ class RequirementDetailViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps an unsaved sign-off and comment, and the date to bring back to an unchecked
     // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
@@ -74,7 +74,7 @@ class RequirementDetailViewModel(
      */
     val comment = fields[COMMENT]
 
-    private val saves = TaskRunner(viewModelScope, log)
+    private val saves = TaskRunner(viewModelScope, warningLog)
     private val recorder = CompletionRecorder(
         advancementId,
         number,
@@ -215,7 +215,7 @@ class RequirementDetailViewModel(
             unearnedByClear = recorded.unearnedByClear,
             saveFailure = saveFailure
         )
-    }.catchLoadFailure(RequirementDetailUiState.LoadFailed, log).stateIn(
+    }.catchLoadFailure(RequirementDetailUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         RequirementDetailUiState.Loading

@@ -32,7 +32,7 @@ class HomeViewModel(
     profileRepository: ProfileRepository,
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
-    log: WarningLog
+    warningLog: WarningLog
 ) : ViewModel() {
     val uiState: StateFlow<HomeUiState> = combine(
         profileRepository.observeProfile(),
@@ -61,7 +61,7 @@ class HomeViewModel(
             eagleTotal = eagle.size,
             badgesInProgress = badgesInProgress(listedBadges, statusById, progressById)
         )
-    }.catchLoadFailure(HomeUiState.LoadFailed, log)
+    }.catchLoadFailure(HomeUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 }
 

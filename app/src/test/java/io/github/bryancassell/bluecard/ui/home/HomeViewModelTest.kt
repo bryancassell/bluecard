@@ -34,7 +34,7 @@ class HomeViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val version = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -100,7 +100,7 @@ class HomeViewModelTest {
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private val viewModel by lazy {
-        HomeViewModel(profileRepository, catalogRepository, progressRepository, log)
+        HomeViewModel(profileRepository, catalogRepository, progressRepository, warningLog)
     }
 
     /**
@@ -129,7 +129,7 @@ class HomeViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = HomeViewModel(profileRepository, loading, progressRepository, log)
+        val viewModel = HomeViewModel(profileRepository, loading, progressRepository, warningLog)
         startCollecting(viewModel)
 
         assertEquals(HomeUiState.Loading, viewModel.uiState.value)

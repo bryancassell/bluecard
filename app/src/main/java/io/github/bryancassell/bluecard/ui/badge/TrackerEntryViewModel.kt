@@ -60,7 +60,7 @@ class TrackerEntryViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps unsaved values if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -78,7 +78,7 @@ class TrackerEntryViewModel(
      */
     val fields: Map<String, TextFieldState> = _fields
 
-    private val saves = TaskRunner(viewModelScope, log)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /** Whether a save or delete is under way. */
     private val saving = MutableStateFlow(false)
@@ -114,7 +114,7 @@ class TrackerEntryViewModel(
                 }
             )
         }
-    }.catchLoadFailure(TrackerEntryUiState.LoadFailed, log).stateIn(
+    }.catchLoadFailure(TrackerEntryUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         TrackerEntryUiState.Loading

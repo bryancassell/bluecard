@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.stateIn
  */
 class EditProfileViewModel(
     private val profileRepository: ProfileRepository,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -37,7 +37,7 @@ class EditProfileViewModel(
     /** The unit number field's text. */
     val unitNumber = fields[UNIT_NUMBER]
 
-    private val saves = TaskRunner(viewModelScope, log)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /** Whether the fields have been saved and the page hasn't closed yet. */
     private val saved = MutableStateFlow(false)
@@ -59,7 +59,7 @@ class EditProfileViewModel(
             saved = isSaved,
             saveFailure = saveFailure
         )
-    }.catchLoadFailure(EditProfileUiState.LoadFailed, log).stateIn(
+    }.catchLoadFailure(EditProfileUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         EditProfileUiState.Loading

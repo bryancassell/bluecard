@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 class BadgesViewModel(
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps the search if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -43,7 +43,7 @@ class BadgesViewModel(
                 matches.map { it.toListItem(progressById[it.badge.id]) }
             )
         }
-    }.catchLoadFailure(BadgesUiState.LoadFailed, log)
+    }.catchLoadFailure(BadgesUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgesUiState.Loading)
 
     private companion object {

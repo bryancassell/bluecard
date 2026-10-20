@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
 class FileDamagedProgressRepository(
     private val context: Context,
     private val clock: ZonedClock,
-    private val log: WarningLog,
+    private val warningLog: WarningLog,
     @param:ApplicationScope private val externalScope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
@@ -75,7 +75,8 @@ class FileDamagedProgressRepository(
     fun setAside(database: File) {
         // Recorded damage outlives the files if the app was stopped after moving them all.
         if (database.exists()) {
-            try {
+            // Warned after the try, so writing the warning can't be mistaken for the move failing.
+            val (message, error) = try {
                 Files.createDirectories(folder.toPath())
                 // Before the move, so the scout is told, and the next launch sets aside the rest,
                 // even if the app closes partway.
@@ -85,12 +86,13 @@ class FileDamagedProgressRepository(
                 for (file in sqliteFiles(database).filter { it.exists() }) {
                     Files.move(file.toPath(), copy.resolve(file.name))
                 }
-                log.warn(TAG, "Set aside a damaged database: $database")
+                "Set aside a damaged database: $database" to null
             } catch (e: IOException) {
-                log.warn(TAG, "Couldn't set aside a damaged database, so deleted it: $database", e)
                 SQLiteDatabase.deleteDatabase(database)
+                "Couldn't set aside a damaged database, so deleted it: $database" to e
             }
             noticePending.value = true
+            warningLog.warn(TAG, message, error)
         }
         damageFile.delete()
     }
@@ -108,7 +110,7 @@ class FileDamagedProgressRepository(
             Files.createDirectories(folder.toPath())
             damageFile.createNewFile()
         } catch (e: IOException) {
-            log.warn(TAG, "Couldn't record a damaged database", e)
+            warningLog.warn(TAG, "Couldn't record a damaged database", e)
         }
     }
 

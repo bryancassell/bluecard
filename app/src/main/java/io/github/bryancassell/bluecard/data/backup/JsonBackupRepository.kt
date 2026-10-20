@@ -33,13 +33,13 @@ class JsonBackupRepository(
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
-    private val log: WarningLog,
+    private val warningLog: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : BackupRepository {
     override suspend fun exportBackup(destination: Uri) = externalScope.runOutlivingCaller {
         withContext(ioDispatcher) {
-            context.contentResolver.saveDocument(destination, log) {
+            context.contentResolver.saveDocument(destination, warningLog) {
                 encodeBackup(currentBackup()).encodeToByteArray()
             }
         }

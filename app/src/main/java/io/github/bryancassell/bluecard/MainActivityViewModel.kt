@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class MainActivityViewModel(
     profileRepository: ProfileRepository,
     private val damagedProgressRepository: DamagedProgressRepository,
-    log: WarningLog
+    warningLog: WarningLog
 ) : ViewModel() {
     val uiState: StateFlow<MainActivityUiState> = combine(
         profileRepository.observeProfile(),
@@ -30,7 +30,7 @@ class MainActivityViewModel(
             showDamagedProgressNotice = noticePending
         )
     }
-        .catchLoadFailure(MainActivityUiState.LoadFailed, log)
+        .catchLoadFailure(MainActivityUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainActivityUiState.Loading)
 
     fun dismissDamagedProgressNotice() {

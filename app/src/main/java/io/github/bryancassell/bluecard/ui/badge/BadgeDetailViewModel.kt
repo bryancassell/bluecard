@@ -41,15 +41,15 @@ class BadgeDetailViewModel(
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
     private val clock: ZonedClock,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val badgeId = key.badgeId
 
-    private val report = ReportTasks(viewModelScope, reportRepository, badgeId, log)
-    private val saves = TaskRunner(viewModelScope, log)
+    private val report = ReportTasks(viewModelScope, reportRepository, badgeId, warningLog)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /**
      * The page as worked out from the catalog and progress, before [uiState] adds the date just
@@ -111,7 +111,7 @@ class BadgeDetailViewModel(
         } else {
             state
         }
-    }.catchLoadFailure(BadgeDetailUiState.LoadFailed, log)
+    }.catchLoadFailure(BadgeDetailUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BadgeDetailUiState.Loading)
 
     /**

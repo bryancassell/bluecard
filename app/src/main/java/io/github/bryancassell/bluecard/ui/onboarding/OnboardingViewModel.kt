@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 
 class OnboardingViewModel(
     private val profileRepository: ProfileRepository,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps what the scout typed if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -30,7 +30,7 @@ class OnboardingViewModel(
 
     private val saveStatus = MutableStateFlow(SaveStatus.Editing)
 
-    private val saves = TaskRunner(viewModelScope, log)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     val uiState: StateFlow<OnboardingUiState> = combine(
         snapshotFlow { name.text.toString() },

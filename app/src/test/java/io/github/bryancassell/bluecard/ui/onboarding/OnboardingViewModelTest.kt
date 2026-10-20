@@ -36,14 +36,14 @@ class OnboardingViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val repository = FakeProfileRepository()
     private val savedStateHandle = SavedStateHandle()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private val viewModel by lazy { OnboardingViewModel(repository, log, savedStateHandle) }
+    private val viewModel by lazy { OnboardingViewModel(repository, warningLog, savedStateHandle) }
 
     private val state get() = viewModel.uiState.value
 
@@ -104,7 +104,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun typing_isRestoredFromSavedState() = runTest {
-        viewModelScenario { OnboardingViewModel(repository, log, createSavedStateHandle()) }
+        viewModelScenario { OnboardingViewModel(repository, warningLog, createSavedStateHandle()) }
             .use { scenario ->
                 // While nothing collects uiState.
                 fillIn(viewModel = scenario.viewModel)
@@ -153,7 +153,7 @@ class OnboardingViewModelTest {
     @Test
     fun save_whileSaving_showsSavingAndLocksTheForm() = runTest {
         val viewModel =
-            OnboardingViewModel(NeverFinishingProfileRepository(), log, savedStateHandle)
+            OnboardingViewModel(NeverFinishingProfileRepository(), warningLog, savedStateHandle)
         startCollecting(viewModel)
         fillIn(viewModel = viewModel)
 
@@ -168,7 +168,7 @@ class OnboardingViewModelTest {
     @Test
     fun save_whileSaving_ignoresAnotherSave() = runTest {
         val repository = NeverFinishingProfileRepository()
-        val viewModel = OnboardingViewModel(repository, log, savedStateHandle)
+        val viewModel = OnboardingViewModel(repository, warningLog, savedStateHandle)
         fillIn(viewModel = viewModel)
 
         // As when the scout presses Done and then taps Get started.
@@ -233,7 +233,7 @@ class OnboardingViewModelTest {
         assertEquals(SaveStatus.Editing, state.saveStatus)
         assertTrue(state.canEdit)
         assertTrue(state.canSave)
-        val warning = log.warnings.single()
+        val warning = warningLog.warnings.single()
         assertEquals("TaskFailure", warning.tag)
         assertTrue(warning.error is IOException)
 

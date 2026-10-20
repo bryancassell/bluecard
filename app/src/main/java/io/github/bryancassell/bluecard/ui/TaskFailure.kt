@@ -31,7 +31,7 @@ class TaskFailure
  * share or save, in [scope]. Keeps the latest one that failed until its screen has shown it
  * with [TaskFailureSnackbarHost] or [TaskFailureSnackbar].
  */
-class TaskRunner(private val scope: CoroutineScope, private val log: WarningLog) {
+class TaskRunner(private val scope: CoroutineScope, private val warningLog: WarningLog) {
     private val _failure = MutableStateFlow<TaskFailure?>(null)
 
     /** The latest task that failed, or null once the screen has shown it. */
@@ -39,7 +39,7 @@ class TaskRunner(private val scope: CoroutineScope, private val log: WarningLog)
 
     /**
      * Launches [task]. If it throws an [IOException], which repositories throw when they can't
-     * read or save the scout's data or write a report, writes it to [log] and reports it in
+     * read or save the scout's data or write a report, writes it to [warningLog] and reports it in
      * [failure]. Any other exception is a bug, so it still crashes the app, as in
      * [catchLoadFailure].
      */
@@ -47,7 +47,7 @@ class TaskRunner(private val scope: CoroutineScope, private val log: WarningLog)
         try {
             task()
         } catch (e: IOException) {
-            log.warn(TAG, "Task failed", e)
+            warningLog.warn(TAG, "Task failed", e)
             _failure.value = TaskFailure()
         }
     }

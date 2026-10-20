@@ -11,7 +11,7 @@ import org.junit.Test
 
 /** [catchLoadFailure]. The screen tests cover the load-failed message. */
 class LoadFailureTest {
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     @Test
     fun ioException_isLoggedAndEmitsFailedValue() = runTest {
@@ -19,12 +19,12 @@ class LoadFailureTest {
         val values = flow {
             emit("loaded")
             throw error
-        }.catchLoadFailure("failed", log).toList()
+        }.catchLoadFailure("failed", warningLog).toList()
 
         assertEquals(listOf("loaded", "failed"), values)
         assertEquals(
             listOf(FakeWarningLog.Warning("LoadFailure", "Couldn't load stored data", error)),
-            log.warnings
+            warningLog.warnings
         )
     }
 
@@ -33,11 +33,11 @@ class LoadFailureTest {
         val error = runCatching {
             flow<String> {
                 throw IllegalStateException("A bug")
-            }.catchLoadFailure("failed", log).toList()
+            }.catchLoadFailure("failed", warningLog).toList()
         }.exceptionOrNull()
 
         assertTrue("Expected the bug's exception, got $error", error is IllegalStateException)
         assertEquals("A bug", error?.message)
-        assertTrue(log.warnings.isEmpty())
+        assertTrue(warningLog.warnings.isEmpty())
     }
 }

@@ -37,7 +37,7 @@ class BadgesViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val version = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -74,7 +74,7 @@ class BadgesViewModelTest {
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private val viewModel by lazy {
-        BadgesViewModel(catalogRepository, progressRepository, log, savedStateHandle)
+        BadgesViewModel(catalogRepository, progressRepository, warningLog, savedStateHandle)
     }
 
     /**
@@ -113,7 +113,7 @@ class BadgesViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = BadgesViewModel(loading, progressRepository, log, savedStateHandle)
+        val viewModel = BadgesViewModel(loading, progressRepository, warningLog, savedStateHandle)
         startCollecting(viewModel)
 
         assertEquals(BadgesUiState.Loading, viewModel.uiState.value)
@@ -372,7 +372,12 @@ class BadgesViewModelTest {
     @Test
     fun search_isRestoredFromSavedState() = runTest {
         viewModelScenario {
-            BadgesViewModel(catalogRepository, progressRepository, log, createSavedStateHandle())
+            BadgesViewModel(
+                catalogRepository,
+                progressRepository,
+                warningLog,
+                createSavedStateHandle()
+            )
         }.use { scenario ->
             // While nothing collects uiState.
             scenario.viewModel.query.setTextAndPlaceCursorAtEnd("camp")

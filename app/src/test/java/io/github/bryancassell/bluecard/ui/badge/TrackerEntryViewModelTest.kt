@@ -60,7 +60,7 @@ class TrackerEntryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val newest = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -140,7 +140,7 @@ class TrackerEntryViewModelTest {
         catalog,
         progress,
         clock,
-        log,
+        warningLog,
         savedStateHandle
     )
 
@@ -154,7 +154,7 @@ class TrackerEntryViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
-            log,
+            warningLog,
             createSavedStateHandle()
         )
     }
@@ -1026,7 +1026,7 @@ class TrackerEntryViewModelTest {
                     catalogRepository,
                     progressRepository,
                     clock,
-                    log,
+                    warningLog,
                     createSavedStateHandle()
                 )
             } else {

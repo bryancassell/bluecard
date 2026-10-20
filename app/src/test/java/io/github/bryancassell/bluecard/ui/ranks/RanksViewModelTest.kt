@@ -25,7 +25,7 @@ class RanksViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val version = LocalDate(2026, 1, 1)
     private val started = LocalDate(2026, 3, 1)
@@ -69,7 +69,9 @@ class RanksViewModelTest {
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private val viewModel by lazy { RanksViewModel(catalogRepository, progressRepository, log) }
+    private val viewModel by lazy {
+        RanksViewModel(catalogRepository, progressRepository, warningLog)
+    }
 
     /**
      * Collects uiState, as the screen does, so WhileSubscribed starts it. From the
@@ -91,7 +93,7 @@ class RanksViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = RanksViewModel(loading, progressRepository, log)
+        val viewModel = RanksViewModel(loading, progressRepository, warningLog)
         startCollecting(viewModel)
 
         assertEquals(RanksUiState.Loading, viewModel.uiState.value)

@@ -22,7 +22,7 @@ class MainActivityViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     /**
      * Collects uiState, as the activity does, so WhileSubscribed starts it. From the
@@ -39,7 +39,7 @@ class MainActivityViewModelTest {
 
             override suspend fun saveProfile(profile: Profile) = Unit
         }
-        val viewModel = MainActivityViewModel(loading, FakeDamagedProgressRepository(), log)
+        val viewModel = MainActivityViewModel(loading, FakeDamagedProgressRepository(), warningLog)
         startCollecting(viewModel)
 
         assertEquals(MainActivityUiState.Loading, viewModel.uiState.value)
@@ -50,7 +50,7 @@ class MainActivityViewModelTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository().apply { failLoads = true },
             FakeDamagedProgressRepository(),
-            log
+            warningLog
         )
         startCollecting(viewModel)
 
@@ -60,7 +60,11 @@ class MainActivityViewModelTest {
     @Test
     fun uiState_withoutProfile_isNotSetUp() = runTest {
         val viewModel =
-            MainActivityViewModel(FakeProfileRepository(), FakeDamagedProgressRepository(), log)
+            MainActivityViewModel(
+                FakeProfileRepository(),
+                FakeDamagedProgressRepository(),
+                warningLog
+            )
         startCollecting(viewModel)
 
         assertEquals(
@@ -74,7 +78,7 @@ class MainActivityViewModelTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
             FakeDamagedProgressRepository(),
-            log
+            warningLog
         )
         startCollecting(viewModel)
 
@@ -87,7 +91,8 @@ class MainActivityViewModelTest {
     @Test
     fun uiState_whenProfileIsSaved_becomesSetUp() = runTest {
         val repository = FakeProfileRepository()
-        val viewModel = MainActivityViewModel(repository, FakeDamagedProgressRepository(), log)
+        val viewModel =
+            MainActivityViewModel(repository, FakeDamagedProgressRepository(), warningLog)
         startCollecting(viewModel)
 
         repository.saveProfile(Profile("Alex Scout", "123"))
@@ -103,7 +108,7 @@ class MainActivityViewModelTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
             FakeDamagedProgressRepository(noticePending = true),
-            log
+            warningLog
         )
         startCollecting(viewModel)
 
@@ -119,7 +124,7 @@ class MainActivityViewModelTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
             damagedProgress,
-            log
+            warningLog
         )
         startCollecting(viewModel)
 
@@ -137,7 +142,7 @@ class MainActivityViewModelTest {
         val viewModel = MainActivityViewModel(
             FakeProfileRepository(Profile("Alex Scout", "123")),
             damagedProgress,
-            log
+            warningLog
         )
         startCollecting(viewModel)
 

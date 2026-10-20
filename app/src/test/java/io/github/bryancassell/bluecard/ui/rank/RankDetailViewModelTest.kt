@@ -52,7 +52,7 @@ class RankDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val older = LocalDate(2025, 1, 1)
     private val newest = LocalDate(2026, 1, 1)
@@ -99,7 +99,7 @@ class RankDetailViewModelTest {
         progress,
         reportRepository,
         clock,
-        log,
+        warningLog,
         savedStateHandle
     )
 
@@ -129,7 +129,7 @@ class RankDetailViewModelTest {
             progressRepository,
             reportRepository,
             clock,
-            log,
+            warningLog,
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -455,7 +455,7 @@ class RankDetailViewModelTest {
                 progressRepository,
                 reportRepository,
                 clock,
-                log,
+                warningLog,
                 createSavedStateHandle()
             )
         }.use { scenario ->

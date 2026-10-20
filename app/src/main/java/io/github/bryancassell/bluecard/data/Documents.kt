@@ -22,11 +22,11 @@ private const val TAG = "Documents"
  * Throws what making the content throws, or an [IOException] if the document can't be opened
  * or written. Either way, it doesn't leave behind the empty document the file picker made, or
  * one that opening emptied. If that can't be deleted, or its size can't be read, that's
- * written to [log].
+ * written to [warningLog].
  */
 suspend fun ContentResolver.saveDocument(
     destination: Uri,
-    log: WarningLog,
+    warningLog: WarningLog,
     content: suspend () -> ByteArray?
 ) {
     val bytes: ByteArray
@@ -34,13 +34,13 @@ suspend fun ContentResolver.saveDocument(
     try {
         bytes = content() ?: run {
             // The file picker made an empty document for the content, which isn't left behind.
-            deleteIfEmpty(destination, log)
+            deleteIfEmpty(destination, warningLog)
             return
         }
         out = openForWriting(destination)
     } catch (e: Exception) {
         // The file picker made an empty document for the content, which isn't left behind.
-        deleteIfEmpty(destination, log)
+        deleteIfEmpty(destination, warningLog)
         throw e
     }
     try {
@@ -48,7 +48,7 @@ suspend fun ContentResolver.saveDocument(
     } catch (e: Exception) {
         // Opening it emptied it, so it's empty or partial, and the scout could send it
         // without noticing that it failed.
-        delete(destination, log)
+        delete(destination, warningLog)
         throw e
     }
 }
@@ -91,7 +91,7 @@ private fun ContentResolver.openForWriting(destination: Uri): OutputStream = try
  * Deletes [destination] if its provider says it's empty, as the file picker makes it. If it
  * doesn't say, it's kept, in case it's a file the scout chose to replace.
  */
-private fun ContentResolver.deleteIfEmpty(destination: Uri, log: WarningLog) {
+private fun ContentResolver.deleteIfEmpty(destination: Uri, warningLog: WarningLog) {
     val size = try {
         // The form of query that providers take since Android O: DocumentsProvider refuses
         // the older one.
@@ -101,22 +101,22 @@ private fun ContentResolver.deleteIfEmpty(destination: Uri, log: WarningLog) {
         }
     } catch (e: Exception) {
         // As in delete.
-        log.warn(TAG, "Couldn't find the size of the document that failed", e)
+        warningLog.warn(TAG, "Couldn't find the size of the document that failed", e)
         null
     }
-    if (size == 0L) delete(destination, log)
+    if (size == 0L) delete(destination, warningLog)
 }
 
 /**
  * Deletes [destination], if its provider lets it. If it doesn't, the save's own failure is
- * what the scout is told about, so this one is only written to [log].
+ * what the scout is told about, so this one is only written to [warningLog].
  */
-private fun ContentResolver.delete(destination: Uri, log: WarningLog) {
+private fun ContentResolver.delete(destination: Uri, warningLog: WarningLog) {
     try {
         DocumentsContract.deleteDocument(this, destination)
     } catch (e: Exception) {
         // deleteDocument rethrows whatever the provider throws, such as an
         // UnsupportedOperationException when it can't delete.
-        log.warn(TAG, "Couldn't delete the document that failed", e)
+        warningLog.warn(TAG, "Couldn't delete the document that failed", e)
     }
 }

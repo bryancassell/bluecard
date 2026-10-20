@@ -48,7 +48,7 @@ class EditCounselorViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val older = LocalDate(2025, 1, 1)
     private val newest = LocalDate(2026, 1, 1)
@@ -83,7 +83,7 @@ class EditCounselorViewModelTest {
         catalogRepository,
         progressRepository,
         clock,
-        log,
+        warningLog,
         savedStateHandle
     )
 
@@ -97,7 +97,7 @@ class EditCounselorViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
-            log,
+            warningLog,
             createSavedStateHandle()
         )
     }
@@ -145,7 +145,7 @@ class EditCounselorViewModelTest {
             loading,
             progressRepository,
             clock,
-            log,
+            warningLog,
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -335,7 +335,7 @@ class EditCounselorViewModelTest {
                 }
             },
             clock,
-            log,
+            warningLog,
             SavedStateHandle()
         )
 
@@ -353,7 +353,7 @@ class EditCounselorViewModelTest {
                 ) {}
             },
             clock,
-            log,
+            warningLog,
             SavedStateHandle()
         )
         startCollecting(viewModel)

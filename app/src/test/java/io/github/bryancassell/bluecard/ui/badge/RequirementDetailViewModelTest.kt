@@ -58,7 +58,7 @@ class RequirementDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val log = FakeWarningLog()
+    private val warningLog = FakeWarningLog()
 
     private val older = LocalDate(2025, 1, 1)
     private val newest = LocalDate(2026, 1, 1)
@@ -180,7 +180,7 @@ class RequirementDetailViewModelTest {
         catalog,
         progress,
         clock,
-        log,
+        warningLog,
         savedStateHandle
     )
 
@@ -198,7 +198,7 @@ class RequirementDetailViewModelTest {
             catalog,
             progressRepository,
             clock,
-            log,
+            warningLog,
             createSavedStateHandle()
         )
     }
@@ -349,7 +349,7 @@ class RequirementDetailViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
-            log,
+            warningLog,
             savedStateHandle
         )
         startCollecting(viewModel)
@@ -1071,7 +1071,7 @@ class RequirementDetailViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
-            log,
+            warningLog,
             SavedStateHandle(mapOf("comment" to "From an intent."))
         )
         startCollecting(viewModel)

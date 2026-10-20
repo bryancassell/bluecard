@@ -33,7 +33,7 @@ class EditCounselorViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -52,7 +52,7 @@ class EditCounselorViewModel(
     /** The counselor's email address field. */
     val email = fields[EMAIL]
 
-    private val saves = TaskRunner(viewModelScope, log)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /** Whether the fields have been saved and the page hasn't closed yet. */
     private val saved = MutableStateFlow(false)
@@ -81,7 +81,7 @@ class EditCounselorViewModel(
             saved = isSaved,
             saveFailure = saveFailure
         )
-    }.catchLoadFailure(EditCounselorUiState.LoadFailed, log).stateIn(
+    }.catchLoadFailure(EditCounselorUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         EditCounselorUiState.Loading

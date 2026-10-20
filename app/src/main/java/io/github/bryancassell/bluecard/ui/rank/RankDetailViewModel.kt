@@ -41,14 +41,14 @@ class RankDetailViewModel(
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
     private val clock: ZonedClock,
-    log: WarningLog,
+    warningLog: WarningLog,
     // Keeps the date to open the date picker at if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val rankId = key.rankId
 
-    private val report = ReportTasks(viewModelScope, reportRepository, rankId, log)
-    private val saves = TaskRunner(viewModelScope, log)
+    private val report = ReportTasks(viewModelScope, reportRepository, rankId, warningLog)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /**
      * The page as worked out from the catalog and progress, before [uiState] adds the date just
@@ -113,7 +113,7 @@ class RankDetailViewModel(
         } else {
             state
         }
-    }.catchLoadFailure(RankDetailUiState.LoadFailed, log)
+    }.catchLoadFailure(RankDetailUiState.LoadFailed, warningLog)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RankDetailUiState.Loading)
 
     /**
