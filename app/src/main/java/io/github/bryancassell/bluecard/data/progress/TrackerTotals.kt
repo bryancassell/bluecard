@@ -1,9 +1,10 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.artificialpb.bignum.BigDecimal
+import io.github.artificialpb.bignum.bigDecimalOf
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.math.BigDecimal
 
 /**
  * The decimal separators a number in a tracker row can have, whichever the scout's keyboard
@@ -25,8 +26,14 @@ fun storedNumber(text: String): BigDecimal? {
             else -> char.digitToIntOrNull()?.digitToChar() ?: return null
         }
     }
-    // Null for a lone separator, which has no digit, or for more than one.
-    return String(digits.toCharArray()).toBigDecimalOrNull()
+    // Null for a lone separator, which has no digit, or for more than one, which bigDecimalOf
+    // throws for; toBigDecimalOrNull is only on the JVM. On iOS, bignum-kt 1.0.5 reads ".5" and
+    // "2." as Java does (parseString in nativeMain's BigDecimal.native.kt).
+    return try {
+        bigDecimalOf(digits.toCharArray().concatToString())
+    } catch (e: NumberFormatException) {
+        null
+    }
 }
 
 /**
@@ -45,7 +52,13 @@ fun TrackerDefinition.totals(entries: List<TrackerEntry>): List<TrackerTotal> =
 /**
  * This column's values added up over the [entries] recorded for its requirement. Only a log has
  * totals (docs/catalog.md), so every entry is a row. A value that isn't a number
- * ([storedNumber]) isn't counted. They're added as [BigDecimal], so 0.1 and 0.2 hours make 0.3.
+ * ([storedNumber]) isn't counted. They're added as bignum-kt's [BigDecimal] (ARCHITECTURE.md,
+ * Trackers), so 0.1 and 0.2 hours make 0.3, and ten rows of 0.6 hours make the 6 that Doubles
+ * fall short of. Whole hundredths in a Long would cut values typed with more decimal places, and
+ * couldn't hold a 20-digit one.
  */
-fun TrackerColumn.sumOver(entries: List<TrackerEntry>): BigDecimal =
-    entries.sumOf { it.values[id]?.let(::storedNumber) ?: BigDecimal.ZERO }
+fun TrackerColumn.sumOver(entries: List<TrackerEntry>): BigDecimal {
+    val numbers = entries.mapNotNull { it.values[id]?.let(::storedNumber) }
+    // Not sumOf, which adds BigDecimals only on the JVM.
+    return numbers.fold(bigDecimalOf(0), BigDecimal::add)
+}

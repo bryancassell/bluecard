@@ -1,12 +1,14 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.artificialpb.bignum.BigDecimal
+import io.github.artificialpb.bignum.plus
+import io.github.artificialpb.bignum.toBigDecimal
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
-import java.math.BigDecimal
 
 /**
  * How much of this requirement is done, from 0 to 1, from the scout's recorded progress and
