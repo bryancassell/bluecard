@@ -206,7 +206,7 @@ class RoomProgressRepository @Inject constructor(
         start: BadgeStart,
         action: suspend () -> T
     ): T = writing {
-        inTransaction {
+        database.withWriteTransaction {
             if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
             action()
         }
@@ -217,9 +217,7 @@ class RoomProgressRepository @Inject constructor(
      * [notStarted] if it isn't.
      */
     private suspend fun <T> ifStarted(badgeId: String, notStarted: T, action: suspend () -> T): T =
-        writing { inTransaction { if (dao.isStarted(badgeId)) action() else notStarted } }
-
-    /** Runs [action] in one transaction, on Room's writer connection. */
-    private suspend fun <T> inTransaction(action: suspend () -> T): T =
-        database.withWriteTransaction { action() }
+        writing {
+            database.withWriteTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
+        }
 }

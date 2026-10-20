@@ -46,9 +46,9 @@ import org.junit.runner.RunWith
 /**
  * Runs the repository contract against Room with an in-memory database, on the SQLite the app
  * bundles (BundledSQLiteDriver), under Robolectric as the other Room tests are. The Room testing
- * guide recommends plain JVM tests with Room's Kotlin Multiplatform setup instead. Room 3 has
- * builders that take no Context, so this can become one when the database moves to common code
- * (#345).
+ * guide recommends plain JVM tests instead. Room 3's builders that take no Context would allow
+ * one here too (tried with an in-memory database and the library's path set), and this test
+ * becomes one when the database moves to common code (#345).
  */
 @RunWith(AndroidJUnit4::class)
 class RoomProgressRepositoryTest : ProgressRepositoryContract() {
