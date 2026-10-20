@@ -447,11 +447,10 @@ both taps of a double tap can reach it.
 - **Storage choice:** the DataStore guide says it is "ideal for small datasets"
   and to "consider using Room" for larger or relational data. The profile is two
   values; recorded progress is relational (badges → requirements → tracker rows).
-- **Room 2.8** (`androidx.room`) on its SQLite driver API, with
-  `BundledSQLiteDriver`: a SQLite the app ships, for iOS too
-  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Room 3 is
-  planned ([#339](https://github.com/bryancassell/bluecard/issues/339)). Room
-  and Hilt both generate code, using the KSP Gradle plugin.
+- **Room 3** (`androidx.room3`) with `BundledSQLiteDriver`: a SQLite the app
+  ships, for iOS too
+  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Room and Hilt
+  both generate code, using the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
 
@@ -959,7 +958,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page; stable since 1.0.0 |
 | [Focus between pages](#navigation) | A focus target around the pages takes the focus a page lets go of | Otherwise Compose gives it to a page's first item, which opened the keyboard on Badges |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
-| [Persistence](#repositories) | Room 2.8 on `BundledSQLiteDriver` for progress; Preferences DataStore for the profile | The DataStore guide's criteria; the same SQLite on Android and iOS |
+| [Persistence](#repositories) | Room 3 on `BundledSQLiteDriver` for progress; Preferences DataStore for the profile | The DataStore guide's criteria; the same SQLite on Android and iOS |
 | [Dependency injection](#dependency-injection) | Hilt | Recommended once there are multiple screens with ViewModels |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays; a started badge stays on its version until the scout switches | The advancement rules allow finishing on the previous requirements |

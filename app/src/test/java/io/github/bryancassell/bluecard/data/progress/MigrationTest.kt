@@ -1,8 +1,8 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
-import androidx.room.Room
-import androidx.room.testing.MigrationTestHelper
+import androidx.room3.Room
+import androidx.room3.testing.MigrationTestHelper
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
@@ -39,11 +39,10 @@ class MigrationTest {
     /**
      * Migrates the database to [version] and checks it against that version's committed schema.
      * The helper checks the schema's tables, but not for others, such as one a migration should
-     * have dropped: its driver form passes validateUnknownTables = false to Room (checked in
-     * room-testing 2.8.5), where its SupportSQLite form took validateDroppedTables. So this
-     * checks that too.
+     * have dropped: it passes validateUnknownTables = false to Room (checked in room3-testing
+     * 3.0.3). So this checks that too.
      */
-    private fun migrateAndValidate(version: Int) =
+    private suspend fun migrateAndValidate(version: Int) =
         helper.runMigrationsAndValidate(version).use { migrated ->
             val tables = migrated.prepare(
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"

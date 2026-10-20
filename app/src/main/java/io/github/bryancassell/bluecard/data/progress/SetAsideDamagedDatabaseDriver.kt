@@ -22,11 +22,11 @@ import java.io.File
  * it as a bug, so the app crashes, and the next run sets the database aside even if the check
  * passes. Otherwise damage the check misses would crash every run. Every statement after that
  * fails with the same error, so nothing more is saved into a database that will be set aside,
- * even where Room catches the first error, as its InvalidationTracker does (Room 2.8.5).
+ * even where Room catches the first error, as its InvalidationTracker does (Room 3.0.3).
  *
  * [driver] is BundledSQLiteDriver. AndroidSQLiteDriver opens the database with Android's default
  * error handler, which deletes a damaged database and the files beside it, and takes no other
- * (checked in androidx.sqlite 2.6.2). Its SQLite calls use only androidx.sqlite's common
+ * (checked in androidx.sqlite 2.7.1). Its SQLite calls use only androidx.sqlite's common
  * interfaces, but its files (#342) and its lock need common replacements before iOS can use it
  * (#345).
  */

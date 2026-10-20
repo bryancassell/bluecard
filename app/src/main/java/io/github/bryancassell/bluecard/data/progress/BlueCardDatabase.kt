@@ -1,9 +1,9 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
+import androidx.room3.AutoMigration
+import androidx.room3.ColumnTypeConverters
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
 
 // Each version's schema is in app/schemas/, and MigrationTest checks each migration.
 // Version 2 added TrackerEntry.rowNumber, version 3 TrackerEntry.addedDate, and version 4
@@ -17,7 +17,7 @@ import androidx.room.TypeConverters
         AutoMigration(from = 3, to = 4)
     ]
 )
-@TypeConverters(Converters::class)
+@ColumnTypeConverters(Converters::class)
 abstract class BlueCardDatabase : RoomDatabase() {
     abstract fun progressDao(): ProgressDao
 
