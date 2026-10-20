@@ -80,13 +80,13 @@ abstract class LocaleFormatsContract {
     // A Persian name in an English sentence keeps its period at its end.
     @Test
     fun typedText_inAnotherDirection_isWrappedToKeepIt() {
-        assertEquals("‎‫علی.‬‎", formats("en-US").typedText("علی."))
+        assertEquals("\u200E\u202Bعلی.\u202C\u200E", formats("en-US").typedText("علی."))
     }
 
     // As an English name would in a right-to-left translation's sentence.
     @Test
     fun typedText_leftToRight_inARightToLeftLocale_isWrappedToKeepIt() {
-        assertEquals("‏‪Alex.‬‏", formats("fa").typedText("Alex."))
+        assertEquals("\u200F\u202AAlex.\u202C\u200F", formats("fa").typedText("Alex."))
     }
 
     @Test

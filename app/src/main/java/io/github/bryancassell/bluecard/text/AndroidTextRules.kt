@@ -11,14 +11,16 @@ class AndroidTextRules : TextRules {
     override fun englishOrder(): Comparator<String> =
         Comparator(Collator.getInstance(Locale.ENGLISH)::compare)
 
-    override fun characterBoundaries(text: String): List<Int> =
-        BreakIterator.getCharacterInstance().boundaries(text)
+    override fun characterBoundaryAtOrBefore(text: String, offset: Int): Int =
+        characters(text).run { if (isBoundary(offset)) offset else preceding(offset) }
 
-    override fun lineBreaks(text: String): List<Int> =
-        BreakIterator.getLineInstance().boundaries(text)
+    override fun characterBoundaryAtOrAfter(text: String, offset: Int): Int =
+        characters(text).run { if (isBoundary(offset)) offset else following(offset) }
 
-    private fun BreakIterator.boundaries(text: String): List<Int> {
-        setText(text)
-        return generateSequence(first()) { next().takeIf { it != BreakIterator.DONE } }.toList()
-    }
+    override fun isLineBreak(text: String, offset: Int): Boolean =
+        BreakIterator.getLineInstance().apply { setText(text) }.isBoundary(offset)
+
+    // ICU works out boundaries near the offset it's asked about, not across the whole text.
+    private fun characters(text: String): BreakIterator =
+        BreakIterator.getCharacterInstance().apply { setText(text) }
 }

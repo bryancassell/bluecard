@@ -42,6 +42,6 @@ fun statusFitsBeside(
 /** Whether a line ends where the text has no line break opportunity: in the middle of a word. */
 private fun TextLayoutResult.breaksAWord(textRules: TextRules): Boolean {
     if (lineCount == 1) return false
-    val breaks = textRules.lineBreaks(layoutInput.text.text)
-    return (0 until lineCount - 1).any { getLineEnd(it) !in breaks }
+    val text = layoutInput.text.text
+    return (0 until lineCount - 1).any { !textRules.isLineBreak(text, getLineEnd(it)) }
 }

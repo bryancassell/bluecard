@@ -257,10 +257,11 @@ private fun TrackerField(
                 state = field,
                 textStyle = typedTextFieldStyle(),
                 label = { Text(column.label) },
-                // A text column's field is single-line, so a pasted line break becomes a space.
                 inputTransformation = if (multiline) {
                     rememberTextLengthLimit(maxLength = TRACKER_MULTILINE_TEXT_MAX_LENGTH)
                 } else {
+                    // A text column's field is single-line, so a pasted line break becomes a
+                    // space.
                     rememberSingleLineInput(maxLength = TRACKER_TEXT_MAX_LENGTH)
                 },
                 keyboardOptions = KeyboardOptions(

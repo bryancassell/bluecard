@@ -14,9 +14,10 @@ import io.github.bryancassell.bluecard.text.TextRules
  * such as a long paste, so the text already in the field stays. Typing into a full field
  * does nothing. `InputTransformation.maxLength` rejects the whole edit instead.
  *
- * It cuts only between characters as a reader sees them ([TextRules.characterBoundaries]), never
- * through an emoji made of several code points or a letter with an accent mark, so the text can
- * end a little short of the limit. A field on screen uses [rememberTextLengthLimit].
+ * It cuts only between characters as a reader sees them, never through an emoji made of
+ * several code points or a letter with an accent mark ([TextRules.characterBoundaryAtOrBefore]),
+ * so the text can end a little short of the limit. A field on screen uses
+ * [rememberTextLengthLimit].
  */
 class TextLengthLimit(private val maxLength: Int, private val textRules: TextRules) :
     InputTransformation {
@@ -56,9 +57,10 @@ class TextLengthLimit(private val maxLength: Int, private val textRules: TextRul
             keptAtEnd = minOf(keptAtEnd, shorter - kept)
         }
         // Cut from the end of what the edit changed, at a boundary between characters.
-        val characters = characters()
-        val end = characters.boundaryAtOrAfter(length - keptAtEnd)
-        val from = characters.boundaryAtOrBefore(maxOf(kept, end - (length - maxLength)))
+        val text = toString()
+        val end = textRules.characterBoundaryAtOrAfter(text, length - keptAtEnd)
+        val from =
+            textRules.characterBoundaryAtOrBefore(text, maxOf(kept, end - (length - maxLength)))
         if (from < kept) {
             // Only cutting text that was already there would make room, as when an accent is
             // added to the last letter of a full field, so the edit is rejected.
@@ -67,11 +69,10 @@ class TextLengthLimit(private val maxLength: Int, private val textRules: TextRul
             delete(from, end)
         }
         // Text that was already too long, such as text set in code, is cut at its end.
-        if (length > maxLength) delete(characters().boundaryAtOrBefore(maxLength), length)
+        if (length > maxLength) {
+            delete(textRules.characterBoundaryAtOrBefore(toString(), maxLength), length)
+        }
     }
-
-    /** The boundaries between characters as a reader sees them (grapheme clusters). */
-    private fun TextFieldBuffer.characters(): List<Int> = textRules.characterBoundaries(toString())
 }
 
 /** A [TextLengthLimit] of [maxLength] characters, for a field on screen ([LocalTextRules]). */
@@ -80,7 +81,3 @@ fun rememberTextLengthLimit(maxLength: Int): TextLengthLimit {
     val textRules = LocalTextRules.current
     return remember(maxLength, textRules) { TextLengthLimit(maxLength, textRules) }
 }
-
-private fun List<Int>.boundaryAtOrBefore(offset: Int) = last { it <= offset }
-
-private fun List<Int>.boundaryAtOrAfter(offset: Int) = first { it >= offset }

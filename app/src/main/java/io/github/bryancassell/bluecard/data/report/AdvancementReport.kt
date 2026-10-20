@@ -154,8 +154,8 @@ fun MeritBadge.report(
  * The report on this standing's rank, which must be earned, for [profile], from their
  * [progress] on it, null if it isn't started, and the badges they've completed
  * ([earnedBadges]), which its requirements that ask for merit badges count and list in name
- * order, by [textRules]. Created on [createdDate]. Null if the catalog doesn't have the version the rank was started on, which
- * only a catalog edited during development can cause.
+ * order, by [textRules]. Created on [createdDate]. Null if the catalog doesn't have the version
+ * the rank was started on, which only a catalog edited during development can cause.
  *
  * A rank counted as earned with a rank above it reads as marked itself, as on its page, so a
  * requirement not recorded for it is [ReportRequirement.notRecorded].

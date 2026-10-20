@@ -14,15 +14,20 @@ interface TextRules {
     fun englishOrder(): Comparator<String>
 
     /**
-     * The offsets in [text] between characters as a reader sees them (grapheme clusters), from 0
-     * to its length, so an emoji made of several code points or a letter with an accent mark is
-     * one character.
+     * [offset] if it's between two characters of [text] as a reader sees them (grapheme
+     * clusters), or else the nearest such boundary before it, so a cut there never splits an
+     * emoji made of several code points or a letter from its accent mark. The start and end of
+     * the text are boundaries. Asked about one offset rather than the whole text, so a huge paste
+     * costs little more than a short one.
      */
-    fun characterBoundaries(text: String): List<Int>
+    fun characterBoundaryAtOrBefore(text: String, offset: Int): Int
+
+    /** As [characterBoundaryAtOrBefore], but the nearest boundary after [offset]. */
+    fun characterBoundaryAtOrAfter(text: String, offset: Int): Int
 
     /**
-     * The offsets in [text] where a line may break, such as after a space, from 0 to its length.
-     * A line that ends anywhere else breaks a word.
+     * Whether a line of [text] may break at [offset], such as after a space. A line that ends
+     * anywhere else breaks a word. The start and end of the text are line breaks.
      */
-    fun lineBreaks(text: String): List<Int>
+    fun isLineBreak(text: String, offset: Int): Boolean
 }
