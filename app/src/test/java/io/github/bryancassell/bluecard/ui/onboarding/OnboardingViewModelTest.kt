@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.onboarding
 
-import android.util.Log
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
@@ -10,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import java.io.IOException
 import kotlinx.coroutines.awaitCancellation
@@ -28,21 +28,22 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.shadows.ShadowLog
 
-// Robolectric, because a failed save reaches android.util.Log, which throws in plain local
-// tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class OnboardingViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val repository = FakeProfileRepository()
     private val savedStateHandle = SavedStateHandle()
 
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
-    private val viewModel by lazy { OnboardingViewModel(repository, savedStateHandle) }
+    private val viewModel by lazy { OnboardingViewModel(repository, warningLog, savedStateHandle) }
 
     private val state get() = viewModel.uiState.value
 
@@ -103,7 +104,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun typing_isRestoredFromSavedState() = runTest {
-        viewModelScenario { OnboardingViewModel(repository, createSavedStateHandle()) }
+        viewModelScenario { OnboardingViewModel(repository, warningLog, createSavedStateHandle()) }
             .use { scenario ->
                 // While nothing collects uiState.
                 fillIn(viewModel = scenario.viewModel)
@@ -151,7 +152,8 @@ class OnboardingViewModelTest {
 
     @Test
     fun save_whileSaving_showsSavingAndLocksTheForm() = runTest {
-        val viewModel = OnboardingViewModel(NeverFinishingProfileRepository(), savedStateHandle)
+        val viewModel =
+            OnboardingViewModel(NeverFinishingProfileRepository(), warningLog, savedStateHandle)
         startCollecting(viewModel)
         fillIn(viewModel = viewModel)
 
@@ -166,7 +168,7 @@ class OnboardingViewModelTest {
     @Test
     fun save_whileSaving_ignoresAnotherSave() = runTest {
         val repository = NeverFinishingProfileRepository()
-        val viewModel = OnboardingViewModel(repository, savedStateHandle)
+        val viewModel = OnboardingViewModel(repository, warningLog, savedStateHandle)
         fillIn(viewModel = viewModel)
 
         // As when the scout presses Done and then taps Get started.
@@ -231,9 +233,9 @@ class OnboardingViewModelTest {
         assertEquals(SaveStatus.Editing, state.saveStatus)
         assertTrue(state.canEdit)
         assertTrue(state.canSave)
-        val log = ShadowLog.getLogsForTag("TaskFailure").single()
-        assertEquals(Log.WARN, log.type)
-        assertTrue(log.throwable is IOException)
+        val warning = warningLog.warnings.single()
+        assertEquals("TaskFailure", warning.tag)
+        assertTrue(warning.error is IOException)
 
         repository.failSaves = false
         viewModel.save()

@@ -2,10 +2,10 @@ package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.util.Log
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import java.io.File
 import java.io.IOException
@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 class FileDamagedProgressRepository(
     private val context: Context,
     private val clock: ZonedClock,
+    private val warningLog: WarningLog,
     @param:ApplicationScope private val externalScope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
@@ -74,7 +75,8 @@ class FileDamagedProgressRepository(
     fun setAside(database: File) {
         // Recorded damage outlives the files if the app was stopped after moving them all.
         if (database.exists()) {
-            try {
+            // Warned after the try, so writing the warning can't be mistaken for the move failing.
+            val (message, error) = try {
                 Files.createDirectories(folder.toPath())
                 // Before the move, so the scout is told, and the next launch sets aside the rest,
                 // even if the app closes partway.
@@ -84,12 +86,13 @@ class FileDamagedProgressRepository(
                 for (file in sqliteFiles(database).filter { it.exists() }) {
                     Files.move(file.toPath(), copy.resolve(file.name))
                 }
-                Log.w(TAG, "Set aside a damaged database: $database")
+                "Set aside a damaged database: $database" to null
             } catch (e: IOException) {
-                Log.w(TAG, "Couldn't set aside a damaged database, so deleted it: $database", e)
                 SQLiteDatabase.deleteDatabase(database)
+                "Couldn't set aside a damaged database, so deleted it: $database" to e
             }
             noticePending.value = true
+            warningLog.warn(TAG, message, error)
         }
         damageFile.delete()
     }
@@ -107,7 +110,7 @@ class FileDamagedProgressRepository(
             Files.createDirectories(folder.toPath())
             damageFile.createNewFile()
         } catch (e: IOException) {
-            Log.w(TAG, "Couldn't record a damaged database", e)
+            warningLog.warn(TAG, "Couldn't record a damaged database", e)
         }
     }
 

@@ -103,6 +103,11 @@ class AndroidModuleTest {
     }
 
     @Test
+    fun warningLog_isLogcat() {
+        assertSame(LogcatWarningLog, koin.get<WarningLog>())
+    }
+
+    @Test
     fun catalogRepository_isAssetCatalogRepository() {
         assertTrue(koin.get<CatalogRepository>() is AssetCatalogRepository)
     }

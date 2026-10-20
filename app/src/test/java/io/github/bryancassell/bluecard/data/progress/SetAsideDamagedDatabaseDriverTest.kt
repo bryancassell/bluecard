@@ -15,6 +15,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import io.github.bryancassell.bluecard.di.DeviceClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
@@ -53,6 +54,7 @@ class SetAsideDamagedDatabaseDriverTest {
     private val damagedProgress = FileDamagedProgressRepository(
         context,
         DeviceClock,
+        FakeWarningLog(),
         CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
         Dispatchers.Unconfined
     )

@@ -21,6 +21,7 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import java.io.File
 import java.io.IOException
@@ -111,6 +112,7 @@ class PdfReportRepositoryTest {
         profileRepository,
         pdfWriter,
         FakeClock(today.atStartOfDayIn(TimeZone.UTC)),
+        FakeWarningLog(),
         ioDispatcher,
         externalScope
     )

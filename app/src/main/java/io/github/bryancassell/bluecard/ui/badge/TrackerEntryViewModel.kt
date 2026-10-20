@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedTrackerValues
 import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.data.progress.withoutTrackerEntry
+import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -59,6 +60,7 @@ class TrackerEntryViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
+    warningLog: WarningLog,
     // Keeps unsaved values if the system stops the app in the background.
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -76,7 +78,7 @@ class TrackerEntryViewModel(
      */
     val fields: Map<String, TextFieldState> = _fields
 
-    private val saves = TaskRunner(viewModelScope)
+    private val saves = TaskRunner(viewModelScope, warningLog)
 
     /** Whether a save or delete is under way. */
     private val saving = MutableStateFlow(false)
@@ -112,7 +114,7 @@ class TrackerEntryViewModel(
                 }
             )
         }
-    }.catchLoadFailure(TrackerEntryUiState.LoadFailed).stateIn(
+    }.catchLoadFailure(TrackerEntryUiState.LoadFailed, warningLog).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         TrackerEntryUiState.Loading

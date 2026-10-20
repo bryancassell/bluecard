@@ -29,6 +29,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import java.io.File
 import java.io.IOException
@@ -132,6 +133,7 @@ class JsonBackupRepositoryTest {
         catalogRepository,
         profileRepository,
         progressRepository,
+        FakeWarningLog(),
         ioDispatcher,
         externalScope
     )

@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
 import kotlinx.coroutines.CompletableDeferred
@@ -40,12 +41,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-// Robolectric, because the load- and save-failure tests reach android.util.Log, which throws in
-// plain local tests (see ARCHITECTURE.md, ViewModel tests).
+// Robolectric, because the tests of the system stopping the app restore saved state, which is a
+// Bundle on Android, and throws in plain local tests (see ARCHITECTURE.md, ViewModel tests).
 @RunWith(AndroidJUnit4::class)
 class EditCounselorViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val warningLog = FakeWarningLog()
 
     private val older = LocalDate(2025, 1, 1)
     private val newest = LocalDate(2026, 1, 1)
@@ -80,6 +83,7 @@ class EditCounselorViewModelTest {
         catalogRepository,
         progressRepository,
         clock,
+        warningLog,
         savedStateHandle
     )
 
@@ -93,6 +97,7 @@ class EditCounselorViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
+            warningLog,
             createSavedStateHandle()
         )
     }
@@ -140,6 +145,7 @@ class EditCounselorViewModelTest {
             loading,
             progressRepository,
             clock,
+            warningLog,
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -329,6 +335,7 @@ class EditCounselorViewModelTest {
                 }
             },
             clock,
+            warningLog,
             SavedStateHandle()
         )
 
@@ -346,6 +353,7 @@ class EditCounselorViewModelTest {
                 ) {}
             },
             clock,
+            warningLog,
             SavedStateHandle()
         )
         startCollecting(viewModel)
