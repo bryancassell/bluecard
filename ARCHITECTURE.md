@@ -238,8 +238,8 @@ Data sources    DataStore     JSON asset      Room      PdfDocument  JSON files 
   reason, beside the data it limits (for example `NOTES_MAX_LENGTH` in
   `data/progress/Progress.kt`), because import holds a file to the same limits
   (see [Export and import](#export-and-import)). Single-line text fields take
-  their limit from `singleLineInput` (`ui/SingleLineInput.kt`), which then
-  replaces a pasted line break with a space (`LineBreaksAsSpaces`). Number
+  their limit from `rememberSingleLineInput` (`ui/SingleLineInput.kt`), which
+  then replaces a pasted line break with a space (`LineBreaksAsSpaces`). Number
   fields instead chain `NumberInput`, which rejects a line break, with their
   `TextLengthLimit`.
 - **The keyboard's action key moves through a page's fields.** On a page with
@@ -322,16 +322,20 @@ both taps of a double tap can reach it.
 - **Text inside a string follows the strings' language, not the device's.**
   `strings_language` in `strings.xml` names the language of the strings the app
   shows, which differs from the device's when the app has no strings for it.
-  `BlueCardApp` provides `LocalResources` in that language
-  (`ProvideStringsLanguageResources`), so every `stringResource` and
-  `pluralStringResource` follows it. Lists inside a string
-  (`rememberBadgeNameListFormatter`), numbers and dates
-  (`rememberCompletionDateFormatter`) are formatted in it too, so a sentence
-  never mixes two languages: on a Persian phone, English strings read "Do 2 of
-  3", not "Do ۲ of ۳". Code outside Compose, such as the PDF report, uses
-  `stringsLanguageResources` and `CompletionDateFormatter` (`text/`). Each
+  `BlueCardApp` provides `LocalResources` in that language, and
+  `LocalLocaleFormats` in its locale (`ProvideStringsLanguageResources`), so
+  every string, and every list, number and date inside one, follows it, and a
+  sentence never mixes two languages: on a Persian phone, English strings read
+  "Do 2 of 3", not "Do ۲ of ۳". Code outside Compose, such as the PDF report,
+  uses `stringsLanguageResources` and `AndroidLocaleFormats` (`text/`). Each
   translation's `strings.xml` must name its own language
   (`StringsLanguageTagTest`).
+- **Formatting, sorting and breaking text go through `LocaleFormats` and
+  `TextRules`** (`text/`), not `java.text`, `android.icu`, `java.time.format`
+  or `BidiFormatter`, which code shared with iOS can't call
+  ([#341](https://github.com/bryancassell/bluecard/issues/341)). Their Android
+  implementations wrap those. ViewModels and the report get `TextRules` from
+  Koin; screens read `LocalTextRules`, which `BlueCardApp` provides.
 - **Punctuation that joins text comes from `strings.xml` too**
   ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
   " · " between a tracker row's values or the ": " after a label, so a
@@ -345,10 +349,10 @@ both taps of a double tap can reach it.
   out right-to-left with no other change.
 - **Text the scout types keeps its own direction** (`ui/TypedText.kt`). Fields
   the scout types in use `typedTextFieldStyle()`. Typed text shown on screen,
-  alone or inside one of the app's strings, goes through `typedText()`, which
-  wraps it with
-  [`BidiFormatter.unicodeWrap`](https://developer.android.com/training/basics/supporting-devices/languages#FormatText);
-  code outside Compose uses `text.typedText(text, locale)`.
+  alone or inside one of the app's strings, goes through
+  `LocaleFormats.typedText` (`typedText()` in Compose), which on Android wraps
+  it with
+  [`BidiFormatter.unicodeWrap`](https://developer.android.com/training/basics/supporting-devices/languages#FormatText).
 
 ### Screen reader labels
 
@@ -508,10 +512,10 @@ fails the build for a missing dependency, as Hilt did.
 - **Two modules list every definition** (`di/`): `appModule`, with no Android
   imports, for common code
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
-  `androidModule`, for what needs a `Context`. Besides the repositories, they
-  provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
-  `CoroutineScope` (`@ApplicationScope`) and a `ZonedClock`, the dispatcher
-  and clock so tests can replace them.
+  `androidModule`, for what needs Android, such as a `Context`. Besides the
+  repositories, they provide a coroutine dispatcher (`@IoDispatcher`), an
+  app-lifetime `CoroutineScope` (`@ApplicationScope`), a `ZonedClock` and
+  `TextRules`, the dispatcher and clock so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could
@@ -539,9 +543,9 @@ io.github.bryancassell.bluecard
 │   ├── progress/       ProgressRepository + Room entities and DAOs
 │   ├── report/         ReportRepository (PDF)
 │   └── backup/         BackupRepository and the export format
-├── text/               The strings' locales, dates and typed text formatted in them, and line
-│                       breaks as spaces, for the screens and for code outside Compose, such as
-│                       the PDF report and import
+├── text/               The strings' locales, text formats and rules (LocaleFormats, TextRules)
+│                       and their Android implementations, and line breaks as spaces, for the
+│                       screens and for code outside Compose, such as the PDF report and import
 └── di/                 Koin modules
 ```
 

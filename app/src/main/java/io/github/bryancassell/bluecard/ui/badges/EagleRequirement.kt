@@ -1,13 +1,12 @@
 package io.github.bryancassell.bluecard.ui.badges
 
-import android.icu.text.ListFormatter
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
-import io.github.bryancassell.bluecard.ui.stringsLocale
+import io.github.bryancassell.bluecard.text.TextRules
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 
 /** How a badge counts toward Eagle Scout. */
 sealed interface EagleRequirement {
@@ -22,8 +21,8 @@ sealed interface EagleRequirement {
 }
 
 /** Maps each Eagle group in this catalog to the names of its badges, in [badgeNameOrder]. */
-fun List<MeritBadge>.eagleGroups(): Map<String, List<String>> {
-    val byName = badgeNameOrder()
+fun List<MeritBadge>.eagleGroups(textRules: TextRules): Map<String, List<String>> {
+    val byName = badgeNameOrder(textRules)
     // Only the few badges in groups are sorted.
     return mapNotNull { badge -> badge.eagleGroup?.let { it to badge } }
         .groupBy({ it.first }, { it.second })
@@ -41,23 +40,16 @@ fun MeritBadge.eagleRequirement(eagleGroups: Map<String, List<String>>): EagleRe
 }
 
 /**
- * Formats lists of badge names in the language of the surrounding string, not the device's,
- * which the app may not have strings for.
+ * How [requirement] is shown, such as "Eagle-required (one of Cycling, Hiking, and Swimming)",
+ * with the list in the language of the surrounding string ([LocalLocaleFormats]), not the
+ * device's, which the app may not have strings for.
  */
 @Composable
-fun rememberBadgeNameListFormatter(): ListFormatter {
-    val locale = stringsLocale()
-    return remember(locale) { ListFormatter.getInstance(locale) }
+fun eagleRequirementLabel(requirement: EagleRequirement): String = when (requirement) {
+    EagleRequirement.Required -> stringResource(R.string.badges_eagle_required)
+
+    is EagleRequirement.OneOf -> stringResource(
+        R.string.badges_eagle_required_one_of,
+        LocalLocaleFormats.current.formatList(requirement.badgeNames)
+    )
 }
-
-/** How [requirement] is shown, such as "Eagle-required (one of Cycling, Hiking, and Swimming)". */
-@Composable
-fun eagleRequirementLabel(requirement: EagleRequirement, listFormatter: ListFormatter): String =
-    when (requirement) {
-        EagleRequirement.Required -> stringResource(R.string.badges_eagle_required)
-
-        is EagleRequirement.OneOf -> stringResource(
-            R.string.badges_eagle_required_one_of,
-            listFormatter.format(requirement.badgeNames)
-        )
-    }

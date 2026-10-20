@@ -30,6 +30,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
 import io.github.bryancassell.bluecard.testing.assertNoWordBroken
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -58,9 +59,9 @@ class AdvancementRowTest {
     )
 
     private fun showBadge(badge: BadgeListItem) {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
-                BadgeRow(badge, rememberBadgeNameListFormatter(), onClick = {})
+                BadgeRow(badge, onClick = {})
             }
         }
     }
@@ -107,7 +108,7 @@ class AdvancementRowTest {
     @Config(qualifiers = NARROW_SCREEN, fontScale = 2f)
     @Test
     fun atTheLargestSizes_aStatusThatWouldBreakAWord_goesUnderARowWithoutABar() {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 AdvancementRow(
                     name = "Swimming",
@@ -152,7 +153,7 @@ class AdvancementRowTest {
         var trailing = 0
         val styles = mutableMapOf<String, TextStyle>()
         lateinit var typography: Typography
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             CompositionLocalProvider(LocalDensity provides density) {
                 BlueCardTheme {
                     typography = MaterialTheme.typography

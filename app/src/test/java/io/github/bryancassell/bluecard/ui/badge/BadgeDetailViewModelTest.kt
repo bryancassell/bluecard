@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import kotlinx.coroutines.CompletableDeferred
@@ -135,6 +136,7 @@ class BadgeDetailViewModelTest {
         progress,
         reportRepository,
         clock,
+        AndroidTextRules(),
         savedStateHandle
     )
 
@@ -163,6 +165,7 @@ class BadgeDetailViewModelTest {
             progressRepository,
             reportRepository,
             clock,
+            AndroidTextRules(),
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -524,6 +527,7 @@ class BadgeDetailViewModelTest {
                 progressRepository,
                 reportRepository,
                 clock,
+                AndroidTextRules(),
                 createSavedStateHandle()
             )
         }.use { scenario ->

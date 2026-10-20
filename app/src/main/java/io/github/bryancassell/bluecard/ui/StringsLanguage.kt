@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
+import io.github.bryancassell.bluecard.text.LocaleFormats
 import io.github.bryancassell.bluecard.text.stringsLanguage
 import io.github.bryancassell.bluecard.text.stringsLanguageResourcesOrNull
 import io.github.bryancassell.bluecard.text.stringsLocales
@@ -25,7 +27,8 @@ fun stringsLocale(): Locale =
 /**
  * Provides [LocalResources] in the strings' language to [content], so every `stringResource`
  * and `pluralStringResource` formats numbers with its digits and picks plural forms by its
- * rules, and a sentence never mixes two languages.
+ * rules, and [LocalLocaleFormats] in its locale ([rememberLocaleFormats]), so a sentence never
+ * mixes two languages.
  *
  * Labels the app doesn't read through [LocalResources] still follow the device's language, such
  * as the text selection toolbar (Cut, Copy, Paste), Material 3's labels and the role and state
@@ -52,9 +55,20 @@ fun ProvideStringsLanguageResources(content: @Composable () -> Unit) {
     // One call either way keeps content at the same place in the composition, so its saved
     // state, such as the back stack, comes back after a language change.
     CompositionLocalProvider(
+        LocalLocaleFormats provides rememberLocaleFormats(),
         *listOfNotNull(resources?.let { LocalResources provides it }).toTypedArray(),
         content = content
     )
+}
+
+/**
+ * Writes dates, numbers, lists and typed text in the strings' locale ([stringsLocale]), as
+ * [ProvideStringsLanguageResources] provides them for [LocalLocaleFormats].
+ */
+@Composable
+fun rememberLocaleFormats(): LocaleFormats {
+    val locale = stringsLocale()
+    return remember(locale) { AndroidLocaleFormats(locale) }
 }
 
 @Composable

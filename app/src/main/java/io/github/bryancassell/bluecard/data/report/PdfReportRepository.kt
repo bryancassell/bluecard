@@ -15,6 +15,7 @@ import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.ZonedClock
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.text.stringsLanguageResources
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -45,6 +46,7 @@ class PdfReportRepository(
     private val profileRepository: ProfileRepository,
     private val pdfWriter: ReportPdfWriter,
     private val clock: ZonedClock,
+    private val textRules: TextRules,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
@@ -116,7 +118,7 @@ class PdfReportRepository(
             val standing = ranks.standings(progress, earnedBadges)
                 .first { it.rank.id == advancementId }
             if (standing.status != RankStatus.Earned) return null
-            standing.report(profile, progress[advancementId], earnedBadges, today)
+            standing.report(profile, progress[advancementId], earnedBadges, textRules, today)
         }
         return checkNotNull(report) { "The catalog has no requirements for $advancementId" }
     }

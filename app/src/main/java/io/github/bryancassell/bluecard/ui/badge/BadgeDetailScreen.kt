@@ -34,12 +34,12 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.reportFileName
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbar
 import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
-import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import kotlinx.datetime.LocalDate
@@ -173,7 +173,7 @@ private fun BadgeDetails(
             officialUrl = uiState.officialUrl,
             startOtherApp = startOtherApp,
             tag = uiState.eagle?.let {
-                { EagleTag(eagleRequirementLabel(it, rememberBadgeNameListFormatter())) }
+                { EagleTag(eagleRequirementLabel(it)) }
             }
         )
         CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) {
@@ -232,11 +232,11 @@ private fun CompletionStatus(
     reportButtons: @Composable () -> Unit
 ) {
     val date = uiState.completedOnPriorDate
-    val formatter = rememberCompletionDateFormatter()
+    val formats = LocalLocaleFormats.current
     StatusCard(reportButtons = reportButtons.takeIf { uiState.completed }) {
         when {
             date != null -> EditableDate(
-                text = stringResource(R.string.badge_detail_completed_on, formatter.format(date)),
+                text = stringResource(R.string.badge_detail_completed_on, formats.formatDate(date)),
                 date = date,
                 today = today,
                 onDateChange = { if (it == null) onUnmark() else onMark(it) },
@@ -246,7 +246,7 @@ private fun CompletionStatus(
 
             uiState.completed -> DoneStatusLine(
                 uiState.completedOn?.let {
-                    stringResource(R.string.badge_detail_completed_on, formatter.format(it))
+                    stringResource(R.string.badge_detail_completed_on, formats.formatDate(it))
                 } ?: stringResource(R.string.badges_completed)
             )
 

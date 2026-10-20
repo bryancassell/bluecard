@@ -34,6 +34,7 @@ import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.readsLine
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -69,7 +70,7 @@ class RanksScreenTest {
 
     private fun show(state: RanksUiState, density: Density? = null) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             CompositionLocalProvider(LocalDensity provides (density ?: LocalDensity.current)) {
                 RanksScreen(uiState = uiState, onOpenRank = { openedRanks += it })
             }

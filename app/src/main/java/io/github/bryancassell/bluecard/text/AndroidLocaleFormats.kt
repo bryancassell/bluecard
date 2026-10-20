@@ -1,0 +1,43 @@
+package io.github.bryancassell.bluecard.text
+
+import android.icu.text.ListFormatter
+import androidx.core.text.BidiFormatter
+import io.github.artificialpb.bignum.BigDecimal
+import java.math.RoundingMode
+import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
+import java.time.format.DecimalStyle
+import java.time.format.FormatStyle
+import java.util.Locale
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
+
+/**
+ * [LocaleFormats] in [locale], with Java's and Android's formatters. The screens get one in the
+ * strings' locale ([stringsLocale]) from `ProvideStringsLanguageResources`; code outside Compose,
+ * such as the PDF report, makes its own.
+ */
+class AndroidLocaleFormats(private val locale: Locale) : LocaleFormats {
+    // kotlinx-datetime leaves localized formats out of its scope.
+    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+        .withLocale(locale)
+        .withDecimalStyle(DecimalStyle.of(locale))
+
+    private val listFormatter = ListFormatter.getInstance(locale)
+
+    private val bidiFormatter = BidiFormatter.getInstance(locale)
+
+    override fun formatDate(date: LocalDate): String = dateFormatter.format(date.toJavaLocalDate())
+
+    // A NumberFormat isn't safe to use on two threads at once, so each total gets its own.
+    override fun formatTotal(total: BigDecimal): String =
+        NumberFormat.getNumberInstance(locale).apply {
+            maximumFractionDigits = 2
+            roundingMode = RoundingMode.DOWN
+            isGroupingUsed = false
+        }.format(total)
+
+    override fun formatList(items: List<String>): String = listFormatter.format(items)
+
+    override fun typedText(text: String): String = bidiFormatter.unicodeWrap(text)
+}

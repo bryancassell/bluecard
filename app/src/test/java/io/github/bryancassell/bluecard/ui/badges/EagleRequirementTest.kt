@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badges
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -45,7 +46,7 @@ class EagleRequirementTest {
                 "c-h-s" to listOf("Cycling", "Hiking", "Swimming"),
                 "ep-l" to listOf("Emergency Preparedness", "Lifesaving")
             ),
-            catalog.eagleGroups()
+            catalog.eagleGroups(AndroidTextRules())
         )
     }
 
@@ -55,7 +56,7 @@ class EagleRequirementTest {
 
         assertEquals(
             listOf("bird Study", "Écologie", "Zoology"),
-            catalog.eagleGroups().getValue("c-h-s")
+            catalog.eagleGroups(AndroidTextRules()).getValue("c-h-s")
         )
     }
 
@@ -75,7 +76,7 @@ class EagleRequirementTest {
 
         assertEquals(
             EagleRequirement.Required,
-            cycling.eagleRequirement(listOf(cycling).eagleGroups())
+            cycling.eagleRequirement(listOf(cycling).eagleGroups(AndroidTextRules()))
         )
     }
 
@@ -85,7 +86,7 @@ class EagleRequirementTest {
 
         assertEquals(
             EagleRequirement.OneOf(listOf("Cycling", "Hiking", "Swimming")),
-            catalog[0].eagleRequirement(catalog.eagleGroups())
+            catalog[0].eagleRequirement(catalog.eagleGroups(AndroidTextRules()))
         )
     }
 }

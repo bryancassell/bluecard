@@ -54,9 +54,8 @@ import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.ui.AnnouncedText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
-import io.github.bryancassell.bluecard.ui.badge.rememberCompletionDateFormatter
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
-import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedText
@@ -222,7 +221,7 @@ private fun UnearnedRanks(names: List<String>) {
     AnnouncedText(
         text = stringResource(
             R.string.merge_unearns,
-            rememberBadgeNameListFormatter().format(names)
+            LocalLocaleFormats.current.formatList(names)
         ),
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
     )
@@ -354,9 +353,9 @@ private fun profileLines(profile: Profile) = listOf(
  */
 @Composable
 private fun summaryLines(summary: ProgressSummary, isRank: Boolean): List<String> {
-    val formatter = rememberCompletionDateFormatter()
+    val formats = LocalLocaleFormats.current
     val fractionDone = summary.fractionDone
-    val doneOn = summary.doneOn?.let { formatter.format(it) }
+    val doneOn = summary.doneOn?.let { formats.formatDate(it) }
     val status = when {
         summary.done && isRank && doneOn != null -> stringResource(R.string.merge_earned_on, doneOn)
         summary.done && isRank -> stringResource(R.string.ranks_earned)
@@ -366,7 +365,7 @@ private fun summaryLines(summary: ProgressSummary, isRank: Boolean): List<String
         else -> stringResource(R.string.badges_in_progress)
     }
     val version = summary.requirementsVersion?.let {
-        stringResource(R.string.merge_requirements_version, formatter.format(it))
+        stringResource(R.string.merge_requirements_version, formats.formatDate(it))
     }
     return listOfNotNull(status, version)
 }

@@ -19,9 +19,8 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.storedDate
-import io.github.bryancassell.bluecard.text.CompletionDateFormatter
-import io.github.bryancassell.bluecard.text.totalFormat
-import io.github.bryancassell.bluecard.text.typedText
+import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
+import io.github.bryancassell.bluecard.text.LocaleFormats
 import kotlinx.datetime.LocalDate
 
 // A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
@@ -103,9 +102,8 @@ private class ReportComposer(private val resources: Resources) {
     private val rightToLeft =
         TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
-    // Dates and totals are written as on screen.
-    private val dateFormatter = CompletionDateFormatter(locale)
-    private val totalFormat = totalFormat(locale)
+    // Dates, totals and typed text are written as on screen.
+    private val formats = AndroidLocaleFormats(locale)
 
     // Between a tracker row's values, as on screen.
     private val valueSeparator = resources.getString(R.string.tracker_value_separator)
@@ -190,7 +188,7 @@ private class ReportComposer(private val resources: Resources) {
         val totals = tracker.totals.map { (sum, total) ->
             string(
                 R.string.tracker_total,
-                totalFormat.format(sum),
+                formats.formatTotal(sum),
                 total.needed,
                 total.neededLabel
             )
@@ -312,9 +310,9 @@ private class ReportComposer(private val resources: Resources) {
     // Text the scout typed keeps its own direction, as on screen. A line break ends a paragraph
     // for the bidi algorithm, and the wrapping with it, so each line is wrapped on its own.
     private fun typed(text: String): String =
-        text.lines().joinToString("\n") { typedText(it, locale) }
+        text.lines().joinToString("\n") { formats.typedText(it) }
 
-    private fun date(date: LocalDate): String = dateFormatter.format(date)
+    private fun date(date: LocalDate): String = formats.formatDate(date)
 
     private fun add(
         style: Style,
@@ -433,8 +431,8 @@ private class ReportComposer(private val resources: Resources) {
 /**
  * The bidi embeddings, overrides and isolates that are still open at the end of [text], in
  * order, to start the rest of a split paragraph with. Text the scout typed in another direction
- * is wrapped in an embedding ([typedText]), so the rest of it keeps its direction on the next
- * page. A line break closes them all, as it ends a paragraph for the bidi algorithm.
+ * is wrapped in an embedding ([LocaleFormats.typedText]), so the rest of it keeps its direction
+ * on the next page. A line break closes them all, as it ends a paragraph for the bidi algorithm.
  */
 internal fun openDirections(text: CharSequence): String {
     val open = ArrayDeque<Char>()

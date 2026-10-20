@@ -54,9 +54,10 @@ import io.github.bryancassell.bluecard.testing.assertShows
 import io.github.bryancassell.bluecard.testing.hasLine
 import io.github.bryancassell.bluecard.testing.hostView
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
-import io.github.bryancassell.bluecard.text.typedText
+import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.util.Locale
 import kotlinx.datetime.LocalDate
@@ -131,7 +132,7 @@ class DataManagementScreenTest {
 
     private fun show(state: DataManagementUiState = ready) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             CompositionLocalProvider(
                 LocalActivityResultRegistryOwner provides resultRegistryOwner
             ) {
@@ -683,7 +684,7 @@ class DataManagementScreenTest {
                 profile = ProfileChoice(Profile("Sam Scout", "Crew 7"), Profile(name, "Troop 12"))
             )
         )
-        val shown = typedText(name, Locale.ENGLISH)
+        val shown = AndroidLocaleFormats(Locale.ENGLISH).typedText(name)
 
         option("The file", shown, "Unit: Troop 12")
             .assert(hasContentDescription("Name and unit, the file. $shown Unit: Troop 12"))

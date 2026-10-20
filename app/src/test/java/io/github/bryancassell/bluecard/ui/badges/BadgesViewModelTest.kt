@@ -17,6 +17,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import java.util.Locale
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
@@ -71,7 +72,7 @@ class BadgesViewModelTest {
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private val viewModel by lazy {
-        BadgesViewModel(catalogRepository, progressRepository, savedStateHandle)
+        BadgesViewModel(catalogRepository, progressRepository, AndroidTextRules(), savedStateHandle)
     }
 
     /**
@@ -110,7 +111,8 @@ class BadgesViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = BadgesViewModel(loading, progressRepository, savedStateHandle)
+        val viewModel =
+            BadgesViewModel(loading, progressRepository, AndroidTextRules(), savedStateHandle)
         startCollecting(viewModel)
 
         assertEquals(BadgesUiState.Loading, viewModel.uiState.value)
@@ -369,7 +371,12 @@ class BadgesViewModelTest {
     @Test
     fun search_isRestoredFromSavedState() = runTest {
         viewModelScenario {
-            BadgesViewModel(catalogRepository, progressRepository, createSavedStateHandle())
+            BadgesViewModel(
+                catalogRepository,
+                progressRepository,
+                AndroidTextRules(),
+                createSavedStateHandle()
+            )
         }.use { scenario ->
             // While nothing collects uiState.
             scenario.viewModel.query.setTextAndPlaceCursorAtEnd("camp")

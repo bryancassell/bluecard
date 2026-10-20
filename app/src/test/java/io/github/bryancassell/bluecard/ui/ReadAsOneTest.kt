@@ -2,7 +2,7 @@ package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bryancassell.bluecard.text.typedText
+import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -41,7 +41,7 @@ class ReadAsOneTest {
     // typedText wraps a right-to-left name in direction marks, which follow its final period.
     @Test
     fun partEndingWithTheSeparatorsPunctuation_thenDirectionMarks_isFollowedByItsSpaceOnly() {
-        val name = typedText("\u05D3\u05D5\u05D3.", Locale.ENGLISH)
+        val name = AndroidLocaleFormats(Locale.ENGLISH).typedText("\u05D3\u05D5\u05D3.")
         assertFalse(name.endsWith("."))
 
         assertEquals("$name Unit: 12", joinedAsOne(listOf(name, "Unit: 12"), ". "))

@@ -49,25 +49,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import io.github.bryancassell.bluecard.R
-import io.github.bryancassell.bluecard.text.CompletionDateFormatter
 import io.github.bryancassell.bluecard.ui.ButtonText
-import io.github.bryancassell.bluecard.ui.stringsLocale
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-
-/**
- * Formats a date something was done on, such as a requirement's completion date: "Apr 15,
- * 2026", in the language of the strings around it, with that language's digits
- * (ARCHITECTURE.md, Language and layout direction).
- */
-@Composable
-fun rememberCompletionDateFormatter(): CompletionDateFormatter {
-    val locale = stringsLocale()
-    return remember(locale) { CompletionDateFormatter(locale) }
-}
 
 /**
  * [text] about a date something was done on, such as "Completed on Apr 15, 2026", with buttons

@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
-import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 
 /**
@@ -67,6 +67,6 @@ fun withUnearnedRanks(message: String, unearnedRanks: List<String>): String =
         stringResource(
             R.string.removal_message_unearns,
             message,
-            rememberBadgeNameListFormatter().format(unearnedRanks)
+            LocalLocaleFormats.current.formatList(unearnedRanks)
         )
     }

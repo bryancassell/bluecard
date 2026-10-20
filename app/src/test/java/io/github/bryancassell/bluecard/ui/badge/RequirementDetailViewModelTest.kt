@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CompletableDeferred
@@ -177,6 +178,7 @@ class RequirementDetailViewModelTest {
         catalog,
         progress,
         clock,
+        AndroidTextRules(),
         savedStateHandle
     )
 
@@ -194,6 +196,7 @@ class RequirementDetailViewModelTest {
             catalog,
             progressRepository,
             clock,
+            AndroidTextRules(),
             createSavedStateHandle()
         )
     }
@@ -344,6 +347,7 @@ class RequirementDetailViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
+            AndroidTextRules(),
             savedStateHandle
         )
         startCollecting(viewModel)
@@ -1065,6 +1069,7 @@ class RequirementDetailViewModelTest {
             catalogRepository,
             progressRepository,
             clock,
+            AndroidTextRules(),
             SavedStateHandle(mapOf("comment" to "From an intent."))
         )
         startCollecting(viewModel)

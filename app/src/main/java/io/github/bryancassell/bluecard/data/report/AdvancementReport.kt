@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.data.progress.numberedRows
 import io.github.bryancassell.bluecard.data.progress.readsAsMarked
 import io.github.bryancassell.bluecard.data.progress.requirementsVersionFor
 import io.github.bryancassell.bluecard.data.progress.totals
+import io.github.bryancassell.bluecard.text.TextRules
 import kotlinx.datetime.LocalDate
 
 /** What a report is on, which its title and file name say. */
@@ -142,7 +143,8 @@ fun MeritBadge.report(
         requirements = version.reportRequirements(
             progress,
             completedOnPriorDate = progress.badge.completedOnPriorDate != null,
-            earnedBadges = EarnedBadges.None
+            earnedBadges = EarnedBadges.None,
+            badgesByName = emptyList()
         ),
         createdDate = createdDate
     )
@@ -151,8 +153,8 @@ fun MeritBadge.report(
 /**
  * The report on this standing's rank, which must be earned, for [profile], from their
  * [progress] on it, null if it isn't started, and the badges they've completed
- * ([earnedBadges]), which its requirements that ask for merit badges count. Created on
- * [createdDate]. Null if the catalog doesn't have the version the rank was started on, which
+ * ([earnedBadges]), which its requirements that ask for merit badges count and list in name
+ * order, by [textRules]. Created on [createdDate]. Null if the catalog doesn't have the version the rank was started on, which
  * only a catalog edited during development can cause.
  *
  * A rank counted as earned with a rank above it reads as marked itself, as on its page, so a
@@ -162,6 +164,7 @@ fun RankStanding.report(
     profile: Profile,
     progress: BadgeProgressDetails?,
     earnedBadges: EarnedBadges,
+    textRules: TextRules,
     createdDate: LocalDate
 ): AdvancementReport? {
     require(status == RankStatus.Earned) { "${rank.id} isn't earned, so it has no report" }
@@ -177,7 +180,8 @@ fun RankStanding.report(
         requirements = version.reportRequirements(
             progress,
             completedOnPriorDate = readsAsMarked(progress),
-            earnedBadges = earnedBadges
+            earnedBadges = earnedBadges,
+            badgesByName = earnedBadges.inNameOrder(textRules)
         ),
         createdDate = createdDate
     )
@@ -187,16 +191,17 @@ fun RankStanding.report(
  * Every requirement of this version, at every level, with what the scout recorded for it in
  * [progress], null for a rank not started. [completedOnPriorDate] is whether the badge or rank
  * reads as marked completed on a prior date. [earnedBadges] are the badges the scout has
- * completed, which a rank's requirement that asks for merit badges counts.
+ * completed, which a rank's requirement that asks for merit badges counts and lists in name
+ * order ([badgesByName]).
  */
 private fun RequirementsVersion.reportRequirements(
     progress: BadgeProgressDetails?,
     completedOnPriorDate: Boolean,
-    earnedBadges: EarnedBadges
+    earnedBadges: EarnedBadges,
+    badgesByName: List<EarnedBadge>
 ): List<ReportRequirement> {
     val recorded = progress?.requirements.orEmpty().associateBy { it.requirementNumber }
     val entries = progress?.trackerEntries.orEmpty().groupBy { it.requirementNumber }
-    val badgesByName = earnedBadges.inNameOrder()
 
     // [partOfHasEnough] is whether a requirement this one is part of, at any depth, has enough
     // complete sub-requirements ([hasEnoughChildren]). Its states are worked out in the same

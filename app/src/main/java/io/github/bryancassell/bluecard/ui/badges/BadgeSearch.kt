@@ -2,7 +2,11 @@ package io.github.bryancassell.bluecard.ui.badges
 
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 
-// Anything but a letter or digit: the code points that Character.isLetterOrDigit() rejects.
+// A letter or digit: the code points that Java's Character.isLetterOrDigit() accepts. Regex,
+// unlike Character, is in Kotlin's common library, which code shared with iOS can use (#341).
+private val wordCharacter = Regex("[\\p{L}\\p{Nd}]")
+
+// Anything but a letter or digit.
 private val nonWordCharacters = Regex("[^\\p{L}\\p{Nd}]+")
 
 /**
@@ -28,8 +32,16 @@ private fun String.hasWordStartingWith(prefix: String): Boolean {
     while (index >= 0) {
         // By code point, as searchWords splits, so a letter outside the Basic Multilingual
         // Plane counts as one letter rather than two surrogates.
-        if (index == 0 || !Character.isLetterOrDigit(codePointBefore(index))) return true
+        if (index == 0 || !wordCharacter.matchesAt(this, codePointStartBefore(index))) return true
         index = indexOf(prefix, startIndex = index + 1, ignoreCase = true)
     }
     return false
 }
+
+/** Where the code point before [index] starts: one char back, or two for a surrogate pair. */
+private fun String.codePointStartBefore(index: Int): Int =
+    if (index >= 2 && this[index - 1].isLowSurrogate() && this[index - 2].isHighSurrogate()) {
+        index - 2
+    } else {
+        index - 1
+    }

@@ -41,13 +41,14 @@ import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
-import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
-import io.github.bryancassell.bluecard.ui.singleLineInput
+import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
+import io.github.bryancassell.bluecard.ui.rememberTextLengthLimit
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
@@ -296,7 +297,7 @@ private fun timeInRankText(timeInRank: TimeInRank): String {
         is TimeInRank.Eligibility.From -> return pluralStringResource(
             R.plurals.requirement_time_in_rank_eligible_from,
             months,
-            rememberCompletionDateFormatter().format(eligibility.date),
+            LocalLocaleFormats.current.formatDate(eligibility.date),
             months,
             rankBelow
         )
@@ -342,12 +343,12 @@ private fun CompletionDate(
     onDateChange: (LocalDate?) -> Unit,
     suggested: LocalDate? = null
 ) {
-    val formatter = rememberCompletionDateFormatter()
+    val formats = LocalLocaleFormats.current
     EditableDate(
         text = if (date == null) {
             stringResource(R.string.requirement_no_date)
         } else {
-            stringResource(R.string.requirement_completed_on, formatter.format(date))
+            stringResource(R.string.requirement_completed_on, formats.formatDate(date))
         },
         date = date,
         today = today,
@@ -355,8 +356,6 @@ private fun CompletionDate(
         suggested = suggested
     )
 }
-
-private val CommentLengthLimit = TextLengthLimit(maxLength = NOTES_MAX_LENGTH)
 
 /**
  * Who [signedOffBy] on the requirement, unless it's null, as for a badge's requirement, and the
@@ -387,7 +386,7 @@ private fun TextFields(
                 state = comment,
                 textStyle = typedTextFieldStyle(),
                 label = { Text(stringResource(R.string.requirement_comment)) },
-                inputTransformation = CommentLengthLimit,
+                inputTransformation = rememberTextLengthLimit(maxLength = NOTES_MAX_LENGTH),
                 lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences
@@ -416,8 +415,6 @@ private fun TextFields(
     }
 }
 
-private val SignedOffByInput = singleLineInput(maxLength = SIGNED_OFF_BY_MAX_LENGTH)
-
 /** A one-line field for who signed off on a rank's requirement, such as the Scoutmaster. */
 @Composable
 private fun SignedOffByField(state: TextFieldState) {
@@ -425,7 +422,7 @@ private fun SignedOffByField(state: TextFieldState) {
         state = state,
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(R.string.requirement_signed_off_by)) },
-        inputTransformation = SignedOffByInput,
+        inputTransformation = rememberSingleLineInput(maxLength = SIGNED_OFF_BY_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         // Next moves on to the notes.
         keyboardOptions = KeyboardOptions(

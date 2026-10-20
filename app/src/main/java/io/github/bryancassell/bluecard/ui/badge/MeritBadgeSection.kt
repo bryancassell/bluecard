@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.AdvancementRow
 
 // A rank's requirement that asks for merit badges, on its page and in its row.
@@ -80,7 +81,7 @@ fun MeritBadgeSection(
                 )
             }
         }
-        val formatter = rememberCompletionDateFormatter()
+        val formats = LocalLocaleFormats.current
         badges.forEach { earned ->
             // Keyed, so a row's state stays with its badge when one before it is cleared.
             key(earned.badge.id) {
@@ -89,7 +90,7 @@ fun MeritBadgeSection(
                     detail = earned.completedOn?.let {
                         stringResource(
                             R.string.requirement_merit_badge_completed_on,
-                            formatter.format(it)
+                            formats.formatDate(it)
                         )
                     } ?: stringResource(R.string.requirement_merit_badge_completed),
                     status = if (earned.countsAsEagleRequired(credit.needed)) {

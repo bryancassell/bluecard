@@ -5,6 +5,7 @@ import androidx.core.view.WindowCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.profile.Profile
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -29,7 +30,7 @@ class MergeDialogSystemBarsTest {
 
     // A "light" bar is one with dark icons.
     private fun assertMergeDialogHasLightBars(light: Boolean) {
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 MergeDialog(
                     MergeChoices(

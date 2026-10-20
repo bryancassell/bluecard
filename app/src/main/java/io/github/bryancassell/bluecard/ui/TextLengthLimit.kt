@@ -1,22 +1,25 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.icu.text.BreakIterator
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.delete
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
 import androidx.compose.ui.semantics.maxTextLength
+import io.github.bryancassell.bluecard.text.TextRules
 
 /**
  * Keeps a text field to [maxLength] characters by cutting off the end of what an edit adds,
  * such as a long paste, so the text already in the field stays. Typing into a full field
  * does nothing. `InputTransformation.maxLength` rejects the whole edit instead.
  *
- * It cuts only between characters as a reader sees them, never through an emoji made of
- * several code points or a letter with an accent mark, so the text can end a little short of
- * the limit.
+ * It cuts only between characters as a reader sees them ([TextRules.characterBoundaries]), never
+ * through an emoji made of several code points or a letter with an accent mark, so the text can
+ * end a little short of the limit. A field on screen uses [rememberTextLengthLimit].
  */
-class TextLengthLimit(private val maxLength: Int) : InputTransformation {
+class TextLengthLimit(private val maxLength: Int, private val textRules: TextRules) :
+    InputTransformation {
     override fun SemanticsPropertyReceiver.applySemantics() {
         maxTextLength = maxLength
     }
@@ -66,14 +69,18 @@ class TextLengthLimit(private val maxLength: Int) : InputTransformation {
         // Text that was already too long, such as text set in code, is cut at its end.
         if (length > maxLength) delete(characters().boundaryAtOrBefore(maxLength), length)
     }
+
+    /** The boundaries between characters as a reader sees them (grapheme clusters). */
+    private fun TextFieldBuffer.characters(): List<Int> = textRules.characterBoundaries(toString())
 }
 
-/** The boundaries between characters as a reader sees them (grapheme clusters). */
-private fun TextFieldBuffer.characters(): BreakIterator =
-    BreakIterator.getCharacterInstance().apply { setText(this@characters.toString()) }
+/** A [TextLengthLimit] of [maxLength] characters, for a field on screen ([LocalTextRules]). */
+@Composable
+fun rememberTextLengthLimit(maxLength: Int): TextLengthLimit {
+    val textRules = LocalTextRules.current
+    return remember(maxLength, textRules) { TextLengthLimit(maxLength, textRules) }
+}
 
-private fun BreakIterator.boundaryAtOrBefore(offset: Int) =
-    if (isBoundary(offset)) offset else preceding(offset)
+private fun List<Int>.boundaryAtOrBefore(offset: Int) = last { it <= offset }
 
-private fun BreakIterator.boundaryAtOrAfter(offset: Int) =
-    if (isBoundary(offset)) offset else following(offset)
+private fun List<Int>.boundaryAtOrAfter(offset: Int) = first { it >= offset }

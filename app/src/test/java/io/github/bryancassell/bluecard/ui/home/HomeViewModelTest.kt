@@ -15,6 +15,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
@@ -102,7 +103,7 @@ class HomeViewModelTest {
     // Created in the test, after MainDispatcherRule has replaced the Main dispatcher that
     // viewModelScope uses.
     private val viewModel by lazy {
-        HomeViewModel(profileRepository, catalogRepository, progressRepository)
+        HomeViewModel(profileRepository, catalogRepository, progressRepository, AndroidTextRules())
     }
 
     /**
@@ -131,7 +132,8 @@ class HomeViewModelTest {
             override suspend fun getBadges(): List<MeritBadge> = awaitCancellation()
             override suspend fun getRanks(): List<Rank> = awaitCancellation()
         }
-        val viewModel = HomeViewModel(profileRepository, loading, progressRepository)
+        val viewModel =
+            HomeViewModel(profileRepository, loading, progressRepository, AndroidTextRules())
         startCollecting(viewModel)
 
         assertEquals(HomeUiState.Loading, viewModel.uiState.value)

@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badges
 
-import android.icu.text.ListFormatter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -29,15 +28,10 @@ import io.github.bryancassell.bluecard.ui.statusFitsBeside
  * calls [onClick], which opens the badge.
  */
 @Composable
-fun BadgeRow(
-    badge: BadgeListItem,
-    listFormatter: ListFormatter,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun BadgeRow(badge: BadgeListItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     AdvancementRow(
         name = badge.name,
-        detail = badge.eagle?.let { eagleRequirementLabel(it, listFormatter) },
+        detail = badge.eagle?.let { eagleRequirementLabel(it) },
         status = when (badge.status) {
             BadgeStatus.NotStarted -> null
             BadgeStatus.InProgress -> stringResource(R.string.badges_in_progress)

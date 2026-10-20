@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.textFieldState
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 class BadgesViewModel(
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
+    textRules: TextRules,
     // Keeps the search if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -27,7 +29,7 @@ class BadgesViewModel(
     val uiState: StateFlow<BadgesUiState> = combine(
         // What depends only on the catalog is worked out when the list starts collecting,
         // not on every progress change or keystroke.
-        flow { emit(catalogRepository.getBadges().inListOrder()) },
+        flow { emit(catalogRepository.getBadges().inListOrder(textRules)) },
         progressRepository.observeAllProgress(),
         snapshotFlow { query.text.toString() }
     ) { badges, progress, search ->

@@ -43,6 +43,7 @@ import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import kotlinx.datetime.LocalDate
@@ -128,7 +129,7 @@ class RankDetailScreenTest {
 
     private fun show(state: RankDetailUiState) {
         uiState = state
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             CompositionLocalProvider(
                 LocalActivityResultRegistryOwner provides resultRegistryOwner
             ) {

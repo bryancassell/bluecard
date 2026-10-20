@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.then
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -47,15 +49,16 @@ import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.NumberInput
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
-import io.github.bryancassell.bluecard.ui.TextLengthLimit
 import io.github.bryancassell.bluecard.ui.navigation.TrackerEntryDetail
+import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
+import io.github.bryancassell.bluecard.ui.rememberTextLengthLimit
 import io.github.bryancassell.bluecard.ui.removalButtonColors
-import io.github.bryancassell.bluecard.ui.singleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlinx.datetime.LocalDate
 import org.koin.compose.viewmodel.koinViewModel
@@ -189,12 +192,12 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
     }
 }
 
-/** A text column's field is single-line, so a pasted line break becomes a space. */
-private val TextLimit = singleLineInput(maxLength = TRACKER_TEXT_MAX_LENGTH)
-
-private val MultilineTextLimit = TextLengthLimit(maxLength = TRACKER_MULTILINE_TEXT_MAX_LENGTH)
-
-private val NumberLimit = NumberInput.then(TextLengthLimit(maxLength = TRACKER_NUMBER_MAX_LENGTH))
+/** A number column's field takes a number ([NumberInput]) up to its greatest length. */
+@Composable
+private fun rememberNumberLimit(): InputTransformation {
+    val limit = rememberTextLengthLimit(maxLength = TRACKER_NUMBER_MAX_LENGTH)
+    return remember(limit) { NumberInput.then(limit) }
+}
 
 /**
  * The field for one column: a date with a picker, or a text field for text or a number. A
@@ -226,9 +229,9 @@ private fun TrackerField(
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
-            val formatter = rememberCompletionDateFormatter()
+            val formats = LocalLocaleFormats.current
             EditableDate(
-                text = date?.let { formatter.format(it) }
+                text = date?.let { formats.formatDate(it) }
                     ?: stringResource(R.string.tracker_entry_no_date),
                 date = date,
                 today = today,
@@ -241,7 +244,7 @@ private fun TrackerField(
             state = field,
             textStyle = typedTextFieldStyle(),
             label = { Text(column.label) },
-            inputTransformation = NumberLimit,
+            inputTransformation = rememberNumberLimit(),
             // Merged with NumberInput's options, so the keyboard stays decimal.
             keyboardOptions = KeyboardOptions(imeAction = oneLineImeAction),
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -254,7 +257,12 @@ private fun TrackerField(
                 state = field,
                 textStyle = typedTextFieldStyle(),
                 label = { Text(column.label) },
-                inputTransformation = if (multiline) MultilineTextLimit else TextLimit,
+                // A text column's field is single-line, so a pasted line break becomes a space.
+                inputTransformation = if (multiline) {
+                    rememberTextLengthLimit(maxLength = TRACKER_MULTILINE_TEXT_MAX_LENGTH)
+                } else {
+                    rememberSingleLineInput(maxLength = TRACKER_TEXT_MAX_LENGTH)
+                },
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
                     imeAction = if (multiline) ImeAction.Default else oneLineImeAction

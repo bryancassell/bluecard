@@ -11,7 +11,7 @@ import io.github.bryancassell.bluecard.text.LINE_BREAK_CHARS
  * break the scout never saw. "\r\n" counts as one line break, and so does each of
  * [LINE_BREAK_CHARS]. Import replaces them the same way (`text.lineBreaksAsSpaces`).
  *
- * Use it through [singleLineInput], which chains it after a [TextLengthLimit], so the limit
+ * Use it through [rememberSingleLineInput], which chains it after a [TextLengthLimit], so the limit
  * cuts a huge paste before this replaces its line breaks. It replaces them one at a time,
  * which keeps the cursor in place but copies the whole text for each break far from the last.
  */

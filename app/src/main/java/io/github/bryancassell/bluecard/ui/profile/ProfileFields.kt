@@ -14,11 +14,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.profile.PROFILE_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.profile.UNIT_NUMBER_MAX_LENGTH
-import io.github.bryancassell.bluecard.ui.singleLineInput
+import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
-
-private val NameInput = singleLineInput(maxLength = PROFILE_NAME_MAX_LENGTH)
-private val UnitNumberInput = singleLineInput(maxLength = UNIT_NUMBER_MAX_LENGTH)
 
 /**
  * The scout's [name] and [unitNumber] fields, both required, as Onboarding and Edit name and
@@ -38,7 +35,7 @@ fun ProfileFields(
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(R.string.profile_name)) },
         supportingText = { Text(stringResource(R.string.profile_required)) },
-        inputTransformation = NameInput,
+        inputTransformation = rememberSingleLineInput(maxLength = PROFILE_NAME_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Words,
@@ -52,7 +49,7 @@ fun ProfileFields(
         textStyle = typedTextFieldStyle(),
         label = { Text(stringResource(R.string.profile_unit_number)) },
         supportingText = { Text(stringResource(R.string.profile_required)) },
-        inputTransformation = UnitNumberInput,
+        inputTransformation = rememberSingleLineInput(maxLength = UNIT_NUMBER_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         onKeyboardAction = { performDefaultAction ->

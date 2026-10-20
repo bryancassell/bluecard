@@ -19,6 +19,8 @@ import io.github.bryancassell.bluecard.data.report.PdfDocumentWriter
 import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.TextRules
 import kotlinx.coroutines.CoroutineScope
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -38,6 +40,7 @@ val androidModule = module {
     single<PdfReportRepository>() bind ReportRepository::class
     single<PdfDocumentWriter>() bind ReportPdfWriter::class
     single<JsonBackupRepository>() bind BackupRepository::class
+    single<AndroidTextRules>() bind TextRules::class
 }
 
 private fun progressDatabase(

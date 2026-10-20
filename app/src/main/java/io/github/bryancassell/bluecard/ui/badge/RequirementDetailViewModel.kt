@@ -26,6 +26,7 @@ import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.progress.timeInRank
 import io.github.bryancassell.bluecard.data.progress.withoutRequirements
 import io.github.bryancassell.bluecard.di.ZonedClock
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -51,6 +52,7 @@ class RequirementDetailViewModel(
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: ZonedClock,
+    textRules: TextRules,
     // Keeps an unsaved sign-off and comment, and the date to bring back to an unchecked
     // requirement, if the system stops the app in the background.
     savedStateHandle: SavedStateHandle
@@ -138,7 +140,9 @@ class RequirementDetailViewModel(
                             requirement.tracker?.toItem(found.trackerEntries[number].orEmpty()),
                         timeInRank = standings?.timeInRank(advancementId, requirement),
                         earnedBadges =
-                            requirement.meritBadges?.let { found.earnedBadges.inNameOrder() },
+                            requirement.meritBadges?.let {
+                                found.earnedBadges.inNameOrder(textRules)
+                            },
                         hasSignOffField = found.advancement is Rank,
                         signedOffBy = recorded?.signedOffBy,
                         comment = recorded?.comment,

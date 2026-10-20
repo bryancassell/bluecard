@@ -20,6 +20,7 @@ import io.github.bryancassell.bluecard.data.progress.TrackerEntry
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
+import io.github.bryancassell.bluecard.text.AndroidTextRules
 import java.math.BigDecimal
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
@@ -442,7 +443,7 @@ class AdvancementReportTest {
         val earnedBadges = badges.earnedBadges(byId)
         return ranks.standings(byId, earnedBadges)
             .first { it.rank.id == id }
-            .report(profile, byId[id], earnedBadges, today)
+            .report(profile, byId[id], earnedBadges, AndroidTextRules(), today)
     }
 
     @Test

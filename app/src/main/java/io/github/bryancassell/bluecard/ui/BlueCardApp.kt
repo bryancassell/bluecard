@@ -12,47 +12,55 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import io.github.bryancassell.bluecard.MainActivityUiState
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.navigation.BlueCardNavDisplay
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 
 /**
  * The app's content. Shows nothing while loading; the splash screen covers it. Tells the scout
  * when their progress was damaged, over whichever screen is open, until they tap OK
- * ([onDismissDamagedProgressNotice]).
+ * ([onDismissDamagedProgressNotice]). The screens break text by [textRules] ([LocalTextRules]).
  */
 @Composable
-fun BlueCardApp(uiState: MainActivityUiState, onDismissDamagedProgressNotice: () -> Unit) {
-    ProvideStringsLanguageResources {
-        BlueCardTheme {
-            val insets = ScaffoldDefaults.contentWindowInsets
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = { StatusBarBackground(insets) },
-                contentWindowInsets = insets
-            ) { innerPadding ->
-                when (uiState) {
-                    MainActivityUiState.Loading -> {}
+fun BlueCardApp(
+    uiState: MainActivityUiState,
+    textRules: TextRules,
+    onDismissDamagedProgressNotice: () -> Unit
+) {
+    CompositionLocalProvider(LocalTextRules provides textRules) {
+        ProvideStringsLanguageResources {
+            BlueCardTheme {
+                val insets = ScaffoldDefaults.contentWindowInsets
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = { StatusBarBackground(insets) },
+                    contentWindowInsets = insets
+                ) { innerPadding ->
+                    when (uiState) {
+                        MainActivityUiState.Loading -> {}
 
-                    MainActivityUiState.LoadFailed -> ScreenMessage(
-                        text = stringResource(R.string.load_failed),
-                        modifier = Modifier.padding(innerPadding)
-                    )
-
-                    is MainActivityUiState.Ready -> {
-                        BlueCardNavDisplay(
-                            isSetUp = uiState.isSetUp,
-                            // Consuming the system bar insets that innerPadding already covers
-                            // keeps screens' imePadding() from adding them a second time.
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .consumeWindowInsets(innerPadding)
+                        MainActivityUiState.LoadFailed -> ScreenMessage(
+                            text = stringResource(R.string.load_failed),
+                            modifier = Modifier.padding(innerPadding)
                         )
-                        if (uiState.showDamagedProgressNotice) {
-                            DamagedProgressNotice(onDismiss = onDismissDamagedProgressNotice)
+
+                        is MainActivityUiState.Ready -> {
+                            BlueCardNavDisplay(
+                                isSetUp = uiState.isSetUp,
+                                // Consuming the system bar insets that innerPadding already covers
+                                // keeps screens' imePadding() from adding them a second time.
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .consumeWindowInsets(innerPadding)
+                            )
+                            if (uiState.showDamagedProgressNotice) {
+                                DamagedProgressNotice(onDismiss = onDismissDamagedProgressNotice)
+                            }
                         }
                     }
                 }

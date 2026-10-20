@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
+import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.junit.Rule
 import org.junit.Test
@@ -48,11 +49,10 @@ class BadgeRowScreenshotTest {
             ),
             BadgeListItem("cooking", "Cooking", EagleRequirement.Required, BadgeStatus.Completed)
         )
-        composeTestRule.setContent {
+        composeTestRule.setContentWithText {
             BlueCardTheme {
                 Column(Modifier.testTag(ROWS)) {
-                    val listFormatter = rememberBadgeNameListFormatter()
-                    rows.forEach { BadgeRow(it, listFormatter, onClick = {}) }
+                    rows.forEach { BadgeRow(it, onClick = {}) }
                 }
             }
         }
