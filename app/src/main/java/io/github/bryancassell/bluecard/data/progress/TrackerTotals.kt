@@ -52,10 +52,10 @@ fun TrackerDefinition.totals(entries: List<TrackerEntry>): List<TrackerTotal> =
 /**
  * This column's values added up over the [entries] recorded for its requirement. Only a log has
  * totals (docs/catalog.md), so every entry is a row. A value that isn't a number
- * ([storedNumber]) isn't counted. They're added as [BigDecimal], so 0.1 and 0.2 hours make 0.3,
- * and ten rows of 0.6 hours make the 6 that Doubles fall short of. It's bignum-kt's, which is
- * java.math's on Android and also runs on iOS (#342). Whole hundredths in a Long would cut values
- * typed with more decimal places, and couldn't hold a 20-digit one.
+ * ([storedNumber]) isn't counted. They're added as bignum-kt's [BigDecimal] (ARCHITECTURE.md,
+ * Trackers), so 0.1 and 0.2 hours make 0.3, and ten rows of 0.6 hours make the 6 that Doubles
+ * fall short of. Whole hundredths in a Long would cut values typed with more decimal places, and
+ * couldn't hold a 20-digit one.
  */
 fun TrackerColumn.sumOver(entries: List<TrackerEntry>): BigDecimal {
     val numbers = entries.mapNotNull { it.values[id]?.let(::storedNumber) }
