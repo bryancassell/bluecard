@@ -508,7 +508,7 @@ fails the build for a missing dependency, as Hilt did.
 - **Two modules list every definition** (`di/`): `appModule`, with no Android
   imports, for common code
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
-  `androidModule`, for what needs a `Context`. Besides the repositories, they
+  `androidModule`, for what needs Android. Besides the repositories, they
   provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
   `CoroutineScope` (`@ApplicationScope`), a `ZonedClock` and a `WarningLog`,
   all but the scope so tests can replace them.

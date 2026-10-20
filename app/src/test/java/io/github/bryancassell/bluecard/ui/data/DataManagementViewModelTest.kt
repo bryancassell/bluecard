@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
+import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -116,6 +117,14 @@ class DataManagementViewModelTest {
 
     private fun DataManagementViewModel.messageKind() = uiState.value.message?.kind
 
+    /** Checks that the one warning written is for [failure], with the exception that caused it. */
+    private fun assertWarned(failure: Kind) {
+        val warning = log.warnings.single()
+        assertEquals("DataManagement", warning.tag)
+        assertEquals("Export, import or clear failed: $failure", warning.message)
+        assertTrue(warning.error is IOException)
+    }
+
     /** A view model that has read [export], an export of [file] the scout chose to import. */
     private fun TestScope.viewModelWithFileToImport(file: Backup = backup) = viewModel().apply {
         backupRepository.files[export] = BackupReadResult.Valid(file)
@@ -203,6 +212,7 @@ class DataManagementViewModelTest {
 
         assertEquals(Kind.ExportFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
+        assertWarned(Kind.ExportFailed)
         viewModel.onMessageShown(viewModel.uiState.value.message!!)
         assertNull(viewModel.uiState.value.message)
     }
@@ -261,6 +271,7 @@ class DataManagementViewModelTest {
 
         assertEquals(Kind.ReadFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
+        assertWarned(Kind.ReadFailed)
     }
 
     @Test
@@ -309,6 +320,7 @@ class DataManagementViewModelTest {
 
         assertEquals(Kind.ImportFailed, viewModel.messageKind())
         assertFalse(viewModel.uiState.value.working)
+        assertWarned(Kind.ImportFailed)
     }
 
     @Test
@@ -570,6 +582,7 @@ class DataManagementViewModelTest {
         viewModel.clearAll()
 
         assertEquals(Kind.ClearFailed, viewModel.messageKind())
+        assertWarned(Kind.ClearFailed)
         assertEquals(1, progressRepository.observeAllProgress().first().size)
         assertTrue(viewModel.uiState.value.canClear)
         assertFalse(viewModel.uiState.value.working)

@@ -21,7 +21,8 @@ private const val TAG = "Documents"
  *
  * Throws what making the content throws, or an [IOException] if the document can't be opened
  * or written. Either way, it doesn't leave behind the empty document the file picker made, or
- * one that opening emptied. If that can't be deleted, that's written to [log].
+ * one that opening emptied. If that can't be deleted, or its size can't be read, that's
+ * written to [log].
  */
 suspend fun ContentResolver.saveDocument(
     destination: Uri,
