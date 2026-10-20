@@ -3,7 +3,6 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.artificialpb.bignum.BigDecimal
 import io.github.artificialpb.bignum.plus
 import io.github.artificialpb.bignum.toBigDecimal
-import io.github.artificialpb.bignum.toFloat
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement

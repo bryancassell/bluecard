@@ -26,10 +26,14 @@ fun storedNumber(text: String): BigDecimal? {
             else -> char.digitToIntOrNull()?.digitToChar() ?: return null
         }
     }
-    // Null with no digit, as for a lone separator, or with more than one separator. Checked here
-    // because bigDecimalOf throws for them, and toBigDecimalOrNull is only on the JVM.
-    if (digits.all { it == '.' } || digits.count { it == '.' } > 1) return null
-    return bigDecimalOf(String(digits.toCharArray()))
+    // Null for a lone separator, which has no digit, or for more than one, which bigDecimalOf
+    // throws for; toBigDecimalOrNull is only on the JVM. On iOS, bignum-kt 1.0.5 reads ".5" and
+    // "2." as Java does (parseString in nativeMain's BigDecimal.native.kt).
+    return try {
+        bigDecimalOf(digits.toCharArray().concatToString())
+    } catch (e: NumberFormatException) {
+        null
+    }
 }
 
 /**
