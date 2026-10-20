@@ -64,11 +64,6 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import dagger.hilt.android.testing.BindValue
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.HiltTestApplication
-import dagger.hilt.android.testing.UninstallModules
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -91,10 +86,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportRepository
-import io.github.bryancassell.bluecard.di.ClockModule
-import io.github.bryancassell.bluecard.di.DataModule
-import io.github.bryancassell.bluecard.di.ProfileModule
-import io.github.bryancassell.bluecard.di.ReportModule
+import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.testing.DATE_PICKER_SCREEN
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.NARROW_SCREEN
@@ -108,58 +100,49 @@ import java.time.Clock
 import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.koin.core.context.loadKoinModules
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 /**
- * Local UI test: Robolectric launches the activity on the JVM with Hilt's test
- * application, so test modules (such as TestDispatchersModule) replace real ones, and
- * this class swaps the repositories for fakes and fixes the date. Each test starts with no
- * saved profile, as on a fresh install, a one-badge catalog and no progress.
+ * Local UI test: Robolectric launches the activity on the JVM, once this class has swapped the
+ * repositories for fakes, the IO dispatcher for a test dispatcher and the clock for a fixed one.
+ * Each test starts with no saved profile, as on a fresh install, a one-badge catalog and no
+ * progress.
  *
  * It doesn't run the accessibility checks (AccessibilityChecks), which need native graphics:
  * under them, launching MainActivity never finishes, because Robolectric keeps drawing frames.
  * Each screen's and dialog's own tests check what it shows.
  */
-@HiltAndroidTest
-@UninstallModules(
-    ProfileModule::class,
-    DataModule::class,
-    ReportModule::class,
-    ClockModule::class
-)
-@Config(application = HiltTestApplication::class)
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
-    // Hilt must set up its components before the activity launches.
-    @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
-
     // An empty rule, so tests can save a profile before launching the activity.
-    @get:Rule(order = 1)
+    @get:Rule
     val composeTestRule = createEmptyComposeRule()
 
     private val fakeProfileRepository = FakeProfileRepository()
 
-    @BindValue
-    @JvmField
-    val profileRepository: ProfileRepository = fakeProfileRepository
+    private val profileRepository: ProfileRepository = fakeProfileRepository
 
-    @BindValue
-    @JvmField
-    val catalogRepository: CatalogRepository = FakeCatalogRepository(
+    private val catalogRepository: CatalogRepository = FakeCatalogRepository(
         listOf(
             MeritBadge(
                 id = "camping",
@@ -221,32 +204,43 @@ class MainActivityTest {
         }
     )
 
-    @BindValue
-    @JvmField
-    val progressRepository: ProgressRepository = FakeProgressRepository()
+    private val progressRepository: ProgressRepository = FakeProgressRepository()
 
     private val fakeDamagedProgressRepository = FakeDamagedProgressRepository()
 
-    @BindValue
-    @JvmField
-    val damagedProgressRepository: DamagedProgressRepository = fakeDamagedProgressRepository
+    private val damagedProgressRepository: DamagedProgressRepository = fakeDamagedProgressRepository
 
     // PdfDocument only runs on a device.
     private val fakeReportRepository = FakeReportRepository(progressRepository, catalogRepository)
 
-    @BindValue
-    @JvmField
-    val reportRepository: ReportRepository = fakeReportRepository
+    private val reportRepository: ReportRepository = fakeReportRepository
 
     private val today = LocalDate.of(2026, 5, 20)
 
     private val fakeClock = FakeClock(today.atTime(12, 0).toInstant(ZoneOffset.UTC))
 
-    @BindValue
-    @JvmField
-    val clock: Clock = fakeClock
+    private val clock: Clock = fakeClock
 
     private lateinit var scenario: ActivityScenario<MainActivity>
+
+    // BlueCardApplication has started Koin with the production definitions. Nothing has been
+    // built from them yet, so everything the activity creates gets these instead.
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Before
+    fun replaceDependencies() {
+        loadKoinModules(
+            module {
+                single<ProfileRepository> { profileRepository }
+                single<CatalogRepository> { catalogRepository }
+                single<ProgressRepository> { progressRepository }
+                single<DamagedProgressRepository> { damagedProgressRepository }
+                single<ReportRepository> { reportRepository }
+                single<Clock> { clock }
+                // Instead of background threads, for the export and import that run for real.
+                single<CoroutineDispatcher>(named<IoDispatcher>()) { UnconfinedTestDispatcher() }
+            }
+        )
+    }
 
     @After
     fun tearDown() {

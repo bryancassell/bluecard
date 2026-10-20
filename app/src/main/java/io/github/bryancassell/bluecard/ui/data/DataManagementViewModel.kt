@@ -4,7 +4,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.backup.BackupReadResult
 import io.github.bryancassell.bluecard.data.backup.BackupRepository
@@ -16,7 +15,6 @@ import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import java.io.IOException
 import java.time.Clock
 import java.time.LocalDate
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,8 +30,7 @@ import kotlinx.coroutines.launch
  * data, asking which to keep where the two differ, or replacing everything with it. Clears all
  * their progress once they confirm it.
  */
-@HiltViewModel
-class DataManagementViewModel @Inject constructor(
+class DataManagementViewModel(
     private val backupRepository: BackupRepository,
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,

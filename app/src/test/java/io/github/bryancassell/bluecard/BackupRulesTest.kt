@@ -17,8 +17,8 @@ import org.xmlpull.v1.XmlPullParser
 
 /**
  * Checks that the manifest uses the app's Auto Backup rules, and that each set of rules covers
- * the files where the app keeps the scout's data. DatabaseModuleTest and ProfileModuleTest
- * check that the app really stores its data in those files.
+ * the files where the app keeps the scout's data. AndroidModuleTest checks that the app really
+ * stores its data in those files.
  * https://developer.android.com/identity/data/autobackup#IncludingFiles
  */
 @RunWith(AndroidJUnit4::class)

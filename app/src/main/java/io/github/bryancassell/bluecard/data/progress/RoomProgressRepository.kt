@@ -6,7 +6,6 @@ import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
-import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +24,7 @@ import kotlinx.coroutines.sync.withLock
  * Functions are written as expression bodies (`= dao...`): when a call really suspends,
  * JaCoCo never sees a separate closing brace run, and would count it as untested.
  */
-class RoomProgressRepository @Inject constructor(
+class RoomProgressRepository(
     private val database: BlueCardDatabase,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ProgressRepository {

@@ -26,7 +26,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
@@ -35,6 +34,7 @@ import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.BadgeRow
 import io.github.bryancassell.bluecard.ui.badges.rememberBadgeNameListFormatter
 import io.github.bryancassell.bluecard.ui.typedText
+import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Home screen to its ViewModel. */
 @Composable
@@ -45,7 +45,7 @@ fun HomeRoute(
     onOpenRank: (rankId: String) -> Unit,
     onOpenDataManagement: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreen(

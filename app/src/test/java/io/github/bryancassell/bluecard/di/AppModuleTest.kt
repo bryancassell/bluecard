@@ -1,0 +1,48 @@
+package io.github.bryancassell.bluecard.di
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
+import io.github.bryancassell.bluecard.data.profile.ProfileRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
+import java.time.Clock
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.koin.core.context.GlobalContext
+import org.koin.core.qualifier.named
+
+/** Checks what [appModule] provides, from the Koin that BlueCardApplication starts. */
+@RunWith(AndroidJUnit4::class)
+class AppModuleTest {
+    private val koin = GlobalContext.get()
+
+    @Test
+    fun ioDispatcher_isDispatchersIo() {
+        assertSame(Dispatchers.IO, koin.get<CoroutineDispatcher>(named<IoDispatcher>()))
+    }
+
+    @Test
+    fun clock_isDeviceClock() {
+        assertSame(DeviceClock, koin.get<Clock>())
+    }
+
+    @Test
+    fun progressRepository_isRoomProgressRepository() {
+        assertTrue(koin.get<ProgressRepository>() is RoomProgressRepository)
+    }
+
+    @Test
+    fun progressRepository_isOneForTheApp() {
+        // So writes from every screen queue on its one lock, in the order they're made.
+        assertSame(koin.get<ProgressRepository>(), koin.get<ProgressRepository>())
+    }
+
+    @Test
+    fun profileRepository_isDataStoreProfileRepository() {
+        assertTrue(koin.get<ProfileRepository>() is DataStoreProfileRepository)
+    }
+}

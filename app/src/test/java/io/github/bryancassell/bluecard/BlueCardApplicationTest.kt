@@ -55,6 +55,8 @@ class BlueCardApplicationTest {
         } else {
             info.flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
         }
+        // Ended first, as Robolectric ends it after each test, so Koin can start again.
+        application.onTerminate()
         application.onCreate()
     }
 

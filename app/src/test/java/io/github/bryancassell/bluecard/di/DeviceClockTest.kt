@@ -10,7 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class ClockModuleTest {
+class DeviceClockTest {
     private val deviceZone = TimeZone.getDefault()
 
     @After
@@ -22,13 +22,13 @@ class ClockModuleTest {
     fun clock_isInDevicesTimeZone() {
         TimeZone.setDefault(TimeZone.getTimeZone(PAGO_PAGO))
 
-        assertEquals(PAGO_PAGO, ClockModule.provideClock().zone)
+        assertEquals(PAGO_PAGO, DeviceClock.zone)
     }
 
     @Test
     fun clock_afterDevicesTimeZoneChanges_isInTheNewZone() {
         TimeZone.setDefault(TimeZone.getTimeZone(PAGO_PAGO))
-        val clock = ClockModule.provideClock()
+        val clock = DeviceClock
         val todayBefore = LocalDate.now(clock)
 
         TimeZone.setDefault(TimeZone.getTimeZone(KIRITIMATI))
@@ -41,7 +41,7 @@ class ClockModuleTest {
     @Test
     fun clock_isTheSystemTime() {
         val before = Instant.now()
-        val read = ClockModule.provideClock().instant()
+        val read = DeviceClock.instant()
         val after = Instant.now()
 
         assertTrue(read in before..after)
@@ -49,7 +49,7 @@ class ClockModuleTest {
 
     @Test
     fun withZone_isTheSystemClockInThatZone() {
-        assertEquals(Clock.system(KIRITIMATI), ClockModule.provideClock().withZone(KIRITIMATI))
+        assertEquals(Clock.system(KIRITIMATI), DeviceClock.withZone(KIRITIMATI))
     }
 
     private companion object {

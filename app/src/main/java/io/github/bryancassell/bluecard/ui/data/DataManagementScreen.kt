@@ -31,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.data.backup.exportFileName
@@ -42,13 +41,14 @@ import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
 import java.time.LocalDate
+import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Data management screen to its ViewModel. */
 @Composable
 fun DataManagementRoute(
     onEditProfile: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DataManagementViewModel = hiltViewModel()
+    viewModel: DataManagementViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     DataManagementScreen(

@@ -4,10 +4,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -24,14 +20,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.annotation.InjectedParam
 
 /**
  * A badge's merit badge counselor, in fields the scout edits and then saves. Once saved, the
  * page closes.
  */
-@HiltViewModel(assistedFactory = EditCounselorViewModel.Factory::class)
-class EditCounselorViewModel @AssistedInject constructor(
-    @Assisted private val badgeId: String,
+class EditCounselorViewModel(
+    @InjectedParam private val badgeId: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
@@ -118,11 +114,6 @@ class EditCounselorViewModel @AssistedInject constructor(
     /** The scout has been told about [failure]. */
     fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(badgeId: String): EditCounselorViewModel
     }
 
     private companion object {

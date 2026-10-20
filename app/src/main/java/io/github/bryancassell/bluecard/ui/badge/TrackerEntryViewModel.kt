@@ -7,10 +7,6 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.Advancement
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -46,6 +42,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.annotation.InjectedParam
 
 /**
  * One row of a requirement's tracker, for the scout to fill in, change or delete: in a log,
@@ -56,12 +53,11 @@ import kotlinx.coroutines.flow.stateIn
  * It reads what's saved when the page opens, and the page is a form: the scout saves it, which
  * closes the page, or leaves to discard their changes.
  */
-@HiltViewModel(assistedFactory = TrackerEntryViewModel.Factory::class)
-class TrackerEntryViewModel @AssistedInject constructor(
-    @Assisted("advancementId") private val advancementId: String,
-    @Assisted("number") private val number: String,
-    @Assisted private val entryId: Long?,
-    @Assisted private val rowNumber: Int?,
+class TrackerEntryViewModel(
+    @InjectedParam private val advancementId: String,
+    @InjectedParam private val number: String,
+    @InjectedParam private val entryId: Long?,
+    @InjectedParam private val rowNumber: Int?,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val clock: Clock,
@@ -341,16 +337,6 @@ class TrackerEntryViewModel @AssistedInject constructor(
     /** The scout has been told about [failure]. */
     fun onSaveFailureShown(failure: TaskFailure) {
         saves.onShown(failure)
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(
-            @Assisted("advancementId") advancementId: String,
-            @Assisted("number") number: String,
-            entryId: Long?,
-            rowNumber: Int?
-        ): TrackerEntryViewModel
     }
 
     private companion object {

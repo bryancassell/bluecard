@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    alias(libs.plugins.koin.compiler)
     alias(libs.plugins.room3)
     alias(libs.plugins.roborazzi)
     jacoco
@@ -137,7 +137,7 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
     group = "verification"
     description = "Fails if any class has less than 80% line coverage from local tests."
     dependsOn("testDebugUnitTest")
-    // Generated Android, Hilt, Room and Kotlin classes, @Preview functions (kept in
+    // Generated Android, Room and Kotlin classes, @Preview functions (kept in
     // *Preview.kt files), which only run in Android Studio, and code that only runs on a
     // device.
     val exclusions = listOf(
@@ -146,17 +146,6 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
         "**/BuildConfig.*",
         "**/Manifest*.*",
         "**/*PreviewKt*.class",
-        // Hilt: components, injectors, factories and aggregation metadata.
-        "**/Hilt_*.class",
-        "**/*_HiltComponents*.class",
-        "**/*_ComponentTreeDeps*.class",
-        "**/*_GeneratedInjector*.class",
-        "**/*_HiltModules*.class",
-        "**/*_Factory*.class",
-        "**/*_Provide*Factory*.class",
-        "**/*_MembersInjector*.class",
-        "**/hilt_aggregated_deps/**",
-        "**/dagger/hilt/internal/**",
         // Room: generated database and DAO implementations.
         "**/*_Impl.class",
         "**/*_Impl\$*.class",
@@ -281,8 +270,9 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose.viewmodel)
+    implementation(libs.koin.annotations)
     implementation(libs.androidx.room3.runtime)
     // Strictly, so a Room update that needs a newer androidx.sqlite fails to resolve until
     // `sqlite` is raised with it: local tests load sqlite-bundled-jvm's library at that version.
@@ -291,7 +281,6 @@ dependencies {
     }
     ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -304,11 +293,9 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
     testImplementation(libs.androidx.lifecycle.viewmodel.testing)
-    testImplementation(libs.hilt.android.testing)
     // MigrationTestHelper, which checks each database migration against the committed schemas.
     testImplementation(libs.androidx.room3.testing)
     bundledSqliteJvm(libs.androidx.sqlite.bundled.jvm)
-    kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.junit)
     // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.
     testImplementation(libs.androidx.espresso.core)

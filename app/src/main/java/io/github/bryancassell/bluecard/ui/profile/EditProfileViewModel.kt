@@ -4,14 +4,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,8 +20,7 @@ import kotlinx.coroutines.flow.stateIn
  * The scout's name and unit number, in fields the scout edits and then saves. Once saved, the
  * page closes.
  */
-@HiltViewModel
-class EditProfileViewModel @Inject constructor(
+class EditProfileViewModel(
     private val profileRepository: ProfileRepository,
     // Keeps unsaved fields if the system stops the app in the background.
     savedStateHandle: SavedStateHandle

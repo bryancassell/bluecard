@@ -4,12 +4,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.textFieldState
-import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -17,8 +15,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
 /** The badges in the catalog that match the scout's search, with their progress on each. */
-@HiltViewModel
-class BadgesViewModel @Inject constructor(
+class BadgesViewModel(
     catalogRepository: CatalogRepository,
     progressRepository: ProgressRepository,
     // Keeps the search if the system stops the app in the background.

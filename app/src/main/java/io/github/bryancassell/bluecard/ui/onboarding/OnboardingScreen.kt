@@ -19,12 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.profile.ProfileFields
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Connects the Onboarding screen to its ViewModel. Once the profile is saved, the
@@ -33,7 +33,7 @@ import io.github.bryancassell.bluecard.ui.profile.ProfileFields
 @Composable
 fun OnboardingRoute(
     modifier: Modifier = Modifier,
-    viewModel: OnboardingViewModel = hiltViewModel()
+    viewModel: OnboardingViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     OnboardingScreen(

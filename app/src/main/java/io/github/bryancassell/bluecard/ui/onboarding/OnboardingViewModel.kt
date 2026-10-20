@@ -4,21 +4,18 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.textFieldState
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-@HiltViewModel
-class OnboardingViewModel @Inject constructor(
+class OnboardingViewModel(
     private val profileRepository: ProfileRepository,
     // Keeps what the scout typed if the system stops the app in the background.
     savedStateHandle: SavedStateHandle

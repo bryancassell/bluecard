@@ -67,15 +67,20 @@ apps. AGP 9 has Kotlin support built in, so the build only adds Kotlin compiler
 plugins on top: Compose, and kotlinx.serialization (for `@Serializable`
 navigation keys).
 
-**KSP and Hilt.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin
-Symbol Processing) runs code generators at compile time.
-[Hilt](https://developer.android.com/training/dependency-injection/hilt-android)
-uses it to generate the dependency injection code; its Gradle plugin wires the
-generated code into the app. Libraries whose generators run through KSP are
-added with `ksp(...)` (for app code) or `kspTest(...)` (for local tests) in
-`app/build.gradle.kts`. Room also generates its database code with KSP. KSP
-versions are no longer tied to Kotlin versions, but Hilt must be 2.60.1 or newer
-to work with Kotlin 2.4.
+**KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
+Processing) runs code generators at compile time. Room generates its database
+code with it. Libraries whose generators run through KSP are added with
+`ksp(...)` (for app code) or `kspTest(...)` (for local tests) in
+`app/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions.
+
+**Koin's compiler plugin.** It writes the constructor calls for Koin's
+`single<T>()` and `viewModel<T>()`, and fails the build for a missing
+dependency (see [`ARCHITECTURE.md`](../ARCHITECTURE.md#dependency-injection)).
+Compiler plugins depend on the compiler's internals, so each release lists the
+Kotlin versions it was verified on
+([compatibility](https://github.com/InsertKoinIO/koin-compiler-plugin#compatibility)).
+On a newer Kotlin it builds anyway, with a warning that names them; after
+raising Kotlin, raise `koinPlugin` too once a release verifies it.
 
 **Room schemas** (`app/schemas/`). The Room Gradle plugin writes each database
 version's schema there as JSON. Commit these files: they show schema changes in
@@ -162,13 +167,14 @@ it.
   which simulates Android on the JVM: mark the class with
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
   device.
-- **Hilt in tests.** ViewModel and other unit tests construct classes directly,
-  passing fakes. Tests that launch a Hilt activity are marked `@HiltAndroidTest`,
-  run with `@Config(application = HiltTestApplication::class)` and use
-  `HiltAndroidRule` (see `MainActivityTest`). In those tests, `@TestInstallIn`
-  modules in `app/src/test` replace production modules, for example
-  `TestDispatchersModule` binds every dispatcher to one shared `TestDispatcher`,
-  which a test can `@Inject` to control virtual time.
+- **Koin in tests.** ViewModel and other unit tests construct classes directly,
+  passing fakes. Robolectric starts `BlueCardApplication`, and so Koin, before
+  each test, and stops Koin when the test ends (`onTerminate()`). A test that
+  launches `MainActivity` replaces definitions before launching it, with
+  `loadKoinModules(module { single<ProgressRepository> { fake } })`, for that
+  test only (see `MainActivityTest`). It replaces the IO dispatcher
+  (`named<IoDispatcher>()`) with a `TestDispatcher` too, so the real
+  repositories it keeps don't work on background threads.
 - **`MainDispatcherRule`** (`app/src/test/.../testing/`) replaces the main
   dispatcher in ViewModel tests, as in Android's
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
@@ -202,7 +208,7 @@ when it can detect that one is broken:
 
 | Rule | Check |
 |---|---|
-| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android, Hilt and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
+| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
@@ -308,7 +314,7 @@ code that R8 breaks at runtime only fails when a release build runs. Check one
 on an emulator before each release, and after adding a library, a keep rule,
 or other code that uses reflection. Also check after updating AGP (which brings
 R8), or a library that uses reflection or ships keep rules the app relies on:
-kotlinx.serialization, Hilt, Room or DataStore. As with backup, use an
+kotlinx.serialization, Koin, Room or DataStore. As with backup, use an
 emulator, and point `adb` at it if a phone is also connected.
 
 Before a release, the [QA test plan](qa-test-plan.md) makes this check on

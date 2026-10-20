@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.net.Uri
 import androidx.core.content.FileProvider
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -23,7 +22,6 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.time.Clock
 import java.time.LocalDate
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
@@ -40,8 +38,8 @@ import kotlinx.coroutines.withContext
  * Saving runs in [externalScope], so a report finishes saving even if the scout leaves the
  * screen ([runOutlivingCaller]).
  */
-class PdfReportRepository @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+class PdfReportRepository(
+    private val context: Context,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val profileRepository: ProfileRepository,

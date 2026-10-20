@@ -4,10 +4,6 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
@@ -30,15 +26,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import org.koin.core.annotation.InjectedParam
 
 /**
  * One badge from the catalog, with the scout's progress on its requirements, and its report
  * once it's complete. While it isn't complete, the scout can mark it completed on a prior date.
  * Once it's started, its progress can be cleared.
  */
-@HiltViewModel(assistedFactory = BadgeDetailViewModel.Factory::class)
-class BadgeDetailViewModel @AssistedInject constructor(
-    @Assisted private val badgeId: String,
+class BadgeDetailViewModel(
+    @InjectedParam private val badgeId: String,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     reportRepository: ReportRepository,
@@ -187,11 +183,6 @@ class BadgeDetailViewModel @AssistedInject constructor(
 
     /** The latest date the badge can be marked completed on, read from the clock each time. */
     fun today(): LocalDate = LocalDate.now(clock)
-
-    @AssistedFactory
-    interface Factory {
-        fun create(badgeId: String): BadgeDetailViewModel
-    }
 
     private companion object {
         /**
