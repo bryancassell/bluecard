@@ -449,10 +449,9 @@ both taps of a double tap can reach it.
   values; recorded progress is relational (badges → requirements → tracker rows).
 - **Room 2.8** (`androidx.room`) on its SQLite driver API, with
   `BundledSQLiteDriver`: a SQLite the app ships, for iOS too
-  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Android's own
-  driver deletes a damaged database. Room 3 is planned
-  ([#339](https://github.com/bryancassell/bluecard/issues/339)). Room and Hilt
-  both generate code, using the KSP Gradle plugin.
+  ([#337](https://github.com/bryancassell/bluecard/issues/337)). Room 3 is
+  planned ([#339](https://github.com/bryancassell/bluecard/issues/339)). Room
+  and Hilt both generate code, using the KSP Gradle plugin.
 - **Repositories are interfaces** with one production implementation each, so
   tests can substitute fakes.
 

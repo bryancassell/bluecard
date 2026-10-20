@@ -11,6 +11,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -31,6 +35,31 @@ class MigrationTest {
         BundledSQLiteDriver(),
         BlueCardDatabase::class
     )
+
+    /**
+     * Migrates the database to [version] and checks it against that version's committed schema.
+     * The helper checks the schema's tables, but not for others, such as one a migration should
+     * have dropped: its driver form passes validateUnknownTables = false to Room (checked in
+     * room-testing 2.8.5), where its SupportSQLite form took validateDroppedTables. So this
+     * checks that too.
+     */
+    private fun migrateAndValidate(version: Int) =
+        helper.runMigrationsAndValidate(version).use { migrated ->
+            val tables = migrated.prepare(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+            ).use { buildSet { while (it.step()) add(it.getText(0)) } }
+            assertEquals(schemaTables(version) + "room_master_table", tables)
+        }
+
+    /** The tables in [version]'s committed schema, which the Room Gradle plugin adds to the assets. */
+    private fun schemaTables(version: Int): Set<String> {
+        val schema = InstrumentationRegistry.getInstrumentation().context.assets
+            .open("${BlueCardDatabase::class.java.name}/$version.json")
+            .use { Json.parseToJsonElement(it.reader().readText()) }
+        return schema.jsonObject.getValue("database").jsonObject.getValue("entities").jsonArray
+            .map { it.jsonObject.getValue("tableName").jsonPrimitive.content }
+            .toSet()
+    }
 
     /** Opens the migrated database as the app does. */
     private fun open() = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE)
@@ -55,7 +84,7 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(2).close()
+        migrateAndValidate(2)
 
         val database = open()
         try {
@@ -99,7 +128,7 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(3).close()
+        migrateAndValidate(3)
 
         val database = open()
         try {
@@ -134,7 +163,7 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(4).close()
+        migrateAndValidate(4)
 
         val database = open()
         try {

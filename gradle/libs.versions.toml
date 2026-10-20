@@ -14,7 +14,7 @@ androidxHilt = "1.4.0"
 # KSP versions are no longer tied to Kotlin versions (since KSP 2.3.0).
 ksp = "2.3.12"
 kotlinxCoroutines = "1.11.0"
-# Room 2.8, not Room 3; see ARCHITECTURE.md (Repositories).
+# Room 2.8 until the move to Room 3 (#339).
 room = "2.8.5"
 # The SQLite that Room's driver bundles; the androidx.sqlite that Room 2.8.5 depends on.
 sqlite = "2.6.2"

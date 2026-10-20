@@ -231,19 +231,35 @@ val bundledSqliteHost = run {
         "linux_$arch" to "libsqliteJni.so"
     }
 }
-val bundledSqliteDir = layout.buildDirectory.dir("bundledSqlite")
 val extractBundledSqlite = tasks.register<Sync>("extractBundledSqlite") {
     from({ zipTree(bundledSqliteJvm.singleFile) }) {
         include("natives/${bundledSqliteHost.first}/*")
         eachFile { path = name }
     }
     includeEmptyDirs = false
-    into(bundledSqliteDir)
+    into(layout.buildDirectory.dir("bundledSqlite"))
+}
+
+// The library is an input of the tests by its path in the build folder, not the absolute path a
+// system property would give, so the build cache can reuse results from another checkout.
+abstract class BundledSqliteArguments : CommandLineArgumentProvider {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val folder: DirectoryProperty
+
+    @get:Input
+    abstract val name: Property<String>
+
+    override fun asArguments() = listOf(
+        "-Dbluecard.bundledSqlite.dir=${folder.get().asFile.absolutePath}",
+        "-Dandroidx.sqlite.driver.bundled.name=${name.get()}"
+    )
 }
 tasks.withType<Test>().configureEach {
-    dependsOn(extractBundledSqlite)
-    systemProperty("bluecard.bundledSqlite.dir", bundledSqliteDir.get().asFile.absolutePath)
-    systemProperty("androidx.sqlite.driver.bundled.name", bundledSqliteHost.second)
+    jvmArgumentProviders += objects.newInstance<BundledSqliteArguments>().apply {
+        folder.set(layout.dir(extractBundledSqlite.map { it.destinationDir }))
+        name.set(bundledSqliteHost.second)
+    }
 }
 
 androidComponents {
@@ -267,7 +283,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.sqlite.bundled)
+    // Strictly, so a Room update that needs a newer androidx.sqlite fails to resolve until
+    // `sqlite` is raised with it: local tests load sqlite-bundled-jvm's library at that version.
+    implementation(libs.androidx.sqlite.bundled) {
+        version { strictly(libs.versions.sqlite.get()) }
+    }
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)

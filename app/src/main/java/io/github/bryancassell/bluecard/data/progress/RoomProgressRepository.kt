@@ -144,7 +144,7 @@ class RoomProgressRepository @Inject constructor(
      * are bugs and pass through, such as a missing migration.
      */
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> = catch {
-        throw if (it is SQLiteException && it.isStorageFailure()) IOException(it) else it
+        throw if (it.isStorageFailure()) IOException(it) else it
     }
 
     /** Lets writes in one at a time, in the order they were made (it's first come, first served). */
@@ -161,7 +161,7 @@ class RoomProgressRepository @Inject constructor(
     private suspend fun <T> writing(write: suspend () -> T): T = externalScope.runOutlivingCaller {
         try {
             writeOrder.withLock { write() }
-        } catch (e: SQLiteException) {
+        } catch (e: Exception) {
             throw if (e.isStorageFailure()) IOException(e) else e
         }
     }
@@ -178,12 +178,20 @@ class RoomProgressRepository @Inject constructor(
      * Damage crashes the app too, and the next launch sets the database aside
      * ([SetAsideDamagedDatabaseDriver]). Reporting it as a load or save failure would leave the
      * scout retrying on a database that stays damaged until the app restarts.
+     *
+     * Before Room first opens the database, it locks a file beside it, and reports a lock file
+     * it can't create or lock as an IllegalStateException caused by the IOException (checked in
+     * Room 2.8.5's ExclusiveLock and FileLock), so that's a storage failure too.
      */
-    private fun SQLiteException.isStorageFailure() = when (resultCode) {
-        null, SQLITE_CONSTRAINT, SQLITE_MISMATCH, SQLITE_MISUSE, SQLITE_RANGE,
-        SQLITE_CORRUPT, SQLITE_NOTADB -> false
+    private fun Throwable.isStorageFailure(): Boolean = when (this) {
+        is SQLiteException -> !isDamage() && when (resultCode) {
+            null, SQLITE_CONSTRAINT, SQLITE_MISMATCH, SQLITE_MISUSE, SQLITE_RANGE -> false
+            else -> true
+        }
 
-        else -> true
+        is IllegalStateException -> generateSequence(cause) { it.cause }.any { it is IOException }
+
+        else -> false
     }
 
     /**

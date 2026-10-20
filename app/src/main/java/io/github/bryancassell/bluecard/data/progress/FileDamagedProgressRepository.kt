@@ -101,7 +101,9 @@ class FileDamagedProgressRepository @Inject constructor(
     /**
      * Records that SQLite found the database damaged while it was open, so it's set aside the
      * next time the app opens it ([SetAsideDamagedDatabaseDriver]). If that can't be recorded,
-     * the next launch still checks the database.
+     * such as on a full disk, the next launch has only its check to find the damage. Damage the
+     * check misses then crashes the app at each launch until there's room for the record, which
+     * is an empty file, and the launch after that sets the database aside.
      */
     @Synchronized
     fun recordDamage() {

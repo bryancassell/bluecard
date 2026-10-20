@@ -24,14 +24,20 @@ class BundledSqlitePerSandbox : TestEnvironmentLifecyclePlugin {
     }
 
     private companion object {
-        // Both set by app/build.gradle.kts.
-        val name: String = System.getProperty("androidx.sqlite.driver.bundled.name")
-        val original = File(System.getProperty("bluecard.bundledSqlite.dir"), name)
+        val name = property("androidx.sqlite.driver.bundled.name")
+        val original = File(property("bluecard.bundledSqlite.dir"), name)
 
+        // Deleted when the JVM exits, in the reverse of the order they're registered in: the
+        // library, then its folder.
         val sandboxCopy: File by lazy {
             val folder = Files.createTempDirectory("bundled-sqlite").toFile()
+            folder.deleteOnExit()
             original.copyTo(File(folder, name)).deleteOnExit()
-            folder.apply { deleteOnExit() }
+            folder
+        }
+
+        fun property(key: String): String = checkNotNull(System.getProperty(key)) {
+            "$key isn't set. app/build.gradle.kts sets it for local tests run through Gradle."
         }
     }
 }

@@ -269,8 +269,10 @@ settings. If a phone is also connected, point `adb` at the emulator first with
 4. Before opening the app, list the restored files. Expect only the files the
    rules include: `files/datastore/profile.preferences_pb`, and
    `databases/bluecard.db` (with its `-wal` and `-shm` files, if present) if the
-   app had opened its database. Any other file, such as `files/profileInstalled`,
-   means the rules include too much. Then open the app and check that the data
+   app had opened its database. `databases/bluecard.db.lck` comes back too: an
+   empty file Room locks before it first opens the database, which does no harm.
+   Any other file, such as `files/profileInstalled`, means the rules include too
+   much. Then open the app and check that the data
    is back.
 
    ```sh

@@ -94,6 +94,25 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     )
 
     @Test
+    fun readingAndWriting_whenRoomCantLockTheDatabase_throwIOException() = runTest {
+        // A folder where Room's lock file goes, so Room can't create it.
+        val file = File(folder.root, BlueCardDatabase.NAME)
+        File(file.path + ".lck").mkdirs()
+        val repository = RoomProgressRepository(
+            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath)),
+            externalScope
+        )
+
+        val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
+        val writeError = runCatching {
+            repository.startBadge("archery", start.requirementsVersion, start.startedDate)
+        }.exceptionOrNull()
+
+        assertTrue("Expected an IOException, got $readError", readError is IOException)
+        assertTrue("Expected an IOException, got $writeError", writeError is IOException)
+    }
+
+    @Test
     fun observing_whenMigrationIsMissing_throwsTheBugUnwrapped() = runTest {
         // A database from a newer app version, which Room has no migration down from.
         val file = File(folder.root, BlueCardDatabase.NAME)

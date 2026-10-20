@@ -15,7 +15,7 @@ val SQLiteException.resultCode: Int?
 private val RESULT_CODE = Regex("""^Error code: (\d+)""")
 
 /** Whether SQLite found the database damaged. */
-fun SQLiteException.isDamage() = resultCode == SQLITE_CORRUPT || resultCode == SQLITE_NOTADB
+fun SQLiteException.isDamage() = resultCode.let { it == SQLITE_CORRUPT || it == SQLITE_NOTADB }
 
 // The primary result codes this app checks for.
 const val SQLITE_CORRUPT = 11
