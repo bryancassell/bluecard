@@ -3,12 +3,18 @@ package io.github.bryancassell.bluecard.data.progress
 import android.content.Context
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -20,17 +26,49 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
     @get:Rule
     val helper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        BlueCardDatabase::class.java
+        context.getDatabasePath(DATABASE),
+        BundledSQLiteDriver(),
+        BlueCardDatabase::class
     )
 
-    private val context = ApplicationProvider.getApplicationContext<Context>()
+    /**
+     * Migrates the database to [version] and checks it against that version's committed schema.
+     * The helper checks the schema's tables, but not for others, such as one a migration should
+     * have dropped: its driver form passes validateUnknownTables = false to Room (checked in
+     * room-testing 2.8.5), where its SupportSQLite form took validateDroppedTables. So this
+     * checks that too.
+     */
+    private fun migrateAndValidate(version: Int) =
+        helper.runMigrationsAndValidate(version).use { migrated ->
+            val tables = migrated.prepare(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+            ).use { buildSet { while (it.step()) add(it.getText(0)) } }
+            assertEquals(schemaTables(version) + "room_master_table", tables)
+        }
+
+    /** The tables in [version]'s committed schema, which the Room Gradle plugin adds to the assets. */
+    private fun schemaTables(version: Int): Set<String> {
+        val schema = InstrumentationRegistry.getInstrumentation().context.assets
+            .open("${BlueCardDatabase::class.java.name}/$version.json")
+            .use { Json.parseToJsonElement(it.reader().readText()) }
+        return schema.jsonObject.getValue("database").jsonObject.getValue("entities").jsonArray
+            .map { it.jsonObject.getValue("tableName").jsonPrimitive.content }
+            .toSet()
+    }
+
+    /** Opens the migrated database as the app does. */
+    private fun open() = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE)
+        .setDriver(BundledSQLiteDriver())
+        .build()
 
     @Test
     fun migrate1To2_keepsTrackerEntries_asLogEntries() = runTest {
-        helper.createDatabase(DATABASE, 1).use {
+        helper.createDatabase(1).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -46,9 +84,9 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(DATABASE, 2, true).close()
+        migrateAndValidate(2)
 
-        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        val database = open()
         try {
             val progress = database.progressDao().observe("personal-fitness").first()!!
             assertEquals(
@@ -74,7 +112,7 @@ class MigrationTest {
 
     @Test
     fun migrate2To3_keepsTrackerEntries_withoutADate() = runTest {
-        helper.createDatabase(DATABASE, 2).use {
+        helper.createDatabase(2).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -90,9 +128,9 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(DATABASE, 3, true).close()
+        migrateAndValidate(3)
 
-        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        val database = open()
         try {
             val progress = database.progressDao().observe("personal-management").first()!!
             assertEquals(
@@ -109,7 +147,7 @@ class MigrationTest {
 
     @Test
     fun migrate3To4_keepsRequirementProgress_withoutASignOff() = runTest {
-        helper.createDatabase(DATABASE, 3).use {
+        helper.createDatabase(3).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -125,9 +163,9 @@ class MigrationTest {
             )
         }
 
-        helper.runMigrationsAndValidate(DATABASE, 4, true).close()
+        migrateAndValidate(4)
 
-        val database = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE).build()
+        val database = open()
         try {
             val progress = database.progressDao().observe("scout").first()!!
             assertEquals(

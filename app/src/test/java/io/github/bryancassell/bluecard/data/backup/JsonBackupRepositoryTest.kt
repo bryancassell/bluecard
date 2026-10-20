@@ -6,6 +6,7 @@ import android.content.pm.ProviderInfo
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.room.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
@@ -503,6 +504,7 @@ class JsonBackupRepositoryTest {
 
     private fun roomProgressRepository(): RoomProgressRepository {
         val database = Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java)
+            .setDriver(BundledSQLiteDriver())
             .build()
             .also { databases += it }
         return RoomProgressRepository(database, roomScope)

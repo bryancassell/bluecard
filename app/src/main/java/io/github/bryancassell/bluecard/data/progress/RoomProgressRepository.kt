@@ -1,16 +1,14 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import android.database.sqlite.SQLiteBindOrColumnIndexOutOfRangeException
-import android.database.sqlite.SQLiteConstraintException
-import android.database.sqlite.SQLiteDatatypeMismatchException
-import android.database.sqlite.SQLiteException
-import android.database.sqlite.SQLiteMisuseException
-import androidx.room.withTransaction
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
+import androidx.sqlite.SQLiteException
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import java.io.IOException
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -143,15 +141,11 @@ class RoomProgressRepository @Inject constructor(
 
     /**
      * Reports a database that can't be read, such as one that can't be opened, as the
-     * [IOException] that [ProgressRepository] documents. Android's SQLite reports those as
-     * [SQLiteException]s ([isStorageFailure]). Other exceptions are bugs and pass through: a
-     * missing migration, and the parent class `android.database.SQLException`, which Room's
-     * SQLite adapter throws only for misuse such as reading a closed statement. If Room is ever
-     * given a `SQLiteDriver`, every SQLite error arrives as that parent class, so this check
-     * needs revisiting.
+     * [IOException] that [ProgressRepository] documents ([isStorageFailure]). Other exceptions
+     * are bugs and pass through, such as a missing migration.
      */
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> = catch {
-        throw if (it is SQLiteException && it.isStorageFailure()) IOException(it) else it
+        throw if (it.isStorageFailure()) IOException(it) else it
     }
 
     /** Lets writes in one at a time, in the order they were made (it's first come, first served). */
@@ -168,7 +162,7 @@ class RoomProgressRepository @Inject constructor(
     private suspend fun <T> writing(write: suspend () -> T): T = externalScope.runOutlivingCaller {
         try {
             writeOrder.withLock { write() }
-        } catch (e: SQLiteException) {
+        } catch (e: Exception) {
             throw if (e.isStorageFailure()) IOException(e) else e
         }
     }
@@ -179,12 +173,30 @@ class RoomProgressRepository @Inject constructor(
      * interface means the app "is incorrectly coded" (https://www.sqlite.org/rescode.html).
      * This app also counts a constraint violation, an out-of-range parameter or column number
      * and a datatype mismatch as bugs: each write checks what it needs first, such as that the
-     * badge is started, so only a mistake in the code can cause one.
+     * badge is started, so only a mistake in the code can cause one. So is an error with no
+     * result code, which comes from Room rather than SQLite, such as a failed foreign key check.
+     *
+     * Damage crashes the app too, and the next launch sets the database aside
+     * ([SetAsideDamagedDatabaseDriver]). Reporting it as a load or save failure would leave the
+     * scout retrying on a database that stays damaged until the app restarts.
+     *
+     * Before Room first opens the database, it locks a file beside it, and reports a lock file
+     * it can't create or lock as an IllegalStateException caused by the IOException (checked in
+     * Room 2.8.5's ExclusiveLock and FileLock), so that's a storage failure too. A cancellation
+     * is an IllegalStateException as well, but stays one.
      */
-    private fun SQLiteException.isStorageFailure() = this !is SQLiteConstraintException &&
-        this !is SQLiteMisuseException &&
-        this !is SQLiteBindOrColumnIndexOutOfRangeException &&
-        this !is SQLiteDatatypeMismatchException
+    private fun Throwable.isStorageFailure(): Boolean = when (this) {
+        is SQLiteException -> !isDamage() && when (resultCode) {
+            null, SQLITE_CONSTRAINT, SQLITE_MISMATCH, SQLITE_MISUSE, SQLITE_RANGE -> false
+            else -> true
+        }
+
+        is CancellationException -> false
+
+        is IllegalStateException -> generateSequence(cause) { it.cause }.any { it is IOException }
+
+        else -> false
+    }
 
     /**
      * Runs [action] once the badge is started, starting it with [start] first if it isn't,
@@ -195,7 +207,7 @@ class RoomProgressRepository @Inject constructor(
         start: BadgeStart,
         action: suspend () -> T
     ): T = writing {
-        database.withTransaction {
+        inTransaction {
             if (!dao.isStarted(badgeId)) dao.insertBadge(start.progress(badgeId))
             action()
         }
@@ -206,7 +218,9 @@ class RoomProgressRepository @Inject constructor(
      * [notStarted] if it isn't.
      */
     private suspend fun <T> ifStarted(badgeId: String, notStarted: T, action: suspend () -> T): T =
-        writing {
-            database.withTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
-        }
+        writing { inTransaction { if (dao.isStarted(badgeId)) action() else notStarted } }
+
+    /** Runs [action] in one transaction, on Room's writer connection. */
+    private suspend fun <T> inTransaction(action: suspend () -> T): T =
+        database.useWriterConnection { it.immediateTransaction { action() } }
 }

@@ -41,6 +41,7 @@ class FileDamagedProgressRepository @Inject constructor(
     // Found when first used, off the main thread: finding the no-backup directory creates it.
     private val folder by lazy { File(context.noBackupFilesDir, FOLDER_NAME) }
     private val noticeFile by lazy { File(folder, NOTICE_FILE_NAME) }
+    private val damageFile by lazy { File(folder, DAMAGE_FILE_NAME) }
 
     // Null until noticeFile is first checked.
     private val noticePending = MutableStateFlow<Boolean?>(null)
@@ -68,30 +69,54 @@ class FileDamagedProgressRepository @Inject constructor(
     /**
      * Moves [database] and the files SQLite keeps beside it into a new folder, named by when
      * they're set aside, and records that the scout needs telling. Copies set aside before are
-     * kept, since an earlier one may hold more progress. SQLite's corruption handler calls it
-     * ([SetAsideDamagedDatabaseFactory]) once the database is closed, so a new one can be
-     * created in its place. Files that can't be moved are deleted, as Android would delete
-     * them, so the new database doesn't open on top of them.
+     * kept, since an earlier one may hold more progress. [SetAsideDamagedDatabaseDriver] calls it
+     * before Room opens the database, so a new one can be created in its place. Files that can't
+     * be moved are deleted, as Android would delete them, so the new database doesn't open on top
+     * of them. Recorded damage ([recordDamage]) is cleared once they're moved.
      */
     @Synchronized
     fun setAside(database: File) {
-        // Two connections can each find the damage; the second finds the files already moved.
-        if (!database.exists()) return
+        // Recorded damage outlives the files if the app was stopped after moving them all.
+        if (database.exists()) {
+            try {
+                Files.createDirectories(folder.toPath())
+                // Before the move, so the scout is told, and the next launch sets aside the rest,
+                // even if the app closes partway.
+                noticeFile.createNewFile()
+                damageFile.createNewFile()
+                val copy = Files.createTempDirectory(folder.toPath(), copyNamePrefix())
+                for (file in sqliteFiles(database).filter { it.exists() }) {
+                    Files.move(file.toPath(), copy.resolve(file.name))
+                }
+                Log.w(TAG, "Set aside a damaged database: $database")
+            } catch (e: IOException) {
+                Log.w(TAG, "Couldn't set aside a damaged database, so deleted it: $database", e)
+                SQLiteDatabase.deleteDatabase(database)
+            }
+            noticePending.value = true
+        }
+        damageFile.delete()
+    }
+
+    /**
+     * Records that SQLite found the database damaged while it was open, so it's set aside the
+     * next time the app opens it ([SetAsideDamagedDatabaseDriver]). If that can't be recorded,
+     * such as on a full disk, the next launch has only its check to find the damage. Damage the
+     * check misses then crashes the app at each launch until there's room for the record, which
+     * is an empty file, and the launch after that sets the database aside.
+     */
+    @Synchronized
+    fun recordDamage() {
         try {
             Files.createDirectories(folder.toPath())
-            // Before the move, so the scout is told even if the app closes partway.
-            noticeFile.createNewFile()
-            val copy = Files.createTempDirectory(folder.toPath(), copyNamePrefix())
-            for (file in sqliteFiles(database).filter { it.exists() }) {
-                Files.move(file.toPath(), copy.resolve(file.name))
-            }
-            Log.w(TAG, "Set aside a damaged database: $database")
+            damageFile.createNewFile()
         } catch (e: IOException) {
-            Log.w(TAG, "Couldn't set aside a damaged database, so deleted it: $database", e)
-            SQLiteDatabase.deleteDatabase(database)
+            Log.w(TAG, "Couldn't record a damaged database", e)
         }
-        noticePending.value = true
     }
+
+    /** Whether damage was recorded ([recordDamage]) and the database not yet set aside. */
+    fun isDamageRecorded() = damageFile.exists()
 
     /** When a copy is set aside, such as "2026-10-02T090607Z-", then a unique suffix. */
     private fun copyNamePrefix() =
@@ -99,8 +124,8 @@ class FileDamagedProgressRepository @Inject constructor(
 
     /**
      * The write-ahead log, shared-memory and rollback journal files SQLite keeps beside the
-     * database, then the database file. The database goes last, so if the app is stopped
-     * partway, SQLite finds the damage again at the next open, and the rest is set aside too.
+     * database, then the database file. The database goes last, so once it's gone, so are the
+     * rest, and a new database never opens beside an old one's log.
      */
     private fun sqliteFiles(database: File) =
         listOf("-wal", "-shm", "-journal", "").map { File(database.path + it) }
@@ -110,6 +135,7 @@ class FileDamagedProgressRepository @Inject constructor(
         const val FOLDER_NAME = "damaged-progress"
 
         private const val NOTICE_FILE_NAME = "notice-pending"
+        private const val DAMAGE_FILE_NAME = "damage-found"
         private const val TAG = "DamagedProgress"
     }
 }

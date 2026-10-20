@@ -209,6 +209,60 @@ tasks.withType<Test>().configureEach {
     }
 }
 
+// Local tests get BundledSQLiteDriver's Android library, whose loader calls
+// System.loadLibrary("sqliteJni") and finds nothing on a desktop JVM. Since androidx.sqlite 2.6.2
+// it loads <androidx.sqlite.driver.bundled.path>/<...name> instead when both are set, so the
+// tests get the host's library from sqlite-bundled-jvm, which registers the same JNI functions.
+// testing/BundledSqlitePerSandbox sets the path.
+val bundledSqliteJvm = configurations.create("bundledSqliteJvm") {
+    isCanBeConsumed = false
+    isTransitive = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+    }
+}
+// The folder and file name in sqlite-bundled-jvm's natives/ for macOS (developers) or Linux (CI).
+val bundledSqliteHost = run {
+    val arch = if (System.getProperty("os.arch") in setOf("aarch64", "arm64")) "arm64" else "x64"
+    if ("mac" in System.getProperty("os.name").lowercase()) {
+        "osx_$arch" to "libsqliteJni.dylib"
+    } else {
+        "linux_$arch" to "libsqliteJni.so"
+    }
+}
+val extractBundledSqlite = tasks.register<Sync>("extractBundledSqlite") {
+    // Resolved when the task runs, not while Gradle plans the build.
+    from(zipTree(bundledSqliteJvm.elements.map { it.single().asFile })) {
+        include("natives/${bundledSqliteHost.first}/*")
+        eachFile { path = name }
+    }
+    includeEmptyDirs = false
+    into(layout.buildDirectory.dir("bundledSqlite"))
+}
+
+// The library is an input of the tests by its path in the build folder, not the absolute path a
+// system property would give, so the build cache can reuse results from another checkout.
+abstract class BundledSqliteArguments : CommandLineArgumentProvider {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val folder: DirectoryProperty
+
+    @get:Input
+    abstract val name: Property<String>
+
+    override fun asArguments() = listOf(
+        "-Dbluecard.bundledSqlite.dir=${folder.get().asFile.absolutePath}",
+        "-Dandroidx.sqlite.driver.bundled.name=${name.get()}"
+    )
+}
+tasks.withType<Test>().configureEach {
+    jvmArgumentProviders += objects.newInstance<BundledSqliteArguments>().apply {
+        folder.set(layout.dir(extractBundledSqlite.map { it.destinationDir }))
+        name.set(bundledSqliteHost.second)
+    }
+}
+
 androidComponents {
     onVariants(selector().withName("debug")) { variant ->
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
@@ -230,6 +284,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.room.runtime)
+    // Strictly, so a Room update that needs a newer androidx.sqlite fails to resolve until
+    // `sqlite` is raised with it: local tests load sqlite-bundled-jvm's library at that version.
+    implementation(libs.androidx.sqlite.bundled) {
+        version { strictly(libs.versions.sqlite.get()) }
+    }
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
@@ -248,6 +307,7 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     // MigrationTestHelper, which checks each database migration against the committed schemas.
     testImplementation(libs.androidx.room.testing)
+    bundledSqliteJvm(libs.androidx.sqlite.bundled.jvm)
     kspTest(libs.hilt.compiler)
     testImplementation(libs.androidx.junit)
     // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.

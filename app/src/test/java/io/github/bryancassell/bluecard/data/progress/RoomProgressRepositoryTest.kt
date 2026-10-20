@@ -1,15 +1,24 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
-import android.database.sqlite.SQLiteConstraintException
-import android.database.sqlite.SQLiteDatabase
+import android.database.SQLException
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.withTransaction
+import androidx.room.execSQL
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.SQLiteDriver
+import androidx.sqlite.SQLiteException
+import androidx.sqlite.SQLiteStatement
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
+import java.io.IOException
 import java.time.LocalDate
+import java.util.concurrent.CancellationException
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -35,10 +44,10 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 
 /**
- * Runs the repository contract against Room with an in-memory database. Robolectric
- * provides the Context that Room needs on Android. The Room testing guide recommends plain JVM
- * tests with Room's Kotlin Multiplatform setup instead, whose JVM target has an in-memory builder
- * that takes no Context. This module is Android-only, and every in-memory builder in Room's
+ * Runs the repository contract against Room with an in-memory database, on the SQLite the app
+ * bundles (BundledSQLiteDriver). Robolectric provides the Context that Room needs on Android.
+ * The Room testing guide recommends plain JVM tests with Room's Kotlin Multiplatform setup
+ * instead, whose JVM target has an in-memory builder that takes no Context. This module is Android-only, and every in-memory builder in Room's
  * Android artifact takes a Context (checked with Room 2.8.5).
  */
 @RunWith(AndroidJUnit4::class)
@@ -49,8 +58,10 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val databases = mutableListOf<BlueCardDatabase>()
 
-    private fun open(builder: RoomDatabase.Builder<BlueCardDatabase>) =
-        builder.build().also { databases += it }
+    private fun open(
+        builder: RoomDatabase.Builder<BlueCardDatabase>,
+        driver: SQLiteDriver = BundledSQLiteDriver()
+    ) = builder.setDriver(driver).build().also { databases += it }
 
     private val database = open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
 
@@ -84,10 +95,29 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     )
 
     @Test
+    fun readingAndWriting_whenRoomCantLockTheDatabase_throwIOException() = runTest {
+        // A folder where Room's lock file goes, so Room can't create it.
+        val file = File(folder.root, BlueCardDatabase.NAME)
+        File(file.path + ".lck").mkdirs()
+        val repository = RoomProgressRepository(
+            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath)),
+            externalScope
+        )
+
+        val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
+        val writeError = runCatching {
+            repository.startBadge("archery", start.requirementsVersion, start.startedDate)
+        }.exceptionOrNull()
+
+        assertTrue("Expected an IOException, got $readError", readError is IOException)
+        assertTrue("Expected an IOException, got $writeError", writeError is IOException)
+    }
+
+    @Test
     fun observing_whenMigrationIsMissing_throwsTheBugUnwrapped() = runTest {
         // A database from a newer app version, which Room has no migration down from.
         val file = File(folder.root, BlueCardDatabase.NAME)
-        SQLiteDatabase.openOrCreateDatabase(file, null).use { it.version = 1_000 }
+        BundledSQLiteDriver().open(file.path).use { it.execSQL("PRAGMA user_version = 1000") }
         val repository = RoomProgressRepository(
             open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath)),
             externalScope
@@ -147,14 +177,17 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
      * SQLite reports a trigger's RAISE(ABORT) as a constraint violation:
      * https://www.sqlite.org/lang_createtrigger.html
      */
-    private fun failRequirementWrites() {
-        database.openHelper.writableDatabase.execSQL(
+    private suspend fun failRequirementWrites() = database.useWriterConnection {
+        it.execSQL(
             """
             CREATE TRIGGER fail_requirement_writes BEFORE INSERT ON requirement_progress
             BEGIN SELECT RAISE(ABORT, 'Test failure'); END
             """
         )
     }
+
+    private fun isConstraintViolation(error: Throwable?) =
+        error is SQLiteException && error.resultCode == SQLITE_CONSTRAINT
 
     @Test
     fun recordingThatFailsPartWay_leavesTheBadgeUnstarted() = runTest {
@@ -195,10 +228,82 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             .exceptionOrNull()
 
         // A bug must crash, not become a save failure (see isStorageFailure).
-        assertTrue(
-            "Expected SQLiteConstraintException, got $error",
-            error is SQLiteConstraintException
-        )
+        assertTrue("Expected a constraint violation, got $error", isConstraintViolation(error))
+    }
+
+    @Test
+    fun writing_whenTheDiskIsFull_throwsIOException() = runTest {
+        val full = SQLException("Error code: 13, message: database or disk is full")
+
+        val error = runCatching { failingRequirementWrites(full).startAndRecord() }
+            .exceptionOrNull()
+
+        assertTrue("Expected an IOException, got $error", error is IOException)
+    }
+
+    @Test
+    fun writing_whenAnErrorHasNoResultCode_throwsTheBugUnwrapped() = runTest {
+        // As Room throws for a failed foreign key check.
+        val noCode = SQLException("Foreign key violation(s) detected in 'requirement_progress'.")
+
+        val error = runCatching { failingRequirementWrites(noCode).startAndRecord() }
+            .exceptionOrNull()
+
+        assertEquals(noCode, error)
+    }
+
+    @Test
+    fun writing_whenSomethingOtherThanSQLiteFails_throwsTheBugUnwrapped() = runTest {
+        val bug = IllegalArgumentException("Test failure")
+
+        val error = runCatching { failingRequirementWrites(bug).startAndRecord() }
+            .exceptionOrNull()
+
+        assertTrue("Expected the bug, got $error", error is IllegalArgumentException)
+    }
+
+    @Test
+    fun writing_whenCancelled_staysCancelled_evenIfCausedByAStorageFailure() = runTest {
+        val cancelled = CancellationException("Cancelled").apply { initCause(IOException()) }
+
+        val error = runCatching { failingRequirementWrites(cancelled).startAndRecord() }
+            .exceptionOrNull()
+
+        assertTrue("Expected the cancellation, got $error", error is CancellationException)
+    }
+
+    /** A repository whose writes of requirement progress throw [error]. */
+    private fun failingRequirementWrites(error: RuntimeException) = RoomProgressRepository(
+        open(
+            Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java),
+            FailingRequirementWrites(error)
+        ),
+        externalScope
+    )
+
+    private suspend fun ProgressRepository.startAndRecord() {
+        startBadge("archery", start.requirementsVersion, start.startedDate)
+        markRequirementCompleted("archery", "1", null, start)
+    }
+
+    /** BundledSQLiteDriver, except that writes of requirement progress throw [error]. */
+    private class FailingRequirementWrites(private val error: RuntimeException) : SQLiteDriver {
+        private val driver = BundledSQLiteDriver()
+
+        override fun open(fileName: String): SQLiteConnection {
+            val connection = driver.open(fileName)
+            return object : SQLiteConnection by connection {
+                override fun prepare(sql: String): SQLiteStatement {
+                    val statement = connection.prepare(sql)
+                    if (!sql.startsWith("INSERT") || "`requirement_progress`" !in sql) {
+                        return statement
+                    }
+                    return object : SQLiteStatement by statement {
+                        override fun step(): Boolean = throw error
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -209,9 +314,11 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val holding = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
         val other = launch(Dispatchers.IO) {
-            database.withTransaction {
-                holding.complete(Unit)
-                release.await()
+            database.useWriterConnection { connection ->
+                connection.immediateTransaction {
+                    holding.complete(Unit)
+                    release.await()
+                }
             }
         }
         holding.await()
@@ -289,10 +396,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         }
 
         val error = crash.await()
-        assertTrue(
-            "Expected SQLiteConstraintException, got $error",
-            error is SQLiteConstraintException
-        )
+        assertTrue("Expected a constraint violation, got $error", isConstraintViolation(error))
     }
 
     @After

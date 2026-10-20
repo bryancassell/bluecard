@@ -96,15 +96,57 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     }
 
     @Test
-    fun setAside_whenAnotherConnectionAlreadyMovedIt_keepsWhatWasMoved() {
+    fun setAside_clearsRecordedDamage() {
+        writeDatabase("" to "damaged")
+        repository.recordDamage()
+
+        repository.setAside(database)
+
+        assertFalse(newRepository().isDamageRecorded())
+    }
+
+    @Test
+    fun setAside_whenItWasAllMovedBefore_keepsWhatWasMoved_andClearsRecordedDamage() = runTest {
         writeDatabase("" to "damaged", "-wal" to "latest saves")
         repository.setAside(database)
+        repository.dismissNotice()
+        // As if the app had stopped after moving the files, before clearing the record.
+        repository.recordDamage()
 
         repository.setAside(database)
 
         val copy = copies().single()
         assertEquals(listOf("bluecard.db", "bluecard.db-wal"), copy.list()!!.sorted())
         assertEquals("damaged", File(copy, "bluecard.db").readText())
+        assertFalse(repository.isDamageRecorded())
+        // There was nothing new to tell the scout.
+        assertFalse(newRepository().observeNoticePending().first())
+    }
+
+    @Test
+    fun recordDamage_isKeptAfterTheAppReopens_withoutTellingTheScoutYet() = runTest {
+        writeDatabase("" to "damaged")
+
+        repository.recordDamage()
+
+        val reopened = newRepository()
+        assertTrue(reopened.isDamageRecorded())
+        assertFalse(reopened.observeNoticePending().first())
+        // Only set aside when the app next opens the database.
+        assertTrue(database.exists())
+    }
+
+    @Test
+    fun recordDamage_whenTheFolderCantBeMade_recordsNothing() {
+        val noBackup = context.noBackupFilesDir
+        noBackup.setWritable(false)
+        try {
+            repository.recordDamage()
+        } finally {
+            noBackup.setWritable(true)
+        }
+
+        assertFalse(repository.isDamageRecorded())
     }
 
     @Test
