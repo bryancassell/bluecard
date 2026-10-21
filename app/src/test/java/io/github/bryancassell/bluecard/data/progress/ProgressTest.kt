@@ -33,6 +33,12 @@ class ProgressTest {
     }
 
     @Test
+    fun storedDate_withASignedYear_isNull() {
+        assertNull(storedDate("+999999999-10-01"))
+        assertNull(storedDate("+02026-09-12"))
+    }
+
+    @Test
     fun numberedRows_ofLog_areItsEntriesInTheOrderAdded() {
         val first = entry(3)
         val second = entry(8)
