@@ -53,7 +53,7 @@ Quote and give lines only from what you read in this session. A wrong quote misl
 ## 2. Implement
 
 1. `git status --porcelain` prints nothing. If it prints anything, ask what to do with those changes rather than carrying them onto the new branch.
-2. `git switch main && git pull --ff-only`, then `git switch -c fix/N-<short-slug>` for a bug, or `feature/N-<short-slug>` otherwise.
+2. `git fetch origin`, then `git switch --no-track -c fix/N-<short-slug> origin/main` for a bug, or `feature/N-<short-slug>` otherwise. Branch from `origin/main` rather than switching to `main`: in a git worktree, the main checkout has `main` checked out, and git won't check out a branch in two places.
 3. Write a test that fails for the issue's reason, then make it pass. Update PRD.md and ARCHITECTURE.md in the same change when a decision changes, following CLAUDE.md's "What goes where": the cause of a bug and how the fix works go in a comment at the fix, not in either document. Check each paragraph you add to either file against it, and remove what your change makes redundant.
 4. `./gradlew build` passes. CI's Build job runs the same command: unit tests, the coverage check, lint and Spotless. When the change touches `app/src/androidTest`, `./gradlew pixel6Api37DebugAndroidTest` passes too, as in CI's Instrumented tests job.
 5. The coverage check only holds each class to 80%. If the change lowers coverage anyway, say so and why under `## Tests`, with numbers from `./gradlew createDebugUnitTestCoverageReport`.
@@ -82,5 +82,5 @@ Do this twice. Round 2 reviews the PR with round 1's fixes pushed.
 3. Anything changed after round 2, such as a CI fix or a conflict resolved with `main`, goes in the PR description, since it becomes the commit message. If it changes production code beyond the trivial, ask whether to review again before merging.
 4. Before merging, check that both review rounds are done and every finding is fixed or listed with its reason. Every question has an answer, and nothing is left that the developer should decide. If something is, ask now.
 5. `gh pr merge <PR number> --squash --match-head-commit "$(git rev-parse HEAD)"`. It refuses if the PR's head isn't the local branch's, so no local commit is left out. If it refuses because `main` moved again, go back to step 5.1. GitHub deletes the remote branch.
-6. `git switch main && git pull --ff-only && git branch -D <branch> && git fetch --prune`. Use `-D`, since a squash merge isn't an ancestor of `main`. The merge in step 5.5 already checked the branch had nothing unpushed.
+6. `git fetch --prune && git switch --detach origin/main && git branch -D <branch>`. Detach rather than switch to `main`, as in step 2.2. Use `-D`, since a squash merge isn't an ancestor of `main`. The merge in step 5.5 already checked the branch had nothing unpushed.
 7. Report the merged PR's URL, the questions asked with their answers, and what's left of the issue, if anything.
