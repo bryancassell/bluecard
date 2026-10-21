@@ -5,10 +5,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Each module's main code, and the folders of tests: local and instrumented ones, and the
-# fakes and helpers that tests in more than one module share (:testing).
-main_dirs=(app/src/main shared/src/androidMain)
-local_test_dirs=(app/src/test shared/src/androidHostTest)
-test_dirs=("${local_test_dirs[@]}" app/src/androidTest testing/src)
+# fakes and helpers that tests in more than one module share (:testing). :shared's source sets
+# are matched by name, so common code (commonMain, commonTest) is covered once it exists.
+shopt -s nullglob
+main_dirs=(app/src/main shared/src/*Main)
+local_test_dirs=()
+for dir in app/src/test shared/src/*HostTest shared/src/commonTest; do
+    if [[ -d $dir ]]; then local_test_dirs+=("$dir"); fi
+done
+test_dirs=("${local_test_dirs[@]}" app/src/androidTest shared/src/*DeviceTest testing/src)
 
 failed=0
 fail() {

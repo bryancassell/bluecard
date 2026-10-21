@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "io.github.bryancassell.bluecard"
-    compileSdk = 37
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "io.github.bryancassell.bluecard"
-        minSdk = 26
-        targetSdk = 37
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
 
@@ -123,6 +123,23 @@ val sharedCoverageData = resolvableCoverage("sharedCoverageData", "data")
 val coverageClassJars = objects.listProperty<RegularFile>()
 val coverageClassDirs = objects.listProperty<Directory>()
 
+interface Archives {
+    @get:Inject val operations: ArchiveOperations
+}
+
+// This module's classes in one folder, the jars' unpacked, so the exclusions apply to them all:
+// its R.jar holds every library's R classes. Both coverage tasks read it.
+val coverageClasses = tasks.register<Sync>("coverageClasses") {
+    // Locals, so the lambda below doesn't hold the build script, which the configuration cache
+    // can't store.
+    val archives = objects.newInstance<Archives>().operations
+    val jars = coverageClassJars
+    from(coverageClassDirs)
+    from(jars.map { files -> files.map { archives.zipTree(it) } })
+    include("**/*.class")
+    into(layout.buildDirectory.dir("coverage/classes"))
+}
+
 // Generated Android, Room and Kotlin classes, @Preview functions (kept in *Preview.kt files),
 // which only run in Android Studio, and code that only runs on a device.
 val coverageExclusions = listOf(
@@ -150,20 +167,25 @@ fun JacocoReportBase.countLocalTests() {
     val fileTrees = objects
     val exclusions = coverageExclusions
     classDirectories.setFrom(
-        coverageClassJars,
-        coverageClassDirs.map { dirs ->
-            dirs.map { dir -> fileTrees.fileTree().setDir(dir).exclude(exclusions) }
-        },
+        coverageClasses.map { fileTrees.fileTree().setDir(it.destinationDir).exclude(exclusions) },
         sharedCoverageClasses.flatMap { it.incoming.files.elements }.map { dirs ->
             dirs.map { dir -> fileTrees.fileTree().setDir(dir).exclude(exclusions) }
         }
     )
+    // Where AGP writes it.
     executionData.setFrom(
         layout.buildDirectory.file(
             "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
         ),
         sharedCoverageData
     )
+    // JaCoCo skips a missing file, which would show as every class it covers at 0%, such as
+    // after an AGP update moves where it writes them.
+    val data = executionData
+    doFirst {
+        val missing = data.files.filterNot { it.exists() }
+        check(missing.isEmpty()) { "No coverage data at $missing" }
+    }
 }
 
 val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>(
@@ -213,7 +235,7 @@ tasks.withType<Test>().configureEach {
 androidComponents {
     onVariants(selector().withName("debug")) { variant ->
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
-            .use(jacocoDebugCoverageVerification)
+            .use(coverageClasses)
             .toGet(ScopedArtifact.CLASSES, { coverageClassJars }, { coverageClassDirs })
     }
 }

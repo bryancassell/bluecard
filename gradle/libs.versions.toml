@@ -2,6 +2,10 @@
 # Reference entries from build scripts as libs.<alias> and libs.plugins.<alias>.
 
 [versions]
+# SDK levels, read by every module's build file so they can't drift apart.
+android-compileSdk = "37"
+android-minSdk = "26"
+android-targetSdk = "37"
 agp = "9.4.1"
 kotlin = "2.4.21"
 coreKtx = "1.19.1"

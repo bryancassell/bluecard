@@ -97,7 +97,7 @@ opened. CI fails if the build changes them, which also catches a Room update
 that computes a different identity hash for the same schema.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
-version lives in this one file. Build scripts refer to entries by alias, such
+version, and the SDK levels every module builds for, live in this one file. Build scripts refer to entries by alias, such
 as `libs.androidx.core.ktx`. Compose libraries are versioned together by the
 Compose BOM ("bill of materials").
 
@@ -192,7 +192,7 @@ it.
   launches `MainActivity` replaces definitions before launching it, with
   `loadKoinModules(module { single<ProgressRepository> { fake } })`, for that
   test only (see `MainActivityTest`). It loads `testIoDispatcherModule`
-  (`testing/`) too, so the real repositories it keeps work on the test's
+  (`:testing`) too, so the real repositories it keeps work on the test's
   thread.
 - **`MainDispatcherRule`** (`shared/src/androidHostTest/.../testing/`) replaces the main
   dispatcher in ViewModel tests, as in Android's

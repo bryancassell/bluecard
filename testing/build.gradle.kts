@@ -14,8 +14,8 @@ plugins {
 kotlin {
     android {
         namespace = "io.github.bryancassell.bluecard.testing"
-        compileSdk = 37
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)

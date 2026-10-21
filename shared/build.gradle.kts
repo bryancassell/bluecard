@@ -3,7 +3,7 @@ import com.android.build.api.variant.ScopedArtifacts
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // The code the Android app and, later, the iOS app share (ARCHITECTURE.md, Architecture
-// approach). Only the Android target so far, so everything is in androidMain.
+// approach).
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -22,8 +22,8 @@ plugins {
 kotlin {
     android {
         namespace = "io.github.bryancassell.bluecard.shared"
-        compileSdk = 37
-        minSdk = 26
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
@@ -40,7 +40,7 @@ kotlin {
             // Records JaCoCo coverage data, which :app's coverage gate reads.
             enableCoverage = true
             // Robolectric runs tests on the target SDK unless a test asks for another.
-            targetSdk { version = release(37) }
+            targetSdk { version = release(libs.versions.android.targetSdk.get().toInt()) }
         }
 
         testCoverage {
@@ -104,7 +104,7 @@ kotlin {
             implementation(libs.androidx.compose.ui.test.junit4)
             // Declares the activity that Compose UI tests show their content in.
             implementation(libs.androidx.compose.ui.test.manifest)
-            // Google's Accessibility Test Framework checks (testing/AccessibilityChecks.kt).
+            // Google's Accessibility Test Framework checks (AccessibilityChecks.kt).
             implementation(libs.accessibility.test.framework)
             implementation(libs.roborazzi)
             implementation(libs.roborazzi.compose)
@@ -138,6 +138,14 @@ roborazzi {
     outputDir.set(file("src/androidHostTest/screenshots"))
 }
 
+// `./gradlew test` runs every module's local tests, as it does in :app; this plugin names its
+// own testAndroidHostTest.
+tasks.register("test") {
+    group = "verification"
+    description = "Runs this module's local tests."
+    dependsOn("testAndroidHostTest")
+}
+
 tasks.withType<Test>().configureEach {
     // Robolectric reaches into JDK internals that JDK 17+ hides by default.
     // Other flags from https://robolectric.org/getting-started/ may be needed later.
@@ -154,7 +162,7 @@ tasks.withType<Test>().configureEach {
 // System.loadLibrary("sqliteJni") and finds nothing on a desktop JVM. Since androidx.sqlite 2.6.2
 // it loads <androidx.sqlite.driver.bundled.path>/<...name> instead when both are set, so the
 // tests get the host's library from sqlite-bundled-jvm, which registers the same JNI functions.
-// testing/BundledSqlitePerSandbox sets the path.
+// BundledSqlitePerSandbox, in this module's tests, sets the path.
 val bundledSqliteJvm = configurations.create("bundledSqliteJvm") {
     isCanBeConsumed = false
     isTransitive = false
@@ -214,8 +222,20 @@ tasks.withType<Test>().configureEach {
 val coverageAttribute = Attribute.of("io.github.bryancassell.bluecard.coverage", String::class.java)
 val coverageClassJars = objects.listProperty<RegularFile>()
 val coverageClassDirs = objects.listProperty<Directory>()
+
+interface Archives {
+    @get:Inject val operations: ArchiveOperations
+}
+
+// The classes in one folder, the jars' unpacked, so the gate's exclusions apply to them all.
 val coverageClasses = tasks.register<Sync>("coverageClasses") {
+    // Locals, so the lambda below doesn't hold the build script, which the configuration cache
+    // can't store.
+    val archives = objects.newInstance<Archives>().operations
+    val jars = coverageClassJars
     from(coverageClassDirs)
+    from(jars.map { files -> files.map { archives.zipTree(it) } })
+    include("**/*.class")
     into(layout.buildDirectory.dir("coverage/classes"))
 }
 androidComponents {
@@ -223,7 +243,11 @@ androidComponents {
         // MigrationTestHelper reads each database version's schema from assets. The Room plugin
         // adds the schemas to device tests' assets only, and migration tests run locally, so
         // the host tests' assets carry them too; the library's own assets don't, so the app
-        // doesn't ship them.
+        // doesn't ship them. Nothing makes merging assets wait for Room to copy a new database
+        // version's schema here, so the first test run after a version bump can miss it, and
+        // MigrationTest fails until it runs again (#96). Room's schema copy declares no
+        // outputs, so Gradle can't order other tasks after it, and working around that needed
+        // more build code than a rerun is worth.
         variant.hostTests.values.forEach { it.sources.assets?.addStaticSourceDirectory("schemas") }
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
             .use(coverageClasses)
@@ -242,6 +266,8 @@ configurations.consumable("coverageDataElements") {
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.VERIFICATION))
         attribute(coverageAttribute, "data")
     }
+    // Where AGP writes it. The task doesn't exist yet while this script runs, so its own setting
+    // can't be read here; :app's gate fails, naming the file, if it isn't there.
     outgoing.artifact(
         layout.buildDirectory.file(
             "outputs/unit_test_code_coverage/androidHostTest/testAndroidHostTest.exec"

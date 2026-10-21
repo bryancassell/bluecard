@@ -366,7 +366,7 @@ both taps of a double tap can reach it.
   on the button's modifier, which TalkBack read as well as the text
   ([#166](https://github.com/bryancassell/bluecard/issues/166),
   [#256](https://github.com/bryancassell/bluecard/issues/256)). Tests check it
-  with `assertButtonReadOnceAs` (`testing/ButtonText.kt`).
+  with `assertButtonReadOnceAs` (`ButtonText.kt`).
 - **Something read as one, with lines one under another, that can be partly
   scrolled off screen has a label of its own**, set with `clearAndSetSemantics`,
   rather than merging its parts': Home's rank card, and list rows such as a
@@ -377,9 +377,9 @@ both taps of a double tap can reach it.
   [#312](https://github.com/bryancassell/bluecard/issues/312)). Something with
   one line of text, such as a button, merges its parts as usual: it loses its
   text only when nothing but its padding is on screen. Tests find such a node
-  with `onReadAsOne` (`testing/ReadAsOne.kt`), and read it scrolled until only
+  with `onReadAsOne` (`ReadAsOne.kt`), and read it scrolled until only
   its last line shows (`readWithOnlyItsLastLineShown` in
-  `testing/SpokenLabel.kt`).
+  `SpokenLabel.kt`).
 
 ### Live regions
 
@@ -394,7 +394,7 @@ both taps of a double tap can reach it.
   in the `semantics` block.** Compose updates a `semantics` block as soon as a
   state it reads changes, before the next frame composes the new text, so
   TalkBack read out the old text.
-- **In local tests, `LiveRegionReadouts` (`testing/LiveRegion.kt`) lists what
+- **In local tests, `LiveRegionReadouts` (`LiveRegion.kt`) lists what
   TalkBack would read out**, as `BadgesScreenTest` uses it.
 
 ### Lists
@@ -873,14 +873,14 @@ before launching it, by loading a module of them, as `MainActivityTest` does
 Room repository tests (`RoomProgressRepositoryTest`), migration tests
 (`MigrationTest`) and damaged database tests
 (`SetAsideDamagedDatabaseDriverTest`) run locally with Robolectric, on the
-SQLite the app bundles (see `testing/BundledSqlitePerSandbox`).
+SQLite the app bundles (see `BundledSqlitePerSandbox`).
 
 ### Compose UI and screenshot tests
 
 - **Compose UI tests** run locally with Robolectric, one test per UI state and
   interaction, fed by fake repositories or fixed UI state. Robolectric shows no
   keyboard, so a test of what stays above it moves one as a phone does
-  (`OnScreenKeyboard` in `testing/`).
+  (`OnScreenKeyboard`).
 - **Each screen's and dialog's tests use Robolectric's native graphics**
   (`@GraphicsMode(NATIVE)`). Its default graphics measure every character as
   1px wide, and show a page out of touch mode, where buttons can take focus.
@@ -888,7 +888,7 @@ SQLite the app bundles (see `testing/BundledSqlitePerSandbox`).
   a test of a hardware keyboard asks for keyboard mode (`InputModeManager`).
 - **They run Google's accessibility checks**
   ([ATF](https://github.com/google/Accessibility-Test-Framework-for-Android))
-  with the `AccessibilityChecks` rule (`testing/`), so a control with no label
+  with the `AccessibilityChecks` rule, so a control with no label
   for screen readers or a touch target under 48dp fails the test rather than
   waiting for someone to try the page with TalkBack. Navigation tests and
   other components' tests don't, since the screens' and dialogs' own tests check
