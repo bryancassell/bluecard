@@ -23,7 +23,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
-import io.github.bryancassell.bluecard.ui.profile.ProfileFields
+import io.github.bryancassell.bluecard.ui.profile.ProfileNameField
+import io.github.bryancassell.bluecard.ui.profile.UnitNumberField
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -71,8 +72,8 @@ fun OnboardingScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
             Text(text = stringResource(R.string.onboarding_message))
-            ProfileFields(
-                name = name,
+            ProfileNameField(name = name, enabled = uiState.canEdit)
+            UnitNumberField(
                 unitNumber = unitNumber,
                 enabled = uiState.canEdit,
                 // Saves after Done closes the keyboard; the ViewModel ignores the save if the

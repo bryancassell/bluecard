@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasImeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -29,6 +30,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
+import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
+import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -36,6 +39,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
@@ -57,6 +61,7 @@ class EditProfileScreenTest {
     private var closes = 0
     private var discards = 0
     private val back = BackPresses()
+    private val keyboard = OnScreenKeyboard(composeTestRule)
     private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     private val ready = EditProfileUiState.Ready(canSave = false, changed = false)
@@ -67,22 +72,27 @@ class EditProfileScreenTest {
     private fun show(state: EditProfileUiState) {
         uiState = state
         composeTestRule.setContentWithText {
-            back.Content {
-                EditProfileScreen(
-                    uiState = uiState,
-                    name = name,
-                    unitNumber = unitNumber,
-                    onSave = { saves++ },
-                    onSaved = { closes++ },
-                    onDiscard = { discards++ },
-                    onSaveFailureShown = { saveFailuresShown += it }
-                )
+            keyboard.Content {
+                back.Content {
+                    EditProfileScreen(
+                        uiState = uiState,
+                        name = name,
+                        unitNumber = unitNumber,
+                        onSave = { saves++ },
+                        onSaved = { closes++ },
+                        onDiscard = { discards++ },
+                        onSaveFailureShown = { saveFailuresShown += it }
+                    )
+                }
             }
         }
     }
 
-    private fun field(label: String) =
-        composeTestRule.onNode(hasSetTextAction() and hasText(label)).performScrollTo()
+    private fun field(label: String) = fieldWithoutScrolling(label).performScrollTo()
+
+    /** The field labeled [label], wherever the page has it. */
+    private fun fieldWithoutScrolling(label: String) =
+        composeTestRule.onNode(hasSetTextAction() and hasText(label))
 
     private fun saveButton() = composeTestRule.onNodeWithText("Save").performScrollTo()
 
@@ -153,6 +163,34 @@ class EditProfileScreenTest {
             .performImeAction()
 
         assertEquals(0, saves)
+    }
+
+    // Seen at the largest text and display size: the page scrolled only far enough to show the
+    // cursor, leaving Save's bottom edge behind the keyboard (#333).
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForUnitNumber_fieldAndSaveShowAboveIt() {
+        show(ready.copy(canSave = true))
+
+        fieldWithoutScrolling("Unit number").performClick()
+        keyboard.open()
+
+        keyboard.assertAbove(fieldWithoutScrolling("Unit number").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+    }
+
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun nextIntoUnitNumber_withKeyboardOpen_fieldAndSaveShowAboveIt() {
+        show(ready.copy(canSave = true))
+        fieldWithoutScrolling("Name").performClick()
+        keyboard.open()
+
+        fieldWithoutScrolling("Name").performImeAction()
+
+        fieldWithoutScrolling("Unit number").assertIsFocused()
+        keyboard.assertAbove(fieldWithoutScrolling("Unit number").getUnclippedBoundsInRoot())
+        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
     }
 
     @Test
