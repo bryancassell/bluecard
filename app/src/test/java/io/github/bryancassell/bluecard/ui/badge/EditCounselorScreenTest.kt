@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasImeAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -25,10 +26,13 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
 import io.github.bryancassell.bluecard.testing.LiveRegionReadouts
+import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
+import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.setContentWithText
@@ -37,6 +41,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -56,6 +61,7 @@ class EditCounselorScreenTest {
     private var closes = 0
     private var discards = 0
     private val back = BackPresses()
+    private val keyboard = OnScreenKeyboard(composeTestRule)
     private val saveFailuresShown = mutableListOf<TaskFailure>()
 
     private val ready = EditCounselorUiState.Ready(badgeName = "Camping", changed = false)
@@ -66,23 +72,37 @@ class EditCounselorScreenTest {
     private fun show(state: EditCounselorUiState) {
         uiState = state
         composeTestRule.setContentWithText {
-            back.Content {
-                EditCounselorScreen(
-                    uiState = uiState,
-                    name = name,
-                    phone = phone,
-                    email = email,
-                    onSave = { saves++ },
-                    onSaved = { closes++ },
-                    onDiscard = { discards++ },
-                    onSaveFailureShown = { saveFailuresShown += it }
-                )
+            keyboard.Content {
+                back.Content {
+                    EditCounselorScreen(
+                        uiState = uiState,
+                        name = name,
+                        phone = phone,
+                        email = email,
+                        onSave = { saves++ },
+                        onSaved = { closes++ },
+                        onDiscard = { discards++ },
+                        onSaveFailureShown = { saveFailuresShown += it }
+                    )
+                }
             }
         }
     }
 
-    private fun field(label: String) =
-        composeTestRule.onNode(hasSetTextAction() and hasText(label)).performScrollTo()
+    private fun field(label: String) = fieldWithoutScrolling(label).performScrollTo()
+
+    /** The field labeled [label], wherever the page has it. */
+    private fun fieldWithoutScrolling(label: String) =
+        composeTestRule.onNode(hasSetTextAction() and hasText(label))
+
+    /**
+     * Checks that Save and the page's 16dp margin under it are above the keyboard, so Save isn't
+     * left against the keyboard's edge. Save's bounds leave the margin out.
+     */
+    private fun assertSaveAndItsMarginAboveKeyboard() {
+        val save = composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot()
+        keyboard.assertAbove(save.copy(bottom = save.bottom + 16.dp))
+    }
 
     private fun saveButton() = composeTestRule.onNodeWithText("Save").performScrollTo()
 
@@ -186,6 +206,36 @@ class EditCounselorScreenTest {
         field("Name").assert(hasImeAction(ImeAction.Next))
         field("Phone").assert(hasImeAction(ImeAction.Next))
         field("Email").assert(hasImeAction(ImeAction.Done))
+    }
+
+    // Seen at the largest text and display size: the page scrolled only far enough to show the
+    // cursor, leaving Save under the field behind the keyboard (#333).
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForEmail_fieldAndSaveShowAboveIt() {
+        show(ready.copy(changed = true))
+
+        fieldWithoutScrolling("Email").performClick()
+        keyboard.open()
+
+        keyboard.assertAbove(fieldWithoutScrolling("Email").getUnclippedBoundsInRoot())
+        assertSaveAndItsMarginAboveKeyboard()
+    }
+
+    // Next swaps the phone pad for the email keyboard, which grows if the pad is shorter.
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun nextIntoEmail_asTheKeyboardGrowsFromThePhonePad_fieldAndSaveShowAboveIt() {
+        show(ready.copy(changed = true))
+        fieldWithoutScrolling("Phone").performClick()
+        keyboard.open(OnScreenKeyboard.NUMBER_PAD_HEIGHT)
+
+        fieldWithoutScrolling("Phone").performImeAction()
+        keyboard.move(from = OnScreenKeyboard.NUMBER_PAD_HEIGHT, to = OnScreenKeyboard.HEIGHT)
+
+        fieldWithoutScrolling("Email").assertIsFocused()
+        keyboard.assertAbove(fieldWithoutScrolling("Email").getUnclippedBoundsInRoot())
+        assertSaveAndItsMarginAboveKeyboard()
     }
 
     // The layout is left-to-right, like the English strings, but a name typed in Persian reads

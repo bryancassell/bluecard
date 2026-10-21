@@ -42,7 +42,6 @@ import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.unit.DpRect
-import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
@@ -729,15 +728,15 @@ class TrackerEntryScreenTest {
     fun keyboardGettingShorterWhileLastFieldScrollsIntoView_fieldAndSaveShowAboveIt() {
         startScrollingToLastNumberField()
 
-        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT)
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = OnScreenKeyboard.NUMBER_PAD_HEIGHT)
 
         keyboard.assertAbove(
             fieldWithoutScrolling("Minutes").getUnclippedBoundsInRoot(),
-            NUMBER_PAD_HEIGHT
+            OnScreenKeyboard.NUMBER_PAD_HEIGHT
         )
         keyboard.assertAbove(
             composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot(),
-            NUMBER_PAD_HEIGHT
+            OnScreenKeyboard.NUMBER_PAD_HEIGHT
         )
     }
 
@@ -752,7 +751,7 @@ class TrackerEntryScreenTest {
         val heading = composeTestRule.onNodeWithText("Session 3")
         val scrolledTo = heading.getUnclippedBoundsInRoot()
 
-        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT)
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = OnScreenKeyboard.NUMBER_PAD_HEIGHT)
 
         assertEquals(scrolledTo, heading.getUnclippedBoundsInRoot())
     }
@@ -766,7 +765,7 @@ class TrackerEntryScreenTest {
         val heading = composeTestRule.onNodeWithText("Session 3")
         lateinit var scrolledTo: DpRect
 
-        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT) {
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = OnScreenKeyboard.NUMBER_PAD_HEIGHT) {
             dragPageDown()
             scrolledTo = heading.getUnclippedBoundsInRoot()
         }
@@ -786,17 +785,17 @@ class TrackerEntryScreenTest {
         // The field shows, so taking focus doesn't scroll the page, but Save is behind the keyboard.
         fieldWithoutScrolling("Minutes").performScrollTo()
 
-        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = NUMBER_PAD_HEIGHT) {
+        keyboard.move(from = OnScreenKeyboard.HEIGHT, to = OnScreenKeyboard.NUMBER_PAD_HEIGHT) {
             fieldWithoutScrolling("Minutes").requestFocus()
         }
 
         keyboard.assertAbove(
             fieldWithoutScrolling("Minutes").getUnclippedBoundsInRoot(),
-            NUMBER_PAD_HEIGHT
+            OnScreenKeyboard.NUMBER_PAD_HEIGHT
         )
         keyboard.assertAbove(
             composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot(),
-            NUMBER_PAD_HEIGHT
+            OnScreenKeyboard.NUMBER_PAD_HEIGHT
         )
     }
 
@@ -896,10 +895,5 @@ class TrackerEntryScreenTest {
 
         composeTestRule.onNodeWithText("Couldn't save. Try again.").assertDoesNotExist()
         assertEquals(listOf(failure), saveFailuresShown)
-    }
-
-    private companion object {
-        /** A number pad shorter than the letters keyboard, as some keyboards have. */
-        val NUMBER_PAD_HEIGHT = 260.dp
     }
 }

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
+import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -106,11 +107,12 @@ private fun Fields(
     onSave: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .verticalScroll(scrollState)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
@@ -119,19 +121,26 @@ private fun Fields(
             // Lets screen reader users jump to it.
             modifier = Modifier.semantics { heading() }
         )
-        // Done only closes the keyboard, where Onboarding's also saves: as on the counselor's
-        // page, the scout decides when to save, since saving closes the page.
-        ProfileFields(name = name, unitNumber = unitNumber)
-        Button(
-            onClick = {
-                onSave()
-                // Done editing: closes the keyboard.
-                focusManager.clearFocus()
-            },
-            enabled = uiState.canSave,
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Text(stringResource(R.string.edit_profile_save))
+        ProfileNameField(name = name)
+        // Keeps Save above the keyboard while the scout types in the unit number: at the
+        // largest text and display size, its bottom edge was behind it (#333).
+        KeepInViewWhileFocused(scrollState) {
+            // Done only closes the keyboard, where Onboarding's also saves: as on the
+            // counselor's page, the scout decides when to save, since saving closes the page.
+            UnitNumberField(unitNumber = unitNumber)
+            Button(
+                onClick = {
+                    onSave()
+                    // Done editing: closes the keyboard.
+                    focusManager.clearFocus()
+                },
+                enabled = uiState.canSave,
+                // Here, not on the Column, so the page's margin under Save comes into view
+                // with it.
+                modifier = Modifier.align(Alignment.End).padding(bottom = 16.dp)
+            ) {
+                Text(stringResource(R.string.edit_profile_save))
+            }
         }
     }
 }
