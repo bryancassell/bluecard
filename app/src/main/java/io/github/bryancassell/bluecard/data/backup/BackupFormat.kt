@@ -85,7 +85,7 @@ fun encodeBackup(backup: Backup): String =
  * first. It's [BackupReadResult.NewerFormat] if it's from a newer version of the app: in a
  * newer format, or with a badge, rank or requirements version that [catalog] doesn't have. It's
  * [BackupReadResult.Invalid] unless it holds only what the app could have recorded:
- * - Every date is a date, and only a completed requirement has one.
+ * - Every date is a date in YYYY-MM-DD form, and only a completed requirement has one.
  * - Only a rank's requirement has a sign-off.
  * - Each badge or rank is listed once, and each of its requirements once.
  * - Each requirement and tracker column is in its badge's or rank's requirements version.

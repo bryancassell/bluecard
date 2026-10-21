@@ -252,7 +252,7 @@ private val catalogJson = Json
 /** Parses catalog JSON. Throws [kotlinx.serialization.SerializationException] if malformed. */
 fun parseCatalog(json: String): Catalog = catalogJson.decodeFromString(json)
 
-/** Reads and writes dates as ISO-8601 strings, such as "2026-01-01". */
+/** Reads and writes dates as ISO-8601 strings in YYYY-MM-DD form, such as "2026-01-01". */
 object LocalDateSerializer : KSerializer<LocalDate> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
 
@@ -263,7 +263,10 @@ object LocalDateSerializer : KSerializer<LocalDate> {
     override fun deserialize(decoder: Decoder): LocalDate {
         val text = decoder.decodeString()
         return try {
-            LocalDate.parse(text)
+            // ISO writes a year past 9999 or before 0000 with a sign, such as "+999999999-10-01".
+            // Only a hand-edited export can have one, and adding a rank's months in rank to a date
+            // that late overflows, crashing its requirement's page (#368).
+            LocalDate.parse(text).also { require(it.year in 0..9999) }
         } catch (e: IllegalArgumentException) {
             // Report bad dates like any other malformed catalog JSON. kotlinx-datetime throws a
             // DateTimeFormatException, which is internal (0.8.0), so this catches what it extends.

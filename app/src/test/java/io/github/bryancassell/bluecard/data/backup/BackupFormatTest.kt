@@ -430,6 +430,9 @@ class BackupFormatTest {
             """"completed": false""" to """"completed": null""",
             """"requirements": []""" to """"requirements": {}""",
             """"startedDate": "2026-03-01"""" to """"startedDate": "2026-02-30"""",
+            // Adding a rank's months in rank to a date this late overflows (#368).
+            """"completedOnPriorDate": "2026-04-15"""" to
+                """"completedOnPriorDate": "+999999999-10-01"""",
             """"addedDate": null""" to """"addedDate": "April 15"""",
             """"rowNumber": 2""" to """"rowNumber": 99999999999"""
         )

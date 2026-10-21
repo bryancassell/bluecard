@@ -244,6 +244,29 @@ class CatalogTest {
         assertEquals("\"January 1, 2026\" is not a date in YYYY-MM-DD form", error.message)
     }
 
+    @Test
+    fun localDateSerializer_rejectsAYearWithASign() {
+        // ISO dates past 9999 or before 0000. Time in rank's months overflow the last (#368).
+        for (text in listOf("+10000-01-01", "+999999999-10-01", "-0001-12-31")) {
+            val error = assertThrows(SerializationException::class.java) {
+                Json.decodeFromString(LocalDateSerializer, "\"$text\"")
+            }
+            assertEquals("\"$text\" is not a date in YYYY-MM-DD form", error.message)
+        }
+    }
+
+    @Test
+    fun localDateSerializer_readsTheFirstAndLastFourDigitYears() {
+        assertEquals(
+            LocalDate(0, 1, 1),
+            Json.decodeFromString(LocalDateSerializer, "\"0000-01-01\"")
+        )
+        assertEquals(
+            LocalDate(9999, 12, 31),
+            Json.decodeFromString(LocalDateSerializer, "\"9999-12-31\"")
+        )
+    }
+
     private val children =
         listOf(Requirement("1a", "A."), Requirement("1b", "B."), Requirement("1c", "C."))
 
