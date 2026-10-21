@@ -106,8 +106,9 @@ task outputs, and parallel execution runs independent tasks together. A no-op
 rebuild takes a few seconds.
 
 **Code style: Spotless + ktlint.** The [Spotless](https://github.com/diffplug/spotless)
-Gradle plugin runs [ktlint](https://ktlint.github.io/ktlint/) on every `.kt`
-and `.gradle.kts` file. ktlint uses its `android_studio` style, which follows
+Gradle plugin runs [ktlint](https://ktlint.github.io/ktlint/) on the `.kt`
+files in each module's `src` folder and on the `.gradle.kts` build scripts.
+ktlint uses its `android_studio` style, which follows
 [Android's Kotlin style guide](https://developer.android.com/kotlin/style-guide):
 4-space indentation, a 100-character line limit, no wildcard imports, and no
 trailing commas. If `./gradlew build` fails on formatting, run
