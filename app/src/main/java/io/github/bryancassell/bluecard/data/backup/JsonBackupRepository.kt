@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okio.BufferedSource
 import okio.buffer
+import okio.use
 
 /**
  * [BackupRepository] that writes and reads exports as JSON ([encodeBackup], [decodeBackup]),

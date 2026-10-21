@@ -139,6 +139,30 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     }
 
     @Test
+    fun setAside_again_whenTheNoticeCantBeWritten_stillSetsItAside() {
+        setAsideDamagedProgress()
+        // The notice from the first, which the scout hasn't dismissed.
+        val notice = File(folder, "notice-pending")
+        notice.setWritable(false)
+        writeDatabase("" to "damaged again")
+        try {
+            repository.setAside(database.toOkioPath())
+        } finally {
+            notice.setWritable(true)
+        }
+
+        assertEquals(
+            listOf("damaged", "damaged again"),
+            copies().map { File(it, "bluecard.db").readText() }.sorted()
+        )
+        assertFalse(database.exists())
+        assertEquals(
+            List(2) { "Set aside a damaged database: $database" },
+            warningLog.warnings.map { it.message }
+        )
+    }
+
+    @Test
     fun setAside_whenRecordedDamageCantBeCleared_keepsIt_andWarns() {
         // As if the app had stopped after moving the files, before clearing the record.
         repository.recordDamage()

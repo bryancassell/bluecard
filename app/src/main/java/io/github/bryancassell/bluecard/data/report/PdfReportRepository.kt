@@ -5,6 +5,7 @@ import android.content.res.Resources
 import android.net.Uri
 import androidx.core.content.FileProvider
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
@@ -28,7 +29,6 @@ import kotlinx.datetime.LocalDate
 import okio.Buffer
 import okio.BufferedSink
 import okio.FileSystem
-import okio.IOException
 import okio.Path.Companion.toOkioPath
 
 /**
@@ -72,14 +72,9 @@ class PdfReportRepository(
             try {
                 fileSystem.write(written, mustCreate = true) { writeReport(report, strings, this) }
                 fileSystem.atomicMove(written, file)
-            } finally {
-                // Only there if it wasn't moved. Okio's delete throws where File.delete returned
-                // false, which here would hide why the report failed, so it's only a warning.
-                try {
-                    fileSystem.delete(written)
-                } catch (e: IOException) {
-                    warningLog.warn(TAG, "Couldn't delete $written", e)
-                }
+            } catch (e: Exception) {
+                fileSystem.deleteOrWarn(written, warningLog, TAG)
+                throw e
             }
             FileProvider.getUriForFile(context, fileProviderAuthority(context), file.toFile())
         }

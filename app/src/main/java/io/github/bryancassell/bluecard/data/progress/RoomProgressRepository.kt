@@ -142,7 +142,7 @@ class RoomProgressRepository(
      * are bugs and pass through, such as a missing migration.
      */
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> = catch {
-        throw if (it.isStorageFailure()) IOException(it) else it
+        throw if (it.isStorageFailure()) IOException(it.toString(), it) else it
     }
 
     /**
@@ -158,7 +158,7 @@ class RoomProgressRepository(
         try {
             database.writeOrder.withLock { write() }
         } catch (e: Exception) {
-            throw if (e.isStorageFailure()) IOException(e) else e
+            throw if (e.isStorageFailure()) IOException(e.toString(), e) else e
         }
     }
 

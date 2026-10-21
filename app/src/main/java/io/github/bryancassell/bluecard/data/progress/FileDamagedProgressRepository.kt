@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
@@ -65,7 +66,7 @@ class FileDamagedProgressRepository(
             synchronized(this@FileDamagedProgressRepository) {
                 // If it can't be deleted, the notice still goes for now, but shows again when the
                 // app reopens.
-                deleteOrWarn(noticeFile)
+                fileSystem.deleteOrWarn(noticeFile, warningLog, TAG)
                 noticePending.value = false
             }
         }
@@ -88,8 +89,8 @@ class FileDamagedProgressRepository(
                 fileSystem.createDirectories(folder)
                 // Before the move, so the scout is told, and the next launch sets aside the rest,
                 // even if the app closes partway.
-                createEmptyFile(noticeFile)
-                createEmptyFile(damageFile)
+                createIfMissing(noticeFile)
+                createIfMissing(damageFile)
                 // Another name if this one is taken, since a copy that can't be made deletes the
                 // database.
                 val copy = generateSequence { folder / copyName() }.first { !fileSystem.exists(it) }
@@ -108,7 +109,7 @@ class FileDamagedProgressRepository(
             warningLog.warn(TAG, message, error)
         }
         // If it can't be deleted, the next launch sets aside the new database too.
-        deleteOrWarn(damageFile)
+        fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
     }
 
     /**
@@ -122,7 +123,7 @@ class FileDamagedProgressRepository(
     fun recordDamage() {
         try {
             fileSystem.createDirectories(folder)
-            createEmptyFile(damageFile)
+            createIfMissing(damageFile)
         } catch (e: IOException) {
             warningLog.warn(TAG, "Couldn't record a damaged database", e)
         }
@@ -131,15 +132,12 @@ class FileDamagedProgressRepository(
     /** Whether damage was recorded ([recordDamage]) and the database not yet set aside. */
     fun isDamageRecorded() = fileSystem.exists(damageFile)
 
-    /** Creates [file] with nothing in it, or empties it if it's there. */
-    private fun createEmptyFile(file: Path) = fileSystem.write(file) {}
-
-    private fun deleteOrWarn(file: Path) {
-        try {
-            fileSystem.delete(file)
-        } catch (e: IOException) {
-            warningLog.warn(TAG, "Couldn't delete $file", e)
-        }
+    /**
+     * Creates [file] with nothing in it. One that's there is left alone, since opening it to
+     * write could fail, which in [setAside] would delete the database rather than set it aside.
+     */
+    private fun createIfMissing(file: Path) {
+        if (!fileSystem.exists(file)) fileSystem.write(file) {}
     }
 
     /**
