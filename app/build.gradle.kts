@@ -283,6 +283,7 @@ dependencies {
     ksp(libs.androidx.room3.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.bignum)
+    implementation(libs.okio)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

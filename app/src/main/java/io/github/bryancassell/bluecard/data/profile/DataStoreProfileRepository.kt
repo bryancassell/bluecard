@@ -9,10 +9,10 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import okio.Path
 
 /**
  * [ProfileRepository] backed by Preferences DataStore. Saving runs in [externalScope], so the
@@ -52,8 +52,8 @@ class DataStoreProfileRepository(
          */
         fun createDataStore(
             scope: CoroutineScope,
-            produceFile: () -> File
-        ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+            produceFile: () -> Path
+        ): DataStore<Preferences> = PreferenceDataStoreFactory.createWithPath(
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
             scope = scope,
             produceFile = produceFile

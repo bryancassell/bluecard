@@ -483,7 +483,10 @@ both taps of a double tap can reach it.
   `RoomProgressRepository` wraps SQLite's errors in one, for its reads and its
   writes. ViewModels then catch it without depending on a storage API
   (req. 9) and show it as a UI state (see
-  [Load and save failures](#load-and-save-failures)).
+  [Load and save failures](#load-and-save-failures)). Shared code handles
+  files and streams with [Okio](https://github.com/lysine-dev/okio), which is
+  stable and comes with DataStore. Its `IOException` is java.io's on Android
+  ([#342](https://github.com/bryancassell/bluecard/issues/342)).
 - **Errors that can only come from a mistake in the app's code aren't
   wrapped,** so they still crash as bugs. `RoomProgressRepository` says which
   SQLite errors count. Driver errors are one class, told apart by result code

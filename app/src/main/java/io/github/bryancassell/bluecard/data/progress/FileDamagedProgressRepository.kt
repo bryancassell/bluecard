@@ -2,14 +2,14 @@ package io.github.bryancassell.bluecard.data.progress
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
-import java.io.File
-import java.io.IOException
-import java.nio.file.Files
+import kotlin.random.Random
+import kotlin.random.nextULong
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +18,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
+import okio.FileSystem
+import okio.IOException
+import okio.Path
+import okio.Path.Companion.toOkioPath
+import okio.Path.Companion.toPath
 
 /**
  * [DamagedProgressRepository] that keeps each damaged database in a folder of its own, in the
@@ -35,10 +40,12 @@ class FileDamagedProgressRepository(
     @param:ApplicationScope private val externalScope: CoroutineScope,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
+    private val fileSystem = FileSystem.SYSTEM
+
     // Found when first used, off the main thread: finding the no-backup directory creates it.
-    private val folder by lazy { File(context.noBackupFilesDir, FOLDER_NAME) }
-    private val noticeFile by lazy { File(folder, NOTICE_FILE_NAME) }
-    private val damageFile by lazy { File(folder, DAMAGE_FILE_NAME) }
+    private val folder by lazy { context.noBackupFilesDir.toOkioPath() / FOLDER_NAME }
+    private val noticeFile by lazy { folder / NOTICE_FILE_NAME }
+    private val damageFile by lazy { folder / DAMAGE_FILE_NAME }
 
     // Null until noticeFile is first checked.
     private val noticePending = MutableStateFlow<Boolean?>(null)
@@ -46,7 +53,7 @@ class FileDamagedProgressRepository(
     override fun observeNoticePending(): Flow<Boolean> = noticePending
         .onStart {
             if (noticePending.value == null) {
-                val stored = withContext(ioDispatcher) { noticeFile.exists() }
+                val stored = withContext(ioDispatcher) { fileSystem.exists(noticeFile) }
                 // Progress set aside while the file was checked has already made it true.
                 noticePending.compareAndSet(null, stored)
             }
@@ -57,7 +64,9 @@ class FileDamagedProgressRepository(
     override suspend fun dismissNotice() = externalScope.runOutlivingCaller {
         withContext(ioDispatcher) {
             synchronized(this@FileDamagedProgressRepository) {
-                noticeFile.delete()
+                // If it can't be deleted, the notice still goes for now, but shows again when the
+                // app reopens.
+                fileSystem.deleteOrWarn(noticeFile, warningLog, TAG)
                 noticePending.value = false
             }
         }
@@ -72,29 +81,35 @@ class FileDamagedProgressRepository(
      * of them. Recorded damage ([recordDamage]) is cleared once they're moved.
      */
     @Synchronized
-    fun setAside(database: File) {
+    fun setAside(database: Path) {
         // Recorded damage outlives the files if the app was stopped after moving them all.
-        if (database.exists()) {
+        if (fileSystem.exists(database)) {
             // Warned after the try, so writing the warning can't be mistaken for the move failing.
             val (message, error) = try {
-                Files.createDirectories(folder.toPath())
+                fileSystem.createDirectories(folder)
                 // Before the move, so the scout is told, and the next launch sets aside the rest,
                 // even if the app closes partway.
-                noticeFile.createNewFile()
-                damageFile.createNewFile()
-                val copy = Files.createTempDirectory(folder.toPath(), copyNamePrefix())
-                for (file in sqliteFiles(database).filter { it.exists() }) {
-                    Files.move(file.toPath(), copy.resolve(file.name))
+                createIfMissing(noticeFile)
+                createIfMissing(damageFile)
+                // Another name if this one is taken, since a copy that can't be made deletes the
+                // database.
+                val copy = generateSequence { folder / copyName() }.first { !fileSystem.exists(it) }
+                fileSystem.createDirectory(copy, mustCreate = true)
+                // The databases and no-backup folders are both in the app's data directory, so
+                // each move is a rename on one file system, which atomicMove needs.
+                for (file in sqliteFiles(database).filter { fileSystem.exists(it) }) {
+                    fileSystem.atomicMove(file, copy / file.name)
                 }
                 "Set aside a damaged database: $database" to null
             } catch (e: IOException) {
-                SQLiteDatabase.deleteDatabase(database)
+                SQLiteDatabase.deleteDatabase(database.toFile())
                 "Couldn't set aside a damaged database, so deleted it: $database" to e
             }
             noticePending.value = true
             warningLog.warn(TAG, message, error)
         }
-        damageFile.delete()
+        // If it can't be deleted, the next launch sets aside the new database too.
+        fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
     }
 
     /**
@@ -107,27 +122,39 @@ class FileDamagedProgressRepository(
     @Synchronized
     fun recordDamage() {
         try {
-            Files.createDirectories(folder.toPath())
-            damageFile.createNewFile()
+            fileSystem.createDirectories(folder)
+            createIfMissing(damageFile)
         } catch (e: IOException) {
             warningLog.warn(TAG, "Couldn't record a damaged database", e)
         }
     }
 
     /** Whether damage was recorded ([recordDamage]) and the database not yet set aside. */
-    fun isDamageRecorded() = damageFile.exists()
+    fun isDamageRecorded() = fileSystem.exists(damageFile)
 
-    /** When a copy is set aside, such as "2026-10-02T090607Z-", then a unique suffix. */
-    private fun copyNamePrefix() =
-        Instant.fromEpochSeconds(clock.now().epochSeconds).toString().replace(":", "") + "-"
+    /**
+     * Creates [file] with nothing in it. One that's there is left alone, since opening it to
+     * write could fail, which in [setAside] would delete the database rather than set it aside.
+     */
+    private fun createIfMissing(file: Path) {
+        if (!fileSystem.exists(file)) fileSystem.write(file) {}
+    }
+
+    /**
+     * When a copy is set aside, such as "2026-10-02T090607Z-", then a random suffix, so two set
+     * aside in the same second get folders of their own.
+     */
+    private fun copyName() =
+        Instant.fromEpochSeconds(clock.now().epochSeconds).toString().replace(":", "") + "-" +
+            Random.nextULong()
 
     /**
      * The write-ahead log, shared-memory and rollback journal files SQLite keeps beside the
      * database, then the database file. The database goes last, so once it's gone, so are the
      * rest, and a new database never opens beside an old one's log.
      */
-    private fun sqliteFiles(database: File) =
-        listOf("-wal", "-shm", "-journal", "").map { File(database.path + it) }
+    private fun sqliteFiles(database: Path) =
+        listOf("-wal", "-shm", "-journal", "").map { "$database$it".toPath() }
 
     companion object {
         /** The folder in the no-backup directory that holds the damaged databases. */

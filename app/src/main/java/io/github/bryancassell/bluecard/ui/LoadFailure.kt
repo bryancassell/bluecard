@@ -1,9 +1,9 @@
 package io.github.bryancassell.bluecard.ui
 
 import io.github.bryancassell.bluecard.di.WarningLog
-import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import okio.IOException
 
 private const val TAG = "LoadFailure"
 

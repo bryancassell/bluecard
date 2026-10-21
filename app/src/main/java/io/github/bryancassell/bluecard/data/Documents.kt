@@ -7,8 +7,9 @@ import android.provider.OpenableColumns
 import io.github.bryancassell.bluecard.di.WarningLog
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.io.InputStream
 import java.io.OutputStream
+import okio.Source
+import okio.source
 
 private const val TAG = "Documents"
 
@@ -58,11 +59,11 @@ suspend fun ContentResolver.saveDocument(
  * when one is opened to write ([openForWriting]), the app that holds it can refuse with an
  * exception that isn't an IOException, which is reported as one.
  */
-fun ContentResolver.openDocument(source: Uri): InputStream = try {
+fun ContentResolver.openDocument(source: Uri): Source = try {
     openInputStream(source)
 } catch (e: RuntimeException) {
     throw IOException("Couldn't open $source", e)
-} ?: throw IOException("Couldn't open $source: its provider recently crashed")
+}?.source() ?: throw IOException("Couldn't open $source: its provider recently crashed")
 
 /**
  * Opens [destination], truncating it: with "w", a provider may leave the end of a longer file

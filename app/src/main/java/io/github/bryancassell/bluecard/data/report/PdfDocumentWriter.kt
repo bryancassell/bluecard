@@ -1,7 +1,7 @@
 package io.github.bryancassell.bluecard.data.report
 
 import android.graphics.pdf.PdfDocument
-import java.io.OutputStream
+import okio.BufferedSink
 
 /**
  * Writes a report's pages with Android's [PdfDocument]. PdfDocument needs a device: Robolectric
@@ -10,7 +10,7 @@ import java.io.OutputStream
  * left out of the local tests' coverage check.
  */
 class PdfDocumentWriter : ReportPdfWriter {
-    override fun write(pages: List<ReportPage>, out: OutputStream) {
+    override fun write(pages: List<ReportPage>, out: BufferedSink) {
         val document = PdfDocument()
         try {
             pages.forEachIndexed { index, page ->
@@ -24,7 +24,7 @@ class PdfDocumentWriter : ReportPdfWriter {
                     document.finishPage(pdfPage)
                 }
             }
-            document.writeTo(out)
+            document.writeTo(out.outputStream())
         } finally {
             document.close()
         }
