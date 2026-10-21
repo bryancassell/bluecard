@@ -1,11 +1,11 @@
 package io.github.bryancassell.bluecard.data
 
 import io.github.bryancassell.bluecard.di.ApplicationScope
-import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
+import okio.IOException
 
 /**
  * Runs [block] in this scope, which lives longer than its caller, such as [ApplicationScope],

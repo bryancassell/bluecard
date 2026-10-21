@@ -12,13 +12,12 @@ import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.nio.charset.CharacterCodingException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import okio.BufferedSource
+import okio.buffer
 
 /**
  * [BackupRepository] that writes and reads exports as JSON ([encodeBackup], [decodeBackup]),
@@ -53,13 +52,13 @@ class JsonBackupRepository(
     }
 
     override suspend fun readBackup(source: Uri): BackupReadResult = withContext(ioDispatcher) {
-        val bytes = context.contentResolver.openDocument(source)
+        val bytes = context.contentResolver.openDocument(source).buffer()
             .use { it.readAtMost(MAX_FILE_SIZE) }
             ?: return@withContext BackupReadResult.Invalid
         val json = try {
             bytes.decodeToString(throwOnInvalidSequence = true)
         } catch (e: CharacterCodingException) {
-            // Not text, such as a photo. Caught here, since it's an IOException too.
+            // Not text, such as a photo. Caught here, since on Android it's an IOException too.
             return@withContext BackupReadResult.Invalid
         }
         // An editor can add a byte order mark when it saves the file, which JSON doesn't allow.
@@ -82,17 +81,9 @@ class JsonBackupRepository(
         if (profileFromFile) profileRepository.saveProfile(backup.profile)
     }
 
-    /** Everything left in this stream, or null if it holds more than [limit] bytes. */
-    private fun InputStream.readAtMost(limit: Int): ByteArray? {
-        val bytes = ByteArrayOutputStream()
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        while (bytes.size() <= limit) {
-            val count = read(buffer)
-            if (count == -1) return bytes.toByteArray()
-            bytes.write(buffer, 0, count)
-        }
-        return null
-    }
+    /** Everything left in this source, or null if it holds more than [limit] bytes. */
+    private fun BufferedSource.readAtMost(limit: Int): ByteArray? =
+        if (request(limit + 1L)) null else readByteArray()
 
     companion object {
         /**

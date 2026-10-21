@@ -26,7 +26,6 @@ import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import java.io.File
 import java.io.IOException
-import java.io.OutputStream
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -41,6 +40,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import okio.BufferedSink
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -615,11 +615,11 @@ class PdfReportRepositoryTest {
         /** What it wrote last. */
         var lastWritten: String? = null
 
-        override fun write(pages: List<ReportPage>, out: OutputStream) {
+        override fun write(pages: List<ReportPage>, out: BufferedSink) {
             if (failWrites) throw IOException("Write failed")
             this.pages += pages
             val text = pages.joinToString("\n\n") { it.lines.joinToString("\n") }
-            out.write(text.toByteArray())
+            out.writeUtf8(text)
             lastWritten = text
         }
     }

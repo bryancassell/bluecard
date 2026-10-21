@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -46,7 +47,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
         val job = Job().also { jobs += it }
         return DataStoreProfileRepository.createDataStore(
             scope = CoroutineScope(Dispatchers.IO + job),
-            produceFile = produceFile
+            produceFile = { produceFile().toOkioPath() }
         )
     }
 

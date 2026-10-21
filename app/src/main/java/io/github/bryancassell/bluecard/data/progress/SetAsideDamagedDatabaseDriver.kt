@@ -5,7 +5,8 @@ import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteException
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.execSQL
-import java.io.File
+import okio.FileSystem
+import okio.Path.Companion.toPath
 
 /**
  * Opens Room's database with [driver], except that a database SQLite finds damaged is set aside
@@ -27,8 +28,7 @@ import java.io.File
  * [driver] is BundledSQLiteDriver. AndroidSQLiteDriver opens the database with Android's default
  * error handler, which deletes a damaged database and the files beside it, and takes no other
  * (checked in androidx.sqlite 2.7.1). Its SQLite calls use only androidx.sqlite's common
- * interfaces, but its files (#342) and its lock need common replacements before iOS can use it
- * (#345).
+ * interfaces, but its lock needs a common replacement before iOS can use it (#345).
  */
 class SetAsideDamagedDatabaseDriver(
     private val driver: SQLiteDriver,
@@ -51,8 +51,10 @@ class SetAsideDamagedDatabaseDriver(
     @Synchronized
     private fun setAsideIfDamaged(fileName: String) {
         if (checked) return
-        val database = File(fileName)
-        if (damagedProgress.isDamageRecorded() || (database.exists() && isDamaged(fileName))) {
+        val database = fileName.toPath()
+        if (damagedProgress.isDamageRecorded() ||
+            (FileSystem.SYSTEM.exists(database) && isDamaged(fileName))
+        ) {
             damagedProgress.setAside(database)
         }
         checked = true
