@@ -123,6 +123,9 @@ class OnScreenKeyboard(private val rule: ComposeContentTestRule) {
          */
         val LANDSCAPE_HEIGHT = 252.dp
 
+        /** A number pad shorter than the letters keyboard, as some keyboards have. */
+        val NUMBER_PAD_HEIGHT = 260.dp
+
         /** About how many frames a keyboard takes to open or close. */
         private const val FRAMES = 15
     }

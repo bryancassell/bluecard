@@ -37,6 +37,7 @@ import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
+import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -129,11 +130,12 @@ private fun CounselorFields(
     onSave: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .verticalScroll(scrollState)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
@@ -165,25 +167,31 @@ private fun CounselorFields(
                 imeAction = ImeAction.Next
             )
         )
-        CounselorField(
-            state = email,
-            label = R.string.edit_counselor_email,
-            maxLength = COUNSELOR_EMAIL_MAX_LENGTH,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Done
+        // Keeps Save above the keyboard while the scout types in the email: at the largest
+        // text and display size, Save was behind it (#333).
+        KeepInViewWhileFocused(scrollState) {
+            CounselorField(
+                state = email,
+                label = R.string.edit_counselor_email,
+                maxLength = COUNSELOR_EMAIL_MAX_LENGTH,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Done
+                )
             )
-        )
-        Button(
-            onClick = {
-                onSave()
-                // Done editing: closes the keyboard.
-                focusManager.clearFocus()
-            },
-            enabled = uiState.changed,
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Text(stringResource(R.string.edit_counselor_save))
+            Button(
+                onClick = {
+                    onSave()
+                    // Done editing: closes the keyboard.
+                    focusManager.clearFocus()
+                },
+                enabled = uiState.changed,
+                // Here, not on the Column, so the page's margin under Save comes into view
+                // with it.
+                modifier = Modifier.align(Alignment.End).padding(bottom = 16.dp)
+            ) {
+                Text(stringResource(R.string.edit_counselor_save))
+            }
         }
     }
 }

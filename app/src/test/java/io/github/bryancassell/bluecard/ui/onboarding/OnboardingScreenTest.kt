@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -30,6 +31,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
+import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
+import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.isPoliteLiveRegion
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.setContentWithText
@@ -38,6 +41,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** One test per UI state and interaction, with fixed UI state. */
@@ -69,17 +73,22 @@ class OnboardingScreenTest {
     // The view that hosts the screen, which connects the keyboard to the focused field.
     private lateinit var view: View
 
+    /** The keyboard over the page, where [keyboard] is the controller that shows and hides it. */
+    private val onScreenKeyboard = OnScreenKeyboard(composeTestRule)
+
     private fun show(uiState: OnboardingUiState) {
         composeTestRule.setContentWithText {
             view = LocalView.current
-            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
-                OnboardingScreen(
-                    uiState = uiState,
-                    name = name,
-                    unitNumber = unitNumber,
-                    onSave = { saves++ },
-                    onSaveFailureShown = { saveFailuresShown += it }
-                )
+            onScreenKeyboard.Content {
+                CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                    OnboardingScreen(
+                        uiState = uiState,
+                        name = name,
+                        unitNumber = unitNumber,
+                        onSave = { saves++ },
+                        onSaveFailureShown = { saveFailuresShown += it }
+                    )
+                }
             }
         }
     }
@@ -283,6 +292,19 @@ class OnboardingScreenTest {
         field("Name").performImeAction()
 
         field("Unit number").assertIsFocused()
+    }
+
+    // Seen on a small screen: the page kept only the cursor in view, leaving the field's border
+    // and "Required" behind the keyboard. The button can stay behind it, since Done saves.
+    @Config(qualifiers = SMALL_PHONE)
+    @Test
+    fun keyboardOpensForUnitNumber_allOfItShowsAboveIt() {
+        show(OnboardingUiState())
+
+        field("Unit number").performClick()
+        onScreenKeyboard.open()
+
+        onScreenKeyboard.assertAbove(field("Unit number").getUnclippedBoundsInRoot())
     }
 
     @Test

@@ -18,17 +18,11 @@ import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 
 /**
- * The scout's [name] and [unitNumber] fields, both required, as Onboarding and Edit name and
- * unit show them, one after the other in the caller's column. The keyboard's Done on the unit
- * number closes the keyboard, then calls [onDone].
+ * The scout's [name] field, required, as Onboarding and Edit name and unit show it. Its
+ * keyboard's action is Next, since both pages put [UnitNumberField] next.
  */
 @Composable
-fun ProfileFields(
-    name: TextFieldState,
-    unitNumber: TextFieldState,
-    enabled: Boolean = true,
-    onDone: () -> Unit = {}
-) {
+fun ProfileNameField(name: TextFieldState, enabled: Boolean = true) {
     OutlinedTextField(
         state = name,
         enabled = enabled,
@@ -43,6 +37,15 @@ fun ProfileFields(
         ),
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+/**
+ * The scout's [unitNumber] field, required, under [ProfileNameField]. It's apart from the name
+ * so that Edit name and unit can keep it in view with Save. The keyboard's Done closes the
+ * keyboard, then calls [onDone].
+ */
+@Composable
+fun UnitNumberField(unitNumber: TextFieldState, enabled: Boolean = true, onDone: () -> Unit = {}) {
     OutlinedTextField(
         state = unitNumber,
         enabled = enabled,

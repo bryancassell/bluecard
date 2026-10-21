@@ -416,9 +416,6 @@ as a new bug. The coordinator checks the full list.
 
 - [#148](https://github.com/bryancassell/bluecard/issues/148): a
   requirement's own-work checkbox moves when it completes the requirement.
-- [#333](https://github.com/bryancassell/bluecard/issues/333): at the
-  largest text and display size, Save on Edit name and unit and Edit
-  counselor is behind the keyboard while typing in the last field.
 
 ## Test suites
 
