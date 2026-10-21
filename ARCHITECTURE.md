@@ -366,7 +366,7 @@ both taps of a double tap can reach it.
   on the button's modifier, which TalkBack read as well as the text
   ([#166](https://github.com/bryancassell/bluecard/issues/166),
   [#256](https://github.com/bryancassell/bluecard/issues/256)). Tests check it
-  with `assertButtonReadOnceAs` (`ButtonText.kt`).
+  with `assertButtonReadOnceAs`.
 - **Something read as one, with lines one under another, that can be partly
   scrolled off screen has a label of its own**, set with `clearAndSetSemantics`,
   rather than merging its parts': Home's rank card, and list rows such as a
@@ -377,7 +377,7 @@ both taps of a double tap can reach it.
   [#312](https://github.com/bryancassell/bluecard/issues/312)). Something with
   one line of text, such as a button, merges its parts as usual: it loses its
   text only when nothing but its padding is on screen. Tests find such a node
-  with `onReadAsOne` (`ReadAsOne.kt`), and read it scrolled until only
+  with `onReadAsOne`, and read it scrolled until only
   its last line shows (`readWithOnlyItsLastLineShown` in
   `SpokenLabel.kt`).
 

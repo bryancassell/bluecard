@@ -119,6 +119,7 @@ fun resolvableCoverage(name: String, kind: String) = configurations.resolvable(n
 }
 val sharedCoverageClasses = resolvableCoverage("sharedCoverageClasses", "classes")
 val sharedCoverageData = resolvableCoverage("sharedCoverageData", "data")
+val sharedCoverageSources = resolvableCoverage("sharedCoverageSources", "sources")
 
 val coverageClassJars = objects.listProperty<RegularFile>()
 val coverageClassDirs = objects.listProperty<Directory>()
@@ -172,6 +173,8 @@ fun JacocoReportBase.countLocalTests() {
             dirs.map { dir -> fileTrees.fileTree().setDir(dir).exclude(exclusions) }
         }
     )
+    // For the report's pages of source lines.
+    sourceDirectories.setFrom(layout.projectDirectory.dir("src/main/java"), sharedCoverageSources)
     // Where AGP writes it.
     executionData.setFrom(
         layout.buildDirectory.file(
@@ -180,7 +183,9 @@ fun JacocoReportBase.countLocalTests() {
         sharedCoverageData
     )
     // JaCoCo skips a missing file, which would show as every class it covers at 0%, such as
-    // after an AGP update moves where it writes them.
+    // after an AGP update moves where it writes them, and these tasks skip themselves when every
+    // file is missing. So they always run, and fail naming what's missing.
+    setOnlyIf("It fails if coverage data is missing") { true }
     val data = executionData
     doFirst {
         val missing = data.files.filterNot { it.exists() }

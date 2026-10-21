@@ -261,6 +261,17 @@ configurations.consumable("coverageClassesElements") {
     }
     outgoing.artifact(coverageClasses)
 }
+configurations.consumable("coverageSourcesElements") {
+    attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.VERIFICATION))
+        attribute(coverageAttribute, "sources")
+    }
+    // The main source sets' folders that exist, androidMain's now and common code's later.
+    kotlin.sourceSets.filter { it.name.endsWith("Main") }
+        .flatMap { it.kotlin.srcDirs }
+        .filter { it.isDirectory }
+        .forEach { outgoing.artifact(it) }
+}
 configurations.consumable("coverageDataElements") {
     attributes {
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.VERIFICATION))

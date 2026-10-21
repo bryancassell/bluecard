@@ -156,10 +156,10 @@ it.
 │   └── qa/                     Emulator helper and seed data for the QA test plan
 ├── gradle.properties           Gradle and Android build settings
 ├── gradle/
-│   ├── libs.versions.toml      Version catalog
+│   ├── libs.versions.toml      Version catalog, and the SDK levels
 │   └── wrapper/                Pinned Gradle version
 ├── app/                        The Android app: MainActivity, BlueCardApplication, manifest
-│   ├── build.gradle.kts        SDK levels, R8, the managed device, the coverage gate
+│   ├── build.gradle.kts        Application ID, R8, the managed device, the coverage gate
 │   └── src/
 │       ├── main/               Code, manifest, launcher icon, window theme, backup rules
 │       ├── debug/              Debug builds' name, icon color and LeakCanary setting
