@@ -15,17 +15,21 @@ plugins {
 // as part of `./gradlew check` and `./gradlew build`); `./gradlew spotlessApply`
 // fixes it. ktlint reads its style settings from .editorconfig.
 //
-// Targets starting with "**/" already skip build, .gradle and .git folders while
-// scanning. Don't add targetExclude("**/build/**"): Spotless scans the whole
-// project, build folders included, to evaluate it, which races with other tasks
-// writing to app/build (#16).
+// The targets name only modules' src folders and the build scripts, so Spotless
+// never scans a build folder or .claude/, where Claude Code keeps other sessions'
+// git worktrees. A "**/" target skips only this project's own build, .gradle and
+// .git folders, and a targetExclude is resolved by scanning every file it matches
+// (FormatExtension.parseTargetIsExclude, Spotless 8.10.4). Either way, Spotless
+// would read folders other builds are writing, failing when a file disappears
+// mid-scan (#16), and would check or reformat other sessions' work. A module
+// nested more than one folder deep needs its own target.
 spotless {
     kotlin {
-        target("**/*.kt")
+        target("*/src/**/*.kt")
         ktlint(libs.versions.ktlint.get())
     }
     kotlinGradle {
-        target("**/*.gradle.kts")
+        target("*.gradle.kts", "*/*.gradle.kts")
         ktlint(libs.versions.ktlint.get())
     }
 }
