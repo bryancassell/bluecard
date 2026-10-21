@@ -54,6 +54,8 @@ Before implementing:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
+Simplicity is about what the code does, not the size of the diff. When approaches differ, prefer the one that follows best practices and the project's existing patterns, even if it changes more files.
+
 ## 3. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
