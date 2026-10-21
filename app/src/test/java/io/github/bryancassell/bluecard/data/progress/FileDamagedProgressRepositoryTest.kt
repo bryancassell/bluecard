@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import okio.IOException
 import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -138,6 +139,27 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     }
 
     @Test
+    fun setAside_whenRecordedDamageCantBeCleared_keepsIt_andWarns() {
+        // As if the app had stopped after moving the files, before clearing the record.
+        repository.recordDamage()
+        // Stops the record being deleted, as long as the tests don't run as root.
+        folder.setWritable(false)
+        try {
+            repository.setAside(database.toOkioPath())
+        } finally {
+            folder.setWritable(true)
+        }
+
+        // The record stays, so the warning is the only sign of why the next launch sets the
+        // database aside again.
+        assertTrue(repository.isDamageRecorded())
+        val warning = warningLog.warnings.single()
+        assertEquals("DamagedProgress", warning.tag)
+        assertEquals("Couldn't delete ${File(folder, "damage-found")}", warning.message)
+        assertTrue("${warning.error}", warning.error is IOException)
+    }
+
+    @Test
     fun recordDamage_isKeptAfterTheAppReopens_withoutTellingTheScoutYet() = runTest {
         writeDatabase("" to "damaged")
 
@@ -226,9 +248,11 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
 
         assertFalse(repository.observeNoticePending().first())
         assertTrue(newRepository().observeNoticePending().first())
-        val warning = warningLog.warnings.last()
+        // After the warning that the database was set aside.
+        val warning = warningLog.warnings.drop(1).single()
         assertEquals("DamagedProgress", warning.tag)
         assertEquals("Couldn't delete ${File(folder, "notice-pending")}", warning.message)
+        assertTrue("${warning.error}", warning.error is IOException)
     }
 
     @Test

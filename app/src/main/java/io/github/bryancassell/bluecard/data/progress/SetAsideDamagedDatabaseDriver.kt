@@ -28,7 +28,8 @@ import okio.Path.Companion.toPath
  * [driver] is BundledSQLiteDriver. AndroidSQLiteDriver opens the database with Android's default
  * error handler, which deletes a damaged database and the files beside it, and takes no other
  * (checked in androidx.sqlite 2.7.1). Its SQLite calls use only androidx.sqlite's common
- * interfaces, but its lock needs a common replacement before iOS can use it (#345).
+ * interfaces, but its lock, and FileDamagedProgressRepository's Context and SQLiteDatabase, need
+ * common replacements before iOS can use it (#345).
  */
 class SetAsideDamagedDatabaseDriver(
     private val driver: SQLiteDriver,

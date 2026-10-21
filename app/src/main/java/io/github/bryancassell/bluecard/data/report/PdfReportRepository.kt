@@ -28,6 +28,7 @@ import kotlinx.datetime.LocalDate
 import okio.Buffer
 import okio.BufferedSink
 import okio.FileSystem
+import okio.IOException
 import okio.Path.Companion.toOkioPath
 
 /**
@@ -69,11 +70,16 @@ class PdfReportRepository(
             // Named at random, so two reports written at once each have their own.
             val written = folder / "report${Random.nextULong()}.tmp"
             try {
-                fileSystem.write(written, mustCreate = true) { write(report, strings, this) }
+                fileSystem.write(written, mustCreate = true) { writeReport(report, strings, this) }
                 fileSystem.atomicMove(written, file)
             } finally {
-                // Only there if it wasn't moved.
-                fileSystem.delete(written)
+                // Only there if it wasn't moved. Okio's delete throws where File.delete returned
+                // false, which here would hide why the report failed, so it's only a warning.
+                try {
+                    fileSystem.delete(written)
+                } catch (e: IOException) {
+                    warningLog.warn(TAG, "Couldn't delete $written", e)
+                }
             }
             FileProvider.getUriForFile(context, fileProviderAuthority(context), file.toFile())
         }
@@ -91,7 +97,7 @@ class PdfReportRepository(
         context.contentResolver.saveDocument(destination, warningLog) {
             report(advancementId)?.let { report ->
                 Buffer().also {
-                    write(report, stringsLanguageResources(context), it)
+                    writeReport(report, stringsLanguageResources(context), it)
                 }.readByteArray()
             }
         }
@@ -128,11 +134,13 @@ class PdfReportRepository(
         return checkNotNull(report) { "The catalog has no requirements for $advancementId" }
     }
 
-    private fun write(report: AdvancementReport, strings: Resources, out: BufferedSink) {
+    private fun writeReport(report: AdvancementReport, strings: Resources, out: BufferedSink) {
         pdfWriter.write(layOutReport(report, strings), out)
     }
 
     companion object {
+        private const val TAG = "Report"
+
         /** The cache folder that reports to share are written to. */
         const val REPORTS_FOLDER = "reports"
 

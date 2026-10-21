@@ -90,8 +90,12 @@ class FileDamagedProgressRepository(
                 // even if the app closes partway.
                 createEmptyFile(noticeFile)
                 createEmptyFile(damageFile)
-                val copy = folder / copyName()
+                // Another name if this one is taken, since a copy that can't be made deletes the
+                // database.
+                val copy = generateSequence { folder / copyName() }.first { !fileSystem.exists(it) }
                 fileSystem.createDirectory(copy, mustCreate = true)
+                // The databases and no-backup folders are both in the app's data directory, so
+                // each move is a rename on one file system, which atomicMove needs.
                 for (file in sqliteFiles(database).filter { fileSystem.exists(it) }) {
                     fileSystem.atomicMove(file, copy / file.name)
                 }

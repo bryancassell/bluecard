@@ -485,8 +485,8 @@ both taps of a double tap can reach it.
   (req. 9) and show it as a UI state (see
   [Load and save failures](#load-and-save-failures)). Shared code handles
   files and streams with [Okio](https://github.com/lysine-dev/okio), which is
-  stable and comes with DataStore, so its `IOException` is Okio's: java.io's
-  on Android ([#342](https://github.com/bryancassell/bluecard/issues/342)).
+  stable and comes with DataStore. Its `IOException` is java.io's on Android
+  ([#342](https://github.com/bryancassell/bluecard/issues/342)).
 - **Errors that can only come from a mistake in the app's code aren't
   wrapped,** so they still crash as bugs. `RoomProgressRepository` says which
   SQLite errors count. Driver errors are one class, told apart by result code
