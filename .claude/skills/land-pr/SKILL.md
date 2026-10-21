@@ -26,20 +26,50 @@ Don't ask what the code, the docs or a convention already answers. Ask when the 
 
 ## How to ask
 
-The developer decides from what the question shows them, so show what you found, not a summary of it. Before each AskUserQuestion call, write the context in a message, then ask. If one call asks more than one question, give each its own context under its `header`.
+Before each AskUserQuestion call, write the question up in a message: first a brief the developer can decide from without reading further, then the evidence it rests on. If one call asks more than one question, give each its own write-up under its `header`.
 
-The context covers:
+The brief, in this order:
 
-- **Previous decisions.** Rows of PRD.md's Design decisions and ARCHITECTURE.md's Decisions table that bear on the question, quoted, with their sections and issue links. Earlier issues and PRs where the same choice came up, found with `gh issue list --state all --search`, `gh pr list --state all --search` and `git log --grep`, with what was chosen and why. Answers the developer already gave on this PR. If you found none, say what you searched for.
-- **Existing patterns.** How the code already handles the same case, as `path:line` with a short excerpt, and how many places follow it. Name any place that does it differently.
+1. **Decision.** What you're asking, in a sentence of plain words. If the options share most of the change, say what they share and where they differ.
+2. **Why it matters.** What the answer shapes: what people see or hear, the code and tests, ARCHITECTURE.md or PRD.md, and planned work that builds on it, such as an open issue. Then how hard it would be to change later.
+3. **Options.** Name each by what it does, and use that name as its label in the dialog. Under each, its pros and cons, one line apiece, each citing the evidence it rests on by number.
+4. **Recommendation.** The option and the reason that decides it. Favor the option that follows the documented best practice and the project's existing patterns over one that changes less code. Then say what would make another option the better pick.
+
+Then the **Evidence**, numbered. Look for all three kinds:
+
+- **Previous decisions.** Rows of PRD.md's Design decisions and ARCHITECTURE.md's Decisions table, quoted, with their sections and issue links. Earlier issues and PRs where the same choice came up, found with `gh issue list --state all --search`, `gh pr list --state all --search` and `git log --grep`, with what was chosen and why. Answers the developer already gave on this PR. If you found none, one item says what you searched for.
+- **Existing patterns.** How the code already handles the same case, as `path:line` with a short excerpt, how many places follow it, and any place that does it differently.
 - **Best practices.** What the Android, Kotlin, Compose or library documentation recommends, with a link to the page, and where the project already departs from it and why. If it's from memory rather than a page you read, say so.
-- **The options.** For each: what it changes (code, what people see or hear, tests, words gained by ARCHITECTURE.md or PRD.md), what it costs or risks, and how it affects planned work, such as an open issue that builds on this one. Then your recommendation, with its reason tied to the points above.
 
-For a review finding, quote its whole comment as posted, not a summary: the heading, the body and any suggested change, with the file, the line and the comment's link, from `gh api 'repos/{owner}/{repo}/pulls/<PR number>/comments'`. Then say what you checked: whether the state it describes can happen, what fixing it would change, and why you'd decline it. A round 1 finding on the same code, and the reply to it, is a previous decision.
+Leave out what the brief doesn't cite. How an option would be built, such as the files it touches and its signatures, goes in the evidence or the option's `preview`, not the brief. For example, #342's logging question, shortened:
 
-For a test or CI failure, quote the failing output, link the run, and say whether the test passes on `main`.
+```markdown
+**Decision:** How warnings reach Android's log once the logging call is in shared code.
 
-In the AskUserQuestion call, each option's description gives its main tradeoff in a sentence. Use an option's `preview` to show the code it would leave, such as a finding's suggested change beside the code you'd keep.
+**Why it matters:** It decides whether about 14 ViewModels take a logger parameter [2]. Switching later touches the same files.
+
+**Options**
+1. **Inject a logger with Koin, like the clock**
+   - Pro: follows Kotlin's advice [3] and the `ZonedClock` pattern [1]
+   - Con: about 35 files change for 7 log lines [2]
+2. **A global writer the app sets at startup**
+   - Pro: 7 one-line changes [2]
+   - Con: a platform that forgets to set it loses warnings silently
+
+**Recommendation: 1**, since it follows the docs and the pattern already in place. Pick 2 if a small diff matters more.
+
+**Evidence**
+1. `di/AppModule.kt:82`: `ZonedClock` is injected so tests can pass their own. 10 files take it.
+2. …
+```
+
+Fit the write-up to the question. One with an obvious answer and no lasting effect, such as deleting a branch that's already merged, needs only the decision and the recommendation.
+
+For a review finding, the decision says what the finding claims. The brief says what you checked: whether the state it describes can happen, what fixing it would change, and why you'd decline it. The evidence quotes its whole comment as posted, not a summary: the heading, the body and any suggested change, with the file, the line and the comment's link, from `gh api 'repos/{owner}/{repo}/pulls/<PR number>/comments'`. A round 1 finding on the same code, and the reply to it, is a previous decision.
+
+For a test or CI failure, the evidence quotes the failing output, links the run, and says whether the test passes on `main`.
+
+In the AskUserQuestion call, the question is the decision's sentence, and each option's description gives its main pro and con. Use an option's `preview` to show the code it would leave, such as a finding's suggested change beside the code you'd keep.
 
 Quote and give lines only from what you read in this session. A wrong quote misleads more than none.
 
