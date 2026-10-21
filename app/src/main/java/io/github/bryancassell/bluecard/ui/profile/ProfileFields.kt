@@ -18,8 +18,8 @@ import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 
 /**
- * The scout's [name] field, required, as Onboarding and Edit name and unit show it, with
- * [UnitNumberField] under it. The keyboard's Next moves to the unit number.
+ * The scout's [name] field, required, as Onboarding and Edit name and unit show it. Its
+ * keyboard's action is Next, since both pages put [UnitNumberField] next.
  */
 @Composable
 fun ProfileNameField(name: TextFieldState, enabled: Boolean = true) {

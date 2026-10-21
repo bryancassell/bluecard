@@ -26,6 +26,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
@@ -93,6 +94,15 @@ class EditCounselorScreenTest {
     /** The field labeled [label], wherever the page has it. */
     private fun fieldWithoutScrolling(label: String) =
         composeTestRule.onNode(hasSetTextAction() and hasText(label))
+
+    /**
+     * Checks that Save and the page's 16dp margin under it are above the keyboard, so Save isn't
+     * left against the keyboard's edge. Save's bounds leave the margin out.
+     */
+    private fun assertSaveAndItsMarginAboveKeyboard() {
+        val save = composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot()
+        keyboard.assertAbove(save.copy(bottom = save.bottom + 16.dp))
+    }
 
     private fun saveButton() = composeTestRule.onNodeWithText("Save").performScrollTo()
 
@@ -209,7 +219,7 @@ class EditCounselorScreenTest {
         keyboard.open()
 
         keyboard.assertAbove(fieldWithoutScrolling("Email").getUnclippedBoundsInRoot())
-        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+        assertSaveAndItsMarginAboveKeyboard()
     }
 
     @Config(qualifiers = SMALL_PHONE)
@@ -223,7 +233,7 @@ class EditCounselorScreenTest {
 
         fieldWithoutScrolling("Email").assertIsFocused()
         keyboard.assertAbove(fieldWithoutScrolling("Email").getUnclippedBoundsInRoot())
-        keyboard.assertAbove(composeTestRule.onNodeWithText("Save").getUnclippedBoundsInRoot())
+        assertSaveAndItsMarginAboveKeyboard()
     }
 
     // The layout is left-to-right, like the English strings, but a name typed in Persian reads
