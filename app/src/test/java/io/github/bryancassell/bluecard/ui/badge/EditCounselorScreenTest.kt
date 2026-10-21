@@ -222,14 +222,16 @@ class EditCounselorScreenTest {
         assertSaveAndItsMarginAboveKeyboard()
     }
 
+    // Next swaps the phone pad for the email keyboard, which grows if the pad is shorter.
     @Config(qualifiers = SMALL_PHONE)
     @Test
-    fun nextIntoEmail_withKeyboardOpen_fieldAndSaveShowAboveIt() {
+    fun nextIntoEmail_asTheKeyboardGrowsFromThePhonePad_fieldAndSaveShowAboveIt() {
         show(ready.copy(changed = true))
         fieldWithoutScrolling("Phone").performClick()
-        keyboard.open()
+        keyboard.open(OnScreenKeyboard.NUMBER_PAD_HEIGHT)
 
         fieldWithoutScrolling("Phone").performImeAction()
+        keyboard.move(from = OnScreenKeyboard.NUMBER_PAD_HEIGHT, to = OnScreenKeyboard.HEIGHT)
 
         fieldWithoutScrolling("Email").assertIsFocused()
         keyboard.assertAbove(fieldWithoutScrolling("Email").getUnclippedBoundsInRoot())

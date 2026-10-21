@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.R
+import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.profile.ProfileNameField
@@ -60,10 +61,11 @@ fun OnboardingScreen(
     // Ends the page above the keyboard, so every field and the button can be scrolled into
     // view, and the snackbar shows above the keyboard.
     Box(modifier = modifier.imePadding()) {
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -73,13 +75,18 @@ fun OnboardingScreen(
             )
             Text(text = stringResource(R.string.onboarding_message))
             ProfileNameField(name = name, enabled = uiState.canEdit)
-            UnitNumberField(
-                unitNumber = unitNumber,
-                enabled = uiState.canEdit,
-                // Saves after Done closes the keyboard; the ViewModel ignores the save if the
-                // form is incomplete.
-                onDone = onSave
-            )
+            // Keeps all of the last field in view while the scout types in it, as other pages
+            // do: its border and "Required" were behind the keyboard on a small screen. The
+            // button can stay behind it, since Done saves.
+            KeepInViewWhileFocused(scrollState) {
+                UnitNumberField(
+                    unitNumber = unitNumber,
+                    enabled = uiState.canEdit,
+                    // Saves after Done closes the keyboard; the ViewModel ignores the save if
+                    // the form is incomplete.
+                    onDone = onSave
+                )
+            }
             Button(
                 onClick = onSave,
                 enabled = uiState.canSave,
