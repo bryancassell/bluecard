@@ -430,9 +430,6 @@ class BackupFormatTest {
             """"completed": false""" to """"completed": null""",
             """"requirements": []""" to """"requirements": {}""",
             """"startedDate": "2026-03-01"""" to """"startedDate": "2026-02-30"""",
-            // Adding a rank's months in rank to a date this late overflows (#368).
-            """"completedOnPriorDate": "2026-04-15"""" to
-                """"completedOnPriorDate": "+999999999-10-01"""",
             """"addedDate": null""" to """"addedDate": "April 15"""",
             """"rowNumber": 2""" to """"rowNumber": 99999999999"""
         )
@@ -441,6 +438,24 @@ class BackupFormatTest {
             check(file != exportJson) { "No $from in the file" }
 
             assertEquals("With $to", BackupReadResult.Invalid, decode(file))
+        }
+    }
+
+    @Test
+    fun decodeBackup_withAnyDateNotInYyyyMmDdForm_isInvalid() {
+        // Every date in the file: each field's, a rank's and a date column's. Adding a rank's
+        // months in rank to the first value overflows (#368), and java.time reads the second.
+        for (match in Regex(""""(\d{4}-\d{2}-\d{2})"""").findAll(exportJson)) {
+            val date = match.groups[1]!!
+            for (signed in listOf("+999999999-10-01", "+0${date.value}")) {
+                val file = exportJson.replaceRange(date.range, signed)
+
+                assertEquals(
+                    "With $signed at ${date.range}",
+                    BackupReadResult.Invalid,
+                    decode(file)
+                )
+            }
         }
     }
 

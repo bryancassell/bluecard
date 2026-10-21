@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.data.catalog
 
 import io.github.bryancassell.bluecard.text.TextRules
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.parseOrNull
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -252,7 +253,7 @@ private val catalogJson = Json
 /** Parses catalog JSON. Throws [kotlinx.serialization.SerializationException] if malformed. */
 fun parseCatalog(json: String): Catalog = catalogJson.decodeFromString(json)
 
-/** Reads and writes dates as ISO-8601 strings in YYYY-MM-DD form, such as "2026-01-01". */
+/** Reads and writes dates in YYYY-MM-DD form, such as "2026-01-01" ([isoDateOrNull]). */
 object LocalDateSerializer : KSerializer<LocalDate> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
 
@@ -260,17 +261,22 @@ object LocalDateSerializer : KSerializer<LocalDate> {
         encoder.encodeString(value.toString())
     }
 
+    // Reports a bad date like any other malformed catalog JSON.
     override fun deserialize(decoder: Decoder): LocalDate {
         val text = decoder.decodeString()
-        return try {
-            // ISO writes a year past 9999 or before 0000 with a sign, such as "+999999999-10-01".
-            // Only a hand-edited export can have one, and adding a rank's months in rank to a date
-            // that late overflows, crashing its requirement's page (#368).
-            LocalDate.parse(text).also { require(it.year in 0..9999) }
-        } catch (e: IllegalArgumentException) {
-            // Report bad dates like any other malformed catalog JSON. kotlinx-datetime throws a
-            // DateTimeFormatException, which is internal (0.8.0), so this catches what it extends.
-            throw SerializationException("\"$text\" is not a date in YYYY-MM-DD form", e)
-        }
+        return isoDateOrNull(text)
+            ?: throw SerializationException("\"$text\" is not a date in YYYY-MM-DD form")
     }
 }
+
+private val yearMonthDay = Regex("""\d{4}-\d{2}-\d{2}""")
+
+/**
+ * [text] as a date if it's one in YYYY-MM-DD form, such as "2026-01-01", or null. ISO also has a
+ * year with a sign, which it writes for a year past 9999 or before 0000, such as
+ * "+999999999-10-01", and java.time reads on any year of five digits or more, such as
+ * "+02026-01-01". The app never records one, and adding a rank's months in rank to a date that
+ * late overflows, crashing its requirement's page (#368).
+ */
+fun isoDateOrNull(text: String): LocalDate? =
+    if (yearMonthDay.matches(text)) LocalDate.parseOrNull(text) else null

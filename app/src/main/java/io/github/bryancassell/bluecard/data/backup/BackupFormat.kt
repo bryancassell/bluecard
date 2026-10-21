@@ -134,7 +134,8 @@ fun decodeBackup(json: String, catalog: List<Advancement>): BackupReadResult {
         // for JSON that doesn't fit, and a plain IllegalArgumentException for a value that can't
         // be made. A bad date gives one when it's read by kotlinx-datetime's own serializer,
         // which a date field gets without a word from the compiler if it doesn't name
-        // LocalDateSerializer.
+        // LocalDateSerializer. That one also reads a year with a sign, as LocalDateSerializer
+        // doesn't, which decodeBackup_withAnyDateNotInYyyyMmDdForm_isInvalid catches.
         return BackupReadResult.Invalid
     }
     if (withoutSignOffs && file.badges.any { it.requirements.any { it.signedOffBy != null } }) {

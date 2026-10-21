@@ -246,8 +246,9 @@ class CatalogTest {
 
     @Test
     fun localDateSerializer_rejectsAYearWithASign() {
-        // ISO dates past 9999 or before 0000. Time in rank's months overflow the last (#368).
-        for (text in listOf("+10000-01-01", "+999999999-10-01", "-0001-12-31")) {
+        // ISO dates past 9999 or before 0000, whose sign java.time also reads on a year in between.
+        // Time in rank's months overflow the last (#368).
+        for (text in listOf("+10000-01-01", "+999999999-10-01", "-0001-12-31", "+09999-01-01")) {
             val error = assertThrows(SerializationException::class.java) {
                 Json.decodeFromString(LocalDateSerializer, "\"$text\"")
             }
