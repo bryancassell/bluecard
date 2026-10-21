@@ -269,7 +269,8 @@ object LocalDateSerializer : KSerializer<LocalDate> {
     }
 }
 
-private val yearMonthDay = Regex("""\d{4}-\d{2}-\d{2}""")
+// Not \d, which on Android matches any script's digits, as ICU's regex does.
+private val yearMonthDay = Regex("""[0-9]{4}-[0-9]{2}-[0-9]{2}""")
 
 /**
  * [text] as a date if it's one in YYYY-MM-DD form, such as "2026-01-01", or null. ISO also has a

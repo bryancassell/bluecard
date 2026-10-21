@@ -445,7 +445,9 @@ class BackupFormatTest {
     fun decodeBackup_withAnyDateNotInYyyyMmDdForm_isInvalid() {
         // Every date in the file: each field's, a rank's and a date column's. Adding a rank's
         // months in rank to the first value overflows (#368), and java.time reads the second.
-        for (match in Regex(""""(\d{4}-\d{2}-\d{2})"""").findAll(exportJson)) {
+        val dates = Regex(""""(\d{4}-\d{2}-\d{2})"""").findAll(exportJson).toList()
+        check(dates.isNotEmpty()) { "No date in the file" }
+        for (match in dates) {
             val date = match.groups[1]!!
             for (signed in listOf("+999999999-10-01", "+0${date.value}")) {
                 val file = exportJson.replaceRange(date.range, signed)

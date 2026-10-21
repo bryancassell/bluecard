@@ -74,8 +74,9 @@ private val formatVersionJson = Json { ignoreUnknownKeys = true }
 /**
  * [backup] as an export's JSON: the format version, the profile, and each started badge with
  * its requirements and tracker entries. A started rank is listed with the badges, as its progress
- * is stored with theirs, so ranks needed no new format version. Dates are in ISO form, such as
- * "2026-01-01". Tracker entries are listed in the order they were added, in place of their IDs.
+ * is stored with theirs, so ranks needed no new format version. Dates are in YYYY-MM-DD form,
+ * such as "2026-01-01". Tracker entries are listed in the order they were added, in place of
+ * their IDs.
  */
 fun encodeBackup(backup: Backup): String =
     backupJson.encodeToString(BackupJson.serializer(), backup.toJson())
@@ -135,7 +136,8 @@ fun decodeBackup(json: String, catalog: List<Advancement>): BackupReadResult {
         // be made. A bad date gives one when it's read by kotlinx-datetime's own serializer,
         // which a date field gets without a word from the compiler if it doesn't name
         // LocalDateSerializer. That one also reads a year with a sign, as LocalDateSerializer
-        // doesn't, which decodeBackup_withAnyDateNotInYyyyMmDdForm_isInvalid catches.
+        // doesn't, which decodeBackup_withAnyDateNotInYyyyMmDdForm_isInvalid catches for each
+        // date in its file.
         return BackupReadResult.Invalid
     }
     if (withoutSignOffs && file.badges.any { it.requirements.any { it.signedOffBy != null } }) {
