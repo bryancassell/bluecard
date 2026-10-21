@@ -14,6 +14,8 @@ import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import java.io.File
 import kotlinx.datetime.LocalDate
+import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -76,7 +78,7 @@ class PdfDocumentWriterTest {
     }
 
     private fun writePdf() {
-        file.outputStream().use { PdfDocumentWriter().write(pages, it) }
+        FileSystem.SYSTEM.write(file.toOkioPath()) { PdfDocumentWriter().write(pages, this) }
     }
 
     private fun <T> read(block: (PdfRenderer) -> T): T =

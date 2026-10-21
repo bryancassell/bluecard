@@ -4,13 +4,13 @@ import androidx.room3.withWriteTransaction
 import androidx.sqlite.SQLiteException
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.di.ApplicationScope
-import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
+import okio.IOException
 
 /**
  * [ProgressRepository] backed by Room.
@@ -142,7 +142,7 @@ class RoomProgressRepository(
      * are bugs and pass through, such as a missing migration.
      */
     private fun <T> Flow<T>.readFailuresAsIOException(): Flow<T> = catch {
-        throw if (it.isStorageFailure()) IOException(it) else it
+        throw if (it.isStorageFailure()) IOException(it.toString(), it) else it
     }
 
     /**
@@ -158,7 +158,7 @@ class RoomProgressRepository(
         try {
             database.writeOrder.withLock { write() }
         } catch (e: Exception) {
-            throw if (e.isStorageFailure()) IOException(e) else e
+            throw if (e.isStorageFailure()) IOException(e.toString(), e) else e
         }
     }
 

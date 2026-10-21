@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.text.TextRules
 import kotlinx.coroutines.CoroutineScope
+import okio.Path.Companion.toOkioPath
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.plugin.module.dsl.create
@@ -66,5 +67,7 @@ private fun profileDataStore(
     @ApplicationScope scope: CoroutineScope
 ): DataStore<Preferences> = DataStoreProfileRepository.createDataStore(
     scope = scope,
-    produceFile = { context.preferencesDataStoreFile(DataStoreProfileRepository.FILE_NAME) }
+    produceFile = {
+        context.preferencesDataStoreFile(DataStoreProfileRepository.FILE_NAME).toOkioPath()
+    }
 )

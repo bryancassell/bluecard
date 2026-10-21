@@ -5,6 +5,7 @@ import android.content.res.Resources
 import android.net.Uri
 import androidx.core.content.FileProvider
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
+import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
@@ -18,16 +19,17 @@ import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.text.stringsLanguageResources
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.OutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import kotlin.random.Random
+import kotlin.random.nextULong
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
+import okio.Buffer
+import okio.BufferedSink
+import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 
 /**
  * [ReportRepository] that lays reports out with [layOutReport] and writes them with
@@ -52,27 +54,29 @@ class PdfReportRepository(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
+    private val fileSystem = FileSystem.SYSTEM
+
     override suspend fun createReportToShare(advancementId: String): Uri? =
         withContext(ioDispatcher) {
             val report = report(advancementId) ?: return@withContext null
             // Read for each report, so it follows a change to the phone's language.
             val strings = stringsLanguageResources(context)
-            val folder = File(context.cacheDir, REPORTS_FOLDER)
-            // If the folder can't be made, creating a file in it throws an IOException.
-            folder.mkdirs()
-            val file = File(folder, reportFileName(strings, report.kind, report.name))
+            val folder = context.cacheDir.toOkioPath() / REPORTS_FOLDER
+            fileSystem.createDirectories(folder)
+            val file = folder / reportFileName(strings, report.kind, report.name)
             // Written beside the report's file, then renamed over it in one step: an app that an
             // earlier report was shared with, such as an email app that reads it only to send it,
             // never reads a partly written one, and a report that fails leaves that one as it was.
-            val written = File.createTempFile("report", null, folder)
+            // Named at random, so two reports written at once each have their own.
+            val written = folder / "report${Random.nextULong()}.tmp"
             try {
-                written.outputStream().use { write(report, strings, it) }
-                Files.move(written.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE)
-            } finally {
-                // Only there if it wasn't moved.
-                written.delete()
+                fileSystem.write(written, mustCreate = true) { writeReport(report, strings, this) }
+                fileSystem.atomicMove(written, file)
+            } catch (e: Exception) {
+                fileSystem.deleteOrWarn(written, warningLog, TAG)
+                throw e
             }
-            FileProvider.getUriForFile(context, fileProviderAuthority(context), file)
+            FileProvider.getUriForFile(context, fileProviderAuthority(context), file.toFile())
         }
 
     override suspend fun saveReport(advancementId: String, destination: Uri) =
@@ -87,9 +91,9 @@ class PdfReportRepository(
     private suspend fun save(advancementId: String, destination: Uri) =
         context.contentResolver.saveDocument(destination, warningLog) {
             report(advancementId)?.let { report ->
-                ByteArrayOutputStream().also {
-                    write(report, stringsLanguageResources(context), it)
-                }.toByteArray()
+                Buffer().also {
+                    writeReport(report, stringsLanguageResources(context), it)
+                }.readByteArray()
             }
         }
 
@@ -125,11 +129,13 @@ class PdfReportRepository(
         return checkNotNull(report) { "The catalog has no requirements for $advancementId" }
     }
 
-    private fun write(report: AdvancementReport, strings: Resources, out: OutputStream) {
+    private fun writeReport(report: AdvancementReport, strings: Resources, out: BufferedSink) {
         pdfWriter.write(layOutReport(report, strings), out)
     }
 
     companion object {
+        private const val TAG = "Report"
+
         /** The cache folder that reports to share are written to. */
         const val REPORTS_FOLDER = "reports"
 

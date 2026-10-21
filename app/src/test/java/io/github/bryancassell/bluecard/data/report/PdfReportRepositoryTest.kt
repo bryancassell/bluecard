@@ -26,7 +26,6 @@ import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import java.io.File
 import java.io.IOException
-import java.io.OutputStream
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -41,6 +40,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import okio.BufferedSink
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -99,6 +99,7 @@ class PdfReportRepositoryTest {
     private val progressRepository = FakeProgressRepository()
     private val profileRepository = FakeProfileRepository(Profile("Alex Scout", "123"))
     private val pdfWriter = FakePdfWriter()
+    private val warningLog = FakeWarningLog()
 
     // As the app's scope, which outlives the screens.
     private val externalScope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher())
@@ -114,7 +115,7 @@ class PdfReportRepositoryTest {
         pdfWriter,
         FakeClock(today.atStartOfDayIn(TimeZone.UTC)),
         AndroidTextRules(),
-        FakeWarningLog(),
+        warningLog,
         ioDispatcher,
         externalScope
     )
@@ -288,6 +289,26 @@ class PdfReportRepositoryTest {
         assertEquals(written, earlier.read())
         val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
+    }
+
+    @Test
+    fun createReportToShare_whenItFails_andWhatItWroteCantBeDeleted_throwsWhatFailed() = runTest {
+        val reports = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER)
+        // Stops what was written being deleted, as long as the tests don't run as root.
+        pdfWriter.beforeWrite = { reports.setWritable(false) }
+        pdfWriter.failWrites = true
+
+        val error = try {
+            runCatching { repository.createReportToShare("chess") }.exceptionOrNull()
+        } finally {
+            reports.setWritable(true)
+        }
+
+        assertEquals("Write failed", error?.message)
+        val warning = warningLog.warnings.single()
+        assertEquals("Report", warning.tag)
+        assertTrue(warning.message, warning.message.startsWith("Couldn't delete $reports/"))
+        assertTrue("${warning.error}", warning.error is IOException)
     }
 
     @Test
@@ -609,17 +630,21 @@ class PdfReportRepositoryTest {
         /** When true, writing throws, as PdfDocument does when the file can't be written. */
         var failWrites = false
 
+        /** Runs as each report starts to be written, once the file it's written to is open. */
+        var beforeWrite: () -> Unit = {}
+
         /** The pages of each report written, in order. */
         val pages = mutableListOf<List<ReportPage>>()
 
         /** What it wrote last. */
         var lastWritten: String? = null
 
-        override fun write(pages: List<ReportPage>, out: OutputStream) {
+        override fun write(pages: List<ReportPage>, out: BufferedSink) {
+            beforeWrite()
             if (failWrites) throw IOException("Write failed")
             this.pages += pages
             val text = pages.joinToString("\n\n") { it.lines.joinToString("\n") }
-            out.write(text.toByteArray())
+            out.writeUtf8(text)
             lastWritten = text
         }
     }
