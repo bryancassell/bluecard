@@ -38,9 +38,9 @@ Run these from the repository root.
 | `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. This is the command CI runs. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
-| `./gradlew test` | Runs local tests only (`app/src/test`). |
-| `./gradlew createDebugUnitTestCoverageReport` | Writes an HTML coverage report for local tests to `app/build/reports/coverage/test/debug/index.html`. |
-| `./gradlew lint` | Runs Android lint. Reports are in `app/build/reports/`. |
+| `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
+| `./gradlew jacocoDebugCoverageReport` | Writes an HTML report of the coverage the build checks to `app/build/reports/jacoco/jacocoDebugCoverageReport/html/index.html`. |
+| `./gradlew lint` | Runs Android lint. Reports are in each module's `build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
 | `./gradlew installDebug` | Installs the debug app on a running emulator or connected device. Its application ID is `io.github.bryancassell.bluecard.debug`, so it installs next to a release build (see [`ARCHITECTURE.md`](../ARCHITECTURE.md#debug-builds)). |
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
@@ -52,7 +52,8 @@ Run these from the repository root.
 **Android Studio's bundled JDK.** Android Studio ships its own JDK (the
 JetBrains Runtime). Pointing `JAVA_HOME` at it means terminal builds and IDE
 builds use the same Java. The app itself is compiled for Java 17 bytecode
-(`compileOptions` in `app/build.gradle.kts`), whatever JDK runs Gradle.
+(`compileOptions` and `jvmTarget` in the modules' build files), whatever JDK
+runs Gradle.
 
 **Gradle wrapper** (`gradlew`, `gradle/wrapper/`). The wrapper downloads the
 exact Gradle version in `gradle/wrapper/gradle-wrapper.properties` and checks
@@ -63,15 +64,18 @@ tampered download fails. Upgrade with
 commit all four wrapper files.
 
 **Android Gradle Plugin (AGP).** The plugin that knows how to build Android
-apps. AGP 9 has Kotlin support built in, so the build only adds Kotlin compiler
-plugins on top: Compose, and kotlinx.serialization (for `@Serializable`
-navigation keys).
+apps. AGP 9 has Kotlin support built in, so `:app` only adds Kotlin compiler
+plugins on top. `:shared` and `:testing` are Kotlin Multiplatform modules,
+built with AGP's
+[Android-KMP library plugin](https://developer.android.com/kotlin/multiplatform/plugin),
+which has no build types, so their source folders are `androidMain` and
+`androidHostTest` rather than `main` and `test`. The compiler plugins are
+Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
 code with it. Libraries whose generators run through KSP are added with
-`ksp(...)` (for app code) or `kspTest(...)` (for local tests) in
-`app/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions.
+`kspAndroid(...)` in `shared/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions.
 
 **Koin's compiler plugin.** It writes the constructor calls for Koin's
 `single<T>()` and `viewModel<T>()`, and fails the build for a missing
@@ -85,7 +89,7 @@ constructor changes, an incremental build can report a missing dependency that
 isn't missing; `./gradlew clean build` checks again from scratch, as Koin's
 [troubleshooting](https://insert-koin.io/docs/setup/compiler-plugin) advises.
 
-**Room schemas** (`app/schemas/`). The Room Gradle plugin writes each database
+**Room schemas** (`shared/schemas/`). The Room Gradle plugin writes each database
 version's schema there as JSON. Commit these files: they show schema changes in
 review, and future migration tests read them. Changing an entity means raising
 the database version and adding a migration, or existing users' data can't be
@@ -93,7 +97,7 @@ opened. CI fails if the build changes them, which also catches a Room update
 that computes a different identity hash for the same schema.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
-version lives in this one file. Build scripts refer to entries by alias, such
+version, and the SDK levels every module builds for, live in this one file. Build scripts refer to entries by alias, such
 as `libs.androidx.core.ktx`. Compose libraries are versioned together by the
 Compose BOM ("bill of materials").
 
@@ -152,42 +156,54 @@ it.
 │   └── qa/                     Emulator helper and seed data for the QA test plan
 ├── gradle.properties           Gradle and Android build settings
 ├── gradle/
-│   ├── libs.versions.toml      Version catalog
+│   ├── libs.versions.toml      Version catalog, and the SDK levels
 │   └── wrapper/                Pinned Gradle version
-└── app/
-    ├── build.gradle.kts        App module: SDK levels, dependencies, lint
-    ├── schemas/                Room database schemas (generated; commit them)
-    └── src/
-        ├── main/               App code, manifest, resources
-        ├── test/               Local tests (run on your computer)
-        └── androidTest/        Instrumented tests (run on a device)
+├── app/                        The Android app: MainActivity, BlueCardApplication, manifest
+│   ├── build.gradle.kts        Application ID, R8, the managed device, the coverage gate
+│   └── src/
+│       ├── main/               Code, manifest, launcher icon, window theme, backup rules
+│       ├── debug/              Debug builds' name, icon color and LeakCanary setting
+│       ├── test/               Local tests of the app as a whole (MainActivityTest)
+│       └── androidTest/        Instrumented tests (run on a device)
+├── shared/                     Everything else, to share with iOS (Kotlin Multiplatform)
+│   ├── build.gradle.kts
+│   ├── schemas/                Room database schemas (generated; commit them)
+│   └── src/
+│       ├── androidMain/        Code, strings, icons, the catalog
+│       └── androidHostTest/    Local tests (run on your computer) and screenshots
+└── testing/                    Fakes and helpers that both modules' tests use
 ```
 
 ## Tests: local vs instrumented
 
-- **Local tests** (`app/src/test`) run on your computer's JVM in seconds. Plain
+- **Local tests** (`shared/src/androidHostTest`, and `app/src/test` for tests
+  of `MainActivity`, `BlueCardApplication` and what the app module declares)
+  run on your computer's JVM in seconds. Plain
   logic tests need nothing else. Tests of activities and Compose UI use
   [Robolectric](https://developer.android.com/training/testing/local-tests/robolectric),
   which simulates Android on the JVM: mark the class with
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
-  device.
+  device. Fakes and helpers that tests in both modules use are in `:testing`;
+  the rest stay with the tests that use them.
 - **Koin in tests.** ViewModel and other unit tests construct classes directly,
-  passing fakes. Robolectric starts `BlueCardApplication`, and so Koin, before
-  each test, and stops Koin when the test ends (`onTerminate()`). A test that
+  passing fakes. In `:app`, Robolectric starts `BlueCardApplication`, and so
+  Koin, before each test, and stops Koin when the test ends (`onTerminate()`);
+  a test in `:shared` that needs Koin starts it with `AppKoinRule`. A test that
   launches `MainActivity` replaces definitions before launching it, with
   `loadKoinModules(module { single<ProgressRepository> { fake } })`, for that
   test only (see `MainActivityTest`). It loads `testIoDispatcherModule`
-  (`testing/`) too, so the real repositories it keeps work on the test's
+  (`:testing`) too, so the real repositories it keeps work on the test's
   thread.
-- **`MainDispatcherRule`** (`app/src/test/.../testing/`) replaces the main
+- **`MainDispatcherRule`** (`shared/src/androidHostTest/.../testing/`) replaces the main
   dispatcher in ViewModel tests, as in Android's
   [coroutines testing guide](https://developer.android.com/kotlin/coroutines/test).
 - **Screenshot tests** ([Roborazzi](https://github.com/takahirom/roborazzi))
   are local tests too. Every test run, `./gradlew build` and CI included,
-  compares them against the reference images in `app/src/test/screenshots/`. A
-  failed comparison writes the new image, and one comparing the two, to
-  `app/build/outputs/roborazzi/`, which CI uploads with its reports. After an
-  intended change, `./gradlew recordRoborazziDebug` records them again; review
+  compares them against the reference images in
+  `shared/src/androidHostTest/screenshots/`. A failed comparison writes the new
+  image, and one comparing the two, to `shared/build/outputs/roborazzi/`, which
+  CI uploads with its reports. After an intended change,
+  `./gradlew recordRoborazziAndroidHostTest` records them again; review
   the new images in the diff.
 - **Migration tests after a database version bump.** The first test run can
   merge assets before Room writes the new schema, so `MigrationTest` fails.
@@ -212,9 +228,9 @@ when it can detect that one is broken:
 
 | Rule | Check |
 |---|---|
-| New code has at least 80% line coverage | Approximated as: every class has at least 80% line coverage from local tests (task `jacocoDebugCoverageVerification`). Generated code (Android and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
+| New code has at least 80% line coverage | Approximated as: every class in `:app` and `:shared` has at least 80% line coverage from both modules' local tests (task `jacocoDebugCoverageVerification`). Both modules' tests count, since `MainActivityTest` is the only test that reaches some of `:shared`'s classes, such as `BlueCardNavDisplay`. Generated code (Android and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
-| Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in `app/src/test`. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
+| Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in either module's local tests. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
 
 The other rules need a person to judge, so they are checked in code review:
@@ -222,10 +238,10 @@ tests check meaningful behavior, UI tests cover every state and interaction,
 screenshot tests only where needed, and local tests are preferred. The same goes
 for "coverage must not decrease": the build only knows the current coverage, not
 what it was before. If a change lowers coverage, say so and why in the pull
-request; `./gradlew createDebugUnitTestCoverageReport` shows the numbers.
+request; `./gradlew jacocoDebugCoverageReport` shows the numbers.
 
 When coverage fails, the error names the class. Run
-`./gradlew createDebugUnitTestCoverageReport` and open the report to see which
+`./gradlew jacocoDebugCoverageReport` and open the report to see which
 lines no test runs.
 
 One JaCoCo limitation: in a `suspend` function whose call really suspends (for

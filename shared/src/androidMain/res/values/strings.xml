@@ -1,0 +1,515 @@
+<resources>
+    <!-- The language of these strings, as a BCP 47 tag, such as "en". Lists and numbers inside
+         a string, such as the badges in an Eagle group, are formatted in this language, and
+         plurals follow its rules, so a sentence never mixes two. Each translation sets its
+         own, as a well-formed tag for its folder's language ("pt-BR", not "pt_BR"). -->
+    <string name="strings_language">en</string>
+    <!-- Shown in place of a screen when the data stored on the phone can't be read. -->
+    <string name="load_failed">Couldn\'t load your data. Try closing and reopening BlueCard.</string>
+    <!-- Shown briefly when something the scout recorded couldn't be saved on the phone. -->
+    <string name="save_failed">Couldn\'t save. Try again.</string>
+    <!-- Between the lines of a list row or card as screen readers read it, such as
+         "Your rank. Tenderfoot. 2 of 7 ranks earned" on Home's rank card. The quotes keep its
+         space. -->
+    <string name="read_as_one_separator">". "</string>
+    <!-- A dialog shown once, when the progress stored on the phone was damaged and BlueCard
+         started over without it. The name and unit number are stored apart, so they're kept. -->
+    <string name="damaged_progress_title">Your progress couldn\'t be read</string>
+    <string name="damaged_progress_message">The progress saved on this phone was damaged, so BlueCard started over without it. Your name and unit number are kept. If you exported your progress, you can import it from Data management.</string>
+    <string name="damaged_progress_ok">OK</string>
+    <string name="onboarding_title">Welcome to BlueCard</string>
+    <string name="onboarding_message">Enter your name and unit number to get started.</string>
+    <string name="profile_name">Name</string>
+    <string name="profile_unit_number">Unit number</string>
+    <string name="profile_required">Required</string>
+    <string name="onboarding_save">Get started</string>
+    <!-- Below Onboarding's Get started button. The app uses Scouting America's terms, such as
+         "Merit Badge", so it says it isn't Scouting America's. -->
+    <string name="onboarding_not_affiliated">BlueCard is an independent app. It isn\'t affiliated with or endorsed by Scouting America.</string>
+    <string name="home_unit">Unit: %1$s</string>
+    <!-- Above the scout's rank on Home's rank card. -->
+    <string name="home_rank_title">Your rank</string>
+    <!-- In place of the rank's name on Home's rank card, before the scout has earned one. -->
+    <string name="home_no_rank">None yet</string>
+    <!-- On Home's rank card, the rank in progress, such as "Next: Second Class". -->
+    <string name="home_next_rank">Next: %1$s</string>
+    <!-- On Home's rank card in place of home_next_rank, once the scout has earned every rank. -->
+    <string name="home_every_rank_earned">Every rank earned</string>
+    <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
+    <string name="home_badges_title">Your merit badges</string>
+    <string name="home_eagle_title">Eagle-required</string>
+    <string name="home_open_badges">Merit badges</string>
+    <string name="home_open_ranks">Ranks</string>
+    <string name="home_open_data_management">Manage data</string>
+    <string name="badges_title">Merit badges</string>
+    <string name="badges_eagle_required">Eagle-required</string>
+    <!-- An Eagle-required badge that is one of a group of alternatives. %1$s lists the group's
+         badges in the strings_language, such as "Cycling, Hiking, and Swimming". -->
+    <string name="badges_eagle_required_one_of">Eagle-required (one of %1$s)</string>
+    <string name="badges_in_progress">In progress</string>
+    <string name="badges_completed">Completed</string>
+    <!-- What screen readers say about a badge in progress's progress bar: "40% done". -->
+    <string name="badges_percent_done">%1$d%% done</string>
+    <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
+    <string name="badges_open_badge">open badge</string>
+    <string name="badges_search">Search merit badges</string>
+    <!-- Screen reader label for the button that empties the search field. -->
+    <string name="badges_clear_search">Clear search</string>
+    <string name="badges_no_matches">No merit badges match your search.</string>
+    <string name="ranks_title">Ranks</string>
+    <!-- A rank's status in the list, where badges say "Completed". -->
+    <string name="ranks_earned">Earned</string>
+    <!-- Screen reader action on a rank in the list: "Double tap to open rank". -->
+    <string name="ranks_open_rank">open rank</string>
+    <string name="badge_detail_official_page">Official requirements</string>
+    <string name="badge_detail_requirements">Requirements</string>
+    <!-- Shown when tapping the official requirements link, if no app on the phone can open
+         web links. -->
+    <string name="badge_detail_no_browser">No app on this phone can open the link.</string>
+    <!-- Screen reader action on the official requirements link, which opens the badge's
+         official page in the browser: "Double tap to open in browser". -->
+    <string name="badge_detail_open_in_browser">open in browser</string>
+    <!-- Heading of the section of a badge's page about the scout's merit badge counselor. -->
+    <string name="badge_detail_counselor">Counselor</string>
+    <string name="badge_detail_add_counselor">Add counselor</string>
+    <string name="badge_detail_edit_counselor">Edit counselor</string>
+    <!-- Screen reader action on the counselor's phone number, which opens the phone app with
+         the number: "Double tap to call". -->
+    <string name="badge_detail_call_counselor">call</string>
+    <!-- Screen reader action on the counselor's email address, which opens an email app:
+         "Double tap to send email". -->
+    <string name="badge_detail_email_counselor">send email</string>
+    <!-- Shown when tapping the counselor's phone number, if no app on the phone can make
+         calls. -->
+    <string name="badge_detail_no_phone_app">No app on this phone can call the number.</string>
+    <!-- Shown when tapping the counselor's email address, if no app on the phone can send
+         email. -->
+    <string name="badge_detail_no_email_app">No app on this phone can send email.</string>
+    <!-- Heading of the page for entering the badge's merit badge counselor. -->
+    <string name="edit_counselor_title">Counselor</string>
+    <string name="edit_counselor_name">Name</string>
+    <string name="edit_counselor_phone">Phone</string>
+    <string name="edit_counselor_email">Email</string>
+    <string name="edit_counselor_save">Save</string>
+    <string name="edit_profile_title">Name and unit</string>
+    <string name="edit_profile_save">Save</string>
+    <!-- Shown in place of a badge's page when the catalog doesn't have the badge or its
+         requirements version. Only a catalog edited during development can cause this. -->
+    <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>
+    <!-- The same, in place of a rank's page. -->
+    <string name="rank_requirements_unavailable">This rank\'s requirements aren\'t in this version of BlueCard.</string>
+    <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
+    <string name="requirement_choice">Do %1$d of %2$d</string>
+    <string name="requirement_completed">Completed</string>
+    <!-- Screen readers read it as the state of a requirement's row while nothing of it is
+         complete, then read "In progress" or "Completed". -->
+    <string name="requirement_not_completed">Not completed</string>
+    <!-- Screen readers read it as the state of a requirement's row once part of it is complete,
+         such as one of its sub-requirements, until it's complete. -->
+    <string name="requirement_in_progress">In progress</string>
+    <!-- On the row and page of a requirement that isn't complete but no longer needs to be,
+         because a requirement it's part of is complete, such as a choice the scout didn't pick.
+         Screen readers read it as the row's state. -->
+    <string name="requirement_not_needed">Not needed</string>
+    <!-- On a badge the scout marked completed on a prior date, without recording its
+         requirements: in its report, and read by screen readers as the state of a requirement's
+         row, in place of "Not completed". -->
+    <string name="requirement_not_recorded">Not recorded</string>
+    <!-- Screen reader action on a requirement's row, which opens its own page: "Double tap to
+         open requirement". -->
+    <string name="requirement_open">open requirement</string>
+    <!-- The date a requirement was completed on, such as "Completed on Apr 15, 2026". -->
+    <string name="requirement_completed_on">Completed on %1$s</string>
+    <!-- Shown for a completed requirement that has no completion date. -->
+    <string name="requirement_no_date">No completion date</string>
+    <string name="requirement_add_date">Add date</string>
+    <string name="requirement_change_date">Change date</string>
+    <string name="requirement_remove_date">Remove date</string>
+    <!-- For screen readers, a date's button: its text, then the label of the date it's for,
+         such as "Add date: Week starting" in a tracker row. Starts with the button's text, as
+         WCAG 2.5.3 recommends for voice control users. -->
+    <string name="labeled_date_button">%1$s: %2$s</string>
+    <!-- Label of the field for the scout's notes about a requirement. -->
+    <string name="requirement_comment">Notes</string>
+    <string name="requirement_save_comment">Save notes</string>
+    <!-- Label of the field for who signed off on a rank's requirement, such as the Scoutmaster,
+         above the notes. -->
+    <string name="requirement_signed_off_by">Signed off by</string>
+    <!-- In place of requirement_save_comment on a rank's requirement, where the button saves who
+         signed off on it and the notes. -->
+    <string name="requirement_save">Save</string>
+    <!-- Button that closes a dialog asking to confirm removing something, such as a tracker
+         row, without removing it. -->
+    <string name="confirm_dialog_cancel">Cancel</string>
+    <!-- Asks before Back closes a page whose fields have changes that aren't saved, and the
+         dialog's button that discards them and closes the page. -->
+    <string name="discard_changes_title">Discard changes?</string>
+    <string name="discard_changes_message">Your changes haven\'t been saved.</string>
+    <!-- The same, on a requirement's page, where the checkbox and date save straight away and
+         only the notes wait for their Save button. -->
+    <string name="discard_changes_message_notes">Your changes to the notes haven\'t been saved.</string>
+    <!-- The same, on a rank's requirement, where who signed off on it waits for the notes' Save
+         button too. -->
+    <string name="discard_changes_message_sign_off_and_notes">Your changes to the sign-off and notes haven\'t been saved.</string>
+    <string name="discard_changes_confirm">Discard</string>
+    <!-- Buttons of the dialog for picking a requirement's completion date. -->
+    <string name="date_picker_ok">OK</string>
+    <string name="date_picker_cancel">Cancel</string>
+    <!-- Heading of a requirement's page, with its official number, such as "Requirement 4b". -->
+    <string name="requirement_detail_title">Requirement %1$s</string>
+    <!-- Shown in place of a requirement's page when the requirements the badge or rank uses
+         don't have it, such as after the badge or rank moves to another version. -->
+    <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge or rank uses.</string>
+    <!-- Button at the bottom of a badge's, a rank's or a requirement's page, which asks before
+         clearing what the scout recorded for it, and the dialog's button that clears it, which
+         Clear all's dialog on Data management uses too. -->
+    <string name="clear_progress">Clear progress</string>
+    <string name="clear_progress_confirm">Clear</string>
+    <!-- A clear or delete dialog's message, %1$s, such as "What you recorded for it will be
+         removed.", with the ranks that clearing or deleting means no longer count as earned, such
+         as Star once a badge it counts is cleared, and the ranks earned after it. %2$s lists them
+         in the strings_language, such as "Star and Life". -->
+    <string name="removal_message_unearns">%1$s %2$s will no longer count as earned.</string>
+    <!-- Asks before a badge's or rank's progress is cleared, with its name, such as "Clear
+         progress on Camping?" -->
+    <string name="badge_detail_clear_title">Clear progress on %1$s?</string>
+    <string name="badge_detail_clear_message">What you recorded for it will be removed.</string>
+    <!-- In place of the one above when the scout has entered the badge's counselor. -->
+    <string name="badge_detail_clear_message_with_counselor">What you recorded for it will be removed, including its counselor.</string>
+    <!-- Asks before a requirement's progress is cleared, with its official number, such as
+         "Clear progress on requirement 4b?" -->
+    <string name="requirement_clear_title">Clear progress on requirement %1$s?</string>
+    <string name="requirement_clear_message">What you recorded for it will be removed.</string>
+    <!-- For a requirement with sub-requirements, such as 4a and 4b under 4. -->
+    <string name="requirement_clear_message_with_children">What you recorded for it and the requirements under it will be removed.</string>
+    <!-- In place of the two above when the scout has changed the requirement's notes without
+         saving them. -->
+    <string name="requirement_clear_message_with_unsaved_notes">What you recorded for it will be removed, along with unsaved changes to its notes.</string>
+    <string name="requirement_clear_message_with_children_and_unsaved_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its notes.</string>
+    <!-- In place of the two above on a rank's requirement, which also has a field for who signed
+         off on it. -->
+    <string name="requirement_clear_message_with_unsaved_sign_off_and_notes">What you recorded for it will be removed, along with unsaved changes to its sign-off and notes.</string>
+    <string name="requirement_clear_message_with_children_and_unsaved_sign_off_and_notes">What you recorded for it and the requirements under it will be removed, along with unsaved changes to its sign-off and notes.</string>
+    <!-- How much of a requirement's tracker is filled in, when the scout adds any number of
+         rows to it and the catalog doesn't say how many it needs, such as "5 sessions". What a
+         row is called comes from the catalog. -->
+    <string name="tracker_count">%1$d %2$s</string>
+    <!-- How much of a requirement's tracker is filled in, when it has a fixed number of rows,
+         such as "8 of 12 weeks", or when the scout adds rows and its requirement asks for a
+         number of them, such as "6 of 10 animals". Then the scout can add more than it asks
+         for, so the first number can be the larger: "12 of 10 animals". What a row is called
+         comes from the catalog. -->
+    <string name="tracker_count_of">%1$d of %2$d %3$s</string>
+    <!-- A tracker column's numbers added up, against the amount its requirement asks for, such
+         as "4.5 of 6 hours" or "2 of 3 conservation hours". The first number is already
+         formatted, and what the amount is counted in comes from the catalog. -->
+    <string name="tracker_total">%1$s of %2$d %3$s</string>
+    <!-- Title of a row of a tracker, with what a row is called and its number, such as
+         "Week 3" or "Session 12". -->
+    <string name="tracker_row_title">%1$s %2$d</string>
+    <!-- Between the values of a tracker row on one line, such as "Sep 12, 2026 · Running · 30"
+         or, in the report, "Nights: 2 · Place: Bear Mountain". The quotes keep its spaces. -->
+    <string name="tracker_value_separator">" · "</string>
+    <!-- Button that adds a row to a tracker, with what a row is called, such as
+         "Add session". -->
+    <string name="tracker_add_row">Add %1$s</string>
+    <!-- Screen reader action on a tracker row, which opens it to fill in or change: "Double tap
+         to edit". -->
+    <string name="tracker_edit_row">edit</string>
+    <!-- Shown for a date in a tracker row that the scout hasn't given. -->
+    <string name="tracker_entry_no_date">No date</string>
+    <string name="tracker_entry_save">Save</string>
+    <string name="tracker_entry_delete">Delete</string>
+    <!-- Asks before a tracker row is deleted, with what a row is called, such as "Delete this
+         session?" -->
+    <string name="tracker_entry_delete_title">Delete this %1$s?</string>
+    <string name="tracker_entry_delete_message">What you entered in it will be removed.</string>
+    <!-- Shown in place of a tracker row's page when the requirements the badge or rank uses
+         don't have the tracker or the row, such as after the row was deleted. -->
+    <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
+    <string name="data_management_title">Data management</string>
+    <string name="data_management_profile_heading">Name and unit</string>
+    <string name="data_management_profile_description">Change your name or unit number.</string>
+    <string name="data_management_profile_edit">Edit</string>
+    <!-- For screen readers, the Edit button with what it edits. Starts with the button's
+         text, as WCAG 2.5.3 recommends for voice control users. -->
+    <string name="data_management_profile_edit_description">Edit name and unit</string>
+    <!-- Export saves the scout's name, unit number and all their progress to a file they
+         choose; import merges a file they exported with it, or replaces all of it with the
+         file's. -->
+    <string name="data_management_export_heading">Export data</string>
+    <string name="data_management_export_description">Save your name, unit number and all your progress to a file.</string>
+    <string name="data_management_export">Export</string>
+    <string name="data_management_import_heading">Import data</string>
+    <string name="data_management_import_description">Merge a file you exported with what\'s on this phone, or replace everything with it.</string>
+    <string name="data_management_import">Import</string>
+    <!-- Shown when tapping Import, if no app on the phone can open files. -->
+    <string name="data_management_no_file_opener">No app on this phone can open files.</string>
+    <!-- The name the file picker suggests for an export, without its ".json" extension, with
+         the date in YYYY-MM-DD form, such as "BlueCard export 2026-10-01". -->
+    <string name="export_file_name">BlueCard export %1$s</string>
+    <!-- Asks, once a file to import is checked, whether to merge it with the scout's data or
+         replace all of it. Replace all is red, as it removes what the scout recorded. -->
+    <string name="import_choose_title">Import this file?</string>
+    <string name="import_choose_message">Merge adds the file\'s badges and ranks to yours, and asks which to keep where the two differ. Replace all replaces your name, unit number and all your progress with the file\'s.</string>
+    <string name="import_merge">Merge</string>
+    <string name="import_replace_all">Replace all</string>
+    <!-- A full-screen dialog that asks which to keep, the phone's or the file's, for each
+         thing a merge finds different on the two: the name and unit number, and each badge
+         and rank started on both. -->
+    <string name="merge_title">Merge</string>
+    <!-- What screen readers say for the X that closes the merge's dialog without merging. -->
+    <string name="merge_close">Close</string>
+    <string name="merge_confirm">Merge</string>
+    <string name="merge_message">This phone and the file are different here. Choose which to keep.</string>
+    <string name="merge_profile_heading">Name and unit</string>
+    <!-- The two choices for each, with what each holds below it. -->
+    <string name="merge_this_phone">This phone</string>
+    <string name="merge_the_file">The file</string>
+    <!-- What screen readers say for each choice's label, with the heading it's under, such as
+         "Camping, this phone", since moving from control to control skips the heading. -->
+    <string name="merge_this_phone_description">%1$s, this phone</string>
+    <string name="merge_the_file_description">%1$s, the file</string>
+    <!-- Below a completed badge's or earned rank's choice, with the date, such as "Completed on
+         Apr 15, 2026". -->
+    <string name="merge_completed_on">Completed on %1$s</string>
+    <string name="merge_earned_on">Earned on %1$s</string>
+    <!-- Below a badge's or rank's choice, when the phone and the file have it on different
+         requirements, such as "Requirements effective Jan 1, 2026". -->
+    <string name="merge_requirements_version">Requirements effective %1$s</string>
+    <!-- Under the merge's title, with the ranks that would no longer count as earned if the
+         scout merged as chosen, such as when they choose the file's progress on a badge that
+         Star counts. %1$s lists them in the strings_language, such as "Star and Life". -->
+    <string name="merge_unearns">%1$s will no longer count as earned.</string>
+    <!-- Shown briefly after an export or import, or when one couldn't be done. -->
+    <string name="export_failed">Couldn\'t export. Try again.</string>
+    <string name="import_read_failed">Couldn\'t open the file. Try again.</string>
+    <string name="import_invalid">This file isn\'t a BlueCard export.</string>
+    <string name="import_newer_format">This file is from a newer version of BlueCard. Update the app to import it.</string>
+    <string name="import_failed">Couldn\'t import. Try again.</string>
+    <string name="import_done">Data imported.</string>
+    <string name="merge_done">Data merged.</string>
+    <!-- Clears the progress on every badge, including counselors, once the scout confirms.
+         Their name and unit number stay. -->
+    <string name="data_management_clear_heading">Clear all progress</string>
+    <string name="data_management_clear_description">Remove the progress on every badge and rank, including counselors. Your name and unit number stay.</string>
+    <string name="data_management_clear">Clear all</string>
+    <string name="clear_all_confirm_title">Clear all progress?</string>
+    <string name="clear_all_confirm_message">The progress on every badge and rank will be removed, including counselors. Your name and unit number stay.</string>
+    <!-- Shown briefly after clearing all progress. -->
+    <string name="clear_all_done">Progress cleared.</string>
+    <!-- Button on a badge's page, while it isn't complete, that asks for a date and marks the
+         badge completed on it without recording its requirements, as for a badge earned before
+         using BlueCard. -->
+    <string name="badge_detail_mark_completed">Mark completed</string>
+    <!-- Above Mark completed on a badge's page, while it isn't complete. -->
+    <string name="badge_detail_mark_completed_prompt">Already completed this badge?</string>
+    <!-- First line, above Mark completed or Mark earned, on the page of a badge with nothing
+         recorded for it, or of a rank with nothing counting toward it that isn't the next rank
+         to earn. -->
+    <string name="badge_detail_not_started">Not started</string>
+    <!-- The date a badge was completed on: the date it was marked completed on, or for one
+         complete from its requirements, the date they were completed on, such as "Completed on
+         Apr 15, 2025". -->
+    <string name="badge_detail_completed_on">Completed on %1$s</string>
+    <!-- Button under the date a badge was marked completed on, or a rank earned on, which
+         undoes the mark. -->
+    <string name="badge_detail_unmark_completed">Unmark</string>
+    <!-- Button on a rank's page, while it isn't earned, that asks for a date and marks the rank
+         earned on it without recording its requirements, as for a rank earned before using
+         BlueCard. Every rank below it then counts as earned too. -->
+    <string name="rank_detail_mark_earned">Mark earned</string>
+    <!-- Above Mark earned on a rank's page, while it isn't earned, with the rank's name, such as
+         "Already earned Tenderfoot?". -->
+    <string name="rank_detail_mark_earned_prompt">Already earned %1$s?</string>
+    <!-- First line on the page of a rank that isn't the next rank to earn, above Mark earned,
+         once it's started or something counts toward it, such as merit badges the scout has
+         completed. Only the next rank is "In progress", as on Ranks. -->
+    <string name="rank_detail_started">Started</string>
+    <!-- The date a rank was marked earned on, or for one earned from its requirements, the date
+         they were completed on, such as "Earned on Apr 15, 2025". -->
+    <string name="rank_detail_earned_on">Earned on %1$s</string>
+    <!-- On the page of a rank that counts as earned because the scout marked a rank above it
+         earned, with that rank's name, such as "Counted as earned with Life". An Add date
+         button under it gives this rank a date of its own. -->
+    <string name="rank_detail_earned_with">Counted as earned with %1$s</string>
+    <!-- On the page of a rank earned from its requirements, in place of "Earned on <date>" when
+         a requirement it needed was completed with no date. -->
+    <string name="rank_detail_earned">Earned</string>
+    <!-- First line, above Mark earned, on the page of a rank whose requirements are all
+         complete, with the name of the rank below it, which has to be earned first, such as
+         "Earned once Tenderfoot is earned". -->
+    <string name="rank_detail_waiting_on">Earned once %1$s is earned</string>
+    <!-- Buttons on a completed badge's page and an earned rank's, for its report: a PDF of
+         everything the scout recorded for it. Share opens Android's share sheet; Save asks
+         where to save it. -->
+    <string name="badge_detail_share_report">Share report</string>
+    <string name="badge_detail_save_report">Save report</string>
+    <!-- Shown when tapping Save report or Export, if no app on the phone can save files. -->
+    <string name="no_file_saver">No app on this phone can save files.</string>
+    <!-- Shown briefly when a badge's or rank's report couldn't be created or saved. -->
+    <string name="report_failed">Couldn\'t create the report. Try again.</string>
+    <!-- The report's file name, without its ".pdf" extension, with the badge's name, such as
+         "Camping merit badge report". Each of " * / : < > ? \ | becomes "_", since a file
+         name can't hold it. -->
+    <string name="report_file_name">%1$s merit badge report</string>
+    <!-- A rank's report's file name, as for a badge's, such as "Star rank report". -->
+    <string name="report_file_name_rank">%1$s rank report</string>
+    <!-- The rest of these are printed in the report, a PDF of everything the scout recorded
+         for a badge or rank, to give to their counselor or board of review, or keep. -->
+    <!-- Above the badge's name, at the top of the first page. -->
+    <string name="report_kind">Merit badge report</string>
+    <!-- Above the rank's name, at the top of the first page. -->
+    <string name="report_kind_rank">Rank report</string>
+    <string name="report_scout">Scout: %1$s</string>
+    <string name="report_unit">Unit: %1$s</string>
+    <!-- The effective date of the requirements the scout worked on, such as "Requirements
+         effective Jan 1, 2026". -->
+    <string name="report_requirements_version">Requirements effective %1$s</string>
+    <!-- The day the report was made, such as "Created on Sep 30, 2026". -->
+    <string name="report_created_on">Created on %1$s</string>
+    <!-- When the badge or a requirement was completed, such as "Completed on Apr 15, 2026". -->
+    <string name="report_completed_on">Completed on %1$s</string>
+    <!-- For a badge or requirement that's complete but has no completion date. -->
+    <string name="report_completed">Completed</string>
+    <string name="report_not_completed">Not completed</string>
+    <!-- When the rank was earned, such as "Earned on Apr 15, 2026", as on its page. -->
+    <string name="report_earned_on">Earned on %1$s</string>
+    <!-- For a rank that's earned but has no date it was earned on. -->
+    <string name="report_earned">Earned</string>
+    <!-- For a rank that counts as earned because the scout marked a higher rank earned, with
+         that rank's name, such as "Counted as earned with Life", as on its page. -->
+    <string name="report_earned_with">Counted as earned with %1$s</string>
+    <!-- Heading of the merit badge counselor's details. -->
+    <string name="report_counselor">Counselor</string>
+    <string name="report_counselor_name">Name</string>
+    <string name="report_counselor_phone">Phone</string>
+    <string name="report_counselor_email">Email</string>
+    <string name="report_requirements">Requirements</string>
+    <!-- A requirement's official number and our summary of it, such as "4b. Cook a meal." -->
+    <string name="report_requirement">%1$s. %2$s</string>
+    <!-- Label of who signed off on a rank's requirement, as on its page. -->
+    <string name="report_signed_off_by">Signed off by</string>
+    <!-- Label of the scout's notes about a requirement, as on its page. -->
+    <string name="report_comment">Notes</string>
+    <!-- A label and its value, such as "Phone: 555-0100" or, in a tracker row,
+         "Minutes: 30". -->
+    <string name="report_labeled_value">%1$s: %2$s</string>
+    <!-- At the foot of each page, such as "Page 1 of 3". -->
+    <string name="report_page">Page %1$d of %2$d</string>
+    <plurals name="home_completed">
+        <item quantity="one">%1$d completed</item>
+        <item quantity="other">%1$d completed</item>
+    </plurals>
+    <plurals name="home_in_progress">
+        <item quantity="one">%1$d in progress</item>
+        <item quantity="other">%1$d in progress</item>
+    </plurals>
+    <!-- What screen readers say for the trail of ranks on Home's rank card, such as "2 of 7 ranks
+         earned". The quantity is the number of ranks. -->
+    <plurals name="home_ranks_earned">
+        <item quantity="one">%1$d of %2$d rank earned</item>
+        <item quantity="other">%1$d of %2$d ranks earned</item>
+    </plurals>
+    <!-- The quantity is the number completed. -->
+    <plurals name="home_eagle_completed">
+        <item quantity="one">%1$d of %2$d completed</item>
+        <item quantity="other">%1$d of %2$d completed</item>
+    </plurals>
+    <!-- How many badges the Badges list shows: every badge, or the ones that match the search.
+         Screen readers announce it when it changes. -->
+    <plurals name="badges_count">
+        <item quantity="one">%1$d merit badge</item>
+        <item quantity="other">%1$d merit badges</item>
+    </plurals>
+    <!-- On the row of a requirement that isn't complete yet, how many of the sub-requirements it
+         needs are, such as "(1 of 3 complete)". The quantity is the number complete. -->
+    <plurals name="requirement_complete_count">
+        <item quantity="one">(%1$d of %2$d complete)</item>
+        <item quantity="other">(%1$d of %2$d complete)</item>
+    </plurals>
+    <!-- requirement_choice and requirement_complete_count on one line, such as
+         "Do 2 of 3 (1 of 2 complete)": 2 of its 3 sub-requirements are needed, and 1 of those 2
+         is complete. The quantity is the number complete. -->
+    <plurals name="requirement_choice_and_complete_count">
+        <item quantity="one">Do %1$d of %2$d (%3$d of %4$d complete)</item>
+        <item quantity="other">Do %1$d of %2$d (%3$d of %4$d complete)</item>
+    </plurals>
+    <!-- On the row of a requirement whose sub-requirements are complete enough, or whose
+         tracker's rows are all filled in, but whose own work isn't, under the count of them
+         (requirement_complete_count, requirement_choice_and_complete_count or
+         tracker_count_of): our summary of that work, such as
+         "Still to do: Share what you learned with your counselor." -->
+    <string name="requirement_still_to_do">Still to do: %1$s</string>
+    <!-- On the row of a requirement whose log has the number of rows or the amount it asks
+         for but that isn't checked off, under the count of them (tracker_count_of or
+         tracker_total), such as "30 of 30 days" or "6 of 6 hours": they don't complete it, as
+         the requirement may ask for more. Worded like requirement_still_to_do. -->
+    <string name="requirement_check_off_left">Still to do: Check it off once all of it is done.</string>
+    <!-- Under the summary on the page of a rank's requirement that asks for time in the rank
+         below, such as "Eligible from Jan 1, 2027, 4 months after earning First Class": the
+         date the scout becomes eligible to complete it, the months it asks for, and the rank
+         below. The quantity is the months. -->
+    <plurals name="requirement_time_in_rank_eligible_from">
+        <item quantity="one">Eligible from %1$s, %2$d month after earning %3$s</item>
+        <item quantity="other">Eligible from %1$s, %2$d months after earning %3$s</item>
+    </plurals>
+    <!-- The same while the rank below isn't earned, such as "Eligible 4 months after earning
+         First Class, which isn't earned yet". The quantity is the months. -->
+    <plurals name="requirement_time_in_rank_not_earned">
+        <item quantity="one">Eligible %1$d month after earning %2$s, which isn\'t earned yet</item>
+        <item quantity="other">Eligible %1$d months after earning %2$s, which isn\'t earned yet</item>
+    </plurals>
+    <!-- The same while the rank below is earned with no date, such as when it only counts as
+         earned with a rank above it: "Eligible 4 months after earning First Class, which has no
+         date it was earned on". The quantity is the months. -->
+    <plurals name="requirement_time_in_rank_no_date">
+        <item quantity="one">Eligible %1$d month after earning %2$s, which has no date it was earned on</item>
+        <item quantity="other">Eligible %1$d months after earning %2$s, which has no date it was earned on</item>
+    </plurals>
+    <!-- How many merit badges the scout has completed, against the number a rank's requirement
+         asks for, such as "4 of 6 merit badges". The quantity is the number it asks for. -->
+    <plurals name="requirement_merit_badges_count">
+        <item quantity="one">%1$d of %2$d merit badge</item>
+        <item quantity="other">%1$d of %2$d merit badges</item>
+    </plurals>
+    <!-- How many of the scout's merit badges count as Eagle-required, against the number a
+         rank's requirement asks for, such as "2 of 4 Eagle-required". The quantity is the
+         number it asks for. -->
+    <plurals name="requirement_eagle_required_count">
+        <item quantity="one">%1$d of %2$d Eagle-required</item>
+        <item quantity="other">%1$d of %2$d Eagle-required</item>
+    </plurals>
+    <!-- On the page of a rank's requirement that asks for merit badges, how many more the scout
+         needs, when any badge will do, such as "Needs 2 more merit badges". The quantity is the
+         number needed. -->
+    <plurals name="requirement_merit_badges_needed">
+        <item quantity="one">Needs %1$d more merit badge</item>
+        <item quantity="other">Needs %1$d more merit badges</item>
+    </plurals>
+    <!-- The same when every one of them must be Eagle-required, such as "Needs 2 more
+         Eagle-required merit badges". The quantity is the number needed. -->
+    <plurals name="requirement_eagle_required_badges_needed">
+        <item quantity="one">Needs %1$d more Eagle-required merit badge</item>
+        <item quantity="other">Needs %1$d more Eagle-required merit badges</item>
+    </plurals>
+    <!-- The same when only some of them must be Eagle-required, such as "Needs 3 more merit
+         badges, 1 of them Eagle-required": the number needed, then how many of them must be
+         Eagle-required, which is always fewer. The quantity is the number needed. -->
+    <plurals name="requirement_merit_badges_needed_some_eagle_required">
+        <item quantity="one">Needs %1$d more merit badge, %2$d of them Eagle-required</item>
+        <item quantity="other">Needs %1$d more merit badges, %2$d of them Eagle-required</item>
+    </plurals>
+    <!-- Heading of the list of merit badges the scout has completed, on the page of a rank's
+         requirement that asks for merit badges. -->
+    <string name="requirement_merit_badges_title">Merit badges</string>
+    <!-- Under a badge's name in that list: the date the scout completed it on, such as
+         "Completed on Apr 15, 2026". -->
+    <string name="requirement_merit_badge_completed_on">Completed on %1$s</string>
+    <!-- The same for a badge completed with no date. -->
+    <string name="requirement_merit_badge_completed">Completed</string>
+    <!-- At the end of a badge's row in that list, when it counts as one of the Eagle-required
+         badges the requirement asks for. Of the badges in an Eagle "one of" group, only one
+         counts. -->
+    <string name="requirement_merit_badge_eagle_required">Eagle-required</string>
+</resources>

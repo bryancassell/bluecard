@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "BlueCard"
-include(":app")
+include(":app", ":shared", ":testing")

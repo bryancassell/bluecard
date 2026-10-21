@@ -214,7 +214,9 @@ class MainActivityTest {
     private lateinit var scenario: ActivityScenario<MainActivity>
 
     // BlueCardApplication has started Koin with the production definitions. Nothing has been
-    // built from them yet, so everything the activity creates gets these instead.
+    // built from them yet, so everything the activity creates gets these instead. Keep the
+    // repositories fake: :app's local tests can't open the real database, since only :shared's
+    // load the bundled SQLite's library for the computer they run on (shared/build.gradle.kts).
     @Before
     fun replaceDependencies() {
         loadKoinModules(
