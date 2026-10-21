@@ -108,7 +108,8 @@ class FileDamagedProgressRepository(
             noticePending.value = true
             warningLog.warn(TAG, message, error)
         }
-        // If it can't be deleted, the next launch sets aside the new database too.
+        // If it can't be deleted, the new database Room makes is newer than it, so the next
+        // launch leaves that alone (isDamageRecorded).
         fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
     }
 
@@ -118,19 +119,40 @@ class FileDamagedProgressRepository(
      * such as on a full disk, the next launch has only its check to find the damage. Damage the
      * check misses then crashes the app at each launch until there's room for the record, which
      * is an empty file, and the launch after that sets the database aside.
+     *
+     * The record is written even if it's there, so it's newer than the database
+     * ([isDamageRecorded]) even when an older one couldn't be deleted.
      */
     @Synchronized
     fun recordDamage() {
         try {
             fileSystem.createDirectories(folder)
-            createIfMissing(damageFile)
+            fileSystem.write(damageFile) {}
         } catch (e: IOException) {
             warningLog.warn(TAG, "Couldn't record a damaged database", e)
         }
     }
 
-    /** Whether damage was recorded ([recordDamage]) and the database not yet set aside. */
-    fun isDamageRecorded() = fileSystem.exists(damageFile)
+    /**
+     * Whether damage was recorded ([recordDamage]) and [database] not yet set aside. A record
+     * older than [database] was left by a set-aside that couldn't delete it, such as when its
+     * folder can't be written, since Room made [database] after it. Honoring it would set aside
+     * the scout's new progress at every launch (#377), so it's deleted instead.
+     *
+     * Every statement fails once damage is found, but one already running on another connection
+     * could still write the database after the record, so a real record looks older too. Then
+     * the next launch has only its check, and damage the check misses crashes the app once more,
+     * which records it again.
+     */
+    @Synchronized
+    fun isDamageRecorded(database: Path): Boolean {
+        val record = fileSystem.metadataOrNull(damageFile) ?: return false
+        val recordedAt = record.lastModifiedAtMillis ?: return true
+        val writtenAt = fileSystem.metadataOrNull(database)?.lastModifiedAtMillis ?: return true
+        if (recordedAt >= writtenAt) return true
+        fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
+        return false
+    }
 
     /**
      * Creates [file] with nothing in it. One that's there is left alone, since opening it to

@@ -34,6 +34,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val database = context.getDatabasePath(BlueCardDatabase.NAME)
     private val folder = File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME)
+    private val damageFile = File(folder, "damage-found")
     private val clock = FakeClock(Instant.parse("2026-10-02T09:06:07.531Z"))
     private val warningLog = FakeWarningLog()
 
@@ -117,7 +118,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
 
         repository.setAside(database.toOkioPath())
 
-        assertFalse(newRepository().isDamageRecorded())
+        assertFalse(newRepository().isDamageRecorded(database.toOkioPath()))
     }
 
     @Test
@@ -133,7 +134,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         val copy = copies().single()
         assertEquals(listOf("bluecard.db", "bluecard.db-wal"), copy.list()!!.sorted())
         assertEquals("damaged", File(copy, "bluecard.db").readText())
-        assertFalse(repository.isDamageRecorded())
+        assertFalse(repository.isDamageRecorded(database.toOkioPath()))
         // There was nothing new to tell the scout.
         assertFalse(newRepository().observeNoticePending().first())
     }
@@ -174,13 +175,66 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
             folder.setWritable(true)
         }
 
-        // The record stays, so the warning is the only sign of why the next launch sets the
-        // database aside again.
-        assertTrue(repository.isDamageRecorded())
+        // The record stays, with the warning saying why. The database Room makes next is newer
+        // than it, so isn't set aside for it.
+        assertTrue(repository.isDamageRecorded(database.toOkioPath()))
         val warning = warningLog.warnings.single()
         assertEquals("DamagedProgress", warning.tag)
         assertEquals("Couldn't delete ${File(folder, "damage-found")}", warning.message)
         assertTrue("${warning.error}", warning.error is IOException)
+    }
+
+    /**
+     * Dates the record a minute before the database's last save, as when a set-aside couldn't
+     * delete the record and Room made a new database at a later launch.
+     */
+    private fun recordOlderThanTheDatabase() {
+        repository.recordDamage()
+        writeDatabase("" to "new progress")
+        val now = System.currentTimeMillis()
+        damageFile.setLastModified(now - 120_000)
+        database.setLastModified(now - 60_000)
+    }
+
+    @Test
+    fun isDamageRecorded_whenTheRecordIsOlderThanTheDatabase_isFalse_andClearsIt() {
+        recordOlderThanTheDatabase()
+
+        assertFalse(repository.isDamageRecorded(database.toOkioPath()))
+        assertFalse(damageFile.exists())
+        assertEquals(emptyList<FakeWarningLog.Warning>(), warningLog.warnings)
+    }
+
+    @Test
+    fun isDamageRecorded_whenAnOlderRecordCantBeCleared_isFalse_andWarns() {
+        recordOlderThanTheDatabase()
+        // Stops the record being deleted, as long as the tests don't run as root.
+        folder.setWritable(false)
+        val recorded = try {
+            repository.isDamageRecorded(database.toOkioPath())
+        } finally {
+            folder.setWritable(true)
+        }
+
+        assertFalse(recorded)
+        assertTrue(damageFile.exists())
+        val warning = warningLog.warnings.single()
+        assertEquals("DamagedProgress", warning.tag)
+        assertEquals("Couldn't delete $damageFile", warning.message)
+        assertTrue("${warning.error}", warning.error is IOException)
+    }
+
+    @Test
+    fun recordDamage_whenAnOlderRecordCantBeCleared_recordsItForTheDatabaseInUse() {
+        recordOlderThanTheDatabase()
+        folder.setWritable(false)
+        try {
+            repository.recordDamage()
+        } finally {
+            folder.setWritable(true)
+        }
+
+        assertTrue(repository.isDamageRecorded(database.toOkioPath()))
     }
 
     @Test
@@ -190,7 +244,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         repository.recordDamage()
 
         val reopened = newRepository()
-        assertTrue(reopened.isDamageRecorded())
+        assertTrue(reopened.isDamageRecorded(database.toOkioPath()))
         assertFalse(reopened.observeNoticePending().first())
         // Only set aside when the app next opens the database.
         assertTrue(database.exists())
@@ -206,7 +260,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
             noBackup.setWritable(true)
         }
 
-        assertFalse(repository.isDamageRecorded())
+        assertFalse(repository.isDamageRecorded(database.toOkioPath()))
         val warning = warningLog.warnings.single()
         assertEquals("DamagedProgress", warning.tag)
         assertEquals("Couldn't record a damaged database", warning.message)

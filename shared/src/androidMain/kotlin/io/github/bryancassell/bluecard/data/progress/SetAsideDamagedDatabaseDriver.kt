@@ -53,7 +53,7 @@ class SetAsideDamagedDatabaseDriver(
     private fun setAsideIfDamaged(fileName: String) {
         if (checked) return
         val database = fileName.toPath()
-        if (damagedProgress.isDamageRecorded() ||
+        if (damagedProgress.isDamageRecorded(database) ||
             (FileSystem.SYSTEM.exists(database) && isDamaged(fileName))
         ) {
             damagedProgress.setAside(database)

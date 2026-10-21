@@ -25,6 +25,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -115,6 +116,7 @@ class SetAsideDamagedDatabaseDriverTest {
         // after it's checked would.
         val driver = newDriver()
         val undamaged = saveProgressAndDamageIt(open(driver))
+        val damagedAt = file.lastModified()
         val database = open(driver)
         val repository =
             RoomProgressRepository(
@@ -137,19 +139,54 @@ class SetAsideDamagedDatabaseDriverTest {
             "Expected the same error, got $next",
             next is SQLiteException && next.message == error?.message
         )
-        assertTrue(damagedProgress.isDamageRecorded())
+        assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
         assertEquals(emptyList<File>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
 
-        // The next launch, with damage the check doesn't find.
+        // The next launch, with damage the check doesn't find. Nothing saves into the database
+        // once the damage is found, so putting the file back keeps its time from before that.
         databases.last().close()
         file.writeBytes(undamaged)
+        file.setLastModified(damagedAt)
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertArrayEquals(undamaged, setAside().readBytes())
         assertTrue(damagedProgress.observeNoticePending().first())
-        assertFalse(damagedProgress.isDamageRecorded())
+        assertFalse(damagedProgress.isDamageRecorded(file.toOkioPath()))
+    }
+
+    @Test
+    fun recordedDamageThatCantBeCleared_deletesOnlyTheDatabaseItWasFoundIn() = runTest {
+        open().readProgress()
+        databases.single().close()
+        damagedProgress.recordDamage()
+        // A minute apart, as the database's last save and the damage found in it could be, so
+        // the new database Room makes is newer than the record.
+        val now = System.currentTimeMillis()
+        file.setLastModified(now - 120_000)
+        File(folder, "damage-found").setLastModified(now - 60_000)
+        // Stops the set-aside and the record's deletion, as long as the tests don't run as root.
+        folder.setWritable(false)
+        val progress = try {
+            // The launch after the damage was found, which can't set it aside, so deletes it.
+            val first = open()
+            assertEquals(emptyList<BadgeProgressDetails>(), first.readProgress())
+            assertTrue(damagedProgress.observeNoticePending().first())
+            damagedProgress.dismissNotice()
+            first.progressDao().insertBadge(
+                BadgeProgress("camping", VERSION, LocalDate(2026, 3, 1))
+            )
+            first.close()
+
+            // The launch after that, with the record still there.
+            open().readProgress()
+        } finally {
+            folder.setWritable(true)
+        }
+
+        assertEquals(listOf("camping"), progress.map { it.badge.badgeId })
+        assertFalse(damagedProgress.observeNoticePending().first())
     }
 
     /**
