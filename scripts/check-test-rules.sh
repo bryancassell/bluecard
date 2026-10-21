@@ -4,6 +4,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Each module's main code, and the folders of tests: local and instrumented ones, and the
+# fakes and helpers that tests in more than one module share (:testing).
+main_dirs=(app/src/main shared/src/androidMain)
+local_test_dirs=(app/src/test shared/src/androidHostTest)
+test_dirs=("${local_test_dirs[@]}" app/src/androidTest testing/src)
+
 failed=0
 fail() {
     echo "error: $*" >&2
@@ -11,7 +17,7 @@ fail() {
 }
 
 # Rule: never skip tests to get them passing.
-for file in $(grep -rlE --include='*.kt' '@([A-Za-z0-9_]+\.)*Ignore\b' app/src/test app/src/androidTest 2>/dev/null || true); do
+for file in $(grep -rlE --include='*.kt' '@([A-Za-z0-9_]+\.)*Ignore\b' "${test_dirs[@]}" 2>/dev/null || true); do
     fail "$file uses @Ignore. Fix the code, or explain why the expectation is wrong, instead of skipping the test."
 done
 
@@ -23,10 +29,10 @@ while IFS= read -r source; do
     if ! grep -qE '^[[:space:]]*(@[^[:space:]]+[[:space:]]+)*([a-z]+[[:space:]]+)*(class|object)[[:space:]]' "$source"; then
         continue
     fi
-    if [[ -z $(find app/src/test -name "${name}Test.kt") ]]; then
-        fail "$source has no unit test. Add app/src/test/.../${name}Test.kt."
+    if [[ -z $(find "${local_test_dirs[@]}" -name "${name}Test.kt") ]]; then
+        fail "$source has no unit test. Add ${name}Test.kt to its module's local tests."
     fi
-done < <(find app/src/main \( -name '*ViewModel.kt' -o -name '*UseCase.kt' \
+done < <(find "${main_dirs[@]}" \( -name '*ViewModel.kt' -o -name '*UseCase.kt' \
     -o -name '*Repository.kt' -o -name '*Mapper.kt' \))
 
 # Rule: prefer fakes over mocks.

@@ -117,7 +117,7 @@ part of the app.
 |---|---|
 | Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
 | The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge and rank **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
-| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `app/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
+| An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `shared/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
 | The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
@@ -145,10 +145,15 @@ marks "strongly recommended":
   happens. Small calculations that several screens share, such as a badge's
   status, are plain functions next to the data they read (see
   [Completion](#completion)) rather than use cases.
-- **One Gradle module (`:app`).** Android's
-  [modularization guide](https://developer.android.com/topic/modularization)
-  says modularizing pays off mainly for reuse, strict visibility or large
-  codebases, none of which apply yet. Code is organized by package instead (see
+- **Three Gradle modules.** `:app` is the Android app: `MainActivity`,
+  `BlueCardApplication`, the manifest, launcher icon, window theme and backup
+  rules. `:shared`, a Kotlin Multiplatform library, has the rest, to share with
+  iOS ([#337](https://github.com/bryancassell/bluecard/issues/337)); with AGP
+  9, the Kotlin Multiplatform plugin
+  [can't be in the app's module](https://kotlinlang.org/docs/multiplatform/multiplatform-project-agp-9-migration.html).
+  `:testing` has the fakes and helpers that both modules' tests use, as the
+  [modularization guide](https://developer.android.com/topic/modularization/patterns#test-modules)
+  suggests. Within each, code is organized by package (see
   [Package layout](#package-layout)).
 
 ```
@@ -526,6 +531,11 @@ fails the build for a missing dependency, as Hilt did.
 
 ## Package layout
 
+`:app` and `:shared` use the same packages. `:shared`'s code is all in
+`androidMain` until [#344](https://github.com/bryancassell/bluecard/issues/344)
+and [#345](https://github.com/bryancassell/bluecard/issues/345) move it to
+common code.
+
 ```
 io.github.bryancassell.bluecard
 ├── ui/                 One package per screen: screen composable, ViewModel, UI state
@@ -890,7 +900,7 @@ SQLite the app bundles (see `testing/BundledSqlitePerSandbox`).
   check only looks that semantics can't tell apart, such as a requirement
   row's number box in each state, on a fixed screen (`w360dp-h640dp-xhdpi`).
   Every test run compares them against reference images committed in
-  `app/src/test/screenshots/`
+  `shared/src/androidHostTest/screenshots/`
   ([`docs/toolchain.md`](docs/toolchain.md#tests-local-vs-instrumented)).
 
 ### Catalog, report and backup tests
@@ -923,7 +933,7 @@ other emulator options didn't work, and why the emulator isn't cached.
   checked by hand
   ([`docs/toolchain.md`](docs/toolchain.md#checking-a-release-build)). Code
   reached only through reflection needs a keep rule in
-  `app/proguard-rules.pro`.
+  `app/proguard-rules.pro`, `:shared`'s included.
 - **Gradle leaves the release build unsigned.** Publishing signs it with
   `apksigner`, so the release key's password never reaches a Gradle build,
   which runs third-party plugins and whatever branch is checked out, and
@@ -969,7 +979,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | Decision | Choice | Why |
 |---|---|---|
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
-| [Modules](#architecture-approach) | Single `:app` module | The modularization guide's reasons don't apply at this size |
+| [Modules](#architecture-approach) | `:app` for the Android app, `:shared` for code to share with iOS, `:testing` for test code both use | AGP 9's Kotlin Multiplatform plugin can't be in the app's module |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page; stable since 1.0.0 |
 | [Focus between pages](#navigation) | A focus target around the pages takes the focus a page lets go of | Otherwise Compose gives it to a page's first item, which opened the keyboard on Badges |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |

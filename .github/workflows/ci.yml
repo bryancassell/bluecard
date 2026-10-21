@@ -40,14 +40,14 @@ jobs:
       # Compile, unit tests, coverage, test rules, lint and formatting.
       - run: ./gradlew build
 
-      # Room's plugin rewrites app/schemas from the compiled entities, before
+      # Room's plugin rewrites shared/schemas from the compiled entities, before
       # MigrationTest reads them. A change there means an entity or Room's
       # identity hash changed without a new database version, so installed
       # apps' databases wouldn't open.
-      - name: Check that the build left app/schemas unchanged
+      - name: Check that the build left shared/schemas unchanged
         run: |
-          git status --porcelain -- app/schemas
-          test -z "$(git status --porcelain -- app/schemas)"
+          git status --porcelain -- shared/schemas
+          test -z "$(git status --porcelain -- shared/schemas)"
 
       # On failure, keep the HTML reports (lint, tests), raw test results and
       # failed screenshot tests' images so they can be downloaded from the run's
@@ -57,9 +57,9 @@ jobs:
         with:
           name: reports
           path: |
-            app/build/reports/
-            app/build/test-results/
-            app/build/outputs/roborazzi/
+            */build/reports/
+            */build/test-results/
+            shared/build/outputs/roborazzi/
 
   instrumented-tests:
     name: Instrumented tests

@@ -1,0 +1,137 @@
+package io.github.bryancassell.bluecard.ui.badge
+
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.takahirom.roborazzi.captureRoboImage
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.testing.setContentWithText
+import io.github.bryancassell.bluecard.ui.LocalUnsavedChanges
+import io.github.bryancassell.bluecard.ui.UnsavedChanges
+import io.github.bryancassell.bluecard.ui.data.DataManagementScreen
+import io.github.bryancassell.bluecard.ui.data.DataManagementUiState
+import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
+import kotlinx.datetime.LocalDate
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+/**
+ * How the buttons that open a dialog to remove what the scout recorded look: red, like the
+ * dialog's confirm button, which semantics can't show. Checked against reference images in
+ * `src/androidHostTest/screenshots`.
+ */
+@RunWith(AndroidJUnit4::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+// The same fixed screen and SDK as RequirementRowScreenshotTest, for the same reasons.
+@Config(qualifiers = "w360dp-h640dp-xhdpi", sdk = [36])
+class RemovalButtonScreenshotTest {
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private val today = LocalDate(2026, 5, 20)
+
+    @Test
+    fun clearProgressIsRed() {
+        composeTestRule.setContentWithText {
+            BlueCardTheme {
+                CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
+                    RequirementDetailScreen(
+                        uiState = RequirementDetailUiState.Ready(
+                            advancementName = "Camping",
+                            requirement = RequirementItem(
+                                "1",
+                                "Plan a campout.",
+                                null,
+                                completed = true,
+                                markedByHand = true
+                            ),
+                            completedDate = today,
+                            children = emptyList(),
+                            tracker = null,
+                            textChanged = false,
+                            canClear = true
+                        ),
+                        signedOffBy = TextFieldState(),
+                        comment = TextFieldState(),
+                        onOpenRequirement = {},
+                        onOpenTrackerEntry = { _, _ -> },
+                        onOpenBadge = {},
+                        onCompletedChange = {},
+                        onCompletedDateChange = {},
+                        today = { today },
+                        onSave = {},
+                        onClear = {},
+                        onDiscard = {},
+                        onSaveFailureShown = {}
+                    )
+                }
+            }
+        }
+        composeTestRule.onNodeWithText("Clear progress").performScrollTo().captureRoboImage()
+    }
+
+    @Test
+    fun deleteIsRed() {
+        val columns = listOf(TrackerColumn("activity", "Activity", TrackerColumnType.TEXT))
+        composeTestRule.setContentWithText {
+            BlueCardTheme {
+                CompositionLocalProvider(LocalUnsavedChanges provides UnsavedChanges()) {
+                    TrackerEntryScreen(
+                        uiState = TrackerEntryUiState.Ready(
+                            advancementName = "Personal Fitness",
+                            requirementNumber = "7a",
+                            rowTitle = "Session",
+                            rowNumber = 2,
+                            rowLabel = "session",
+                            columns = columns,
+                            dates = emptyMap(),
+                            canSave = false,
+                            changed = false,
+                            hasSavedEntry = true,
+                            canDelete = true
+                        ),
+                        fields = columns.associate { it.id to TextFieldState("Ran 2 miles") },
+                        onDateChange = { _, _ -> },
+                        today = { today },
+                        onSave = {},
+                        onDelete = {},
+                        onClose = {},
+                        onSaveFailureShown = {}
+                    )
+                }
+            }
+        }
+        composeTestRule.onNodeWithText("Delete").performScrollTo().captureRoboImage()
+    }
+
+    @Test
+    fun clearAllIsRed() {
+        composeTestRule.setContentWithText {
+            BlueCardTheme {
+                DataManagementScreen(
+                    uiState = DataManagementUiState(canClear = true),
+                    today = { today },
+                    onEditProfile = {},
+                    onExport = {},
+                    onImport = {},
+                    onMerge = {},
+                    onReplace = {},
+                    onChooseProfile = {},
+                    onChooseProgress = { _, _ -> },
+                    onConfirmMerge = {},
+                    onCancelImport = {},
+                    onClearAll = {},
+                    onMessageShown = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Clear all").performScrollTo().captureRoboImage()
+    }
+}

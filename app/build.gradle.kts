@@ -5,11 +5,7 @@ import com.android.build.api.variant.ScopedArtifacts
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.koin.compiler)
-    alias(libs.plugins.room3)
-    alias(libs.plugins.roborazzi)
     jacoco
 }
 
@@ -66,7 +62,9 @@ android {
             it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
         }
         // The emulator that runs instrumented tests in CI, on the target SDK. Gradle downloads its
-        // system image and starts and stops it: ./gradlew pixel6Api37DebugAndroidTest.
+        // system image and starts and stops it: ./gradlew pixel6Api37DebugAndroidTest. Device
+        // tests of :shared's classes, such as PdfDocumentWriterTest, are in this module too, so
+        // CI starts one emulator rather than one for each module.
         managedDevices {
             localDevices {
                 create("pixel6Api37") {
@@ -86,16 +84,6 @@ android {
         }
     }
 
-    // MigrationTestHelper reads each database version's schema from assets. The Room plugin
-    // adds the schemas to instrumented tests' assets only, and migration tests run locally,
-    // where Robolectric reads the debug build's assets. So debug builds carry the schemas too;
-    // release builds don't. Nothing makes merging assets wait for Room to copy a new database
-    // version's schema here, so the first test run after a version bump can miss it, and
-    // MigrationTest fails until it runs again (#96). Room's schema copy declares no outputs, so
-    // Gradle can't order other tasks after it, and working around that needed more build code
-    // than a rerun is worth.
-    sourceSets.getByName("debug").assets.directories.add("$projectDir/schemas")
-
     testCoverage {
         jacocoVersion = libs.versions.jacoco.get()
     }
@@ -110,64 +98,80 @@ android {
     }
 }
 
-// Room writes each database version's schema here, for reviewing schema changes and
-// testing future migrations. Commit the generated files.
-room3 {
-    schemaDirectory("$projectDir/schemas")
-}
-
 jacoco {
     toolVersion = libs.versions.jacoco.get()
 }
 
-// Screenshot tests' reference images, committed. Every test run checks against them
-// (roborazzi.test.verify in gradle.properties); `./gradlew recordRoborazziDebug` records
-// them again after an intended change.
-roborazzi {
-    outputDir.set(file("src/test/screenshots"))
+// Coverage gate for the testing rules in CLAUDE.md, measured from local tests. It checks this
+// module's classes and :shared's together, counting what both modules' local tests run, since
+// MainActivityTest here is the only test that reaches some of :shared's, such as
+// BlueCardNavDisplay. :shared hands over its classes and coverage data through the
+// configurations below (shared/build.gradle.kts). Runs as part of `check`, so `./gradlew build`
+// enforces it.
+val coverageAttribute = Attribute.of("io.github.bryancassell.bluecard.coverage", String::class.java)
+val sharedCoverage = configurations.dependencyScope("sharedCoverage")
+fun resolvableCoverage(name: String, kind: String) = configurations.resolvable(name) {
+    extendsFrom(sharedCoverage.get())
+    attributes {
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.VERIFICATION))
+        attribute(coverageAttribute, kind)
+    }
 }
+val sharedCoverageClasses = resolvableCoverage("sharedCoverageClasses", "classes")
+val sharedCoverageData = resolvableCoverage("sharedCoverageData", "data")
 
-// Coverage gate for the testing rules in CLAUDE.md, measured from local tests.
-// Runs as part of `check`, so `./gradlew build` enforces it.
 val coverageClassJars = objects.listProperty<RegularFile>()
 val coverageClassDirs = objects.listProperty<Directory>()
-val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>(
-    "jacocoDebugCoverageVerification"
-) {
-    group = "verification"
-    description = "Fails if any class has less than 80% line coverage from local tests."
+
+// Generated Android, Room and Kotlin classes, @Preview functions (kept in *Preview.kt files),
+// which only run in Android Studio, and code that only runs on a device.
+val coverageExclusions = listOf(
+    "**/R.class",
+    "**/R\$*.class",
+    "**/BuildConfig.*",
+    "**/Manifest*.*",
+    "**/*PreviewKt*.class",
+    // Room: generated database and DAO implementations.
+    "**/*_Impl.class",
+    "**/*_Impl\$*.class",
+    // Kotlin: copies of an interface's default arguments for Java code compiled against
+    // older Kotlin. Kotlin callers use the interface's own static methods instead.
+    "**/*\$DefaultImpls.class",
+    // Writes PDFs with Android's PdfDocument, which only runs on a device. Its instrumented
+    // test (androidTest/.../PdfDocumentWriterTest) checks it instead.
+    "**/data/report/PdfDocumentWriter.class"
+)
+
+// The verification and its report read the same classes and coverage data.
+fun JacocoReportBase.countLocalTests() {
     dependsOn("testDebugUnitTest")
-    // Generated Android, Room and Kotlin classes, @Preview functions (kept in
-    // *Preview.kt files), which only run in Android Studio, and code that only runs on a
-    // device.
-    val exclusions = listOf(
-        "**/R.class",
-        "**/R\$*.class",
-        "**/BuildConfig.*",
-        "**/Manifest*.*",
-        "**/*PreviewKt*.class",
-        // Room: generated database and DAO implementations.
-        "**/*_Impl.class",
-        "**/*_Impl\$*.class",
-        // Kotlin: copies of an interface's default arguments for Java code compiled against
-        // older Kotlin. Kotlin callers use the interface's own static methods instead.
-        "**/*\$DefaultImpls.class",
-        // Writes PDFs with Android's PdfDocument, which only runs on a device. Its instrumented
-        // test (androidTest/.../PdfDocumentWriterTest) checks it instead.
-        "**/data/report/PdfDocumentWriter.class"
-    )
+    // Locals, so the lambdas below don't hold the build script, which the configuration cache
+    // can't store.
     val fileTrees = objects
+    val exclusions = coverageExclusions
     classDirectories.setFrom(
         coverageClassJars,
         coverageClassDirs.map { dirs ->
+            dirs.map { dir -> fileTrees.fileTree().setDir(dir).exclude(exclusions) }
+        },
+        sharedCoverageClasses.flatMap { it.incoming.files.elements }.map { dirs ->
             dirs.map { dir -> fileTrees.fileTree().setDir(dir).exclude(exclusions) }
         }
     )
     executionData.setFrom(
         layout.buildDirectory.file(
             "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
-        )
+        ),
+        sharedCoverageData
     )
+}
+
+val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>(
+    "jacocoDebugCoverageVerification"
+) {
+    group = "verification"
+    description = "Fails if any class has less than 80% line coverage from local tests."
+    countLocalTests()
     violationRules {
         // Every class needs at least 80% line coverage.
         rule {
@@ -178,6 +182,14 @@ val jacocoDebugCoverageVerification = tasks.register<JacocoCoverageVerification>
             }
         }
     }
+}
+
+// What the gate checks, as a report that shows which lines no test runs.
+val jacocoDebugCoverageReport = tasks.register<JacocoReport>("jacocoDebugCoverageReport") {
+    group = "verification"
+    description =
+        "Writes an HTML report of the line coverage jacocoDebugCoverageVerification checks."
+    countLocalTests()
 }
 
 // Testing rules from CLAUDE.md that a text search can catch.
@@ -198,60 +210,6 @@ tasks.withType<Test>().configureEach {
     }
 }
 
-// Local tests get BundledSQLiteDriver's Android library, whose loader calls
-// System.loadLibrary("sqliteJni") and finds nothing on a desktop JVM. Since androidx.sqlite 2.6.2
-// it loads <androidx.sqlite.driver.bundled.path>/<...name> instead when both are set, so the
-// tests get the host's library from sqlite-bundled-jvm, which registers the same JNI functions.
-// testing/BundledSqlitePerSandbox sets the path.
-val bundledSqliteJvm = configurations.create("bundledSqliteJvm") {
-    isCanBeConsumed = false
-    isTransitive = false
-    attributes {
-        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
-        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
-    }
-}
-// The folder and file name in sqlite-bundled-jvm's natives/ for macOS (developers) or Linux (CI).
-val bundledSqliteHost = run {
-    val arch = if (System.getProperty("os.arch") in setOf("aarch64", "arm64")) "arm64" else "x64"
-    if ("mac" in System.getProperty("os.name").lowercase()) {
-        "osx_$arch" to "libsqliteJni.dylib"
-    } else {
-        "linux_$arch" to "libsqliteJni.so"
-    }
-}
-val extractBundledSqlite = tasks.register<Sync>("extractBundledSqlite") {
-    // Resolved when the task runs, not while Gradle plans the build.
-    from(zipTree(bundledSqliteJvm.elements.map { it.single().asFile })) {
-        include("natives/${bundledSqliteHost.first}/*")
-        eachFile { path = name }
-    }
-    includeEmptyDirs = false
-    into(layout.buildDirectory.dir("bundledSqlite"))
-}
-
-// The library is an input of the tests by its path in the build folder, not the absolute path a
-// system property would give, so the build cache can reuse results from another checkout.
-abstract class BundledSqliteArguments : CommandLineArgumentProvider {
-    @get:InputDirectory
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val folder: DirectoryProperty
-
-    @get:Input
-    abstract val name: Property<String>
-
-    override fun asArguments() = listOf(
-        "-Dbluecard.bundledSqlite.dir=${folder.get().asFile.absolutePath}",
-        "-Dandroidx.sqlite.driver.bundled.name=${name.get()}"
-    )
-}
-tasks.withType<Test>().configureEach {
-    jvmArgumentProviders += objects.newInstance<BundledSqliteArguments>().apply {
-        folder.set(layout.dir(extractBundledSqlite.map { it.destinationDir }))
-        name.set(bundledSqliteHost.second)
-    }
-}
-
 androidComponents {
     onVariants(selector().withName("debug")) { variant ->
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
@@ -261,56 +219,31 @@ androidComponents {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
+    implementation(project(":shared"))
+    sharedCoverage(project(":shared"))
     implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlinx.datetime)
     implementation(libs.koin.android)
-    implementation(libs.koin.compose.viewmodel)
-    implementation(libs.koin.annotations)
-    implementation(libs.androidx.room3.runtime)
-    // Strictly, so a Room update that needs a newer androidx.sqlite fails to resolve until
-    // `sqlite` is raised with it: local tests load sqlite-bundled-jvm's library at that version.
-    implementation(libs.androidx.sqlite.bundled) {
-        version { strictly(libs.versions.sqlite.get()) }
-    }
-    ksp(libs.androidx.room3.compiler)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.bignum)
-    implementation(libs.okio)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
 
+    testImplementation(project(":testing"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
-    // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
-    testImplementation(libs.androidx.lifecycle.viewmodel.testing)
-    // MigrationTestHelper, which checks each database migration against the committed schemas.
-    testImplementation(libs.androidx.room3.testing)
-    bundledSqliteJvm(libs.androidx.sqlite.bundled.jvm)
+    testImplementation(libs.kotlinx.datetime)
+    // BackupRulesTest finds the profile's DataStore file as the app names it.
+    testImplementation(libs.androidx.datastore.preferences)
     testImplementation(libs.androidx.junit)
     // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.
     testImplementation(libs.androidx.espresso.core)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
-    // Google's Accessibility Test Framework checks (testing/AccessibilityChecks.kt).
-    testImplementation(libs.accessibility.test.framework)
-    testImplementation(libs.roborazzi)
-    testImplementation(libs.roborazzi.compose)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.okio)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 

@@ -1,7 +1,7 @@
 # Writing the catalog
 
 The catalog of merit badges and ranks is a single JSON file bundled with the
-app: [`app/src/main/assets/catalog.json`](../app/src/main/assets/catalog.json).
+app: [`shared/src/androidMain/assets/catalog.json`](../shared/src/androidMain/assets/catalog.json).
 This page explains its format so badges and ranks can be added without reading
 code. Why the catalog works this way is in
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-catalog).
@@ -291,7 +291,7 @@ conservation:
 problem it finds. To run just that test:
 
 ```sh
-./gradlew testDebugUnitTest --tests '*BundledCatalogTest*'
+./gradlew :shared:testAndroidHostTest --tests '*BundledCatalogTest*'
 ```
 
 It checks that:

@@ -1,0 +1,280 @@
+package io.github.bryancassell.bluecard.ui.badge
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.ui.readAsOneLabel
+
+// Composables shared by the Badge detail and Requirement detail screens.
+
+/** The smallest a number's box is, on each side. */
+private val NumberBoxMinSize = 40.dp
+
+/** Between a number and its box's edge. */
+private val NumberBoxPadding = 8.dp
+
+/** A number's text, in its box and when measuring the widest one. */
+private val numberStyle: TextStyle
+    @Composable @ReadOnlyComposable
+    get() = MaterialTheme.typography.titleMedium
+
+/**
+ * A list of requirements' rows. Every number's box is as wide as the widest number needs at the
+ * current font size, so the summaries after them line up, even when sibling numbers differ in
+ * width, such as `1b(9)` and `1b(10)` (#131).
+ */
+@Composable
+fun RequirementRows(
+    items: List<RequirementItem>,
+    onOpen: (number: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val style = numberStyle
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // Keyed on the numbers alone, so a change in progress doesn't measure them again.
+    val numbers = items.map { it.number }
+    val numberWidth = remember(numbers, style, textMeasurer, density) {
+        val widestNumber = numbers.maxOfOrNull { textMeasurer.measure(it, style).size.width } ?: 0
+        with(density) {
+            maxOf(NumberBoxMinSize.roundToPx(), widestNumber + NumberBoxPadding.roundToPx() * 2)
+                .toDp()
+        }
+    }
+    Column(modifier) {
+        items.forEach { RequirementRow(it, numberWidth, onOpen) }
+    }
+}
+
+/**
+ * A requirement's row, which opens its page: its number, in a box that's tinted once part of it
+ * is complete and filled in once all of it is, its summary, "Do N of M" when only some
+ * sub-requirements are needed, how many of those it needs are complete, how far along its tracker
+ * is ([trackerProgressLabels]), what's still to do once only its own work is left, or once its
+ * log has the rows or the amount it asks for, under the count of what's done, how many merit
+ * badges count toward it, for one that asks for them, and "Not needed" when it no longer is.
+ * Screen readers read "Completed", "In progress", "Not completed", "Not recorded" or "Not needed"
+ * as its state. The scout marks a requirement complete on its page. A checkbox on the row let the
+ * scout mark many parts without leaving the list, such as Personal Fitness 3's seven, but was
+ * dropped after using the app (#103).
+ */
+@Composable
+private fun RequirementRow(
+    item: RequirementItem,
+    numberWidth: Dp,
+    onOpen: (number: String) -> Unit
+) {
+    val state = stringResource(
+        when {
+            item.completed -> R.string.requirement_completed
+            item.notNeeded -> R.string.requirement_not_needed
+            item.partlyCompleted -> R.string.requirement_in_progress
+            item.notRecorded -> R.string.requirement_not_recorded
+            else -> R.string.requirement_not_completed
+        }
+    )
+    // Its lines under the summary, all but "Not needed".
+    val lines = buildList {
+        val count = listOfNotNull(choiceAndCountLabel(item.choice, item.completeCount))
+        val trackerLines = item.tracker?.let { trackerProgressLabels(it) }.orEmpty()
+        val stillToDo = listOfNotNull(
+            item.stillToDo?.let { stringResource(R.string.requirement_still_to_do, it) },
+            if (item.checkOffLeft) stringResource(R.string.requirement_check_off_left) else null
+        )
+        // Under the count it's what's left of: its sub-requirements', or else its tracker's.
+        addAll(
+            if (item.completeCount != null) {
+                count + stillToDo + trackerLines
+            } else {
+                count + trackerLines + stillToDo
+            }
+        )
+        item.meritBadges?.let {
+            add(meritBadgesCountLabel(it))
+            add(eagleRequiredCountLabel(it))
+        }
+    }
+    val label = readAsOneLabel(item.number, item.summary, *lines.toTypedArray())
+    ListItem(
+        leadingContent = { RequirementNumber(item, numberWidth) },
+        headlineContent = { Text(item.summary) },
+        supportingContent = if (lines.isEmpty() && !item.notNeeded) {
+            null
+        } else {
+            {
+                Column {
+                    lines.forEach { Text(it) }
+                    // Screen readers read it as the row's state.
+                    if (item.notNeeded) Text(stringResource(R.string.requirement_not_needed))
+                }
+            }
+        },
+        trailingContent = {
+            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
+        },
+        // Screen readers read the row as one button that opens the requirement, with a label
+        // of its own: TalkBack leaves out parts scrolled off screen (#312).
+        modifier = Modifier
+            .clickable(
+                onClickLabel = stringResource(R.string.requirement_open),
+                role = Role.Button,
+                onClick = { onOpen(item.number) }
+            )
+            .clearAndSetSemantics {
+                contentDescription = label
+                stateDescription = state
+            }
+    )
+}
+
+/**
+ * How far along a requirement's tracker is: its columns' totals, such as "4 of 6 hours", if it
+ * has any, as they say more than how many rows there are. Otherwise how much of it is filled
+ * in, such as "5 sessions", "8 of 12 weeks" or "6 of 10 animals".
+ */
+@Composable
+private fun trackerProgressLabels(count: TrackerCount): List<String> {
+    if (count.totals.isEmpty()) return listOf(trackerCountLabel(count))
+    return count.totals.map { trackerTotalLabel(it) }
+}
+
+/**
+ * A requirement's number in a box, like the boxes on the blue card: outlined until part of the
+ * requirement is complete, then tinted (primaryContainer) and outlined in primary with a
+ * half-filled circle on its top end corner, then filled in primary with a check there once all of
+ * it is complete, or filled in the highest surface once it's no longer needed. In light mode
+ * that's light blue, Scouting America Blue and grey; in dark mode navy, Pale Blue and Dark Blue.
+ * The mark on the corner tells the states apart by more than color. It's [minWidth] wide, room
+ * for the widest number in its list, but still widens to fit its own number if that measures
+ * wider. It grows taller with the font size. The marks are drawn only: its row reads the state.
+ *
+ * A small check beside the chevron was easy to miss (#123). Filled versus outlined stands out
+ * without a new color or more width, and a choice the scout didn't pick no longer looks like work
+ * left. Until the tint, a requirement looked untouched until all of it was done, including one
+ * waiting only on its own work, and Badge detail showed nothing of progress below the top level
+ * (#158, #151). The tint barely stands out from the page, so the half circle tells it from an
+ * untouched box by shape, not color alone (WCAG 1.4.1), and pairs with the check: half done,
+ * then done.
+ */
+@Composable
+private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
+    val colors = MaterialTheme.colorScheme
+    val shape = MaterialTheme.shapes.medium
+    Box {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .defaultMinSize(minWidth = minWidth, minHeight = NumberBoxMinSize)
+                .then(
+                    when {
+                        item.completed -> Modifier.background(colors.primary, shape)
+
+                        item.notNeeded -> Modifier.background(colors.surfaceContainerHighest, shape)
+
+                        item.partlyCompleted ->
+                            Modifier
+                                .background(colors.primaryContainer, shape)
+                                .border(2.dp, colors.primary, shape)
+
+                        else -> Modifier.border(2.dp, colors.outline, shape)
+                    }
+                )
+                // On every side: once the text outgrows the box, it stays clear of the edge and
+                // below the mark on its corner.
+                .padding(NumberBoxPadding)
+        ) {
+            Text(
+                text = item.number,
+                style = numberStyle,
+                color = when {
+                    item.completed -> colors.onPrimary
+                    item.partlyCompleted -> colors.onPrimaryContainer
+                    else -> colors.onSurfaceVariant
+                }
+            )
+        }
+        val mark = when {
+            item.completed -> R.drawable.ic_check
+            item.partlyCompleted -> R.drawable.ic_half_circle
+            else -> null
+        }
+        mark?.let {
+            Icon(
+                painterResource(it),
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    // Over the corner. offset, unlike absoluteOffset, mirrors right-to-left.
+                    .offset(x = 7.dp, y = (-7).dp)
+                    .size(20.dp)
+                    // A primary circle under a smaller onPrimary one, rather than a border over an
+                    // onPrimary one, so no onPrimary shows at its edge over the primary box.
+                    .background(colors.primary, CircleShape)
+                    .padding(2.dp)
+                    .background(colors.onPrimary, CircleShape)
+                    .padding(1.dp)
+            )
+        }
+    }
+}
+
+/** "Do 2 of 3". */
+@Composable
+@ReadOnlyComposable
+fun choiceLabel(choice: Choice): String =
+    stringResource(R.string.requirement_choice, choice.required, choice.of)
+
+/** "Do 2 of 3 (1 of 2 complete)", "Do 2 of 3", "(1 of 3 complete)", or null for neither. */
+@Composable
+@ReadOnlyComposable
+private fun choiceAndCountLabel(choice: Choice?, count: CompleteCount?): String? = when {
+    choice != null && count != null -> pluralStringResource(
+        R.plurals.requirement_choice_and_complete_count,
+        count.complete,
+        choice.required,
+        choice.of,
+        count.complete,
+        count.needed
+    )
+
+    choice != null -> choiceLabel(choice)
+
+    count != null -> pluralStringResource(
+        R.plurals.requirement_complete_count,
+        count.complete,
+        count.complete,
+        count.needed
+    )
+
+    else -> null
+}
