@@ -21,9 +21,11 @@ import okio.Path.Companion.toPath
  * ([FileDamagedProgressRepository.recordDamage]), since Room's other connections would keep
  * writing into the files if they were moved. The error goes on to the repository, which treats
  * it as a bug, so the app crashes, and the next run sets the database aside even if the check
- * passes. Otherwise damage the check misses would crash every run. Every statement after that
- * fails with the same error, so nothing more is saved into a database that will be set aside,
- * even where Room catches the first error, as its InvalidationTracker does (Room 3.0.3).
+ * passes, unless the database is written after the record
+ * ([FileDamagedProgressRepository.isDamageRecorded]). Otherwise damage the check misses would
+ * crash every run. Every statement after that fails with the same error, so nothing more is
+ * saved into a database that will be set aside, even where Room catches the first error, as its
+ * InvalidationTracker does (Room 3.0.3).
  *
  * [driver] is BundledSQLiteDriver. AndroidSQLiteDriver opens the database with Android's default
  * error handler, which deletes a damaged database and the files beside it, and takes no other
@@ -53,7 +55,11 @@ class SetAsideDamagedDatabaseDriver(
     private fun setAsideIfDamaged(fileName: String) {
         if (checked) return
         val database = fileName.toPath()
-        if (damagedProgress.isDamageRecorded() ||
+        // A record older than the database was left by a set-aside that couldn't delete it.
+        // Cleared first, so damage the check finds now gets a record of its own, which the next
+        // launch needs if the app stops partway through setting it aside.
+        damagedProgress.clearLeftoverDamageRecord(database)
+        if (damagedProgress.isDamageRecorded(database) ||
             (FileSystem.SYSTEM.exists(database) && isDamaged(fileName))
         ) {
             damagedProgress.setAside(database)
