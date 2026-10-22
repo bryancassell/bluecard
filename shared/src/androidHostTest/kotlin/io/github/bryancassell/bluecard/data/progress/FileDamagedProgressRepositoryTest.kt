@@ -184,16 +184,11 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         assertTrue("${warning.error}", warning.error is IOException)
     }
 
-    /**
-     * Dates the record a minute before the database's last save, as when a set-aside couldn't
-     * delete the record and Room made a new database at a later launch.
-     */
+    /** As when a set-aside couldn't delete the record and Room made a new database later. */
     private fun recordOlderThanTheDatabase() {
         repository.recordDamage()
         writeDatabase("" to "new progress")
-        val now = System.currentTimeMillis()
-        assertTrue(damageFile.setLastModified(now - 120_000))
-        assertTrue(database.setLastModified(now - 60_000))
+        dateInOrder(older = damageFile, newer = database)
     }
 
     @Test
@@ -205,22 +200,60 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     }
 
     @Test
-    fun clearDamageRecord_deletesIt() {
+    fun isDamageRecorded_whenTheRecordIsAsOldAsTheDatabase_isTrue() {
+        writeDatabase("" to "damaged")
+        repository.recordDamage()
+        // In the same tick of the file clock.
+        assertTrue(damageFile.setLastModified(database.lastModified()))
+
+        assertTrue(repository.isDamageRecorded(database.toOkioPath()))
+    }
+
+    @Test
+    fun clearLeftoverDamageRecord_deletesARecordOlderThanTheDatabase() {
         recordOlderThanTheDatabase()
 
-        repository.clearDamageRecord()
+        repository.clearLeftoverDamageRecord(database.toOkioPath())
 
         assertFalse(damageFile.exists())
         assertEquals(emptyList<FakeWarningLog.Warning>(), warningLog.warnings)
     }
 
     @Test
-    fun clearDamageRecord_whenItCantBeDeleted_warns_andItStillDoesntCount() {
+    fun clearLeftoverDamageRecord_keepsARecordThatCounts() {
+        writeDatabase("" to "damaged")
+        repository.recordDamage()
+        dateInOrder(older = database, newer = damageFile)
+
+        repository.clearLeftoverDamageRecord(database.toOkioPath())
+
+        assertTrue(repository.isDamageRecorded(database.toOkioPath()))
+    }
+
+    @Test
+    fun clearLeftoverDamageRecord_withNoRecord_deletesNothing() {
+        writeDatabase("" to "progress")
+        // Okio's delete would take the interrupt for itself and fail (Okio 3.18.2).
+        Thread.currentThread().interrupt()
+        val stillInterrupted = try {
+            repository.clearLeftoverDamageRecord(database.toOkioPath())
+            Thread.interrupted()
+        } finally {
+            // So the interrupt can't reach the next test.
+            Thread.interrupted()
+        }
+
+        assertTrue(stillInterrupted)
+        assertEquals(emptyList<FakeWarningLog.Warning>(), warningLog.warnings)
+    }
+
+    @Test
+    fun clearLeftoverDamageRecord_whenItCantBeDeleted_warns_andItStillDoesntCount() {
         recordOlderThanTheDatabase()
         // Stops the record being deleted, as long as the tests don't run as root.
         folder.setWritable(false)
         try {
-            repository.clearDamageRecord()
+            repository.clearLeftoverDamageRecord(database.toOkioPath())
         } finally {
             folder.setWritable(true)
         }
@@ -238,12 +271,18 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         recordOlderThanTheDatabase()
         folder.setWritable(false)
         try {
+            // The launch's check, which can't delete it.
+            repository.clearLeftoverDamageRecord(database.toOkioPath())
+            assertTrue(damageFile.exists())
+
             repository.recordDamage()
         } finally {
             folder.setWritable(true)
         }
 
         assertTrue(repository.isDamageRecorded(database.toOkioPath()))
+        // Only the check warned, so the record was written.
+        assertEquals(listOf("Couldn't delete $damageFile"), warningLog.warnings.map { it.message })
     }
 
     @Test

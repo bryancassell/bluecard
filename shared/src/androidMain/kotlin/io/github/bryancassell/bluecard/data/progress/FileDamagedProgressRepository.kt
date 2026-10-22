@@ -139,14 +139,16 @@ class FileDamagedProgressRepository(
      * older than [database] was left by a set-aside that couldn't delete it, such as when its
      * folder can't be written, since Room made [database] after it. Honoring it would set aside
      * the scout's new progress at every launch (#377), so it doesn't count, and
-     * [clearDamageRecord] deletes it.
+     * [clearLeftoverDamageRecord] deletes it. A record as old as [database] counts, since
+     * damage can be found in the same tick of the file clock as the database's last write.
      *
-     * Every statement fails once damage is found, but one already running on another connection
-     * could still write the database after the record, so a real record looks older too. Then
-     * the next launch has only its check, and damage the check misses crashes the app once more,
-     * which records it again. File times come from the phone's clock, so a clock set back by
-     * more than the time between the two writes can make a real record look older, or one left
-     * over look newer, until the clock catches up.
+     * Every statement fails once damage is found, but SQLite can still write the database file
+     * after the record: a checkpoint after a commit already running on another connection, or
+     * when the last connection closes, which nothing in the app does. A real record then looks
+     * older too, so the next launch has only its check, and damage the check misses crashes the
+     * app once more, which records it again. File times come from the phone's clock, so a clock
+     * set back by more than the time between the two writes can make a real record look older,
+     * or one left over look newer, until the clock catches up.
      */
     fun isDamageRecorded(database: Path): Boolean {
         val record = fileSystem.metadataOrNull(damageFile) ?: return false
@@ -156,11 +158,15 @@ class FileDamagedProgressRepository(
     }
 
     /**
-     * Deletes recorded damage that [isDamageRecorded] doesn't count. If it can't be deleted, it
-     * stays older than the database, so it still doesn't count.
+     * Deletes recorded damage that's older than [database], which [isDamageRecorded] doesn't
+     * count. If it can't be deleted, it stays older, so it still doesn't count.
      */
     @Synchronized
-    fun clearDamageRecord() = fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
+    fun clearLeftoverDamageRecord(database: Path) {
+        if (fileSystem.exists(damageFile) && !isDamageRecorded(database)) {
+            fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
+        }
+    }
 
     /**
      * Creates [file] with nothing in it. One that's there is left alone, since opening it to

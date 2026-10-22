@@ -149,7 +149,7 @@ class SetAsideDamagedDatabaseDriverTest {
         // once the damage is found, so putting the file back keeps its time from before that.
         databases.last().close()
         file.writeBytes(undamaged)
-        file.setLastModified(damagedAt)
+        assertTrue(file.setLastModified(damagedAt))
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
@@ -163,11 +163,9 @@ class SetAsideDamagedDatabaseDriverTest {
         open().readProgress()
         databases.single().close()
         damagedProgress.recordDamage()
-        // A minute apart, as the database's last save and the damage found in it could be, so
-        // the new database Room makes is newer than the record.
-        val now = System.currentTimeMillis()
-        assertTrue(file.setLastModified(now - 120_000))
-        assertTrue(damageFile.setLastModified(now - 60_000))
+        // As the database's last save and the damage found in it could be, so the new database
+        // Room makes is newer than the record.
+        dateInOrder(older = file, newer = damageFile)
         // Stops the set-aside and the record's deletion, as long as the tests don't run as root.
         folder.setWritable(false)
         val progress = try {
@@ -207,9 +205,7 @@ class SetAsideDamagedDatabaseDriverTest {
         saveProgress(open())
         damagedProgress.recordDamage()
         // As when a set-aside couldn't delete the record, and Room made this database after it.
-        val now = System.currentTimeMillis()
-        assertTrue(damageFile.setLastModified(now - 120_000))
-        assertTrue(file.setLastModified(now - 60_000))
+        dateInOrder(older = damageFile, newer = file)
 
         val progress = open().readProgress()
 

@@ -55,13 +55,14 @@ class SetAsideDamagedDatabaseDriver(
     private fun setAsideIfDamaged(fileName: String) {
         if (checked) return
         val database = fileName.toPath()
+        // A record older than the database was left by a set-aside that couldn't delete it.
+        // Cleared first, so damage the check finds now gets a record of its own, which the next
+        // launch needs if the app stops partway through setting it aside.
+        damagedProgress.clearLeftoverDamageRecord(database)
         if (damagedProgress.isDamageRecorded(database) ||
             (FileSystem.SYSTEM.exists(database) && isDamaged(fileName))
         ) {
             damagedProgress.setAside(database)
-        } else {
-            // A record older than the database, left by a set-aside that couldn't delete it.
-            damagedProgress.clearDamageRecord()
         }
         checked = true
     }
