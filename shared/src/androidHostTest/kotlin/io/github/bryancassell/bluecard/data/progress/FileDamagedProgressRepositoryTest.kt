@@ -15,6 +15,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import okio.IOException
@@ -398,16 +399,18 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
 
     @Test
     fun dismissNotice_deletesTheNoticeOnTheIoDispatcher() = runTest {
-        // Holds the file work until the test runs it, so a delete in the caller's thread shows.
-        val repository = newRepository(StandardTestDispatcher(testScheduler))
+        // A scheduler of its own, so the test runs the IO dispatcher's work apart from the rest.
+        val io = TestCoroutineScheduler()
+        val repository = newRepository(StandardTestDispatcher(io))
         writeDatabase("" to "damaged")
         repository.setAside(database.toOkioPath())
         val notice = File(folder, "notice-pending")
 
-        launch(start = CoroutineStart.UNDISPATCHED) { repository.dismissNotice() }
-
-        assertTrue(notice.exists())
+        launch { repository.dismissNotice() }
         advanceUntilIdle()
+        assertTrue(notice.exists())
+
+        io.advanceUntilIdle()
         assertFalse(notice.exists())
     }
 }

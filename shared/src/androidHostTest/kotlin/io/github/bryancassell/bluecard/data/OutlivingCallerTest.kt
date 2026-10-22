@@ -8,13 +8,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OutlivingCallerTest {
@@ -40,6 +38,19 @@ class OutlivingCallerTest {
     }
 
     @Test
+    fun block_switchingToADispatcherTheCallersContextNames_leavesTheCallersThread() = runTest {
+        val caller = Thread.currentThread()
+        var thread: Thread? = null
+
+        // Runs in this thread until it suspends, with io in its context.
+        launch(io, start = CoroutineStart.UNDISPATCHED) {
+            thread = scope.runOutlivingCaller { withContext(io) { Thread.currentThread() } }
+        }.join()
+
+        assertNotSame(caller, thread)
+    }
+
+    @Test
     fun blocks_startInTheOrderTheyreRun() = runTest {
         val started = mutableListOf<Int>()
 
@@ -56,18 +67,17 @@ class OutlivingCallerTest {
     @Test
     fun block_finishesEvenIfItsCallerIsCancelled() = runTest {
         val proceed = CompletableDeferred<Unit>()
-        var finished = false
+        val finished = CompletableDeferred<Unit>()
 
         val caller = launch(start = CoroutineStart.UNDISPATCHED) {
             scope.runOutlivingCaller {
                 proceed.await()
-                finished = true
+                finished.complete(Unit)
             }
         }
         caller.cancel()
         proceed.complete(Unit)
-        advanceUntilIdle()
 
-        assertTrue(finished)
+        finished.await()
     }
 }
