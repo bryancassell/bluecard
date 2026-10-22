@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.text.LocaleFormats
+import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.typedText
@@ -29,7 +31,8 @@ import io.github.bryancassell.bluecard.ui.typedText
 /**
  * The badge's merit badge [counselor], with a button to enter one or edit it. Tapping the phone
  * number opens the phone app to call it, and tapping the email address opens an email app, each
- * with [startOtherApp] ([rememberOtherAppStarter]).
+ * with [startOtherApp] ([rememberOtherAppStarter]). The phone number is shown formatted
+ * ([LocaleFormats.formatPhoneNumber]) but dialed as typed, which is how it's stored.
  */
 @Composable
 fun CounselorSection(
@@ -53,7 +56,7 @@ fun CounselorSection(
             val noApp = stringResource(R.string.badge_detail_no_phone_app)
             ContactItem(
                 icon = R.drawable.ic_call,
-                text = it,
+                text = LocalLocaleFormats.current.formatPhoneNumber(it),
                 onClickLabel = stringResource(R.string.badge_detail_call_counselor),
                 onClick = { startOtherApp(intent, noApp) }
             )

@@ -33,4 +33,13 @@ interface LocaleFormats {
      * at its end in an English sentence.
      */
     fun typedText(text: String): String
+
+    /**
+     * A phone [number] the scout typed, formatted to read at a glance: "(555) 123-4567" for
+     * 5551234567. One without a country code follows US rules in every locale, since most
+     * counselors' numbers are American and another country's rules would group one wrongly
+     * (#365). One that can't be formatted, such as a UK number without +44, comes back as typed.
+     * Its digits never change, only the characters between them.
+     */
+    fun formatPhoneNumber(number: String): String
 }

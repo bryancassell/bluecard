@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.text
 
 import android.icu.text.ListFormatter
+import android.telephony.PhoneNumberUtils
 import androidx.core.text.BidiFormatter
 import io.github.artificialpb.bignum.BigDecimal
 import java.math.RoundingMode
@@ -45,4 +46,10 @@ class AndroidLocaleFormats(private val locale: Locale) : LocaleFormats {
     override fun formatList(items: List<String>): String = listFormatter.format(items)
 
     override fun typedText(text: String): String = bidiFormatter.unicodeWrap(text)
+
+    // PhoneNumberUtils formats with libphonenumber's formatInOriginalFormat, which keeps a number
+    // typed with + in international form, returns the number as typed when formatting would
+    // change a digit or it has no pattern for it, and null for one it can't read at all.
+    override fun formatPhoneNumber(number: String): String =
+        PhoneNumberUtils.formatNumber(number, "US") ?: number
 }

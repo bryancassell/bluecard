@@ -102,7 +102,7 @@ private class ReportComposer(private val resources: Resources) {
     private val rightToLeft =
         TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
-    // Dates, totals and typed text are written as on screen.
+    // Dates, totals, phone numbers and typed text are written as on screen.
     private val formats = AndroidLocaleFormats(locale)
 
     // Between a tracker row's values, as on screen.
@@ -140,7 +140,9 @@ private class ReportComposer(private val resources: Resources) {
         report.counselor?.let { counselor ->
             addHeading(R.string.report_counselor)
             counselor.name?.let { addLabeled(R.string.report_counselor_name, typed(it)) }
-            counselor.phone?.let { addLabeled(R.string.report_counselor_phone, typed(it)) }
+            counselor.phone?.let {
+                addLabeled(R.string.report_counselor_phone, typed(formats.formatPhoneNumber(it)))
+            }
             counselor.email?.let { addLabeled(R.string.report_counselor_email, typed(it)) }
         }
         addHeading(R.string.report_requirements)

@@ -392,6 +392,14 @@ class ReportLayoutTest {
     }
 
     @Test
+    fun counselorsPhone_isFormattedAsOnScreen() {
+        val lines = layOut(report(emptyList(), counselor = Counselor(phone = "5551234567")))
+            .single().lines
+
+        assertEquals("Phone: (555) 123-4567", lines[8])
+    }
+
+    @Test
     fun trackerValueThatIsntADate_isShownAsStored() {
         val tracker = ReportTracker(log, listOf(ReportTrackerRow(1, listOf(date to "Last May"))))
         val lines = layOut(report(listOf(requirement("1", "Log.", tracker = tracker))))

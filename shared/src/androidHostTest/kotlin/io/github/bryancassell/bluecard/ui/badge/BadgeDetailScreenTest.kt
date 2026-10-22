@@ -242,7 +242,7 @@ class BadgeDetailScreenTest {
 
     private val isSelected = SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)
 
-    private val counselor = Counselor("Pat Lee", "+1 555-0100", "pat@example.com")
+    private val counselor = Counselor("Pat Lee", "+1 202-555-0100", "pat@example.com")
 
     private val application = ApplicationProvider.getApplicationContext<Application>()
 
@@ -479,7 +479,7 @@ class BadgeDetailScreenTest {
         show(ready.copy(counselor = counselor))
 
         composeTestRule.onNodeWithText("Pat Lee").performScrollTo().assertIsDisplayed()
-        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("+1 202-555-0100").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("pat@example.com").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Edit counselor").performScrollTo().performClick()
 
@@ -514,7 +514,7 @@ class BadgeDetailScreenTest {
     fun counselorPhone_opensPhoneAppWithTheNumber() {
         show(ready.copy(counselor = counselor))
 
-        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo()
+        composeTestRule.onNodeWithText("+1 202-555-0100").performScrollTo()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .assert(hasClickLabel("call"))
             .performClick()
@@ -522,14 +522,24 @@ class BadgeDetailScreenTest {
         val started = startedActivity()
         assertEquals(Intent.ACTION_DIAL, started?.action)
         assertEquals("tel", started?.data?.scheme)
-        assertEquals("+1 555-0100", started?.data?.schemeSpecificPart)
+        assertEquals("+1 202-555-0100", started?.data?.schemeSpecificPart)
+    }
+
+    // Dialed as typed, which is what's stored.
+    @Test
+    fun counselorPhone_isShownFormatted_andDialedAsTyped() {
+        show(ready.copy(counselor = Counselor(phone = "2025550100")))
+
+        composeTestRule.onNodeWithText("(202) 555-0100").performScrollTo().performClick()
+
+        assertEquals("2025550100", startedActivity()?.data?.schemeSpecificPart)
     }
 
     @Test
     fun counselorPhone_doubleTap_opensPhoneAppOnce() {
         show(ready.copy(counselor = counselor))
 
-        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo()
+        composeTestRule.onNodeWithText("+1 202-555-0100").performScrollTo()
             .performTouchInput { doubleClick() }
 
         assertEquals(Intent.ACTION_DIAL, startedActivity()?.action)
@@ -573,7 +583,7 @@ class BadgeDetailScreenTest {
         composeTestRule.mainClock.autoAdvance = false
 
         composeTestRule.onNodeWithText("Official requirements").performClick()
-        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("+1 202-555-0100").performScrollTo().performClick()
         composeTestRule.onNodeWithText("pat@example.com").performScrollTo().performClick()
 
         assertEquals(Intent.ACTION_VIEW, startedActivity()?.action)
@@ -598,7 +608,7 @@ class BadgeDetailScreenTest {
         // Starting an activity nothing can handle now fails, as on a tablet without a phone app.
         shadowOf(application).checkActivities(true)
 
-        composeTestRule.onNodeWithText("+1 555-0100").performScrollTo().performClick()
+        composeTestRule.onNodeWithText("+1 202-555-0100").performScrollTo().performClick()
 
         assertEquals(
             "No app on this phone can call the number.",
