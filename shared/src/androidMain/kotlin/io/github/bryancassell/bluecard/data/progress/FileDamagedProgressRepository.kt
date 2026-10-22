@@ -108,29 +108,65 @@ class FileDamagedProgressRepository(
             noticePending.value = true
             warningLog.warn(TAG, message, error)
         }
-        // If it can't be deleted, the next launch sets aside the new database too.
+        // If it can't be deleted, the new database Room makes is newer than it, so the next
+        // launch leaves that alone (isDamageRecorded).
         fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
     }
 
     /**
      * Records that SQLite found the database damaged while it was open, so it's set aside the
-     * next time the app opens it ([SetAsideDamagedDatabaseDriver]). If that can't be recorded,
-     * such as on a full disk, the next launch has only its check to find the damage. Damage the
-     * check misses then crashes the app at each launch until there's room for the record, which
-     * is an empty file, and the launch after that sets the database aside.
+     * next time the app opens it ([SetAsideDamagedDatabaseDriver]), unless the database is
+     * written after the record ([isDamageRecorded]). If that can't be recorded, such as on a full
+     * disk, the next launch has only its check to find the damage. Damage the check misses then
+     * crashes the app at each launch until there's room for the record, which is an empty file,
+     * and the launch after that sets the database aside.
+     *
+     * The record is written even if it's there, so it's newer than the database
+     * ([isDamageRecorded]) even when an older one couldn't be deleted.
      */
     @Synchronized
     fun recordDamage() {
         try {
             fileSystem.createDirectories(folder)
-            createIfMissing(damageFile)
+            fileSystem.write(damageFile) {}
         } catch (e: IOException) {
             warningLog.warn(TAG, "Couldn't record a damaged database", e)
         }
     }
 
-    /** Whether damage was recorded ([recordDamage]) and the database not yet set aside. */
-    fun isDamageRecorded() = fileSystem.exists(damageFile)
+    /**
+     * Whether damage was recorded ([recordDamage]) and [database] not yet set aside. A record
+     * older than [database] was left by a set-aside that couldn't delete it, such as when its
+     * folder can't be written, since Room made [database] after it. Honoring it would set aside
+     * the scout's new progress at every launch (#377), so it doesn't count, and
+     * [clearLeftoverDamageRecord] deletes it. A record as old as [database] counts, since
+     * damage can be found in the same tick of the file clock as the database's last write.
+     *
+     * Every statement fails once damage is found, but SQLite can still write the database file
+     * after the record: a checkpoint after a commit already running on another connection, or
+     * when the last connection closes, which nothing in the app does. A real record then looks
+     * older too, so the next launch has only its check, and damage the check misses crashes the
+     * app once more, which records it again. File times come from the phone's clock, so a clock
+     * set back by more than the time between the two writes can make a real record look older,
+     * or one left over look newer, until the clock catches up.
+     */
+    fun isDamageRecorded(database: Path): Boolean {
+        val record = fileSystem.metadataOrNull(damageFile) ?: return false
+        val recordedAt = record.lastModifiedAtMillis ?: return true
+        val writtenAt = fileSystem.metadataOrNull(database)?.lastModifiedAtMillis ?: return true
+        return recordedAt >= writtenAt
+    }
+
+    /**
+     * Deletes recorded damage that's older than [database], which [isDamageRecorded] doesn't
+     * count. If it can't be deleted, it stays older, so it still doesn't count.
+     */
+    @Synchronized
+    fun clearLeftoverDamageRecord(database: Path) {
+        if (fileSystem.exists(damageFile) && !isDamageRecorded(database)) {
+            fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
+        }
+    }
 
     /**
      * Creates [file] with nothing in it. One that's there is left alone, since opening it to
