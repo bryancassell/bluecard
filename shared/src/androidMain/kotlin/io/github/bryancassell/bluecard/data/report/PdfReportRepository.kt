@@ -16,6 +16,7 @@ import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.text.stringsLocale
 import kotlin.random.Random
@@ -50,6 +51,7 @@ class PdfReportRepository(
     private val pdfWriter: ReportPdfWriter,
     private val clock: ZonedClock,
     private val textRules: TextRules,
+    private val phoneNumberFormat: PhoneNumberFormat,
     private val warningLog: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
@@ -124,7 +126,9 @@ class PdfReportRepository(
             if (standing.status != RankStatus.Earned) return null
             standing.report(profile, progress[advancementId], earnedBadges, textRules, today)
         }
-        return checkNotNull(report) { "The catalog has no requirements for $advancementId" }
+        checkNotNull(report) { "The catalog has no requirements for $advancementId" }
+        val phone = report.counselor?.phone ?: return report
+        return report.copy(counselorPhone = phoneNumberFormat.format(phone))
     }
 
     // Read for each report, so it follows a change to the phone's language. The environment is

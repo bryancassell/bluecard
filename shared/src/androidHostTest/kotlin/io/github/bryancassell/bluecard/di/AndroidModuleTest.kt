@@ -19,7 +19,9 @@ import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.testing.AppKoinRule
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
+import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
 import java.io.File
 import kotlinx.coroutines.flow.first
@@ -129,5 +131,10 @@ class AndroidModuleTest {
     @Test
     fun textRules_isAndroidTextRules() {
         assertTrue(koin.get<TextRules>() is AndroidTextRules)
+    }
+
+    @Test
+    fun phoneNumberFormat_isAndroidPhoneNumberFormat() {
+        assertTrue(koin.get<PhoneNumberFormat>() is AndroidPhoneNumberFormat)
     }
 }

@@ -525,6 +525,21 @@ class BadgeDetailScreenTest {
         assertEquals("+1 555-0100", started?.data?.schemeSpecificPart)
     }
 
+    // Dialed as typed, which is what's stored.
+    @Test
+    fun counselorPhone_isShownFormatted_andDialedAsTyped() {
+        show(
+            ready.copy(
+                counselor = Counselor(phone = "2025550100"),
+                counselorPhone = "(202) 555-0100"
+            )
+        )
+
+        composeTestRule.onNodeWithText("(202) 555-0100").performScrollTo().performClick()
+
+        assertEquals("2025550100", startedActivity()?.data?.schemeSpecificPart)
+    }
+
     @Test
     fun counselorPhone_doubleTap_opensPhoneAppOnce() {
         show(ready.copy(counselor = counselor))

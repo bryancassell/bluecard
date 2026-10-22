@@ -4,6 +4,7 @@ import android.net.Uri
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import kotlinx.datetime.LocalDate
@@ -26,6 +27,12 @@ sealed interface BadgeDetailUiState {
         val requirements: List<RequirementItem>,
         /** The scout's merit badge counselor, or null if they haven't entered one. */
         val counselor: Counselor? = null,
+        /**
+         * [counselor]'s phone number, formatted to show ([PhoneNumberFormat]). It's null if they
+         * have none, and for a moment after the number changes, while it shows as typed. Tapping
+         * it dials the number as typed.
+         */
+        val counselorPhone: String? = null,
         /** How far the scout has got with the badge, as every screen says ([MeritBadge.status]). */
         val status: BadgeStatus = BadgeStatus.NotStarted,
         /**

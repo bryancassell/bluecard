@@ -185,7 +185,9 @@ private class ReportComposer(
         report.counselor?.let { counselor ->
             addHeading(Res.string.report_counselor)
             counselor.name?.let { addLabeled(Res.string.report_counselor_name, typed(it)) }
-            counselor.phone?.let { addLabeled(Res.string.report_counselor_phone, typed(it)) }
+            counselor.phone?.let {
+                addLabeled(Res.string.report_counselor_phone, typed(report.counselorPhone ?: it))
+            }
             counselor.email?.let { addLabeled(Res.string.report_counselor_email, typed(it)) }
         }
         addHeading(Res.string.report_requirements)

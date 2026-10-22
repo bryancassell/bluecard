@@ -340,12 +340,14 @@ both taps of a double tap can reach it.
   language with its own digits must format its numbers first. Each
   translation's `strings.xml` must name its own language
   (`StringsLanguageTagTest`).
-- **Formatting, sorting and breaking text go through `LocaleFormats` and
-  `TextRules`** (`text/`), not `java.text`, `android.icu`, `java.time.format`
-  or `BidiFormatter`, which code shared with iOS can't call
+- **Formatting, sorting and breaking text go through `LocaleFormats`,
+  `TextRules` and `PhoneNumberFormat`** (`text/`), not `java.text`,
+  `android.icu`, `java.time.format`, `BidiFormatter` or `PhoneNumberUtils`,
+  which code shared with iOS can't call
   ([#341](https://github.com/bryancassell/bluecard/issues/341)). Their Android
-  implementations wrap those. ViewModels and the report get `TextRules` from
-  Koin; screens read `LocalTextRules`, which `BlueCardApp` provides.
+  implementations wrap those. ViewModels and the report get `TextRules` and
+  `PhoneNumberFormat` from Koin; screens read `LocalTextRules`, which
+  `BlueCardApp` provides.
 - **Punctuation that joins text comes from `strings.xml` too**
   ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
   " · " between a tracker row's values or the ": " after a label, so a
@@ -527,8 +529,9 @@ fails the build for a missing dependency, as Hilt did.
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
   `androidModule`, for what needs Android. Besides the repositories, they
   provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
-  `CoroutineScope` (`@ApplicationScope`), a `ZonedClock`, a `WarningLog` and
-  `TextRules`, the dispatcher, clock and log so tests can replace them.
+  `CoroutineScope` (`@ApplicationScope`), a `ZonedClock`, a `WarningLog`,
+  `TextRules` and `PhoneNumberFormat`, the dispatcher, clock and log so tests
+  can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could

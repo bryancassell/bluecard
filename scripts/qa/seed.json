@@ -6,7 +6,7 @@
       "badgeId": "camping",
       "requirementsVersion": "2024-01-01",
       "startedDate": "2026-03-14",
-      "counselor": {"name": "Pat Rivera", "phone": "555-0142", "email": "pat.rivera@example.com"},
+      "counselor": {"name": "Pat Rivera", "phone": "2145550142", "email": "pat.rivera@example.com"},
       "completedOnPriorDate": null,
       "requirements": [
         {"number": "1a", "completed": true, "completedDate": "2026-03-14", "notes": null, "signedOffBy": null},

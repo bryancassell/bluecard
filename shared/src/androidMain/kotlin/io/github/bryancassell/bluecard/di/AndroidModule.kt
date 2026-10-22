@@ -18,7 +18,9 @@ import io.github.bryancassell.bluecard.data.report.PdfDocumentWriter
 import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
 import kotlinx.coroutines.CoroutineScope
 import okio.Path.Companion.toOkioPath
@@ -41,6 +43,7 @@ val androidModule = module {
     single<PdfDocumentWriter>() bind ReportPdfWriter::class
     single<JsonBackupRepository>() bind BackupRepository::class
     single<AndroidTextRules>() bind TextRules::class
+    single<AndroidPhoneNumberFormat>() bind PhoneNumberFormat::class
 }
 
 /** Writes warnings to logcat, which bug reports include. */

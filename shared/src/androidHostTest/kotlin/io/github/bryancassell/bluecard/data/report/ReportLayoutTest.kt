@@ -386,6 +386,14 @@ class ReportLayoutTest {
     }
 
     @Test
+    fun counselorsPhone_isShownFormatted() {
+        val report = report(emptyList(), counselor = Counselor(phone = "5551234567"))
+            .copy(counselorPhone = "(555) 123-4567")
+
+        assertEquals("Phone: (555) 123-4567", layOut(report).single().lines[8])
+    }
+
+    @Test
     fun trackerValueThatIsntADate_isShownAsStored() {
         val tracker = ReportTracker(log, listOf(ReportTrackerRow(1, listOf(date to "Last May"))))
         val lines = layOut(report(listOf(requirement("1", "Log.", tracker = tracker))))
