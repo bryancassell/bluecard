@@ -9,12 +9,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.clear_progress
+import io.github.bryancassell.bluecard.resources.clear_progress_confirm
+import io.github.bryancassell.bluecard.resources.removal_message_unearns
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.removalButtonColors
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Clears what the scout recorded ([onClear]) once they confirm, in a dialog with [title] and
@@ -36,13 +39,13 @@ fun ClearProgress(
         // Lines the button's text up with the page's, as for Add counselor.
         modifier = modifier.padding(start = 4.dp, end = 4.dp, bottom = 16.dp)
     ) {
-        Text(stringResource(R.string.clear_progress))
+        Text(stringResource(Res.string.clear_progress))
     }
     if (confirming) {
         ConfirmDialog(
             title = title,
             message = withUnearnedRanks(message, unearnedRanks),
-            confirmLabel = stringResource(R.string.clear_progress_confirm),
+            confirmLabel = stringResource(Res.string.clear_progress_confirm),
             onConfirm = {
                 confirming = false
                 onClear()
@@ -65,7 +68,7 @@ fun withUnearnedRanks(message: String, unearnedRanks: List<String>): String =
         message
     } else {
         stringResource(
-            R.string.removal_message_unearns,
+            Res.string.removal_message_unearns,
             message,
             LocalLocaleFormats.current.formatList(unearnedRanks)
         )

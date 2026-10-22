@@ -19,11 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.ic_event_available
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.painterResource
 
 /** Test tag of a badge's or rank's status card, for its screenshot tests. */
 internal const val STATUS_CARD_TAG = "statusCard"
@@ -145,7 +146,7 @@ private fun MarkOnDateButton(
             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
         ) {
             Icon(
-                painterResource(R.drawable.ic_event_available),
+                painterResource(Res.drawable.ic_event_available),
                 contentDescription = null,
                 modifier = Modifier.size(ButtonDefaults.IconSize)
             )

@@ -96,6 +96,13 @@ the database version and adding a migration, or existing users' data can't be
 opened. CI fails if the build changes them, which also catches a Room update
 that computes a different identity hash for the same schema.
 
+**Compose Multiplatform resources** (`shared/src/commonMain/composeResources/`).
+The strings, icons and catalog, which common code can read, unlike Android
+resources. The Compose Multiplatform Gradle plugin generates a `Res` class from
+them when the module builds, so a new string's `Res.string.<name>` appears after
+a build or a Gradle sync. Their `strings.xml` differs from Android's in a few
+ways, listed at its top.
+
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
 version, and the SDK levels every module builds for, live in this one file. Build scripts refer to entries by alias, such
 as `libs.androidx.core.ktx`. Compose libraries are versioned together by the
@@ -169,7 +176,8 @@ it.
 │   ├── build.gradle.kts
 │   ├── schemas/                Room database schemas (generated; commit them)
 │   └── src/
-│       ├── androidMain/        Code, strings, icons, the catalog
+│       ├── commonMain/         Strings, icons and the catalog, in composeResources/
+│       ├── androidMain/        Code and manifest
 │       └── androidHostTest/    Local tests (run on your computer) and screenshots
 └── testing/                    Fakes and helpers that both modules' tests use
 ```

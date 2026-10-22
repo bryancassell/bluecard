@@ -11,6 +11,8 @@ plugins {
     // makes `check` run them. Android Studio's Kotlin Multiplatform module template applies it too.
     alias(libs.plugins.android.lint)
     alias(libs.plugins.kotlin.compose)
+    // For its resources only, for now: Compose and Material 3 are still Google's artifacts (#345).
+    alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.koin.compiler)
@@ -29,7 +31,9 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
 
-        // The strings, icons and report_paths.xml. Off by default in this plugin.
+        // report_paths.xml, the one Android resource left: the strings, icons and catalog are
+        // Compose Multiplatform resources (commonMain/composeResources). Off by default in this
+        // plugin.
         androidResources {
             enable = true
         }
@@ -58,6 +62,10 @@ kotlin {
     }
 
     sourceSets {
+        commonMain.dependencies {
+            implementation(libs.compose.components.resources)
+        }
+
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -123,6 +131,14 @@ dependencies {
     // Android Studio's Compose previews need it at runtime. It isn't passed on to :app, which
     // adds it to debug builds only.
     "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
+}
+
+// The generated Res class, with the strings, icons and catalog in
+// src/commonMain/composeResources. Without a package, it would be named after this module's
+// folder. It's public so :testing's helpers can read the strings too.
+compose.resources {
+    packageOfResClass = "io.github.bryancassell.bluecard.resources"
+    publicResClass = true
 }
 
 // Room writes each database version's schema here, for reviewing schema changes and

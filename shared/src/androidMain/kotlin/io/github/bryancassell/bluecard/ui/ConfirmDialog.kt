@@ -7,8 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.confirm_dialog_cancel
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Asks the scout to confirm removing something they recorded or typed, which can't be undone.
@@ -36,7 +37,7 @@ fun ConfirmDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.confirm_dialog_cancel))
+                Text(stringResource(Res.string.confirm_dialog_cancel))
             }
         }
     )

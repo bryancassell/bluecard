@@ -23,17 +23,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
+import io.github.bryancassell.bluecard.data.report.fileNameTitle
 import io.github.bryancassell.bluecard.data.report.reportFileName
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badge_detail_clear_message
+import io.github.bryancassell.bluecard.resources.badge_detail_clear_message_with_counselor
+import io.github.bryancassell.bluecard.resources.badge_detail_clear_title
+import io.github.bryancassell.bluecard.resources.badge_detail_completed_on
+import io.github.bryancassell.bluecard.resources.badge_detail_mark_completed
+import io.github.bryancassell.bluecard.resources.badge_detail_mark_completed_prompt
+import io.github.bryancassell.bluecard.resources.badge_detail_not_started
+import io.github.bryancassell.bluecard.resources.badge_detail_requirements
+import io.github.bryancassell.bluecard.resources.badge_detail_unmark_completed
+import io.github.bryancassell.bluecard.resources.badges_completed
+import io.github.bryancassell.bluecard.resources.badges_in_progress
+import io.github.bryancassell.bluecard.resources.ic_workspace_premium
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.report_failed
+import io.github.bryancassell.bluecard.resources.requirements_unavailable
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
@@ -43,6 +57,8 @@ import io.github.bryancassell.bluecard.ui.badges.eagleRequirementLabel
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -110,10 +126,10 @@ fun BadgeDetailScreen(
         BadgeDetailUiState.Loading -> ScreenLoadingIndicator(modifier)
 
         BadgeDetailUiState.LoadFailed ->
-            ScreenMessage(stringResource(R.string.load_failed), modifier)
+            ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         BadgeDetailUiState.Unavailable ->
-            ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
+            ScreenMessage(stringResource(Res.string.requirements_unavailable), modifier)
 
         is BadgeDetailUiState.Ready -> Box(modifier = modifier) {
             BadgeDetails(
@@ -132,13 +148,13 @@ fun BadgeDetailScreen(
             val snackbarHostState = remember { SnackbarHostState() }
             TaskFailureSnackbar(
                 failure = uiState.reportFailure,
-                message = stringResource(R.string.report_failed),
+                message = stringResource(Res.string.report_failed),
                 onShown = onReportFailureShown,
                 hostState = snackbarHostState
             )
             TaskFailureSnackbar(
                 failure = uiState.saveFailure,
-                message = stringResource(R.string.save_failed),
+                message = stringResource(Res.string.save_failed),
                 onShown = onSaveFailureShown,
                 hostState = snackbarHostState
             )
@@ -178,15 +194,20 @@ private fun BadgeDetails(
         )
         CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) {
             ReportButtons(
-                reportFileName(LocalResources.current, ReportKind.MeritBadge, uiState.name),
+                reportFileName(stringResource(ReportKind.MeritBadge.fileNameTitle, uiState.name)),
                 onShareReport,
                 onSaveReport,
                 startOtherApp
             )
         }
-        CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
+        CounselorSection(
+            uiState.counselor,
+            uiState.counselorPhone,
+            onEdit = onEditCounselor,
+            startOtherApp = startOtherApp
+        )
         Text(
-            text = stringResource(R.string.badge_detail_requirements),
+            text = stringResource(Res.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -195,12 +216,12 @@ private fun BadgeDetails(
         RequirementRows(items = uiState.requirements, onOpen = onOpenRequirement)
         if (uiState.canClear) {
             ClearProgress(
-                title = stringResource(R.string.badge_detail_clear_title, uiState.name),
+                title = stringResource(Res.string.badge_detail_clear_title, uiState.name),
                 message = stringResource(
                     if (uiState.counselor == null) {
-                        R.string.badge_detail_clear_message
+                        Res.string.badge_detail_clear_message
                     } else {
-                        R.string.badge_detail_clear_message_with_counselor
+                        Res.string.badge_detail_clear_message_with_counselor
                     }
                 ),
                 unearnedRanks = uiState.unearnedByClear,
@@ -236,30 +257,33 @@ private fun CompletionStatus(
     StatusCard(reportButtons = reportButtons.takeIf { uiState.completed }) {
         when {
             date != null -> EditableDate(
-                text = stringResource(R.string.badge_detail_completed_on, formats.formatDate(date)),
+                text = stringResource(
+                    Res.string.badge_detail_completed_on,
+                    formats.formatDate(date)
+                ),
                 date = date,
                 today = today,
                 onDateChange = { if (it == null) onUnmark() else onMark(it) },
-                removeText = R.string.badge_detail_unmark_completed,
+                removeText = Res.string.badge_detail_unmark_completed,
                 textStyle = statusLineStyle
             )
 
             uiState.completed -> DoneStatusLine(
                 uiState.completedOn?.let {
-                    stringResource(R.string.badge_detail_completed_on, formats.formatDate(it))
-                } ?: stringResource(R.string.badges_completed)
+                    stringResource(Res.string.badge_detail_completed_on, formats.formatDate(it))
+                } ?: stringResource(Res.string.badges_completed)
             )
 
             else -> MarkDoneLines(
                 status = stringResource(
                     if (uiState.status == BadgeStatus.InProgress) {
-                        R.string.badges_in_progress
+                        Res.string.badges_in_progress
                     } else {
-                        R.string.badge_detail_not_started
+                        Res.string.badge_detail_not_started
                     }
                 ),
-                prompt = stringResource(R.string.badge_detail_mark_completed_prompt),
-                markText = stringResource(R.string.badge_detail_mark_completed),
+                prompt = stringResource(Res.string.badge_detail_mark_completed_prompt),
+                markText = stringResource(Res.string.badge_detail_mark_completed),
                 // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
                 initial = uiState.unmarkedDate,
                 today = today,
@@ -292,7 +316,7 @@ private fun EagleTag(label: String) {
                 (style.lineHeight.value / style.fontSize.value)
             Box(modifier = Modifier.height(lineHeight), contentAlignment = Alignment.Center) {
                 Icon(
-                    painterResource(R.drawable.ic_workspace_premium),
+                    painterResource(Res.drawable.ic_workspace_premium),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )

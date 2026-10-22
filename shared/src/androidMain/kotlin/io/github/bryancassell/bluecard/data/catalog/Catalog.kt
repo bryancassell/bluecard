@@ -13,8 +13,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
-// The bundled catalog of merit badges and ranks (assets/catalog.json). The format is documented
-// for authors in docs/catalog.md.
+// The bundled catalog of merit badges and ranks (composeResources/files/catalog.json). The format
+// is documented for authors in docs/catalog.md.
 
 @Serializable
 data class Catalog(

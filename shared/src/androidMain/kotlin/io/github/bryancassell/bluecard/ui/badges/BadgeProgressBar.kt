@@ -5,9 +5,10 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_percent_done
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * How much of a badge or rank is done, [fractionDone] from 0 to 1, as a bar as wide as its
@@ -37,5 +38,5 @@ fun percentDoneDescription(fractionDone: Float): String {
         1f -> 100
         else -> (fractionDone * 100).roundToInt().coerceIn(1, 99)
     }
-    return stringResource(R.string.badges_percent_done, percent)
+    return stringResource(Res.string.badges_percent_done, percent)
 }

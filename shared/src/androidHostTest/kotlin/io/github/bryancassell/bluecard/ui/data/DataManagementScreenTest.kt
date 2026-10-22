@@ -504,6 +504,18 @@ class DataManagementScreenTest {
         option("The file", "Earned").assertIsSelected()
     }
 
+    // A rank earned on a date says when, as a badge completed on one does.
+    @Test
+    fun mergeChoices_rankEarnedOnADate_saysWhenItWasEarned() {
+        val scout = choices.advancements.last()
+        val earnedOn = scout.copy(
+            file = ProgressSummary(done = true, doneOn = LocalDate(2026, 3, 2))
+        )
+        showMergeChoices(choices.copy(advancements = listOf(earnedOn)))
+
+        option("The file", "Earned on Mar 2, 2026").assertIsSelected()
+    }
+
     // Screen readers hear each option as a radio button, in a group of two.
     @Test
     fun mergeChoices_areRadioButtons_inGroups() {

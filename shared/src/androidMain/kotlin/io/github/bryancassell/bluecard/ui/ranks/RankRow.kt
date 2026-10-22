@@ -2,10 +2,13 @@ package io.github.bryancassell.bluecard.ui.ranks
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import io.github.bryancassell.bluecard.data.progress.RankStatus
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_in_progress
+import io.github.bryancassell.bluecard.resources.ranks_earned
+import io.github.bryancassell.bluecard.resources.ranks_open_rank
 import io.github.bryancassell.bluecard.ui.badges.AdvancementRow
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * A rank's row on Ranks. It's the same row as a badge's, so ranks look familiar: the rank's name
@@ -19,11 +22,11 @@ fun RankRow(rank: RankListItem, onClick: () -> Unit, modifier: Modifier = Modifi
         detail = null,
         status = when (rank.status) {
             RankStatus.NotEarned -> null
-            RankStatus.InProgress -> stringResource(R.string.badges_in_progress)
-            RankStatus.Earned -> stringResource(R.string.ranks_earned)
+            RankStatus.InProgress -> stringResource(Res.string.badges_in_progress)
+            RankStatus.Earned -> stringResource(Res.string.ranks_earned)
         },
         fractionDone = rank.fractionDone,
-        onClickLabel = stringResource(R.string.ranks_open_rank),
+        onClickLabel = stringResource(Res.string.ranks_open_rank),
         onClick = onClick,
         modifier = modifier
     )

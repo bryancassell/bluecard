@@ -6,8 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.BackupRepository
 import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
-import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
-import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -21,7 +19,9 @@ import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.testing.AppKoinRule
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
+import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
 import java.io.File
 import kotlinx.coroutines.flow.first
@@ -114,11 +114,6 @@ class AndroidModuleTest {
     }
 
     @Test
-    fun catalogRepository_isAssetCatalogRepository() {
-        assertTrue(koin.get<CatalogRepository>() is AssetCatalogRepository)
-    }
-
-    @Test
     fun reportRepository_isPdfReportRepository() {
         assertTrue(koin.get<ReportRepository>() is PdfReportRepository)
     }
@@ -136,5 +131,10 @@ class AndroidModuleTest {
     @Test
     fun textRules_isAndroidTextRules() {
         assertTrue(koin.get<TextRules>() is AndroidTextRules)
+    }
+
+    @Test
+    fun phoneNumberFormat_isAndroidPhoneNumberFormat() {
+        assertTrue(koin.get<PhoneNumberFormat>() is AndroidPhoneNumberFormat)
     }
 }

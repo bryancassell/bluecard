@@ -1,20 +1,24 @@
+<!-- Compose Multiplatform's string format (1.12), which is Android's but for a few things:
+     apostrophes and quotes need no backslash, spaces stay as written, "%" isn't doubled, and
+     arguments are only "%1$s" or "%1$d", both of which insert the argument as it is: a number
+     in Latin digits. -->
 <resources>
-    <!-- The language of these strings, as a BCP 47 tag, such as "en". Lists and numbers inside
+    <!-- The language of these strings, as a BCP 47 tag, such as "en". Lists and dates inside
          a string, such as the badges in an Eagle group, are formatted in this language, and
          plurals follow its rules, so a sentence never mixes two. Each translation sets its
          own, as a well-formed tag for its folder's language ("pt-BR", not "pt_BR"). -->
     <string name="strings_language">en</string>
     <!-- Shown in place of a screen when the data stored on the phone can't be read. -->
-    <string name="load_failed">Couldn\'t load your data. Try closing and reopening BlueCard.</string>
+    <string name="load_failed">Couldn't load your data. Try closing and reopening BlueCard.</string>
     <!-- Shown briefly when something the scout recorded couldn't be saved on the phone. -->
-    <string name="save_failed">Couldn\'t save. Try again.</string>
+    <string name="save_failed">Couldn't save. Try again.</string>
     <!-- Between the lines of a list row or card as screen readers read it, such as
-         "Your rank. Tenderfoot. 2 of 7 ranks earned" on Home's rank card. The quotes keep its
+         "Your rank. Tenderfoot. 2 of 7 ranks earned" on Home's rank card. It ends in a
          space. -->
-    <string name="read_as_one_separator">". "</string>
+    <string name="read_as_one_separator">. </string>
     <!-- A dialog shown once, when the progress stored on the phone was damaged and BlueCard
          started over without it. The name and unit number are stored apart, so they're kept. -->
-    <string name="damaged_progress_title">Your progress couldn\'t be read</string>
+    <string name="damaged_progress_title">Your progress couldn't be read</string>
     <string name="damaged_progress_message">The progress saved on this phone was damaged, so BlueCard started over without it. Your name and unit number are kept. If you exported your progress, you can import it from Data management.</string>
     <string name="damaged_progress_ok">OK</string>
     <string name="onboarding_title">Welcome to BlueCard</string>
@@ -25,7 +29,7 @@
     <string name="onboarding_save">Get started</string>
     <!-- Below Onboarding's Get started button. The app uses Scouting America's terms, such as
          "Merit Badge", so it says it isn't Scouting America's. -->
-    <string name="onboarding_not_affiliated">BlueCard is an independent app. It isn\'t affiliated with or endorsed by Scouting America.</string>
+    <string name="onboarding_not_affiliated">BlueCard is an independent app. It isn't affiliated with or endorsed by Scouting America.</string>
     <string name="home_unit">Unit: %1$s</string>
     <!-- Above the scout's rank on Home's rank card. -->
     <string name="home_rank_title">Your rank</string>
@@ -35,7 +39,7 @@
     <string name="home_next_rank">Next: %1$s</string>
     <!-- On Home's rank card in place of home_next_rank, once the scout has earned every rank. -->
     <string name="home_every_rank_earned">Every rank earned</string>
-    <string name="home_no_progress">You haven\'t started any merit badges yet.</string>
+    <string name="home_no_progress">You haven't started any merit badges yet.</string>
     <string name="home_badges_title">Your merit badges</string>
     <string name="home_eagle_title">Eagle-required</string>
     <string name="home_open_badges">Merit badges</string>
@@ -49,7 +53,7 @@
     <string name="badges_in_progress">In progress</string>
     <string name="badges_completed">Completed</string>
     <!-- What screen readers say about a badge in progress's progress bar: "40% done". -->
-    <string name="badges_percent_done">%1$d%% done</string>
+    <string name="badges_percent_done">%1$d% done</string>
     <!-- Screen reader action on a badge in the list: "Double tap to open badge". -->
     <string name="badges_open_badge">open badge</string>
     <string name="badges_search">Search merit badges</string>
@@ -95,9 +99,9 @@
     <string name="edit_profile_save">Save</string>
     <!-- Shown in place of a badge's page when the catalog doesn't have the badge or its
          requirements version. Only a catalog edited during development can cause this. -->
-    <string name="requirements_unavailable">This badge\'s requirements aren\'t in this version of BlueCard.</string>
+    <string name="requirements_unavailable">This badge's requirements aren't in this version of BlueCard.</string>
     <!-- The same, in place of a rank's page. -->
-    <string name="rank_requirements_unavailable">This rank\'s requirements aren\'t in this version of BlueCard.</string>
+    <string name="rank_requirements_unavailable">This rank's requirements aren't in this version of BlueCard.</string>
     <!-- A requirement where only some of its sub-requirements are needed, such as "Do 2 of 3". -->
     <string name="requirement_choice">Do %1$d of %2$d</string>
     <string name="requirement_completed">Completed</string>
@@ -144,13 +148,13 @@
     <!-- Asks before Back closes a page whose fields have changes that aren't saved, and the
          dialog's button that discards them and closes the page. -->
     <string name="discard_changes_title">Discard changes?</string>
-    <string name="discard_changes_message">Your changes haven\'t been saved.</string>
+    <string name="discard_changes_message">Your changes haven't been saved.</string>
     <!-- The same, on a requirement's page, where the checkbox and date save straight away and
          only the notes wait for their Save button. -->
-    <string name="discard_changes_message_notes">Your changes to the notes haven\'t been saved.</string>
+    <string name="discard_changes_message_notes">Your changes to the notes haven't been saved.</string>
     <!-- The same, on a rank's requirement, where who signed off on it waits for the notes' Save
          button too. -->
-    <string name="discard_changes_message_sign_off_and_notes">Your changes to the sign-off and notes haven\'t been saved.</string>
+    <string name="discard_changes_message_sign_off_and_notes">Your changes to the sign-off and notes haven't been saved.</string>
     <string name="discard_changes_confirm">Discard</string>
     <!-- Buttons of the dialog for picking a requirement's completion date. -->
     <string name="date_picker_ok">OK</string>
@@ -159,7 +163,7 @@
     <string name="requirement_detail_title">Requirement %1$s</string>
     <!-- Shown in place of a requirement's page when the requirements the badge or rank uses
          don't have it, such as after the badge or rank moves to another version. -->
-    <string name="requirement_detail_unavailable">This requirement isn\'t in the requirements this badge or rank uses.</string>
+    <string name="requirement_detail_unavailable">This requirement isn't in the requirements this badge or rank uses.</string>
     <!-- Button at the bottom of a badge's, a rank's or a requirement's page, which asks before
          clearing what the scout recorded for it, and the dialog's button that clears it, which
          Clear all's dialog on Data management uses too. -->
@@ -208,8 +212,8 @@
          "Week 3" or "Session 12". -->
     <string name="tracker_row_title">%1$s %2$d</string>
     <!-- Between the values of a tracker row on one line, such as "Sep 12, 2026 · Running · 30"
-         or, in the report, "Nights: 2 · Place: Bear Mountain". The quotes keep its spaces. -->
-    <string name="tracker_value_separator">" · "</string>
+         or, in the report, "Nights: 2 · Place: Bear Mountain". It has a space on each side. -->
+    <string name="tracker_value_separator"> · </string>
     <!-- Button that adds a row to a tracker, with what a row is called, such as
          "Add session". -->
     <string name="tracker_add_row">Add %1$s</string>
@@ -226,7 +230,7 @@
     <string name="tracker_entry_delete_message">What you entered in it will be removed.</string>
     <!-- Shown in place of a tracker row's page when the requirements the badge or rank uses
          don't have the tracker or the row, such as after the row was deleted. -->
-    <string name="tracker_entry_unavailable">This entry isn\'t in the tracker anymore.</string>
+    <string name="tracker_entry_unavailable">This entry isn't in the tracker anymore.</string>
     <string name="data_management_title">Data management</string>
     <string name="data_management_profile_heading">Name and unit</string>
     <string name="data_management_profile_description">Change your name or unit number.</string>
@@ -241,7 +245,7 @@
     <string name="data_management_export_description">Save your name, unit number and all your progress to a file.</string>
     <string name="data_management_export">Export</string>
     <string name="data_management_import_heading">Import data</string>
-    <string name="data_management_import_description">Merge a file you exported with what\'s on this phone, or replace everything with it.</string>
+    <string name="data_management_import_description">Merge a file you exported with what's on this phone, or replace everything with it.</string>
     <string name="data_management_import">Import</string>
     <!-- Shown when tapping Import, if no app on the phone can open files. -->
     <string name="data_management_no_file_opener">No app on this phone can open files.</string>
@@ -251,7 +255,7 @@
     <!-- Asks, once a file to import is checked, whether to merge it with the scout's data or
          replace all of it. Replace all is red, as it removes what the scout recorded. -->
     <string name="import_choose_title">Import this file?</string>
-    <string name="import_choose_message">Merge adds the file\'s badges and ranks to yours, and asks which to keep where the two differ. Replace all replaces your name, unit number and all your progress with the file\'s.</string>
+    <string name="import_choose_message">Merge adds the file's badges and ranks to yours, and asks which to keep where the two differ. Replace all replaces your name, unit number and all your progress with the file's.</string>
     <string name="import_merge">Merge</string>
     <string name="import_replace_all">Replace all</string>
     <!-- A full-screen dialog that asks which to keep, the phone's or the file's, for each
@@ -282,11 +286,11 @@
          Star counts. %1$s lists them in the strings_language, such as "Star and Life". -->
     <string name="merge_unearns">%1$s will no longer count as earned.</string>
     <!-- Shown briefly after an export or import, or when one couldn't be done. -->
-    <string name="export_failed">Couldn\'t export. Try again.</string>
-    <string name="import_read_failed">Couldn\'t open the file. Try again.</string>
-    <string name="import_invalid">This file isn\'t a BlueCard export.</string>
+    <string name="export_failed">Couldn't export. Try again.</string>
+    <string name="import_read_failed">Couldn't open the file. Try again.</string>
+    <string name="import_invalid">This file isn't a BlueCard export.</string>
     <string name="import_newer_format">This file is from a newer version of BlueCard. Update the app to import it.</string>
-    <string name="import_failed">Couldn\'t import. Try again.</string>
+    <string name="import_failed">Couldn't import. Try again.</string>
     <string name="import_done">Data imported.</string>
     <string name="merge_done">Data merged.</string>
     <!-- Clears the progress on every badge, including counselors, once the scout confirms.
@@ -348,7 +352,7 @@
     <!-- Shown when tapping Save report or Export, if no app on the phone can save files. -->
     <string name="no_file_saver">No app on this phone can save files.</string>
     <!-- Shown briefly when a badge's or rank's report couldn't be created or saved. -->
-    <string name="report_failed">Couldn\'t create the report. Try again.</string>
+    <string name="report_failed">Couldn't create the report. Try again.</string>
     <!-- The report's file name, without its ".pdf" extension, with the badge's name, such as
          "Camping merit badge report". Each of " * / : < > ? \ | becomes "_", since a file
          name can't hold it. -->
@@ -457,8 +461,8 @@
     <!-- The same while the rank below isn't earned, such as "Eligible 4 months after earning
          First Class, which isn't earned yet". The quantity is the months. -->
     <plurals name="requirement_time_in_rank_not_earned">
-        <item quantity="one">Eligible %1$d month after earning %2$s, which isn\'t earned yet</item>
-        <item quantity="other">Eligible %1$d months after earning %2$s, which isn\'t earned yet</item>
+        <item quantity="one">Eligible %1$d month after earning %2$s, which isn't earned yet</item>
+        <item quantity="other">Eligible %1$d months after earning %2$s, which isn't earned yet</item>
     </plurals>
     <!-- The same while the rank below is earned with no date, such as when it only counts as
          earned with a rank above it: "Eligible 4 months after earning First Class, which has no

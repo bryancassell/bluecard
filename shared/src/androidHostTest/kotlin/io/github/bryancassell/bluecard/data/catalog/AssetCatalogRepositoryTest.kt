@@ -1,13 +1,14 @@
 package io.github.bryancassell.bluecard.data.catalog
 
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import okio.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -16,27 +17,29 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AssetCatalogRepositoryTest {
     private val dispatcher = StandardTestDispatcher()
-    private val repository =
-        AssetCatalogRepository(ApplicationProvider.getApplicationContext(), dispatcher)
+    private val repository = AssetCatalogRepository(dispatcher)
+    private val bundled =
+        File("src/commonMain/composeResources/${AssetCatalogRepository.CATALOG_FILE}")
 
     @Test
     fun getBadges_returnsTheBundledCatalog() = runTest(dispatcher) {
-        val expected = parseCatalog(
-            File("src/androidMain/assets/${AssetCatalogRepository.CATALOG_ASSET}").readText()
-        ).badges
-        assertEquals(expected, repository.getBadges())
+        assertEquals(parseCatalog(bundled.readText()).badges, repository.getBadges())
     }
 
     @Test
     fun getRanks_returnsTheBundledCatalog() = runTest(dispatcher) {
-        val expected = parseCatalog(
-            File("src/androidMain/assets/${AssetCatalogRepository.CATALOG_ASSET}").readText()
-        ).ranks
-        assertEquals(expected, repository.getRanks())
+        assertEquals(parseCatalog(bundled.readText()).ranks, repository.getRanks())
     }
 
     @Test
     fun getBadges_loadsOnlyOnce() = runTest(dispatcher) {
         assertSame(repository.getBadges(), repository.getBadges())
+    }
+
+    // Compose Multiplatform throws its own MissingResourceException, which isn't an IOException.
+    @Test
+    fun readResourceFile_missingFile_throwsIOException() = runTest {
+        val error = runCatching { readResourceFile("files/missing.json") }.exceptionOrNull()
+        assertTrue("Expected an IOException, got $error", error is IOException)
     }
 }

@@ -13,8 +13,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import io.github.bryancassell.bluecard.text.TextRules
-import io.github.bryancassell.bluecard.text.stringsLocale
+import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import io.github.bryancassell.bluecard.ui.BlueCardApp
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -36,13 +37,13 @@ class MainActivity : ComponentActivity() {
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase)
-        // Lay out in the strings' language's direction, not the device's, so English strings
-        // read left-to-right on a Persian phone (see ARCHITECTURE.md, Language and layout
-        // direction). Setting it on the activity keeps its views, Compose, focus and resources in
-        // step.
-        applyOverrideConfiguration(
-            Configuration().apply { setLayoutDirection(stringsLocale(newBase)) }
-        )
+        // The strings follow their own language's plural rules, not the device's, and are laid
+        // out in its direction, so English strings read left-to-right on a Persian phone (see
+        // ARCHITECTURE.md, Language and layout direction). Setting the direction on the activity
+        // keeps its views, Compose, focus and resources in step.
+        // Blocks to read one string, as Compose Multiplatform's stringResource does on Android.
+        val stringsLocale = runBlocking { useStringsLocalesByDefault(newBase) }
+        applyOverrideConfiguration(Configuration().apply { setLayoutDirection(stringsLocale) })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

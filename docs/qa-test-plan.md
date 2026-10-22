@@ -350,9 +350,9 @@ screen something to show. After importing it:
   completed and 2 in progress (Hiking counts with Swimming, which is
   complete). In progress: Camping, Hiking, Personal Fitness, Space
   Exploration.
-- **Camping:** counselor Pat Rivera with phone and email; 1a to 1c, 2 and 4a
-  complete, 4a with two lines of notes; notes on 9; 9a's log has 3 campouts,
-  12 of 20 nights.
+- **Camping:** counselor Pat Rivera with email and phone, typed as
+  2145550142; 1a to 1c, 2 and 4a complete, 4a with two lines of notes; notes
+  on 9; 9a's log has 3 campouts, 12 of 20 nights.
 - **Hiking:** counselor with email only; 5's fixed rows have 3 of 5 hikes.
 - **First Aid:** completed on Nov 20, 2025. **Swimming:** completed on
   Jul 30, 2026.
@@ -510,22 +510,24 @@ Start from the seed.
 - **BADGE-1 [smoke] The page.** Open Camping. → Name, a progress bar,
   "Eagle-required", the summary, "Official requirements", the status card
   ("In progress", "Already completed this badge?", Mark completed), the
-  counselor (Pat Rivera, phone, email, Edit), and the requirements 1 to 10,
-  each with its number in a box, its summary, and "Do 1 of 3" on 3. 1 and 2
-  are complete; 4 and 9 are partly done. At the bottom, Clear progress. (PRD:
-  Status card, Requirement list, Showing whether a requirement is complete)
+  counselor (Pat Rivera, (214) 555-0142, email, Edit), and the requirements 1
+  to 10, each with its number in a box, its summary, and "Do 1 of 3" on 3. 1
+  and 2 are complete; 4 and 9 are partly done. At the bottom, Clear progress.
+  (PRD: Status card, Counselor phone numbers, Requirement list, Showing
+  whether a requirement is complete)
 - **BADGE-2 [smoke] Official link.** Tap Official requirements. → The browser
   opens `https://www.scouting.org/merit-badges/camping/` (check with
   `ui.py S starts`); on API 26, in its WebView Browser Tester. Back returns to
   Camping.
 - **BADGE-3 Phone and email.** Tap the phone number. → The phone app opens
-  with 555-0142 to dial, without calling. Back until BlueCard shows: the
-  dialer's first Back can just close its dialpad. Tap the email. → An email
+  with (214) 555-0142 to dial, without calling, and `starts` shows it was sent
+  `tel:2145550142`, as typed. Back until BlueCard shows: the dialer's first
+  Back can just close its dialpad. Tap the email. → An email
   app opens with a `mailto:pat.rivera@example.com` link (`starts`); on a fresh
   emulator Gmail shows its tour, since it has no account. If no app can send
   email, a message says so. (PRD: Counselor details)
 - **BADGE-4 Editing the counselor.** Edit counselor. → Name, phone and email,
-  filled in. Clear the phone and Save. → The page closes, and Camping shows
+  filled in, with the phone as typed: 2145550142. Clear the phone and Save. → The page closes, and Camping shows
   the counselor without a phone. Back with an unsaved change asks first.
 - **BADGE-5 Adding a counselor.** Open a badge not started, such as Chess.
   → "Not started", "Add counselor". Add a name only and Save. → Chess is now
@@ -639,11 +641,11 @@ Start from the seed.
   requirements version, every requirement with "Not recorded" for ones with
   nothing done, page numbers and today's date. (PRD: PDF report)
 - **DONE-4 Report with details.** Mark Camping completed (today), Save report,
-  and read it. → The counselor, requirements with their dates and notes
-  (including 4a's two lines), 9a's campouts with "12 of 20 nights", "Not
-  recorded" on requirements with nothing done, and "Not completed" on ones
-  partly done, such as 4 and 9. (PRD: Marking a badge completed on a prior
-  date)
+  and read it. → The counselor with "Phone: (214) 555-0142", requirements
+  with their dates and notes (including 4a's two lines), 9a's campouts with
+  "12 of 20 nights", "Not recorded" on requirements with nothing done, and
+  "Not completed" on ones partly done, such as 4 and 9. (PRD: Marking a badge
+  completed on a prior date)
 - **DONE-5 [smoke] Share report.** On First Aid, Share report. → The share
   sheet opens, saying it's sharing one file, "First Aid merit badge
   report.pdf". Back returns to First Aid. On API 26, Gmail is the only app

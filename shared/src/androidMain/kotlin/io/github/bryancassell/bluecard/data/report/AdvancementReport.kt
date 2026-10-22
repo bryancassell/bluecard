@@ -54,6 +54,11 @@ data class AdvancementReport(
     /** The badge's counselor, or null if the scout entered none. A rank has none. */
     val counselor: Counselor?,
     /**
+     * [counselor]'s phone number formatted to show (`PhoneNumberFormat`), or null to show it as
+     * typed. The repository formats it as it reads the report.
+     */
+    val counselorPhone: String? = null,
+    /**
      * Every requirement of the version, in catalog order, with its sub-requirements, including
      * those not completed or not needed, so a counselor reading it sees the whole badge.
      */

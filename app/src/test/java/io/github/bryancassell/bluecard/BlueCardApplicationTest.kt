@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard
 
 import android.content.pm.ApplicationInfo
+import android.os.LocaleList
 import android.os.StrictMode
 import android.os.strictmode.CustomViolation
 import android.os.strictmode.LeakedClosableViolation
@@ -9,16 +10,18 @@ import android.util.CloseGuard
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlin.concurrent.thread
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLog
 
 /**
- * StrictMode in [BlueCardApplication], which Robolectric starts from the manifest before each
- * test. StrictMode's policies outlive the test that set them, so each test turns them off, sets
- * whether the app is debuggable, and starts the app again.
+ * StrictMode and the default locales in [BlueCardApplication], which Robolectric starts from the
+ * manifest before each test. StrictMode's policies outlive the test that set them, so each of its
+ * tests turns them off, sets whether the app is debuggable, and starts the app again.
  */
 @RunWith(AndroidJUnit4::class)
 class BlueCardApplicationTest {
@@ -44,6 +47,18 @@ class BlueCardApplicationTest {
 
         assertFalse(mainThreadViolationLogged())
         assertFalse(objectNeverClosedLogged())
+    }
+
+    // Android sets the default locales back to the device's on a configuration change, and the
+    // strings pick their plural forms by them.
+    @Config(qualifiers = "fa-rIR")
+    @Test
+    fun configurationChange_makesTheStringsLocalesTheDefaultAgain() {
+        LocaleList.setDefault(LocaleList.forLanguageTags("fa-IR"))
+
+        application.onConfigurationChanged(application.resources.configuration)
+
+        assertEquals(LocaleList.forLanguageTags("en,fa-IR"), LocaleList.getDefault())
     }
 
     private fun startApp(debuggable: Boolean) {
