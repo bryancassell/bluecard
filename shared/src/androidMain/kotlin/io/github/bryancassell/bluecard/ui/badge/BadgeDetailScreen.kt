@@ -184,7 +184,12 @@ private fun BadgeDetails(
                 startOtherApp
             )
         }
-        CounselorSection(uiState.counselor, onEdit = onEditCounselor, startOtherApp = startOtherApp)
+        CounselorSection(
+            uiState.counselor,
+            uiState.counselorPhone,
+            onEdit = onEditCounselor,
+            startOtherApp = startOtherApp
+        )
         Text(
             text = stringResource(R.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,

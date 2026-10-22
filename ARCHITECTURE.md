@@ -335,12 +335,14 @@ both taps of a double tap can reach it.
   uses `stringsLanguageResources` and `AndroidLocaleFormats` (`text/`). Each
   translation's `strings.xml` must name its own language
   (`StringsLanguageTagTest`).
-- **Formatting, sorting and breaking text go through `LocaleFormats` and
-  `TextRules`** (`text/`), not `java.text`, `android.icu`, `java.time.format`
-  or `BidiFormatter`, which code shared with iOS can't call
+- **Formatting, sorting and breaking text go through `LocaleFormats`,
+  `TextRules` and `PhoneNumberFormat`** (`text/`), not `java.text`,
+  `android.icu`, `java.time.format`, `BidiFormatter` or `PhoneNumberUtils`,
+  which code shared with iOS can't call
   ([#341](https://github.com/bryancassell/bluecard/issues/341)). Their Android
-  implementations wrap those. ViewModels and the report get `TextRules` from
-  Koin; screens read `LocalTextRules`, which `BlueCardApp` provides.
+  implementations wrap those. ViewModels and the report get `TextRules` and
+  `PhoneNumberFormat` from Koin; screens read `LocalTextRules`, which
+  `BlueCardApp` provides.
 - **Punctuation that joins text comes from `strings.xml` too**
   ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
   " · " between a tracker row's values or the ": " after a label, so a

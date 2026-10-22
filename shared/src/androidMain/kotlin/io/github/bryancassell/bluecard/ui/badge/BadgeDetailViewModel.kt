@@ -12,8 +12,10 @@ import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -22,12 +24,14 @@ import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
@@ -43,7 +47,9 @@ class BadgeDetailViewModel(
     reportRepository: ReportRepository,
     private val clock: ZonedClock,
     textRules: TextRules,
+    phoneNumberFormat: PhoneNumberFormat,
     warningLog: WarningLog,
+    @param:IoDispatcher ioDispatcher: CoroutineDispatcher,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
     private val savedStateHandle: SavedStateHandle
@@ -81,6 +87,10 @@ class BadgeDetailViewModel(
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map(found::item),
             counselor = progress?.badge?.counselor,
+            // Off the main thread, since formatting reads phone number data from disk.
+            counselorPhone = progress?.badge?.counselor?.phone?.let {
+                withContext(ioDispatcher) { phoneNumberFormat.format(it) }
+            },
             status = badge.status(progress),
             completedOnPriorDate = progress?.badge?.completedOnPriorDate,
             completedOn = completion?.date,

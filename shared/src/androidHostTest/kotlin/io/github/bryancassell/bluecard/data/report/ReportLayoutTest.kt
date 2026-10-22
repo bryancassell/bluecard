@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import java.math.BigDecimal
 import java.util.Locale
 import kotlinx.datetime.LocalDate
@@ -149,7 +150,7 @@ class ReportLayoutTest {
     )
 
     private fun layOut(report: AdvancementReport, resources: Resources = context.resources) =
-        layOutReport(report, resources)
+        layOutReport(report, resources, AndroidPhoneNumberFormat())
 
     /** Resources in [locales], BCP 47 tags in order, as `stringsLanguageResources` gives. */
     private fun resources(locales: String): Resources = context.createConfigurationContext(

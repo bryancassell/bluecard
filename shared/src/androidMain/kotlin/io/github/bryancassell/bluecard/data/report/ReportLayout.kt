@@ -21,6 +21,7 @@ import io.github.bryancassell.bluecard.data.progress.storedDate
 import io.github.bryancassell.bluecard.shared.R
 import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import io.github.bryancassell.bluecard.text.LocaleFormats
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import kotlinx.datetime.LocalDate
 
 // A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
@@ -72,9 +73,14 @@ internal class PlacedText(
  * Lays [report] out on pages, with its text from [resources], which must be in the strings'
  * language (`stringsLanguageResources`). Dates and numbers are formatted in their first
  * locale, and text is laid out in its direction (ARCHITECTURE.md, Language and layout direction).
+ * The counselor's phone number is formatted with [phoneNumberFormat], as on screen, so this reads
+ * from disk: call it off the main thread.
  */
-fun layOutReport(report: AdvancementReport, resources: Resources): List<ReportPage> =
-    ReportComposer(resources).apply { add(report) }.pages()
+fun layOutReport(
+    report: AdvancementReport,
+    resources: Resources,
+    phoneNumberFormat: PhoneNumberFormat
+): List<ReportPage> = ReportComposer(resources, phoneNumberFormat).apply { add(report) }.pages()
 
 /** The text styles of a report. */
 private enum class Style(val size: Float, val bold: Boolean) {
@@ -97,12 +103,15 @@ private class Paragraph(
 )
 
 /** Writes a report's paragraphs, then places them on pages. */
-private class ReportComposer(private val resources: Resources) {
+private class ReportComposer(
+    private val resources: Resources,
+    private val phoneNumberFormat: PhoneNumberFormat
+) {
     private val locale = resources.configuration.locales[0]
     private val rightToLeft =
         TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
-    // Dates, totals, phone numbers and typed text are written as on screen.
+    // Dates, totals and typed text are written as on screen.
     private val formats = AndroidLocaleFormats(locale)
 
     // Between a tracker row's values, as on screen.
@@ -141,7 +150,7 @@ private class ReportComposer(private val resources: Resources) {
             addHeading(R.string.report_counselor)
             counselor.name?.let { addLabeled(R.string.report_counselor_name, typed(it)) }
             counselor.phone?.let {
-                addLabeled(R.string.report_counselor_phone, typed(formats.formatPhoneNumber(it)))
+                addLabeled(R.string.report_counselor_phone, typed(phoneNumberFormat.format(it)))
             }
             counselor.email?.let { addLabeled(R.string.report_counselor_email, typed(it)) }
         }

@@ -93,36 +93,4 @@ abstract class LocaleFormatsContract {
     fun typedText_inTheLocalesDirection_isUnchanged() {
         assertEquals("Alex Scout", formats("en-US").typedText("Alex Scout"))
     }
-
-    @Test
-    fun formatPhoneNumber_withoutACountryCode_followsUsRules() {
-        val formats = formats("en-US")
-
-        assertEquals("(555) 123-4567", formats.formatPhoneNumber("5551234567"))
-        assertEquals("(555) 123-4567", formats.formatPhoneNumber("555.123.4567"))
-        assertEquals("555-0100", formats.formatPhoneNumber("5550100"))
-    }
-
-    // Regrouped by the UK's rules, it would read 55 5123 4567.
-    @Test
-    fun formatPhoneNumber_followsUsRules_inEveryLocale() {
-        assertEquals("(555) 123-4567", formats("en-GB").formatPhoneNumber("5551234567"))
-    }
-
-    @Test
-    fun formatPhoneNumber_withACountryCode_followsItsCountrysRules() {
-        val formats = formats("en-US")
-
-        assertEquals("+1 555-123-4567", formats.formatPhoneNumber("+15551234567"))
-        assertEquals("+44 20 7946 0958", formats.formatPhoneNumber("+442079460958"))
-    }
-
-    @Test
-    fun formatPhoneNumber_thatCantBeFormatted_isAsTyped() {
-        val formats = formats("en-US")
-
-        // A UK number without its country code.
-        assertEquals("020 7946 0958", formats.formatPhoneNumber("020 7946 0958"))
-        assertEquals("Ask at the office", formats.formatPhoneNumber("Ask at the office"))
-    }
 }

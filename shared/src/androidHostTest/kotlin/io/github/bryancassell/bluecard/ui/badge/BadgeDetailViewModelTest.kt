@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.report.FakeReportRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
+import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
@@ -141,7 +142,9 @@ class BadgeDetailViewModelTest {
         reportRepository,
         clock,
         AndroidTextRules(),
+        AndroidPhoneNumberFormat(),
         warningLog,
+        mainDispatcherRule.testDispatcher,
         savedStateHandle
     )
 
@@ -171,7 +174,9 @@ class BadgeDetailViewModelTest {
             reportRepository,
             clock,
             AndroidTextRules(),
+            AndroidPhoneNumberFormat(),
             warningLog,
+            mainDispatcherRule.testDispatcher,
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -331,6 +336,26 @@ class BadgeDetailViewModelTest {
             Counselor("Pat Lee", "555-0100", "pat@example.com"),
             viewModel.ready().counselor
         )
+    }
+
+    // Dialed as typed, which is what's stored.
+    @Test
+    fun counselorPhone_isFormatted_andTheCounselorKeepsItAsTyped() = runTest {
+        progressRepository.setCounselor("camping", Counselor(phone = "5551234567"), badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertEquals("(555) 123-4567", viewModel.ready().counselorPhone)
+        assertEquals("5551234567", viewModel.ready().counselor?.phone)
+    }
+
+    @Test
+    fun counselorWithoutAPhone_hasNoPhoneToShow() = runTest {
+        progressRepository.setCounselor("camping", Counselor(name = "Pat Lee"), badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        assertNull(viewModel.ready().counselorPhone)
     }
 
     @Test
@@ -534,7 +559,9 @@ class BadgeDetailViewModelTest {
                 reportRepository,
                 clock,
                 AndroidTextRules(),
+                AndroidPhoneNumberFormat(),
                 warningLog,
+                mainDispatcherRule.testDispatcher,
                 createSavedStateHandle()
             )
         }.use { scenario ->

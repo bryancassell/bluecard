@@ -17,6 +17,7 @@ import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.text.stringsLanguageResources
 import kotlin.random.Random
@@ -50,6 +51,7 @@ class PdfReportRepository(
     private val pdfWriter: ReportPdfWriter,
     private val clock: ZonedClock,
     private val textRules: TextRules,
+    private val phoneNumberFormat: PhoneNumberFormat,
     private val warningLog: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
@@ -130,7 +132,7 @@ class PdfReportRepository(
     }
 
     private fun writeReport(report: AdvancementReport, strings: Resources, out: BufferedSink) {
-        pdfWriter.write(layOutReport(report, strings), out)
+        pdfWriter.write(layOutReport(report, strings, phoneNumberFormat), out)
     }
 
     companion object {
