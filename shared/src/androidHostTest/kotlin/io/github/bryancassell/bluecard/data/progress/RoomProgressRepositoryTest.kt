@@ -17,6 +17,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import java.io.IOException
+import java.util.Collections
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
@@ -36,6 +37,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -271,6 +273,48 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             .exceptionOrNull()
 
         assertTrue("Expected the cancellation, got $error", error is CancellationException)
+    }
+
+    @Test
+    fun writing_usesTheDatabaseOffTheCallersThread() = runTest {
+        // Room runs queries on Dispatchers.IO by default, which externalScope runs on, as in the
+        // app.
+        val threads = Collections.synchronizedList(mutableListOf<Thread>())
+        val repository = RoomProgressRepository(
+            open(
+                Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java),
+                ThreadRecordingDriver(threads)
+            ),
+            externalScope
+        )
+
+        // One write of each kind: a single statement, and a transaction (afterStarting).
+        repository.startBadge("archery", start.requirementsVersion, start.startedDate)
+        repository.markRequirementCompleted("archery", "1", null, start)
+
+        // A copy, since Room's refresh after a write may still be adding to it.
+        val used = synchronized(threads) { threads.toList() }
+        assertTrue(used.isNotEmpty())
+        assertFalse("Used on ${used.map { it.name }.distinct()}", Thread.currentThread() in used)
+    }
+
+    /**
+     * BundledSQLiteDriver, recording in [threads] the thread that opens each connection, which is
+     * where the app's driver sets a damaged database aside, and that prepares each statement.
+     */
+    private class ThreadRecordingDriver(private val threads: MutableList<Thread>) : SQLiteDriver {
+        private val driver = BundledSQLiteDriver()
+
+        override fun open(fileName: String): SQLiteConnection {
+            threads += Thread.currentThread()
+            val connection = driver.open(fileName)
+            return object : SQLiteConnection by connection {
+                override fun prepare(sql: String): SQLiteStatement {
+                    threads += Thread.currentThread()
+                    return connection.prepare(sql)
+                }
+            }
+        }
     }
 
     /** A repository whose writes of requirement progress throw [error]. */

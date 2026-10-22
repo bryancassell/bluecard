@@ -45,6 +45,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -272,6 +273,26 @@ class JsonBackupRepositoryTest {
         caller.cancel()
         advanceUntilIdle()
 
+        assertEquals(BackupReadResult.Valid(storedBackup()), readExport(file))
+    }
+
+    @Test
+    fun exportBackup_writesTheFileOnTheIoDispatcher() = runTest {
+        val (destination, file) = document()
+        // A scheduler of its own, so the test runs the IO dispatcher's work apart from the rest.
+        // The scope runs on the IO dispatcher, as the app's does.
+        val io = TestCoroutineScheduler()
+        val ioDispatcher = StandardTestDispatcher(io)
+        val repository = newRepository(
+            ioDispatcher = ioDispatcher,
+            externalScope = CoroutineScope(SupervisorJob() + ioDispatcher)
+        )
+
+        launch { repository.exportBackup(destination) }
+        advanceUntilIdle()
+        assertEquals(0L, file.length())
+
+        io.advanceUntilIdle()
         assertEquals(BackupReadResult.Valid(storedBackup()), readExport(file))
     }
 

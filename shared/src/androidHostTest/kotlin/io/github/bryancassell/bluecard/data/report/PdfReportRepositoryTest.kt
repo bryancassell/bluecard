@@ -36,6 +36,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -411,6 +412,23 @@ class PdfReportRepositoryTest {
         caller.cancel()
         advanceUntilIdle()
 
+        assertEquals(pdfWriter.lastWritten, file.readText())
+    }
+
+    @Test
+    fun saveReport_writesTheFileOnTheIoDispatcher() = runTest {
+        val (document, file) = createdDocument()
+        // A scheduler of its own, so the test runs the IO dispatcher's work apart from the rest.
+        // The scope runs on the IO dispatcher, as the app's does.
+        val io = TestCoroutineScheduler()
+        val ioDispatcher = StandardTestDispatcher(io)
+        val repository = newRepository(ioDispatcher, CoroutineScope(SupervisorJob() + ioDispatcher))
+
+        launch { repository.saveReport("chess", document) }
+        advanceUntilIdle()
+        assertEquals("", file.readText())
+
+        io.advanceUntilIdle()
         assertEquals(pdfWriter.lastWritten, file.readText())
     }
 
