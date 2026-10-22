@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -604,6 +605,8 @@ class PdfReportRepositoryTest {
     @Config(qualifiers = "fa")
     @Test
     fun report_onPersianPhone_isInTheStringsLanguage() = runTest {
+        useStringsLocalesByDefault(context)
+
         repository.createReportToShare("chess")
 
         val lines = pdfWriter.pages.single().flatMap { it.lines }

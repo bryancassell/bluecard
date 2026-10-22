@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
-import io.github.bryancassell.bluecard.data.report.fileName
+import io.github.bryancassell.bluecard.data.report.fileNameTitle
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_clear_message
@@ -187,7 +187,7 @@ private fun RankDetails(
         )
         EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) {
             ReportButtons(
-                reportFileName(stringResource(ReportKind.Rank.fileName, uiState.name)),
+                reportFileName(stringResource(ReportKind.Rank.fileNameTitle, uiState.name)),
                 onShareReport,
                 onSaveReport,
                 startOtherApp

@@ -24,6 +24,7 @@ import java.math.BigDecimal
 import java.util.Locale
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -149,7 +150,7 @@ class ReportLayoutTest {
     private fun layOut(
         report: AdvancementReport,
         locale: Locale = context.resources.configuration.locales[0]
-    ) = runBlocking { layOutReport(report, locale) }
+    ) = runBlocking { layOutReport(report, locale, getSystemResourceEnvironment()) }
 
     @Test
     fun shortReport_isOnePage_withEverythingRecordedInOrder() {

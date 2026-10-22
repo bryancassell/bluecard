@@ -34,17 +34,17 @@ interface ReportRepository {
 }
 
 /**
- * What a report of this kind's file is called, with the badge's or rank's name: "%1$s merit badge
- * report" or "%1$s rank report" ([reportFileName]).
+ * The title a report of this kind's file is named after, with the badge's or rank's name:
+ * "%1$s merit badge report" or "%1$s rank report" ([reportFileName]).
  */
-val ReportKind.fileName: StringResource
+val ReportKind.fileNameTitle: StringResource
     get() = when (this) {
         ReportKind.MeritBadge -> Res.string.report_file_name
         ReportKind.Rank -> Res.string.report_file_name_rank
     }
 
 /**
- * The file name of the report titled [title] ([ReportKind.fileName] with the badge's or rank's
+ * The file name of the report titled [title] ([ReportKind.fileNameTitle] with the badge's or rank's
  * name), such as "Camping merit badge report.pdf" or "Star rank report.pdf". Both a shared report
  * and the name the file picker suggests use it.
  *

@@ -58,7 +58,6 @@ import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 // A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
 // Sizes are in PDF points, 1/72 of an inch.
@@ -106,14 +105,17 @@ internal class PlacedText(
 }
 
 /**
- * Lays [report] out on pages, in the strings' language, as the default locale has it
- * (`useStringsLocalesByDefault`). Dates and totals are formatted in [locale], the strings'
- * locale (`stringsLocale`), and text is laid out in its direction (ARCHITECTURE.md, Language and
- * layout direction).
+ * Lays [report] out on pages, with its strings from [environment], such as
+ * `getSystemResourceEnvironment()`, which reads the default locale the app makes the strings'
+ * (`useStringsLocalesByDefault`). Dates and totals are formatted in [locale], the strings' locale
+ * (`stringsLocale`), and text is laid out in its direction (ARCHITECTURE.md, Language and layout
+ * direction).
  */
-suspend fun layOutReport(report: AdvancementReport, locale: Locale): List<ReportPage> {
-    // Read once, as it reads the system's configuration, and so every string is in one language.
-    val environment = getSystemResourceEnvironment()
+suspend fun layOutReport(
+    report: AdvancementReport,
+    locale: Locale,
+    environment: ResourceEnvironment
+): List<ReportPage> {
     val valueSeparator = getString(environment, Res.string.tracker_value_separator)
     return ReportComposer(locale, environment, valueSeparator).apply { add(report) }.pages()
 }

@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
-import io.github.bryancassell.bluecard.data.report.fileName
+import io.github.bryancassell.bluecard.data.report.fileNameTitle
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_clear_message
@@ -194,7 +194,7 @@ private fun BadgeDetails(
         )
         CompletionStatus(uiState, today, onMarkCompleted, onUnmarkCompleted) {
             ReportButtons(
-                reportFileName(stringResource(ReportKind.MeritBadge.fileName, uiState.name)),
+                reportFileName(stringResource(ReportKind.MeritBadge.fileNameTitle, uiState.name)),
                 onShareReport,
                 onSaveReport,
                 startOtherApp

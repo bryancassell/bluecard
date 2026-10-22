@@ -274,6 +274,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.okio)
+    // getSystemResourceEnvironment, which PdfDocumentWriterTest lays its report out with.
+    androidTestImplementation(libs.compose.components.resources)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 

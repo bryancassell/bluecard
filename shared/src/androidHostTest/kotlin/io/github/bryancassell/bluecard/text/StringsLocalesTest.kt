@@ -72,6 +72,14 @@ class StringsLocalesTest {
         )
     }
 
+    @Config(qualifiers = "fa")
+    @Test
+    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() = runTest {
+        val locale = stringsLocale(ApplicationProvider.getApplicationContext())
+
+        assertEquals(Locale.forLanguageTag("en"), locale)
+    }
+
     // Compose Multiplatform's strings, and Compose's own Locale.current, read the default.
     @Config(qualifiers = "fa-rIR")
     @Test

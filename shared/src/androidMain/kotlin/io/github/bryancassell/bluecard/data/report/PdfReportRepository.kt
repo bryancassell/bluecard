@@ -17,7 +17,7 @@ import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.TextRules
-import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
+import io.github.bryancassell.bluecard.text.stringsLocale
 import kotlin.random.Random
 import kotlin.random.nextULong
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,6 +29,7 @@ import okio.Buffer
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 /**
  * [ReportRepository] that lays reports out with [layOutReport] and writes them with
@@ -58,11 +59,10 @@ class PdfReportRepository(
     override suspend fun createReportToShare(advancementId: String): Uri? =
         withContext(ioDispatcher) {
             val report = report(advancementId) ?: return@withContext null
-            // Read for each report, so it follows a change to the phone's language.
-            val pages = layOutReport(report, useStringsLocalesByDefault(context))
+            val pages = layOut(report)
             val folder = context.cacheDir.toOkioPath() / REPORTS_FOLDER
             fileSystem.createDirectories(folder)
-            val file = folder / reportFileName(getString(report.kind.fileName, report.name))
+            val file = folder / reportFileName(getString(report.kind.fileNameTitle, report.name))
             // Written beside the report's file, then renamed over it in one step: an app that an
             // earlier report was shared with, such as an email app that reads it only to send it,
             // never reads a partly written one, and a report that fails leaves that one as it was.
@@ -90,7 +90,7 @@ class PdfReportRepository(
     private suspend fun save(advancementId: String, destination: Uri) =
         context.contentResolver.saveDocument(destination, warningLog) {
             report(advancementId)?.let { report ->
-                val pages = layOutReport(report, useStringsLocalesByDefault(context))
+                val pages = layOut(report)
                 Buffer().also { pdfWriter.write(pages, it) }.readByteArray()
             }
         }
@@ -126,6 +126,11 @@ class PdfReportRepository(
         }
         return checkNotNull(report) { "The catalog has no requirements for $advancementId" }
     }
+
+    // Read for each report, so it follows a change to the phone's language. The environment is
+    // read once, as it reads the system's configuration, so every string is in one language.
+    private suspend fun layOut(report: AdvancementReport): List<ReportPage> =
+        layOutReport(report, stringsLocale(context), getSystemResourceEnvironment())
 
     companion object {
         private const val TAG = "Report"
