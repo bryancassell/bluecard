@@ -141,8 +141,8 @@ val coverageClasses = tasks.register<Sync>("coverageClasses") {
     into(layout.buildDirectory.dir("coverage/classes"))
 }
 
-// Generated Android, Room and Kotlin classes, @Preview functions (kept in *Preview.kt files),
-// which only run in Android Studio, and code that only runs on a device.
+// Generated Android, Room, Compose Multiplatform and Kotlin classes, @Preview functions (kept in
+// *Preview.kt files), which only run in Android Studio, and code that only runs on a device.
 val coverageExclusions = listOf(
     "**/R.class",
     "**/R\$*.class",
@@ -152,6 +152,9 @@ val coverageExclusions = listOf(
     // Room: generated database and DAO implementations.
     "**/*_Impl.class",
     "**/*_Impl\$*.class",
+    // Compose Multiplatform: the Res class and its accessors, generated from :shared's
+    // composeResources into the package its build file names.
+    "**/io/github/bryancassell/bluecard/resources/**",
     // Kotlin: copies of an interface's default arguments for Java code compiled against
     // older Kotlin. Kotlin callers use the interface's own static methods instead.
     "**/*\$DefaultImpls.class",

@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.LocaleList
 import android.view.View
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -657,11 +658,21 @@ class MainActivityTest {
         composeTestRule.onReadAsOne("Do 1 of 2").performScrollTo().assertIsDisplayed()
     }
 
+    // Compose Multiplatform's strings pick plural forms by the default locale's rules, so the
+    // activity makes the strings' locales the default: English rules, not Persian ones, which
+    // would read "0 merit badge" (useStringsLocalesByDefault).
+    @Config(qualifiers = "fa-rIR")
+    @Test
+    fun onDeviceInOtherLanguage_defaultLocalesAreTheStrings() {
+        launchWithProfile()
+
+        assertEquals(LocaleList.forLanguageTags("en,fa-IR"), LocaleList.getDefault())
+    }
+
     // The activity takes the strings' language's direction, so on a right-to-left device its
     // views are left-to-right like the English strings. Compose draws in one of them, and
-    // keyboard and D-pad focus moves by its direction. Its resources are left-to-right too, and
-    // ProvideStringsLanguageResources keeps their direction, so resources with a
-    // direction-specific version, such as drawable-ldrtl, match the layout.
+    // keyboard and D-pad focus moves by its direction. Its resources are left-to-right too, so
+    // resources with a direction-specific version, such as drawable-ldrtl, match the layout.
     @Config(qualifiers = "fa")
     @Test
     fun onRightToLeftDevice_activityIsLeftToRight() {

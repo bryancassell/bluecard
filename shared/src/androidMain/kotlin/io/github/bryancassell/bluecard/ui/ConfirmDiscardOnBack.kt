@@ -6,8 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.discard_changes_confirm
+import io.github.bryancassell.bluecard.resources.discard_changes_message
+import io.github.bryancassell.bluecard.resources.discard_changes_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Whether a page has changes that aren't saved, for Back, which the navigation root handles.
@@ -55,16 +58,16 @@ val LocalUnsavedChanges = staticCompositionLocalOf<UnsavedChanges> {
 fun ConfirmDiscardOnBack(
     changed: Boolean,
     onDiscard: () -> Unit,
-    message: String = stringResource(R.string.discard_changes_message)
+    message: String = stringResource(Res.string.discard_changes_message)
 ) {
     val unsaved = LocalUnsavedChanges.current
     // Back reads it when it arrives, so it follows what the page shows.
     SideEffect { unsaved.changed = changed }
     if (unsaved.confirming && changed) {
         ConfirmDialog(
-            title = stringResource(R.string.discard_changes_title),
+            title = stringResource(Res.string.discard_changes_title),
             message = message,
-            confirmLabel = stringResource(R.string.discard_changes_confirm),
+            confirmLabel = stringResource(Res.string.discard_changes_confirm),
             onConfirm = {
                 unsaved.confirming = false
                 onDiscard()

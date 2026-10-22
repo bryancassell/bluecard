@@ -35,6 +35,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(project(":shared"))
+            implementation(libs.compose.components.resources)
             implementation(libs.androidx.core.ktx)
             implementation(libs.junit)
             implementation(libs.robolectric)

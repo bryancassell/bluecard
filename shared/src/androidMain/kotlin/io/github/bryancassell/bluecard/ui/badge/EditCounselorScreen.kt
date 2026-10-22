@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -35,7 +33,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_EMAIL_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.COUNSELOR_PHONE_MAX_LENGTH
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.edit_counselor_email
+import io.github.bryancassell.bluecard.resources.edit_counselor_name
+import io.github.bryancassell.bluecard.resources.edit_counselor_phone
+import io.github.bryancassell.bluecard.resources.edit_counselor_save
+import io.github.bryancassell.bluecard.resources.edit_counselor_title
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.requirements_unavailable
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
@@ -45,6 +51,8 @@ import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.navigation.EditCounselor
 import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -99,10 +107,10 @@ fun EditCounselorScreen(
         EditCounselorUiState.Loading -> ScreenLoadingIndicator(modifier)
 
         EditCounselorUiState.LoadFailed ->
-            ScreenMessage(stringResource(R.string.load_failed), modifier)
+            ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         EditCounselorUiState.Unavailable ->
-            ScreenMessage(stringResource(R.string.requirements_unavailable), modifier)
+            ScreenMessage(stringResource(Res.string.requirements_unavailable), modifier)
 
         // Ends the page above the keyboard, so every field can be scrolled into view.
         is EditCounselorUiState.Ready -> Box(modifier = modifier.imePadding()) {
@@ -113,7 +121,7 @@ fun EditCounselorScreen(
             CounselorFields(uiState, name, phone, email, onSave)
             TaskFailureSnackbarHost(
                 failure = uiState.saveFailure,
-                message = stringResource(R.string.save_failed),
+                message = stringResource(Res.string.save_failed),
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -144,14 +152,14 @@ private fun CounselorFields(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = stringResource(R.string.edit_counselor_title),
+            text = stringResource(Res.string.edit_counselor_title),
             style = MaterialTheme.typography.headlineMedium,
             // Lets screen reader users jump to it.
             modifier = Modifier.semantics { heading() }
         )
         CounselorField(
             state = name,
-            label = R.string.edit_counselor_name,
+            label = Res.string.edit_counselor_name,
             maxLength = COUNSELOR_NAME_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
@@ -160,7 +168,7 @@ private fun CounselorFields(
         )
         CounselorField(
             state = phone,
-            label = R.string.edit_counselor_phone,
+            label = Res.string.edit_counselor_phone,
             maxLength = COUNSELOR_PHONE_MAX_LENGTH,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
@@ -172,7 +180,7 @@ private fun CounselorFields(
         KeepInViewWhileFocused(scrollState) {
             CounselorField(
                 state = email,
-                label = R.string.edit_counselor_email,
+                label = Res.string.edit_counselor_email,
                 maxLength = COUNSELOR_EMAIL_MAX_LENGTH,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -190,7 +198,7 @@ private fun CounselorFields(
                 // with it.
                 modifier = Modifier.align(Alignment.End).padding(bottom = 16.dp)
             ) {
-                Text(stringResource(R.string.edit_counselor_save))
+                Text(stringResource(Res.string.edit_counselor_save))
             }
         }
     }
@@ -199,7 +207,7 @@ private fun CounselorFields(
 @Composable
 private fun CounselorField(
     state: TextFieldState,
-    @StringRes label: Int,
+    label: StringResource,
     maxLength: Int,
     keyboardOptions: KeyboardOptions
 ) {

@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -45,7 +44,17 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.TRACKER_MULTILINE_TEXT_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_NUMBER_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TRACKER_TEXT_MAX_LENGTH
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.requirement_detail_title
+import io.github.bryancassell.bluecard.resources.save_failed
+import io.github.bryancassell.bluecard.resources.tracker_entry_delete
+import io.github.bryancassell.bluecard.resources.tracker_entry_delete_message
+import io.github.bryancassell.bluecard.resources.tracker_entry_delete_title
+import io.github.bryancassell.bluecard.resources.tracker_entry_no_date
+import io.github.bryancassell.bluecard.resources.tracker_entry_save
+import io.github.bryancassell.bluecard.resources.tracker_entry_unavailable
+import io.github.bryancassell.bluecard.resources.tracker_row_title
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
@@ -61,6 +70,7 @@ import io.github.bryancassell.bluecard.ui.rememberTextLengthLimit
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -116,10 +126,10 @@ fun TrackerEntryScreen(
         TrackerEntryUiState.Loading -> ScreenLoadingIndicator(modifier)
 
         TrackerEntryUiState.LoadFailed ->
-            ScreenMessage(stringResource(R.string.load_failed), modifier)
+            ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         TrackerEntryUiState.Unavailable ->
-            ScreenMessage(stringResource(R.string.tracker_entry_unavailable), modifier)
+            ScreenMessage(stringResource(Res.string.tracker_entry_unavailable), modifier)
 
         is TrackerEntryUiState.Ready -> {
             if (uiState.done) {
@@ -158,7 +168,7 @@ fun TrackerEntryScreen(
                 }
                 TaskFailureSnackbarHost(
                     failure = uiState.saveFailure,
-                    message = stringResource(R.string.save_failed),
+                    message = stringResource(Res.string.save_failed),
                     onShown = onSaveFailureShown,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
@@ -179,12 +189,16 @@ private fun TrackerEntryHeader(uiState: TrackerEntryUiState.Ready) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = stringResource(R.string.requirement_detail_title, uiState.requirementNumber),
+            text = stringResource(Res.string.requirement_detail_title, uiState.requirementNumber),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = stringResource(R.string.tracker_row_title, uiState.rowTitle, uiState.rowNumber),
+            text = stringResource(
+                Res.string.tracker_row_title,
+                uiState.rowTitle,
+                uiState.rowNumber
+            ),
             style = MaterialTheme.typography.headlineMedium,
             // Lets screen reader users jump to it.
             modifier = Modifier.semantics { heading() }
@@ -232,7 +246,7 @@ private fun TrackerField(
             val formats = LocalLocaleFormats.current
             EditableDate(
                 text = date?.let { formats.formatDate(it) }
-                    ?: stringResource(R.string.tracker_entry_no_date),
+                    ?: stringResource(Res.string.tracker_entry_no_date),
                 date = date,
                 today = today,
                 onDateChange = onDateChange,
@@ -298,7 +312,7 @@ private fun TrackerEntryButtons(
                 enabled = uiState.canDelete,
                 colors = removalButtonColors()
             ) {
-                Text(stringResource(R.string.tracker_entry_delete))
+                Text(stringResource(Res.string.tracker_entry_delete))
             }
         }
         Spacer(Modifier.weight(1f))
@@ -310,17 +324,17 @@ private fun TrackerEntryButtons(
             },
             enabled = uiState.canSave
         ) {
-            Text(stringResource(R.string.tracker_entry_save))
+            Text(stringResource(Res.string.tracker_entry_save))
         }
     }
     if (confirmingDelete) {
         ConfirmDialog(
-            title = stringResource(R.string.tracker_entry_delete_title, uiState.rowLabel),
+            title = stringResource(Res.string.tracker_entry_delete_title, uiState.rowLabel),
             message = withUnearnedRanks(
-                stringResource(R.string.tracker_entry_delete_message),
+                stringResource(Res.string.tracker_entry_delete_message),
                 uiState.unearnedByDelete
             ),
-            confirmLabel = stringResource(R.string.tracker_entry_delete),
+            confirmLabel = stringResource(Res.string.tracker_entry_delete),
             onConfirm = {
                 confirmingDelete = false
                 onDelete()

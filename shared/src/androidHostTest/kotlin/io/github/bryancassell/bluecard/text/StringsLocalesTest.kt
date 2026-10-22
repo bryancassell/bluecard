@@ -2,13 +2,14 @@ package io.github.bryancassell.bluecard.text
 
 import android.content.Context
 import android.os.LocaleList
-import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_count
 import java.util.Locale
+import kotlinx.coroutines.test.runTest
+import org.jetbrains.compose.resources.getPluralString
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -34,6 +35,18 @@ class StringsLocalesTest {
         )
     }
 
+    // "%1$d" in a string inserts Latin digits, so dates and totals don't use other ones.
+    @Test
+    fun stringsLocales_deviceChoosesOtherDigits_leavesThemOut() {
+        assertEquals(
+            LocaleList.forLanguageTags("en-GB,fa-IR"),
+            stringsLocales(
+                LocaleList.forLanguageTags("en-GB-u-nu-arab,fa-IR"),
+                Locale.forLanguageTag("en")
+            )
+        )
+    }
+
     // Serbian is written in Cyrillic or Latin script; "sr-RS" is Cyrillic.
     @Test
     fun stringsLocales_matchesScript() {
@@ -48,27 +61,38 @@ class StringsLocalesTest {
 
     @Config(qualifiers = "fa")
     @Test
-    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() {
+    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() = runTest {
         val locale = stringsLocale(ApplicationProvider.getApplicationContext<Context>())
 
         assertEquals(Locale.forLanguageTag("en"), locale)
     }
 
-    // For code outside Compose, such as the PDF report.
-    @Config(qualifiers = "fa")
+    // Compose Multiplatform's strings, and Compose's own Locale.current, read the default.
+    @Config(qualifiers = "fa-rIR")
     @Test
-    fun stringsLanguageResources_onPersianDevice_areInStringsLanguage_leftToRight() {
-        val resources = stringsLanguageResources(ApplicationProvider.getApplicationContext())
+    fun useStringsLocalesByDefault_onPersianDevice_putsStringsLanguageFirst() {
+        val locale = useStringsLocalesByDefault(ApplicationProvider.getApplicationContext())
 
-        assertEquals("Do 2 of 3", resources.getString(R.string.requirement_choice, 2, 3))
-        assertEquals(Locale.forLanguageTag("en"), resources.configuration.locales[0])
-        assertEquals(View.LAYOUT_DIRECTION_LTR, resources.configuration.layoutDirection)
+        assertEquals(Locale.forLanguageTag("en"), locale)
+        assertEquals(LocaleList.forLanguageTags("en,fa-IR"), LocaleList.getDefault())
     }
 
+    // For code outside Compose, such as the PDF report. Persian rules would pick "one" for 0.
+    @Config(qualifiers = "fa")
     @Test
-    fun stringsLanguageResources_onDeviceInStringsLanguage_areTheDevices() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun useStringsLocalesByDefault_onPersianDevice_pluralsOutsideComposeUseStringsLanguageRules() =
+        runTest {
+            useStringsLocalesByDefault(ApplicationProvider.getApplicationContext())
 
-        assertSame(context.resources, stringsLanguageResources(context))
+            assertEquals("0 merit badges", getPluralString(Res.plurals.badges_count, 0, 0))
+        }
+
+    @Test
+    fun useStringsLocalesByDefault_onDeviceInStringsLanguage_keepsDevicesLocales() {
+        val device = LocaleList.getDefault()
+
+        useStringsLocalesByDefault(ApplicationProvider.getApplicationContext())
+
+        assertEquals(device, LocaleList.getDefault())
     }
 }

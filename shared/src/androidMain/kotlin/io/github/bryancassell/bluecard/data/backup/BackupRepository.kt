@@ -1,10 +1,11 @@
 package io.github.bryancassell.bluecard.data.backup
 
-import android.content.res.Resources
 import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.export_file_name
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.getString
 
 /**
  * Export and import of everything the scout entered: their profile and all their progress, in
@@ -42,8 +43,8 @@ interface BackupRepository {
 
 /**
  * The name the file picker suggests for an export made on [date], such as "BlueCard export
- * 2026-10-01.json", from [resources] in the strings' language. The date is in ISO form, so the
- * name has no slashes in it and files sort by date.
+ * 2026-10-01.json", in the strings' language. The date is in ISO form, so the name has no
+ * slashes in it and files sort by date.
  */
-fun exportFileName(resources: Resources, date: LocalDate): String =
-    resources.getString(R.string.export_file_name, date.toString()) + ".json"
+suspend fun exportFileName(date: LocalDate): String =
+    getString(Res.string.export_file_name, date.toString()) + ".json"

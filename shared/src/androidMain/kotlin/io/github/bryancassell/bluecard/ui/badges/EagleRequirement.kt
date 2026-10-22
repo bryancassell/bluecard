@@ -1,12 +1,14 @@
 package io.github.bryancassell.bluecard.ui.badges
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.badgeNameOrder
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_eagle_required
+import io.github.bryancassell.bluecard.resources.badges_eagle_required_one_of
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
+import org.jetbrains.compose.resources.stringResource
 
 /** How a badge counts toward Eagle Scout. */
 sealed interface EagleRequirement {
@@ -46,10 +48,10 @@ fun MeritBadge.eagleRequirement(eagleGroups: Map<String, List<String>>): EagleRe
  */
 @Composable
 fun eagleRequirementLabel(requirement: EagleRequirement): String = when (requirement) {
-    EagleRequirement.Required -> stringResource(R.string.badges_eagle_required)
+    EagleRequirement.Required -> stringResource(Res.string.badges_eagle_required)
 
     is EagleRequirement.OneOf -> stringResource(
-        R.string.badges_eagle_required_one_of,
+        Res.string.badges_eagle_required_one_of,
         LocalLocaleFormats.current.formatList(requirement.badgeNames)
     )
 }

@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,25 +21,55 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.backup.exportFileName
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.clear_all_confirm_message
+import io.github.bryancassell.bluecard.resources.clear_all_confirm_title
+import io.github.bryancassell.bluecard.resources.clear_all_done
+import io.github.bryancassell.bluecard.resources.clear_progress_confirm
+import io.github.bryancassell.bluecard.resources.data_management_clear
+import io.github.bryancassell.bluecard.resources.data_management_clear_description
+import io.github.bryancassell.bluecard.resources.data_management_clear_heading
+import io.github.bryancassell.bluecard.resources.data_management_export
+import io.github.bryancassell.bluecard.resources.data_management_export_description
+import io.github.bryancassell.bluecard.resources.data_management_export_heading
+import io.github.bryancassell.bluecard.resources.data_management_import
+import io.github.bryancassell.bluecard.resources.data_management_import_description
+import io.github.bryancassell.bluecard.resources.data_management_import_heading
+import io.github.bryancassell.bluecard.resources.data_management_no_file_opener
+import io.github.bryancassell.bluecard.resources.data_management_profile_description
+import io.github.bryancassell.bluecard.resources.data_management_profile_edit
+import io.github.bryancassell.bluecard.resources.data_management_profile_edit_description
+import io.github.bryancassell.bluecard.resources.data_management_profile_heading
+import io.github.bryancassell.bluecard.resources.data_management_title
+import io.github.bryancassell.bluecard.resources.export_failed
+import io.github.bryancassell.bluecard.resources.import_done
+import io.github.bryancassell.bluecard.resources.import_failed
+import io.github.bryancassell.bluecard.resources.import_invalid
+import io.github.bryancassell.bluecard.resources.import_newer_format
+import io.github.bryancassell.bluecard.resources.import_read_failed
+import io.github.bryancassell.bluecard.resources.merge_done
+import io.github.bryancassell.bluecard.resources.no_file_saver
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.ButtonText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Data management screen to its ViewModel. */
@@ -106,9 +135,9 @@ fun DataManagementScreen(
     val openDocument = rememberLauncherForActivityResult(OpenOpenableDocument()) { source ->
         source?.let(onImport)
     }
-    val resources = LocalResources.current
-    val noFileSaver = stringResource(R.string.no_file_saver)
-    val noFileOpener = stringResource(R.string.data_management_no_file_opener)
+    val scope = rememberCoroutineScope()
+    val noFileSaver = stringResource(Res.string.no_file_saver)
+    val noFileOpener = stringResource(Res.string.data_management_no_file_opener)
     var confirmingClear by rememberSaveable { mutableStateOf(false) }
     Box(modifier = modifier) {
         Column(
@@ -119,45 +148,48 @@ fun DataManagementScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = stringResource(R.string.data_management_title),
+                text = stringResource(Res.string.data_management_title),
                 style = MaterialTheme.typography.headlineMedium,
                 // Lets screen reader users jump to it.
                 modifier = Modifier.semantics { heading() }
             )
             Section(
-                heading = R.string.data_management_profile_heading,
-                description = R.string.data_management_profile_description,
-                button = R.string.data_management_profile_edit,
+                heading = Res.string.data_management_profile_heading,
+                description = Res.string.data_management_profile_description,
+                button = Res.string.data_management_profile_edit,
                 // Screen reader users moving from control to control don't hear the heading, so
                 // "Edit" alone didn't say what it edits (#166).
-                buttonDescription = R.string.data_management_profile_edit_description,
+                buttonDescription = Res.string.data_management_profile_edit_description,
                 enabled = !uiState.working,
                 // Through the screen's OtherAppStarter, so a tap just after Export or Import
                 // doesn't open the page under the file picker.
                 onClick = { startOtherApp.tap(onEditProfile) }
             )
             Section(
-                heading = R.string.data_management_export_heading,
-                description = R.string.data_management_export_description,
-                button = R.string.data_management_export,
+                heading = Res.string.data_management_export_heading,
+                description = Res.string.data_management_export_description,
+                button = Res.string.data_management_export,
                 enabled = !uiState.working,
                 onClick = {
-                    val fileName = exportFileName(resources, today())
-                    startOtherApp.launch(createDocument, fileName, noFileSaver)
+                    // The name has the date of the tap, so it's read here, outside
+                    // composition, where strings come from the suspend getString.
+                    scope.launch {
+                        startOtherApp.launch(createDocument, exportFileName(today()), noFileSaver)
+                    }
                 }
             )
             Section(
-                heading = R.string.data_management_import_heading,
-                description = R.string.data_management_import_description,
-                button = R.string.data_management_import,
+                heading = Res.string.data_management_import_heading,
+                description = Res.string.data_management_import_description,
+                button = Res.string.data_management_import,
                 enabled = !uiState.working,
                 onClick = { startOtherApp.launch(openDocument, IMPORT_TYPES, noFileOpener) }
             )
             // Red, and last on the page, so it isn't tapped by mistake.
             Section(
-                heading = R.string.data_management_clear_heading,
-                description = R.string.data_management_clear_description,
-                button = R.string.data_management_clear,
+                heading = Res.string.data_management_clear_heading,
+                description = Res.string.data_management_clear_description,
+                button = Res.string.data_management_clear,
                 // Disabled rather than hidden, unlike the other clears' buttons, so the scout can
                 // see where clearing everything lives.
                 enabled = uiState.canClear && !uiState.working,
@@ -190,9 +222,9 @@ fun DataManagementScreen(
     }
     if (confirmingClear) {
         ConfirmDialog(
-            title = stringResource(R.string.clear_all_confirm_title),
-            message = stringResource(R.string.clear_all_confirm_message),
-            confirmLabel = stringResource(R.string.clear_progress_confirm),
+            title = stringResource(Res.string.clear_all_confirm_title),
+            message = stringResource(Res.string.clear_all_confirm_message),
+            confirmLabel = stringResource(Res.string.clear_progress_confirm),
             onConfirm = {
                 confirmingClear = false
                 onClearAll()
@@ -208,13 +240,13 @@ fun DataManagementScreen(
  */
 @Composable
 private fun Section(
-    @StringRes heading: Int,
-    @StringRes description: Int,
-    @StringRes button: Int,
+    heading: StringResource,
+    description: StringResource,
+    button: StringResource,
     enabled: Boolean,
     onClick: () -> Unit,
     colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
-    @StringRes buttonDescription: Int? = null
+    buttonDescription: StringResource? = null
 ) {
     Text(
         text = stringResource(heading),
@@ -232,17 +264,17 @@ private fun Section(
     }
 }
 
-private val Kind.text: Int
-    @StringRes get() = when (this) {
-        Kind.ExportFailed -> R.string.export_failed
-        Kind.ReadFailed -> R.string.import_read_failed
-        Kind.Invalid -> R.string.import_invalid
-        Kind.NewerFormat -> R.string.import_newer_format
-        Kind.ImportFailed -> R.string.import_failed
-        Kind.Imported -> R.string.import_done
-        Kind.Merged -> R.string.merge_done
-        Kind.ClearFailed -> R.string.save_failed
-        Kind.Cleared -> R.string.clear_all_done
+private val Kind.text: StringResource
+    get() = when (this) {
+        Kind.ExportFailed -> Res.string.export_failed
+        Kind.ReadFailed -> Res.string.import_read_failed
+        Kind.Invalid -> Res.string.import_invalid
+        Kind.NewerFormat -> Res.string.import_newer_format
+        Kind.ImportFailed -> Res.string.import_failed
+        Kind.Imported -> Res.string.import_done
+        Kind.Merged -> Res.string.merge_done
+        Kind.ClearFailed -> Res.string.save_failed
+        Kind.Cleared -> Res.string.clear_all_done
     }
 
 private const val JSON = "application/json"

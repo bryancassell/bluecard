@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.OutlinedButton
@@ -16,11 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.data.report.reportFileName
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badge_detail_save_report
+import io.github.bryancassell.bluecard.resources.badge_detail_share_report
+import io.github.bryancassell.bluecard.resources.no_file_saver
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 // A badge's or rank's report, on its page once it's complete or earned.
 
@@ -43,16 +46,16 @@ fun ReportButtons(
         // Null when the scout leaves the file picker without saving.
         destination?.let(onSave)
     }
-    val noFilePicker = stringResource(R.string.no_file_saver)
+    val noFilePicker = stringResource(Res.string.no_file_saver)
     // Wraps the buttons onto two lines when they don't fit on one, as with large text.
     FlowRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        ReportButton(R.string.badge_detail_share_report, onClick = { startOtherApp.tap(onShare) })
+        ReportButton(Res.string.badge_detail_share_report, onClick = { startOtherApp.tap(onShare) })
         ReportButton(
-            R.string.badge_detail_save_report,
+            Res.string.badge_detail_save_report,
             onClick = { startOtherApp.launch(createDocument, fileName, noFilePicker) }
         )
     }
@@ -60,7 +63,7 @@ fun ReportButtons(
 
 /** A button for the report, outlined as the official link is. */
 @Composable
-private fun ReportButton(@StringRes text: Int, onClick: () -> Unit) {
+private fun ReportButton(text: StringResource, onClick: () -> Unit) {
     OutlinedButton(
         onClick = onClick,
         colors = detailOutlinedButtonColors(),

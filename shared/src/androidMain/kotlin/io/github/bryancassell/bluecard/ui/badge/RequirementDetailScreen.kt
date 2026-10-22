@@ -26,8 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -38,7 +36,31 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.NOTES_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.SIGNED_OFF_BY_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.discard_changes_message_notes
+import io.github.bryancassell.bluecard.resources.discard_changes_message_sign_off_and_notes
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.requirement_clear_message
+import io.github.bryancassell.bluecard.resources.requirement_clear_message_with_children
+import io.github.bryancassell.bluecard.resources.requirement_clear_message_with_children_and_unsaved_notes
+import io.github.bryancassell.bluecard.resources.requirement_clear_message_with_children_and_unsaved_sign_off_and_notes
+import io.github.bryancassell.bluecard.resources.requirement_clear_message_with_unsaved_notes
+import io.github.bryancassell.bluecard.resources.requirement_clear_message_with_unsaved_sign_off_and_notes
+import io.github.bryancassell.bluecard.resources.requirement_clear_title
+import io.github.bryancassell.bluecard.resources.requirement_comment
+import io.github.bryancassell.bluecard.resources.requirement_completed
+import io.github.bryancassell.bluecard.resources.requirement_completed_on
+import io.github.bryancassell.bluecard.resources.requirement_detail_title
+import io.github.bryancassell.bluecard.resources.requirement_detail_unavailable
+import io.github.bryancassell.bluecard.resources.requirement_no_date
+import io.github.bryancassell.bluecard.resources.requirement_not_needed
+import io.github.bryancassell.bluecard.resources.requirement_save
+import io.github.bryancassell.bluecard.resources.requirement_save_comment
+import io.github.bryancassell.bluecard.resources.requirement_signed_off_by
+import io.github.bryancassell.bluecard.resources.requirement_time_in_rank_eligible_from
+import io.github.bryancassell.bluecard.resources.requirement_time_in_rank_no_date
+import io.github.bryancassell.bluecard.resources.requirement_time_in_rank_not_earned
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
@@ -51,6 +73,8 @@ import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.rememberTextLengthLimit
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -122,9 +146,9 @@ fun RequirementDetailScreen(
         // Says it's the text that isn't saved, as the checkbox and date save straight away.
         message = stringResource(
             if (ready?.hasSignOffField == true) {
-                R.string.discard_changes_message_sign_off_and_notes
+                Res.string.discard_changes_message_sign_off_and_notes
             } else {
-                R.string.discard_changes_message_notes
+                Res.string.discard_changes_message_notes
             }
         )
     )
@@ -132,10 +156,10 @@ fun RequirementDetailScreen(
         RequirementDetailUiState.Loading -> ScreenLoadingIndicator(modifier)
 
         RequirementDetailUiState.LoadFailed ->
-            ScreenMessage(stringResource(R.string.load_failed), modifier)
+            ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         RequirementDetailUiState.Unavailable ->
-            ScreenMessage(stringResource(R.string.requirement_detail_unavailable), modifier)
+            ScreenMessage(stringResource(Res.string.requirement_detail_unavailable), modifier)
 
         // Ends the page above the keyboard, so the text fields can be scrolled into view.
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
@@ -153,7 +177,9 @@ fun RequirementDetailScreen(
                 if (requirement.markedByHand || ownWork != null) {
                     val checked = ownWork?.completed ?: requirement.completed
                     CompletedCheckbox(
-                        label = ownWork?.summary ?: stringResource(R.string.requirement_completed),
+                        label = ownWork?.summary ?: stringResource(
+                            Res.string.requirement_completed
+                        ),
                         checked = checked,
                         onCheckedChange = onCompletedChange
                     )
@@ -219,7 +245,7 @@ fun RequirementDetailScreen(
             }
             TaskFailureSnackbarHost(
                 failure = uiState.saveFailure,
-                message = stringResource(R.string.save_failed),
+                message = stringResource(Res.string.save_failed),
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -243,7 +269,7 @@ private fun RequirementHeader(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = stringResource(R.string.requirement_detail_title, requirement.number),
+            text = stringResource(Res.string.requirement_detail_title, requirement.number),
             style = MaterialTheme.typography.headlineMedium,
             // Lets screen reader users jump to it.
             modifier = Modifier.semantics { heading() }
@@ -268,7 +294,7 @@ private fun RequirementHeader(
         // sparingly" (#109).
         if (!requirement.markedByHand && requirement.completed) {
             Text(
-                text = stringResource(R.string.requirement_completed),
+                text = stringResource(Res.string.requirement_completed),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -277,7 +303,7 @@ private fun RequirementHeader(
         // anyway.
         if (requirement.notNeeded) {
             Text(
-                text = stringResource(R.string.requirement_not_needed),
+                text = stringResource(Res.string.requirement_not_needed),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -295,16 +321,16 @@ private fun timeInRankText(timeInRank: TimeInRank): String {
     val rankBelow = timeInRank.rankBelow
     val withoutDate = when (val eligibility = timeInRank.eligibility) {
         is TimeInRank.Eligibility.From -> return pluralStringResource(
-            R.plurals.requirement_time_in_rank_eligible_from,
+            Res.plurals.requirement_time_in_rank_eligible_from,
             months,
             LocalLocaleFormats.current.formatDate(eligibility.date),
             months,
             rankBelow
         )
 
-        TimeInRank.Eligibility.RankBelowHasNoDate -> R.plurals.requirement_time_in_rank_no_date
+        TimeInRank.Eligibility.RankBelowHasNoDate -> Res.plurals.requirement_time_in_rank_no_date
 
-        TimeInRank.Eligibility.RankBelowNotEarned -> R.plurals.requirement_time_in_rank_not_earned
+        TimeInRank.Eligibility.RankBelowNotEarned -> Res.plurals.requirement_time_in_rank_not_earned
     }
     return pluralStringResource(withoutDate, months, months, rankBelow)
 }
@@ -346,9 +372,9 @@ private fun CompletionDate(
     val formats = LocalLocaleFormats.current
     EditableDate(
         text = if (date == null) {
-            stringResource(R.string.requirement_no_date)
+            stringResource(Res.string.requirement_no_date)
         } else {
-            stringResource(R.string.requirement_completed_on, formats.formatDate(date))
+            stringResource(Res.string.requirement_completed_on, formats.formatDate(date))
         },
         date = date,
         today = today,
@@ -385,7 +411,7 @@ private fun TextFields(
             OutlinedTextField(
                 state = comment,
                 textStyle = typedTextFieldStyle(),
-                label = { Text(stringResource(R.string.requirement_comment)) },
+                label = { Text(stringResource(Res.string.requirement_comment)) },
                 inputTransformation = rememberTextLengthLimit(maxLength = NOTES_MAX_LENGTH),
                 lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = 3),
                 keyboardOptions = KeyboardOptions(
@@ -405,9 +431,9 @@ private fun TextFields(
             ) {
                 // With the sign-off, it saves more than the notes.
                 val label = if (signedOffBy != null) {
-                    R.string.requirement_save
+                    Res.string.requirement_save
                 } else {
-                    R.string.requirement_save_comment
+                    Res.string.requirement_save_comment
                 }
                 Text(stringResource(label))
             }
@@ -421,7 +447,7 @@ private fun SignedOffByField(state: TextFieldState) {
     OutlinedTextField(
         state = state,
         textStyle = typedTextFieldStyle(),
-        label = { Text(stringResource(R.string.requirement_signed_off_by)) },
+        label = { Text(stringResource(Res.string.requirement_signed_off_by)) },
         inputTransformation = rememberSingleLineInput(maxLength = SIGNED_OFF_BY_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         // Next moves on to the notes.
@@ -448,26 +474,25 @@ private fun ClearRequirement(
     unearnedRanks: List<String>,
     onClear: () -> Unit
 ) {
+    val message = when {
+        hasChildren && unsavedText && hasSignOffField ->
+            Res.string.requirement_clear_message_with_children_and_unsaved_sign_off_and_notes
+
+        hasChildren && unsavedText ->
+            Res.string.requirement_clear_message_with_children_and_unsaved_notes
+
+        hasChildren -> Res.string.requirement_clear_message_with_children
+
+        unsavedText && hasSignOffField ->
+            Res.string.requirement_clear_message_with_unsaved_sign_off_and_notes
+
+        unsavedText -> Res.string.requirement_clear_message_with_unsaved_notes
+
+        else -> Res.string.requirement_clear_message
+    }
     ClearProgress(
-        title = stringResource(R.string.requirement_clear_title, number),
-        message = stringResource(
-            when {
-                hasChildren && unsavedText && hasSignOffField ->
-                    R.string.requirement_clear_message_with_children_and_unsaved_sign_off_and_notes
-
-                hasChildren && unsavedText ->
-                    R.string.requirement_clear_message_with_children_and_unsaved_notes
-
-                hasChildren -> R.string.requirement_clear_message_with_children
-
-                unsavedText && hasSignOffField ->
-                    R.string.requirement_clear_message_with_unsaved_sign_off_and_notes
-
-                unsavedText -> R.string.requirement_clear_message_with_unsaved_notes
-
-                else -> R.string.requirement_clear_message
-            }
-        ),
+        title = stringResource(Res.string.requirement_clear_title, number),
+        message = stringResource(message),
         unearnedRanks = unearnedRanks,
         onClear = onClear
     )

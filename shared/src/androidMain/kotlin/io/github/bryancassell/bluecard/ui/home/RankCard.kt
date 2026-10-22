@@ -22,9 +22,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -34,11 +31,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.data.progress.RankStatus
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_in_progress
+import io.github.bryancassell.bluecard.resources.home_every_rank_earned
+import io.github.bryancassell.bluecard.resources.home_next_rank
+import io.github.bryancassell.bluecard.resources.home_no_rank
+import io.github.bryancassell.bluecard.resources.home_rank_title
+import io.github.bryancassell.bluecard.resources.home_ranks_earned
+import io.github.bryancassell.bluecard.resources.ic_chevron_right
+import io.github.bryancassell.bluecard.resources.ranks_open_rank
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.ranks.RankListItem
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.statusFitsBeside
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The scout's rank, a trail of every rank, and the rank in progress, which tapping the card
@@ -58,18 +66,18 @@ fun RankCard(
 ) {
     val nextRank = uiState.nextRank
     val colors = MaterialTheme.colorScheme
-    val title = stringResource(R.string.home_rank_title)
-    val rankName = uiState.rank?.name ?: stringResource(R.string.home_no_rank)
+    val title = stringResource(Res.string.home_rank_title)
+    val rankName = uiState.rank?.name ?: stringResource(Res.string.home_no_rank)
     val earned = uiState.ranks.count { it.status == RankStatus.Earned }
     val ranksEarned = pluralStringResource(
-        R.plurals.home_ranks_earned,
+        Res.plurals.home_ranks_earned,
         uiState.ranks.size,
         earned,
         uiState.ranks.size
     )
-    val next = nextRank?.let { stringResource(R.string.home_next_rank, it.name) }
-        ?: stringResource(R.string.home_every_rank_earned)
-    val inProgress = stringResource(R.string.badges_in_progress)
+    val next = nextRank?.let { stringResource(Res.string.home_next_rank, it.name) }
+        ?: stringResource(Res.string.home_every_rank_earned)
+    val inProgress = stringResource(Res.string.badges_in_progress)
     // How many ranks are earned takes the trail's place.
     val label = readAsOneLabel(
         title,
@@ -91,7 +99,7 @@ fun RankCard(
             Modifier
         } else {
             Modifier.clickable(
-                onClickLabel = stringResource(R.string.ranks_open_rank),
+                onClickLabel = stringResource(Res.string.ranks_open_rank),
                 role = Role.Button,
                 onClick = { onOpenRank(nextRank.id) }
             )
@@ -167,7 +175,7 @@ fun RankCard(
                     if (nextRank != null) {
                         if (!statusUnder) status()
                         Icon(
-                            painterResource(R.drawable.ic_chevron_right),
+                            painterResource(Res.drawable.ic_chevron_right),
                             contentDescription = null,
                             modifier = Modifier.size(ChevronSize)
                         )

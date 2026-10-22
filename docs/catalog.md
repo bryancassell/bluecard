@@ -1,7 +1,8 @@
 # Writing the catalog
 
 The catalog of merit badges and ranks is a single JSON file bundled with the
-app: [`shared/src/androidMain/assets/catalog.json`](../shared/src/androidMain/assets/catalog.json).
+app: [`shared/src/commonMain/composeResources/files/catalog.json`](../shared/src/commonMain/composeResources/files/catalog.json),
+one of the shared code's Compose Multiplatform resources.
 This page explains its format so badges and ranks can be added without reading
 code. Why the catalog works this way is in
 [`ARCHITECTURE.md`](../ARCHITECTURE.md#merit-badge-catalog).

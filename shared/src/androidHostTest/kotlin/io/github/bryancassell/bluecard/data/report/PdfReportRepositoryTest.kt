@@ -3,7 +3,6 @@ package io.github.bryancassell.bluecard.data.report
 import android.Manifest
 import android.content.Context
 import android.content.pm.ProviderInfo
-import android.content.res.Resources
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -24,6 +23,7 @@ import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -225,18 +225,9 @@ class PdfReportRepositoryTest {
     // file can be kept on an SD card or computer too.
     @Test
     fun reportFileName_replacesEachCharacterAFileNameCantHold() {
-        val app = context.resources
-
-        // Resources has no other way to give a string that isn't in the app.
-        @Suppress("DEPRECATION")
-        val translation = object : Resources(app.assets, app.displayMetrics, app.configuration) {
-            override fun getString(id: Int, vararg formatArgs: Any?): String =
-                "a\"b*c/d:e<f>g?h\\i|j\tk\u007Fl %1\$s".format(*formatArgs)
-        }
-
         assertEquals(
             "a_b_c_d_e_f_g_h_i_j_k_l Search_Rescue.pdf",
-            reportFileName(translation, ReportKind.MeritBadge, "Search/Rescue")
+            reportFileName("a\"b*c/d:e<f>g?h\\i|j\tk\u007Fl Search/Rescue")
         )
     }
 
@@ -614,6 +605,8 @@ class PdfReportRepositoryTest {
     @Config(qualifiers = "fa")
     @Test
     fun report_onPersianPhone_isInTheStringsLanguage() = runTest {
+        useStringsLocalesByDefault(context)
+
         repository.createReportToShare("chess")
 
         val lines = pdfWriter.pages.single().flatMap { it.lines }
