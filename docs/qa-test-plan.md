@@ -520,13 +520,14 @@ Start from the seed.
   `ui.py S starts`); on API 26, in its WebView Browser Tester. Back returns to
   Camping.
 - **BADGE-3 Phone and email.** Tap the phone number. → The phone app opens
-  with (214) 555-0142 to dial, without calling. Back until BlueCard shows:
-  the dialer's first Back can just close its dialpad. Tap the email. → An email
+  with (214) 555-0142 to dial, without calling, and `starts` shows it was sent
+  `tel:2145550142`, as typed. Back until BlueCard shows: the dialer's first
+  Back can just close its dialpad. Tap the email. → An email
   app opens with a `mailto:pat.rivera@example.com` link (`starts`); on a fresh
   emulator Gmail shows its tour, since it has no account. If no app can send
   email, a message says so. (PRD: Counselor details)
 - **BADGE-4 Editing the counselor.** Edit counselor. → Name, phone and email,
-  filled in. Clear the phone and Save. → The page closes, and Camping shows
+  filled in, with the phone as typed: 2145550142. Clear the phone and Save. → The page closes, and Camping shows
   the counselor without a phone. Back with an unsaved change asks first.
 - **BADGE-5 Adding a counselor.** Open a badge not started, such as Chess.
   → "Not started", "Add counselor". Add a name only and Save. → Chess is now

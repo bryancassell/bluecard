@@ -19,6 +19,7 @@ import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
 import io.github.bryancassell.bluecard.data.profile.FakeProfileRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
+import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
@@ -116,7 +117,7 @@ class PdfReportRepositoryTest {
         pdfWriter,
         FakeClock(today.atStartOfDayIn(TimeZone.UTC)),
         AndroidTextRules(),
-        AndroidPhoneNumberFormat(),
+        AndroidPhoneNumberFormat(UnconfinedTestDispatcher()),
         warningLog,
         ioDispatcher,
         externalScope
@@ -202,6 +203,17 @@ class PdfReportRepositoryTest {
         assertTrue("Completed on Apr 2, 2026" in lines)
         assertTrue("Created on Sep 30, 2026" in lines)
         assertTrue("Notes: Next week." in lines)
+    }
+
+    // As Badge detail shows it.
+    @Test
+    fun createReportToShare_formatsTheCounselorsPhone() = runTest {
+        val start = BadgeStart(newest, LocalDate(2026, 3, 1))
+        progressRepository.setCounselor("chess", Counselor(phone = "5551234567"), start)
+
+        repository.createReportToShare("chess")
+
+        assertTrue("Phone: (555) 123-4567" in pdfWriter.pages.single().flatMap { it.lines })
     }
 
     @Test

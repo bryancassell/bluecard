@@ -23,7 +23,6 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
-import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import java.math.BigDecimal
 import java.util.Locale
 import kotlinx.datetime.LocalDate
@@ -150,7 +149,7 @@ class ReportLayoutTest {
     )
 
     private fun layOut(report: AdvancementReport, resources: Resources = context.resources) =
-        layOutReport(report, resources, AndroidPhoneNumberFormat())
+        layOutReport(report, resources)
 
     /** Resources in [locales], BCP 47 tags in order, as `stringsLanguageResources` gives. */
     private fun resources(locales: String): Resources = context.createConfigurationContext(
@@ -393,11 +392,11 @@ class ReportLayoutTest {
     }
 
     @Test
-    fun counselorsPhone_isFormattedAsOnScreen() {
-        val lines = layOut(report(emptyList(), counselor = Counselor(phone = "5551234567")))
-            .single().lines
+    fun counselorsPhone_isShownFormatted() {
+        val report = report(emptyList(), counselor = Counselor(phone = "5551234567"))
+            .copy(counselorPhone = "(555) 123-4567")
 
-        assertEquals("Phone: (555) 123-4567", lines[8])
+        assertEquals("Phone: (555) 123-4567", layOut(report).single().lines[8])
     }
 
     @Test

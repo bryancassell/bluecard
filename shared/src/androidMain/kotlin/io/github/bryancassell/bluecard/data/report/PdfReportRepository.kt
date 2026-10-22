@@ -128,11 +128,13 @@ class PdfReportRepository(
             if (standing.status != RankStatus.Earned) return null
             standing.report(profile, progress[advancementId], earnedBadges, textRules, today)
         }
-        return checkNotNull(report) { "The catalog has no requirements for $advancementId" }
+        checkNotNull(report) { "The catalog has no requirements for $advancementId" }
+        val phone = report.counselor?.phone ?: return report
+        return report.copy(counselorPhone = phoneNumberFormat.format(phone))
     }
 
     private fun writeReport(report: AdvancementReport, strings: Resources, out: BufferedSink) {
-        pdfWriter.write(layOutReport(report, strings, phoneNumberFormat), out)
+        pdfWriter.write(layOutReport(report, strings), out)
     }
 
     companion object {

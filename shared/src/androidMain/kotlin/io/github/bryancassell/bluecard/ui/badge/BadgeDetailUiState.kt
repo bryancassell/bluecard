@@ -28,8 +28,9 @@ sealed interface BadgeDetailUiState {
         /** The scout's merit badge counselor, or null if they haven't entered one. */
         val counselor: Counselor? = null,
         /**
-         * [counselor]'s phone number, formatted to show ([PhoneNumberFormat]), or null if they
-         * have none. Tapping it dials the number as typed.
+         * [counselor]'s phone number, formatted to show ([PhoneNumberFormat]). It's null if they
+         * have none, and for a moment after the number changes, while it shows as typed. Tapping
+         * it dials the number as typed.
          */
         val counselorPhone: String? = null,
         /** How far the scout has got with the badge, as every screen says ([MeritBadge.status]). */

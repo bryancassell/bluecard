@@ -27,6 +27,7 @@ import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.MainDispatcherRule
 import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
+import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import kotlinx.coroutines.CompletableDeferred
@@ -134,7 +135,9 @@ class BadgeDetailViewModelTest {
     private fun viewModel(
         badgeId: String = "camping",
         progress: ProgressRepository = progressRepository,
-        savedStateHandle: SavedStateHandle = SavedStateHandle()
+        savedStateHandle: SavedStateHandle = SavedStateHandle(),
+        phoneNumberFormat: PhoneNumberFormat =
+            AndroidPhoneNumberFormat(mainDispatcherRule.testDispatcher)
     ) = BadgeDetailViewModel(
         BadgeDetail(badgeId),
         catalogRepository,
@@ -142,9 +145,8 @@ class BadgeDetailViewModelTest {
         reportRepository,
         clock,
         AndroidTextRules(),
-        AndroidPhoneNumberFormat(),
+        phoneNumberFormat,
         warningLog,
-        mainDispatcherRule.testDispatcher,
         savedStateHandle
     )
 
@@ -174,9 +176,8 @@ class BadgeDetailViewModelTest {
             reportRepository,
             clock,
             AndroidTextRules(),
-            AndroidPhoneNumberFormat(),
+            AndroidPhoneNumberFormat(mainDispatcherRule.testDispatcher),
             warningLog,
-            mainDispatcherRule.testDispatcher,
             SavedStateHandle()
         )
         startCollecting(viewModel)
@@ -347,6 +348,41 @@ class BadgeDetailViewModelTest {
 
         assertEquals("(555) 123-4567", viewModel.ready().counselorPhone)
         assertEquals("5551234567", viewModel.ready().counselor?.phone)
+    }
+
+    @Test
+    fun counselorPhone_followsAnEditOrClear() = runTest {
+        progressRepository.setCounselor("camping", Counselor(phone = "5551234567"), badgeStart)
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        progressRepository.setCounselor("camping", Counselor(phone = "5557654321"), badgeStart)
+        assertEquals("(555) 765-4321", viewModel.ready().counselorPhone)
+
+        progressRepository.setCounselor("camping", Counselor(name = "Pat Lee"), badgeStart)
+        assertNull(viewModel.ready().counselorPhone)
+    }
+
+    // So Badge detail never shows one number and dials another.
+    @Test
+    fun counselorPhone_whileANewNumberIsFormatted_isntTheOldOnes() = runTest {
+        val newNumberFormatted = CompletableDeferred<Unit>()
+        val format = object : PhoneNumberFormat {
+            override suspend fun format(number: String): String {
+                if (number == "5557654321") newNumberFormatted.await()
+                return "formatted $number"
+            }
+        }
+        progressRepository.setCounselor("camping", Counselor(phone = "5551234567"), badgeStart)
+        val viewModel = viewModel(phoneNumberFormat = format)
+        startCollecting(viewModel)
+
+        progressRepository.setCounselor("camping", Counselor(phone = "5557654321"), badgeStart)
+        assertEquals("5557654321", viewModel.ready().counselor?.phone)
+        assertNull(viewModel.ready().counselorPhone)
+
+        newNumberFormatted.complete(Unit)
+        assertEquals("formatted 5557654321", viewModel.ready().counselorPhone)
     }
 
     @Test
@@ -559,9 +595,8 @@ class BadgeDetailViewModelTest {
                 reportRepository,
                 clock,
                 AndroidTextRules(),
-                AndroidPhoneNumberFormat(),
+                AndroidPhoneNumberFormat(mainDispatcherRule.testDispatcher),
                 warningLog,
-                mainDispatcherRule.testDispatcher,
                 createSavedStateHandle()
             )
         }.use { scenario ->

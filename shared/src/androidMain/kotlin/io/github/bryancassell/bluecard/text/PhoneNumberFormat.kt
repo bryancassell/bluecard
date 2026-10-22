@@ -13,7 +13,8 @@ interface PhoneNumberFormat {
      * "Cell: 555-123-4567", comes back as typed. So does one that formatting would join digits of
      * that were typed apart, and one that can't be formatted, such as a UK number without +44.
      *
-     * It may read the platform's phone number data from disk, so call it off the main thread.
+     * Safe to call from the main thread, though the platform's phone number data may be read
+     * from disk.
      */
-    fun format(number: String): String
+    suspend fun format(number: String): String
 }

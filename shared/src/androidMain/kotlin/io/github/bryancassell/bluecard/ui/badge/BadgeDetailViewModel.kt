@@ -12,7 +12,6 @@ import io.github.bryancassell.bluecard.data.progress.fractionDoneWhileInProgress
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.status
 import io.github.bryancassell.bluecard.data.report.ReportRepository
-import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
@@ -24,14 +23,14 @@ import io.github.bryancassell.bluecard.ui.badges.eagleRequirement
 import io.github.bryancassell.bluecard.ui.catchLoadFailure
 import io.github.bryancassell.bluecard.ui.dateFromEpochDay
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.InjectedParam
 
@@ -49,7 +48,6 @@ class BadgeDetailViewModel(
     textRules: TextRules,
     phoneNumberFormat: PhoneNumberFormat,
     warningLog: WarningLog,
-    @param:IoDispatcher ioDispatcher: CoroutineDispatcher,
     // Keeps the date to open Mark completed's picker at if the system stops the app in the
     // background.
     private val savedStateHandle: SavedStateHandle
@@ -58,6 +56,16 @@ class BadgeDetailViewModel(
 
     private val report = ReportTasks(viewModelScope, reportRepository, badgeId, warningLog)
     private val saves = TaskRunner(viewModelScope, warningLog)
+
+    /**
+     * The counselor's phone number, as typed and formatted. Formatted apart from the page, and
+     * only when the number changes, so the first number, which reads phone number data from disk,
+     * is formatted while the catalog loads.
+     */
+    private val counselorPhone: Flow<FormattedPhone?> = progressRepository.observeProgress(badgeId)
+        .map { it?.badge?.counselor?.phone }
+        .distinctUntilChanged()
+        .map { typed -> typed?.let { FormattedPhone(it, phoneNumberFormat.format(it)) } }
 
     /**
      * The page as worked out from the catalog and progress, before [uiState] adds the date just
@@ -72,25 +80,25 @@ class BadgeDetailViewModel(
         // Every badge's and rank's, since the badges the scout has completed decide which ranks
         // clearing this one would un-earn.
         progressRepository.observeAllProgress(),
-        saves.failure
-    ) { (catalog, eagleGroups, ranks), allProgress, saveFailure ->
+        saves.failure,
+        counselorPhone
+    ) { (catalog, eagleGroups, ranks), allProgress, saveFailure, phone ->
         val progressById = allProgress.associateBy { it.badge.badgeId }
         val progress = progressById[badgeId]
         val found = catalog.advancementRequirements(badgeId, progress)
             ?: return@combine BadgeDetailUiState.Unavailable
         val badge = found.advancement
         val completion = progress?.completion(found.version)
+        val counselor = progress?.badge?.counselor
         BadgeDetailUiState.Ready(
             name = badge.name,
             summary = badge.summary,
             eagle = badge.eagleRequirement(eagleGroups),
             officialUrl = badge.officialUrl,
             requirements = found.version.requirements.map(found::item),
-            counselor = progress?.badge?.counselor,
-            // Off the main thread, since formatting reads phone number data from disk.
-            counselorPhone = progress?.badge?.counselor?.phone?.let {
-                withContext(ioDispatcher) { phoneNumberFormat.format(it) }
-            },
+            counselor = counselor,
+            // Just after the number changes, the format can still be the old number's.
+            counselorPhone = phone?.takeIf { it.typed == counselor?.phone }?.formatted,
             status = badge.status(progress),
             completedOnPriorDate = progress?.badge?.completedOnPriorDate,
             completedOn = completion?.date,
@@ -211,3 +219,6 @@ class BadgeDetailViewModel(
         const val UNMARKED_DATE = "unmarkedDate"
     }
 }
+
+/** A phone number as the scout [typed] it, and [formatted] to show. */
+private data class FormattedPhone(val typed: String, val formatted: String)

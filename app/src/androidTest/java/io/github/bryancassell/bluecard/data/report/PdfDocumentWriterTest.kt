@@ -12,7 +12,6 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
-import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import java.io.File
 import kotlinx.datetime.LocalDate
 import okio.FileSystem
@@ -71,7 +70,7 @@ class PdfDocumentWriterTest {
         createdDate = LocalDate(2026, 9, 30)
     )
 
-    private val pages = layOutReport(report, context.resources, AndroidPhoneNumberFormat())
+    private val pages = layOutReport(report, context.resources)
 
     @After
     fun deleteFile() {
