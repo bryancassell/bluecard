@@ -38,13 +38,14 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     private val clock = FakeClock(Instant.parse("2026-10-02T09:06:07.531Z"))
     private val warningLog = FakeWarningLog()
 
-    // Checks and changes files in place by default, so a test sees each when it's made.
+    // Checks and changes files in place by default, so a test sees each when it's made. The
+    // scope runs on the IO dispatcher, as the app's does.
     private fun newRepository(ioDispatcher: CoroutineDispatcher = Dispatchers.Unconfined) =
         FileDamagedProgressRepository(
             context,
             clock,
             warningLog,
-            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+            CoroutineScope(SupervisorJob() + ioDispatcher),
             ioDispatcher
         )
 
@@ -393,5 +394,20 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         advanceUntilIdle()
 
         assertFalse(newRepository().observeNoticePending().first())
+    }
+
+    @Test
+    fun dismissNotice_deletesTheNoticeOnTheIoDispatcher() = runTest {
+        // Holds the file work until the test runs it, so a delete in the caller's thread shows.
+        val repository = newRepository(StandardTestDispatcher(testScheduler))
+        writeDatabase("" to "damaged")
+        repository.setAside(database.toOkioPath())
+        val notice = File(folder, "notice-pending")
+
+        launch(start = CoroutineStart.UNDISPATCHED) { repository.dismissNotice() }
+
+        assertTrue(notice.exists())
+        advanceUntilIdle()
+        assertFalse(notice.exists())
     }
 }

@@ -17,6 +17,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
 import java.io.IOException
+import java.util.Collections
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
@@ -36,6 +37,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -273,6 +275,43 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertTrue("Expected the cancellation, got $error", error is CancellationException)
     }
 
+    @Test
+    fun writing_preparesItsStatementsOffTheCallersThread() = runTest {
+        // Room runs queries on Dispatchers.IO by default, which externalScope runs on, as in the
+        // app.
+        val threads = Collections.synchronizedList(mutableListOf<Thread>())
+        val repository = RoomProgressRepository(
+            open(
+                Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java),
+                ThreadRecordingDriver(threads)
+            ),
+            externalScope
+        )
+
+        repository.startBadge("archery", start.requirementsVersion, start.startedDate)
+
+        assertTrue(threads.isNotEmpty())
+        assertFalse(
+            "Prepared on ${threads.map { it.name }.distinct()}",
+            Thread.currentThread() in threads
+        )
+    }
+
+    /** BundledSQLiteDriver, recording the thread that prepares each statement in [threads]. */
+    private class ThreadRecordingDriver(private val threads: MutableList<Thread>) : SQLiteDriver {
+        private val driver = BundledSQLiteDriver()
+
+        override fun open(fileName: String): SQLiteConnection {
+            val connection = driver.open(fileName)
+            return object : SQLiteConnection by connection {
+                override fun prepare(sql: String): SQLiteStatement {
+                    threads += Thread.currentThread()
+                    return connection.prepare(sql)
+                }
+            }
+        }
+    }
+
     /** A repository whose writes of requirement progress throw [error]. */
     private fun failingRequirementWrites(error: RuntimeException) = RoomProgressRepository(
         open(
@@ -346,8 +385,9 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val repository =
             RoomProgressRepository(database, CoroutineScope(SupervisorJob() + dispatcher))
 
+        // Made on the held dispatcher, since a write runs on its caller's.
         val writes = (1..20).map { i ->
-            launch(start = CoroutineStart.UNDISPATCHED) {
+            launch(dispatcher, start = CoroutineStart.UNDISPATCHED) {
                 repository.setRequirementSignOffAndComment("archery", "1", null, "Draft $i", start)
             }
         }
@@ -368,7 +408,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             val (first, second) = List(2) { RoomProgressRepository(database, scope) }
 
             val writes = (1..20).map { i ->
-                launch(start = CoroutineStart.UNDISPATCHED) {
+                launch(dispatcher, start = CoroutineStart.UNDISPATCHED) {
                     (if (i < 20) first else second)
                         .setRequirementSignOffAndComment("archery", "1", null, "Draft $i", start)
                 }

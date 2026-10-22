@@ -72,8 +72,9 @@ val appModule = module {
 /**
  * Lives as long as the app, as the data layer guide advises for work that must outlive the
  * screen: https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen
- * One coroutine failing doesn't cancel the others (SupervisorJob). Its work is saving to disk,
- * so it runs on the IO dispatcher.
+ * One coroutine failing doesn't cancel the others (SupervisorJob). DataStore reads and writes
+ * the profile in it, so it runs on the IO dispatcher. Work run with runOutlivingCaller runs on
+ * its caller's dispatcher instead.
  */
 internal fun applicationScope(@IoDispatcher ioDispatcher: CoroutineDispatcher): CoroutineScope =
     CoroutineScope(SupervisorJob() + ioDispatcher)
