@@ -1,9 +1,7 @@
 package io.github.bryancassell.bluecard.data.backup
 
-import android.content.res.Resources
 import android.net.Uri
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.shared.R
 import kotlinx.datetime.LocalDate
 
 /**
@@ -42,8 +40,12 @@ interface BackupRepository {
 
 /**
  * The name the file picker suggests for an export made on [date], such as "BlueCard export
- * 2026-10-01.json", from [resources] in the strings' language. The date is in ISO form, so the
- * name has no slashes in it and files sort by date.
+ * 2026-10-01.json", from [format], `export_file_name` as written. The date is in ISO form, so
+ * the name has no slashes in it and files sort by date.
+ *
+ * It fills in "%1$s" itself, as `stringResource` would. The name is made as the scout taps
+ * Export, so the tap's guard against a quick second tap engages at once (`OtherAppStarter`), and
+ * outside composition Compose Multiplatform fills in a string only in the suspend `getString`.
  */
-fun exportFileName(resources: Resources, date: LocalDate): String =
-    resources.getString(R.string.export_file_name, date.toString()) + ".json"
+fun exportFileName(format: String, date: LocalDate): String =
+    format.replace("%1\$s", date.toString()) + ".json"

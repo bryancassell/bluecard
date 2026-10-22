@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.home
 
-import androidx.annotation.PluralsRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -18,8 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.collectionInfo
 import androidx.compose.ui.semantics.heading
@@ -27,12 +24,26 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.home_badges_title
+import io.github.bryancassell.bluecard.resources.home_completed
+import io.github.bryancassell.bluecard.resources.home_eagle_completed
+import io.github.bryancassell.bluecard.resources.home_eagle_title
+import io.github.bryancassell.bluecard.resources.home_in_progress
+import io.github.bryancassell.bluecard.resources.home_no_progress
+import io.github.bryancassell.bluecard.resources.home_open_badges
+import io.github.bryancassell.bluecard.resources.home_open_data_management
+import io.github.bryancassell.bluecard.resources.home_open_ranks
+import io.github.bryancassell.bluecard.resources.home_unit
+import io.github.bryancassell.bluecard.resources.load_failed
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
 import io.github.bryancassell.bluecard.ui.badges.BadgeRow
 import io.github.bryancassell.bluecard.ui.typedText
+import org.jetbrains.compose.resources.PluralStringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Home screen to its ViewModel. */
@@ -76,7 +87,7 @@ fun HomeScreen(
     when (uiState) {
         HomeUiState.Loading -> ScreenLoadingIndicator(modifier)
 
-        HomeUiState.LoadFailed -> ScreenMessage(stringResource(R.string.load_failed), modifier)
+        HomeUiState.LoadFailed -> ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         is HomeUiState.Ready -> Column(
             modifier = modifier
@@ -94,7 +105,7 @@ fun HomeScreen(
                     modifier = Modifier.semantics { heading() }
                 )
                 Text(
-                    text = stringResource(R.string.home_unit, typedText(uiState.unitNumber)),
+                    text = stringResource(Res.string.home_unit, typedText(uiState.unitNumber)),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -103,7 +114,7 @@ fun HomeScreen(
                 RankCard(uiState, onOpenRank, modifier = inset)
             }
             if (uiState.hasNoProgress) {
-                Text(stringResource(R.string.home_no_progress), modifier = inset)
+                Text(stringResource(Res.string.home_no_progress), modifier = inset)
             } else {
                 Summary(uiState, modifier = inset)
             }
@@ -111,13 +122,13 @@ fun HomeScreen(
                 BadgesInProgress(uiState.badgesInProgress, onOpenBadge)
             }
             Button(onClick = onOpenBadges, modifier = inset.fillMaxWidth()) {
-                Text(stringResource(R.string.home_open_badges))
+                Text(stringResource(Res.string.home_open_badges))
             }
             Button(onClick = onOpenRanks, modifier = inset.fillMaxWidth()) {
-                Text(stringResource(R.string.home_open_ranks))
+                Text(stringResource(Res.string.home_open_ranks))
             }
             OutlinedButton(onClick = onOpenDataManagement, modifier = inset.fillMaxWidth()) {
-                Text(stringResource(R.string.home_open_data_management))
+                Text(stringResource(Res.string.home_open_data_management))
             }
         }
     }
@@ -126,9 +137,9 @@ fun HomeScreen(
 @Composable
 private fun Summary(uiState: HomeUiState.Ready, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SummaryCard(title = stringResource(R.string.home_badges_title)) {
-            Text(countText(R.plurals.home_completed, uiState.badges.completed))
-            Text(countText(R.plurals.home_in_progress, uiState.badges.inProgress))
+        SummaryCard(title = stringResource(Res.string.home_badges_title)) {
+            Text(countText(Res.plurals.home_completed, uiState.badges.completed))
+            Text(countText(Res.plurals.home_in_progress, uiState.badges.inProgress))
         }
         // A catalog with no Eagle-required badges has no Eagle progress to show.
         if (uiState.eagleTotal > 0) {
@@ -161,10 +172,10 @@ private fun BadgesInProgress(badges: List<BadgeListItem>, onOpenBadge: (badgeId:
 
 @Composable
 private fun EagleCard(uiState: HomeUiState.Ready) {
-    SummaryCard(title = stringResource(R.string.home_eagle_title)) {
+    SummaryCard(title = stringResource(Res.string.home_eagle_title)) {
         Text(
             pluralStringResource(
-                R.plurals.home_eagle_completed,
+                Res.plurals.home_eagle_completed,
                 uiState.eagle.completed,
                 uiState.eagle.completed,
                 uiState.eagleTotal
@@ -181,7 +192,7 @@ private fun EagleCard(uiState: HomeUiState.Ready) {
                 .fillMaxWidth()
                 .semantics { hideFromAccessibility() }
         )
-        Text(countText(R.plurals.home_in_progress, uiState.eagle.inProgress))
+        Text(countText(Res.plurals.home_in_progress, uiState.eagle.inProgress))
     }
 }
 
@@ -204,4 +215,4 @@ private fun SummaryCard(title: String, content: @Composable ColumnScope.() -> Un
 
 /** A plural string whose only argument is its quantity, such as "3 in progress". */
 @Composable
-private fun countText(@PluralsRes id: Int, count: Int) = pluralStringResource(id, count, count)
+private fun countText(id: PluralStringResource, count: Int) = pluralStringResource(id, count, count)

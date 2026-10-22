@@ -4,8 +4,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.damaged_progress_message
+import io.github.bryancassell.bluecard.resources.damaged_progress_ok
+import io.github.bryancassell.bluecard.resources.damaged_progress_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Tells the scout that the progress saved on the phone was damaged, so BlueCard started over
@@ -19,10 +22,10 @@ import io.github.bryancassell.bluecard.shared.R
 fun DamagedProgressNotice(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
-        title = { Text(stringResource(R.string.damaged_progress_title)) },
-        text = { Text(stringResource(R.string.damaged_progress_message)) },
+        title = { Text(stringResource(Res.string.damaged_progress_title)) },
+        text = { Text(stringResource(Res.string.damaged_progress_message)) },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.damaged_progress_ok)) }
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.damaged_progress_ok)) }
         }
     )
 }

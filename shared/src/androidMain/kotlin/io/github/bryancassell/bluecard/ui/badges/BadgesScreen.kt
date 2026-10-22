@@ -31,9 +31,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CollectionInfo
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.collectionInfo
@@ -45,13 +42,24 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_clear_search
+import io.github.bryancassell.bluecard.resources.badges_count
+import io.github.bryancassell.bluecard.resources.badges_no_matches
+import io.github.bryancassell.bluecard.resources.badges_search
+import io.github.bryancassell.bluecard.resources.badges_title
+import io.github.bryancassell.bluecard.resources.ic_close
+import io.github.bryancassell.bluecard.resources.ic_search
+import io.github.bryancassell.bluecard.resources.load_failed
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Badges screen to its ViewModel. */
@@ -84,7 +92,7 @@ fun BadgesScreen(
     HeadingSearchAndContent(
         heading = {
             Text(
-                text = stringResource(R.string.badges_title),
+                text = stringResource(Res.string.badges_title),
                 style = MaterialTheme.typography.headlineMedium,
                 // Lets screen reader users jump to it.
                 modifier = Modifier
@@ -169,9 +177,9 @@ private fun SearchAndCount(uiState: BadgesUiState, query: TextFieldState) {
     if (uiState is BadgesUiState.Ready || uiState == BadgesUiState.NoMatches) {
         val count = if (uiState is BadgesUiState.Ready) {
             val size = uiState.badges.size
-            pluralStringResource(R.plurals.badges_count, size, size)
+            pluralStringResource(Res.plurals.badges_count, size, size)
         } else {
-            stringResource(R.string.badges_no_matches)
+            stringResource(Res.string.badges_no_matches)
         }
         // The count when the scout last pressed Clear search, until the count that
         // replaces it is announced.
@@ -192,7 +200,7 @@ private fun BadgesContent(uiState: BadgesUiState, onOpenBadge: (badgeId: String)
     when (uiState) {
         BadgesUiState.Loading -> ScreenLoadingIndicator()
 
-        BadgesUiState.LoadFailed -> ScreenMessage(stringResource(R.string.load_failed))
+        BadgesUiState.LoadFailed -> ScreenMessage(stringResource(Res.string.load_failed))
 
         // MatchCount says so.
         BadgesUiState.NoMatches -> Unit
@@ -249,8 +257,8 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
     OutlinedTextField(
         state = query,
         textStyle = typedTextFieldStyle(),
-        label = { Text(stringResource(R.string.badges_search)) },
-        leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+        label = { Text(stringResource(Res.string.badges_search)) },
+        leadingIcon = { Icon(painterResource(Res.drawable.ic_search), contentDescription = null) },
         trailingIcon = if (isEmpty) {
             null
         } else {
@@ -267,8 +275,8 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
                     keyboardController?.show()
                 }) {
                     Icon(
-                        painterResource(R.drawable.ic_close),
-                        contentDescription = stringResource(R.string.badges_clear_search)
+                        painterResource(Res.drawable.ic_close),
+                        contentDescription = stringResource(Res.string.badges_clear_search)
                     )
                 }
             }

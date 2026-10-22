@@ -10,10 +10,10 @@ import io.github.bryancassell.bluecard.text.TextRules
 
 /**
  * Writes dates, numbers, lists and typed text in the strings' locale.
- * `ProvideStringsLanguageResources` provides it.
+ * [BlueCardApp] provides it ([rememberLocaleFormats]).
  */
 val LocalLocaleFormats = staticCompositionLocalOf<LocaleFormats> {
-    error("LocalLocaleFormats isn't provided: ProvideStringsLanguageResources provides it")
+    error("LocalLocaleFormats isn't provided: BlueCardApp provides it")
 }
 
 /** How text sorts and where it can be broken. [BlueCardApp] provides it. */

@@ -20,9 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -31,8 +28,25 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.ic_check
+import io.github.bryancassell.bluecard.resources.ic_chevron_right
+import io.github.bryancassell.bluecard.resources.ic_half_circle
+import io.github.bryancassell.bluecard.resources.requirement_check_off_left
+import io.github.bryancassell.bluecard.resources.requirement_choice
+import io.github.bryancassell.bluecard.resources.requirement_choice_and_complete_count
+import io.github.bryancassell.bluecard.resources.requirement_complete_count
+import io.github.bryancassell.bluecard.resources.requirement_completed
+import io.github.bryancassell.bluecard.resources.requirement_in_progress
+import io.github.bryancassell.bluecard.resources.requirement_not_completed
+import io.github.bryancassell.bluecard.resources.requirement_not_needed
+import io.github.bryancassell.bluecard.resources.requirement_not_recorded
+import io.github.bryancassell.bluecard.resources.requirement_open
+import io.github.bryancassell.bluecard.resources.requirement_still_to_do
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 // Composables shared by the Badge detail and Requirement detail screens.
 
@@ -95,11 +109,11 @@ private fun RequirementRow(
 ) {
     val state = stringResource(
         when {
-            item.completed -> R.string.requirement_completed
-            item.notNeeded -> R.string.requirement_not_needed
-            item.partlyCompleted -> R.string.requirement_in_progress
-            item.notRecorded -> R.string.requirement_not_recorded
-            else -> R.string.requirement_not_completed
+            item.completed -> Res.string.requirement_completed
+            item.notNeeded -> Res.string.requirement_not_needed
+            item.partlyCompleted -> Res.string.requirement_in_progress
+            item.notRecorded -> Res.string.requirement_not_recorded
+            else -> Res.string.requirement_not_completed
         }
     )
     // Its lines under the summary, all but "Not needed".
@@ -107,8 +121,8 @@ private fun RequirementRow(
         val count = listOfNotNull(choiceAndCountLabel(item.choice, item.completeCount))
         val trackerLines = item.tracker?.let { trackerProgressLabels(it) }.orEmpty()
         val stillToDo = listOfNotNull(
-            item.stillToDo?.let { stringResource(R.string.requirement_still_to_do, it) },
-            if (item.checkOffLeft) stringResource(R.string.requirement_check_off_left) else null
+            item.stillToDo?.let { stringResource(Res.string.requirement_still_to_do, it) },
+            if (item.checkOffLeft) stringResource(Res.string.requirement_check_off_left) else null
         )
         // Under the count it's what's left of: its sub-requirements', or else its tracker's.
         addAll(
@@ -134,18 +148,18 @@ private fun RequirementRow(
                 Column {
                     lines.forEach { Text(it) }
                     // Screen readers read it as the row's state.
-                    if (item.notNeeded) Text(stringResource(R.string.requirement_not_needed))
+                    if (item.notNeeded) Text(stringResource(Res.string.requirement_not_needed))
                 }
             }
         },
         trailingContent = {
-            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
+            Icon(painterResource(Res.drawable.ic_chevron_right), contentDescription = null)
         },
         // Screen readers read the row as one button that opens the requirement, with a label
         // of its own: TalkBack leaves out parts scrolled off screen (#312).
         modifier = Modifier
             .clickable(
-                onClickLabel = stringResource(R.string.requirement_open),
+                onClickLabel = stringResource(Res.string.requirement_open),
                 role = Role.Button,
                 onClick = { onOpen(item.number) }
             )
@@ -223,8 +237,8 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
             )
         }
         val mark = when {
-            item.completed -> R.drawable.ic_check
-            item.partlyCompleted -> R.drawable.ic_half_circle
+            item.completed -> Res.drawable.ic_check
+            item.partlyCompleted -> Res.drawable.ic_half_circle
             else -> null
         }
         mark?.let {
@@ -250,16 +264,14 @@ private fun RequirementNumber(item: RequirementItem, minWidth: Dp) {
 
 /** "Do 2 of 3". */
 @Composable
-@ReadOnlyComposable
 fun choiceLabel(choice: Choice): String =
-    stringResource(R.string.requirement_choice, choice.required, choice.of)
+    stringResource(Res.string.requirement_choice, choice.required, choice.of)
 
 /** "Do 2 of 3 (1 of 2 complete)", "Do 2 of 3", "(1 of 3 complete)", or null for neither. */
 @Composable
-@ReadOnlyComposable
 private fun choiceAndCountLabel(choice: Choice?, count: CompleteCount?): String? = when {
     choice != null && count != null -> pluralStringResource(
-        R.plurals.requirement_choice_and_complete_count,
+        Res.plurals.requirement_choice_and_complete_count,
         count.complete,
         choice.required,
         choice.of,
@@ -270,7 +282,7 @@ private fun choiceAndCountLabel(choice: Choice?, count: CompleteCount?): String?
     choice != null -> choiceLabel(choice)
 
     count != null -> pluralStringResource(
-        R.plurals.requirement_complete_count,
+        Res.plurals.requirement_complete_count,
         count.complete,
         count.complete,
         count.needed

@@ -22,7 +22,7 @@ class LocalTextTest {
         }
 
         assertEquals(
-            "LocalLocaleFormats isn't provided: ProvideStringsLanguageResources provides it",
+            "LocalLocaleFormats isn't provided: BlueCardApp provides it",
             error.message
         )
     }

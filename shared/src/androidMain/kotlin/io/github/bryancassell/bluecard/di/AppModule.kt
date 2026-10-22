@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.di
 
 import io.github.bryancassell.bluecard.MainActivityViewModel
+import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -52,6 +54,7 @@ val appModule = module {
     // Dates such as "today" are read from it, so tests can fix the date.
     single<ZonedClock> { DeviceClock }
 
+    single<AssetCatalogRepository>() bind CatalogRepository::class
     single<RoomProgressRepository>() bind ProgressRepository::class
     single<DataStoreProfileRepository>() bind ProfileRepository::class
 

@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.data.report
 
-import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -9,19 +8,56 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
-import android.text.TextUtils
 import android.view.View
-import androidx.annotation.PluralsRes
-import androidx.annotation.StringRes
 import androidx.core.graphics.withTranslation
+import androidx.core.text.layoutDirection
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.storedDate
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.report_comment
+import io.github.bryancassell.bluecard.resources.report_completed
+import io.github.bryancassell.bluecard.resources.report_completed_on
+import io.github.bryancassell.bluecard.resources.report_counselor
+import io.github.bryancassell.bluecard.resources.report_counselor_email
+import io.github.bryancassell.bluecard.resources.report_counselor_name
+import io.github.bryancassell.bluecard.resources.report_counselor_phone
+import io.github.bryancassell.bluecard.resources.report_created_on
+import io.github.bryancassell.bluecard.resources.report_earned
+import io.github.bryancassell.bluecard.resources.report_earned_on
+import io.github.bryancassell.bluecard.resources.report_earned_with
+import io.github.bryancassell.bluecard.resources.report_kind
+import io.github.bryancassell.bluecard.resources.report_kind_rank
+import io.github.bryancassell.bluecard.resources.report_labeled_value
+import io.github.bryancassell.bluecard.resources.report_not_completed
+import io.github.bryancassell.bluecard.resources.report_page
+import io.github.bryancassell.bluecard.resources.report_requirement
+import io.github.bryancassell.bluecard.resources.report_requirements
+import io.github.bryancassell.bluecard.resources.report_requirements_version
+import io.github.bryancassell.bluecard.resources.report_scout
+import io.github.bryancassell.bluecard.resources.report_signed_off_by
+import io.github.bryancassell.bluecard.resources.report_unit
+import io.github.bryancassell.bluecard.resources.requirement_choice
+import io.github.bryancassell.bluecard.resources.requirement_eagle_required_count
+import io.github.bryancassell.bluecard.resources.requirement_merit_badge_eagle_required
+import io.github.bryancassell.bluecard.resources.requirement_merit_badges_count
+import io.github.bryancassell.bluecard.resources.requirement_not_needed
+import io.github.bryancassell.bluecard.resources.requirement_not_recorded
+import io.github.bryancassell.bluecard.resources.tracker_count
+import io.github.bryancassell.bluecard.resources.tracker_count_of
+import io.github.bryancassell.bluecard.resources.tracker_row_title
+import io.github.bryancassell.bluecard.resources.tracker_total
+import io.github.bryancassell.bluecard.resources.tracker_value_separator
 import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import io.github.bryancassell.bluecard.text.LocaleFormats
+import java.util.Locale
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.PluralStringResource
+import org.jetbrains.compose.resources.ResourceEnvironment
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
 
 // A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
 // Sizes are in PDF points, 1/72 of an inch.
@@ -69,12 +105,20 @@ internal class PlacedText(
 }
 
 /**
- * Lays [report] out on pages, with its text from [resources], which must be in the strings'
- * language (`stringsLanguageResources`). Dates and numbers are formatted in their first
- * locale, and text is laid out in its direction (ARCHITECTURE.md, Language and layout direction).
+ * Lays [report] out on pages, with its strings from [environment], such as
+ * `getSystemResourceEnvironment()`, which reads the default locale the app makes the strings'
+ * (`useStringsLocalesByDefault`). Dates and totals are formatted in [locale], the strings' locale
+ * (`stringsLocale`), and text is laid out in its direction (ARCHITECTURE.md, Language and layout
+ * direction).
  */
-fun layOutReport(report: AdvancementReport, resources: Resources): List<ReportPage> =
-    ReportComposer(resources).apply { add(report) }.pages()
+suspend fun layOutReport(
+    report: AdvancementReport,
+    locale: Locale,
+    environment: ResourceEnvironment
+): List<ReportPage> {
+    val valueSeparator = getString(environment, Res.string.tracker_value_separator)
+    return ReportComposer(locale, environment, valueSeparator).apply { add(report) }.pages()
+}
 
 /** The text styles of a report. */
 private enum class Style(val size: Float, val bold: Boolean) {
@@ -97,16 +141,17 @@ private class Paragraph(
 )
 
 /** Writes a report's paragraphs, then places them on pages. */
-private class ReportComposer(private val resources: Resources) {
-    private val locale = resources.configuration.locales[0]
+private class ReportComposer(
+    private val locale: Locale,
+    private val environment: ResourceEnvironment,
+    // Between a tracker row's values, as on screen.
+    private val valueSeparator: String
+) {
     private val rightToLeft =
-        TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
+        locale.layoutDirection == View.LAYOUT_DIRECTION_RTL
 
     // Dates, totals and typed text are written as on screen.
     private val formats = AndroidLocaleFormats(locale)
-
-    // Between a tracker row's values, as on screen.
-    private val valueSeparator = resources.getString(R.string.tracker_value_separator)
 
     private val paints = Style.entries.associateWith { style ->
         TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -119,75 +164,75 @@ private class ReportComposer(private val resources: Resources) {
 
     private val paragraphs = mutableListOf<Paragraph>()
 
-    fun add(report: AdvancementReport) {
+    suspend fun add(report: AdvancementReport) {
         val profile = report.profile
         val kind = when (report.kind) {
-            ReportKind.MeritBadge -> R.string.report_kind
-            ReportKind.Rank -> R.string.report_kind_rank
+            ReportKind.MeritBadge -> Res.string.report_kind
+            ReportKind.Rank -> Res.string.report_kind_rank
         }
         add(Style.Body, string(kind))
         add(Style.Title, report.name, spaceBefore = 2f)
-        add(Style.Body, string(R.string.report_scout, typed(profile.name)), spaceBefore = 8f)
-        add(Style.Body, string(R.string.report_unit, typed(profile.unitNumber)))
+        add(Style.Body, string(Res.string.report_scout, typed(profile.name)), spaceBefore = 8f)
+        add(Style.Body, string(Res.string.report_unit, typed(profile.unitNumber)))
         val status = when (report.kind) {
             ReportKind.MeritBadge -> completionText(report.completion)
             ReportKind.Rank -> earnedText(report)
         }
         add(Style.Body, status)
         val version = date(report.requirementsVersion)
-        add(Style.Body, string(R.string.report_requirements_version, version))
-        add(Style.Body, string(R.string.report_created_on, date(report.createdDate)))
+        add(Style.Body, string(Res.string.report_requirements_version, version))
+        add(Style.Body, string(Res.string.report_created_on, date(report.createdDate)))
         report.counselor?.let { counselor ->
-            addHeading(R.string.report_counselor)
-            counselor.name?.let { addLabeled(R.string.report_counselor_name, typed(it)) }
-            counselor.phone?.let { addLabeled(R.string.report_counselor_phone, typed(it)) }
-            counselor.email?.let { addLabeled(R.string.report_counselor_email, typed(it)) }
+            addHeading(Res.string.report_counselor)
+            counselor.name?.let { addLabeled(Res.string.report_counselor_name, typed(it)) }
+            counselor.phone?.let { addLabeled(Res.string.report_counselor_phone, typed(it)) }
+            counselor.email?.let { addLabeled(Res.string.report_counselor_email, typed(it)) }
         }
-        addHeading(R.string.report_requirements)
+        addHeading(Res.string.report_requirements)
         report.requirements.forEach { add(it, depth = 0) }
     }
 
-    private fun add(requirement: ReportRequirement, depth: Int) {
+    private suspend fun add(requirement: ReportRequirement, depth: Int) {
         val indent = depth * INDENT
         add(
             Style.Subheading,
-            string(R.string.report_requirement, requirement.number, requirement.summary),
+            string(Res.string.report_requirement, requirement.number, requirement.summary),
             indent,
             spaceBefore = 10f,
             keepWithNext = true
         )
         requirement.requiredCount?.let {
-            val choice = string(R.string.requirement_choice, it, requirement.children.size)
+            val choice = string(Res.string.requirement_choice, it, requirement.children.size)
             add(Style.Body, choice, indent)
         }
         val status = when {
-            requirement.notNeeded -> string(R.string.requirement_not_needed)
-            requirement.notRecorded -> string(R.string.requirement_not_recorded)
+            requirement.notNeeded -> string(Res.string.requirement_not_needed)
+            requirement.notRecorded -> string(Res.string.requirement_not_recorded)
             else -> completionText(requirement.completion)
         }
         add(Style.Body, status, indent)
         requirement.signedOffBy?.let {
-            addLabeled(R.string.report_signed_off_by, typed(it), indent)
+            addLabeled(Res.string.report_signed_off_by, typed(it), indent)
         }
-        requirement.comment?.let { addLabeled(R.string.report_comment, typed(it), indent) }
+        requirement.comment?.let { addLabeled(Res.string.report_comment, typed(it), indent) }
         requirement.tracker?.let { add(it, indent) }
         requirement.meritBadges?.let { add(it, indent) }
         requirement.children.forEach { add(it, depth + 1) }
     }
 
-    private fun add(tracker: ReportTracker, indent: Int) {
+    private suspend fun add(tracker: ReportTracker, indent: Int) {
         val definition = tracker.definition
         val recorded = tracker.rows.size
         // As on the requirement's page: "5 sessions" in a log, or "8 of 12 weeks" or
         // "6 of 10 animals" when it's out of a number.
         val rows = definition.rowsLabel(recorded)
         val count = definition.rowsOutOf?.let {
-            string(R.string.tracker_count_of, recorded, it, rows)
-        } ?: string(R.string.tracker_count, recorded, rows)
+            string(Res.string.tracker_count_of, recorded, it, rows)
+        } ?: string(Res.string.tracker_count, recorded, rows)
         // Then its totals, such as "4 of 6 hours", as on the requirement's page.
         val totals = tracker.totals.map { (sum, total) ->
             string(
-                R.string.tracker_total,
+                Res.string.tracker_total,
                 formats.formatTotal(sum),
                 total.needed,
                 total.neededLabel
@@ -206,7 +251,7 @@ private class ReportComposer(private val resources: Resources) {
         tracker.rows.forEach { row ->
             add(
                 Style.Subheading,
-                string(R.string.tracker_row_title, definition.rowTitle, row.number),
+                string(Res.string.tracker_row_title, definition.rowTitle, row.number),
                 indent,
                 spaceBefore = 4f,
                 keepWithNext = row.values.isNotEmpty()
@@ -222,18 +267,18 @@ private class ReportComposer(private val resources: Resources) {
      * toward the requirement. The page's line on how many more are needed is left out, as the
      * report is on a rank that's already earned.
      */
-    private fun add(meritBadges: ReportMeritBadges, indent: Int) {
+    private suspend fun add(meritBadges: ReportMeritBadges, indent: Int) {
         val credit = meritBadges.credit
         val needed = credit.needed
         val counts = listOf(
             quantityString(
-                R.plurals.requirement_merit_badges_count,
+                Res.plurals.requirement_merit_badges_count,
                 needed.total,
                 credit.completed,
                 needed.total
             ),
             quantityString(
-                R.plurals.requirement_eagle_required_count,
+                Res.plurals.requirement_eagle_required_count,
                 needed.eagleRequired,
                 credit.eagleRequired,
                 needed.eagleRequired
@@ -252,7 +297,7 @@ private class ReportComposer(private val resources: Resources) {
             val parts = listOfNotNull(
                 earned.badge.name,
                 completionText(Completion(earned.completedOn)),
-                string(R.string.requirement_merit_badge_eagle_required)
+                string(Res.string.requirement_merit_badge_eagle_required)
                     .takeIf { earned.countsAsEagleRequired(needed) }
             )
             add(Style.Body, parts.joinToString(valueSeparator), indent)
@@ -263,15 +308,19 @@ private class ReportComposer(private val resources: Resources) {
      * A row's values, each after its column's label, separated as on screen, such as by " · ". A
      * value after multi-line text starts a new line, so it doesn't read as the text's last line.
      */
-    private fun valuesText(values: List<Pair<TrackerColumn, String>>): String = buildString {
-        values.forEachIndexed { index, (column, value) ->
-            if (index > 0) {
-                val previous = values[index - 1].first.type
-                append(if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else valueSeparator)
+    private suspend fun valuesText(values: List<Pair<TrackerColumn, String>>): String =
+        buildString {
+            values.forEachIndexed { index, (column, value) ->
+                if (index > 0) {
+                    val previous = values[index - 1].first.type
+                    append(
+                        if (previous == TrackerColumnType.MULTILINE_TEXT) "\n" else valueSeparator
+                    )
+                }
+                val text = valueText(column, value)
+                append(string(Res.string.report_labeled_value, column.label, text))
             }
-            append(string(R.string.report_labeled_value, column.label, valueText(column, value)))
         }
-    }
 
     /**
      * A tracker value as stored, with a date written out, as on screen. Multi-line text keeps
@@ -285,27 +334,30 @@ private class ReportComposer(private val resources: Resources) {
             typed(value)
     }
 
-    private fun completionText(completion: Completion?): String = when {
-        completion == null -> string(R.string.report_not_completed)
-        completion.date == null -> string(R.string.report_completed)
-        else -> string(R.string.report_completed_on, date(completion.date))
+    private suspend fun completionText(completion: Completion?): String = when {
+        completion == null -> string(Res.string.report_not_completed)
+        completion.date == null -> string(Res.string.report_completed)
+        else -> string(Res.string.report_completed_on, date(completion.date))
     }
 
     /** How the rank was earned, and when, as its page says. */
-    private fun earnedText(report: AdvancementReport): String {
+    private suspend fun earnedText(report: AdvancementReport): String {
         val earnedOn = report.completion?.date
         return when {
-            report.earnedWith != null -> string(R.string.report_earned_with, report.earnedWith)
-            earnedOn == null -> string(R.string.report_earned)
-            else -> string(R.string.report_earned_on, date(earnedOn))
+            report.earnedWith != null -> string(Res.string.report_earned_with, report.earnedWith)
+            earnedOn == null -> string(Res.string.report_earned)
+            else -> string(Res.string.report_earned_on, date(earnedOn))
         }
     }
 
-    private fun string(@StringRes id: Int, vararg args: Any): String =
-        resources.getString(id, *args)
+    private suspend fun string(resource: StringResource, vararg args: Any): String =
+        getString(environment, resource, *args)
 
-    private fun quantityString(@PluralsRes id: Int, quantity: Int, vararg args: Any): String =
-        resources.getQuantityString(id, quantity, *args)
+    private suspend fun quantityString(
+        resource: PluralStringResource,
+        quantity: Int,
+        vararg args: Any
+    ): String = getPluralString(environment, resource, quantity, *args)
 
     // Text the scout typed keeps its own direction, as on screen. A line break ends a paragraph
     // for the bidi algorithm, and the wrapping with it, so each line is wrapped on its own.
@@ -326,12 +378,12 @@ private class ReportComposer(private val resources: Resources) {
         paragraphs += Paragraph(text, style, indent, space, keepWithNext)
     }
 
-    private fun addHeading(@StringRes text: Int) {
+    private suspend fun addHeading(text: StringResource) {
         add(Style.Heading, string(text), spaceBefore = 18f, keepWithNext = true)
     }
 
-    private fun addLabeled(@StringRes label: Int, value: String, indent: Int = 0) {
-        add(Style.Body, string(R.string.report_labeled_value, string(label), value), indent)
+    private suspend fun addLabeled(label: StringResource, value: String, indent: Int = 0) {
+        add(Style.Body, string(Res.string.report_labeled_value, string(label), value), indent)
     }
 
     /**
@@ -339,7 +391,7 @@ private class ReportComposer(private val resources: Resources) {
      * keeps printed pages in order. A paragraph that doesn't fit at the foot of a page continues
      * on the next one, unless it's kept with the paragraph after it.
      */
-    fun pages(): List<ReportPage> {
+    suspend fun pages(): List<ReportPage> {
         val layouts = paragraphs.map { layOut(it, it.text) }
         val pages = mutableListOf(mutableListOf<PlacedText>())
         // The top of the next line.
@@ -380,7 +432,7 @@ private class ReportComposer(private val resources: Resources) {
             place(layout, paragraph)
         }
         return pages.mapIndexed { index, texts ->
-            val number = string(R.string.report_page, index + 1, pages.size)
+            val number = string(Res.string.report_page, index + 1, pages.size)
             val footer = layOut(number, Style.Footer, CONTENT_WIDTH, Layout.Alignment.ALIGN_CENTER)
             ReportPage(texts + PlacedText(footer, MARGIN.toFloat(), FOOTER_TOP.toFloat()))
         }

@@ -15,7 +15,8 @@ import org.junit.Test
 class QaSeedTest {
     // Local tests run with the module directory as the working directory.
     private val seed = File("../scripts/qa/seed.json")
-    private val catalog = File("src/androidMain/assets/${AssetCatalogRepository.CATALOG_ASSET}")
+    private val catalog =
+        File("src/commonMain/composeResources/${AssetCatalogRepository.CATALOG_FILE}")
 
     @Test
     fun qaSeed_importsIntoTheBundledCatalog() {

@@ -10,14 +10,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.ranks_title
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Ranks screen to its ViewModel. */
@@ -43,7 +45,7 @@ fun RanksScreen(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = stringResource(R.string.ranks_title),
+            text = stringResource(Res.string.ranks_title),
             style = MaterialTheme.typography.headlineMedium,
             // Lets screen reader users jump to it.
             modifier = Modifier
@@ -53,7 +55,7 @@ fun RanksScreen(
         when (uiState) {
             RanksUiState.Loading -> ScreenLoadingIndicator()
 
-            RanksUiState.LoadFailed -> ScreenMessage(stringResource(R.string.load_failed))
+            RanksUiState.LoadFailed -> ScreenMessage(stringResource(Res.string.load_failed))
 
             // A lazy list, as on Badges, scrolls when large text makes the ranks taller than
             // the screen, and screen readers say how many it has.

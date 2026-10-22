@@ -17,15 +17,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.onboarding_message
+import io.github.bryancassell.bluecard.resources.onboarding_not_affiliated
+import io.github.bryancassell.bluecard.resources.onboarding_save
+import io.github.bryancassell.bluecard.resources.onboarding_title
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
 import io.github.bryancassell.bluecard.ui.profile.ProfileNameField
 import io.github.bryancassell.bluecard.ui.profile.UnitNumberField
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -70,10 +75,10 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = stringResource(R.string.onboarding_title),
+                text = stringResource(Res.string.onboarding_title),
                 style = MaterialTheme.typography.headlineMedium
             )
-            Text(text = stringResource(R.string.onboarding_message))
+            Text(text = stringResource(Res.string.onboarding_message))
             ProfileNameField(name = name, enabled = uiState.canEdit)
             // Keeps all of the last field in view while the scout types in it, as other pages
             // do: its border and "Required" were behind the keyboard on a small screen. The
@@ -92,17 +97,17 @@ fun OnboardingScreen(
                 enabled = uiState.canSave,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(R.string.onboarding_save))
+                Text(stringResource(Res.string.onboarding_save))
             }
             Text(
-                text = stringResource(R.string.onboarding_not_affiliated),
+                text = stringResource(Res.string.onboarding_not_affiliated),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         TaskFailureSnackbarHost(
             failure = uiState.saveFailure,
-            message = stringResource(R.string.save_failed),
+            message = stringResource(Res.string.save_failed),
             onShown = onSaveFailureShown,
             modifier = Modifier.align(Alignment.BottomCenter)
         )

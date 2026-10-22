@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import android.text.TextUtils
 import android.view.View
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -42,19 +41,26 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.date_picker_cancel
+import io.github.bryancassell.bluecard.resources.date_picker_ok
+import io.github.bryancassell.bluecard.resources.labeled_date_button
+import io.github.bryancassell.bluecard.resources.requirement_add_date
+import io.github.bryancassell.bluecard.resources.requirement_change_date
+import io.github.bryancassell.bluecard.resources.requirement_remove_date
 import io.github.bryancassell.bluecard.ui.ButtonText
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * [text] about a date something was done on, such as "Completed on Apr 15, 2026", with buttons
@@ -79,7 +85,7 @@ fun EditableDate(
     onDateChange: (LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
     label: String? = null,
-    @StringRes removeText: Int = R.string.requirement_remove_date,
+    removeText: StringResource = Res.string.requirement_remove_date,
     suggested: LocalDate? = null,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium
 ) {
@@ -98,9 +104,9 @@ fun EditableDate(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             val pickText = if (date == null) {
-                R.string.requirement_add_date
+                Res.string.requirement_add_date
             } else {
-                R.string.requirement_change_date
+                Res.string.requirement_change_date
             }
             PickDate(date ?: suggested, today, onDateChange) { onClick ->
                 DateButton(stringResource(pickText), label, onClick)
@@ -121,7 +127,7 @@ private fun DateButton(text: String, label: String?, onClick: () -> Unit) {
     TextButton(onClick = onClick) {
         ButtonText(
             text = text,
-            description = label?.let { stringResource(R.string.labeled_date_button, text, it) }
+            description = label?.let { stringResource(Res.string.labeled_date_button, text, it) }
         )
     }
 }
@@ -298,7 +304,7 @@ private fun ColumnScope.DatePickerButtons(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         TextButton(onClick = onDismiss) {
-            Text(stringResource(R.string.date_picker_cancel))
+            Text(stringResource(Res.string.date_picker_cancel))
         }
         // Null while a typed date isn't valid. One the picker doesn't offer can still be
         // selected when it's restored with an earlier today, as when the system stopped the app
@@ -308,7 +314,7 @@ private fun ColumnScope.DatePickerButtons(
             onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
             enabled = selected != null
         ) {
-            Text(stringResource(R.string.date_picker_ok))
+            Text(stringResource(Res.string.date_picker_ok))
         }
     }
 }

@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -18,9 +17,13 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_completed
+import io.github.bryancassell.bluecard.resources.badges_in_progress
+import io.github.bryancassell.bluecard.resources.badges_open_badge
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.statusFitsBeside
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * One badge in a list, on Badges and on Home: its name, whether it's Eagle-required and the
@@ -34,11 +37,11 @@ fun BadgeRow(badge: BadgeListItem, onClick: () -> Unit, modifier: Modifier = Mod
         detail = badge.eagle?.let { eagleRequirementLabel(it) },
         status = when (badge.status) {
             BadgeStatus.NotStarted -> null
-            BadgeStatus.InProgress -> stringResource(R.string.badges_in_progress)
-            BadgeStatus.Completed -> stringResource(R.string.badges_completed)
+            BadgeStatus.InProgress -> stringResource(Res.string.badges_in_progress)
+            BadgeStatus.Completed -> stringResource(Res.string.badges_completed)
         },
         fractionDone = badge.fractionDone,
-        onClickLabel = stringResource(R.string.badges_open_badge),
+        onClickLabel = stringResource(Res.string.badges_open_badge),
         onClick = onClick,
         modifier = modifier
     )
