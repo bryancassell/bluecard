@@ -9,7 +9,8 @@ import org.junit.Test
 /** Checks the catalog file that ships in the app. See docs/catalog.md for the rules. */
 class BundledCatalogTest {
     // Local tests run with the module directory as the working directory.
-    private val file = File("src/androidMain/assets/${AssetCatalogRepository.CATALOG_ASSET}")
+    private val file =
+        File("src/commonMain/composeResources/${AssetCatalogRepository.CATALOG_FILE}")
 
     @Test
     fun bundledCatalog_isValid() {

@@ -5,27 +5,35 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_open_badge
+import io.github.bryancassell.bluecard.resources.requirement_eagle_required_badges_needed
+import io.github.bryancassell.bluecard.resources.requirement_eagle_required_count
+import io.github.bryancassell.bluecard.resources.requirement_merit_badge_completed
+import io.github.bryancassell.bluecard.resources.requirement_merit_badge_completed_on
+import io.github.bryancassell.bluecard.resources.requirement_merit_badge_eagle_required
+import io.github.bryancassell.bluecard.resources.requirement_merit_badges_count
+import io.github.bryancassell.bluecard.resources.requirement_merit_badges_needed
+import io.github.bryancassell.bluecard.resources.requirement_merit_badges_needed_some_eagle_required
+import io.github.bryancassell.bluecard.resources.requirement_merit_badges_title
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.AdvancementRow
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 // A rank's requirement that asks for merit badges, on its page and in its row.
 
 /** "4 of 6 merit badges". */
 @Composable
-@ReadOnlyComposable
 fun meritBadgesCountLabel(credit: MeritBadgeCredit): String = pluralStringResource(
-    R.plurals.requirement_merit_badges_count,
+    Res.plurals.requirement_merit_badges_count,
     credit.needed.total,
     credit.completed,
     credit.needed.total
@@ -33,9 +41,8 @@ fun meritBadgesCountLabel(credit: MeritBadgeCredit): String = pluralStringResour
 
 /** "2 of 4 Eagle-required". */
 @Composable
-@ReadOnlyComposable
 fun eagleRequiredCountLabel(credit: MeritBadgeCredit): String = pluralStringResource(
-    R.plurals.requirement_eagle_required_count,
+    Res.plurals.requirement_eagle_required_count,
     credit.needed.eagleRequired,
     credit.eagleRequired,
     credit.needed.eagleRequired
@@ -60,7 +67,7 @@ fun MeritBadgeSection(
 ) {
     Column(modifier) {
         Text(
-            text = stringResource(R.string.requirement_merit_badges_title),
+            text = stringResource(Res.string.requirement_merit_badges_title),
             style = MaterialTheme.typography.titleMedium,
             // Lets screen reader users jump to it.
             modifier = Modifier
@@ -89,17 +96,17 @@ fun MeritBadgeSection(
                     name = earned.badge.name,
                     detail = earned.completedOn?.let {
                         stringResource(
-                            R.string.requirement_merit_badge_completed_on,
+                            Res.string.requirement_merit_badge_completed_on,
                             formats.formatDate(it)
                         )
-                    } ?: stringResource(R.string.requirement_merit_badge_completed),
+                    } ?: stringResource(Res.string.requirement_merit_badge_completed),
                     status = if (earned.countsAsEagleRequired(credit.needed)) {
-                        stringResource(R.string.requirement_merit_badge_eagle_required)
+                        stringResource(Res.string.requirement_merit_badge_eagle_required)
                     } else {
                         null
                     },
                     fractionDone = null,
-                    onClickLabel = stringResource(R.string.badges_open_badge),
+                    onClickLabel = stringResource(Res.string.badges_open_badge),
                     onClick = { onOpenBadge(earned.badge.id) }
                 )
             }
@@ -114,7 +121,6 @@ fun MeritBadgeSection(
  * do, where this says it takes two, both Eagle-required.
  */
 @Composable
-@ReadOnlyComposable
 private fun moreNeededLabel(credit: MeritBadgeCredit): String? {
     val more = credit.moreNeeded
     val moreEagleRequired = credit.moreEagleRequiredNeeded
@@ -122,13 +128,13 @@ private fun moreNeededLabel(credit: MeritBadgeCredit): String? {
         more == 0 -> null
 
         moreEagleRequired == 0 ->
-            pluralStringResource(R.plurals.requirement_merit_badges_needed, more, more)
+            pluralStringResource(Res.plurals.requirement_merit_badges_needed, more, more)
 
         moreEagleRequired == more ->
-            pluralStringResource(R.plurals.requirement_eagle_required_badges_needed, more, more)
+            pluralStringResource(Res.plurals.requirement_eagle_required_badges_needed, more, more)
 
         else -> pluralStringResource(
-            R.plurals.requirement_merit_badges_needed_some_eagle_required,
+            Res.plurals.requirement_merit_badges_needed_some_eagle_required,
             more,
             more,
             moreEagleRequired

@@ -1,9 +1,9 @@
 package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.res.stringResource
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.read_as_one_separator
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The label of something screen readers read as one, such as a list row: [parts] in reading order,
@@ -19,9 +19,8 @@ import io.github.bryancassell.bluecard.shared.R
  * state, such as a progress bar, needs no `hideFromAccessibility` of its own.
  */
 @Composable
-@ReadOnlyComposable
 fun readAsOneLabel(vararg parts: String?): String =
-    joinedAsOne(parts.filterNotNull(), stringResource(R.string.read_as_one_separator))
+    joinedAsOne(parts.filterNotNull(), stringResource(Res.string.read_as_one_separator))
 
 /**
  * [parts] joined with [separator]. After a part that already ends with the separator's

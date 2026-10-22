@@ -21,8 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
@@ -30,10 +28,16 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badge_detail_no_browser
+import io.github.bryancassell.bluecard.resources.badge_detail_official_page
+import io.github.bryancassell.bluecard.resources.badge_detail_open_in_browser
+import io.github.bryancassell.bluecard.resources.ic_open_in_new
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.badges.BadgeProgressBar
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 /** Test tag of the official requirements link's icon, which has no semantics of its own. */
 internal const val OFFICIAL_LINK_ICON_TAG = "officialLinkIcon"
@@ -86,8 +90,8 @@ private fun OfficialPageButton(officialUrl: String, startOtherApp: OtherAppStart
     // counselor's phone and email.
     val officialPage = Intent(Intent.ACTION_VIEW, officialUrl.toUri())
     // Shown when no app can open web links, as when parental controls block the browser.
-    val noBrowser = stringResource(R.string.badge_detail_no_browser)
-    val openInBrowser = stringResource(R.string.badge_detail_open_in_browser)
+    val noBrowser = stringResource(Res.string.badge_detail_no_browser)
+    val openInBrowser = stringResource(Res.string.badge_detail_open_in_browser)
     // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
     OutlinedButton(
         onClick = { startOtherApp(officialPage, noBrowser) },
@@ -105,10 +109,10 @@ private fun OfficialPageButton(officialUrl: String, startOtherApp: OtherAppStart
             )
         }
     ) {
-        Text(text = stringResource(R.string.badge_detail_official_page))
+        Text(text = stringResource(Res.string.badge_detail_official_page))
         Spacer(Modifier.width(ButtonDefaults.IconSpacing))
         Icon(
-            painterResource(R.drawable.ic_open_in_new),
+            painterResource(Res.drawable.ic_open_in_new),
             contentDescription = null,
             modifier = Modifier
                 .size(ButtonDefaults.IconSize)

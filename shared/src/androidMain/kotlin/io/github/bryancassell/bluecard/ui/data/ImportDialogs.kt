@@ -38,8 +38,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -51,7 +49,33 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import io.github.bryancassell.bluecard.data.profile.Profile
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_completed
+import io.github.bryancassell.bluecard.resources.badges_in_progress
+import io.github.bryancassell.bluecard.resources.confirm_dialog_cancel
+import io.github.bryancassell.bluecard.resources.discard_changes_confirm
+import io.github.bryancassell.bluecard.resources.discard_changes_message
+import io.github.bryancassell.bluecard.resources.discard_changes_title
+import io.github.bryancassell.bluecard.resources.home_unit
+import io.github.bryancassell.bluecard.resources.ic_close
+import io.github.bryancassell.bluecard.resources.import_choose_message
+import io.github.bryancassell.bluecard.resources.import_choose_title
+import io.github.bryancassell.bluecard.resources.import_merge
+import io.github.bryancassell.bluecard.resources.import_replace_all
+import io.github.bryancassell.bluecard.resources.merge_close
+import io.github.bryancassell.bluecard.resources.merge_completed_on
+import io.github.bryancassell.bluecard.resources.merge_confirm
+import io.github.bryancassell.bluecard.resources.merge_earned_on
+import io.github.bryancassell.bluecard.resources.merge_message
+import io.github.bryancassell.bluecard.resources.merge_profile_heading
+import io.github.bryancassell.bluecard.resources.merge_requirements_version
+import io.github.bryancassell.bluecard.resources.merge_the_file
+import io.github.bryancassell.bluecard.resources.merge_the_file_description
+import io.github.bryancassell.bluecard.resources.merge_this_phone
+import io.github.bryancassell.bluecard.resources.merge_this_phone_description
+import io.github.bryancassell.bluecard.resources.merge_title
+import io.github.bryancassell.bluecard.resources.merge_unearns
+import io.github.bryancassell.bluecard.resources.ranks_earned
 import io.github.bryancassell.bluecard.ui.AnnouncedText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
@@ -60,6 +84,8 @@ import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedText
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Asks the scout, once a file to import is checked, whether to merge it with their data
@@ -70,19 +96,19 @@ import kotlinx.coroutines.delay
 fun ImportDialog(onMerge: () -> Unit, onReplace: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.import_choose_title)) },
-        text = { Text(stringResource(R.string.import_choose_message)) },
+        title = { Text(stringResource(Res.string.import_choose_title)) },
+        text = { Text(stringResource(Res.string.import_choose_message)) },
         confirmButton = {
-            TextButton(onClick = onMerge) { Text(stringResource(R.string.import_merge)) }
+            TextButton(onClick = onMerge) { Text(stringResource(Res.string.import_merge)) }
         },
         // The dialog lays out these buttons, then the confirm button, wrapping them if they
         // don't fit on one line.
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.confirm_dialog_cancel))
+                Text(stringResource(Res.string.confirm_dialog_cancel))
             }
             TextButton(onClick = onReplace, colors = removalButtonColors()) {
-                Text(stringResource(R.string.import_replace_all))
+                Text(stringResource(Res.string.import_replace_all))
             }
         }
     )
@@ -132,12 +158,12 @@ fun MergeDialog(
                     ) {
                         IconButton(onClick = close) {
                             Icon(
-                                painterResource(R.drawable.ic_close),
-                                contentDescription = stringResource(R.string.merge_close)
+                                painterResource(Res.drawable.ic_close),
+                                contentDescription = stringResource(Res.string.merge_close)
                             )
                         }
                         Text(
-                            text = stringResource(R.string.merge_title),
+                            text = stringResource(Res.string.merge_title),
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier
                                 .weight(1f)
@@ -145,7 +171,7 @@ fun MergeDialog(
                                 .semantics { heading() }
                         )
                         TextButton(onClick = onConfirm) {
-                            Text(stringResource(R.string.merge_confirm))
+                            Text(stringResource(Res.string.merge_confirm))
                         }
                     }
                     UnearnedRanks(choices.unearnedRanks)
@@ -155,9 +181,9 @@ fun MergeDialog(
         }
         if (confirmingDiscard) {
             ConfirmDialog(
-                title = stringResource(R.string.discard_changes_title),
-                message = stringResource(R.string.discard_changes_message),
-                confirmLabel = stringResource(R.string.discard_changes_confirm),
+                title = stringResource(Res.string.discard_changes_title),
+                message = stringResource(Res.string.discard_changes_message),
+                confirmLabel = stringResource(Res.string.discard_changes_confirm),
                 onConfirm = {
                     confirmingDiscard = false
                     onDismiss()
@@ -220,7 +246,7 @@ private fun UnearnedRanks(names: List<String>) {
     if (names.isEmpty()) return
     AnnouncedText(
         text = stringResource(
-            R.string.merge_unearns,
+            Res.string.merge_unearns,
             LocalLocaleFormats.current.formatList(names)
         ),
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
@@ -240,10 +266,10 @@ private fun MergeChoiceList(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(stringResource(R.string.merge_message))
+        Text(stringResource(Res.string.merge_message))
         choices.profile?.let { profile ->
             Choice(
-                heading = stringResource(R.string.merge_profile_heading),
+                heading = stringResource(Res.string.merge_profile_heading),
                 phone = profileLines(profile.phone),
                 file = profileLines(profile.file),
                 fromFile = profile.fromFile,
@@ -285,16 +311,16 @@ private fun Choice(
     )
     Column(modifier = Modifier.selectableGroup()) {
         Option(
-            label = stringResource(R.string.merge_this_phone),
+            label = stringResource(Res.string.merge_this_phone),
             // Screen reader users moving from control to control don't hear the heading.
-            labelDescription = stringResource(R.string.merge_this_phone_description, heading),
+            labelDescription = stringResource(Res.string.merge_this_phone_description, heading),
             details = phone,
             selected = !fromFile,
             onClick = { onChoose(false) }
         )
         Option(
-            label = stringResource(R.string.merge_the_file),
-            labelDescription = stringResource(R.string.merge_the_file_description, heading),
+            label = stringResource(Res.string.merge_the_file),
+            labelDescription = stringResource(Res.string.merge_the_file_description, heading),
             details = file,
             selected = fromFile,
             onClick = { onChoose(true) }
@@ -344,7 +370,7 @@ private fun Option(
 @Composable
 private fun profileLines(profile: Profile) = listOf(
     typedText(profile.name),
-    stringResource(R.string.home_unit, typedText(profile.unitNumber))
+    stringResource(Res.string.home_unit, typedText(profile.unitNumber))
 )
 
 /**
@@ -357,15 +383,23 @@ private fun summaryLines(summary: ProgressSummary, isRank: Boolean): List<String
     val fractionDone = summary.fractionDone
     val doneOn = summary.doneOn?.let { formats.formatDate(it) }
     val status = when {
-        summary.done && isRank && doneOn != null -> stringResource(R.string.merge_earned_on, doneOn)
-        summary.done && isRank -> stringResource(R.string.ranks_earned)
-        summary.done && doneOn != null -> stringResource(R.string.merge_completed_on, doneOn)
-        summary.done -> stringResource(R.string.badges_completed)
+        summary.done && isRank && doneOn != null -> stringResource(
+            Res.string.merge_earned_on,
+            doneOn
+        )
+
+        summary.done && isRank -> stringResource(Res.string.ranks_earned)
+
+        summary.done && doneOn != null -> stringResource(Res.string.merge_completed_on, doneOn)
+
+        summary.done -> stringResource(Res.string.badges_completed)
+
         fractionDone != null -> percentDoneDescription(fractionDone)
-        else -> stringResource(R.string.badges_in_progress)
+
+        else -> stringResource(Res.string.badges_in_progress)
     }
     val version = summary.requirementsVersion?.let {
-        stringResource(R.string.merge_requirements_version, formats.formatDate(it))
+        stringResource(Res.string.merge_requirements_version, formats.formatDate(it))
     }
     return listOfNotNull(status, version)
 }

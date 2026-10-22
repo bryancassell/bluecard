@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.di
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -31,6 +33,11 @@ class AppModuleTest {
     @Test
     fun clock_isDeviceClock() {
         assertSame(DeviceClock, koin.get<ZonedClock>())
+    }
+
+    @Test
+    fun catalogRepository_isAssetCatalogRepository() {
+        assertTrue(koin.get<CatalogRepository>() is AssetCatalogRepository)
     }
 
     @Test

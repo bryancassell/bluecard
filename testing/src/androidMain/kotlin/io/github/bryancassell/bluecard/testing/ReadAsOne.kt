@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.testing
 
-import android.content.Context
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -12,8 +11,10 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.test.core.app.ApplicationProvider
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.read_as_one_separator
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 import org.junit.Assert.assertEquals
 
 /**
@@ -36,8 +37,7 @@ fun SemanticsNodeInteractionsProvider.onReadAsOne(
  * a right-to-left name.
  */
 fun readsLine(text: String): SemanticsMatcher {
-    val separator = ApplicationProvider.getApplicationContext<Context>()
-        .getString(R.string.read_as_one_separator)
+    val separator = runBlocking { getString(Res.string.read_as_one_separator) }
     val punctuation = separator.trimEnd()
     val space = separator.substring(punctuation.length)
     val endsWithIt = text.trimEnd { it.category == CharCategory.FORMAT }.endsWith(punctuation)

@@ -1,30 +1,26 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.content.Context
 import android.content.res.Configuration
-import android.icu.text.PluralRules
 import android.os.LocaleList
-import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badges_count
+import io.github.bryancassell.bluecard.resources.home_eagle_completed
+import io.github.bryancassell.bluecard.resources.requirement_choice
+import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import java.util.Locale
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertSame
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,25 +28,31 @@ import org.robolectric.annotation.Config
 
 /**
  * The app has only English strings. On a Persian device, or an Arabic one in some regions,
- * the device's language would format their numbers with its own digits ("Do ۲ of ۳").
+ * the device's language would pick the strings' plural forms by its own rules ("0 merit badge"),
+ * and format dates and lists in it.
  */
 @RunWith(AndroidJUnit4::class)
 class StringsLanguageTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    /** What [text] returns inside [ProvideStringsLanguageResources]. */
+    /** What [text] returns with the strings' locales the default, as MainActivity makes them. */
     private fun inStringsLanguage(text: @Composable () -> String): String {
+        runBlocking { useStringsLocalesByDefault(ApplicationProvider.getApplicationContext()) }
         lateinit var result: String
-        composeTestRule.setContent { ProvideStringsLanguageResources { result = text() } }
+        composeTestRule.setContent { result = text() }
         return result
     }
 
-    /** What [text] returns inside [ProvideStringsLanguageResources] on [Device] [locales]. */
+    /** What [text] returns with [LocalLocaleFormats] provided on [Device] [locales]. */
     private fun onDevice(locales: String, text: @Composable () -> String): String {
         lateinit var result: String
         composeTestRule.setContent {
-            Device(locales) { ProvideStringsLanguageResources { result = text() } }
+            Device(locales) {
+                CompositionLocalProvider(LocalLocaleFormats provides rememberLocaleFormats()) {
+                    result = text()
+                }
+            }
         }
         return result
     }
@@ -78,111 +80,52 @@ class StringsLanguageTest {
 
     @Config(qualifiers = "fa")
     @Test
-    fun onPersianDevice_numbersUseStringsLanguageDigits() {
+    fun onPersianDevice_numbersUseLatinDigits() {
         assertEquals(
             "Do 2 of 3",
-            inStringsLanguage { stringResource(R.string.requirement_choice, 2, 3) }
+            inStringsLanguage { stringResource(Res.string.requirement_choice, 2, 3) }
         )
     }
 
     @Config(qualifiers = "fa")
     @Test
-    fun onPersianDevice_pluralsUseStringsLanguageDigits() {
+    fun onPersianDevice_pluralsUseLatinDigits() {
         assertEquals(
             "1 of 3 completed",
-            inStringsLanguage { pluralStringResource(R.plurals.home_eagle_completed, 1, 1, 3) }
+            inStringsLanguage { pluralStringResource(Res.plurals.home_eagle_completed, 1, 1, 3) }
         )
     }
 
     @Config(qualifiers = "ar-rEG")
     @Test
-    fun onArabicDeviceInEgypt_numbersUseStringsLanguageDigits() {
+    fun onArabicDeviceInEgypt_numbersUseLatinDigits() {
         assertEquals(
             "Do 2 of 3",
-            inStringsLanguage { stringResource(R.string.requirement_choice, 2, 3) }
+            inStringsLanguage { stringResource(Res.string.requirement_choice, 2, 3) }
         )
     }
 
-    // Android picks a plural's form by the rules of the resources' first locale. English
-    // rules pick "other" for 0 ("0 badges"); Persian rules would pick "one" ("0 badge").
+    // Compose Multiplatform picks a plural's form by the default locale's rules. English rules
+    // pick "other" for 0 ("0 merit badges"); Persian rules would pick "one" ("0 merit badge").
     @Config(qualifiers = "fa")
     @Test
     fun onPersianDevice_pluralFormsUseStringsLanguageRules() {
-        val form = inStringsLanguage {
-            PluralRules.forLocale(LocalResources.current.configuration.locales[0]).select(0.0)
-        }
-
-        assertEquals("other", form)
+        assertEquals(
+            "0 merit badges",
+            inStringsLanguage { pluralStringResource(Res.plurals.badges_count, 0, 0) }
+        )
     }
 
-    // The layout follows the configuration's direction, which MainActivity sets from the
-    // strings' language, so resources with a direction-specific version (such as
-    // drawable-ldrtl) must too. Here the configuration is a Persian device's, unchanged.
+    // A locale can choose other digits, as English with Arabic digits does. "%1$d" in a string
+    // inserts Latin digits, so dates use them too, and a sentence doesn't mix two kinds.
     @Test
-    fun onRightToLeftConfiguration_keepsItsLayoutDirection() {
-        val direction = onDevice("fa-IR") {
-            LocalResources.current.configuration.layoutDirection.toString()
-        }
-
-        assertEquals(View.LAYOUT_DIRECTION_RTL.toString(), direction)
-    }
-
-    @Test
-    fun onDeviceInStringsLanguage_usesDeviceResources() {
-        lateinit var provided: Any
-        lateinit var device: Any
-        composeTestRule.setContent {
-            device = LocalResources.current
-            ProvideStringsLanguageResources { provided = LocalResources.current }
-        }
-
-        assertSame(device, provided)
-    }
-
-    @Config(qualifiers = "fa")
-    @Test
-    fun onPersianDevice_providesOtherResources() {
-        lateinit var provided: Any
-        lateinit var device: Any
-        composeTestRule.setContent {
-            device = LocalResources.current
-            ProvideStringsLanguageResources { provided = LocalResources.current }
-        }
-
-        assertNotSame(device, provided)
-    }
-
-    // Changing the phone's language recreates the activity. The content must be at the same
-    // place in the composition whether or not the new language needs other resources, so its
-    // saved state, such as the back stack, comes back.
-    @Test
-    fun deviceLanguageChange_keepsContentState() {
-        var locales by mutableStateOf("en-US")
-        var state: MutableList<String>? = null
-        composeTestRule.setContent {
-            Device(locales) {
-                ProvideStringsLanguageResources {
-                    state = rememberSaveable { mutableListOf<String>() }
-                }
-            }
-        }
-        composeTestRule.runOnIdle { state!!.add("kept") }
-
-        locales = "fa-IR"
-        composeTestRule.waitForIdle()
-
-        assertEquals(listOf("kept"), state)
-    }
-
-    // Android offers a choice of digits for some languages, such as Persian with Western
-    // digits. When the device's language is the strings' language, that choice is kept.
-    @Test
-    fun onDeviceInStringsLanguage_keepsItsDigitChoice() {
+    fun onDeviceInStringsLanguageWithOtherDigits_usesTheLanguagesDigits() {
         val text = onDevice("en-US-u-nu-arab") {
-            stringResource(R.string.requirement_choice, 2, 3)
+            val date = LocalLocaleFormats.current.formatDate(LocalDate(2026, 9, 29))
+            "${stringResource(Res.string.requirement_choice, 2, 3)}; $date"
         }
 
-        assertEquals("Do ٢ of ٣", text)
+        assertEquals("Do 2 of 3; Sep 29, 2026", text)
     }
 
     // British English lists have no comma before "and". Numbers still use English digits.
@@ -191,7 +134,7 @@ class StringsLanguageTest {
         val text = onDevice("fa-IR,en-GB") {
             val badges =
                 LocalLocaleFormats.current.formatList(listOf("Cycling", "Hiking", "Swimming"))
-            "${stringResource(R.string.requirement_choice, 2, 3)}; $badges"
+            "${stringResource(Res.string.requirement_choice, 2, 3)}; $badges"
         }
 
         assertEquals("Do 2 of 3; Cycling, Hiking and Swimming", text)

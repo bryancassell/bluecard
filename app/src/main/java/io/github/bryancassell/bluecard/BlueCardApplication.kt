@@ -2,14 +2,20 @@ package io.github.bryancassell.bluecard
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
+import android.content.res.Configuration
 import android.os.StrictMode
 import io.github.bryancassell.bluecard.di.androidModule
 import io.github.bryancassell.bluecard.di.appModule
+import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 
-/** Starts Koin, which builds the app's repositories and ViewModels as they're first needed. */
+/**
+ * Starts Koin, which builds the app's repositories and ViewModels as they're first needed, and
+ * keeps the strings' locales the default.
+ */
 class BlueCardApplication : Application() {
     override fun onCreate() {
         // Debug builds report disk access on the main thread, objects never closed and
@@ -34,6 +40,15 @@ class BlueCardApplication : Application() {
             androidContext(this@BlueCardApplication)
             modules(appModule, androidModule)
         }
+    }
+
+    // Android sets the default locales back to the device's on each configuration change, and
+    // the strings pick their plural forms by them (useStringsLocalesByDefault). This runs right
+    // after, before any activity the change recreates. It blocks to read one string, as
+    // MainActivity does.
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        runBlocking { useStringsLocalesByDefault(this@BlueCardApplication) }
     }
 
     // Robolectric starts the app again for each test, in the same process, and ends each test

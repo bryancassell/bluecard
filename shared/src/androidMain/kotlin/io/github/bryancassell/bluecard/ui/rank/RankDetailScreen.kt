@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
 import android.net.Uri
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,16 +16,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
+import io.github.bryancassell.bluecard.data.report.fileNameTitle
 import io.github.bryancassell.bluecard.data.report.reportFileName
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.badge_detail_clear_message
+import io.github.bryancassell.bluecard.resources.badge_detail_clear_title
+import io.github.bryancassell.bluecard.resources.badge_detail_not_started
+import io.github.bryancassell.bluecard.resources.badge_detail_requirements
+import io.github.bryancassell.bluecard.resources.badge_detail_unmark_completed
+import io.github.bryancassell.bluecard.resources.badges_in_progress
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.rank_detail_earned
+import io.github.bryancassell.bluecard.resources.rank_detail_earned_on
+import io.github.bryancassell.bluecard.resources.rank_detail_earned_with
+import io.github.bryancassell.bluecard.resources.rank_detail_mark_earned
+import io.github.bryancassell.bluecard.resources.rank_detail_mark_earned_prompt
+import io.github.bryancassell.bluecard.resources.rank_detail_started
+import io.github.bryancassell.bluecard.resources.rank_detail_waiting_on
+import io.github.bryancassell.bluecard.resources.rank_requirements_unavailable
+import io.github.bryancassell.bluecard.resources.report_failed
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
@@ -45,6 +60,8 @@ import io.github.bryancassell.bluecard.ui.badge.statusLineStyle
 import io.github.bryancassell.bluecard.ui.navigation.RankDetail
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -108,10 +125,10 @@ fun RankDetailScreen(
         RankDetailUiState.Loading -> ScreenLoadingIndicator(modifier)
 
         RankDetailUiState.LoadFailed ->
-            ScreenMessage(stringResource(R.string.load_failed), modifier)
+            ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         RankDetailUiState.Unavailable ->
-            ScreenMessage(stringResource(R.string.rank_requirements_unavailable), modifier)
+            ScreenMessage(stringResource(Res.string.rank_requirements_unavailable), modifier)
 
         is RankDetailUiState.Ready -> Box(modifier = modifier) {
             RankDetails(
@@ -129,13 +146,13 @@ fun RankDetailScreen(
             val snackbarHostState = remember { SnackbarHostState() }
             TaskFailureSnackbar(
                 failure = uiState.reportFailure,
-                message = stringResource(R.string.report_failed),
+                message = stringResource(Res.string.report_failed),
                 onShown = onReportFailureShown,
                 hostState = snackbarHostState
             )
             TaskFailureSnackbar(
                 failure = uiState.saveFailure,
-                message = stringResource(R.string.save_failed),
+                message = stringResource(Res.string.save_failed),
                 onShown = onSaveFailureShown,
                 hostState = snackbarHostState
             )
@@ -170,14 +187,14 @@ private fun RankDetails(
         )
         EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) {
             ReportButtons(
-                reportFileName(LocalResources.current, ReportKind.Rank, uiState.name),
+                reportFileName(stringResource(ReportKind.Rank.fileNameTitle, uiState.name)),
                 onShareReport,
                 onSaveReport,
                 startOtherApp
             )
         }
         Text(
-            text = stringResource(R.string.badge_detail_requirements),
+            text = stringResource(Res.string.badge_detail_requirements),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -186,8 +203,8 @@ private fun RankDetails(
         RequirementRows(items = uiState.requirements, onOpen = onOpenRequirement)
         if (uiState.canClear) {
             ClearProgress(
-                title = stringResource(R.string.badge_detail_clear_title, uiState.name),
-                message = stringResource(R.string.badge_detail_clear_message),
+                title = stringResource(Res.string.badge_detail_clear_title, uiState.name),
+                message = stringResource(Res.string.badge_detail_clear_message),
                 unearnedRanks = uiState.unearnedByClear,
                 onClear = onClear
             )
@@ -225,16 +242,16 @@ private fun EarnedStatus(
     StatusCard(reportButtons = reportButtons.takeIf { uiState.status == RankStatus.Earned }) {
         when {
             date != null -> EditableDate(
-                text = stringResource(R.string.rank_detail_earned_on, formats.formatDate(date)),
+                text = stringResource(Res.string.rank_detail_earned_on, formats.formatDate(date)),
                 date = date,
                 today = today,
                 onDateChange = { if (it == null) onUnmark() else onMark(it) },
-                removeText = R.string.badge_detail_unmark_completed,
+                removeText = Res.string.badge_detail_unmark_completed,
                 textStyle = statusLineStyle
             )
 
             uiState.earnedWith != null -> EditableDate(
-                text = stringResource(R.string.rank_detail_earned_with, uiState.earnedWith),
+                text = stringResource(Res.string.rank_detail_earned_with, uiState.earnedWith),
                 date = null,
                 today = today,
                 // Without a date, it can only be picked.
@@ -245,15 +262,15 @@ private fun EarnedStatus(
 
             uiState.status != RankStatus.Earned -> MarkDoneLines(
                 status = uiState.waitingOn
-                    ?.let { stringResource(R.string.rank_detail_waiting_on, it) }
+                    ?.let { stringResource(Res.string.rank_detail_waiting_on, it) }
                     ?: stringResource(notEarnedStatus(uiState)),
                 // The rank it's waiting on says why it isn't earned, so there's no need to ask.
                 prompt = if (uiState.waitingOn == null) {
-                    stringResource(R.string.rank_detail_mark_earned_prompt, uiState.name)
+                    stringResource(Res.string.rank_detail_mark_earned_prompt, uiState.name)
                 } else {
                     null
                 },
-                markText = stringResource(R.string.rank_detail_mark_earned),
+                markText = stringResource(Res.string.rank_detail_mark_earned),
                 // At the date the scout just unmarked, if any, so a mistaken Unmark loses nothing.
                 initial = uiState.unmarkedDate,
                 today = today,
@@ -263,8 +280,8 @@ private fun EarnedStatus(
             // Earned from its requirements.
             else -> DoneStatusLine(
                 uiState.earnedOn?.let {
-                    stringResource(R.string.rank_detail_earned_on, formats.formatDate(it))
-                } ?: stringResource(R.string.rank_detail_earned)
+                    stringResource(Res.string.rank_detail_earned_on, formats.formatDate(it))
+                } ?: stringResource(Res.string.rank_detail_earned)
             )
         }
     }
@@ -276,9 +293,8 @@ private fun EarnedStatus(
  * started". Badges count toward Star, Life and Eagle before anything is recorded for them, so
  * "Not started" would contradict their rows.
  */
-@StringRes
-private fun notEarnedStatus(uiState: RankDetailUiState.Ready): Int = when {
-    uiState.status == RankStatus.InProgress -> R.string.badges_in_progress
-    uiState.started -> R.string.rank_detail_started
-    else -> R.string.badge_detail_not_started
+private fun notEarnedStatus(uiState: RankDetailUiState.Ready): StringResource = when {
+    uiState.status == RankStatus.InProgress -> Res.string.badges_in_progress
+    uiState.started -> Res.string.rank_detail_started
+    else -> Res.string.badge_detail_not_started
 }

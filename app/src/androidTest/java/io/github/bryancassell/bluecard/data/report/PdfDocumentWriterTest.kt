@@ -13,9 +13,11 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import java.io.File
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -70,7 +72,10 @@ class PdfDocumentWriterTest {
         createdDate = LocalDate(2026, 9, 30)
     )
 
-    private val pages = layOutReport(report, context.resources)
+    private val pages = runBlocking {
+        val locale = context.resources.configuration.locales[0]
+        layOutReport(report, locale, getSystemResourceEnvironment())
+    }
 
     @After
     fun deleteFile() {

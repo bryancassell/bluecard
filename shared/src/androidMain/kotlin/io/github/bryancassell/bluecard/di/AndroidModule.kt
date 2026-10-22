@@ -9,8 +9,6 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.backup.BackupRepository
 import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
-import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
-import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
@@ -37,7 +35,6 @@ val androidModule = module {
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }
 
-    single<AssetCatalogRepository>() bind CatalogRepository::class
     // The database sets damaged progress aside with this same instance, so the notice shows
     // without the app reopening. So a test that fakes DamagedProgressRepository fakes
     // ProgressRepository too, or the real database tells the real one instead of the fake.

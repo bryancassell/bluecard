@@ -14,8 +14,8 @@ import kotlinx.datetime.toJavaLocalDate
 
 /**
  * [LocaleFormats] in [locale], with Java's and Android's formatters. The screens get one in the
- * strings' locale ([stringsLocale]) from `ProvideStringsLanguageResources`; code outside Compose,
- * such as the PDF report, makes its own.
+ * strings' locale ([stringsLocale]) from `BlueCardApp` (`rememberLocaleFormats`); code outside
+ * Compose, such as the PDF report, makes its own.
  */
 class AndroidLocaleFormats(private val locale: Locale) : LocaleFormats {
     // Each is made when it's first needed: the PDF report, for one, never formats a list, and

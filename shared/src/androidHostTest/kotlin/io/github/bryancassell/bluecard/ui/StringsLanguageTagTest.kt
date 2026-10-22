@@ -10,19 +10,19 @@ import org.w3c.dom.Element
 
 /**
  * Checks that each strings.xml names its own language in `strings_language`. The app loads and
- * formats its strings in that language (ProvideStringsLanguageResources), so a wrong tag, such
+ * formats its strings in that language (useStringsLocalesByDefault), so a wrong tag, such
  * as "en" left in a translation, would replace the whole translation with English. Lint
  * doesn't check it.
  */
 class StringsLanguageTagTest {
-    private val stringsFiles = File("src/androidMain/res")
+    private val stringsFiles = File("src/commonMain/composeResources")
         .listFiles { folder -> folder.name.startsWith("values") }!!
         .map { File(it, "strings.xml") }
         .filter { it.exists() }
 
     @Test
     fun defaultStrings_areChecked() {
-        assertTrue(File("src/androidMain/res/values/strings.xml") in stringsFiles)
+        assertTrue(File("src/commonMain/composeResources/values/strings.xml") in stringsFiles)
     }
 
     @Test

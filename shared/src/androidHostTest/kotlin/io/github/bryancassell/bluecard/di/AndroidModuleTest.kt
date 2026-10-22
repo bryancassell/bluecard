@@ -6,8 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.backup.BackupRepository
 import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
-import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
-import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -113,11 +111,6 @@ class AndroidModuleTest {
     @Test
     fun warningLog_isLogcat() {
         assertSame(LogcatWarningLog, koin.get<WarningLog>())
-    }
-
-    @Test
-    fun catalogRepository_isAssetCatalogRepository() {
-        assertTrue(koin.get<CatalogRepository>() is AssetCatalogRepository)
     }
 
     @Test

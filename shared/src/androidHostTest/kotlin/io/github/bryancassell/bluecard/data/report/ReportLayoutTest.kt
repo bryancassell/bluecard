@@ -1,13 +1,10 @@
 package io.github.bryancassell.bluecard.data.report
 
 import android.content.Context
-import android.content.res.Configuration
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
-import android.os.LocaleList
 import androidx.core.text.BidiFormatter
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -25,7 +22,9 @@ import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
 import java.math.BigDecimal
 import java.util.Locale
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -148,15 +147,10 @@ class ReportLayoutTest {
         )
     )
 
-    private fun layOut(report: AdvancementReport, resources: Resources = context.resources) =
-        layOutReport(report, resources)
-
-    /** Resources in [locales], BCP 47 tags in order, as `stringsLanguageResources` gives. */
-    private fun resources(locales: String): Resources = context.createConfigurationContext(
-        Configuration(context.resources.configuration).apply {
-            setLocales(LocaleList.forLanguageTags(locales))
-        }
-    ).resources
+    private fun layOut(
+        report: AdvancementReport,
+        locale: Locale = context.resources.configuration.locales[0]
+    ) = runBlocking { layOutReport(report, locale, getSystemResourceEnvironment()) }
 
     @Test
     fun shortReport_isOnePage_withEverythingRecordedInOrder() {
@@ -461,15 +455,12 @@ class ReportLayoutTest {
         assertTrue("Scout: $wrapped" in lines)
     }
 
-    // A device in the strings' language keeps its choice of digits (stringsLocales).
+    // A device in the strings' language keeps its region (stringsLocales).
     @Test
-    fun datesAndNumbers_useTheResourcesLocale() {
-        val lines = layOut(camping, resources("en-US-u-nu-arab")).single().lines
+    fun dates_useTheGivenLocale() {
+        val lines = layOut(camping, Locale.forLanguageTag("en-GB")).single().lines
 
-        assertTrue("Created on Sep ٣٠, ٢٠٢٦" in lines)
-        assertTrue("Do ٢ of ٣" in lines)
-        assertTrue("٢ of ٢٠ nights" in lines)
-        assertEquals("Page ١ of ١", lines.last())
+        assertTrue(lines.toString(), "Created on 30 Sept 2026" in lines)
     }
 
     /**
@@ -663,7 +654,7 @@ class ReportLayoutTest {
     @Test
     fun rightToLeftLocale_laysTextOutFromTheRight() {
         val canvas = RecordingCanvas()
-        layOut(camping, resources("fa-IR")).single().draw(canvas)
+        layOut(camping, Locale.forLanguageTag("fa-IR")).single().draw(canvas)
 
         val kind = canvas.drawn.first { it.text == "Merit badge report" }
         assertTrue("Starts at ${kind.x}", kind.x > PAGE_WIDTH / 2)

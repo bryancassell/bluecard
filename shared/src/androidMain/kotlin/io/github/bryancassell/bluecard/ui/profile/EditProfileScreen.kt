@@ -19,18 +19,22 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.edit_profile_save
+import io.github.bryancassell.bluecard.resources.edit_profile_title
+import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Connects the Edit name and unit screen to its ViewModel. */
@@ -80,7 +84,7 @@ fun EditProfileScreen(
         EditProfileUiState.Loading -> ScreenLoadingIndicator(modifier)
 
         EditProfileUiState.LoadFailed ->
-            ScreenMessage(stringResource(R.string.load_failed), modifier)
+            ScreenMessage(stringResource(Res.string.load_failed), modifier)
 
         // Ends the page above the keyboard, so every field can be scrolled into view.
         is EditProfileUiState.Ready -> Box(modifier = modifier.imePadding()) {
@@ -91,7 +95,7 @@ fun EditProfileScreen(
             Fields(uiState, name, unitNumber, onSave)
             TaskFailureSnackbarHost(
                 failure = uiState.saveFailure,
-                message = stringResource(R.string.save_failed),
+                message = stringResource(Res.string.save_failed),
                 onShown = onSaveFailureShown,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
@@ -116,7 +120,7 @@ private fun Fields(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = stringResource(R.string.edit_profile_title),
+            text = stringResource(Res.string.edit_profile_title),
             style = MaterialTheme.typography.headlineMedium,
             // Lets screen reader users jump to it.
             modifier = Modifier.semantics { heading() }
@@ -139,7 +143,7 @@ private fun Fields(
                 // with it.
                 modifier = Modifier.align(Alignment.End).padding(bottom = 16.dp)
             ) {
-                Text(stringResource(R.string.edit_profile_save))
+                Text(stringResource(Res.string.edit_profile_save))
             }
         }
     }

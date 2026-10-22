@@ -8,14 +8,17 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import io.github.bryancassell.bluecard.data.profile.PROFILE_NAME_MAX_LENGTH
 import io.github.bryancassell.bluecard.data.profile.UNIT_NUMBER_MAX_LENGTH
-import io.github.bryancassell.bluecard.shared.R
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.profile_name
+import io.github.bryancassell.bluecard.resources.profile_required
+import io.github.bryancassell.bluecard.resources.profile_unit_number
 import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.typedTextFieldStyle
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The scout's [name] field, required, as Onboarding and Edit name and unit show it. Its
@@ -27,8 +30,8 @@ fun ProfileNameField(name: TextFieldState, enabled: Boolean = true) {
         state = name,
         enabled = enabled,
         textStyle = typedTextFieldStyle(),
-        label = { Text(stringResource(R.string.profile_name)) },
-        supportingText = { Text(stringResource(R.string.profile_required)) },
+        label = { Text(stringResource(Res.string.profile_name)) },
+        supportingText = { Text(stringResource(Res.string.profile_required)) },
         inputTransformation = rememberSingleLineInput(maxLength = PROFILE_NAME_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(
@@ -50,8 +53,8 @@ fun UnitNumberField(unitNumber: TextFieldState, enabled: Boolean = true, onDone:
         state = unitNumber,
         enabled = enabled,
         textStyle = typedTextFieldStyle(),
-        label = { Text(stringResource(R.string.profile_unit_number)) },
-        supportingText = { Text(stringResource(R.string.profile_required)) },
+        label = { Text(stringResource(Res.string.profile_unit_number)) },
+        supportingText = { Text(stringResource(Res.string.profile_required)) },
         inputTransformation = rememberSingleLineInput(maxLength = UNIT_NUMBER_MAX_LENGTH),
         lineLimits = TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

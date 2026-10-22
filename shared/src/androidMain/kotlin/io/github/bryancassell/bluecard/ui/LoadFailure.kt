@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.ui
 
 import io.github.bryancassell.bluecard.di.WarningLog
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.load_failed
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import okio.IOException
@@ -13,7 +15,7 @@ private const val TAG = "LoadFailure"
  * reaches crash reports instead of hiding behind the load-failed message (see ARCHITECTURE.md,
  * Load and save failures).
  *
- * To keep it simple, the message (`R.string.load_failed`) has no "Try again" button: it asks the
+ * To keep it simple, the message (`Res.string.load_failed`) has no "Try again" button: it asks the
  * scout to close and reopen the app. A screen loads again only when its ViewModel is created, or
  * when it's shown after being hidden for more than 5 seconds (`WhileSubscribed(5_000)`). Home and
  * the navigation root keep their ViewModels for as long as the activity lives, and on Android 12
