@@ -21,6 +21,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.bryancassell.bluecard.data.progress.RankStatus
+import io.github.bryancassell.bluecard.data.report.ReportKind
+import io.github.bryancassell.bluecard.data.report.fileName
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_clear_message
@@ -39,7 +41,6 @@ import io.github.bryancassell.bluecard.resources.rank_detail_started
 import io.github.bryancassell.bluecard.resources.rank_detail_waiting_on
 import io.github.bryancassell.bluecard.resources.rank_requirements_unavailable
 import io.github.bryancassell.bluecard.resources.report_failed
-import io.github.bryancassell.bluecard.resources.report_file_name_rank
 import io.github.bryancassell.bluecard.resources.save_failed
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
@@ -186,7 +187,7 @@ private fun RankDetails(
         )
         EarnedStatus(uiState, today, onMarkEarned, onUnmarkEarned) {
             ReportButtons(
-                reportFileName(stringResource(Res.string.report_file_name_rank, uiState.name)),
+                reportFileName(stringResource(ReportKind.Rank.fileName, uiState.name)),
                 onShareReport,
                 onSaveReport,
                 startOtherApp

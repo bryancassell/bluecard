@@ -16,6 +16,7 @@ import io.github.bryancassell.bluecard.resources.home_eagle_completed
 import io.github.bryancassell.bluecard.resources.requirement_choice
 import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import java.util.Locale
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -37,7 +38,7 @@ class StringsLanguageTest {
 
     /** What [text] returns with the strings' locales the default, as MainActivity makes them. */
     private fun inStringsLanguage(text: @Composable () -> String): String {
-        useStringsLocalesByDefault(ApplicationProvider.getApplicationContext())
+        runBlocking { useStringsLocalesByDefault(ApplicationProvider.getApplicationContext()) }
         lateinit var result: String
         composeTestRule.setContent { result = text() }
         return result

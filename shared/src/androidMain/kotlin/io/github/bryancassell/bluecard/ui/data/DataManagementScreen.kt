@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,6 +51,7 @@ import io.github.bryancassell.bluecard.resources.data_management_profile_edit_de
 import io.github.bryancassell.bluecard.resources.data_management_profile_heading
 import io.github.bryancassell.bluecard.resources.data_management_title
 import io.github.bryancassell.bluecard.resources.export_failed
+import io.github.bryancassell.bluecard.resources.export_file_name
 import io.github.bryancassell.bluecard.resources.import_done
 import io.github.bryancassell.bluecard.resources.import_failed
 import io.github.bryancassell.bluecard.resources.import_invalid
@@ -66,7 +66,6 @@ import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -135,7 +134,7 @@ fun DataManagementScreen(
     val openDocument = rememberLauncherForActivityResult(OpenOpenableDocument()) { source ->
         source?.let(onImport)
     }
-    val scope = rememberCoroutineScope()
+    val exportFileNameFormat = stringResource(Res.string.export_file_name)
     val noFileSaver = stringResource(Res.string.no_file_saver)
     val noFileOpener = stringResource(Res.string.data_management_no_file_opener)
     var confirmingClear by rememberSaveable { mutableStateOf(false) }
@@ -171,11 +170,8 @@ fun DataManagementScreen(
                 button = Res.string.data_management_export,
                 enabled = !uiState.working,
                 onClick = {
-                    // The name has the date of the tap, so it's read here, outside
-                    // composition, where strings come from the suspend getString.
-                    scope.launch {
-                        startOtherApp.launch(createDocument, exportFileName(today()), noFileSaver)
-                    }
+                    val fileName = exportFileName(exportFileNameFormat, today())
+                    startOtherApp.launch(createDocument, fileName, noFileSaver)
                 }
             )
             Section(

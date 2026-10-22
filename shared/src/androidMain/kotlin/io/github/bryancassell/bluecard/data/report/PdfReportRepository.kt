@@ -16,11 +16,8 @@ import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
-import io.github.bryancassell.bluecard.resources.Res
-import io.github.bryancassell.bluecard.resources.report_file_name
-import io.github.bryancassell.bluecard.resources.report_file_name_rank
 import io.github.bryancassell.bluecard.text.TextRules
-import io.github.bryancassell.bluecard.text.stringsLocale
+import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import kotlin.random.Random
 import kotlin.random.nextULong
 import kotlinx.coroutines.CoroutineDispatcher
@@ -62,14 +59,10 @@ class PdfReportRepository(
         withContext(ioDispatcher) {
             val report = report(advancementId) ?: return@withContext null
             // Read for each report, so it follows a change to the phone's language.
-            val pages = layOutReport(report, stringsLocale(context))
+            val pages = layOutReport(report, useStringsLocalesByDefault(context))
             val folder = context.cacheDir.toOkioPath() / REPORTS_FOLDER
             fileSystem.createDirectories(folder)
-            val title = when (report.kind) {
-                ReportKind.MeritBadge -> Res.string.report_file_name
-                ReportKind.Rank -> Res.string.report_file_name_rank
-            }
-            val file = folder / reportFileName(getString(title, report.name))
+            val file = folder / reportFileName(getString(report.kind.fileName, report.name))
             // Written beside the report's file, then renamed over it in one step: an app that an
             // earlier report was shared with, such as an email app that reads it only to send it,
             // never reads a partly written one, and a report that fails leaves that one as it was.
@@ -97,7 +90,7 @@ class PdfReportRepository(
     private suspend fun save(advancementId: String, destination: Uri) =
         context.contentResolver.saveDocument(destination, warningLog) {
             report(advancementId)?.let { report ->
-                val pages = layOutReport(report, stringsLocale(context))
+                val pages = layOutReport(report, useStringsLocalesByDefault(context))
                 Buffer().also { pdfWriter.write(pages, it) }.readByteArray()
             }
         }

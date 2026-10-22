@@ -1,6 +1,10 @@
 package io.github.bryancassell.bluecard.data.report
 
 import android.net.Uri
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.report_file_name
+import io.github.bryancassell.bluecard.resources.report_file_name_rank
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * Badge and rank reports: a PDF of everything the scout recorded for a badge or rank, to share
@@ -30,9 +34,19 @@ interface ReportRepository {
 }
 
 /**
- * The file name of the report titled [title] (`report_file_name` or `report_file_name_rank`, with
- * the badge's or rank's name), such as "Camping merit badge report.pdf" or "Star rank
- * report.pdf". Both a shared report and the name the file picker suggests use it.
+ * What a report of this kind's file is called, with the badge's or rank's name: "%1$s merit badge
+ * report" or "%1$s rank report" ([reportFileName]).
+ */
+val ReportKind.fileName: StringResource
+    get() = when (this) {
+        ReportKind.MeritBadge -> Res.string.report_file_name
+        ReportKind.Rank -> Res.string.report_file_name_rank
+    }
+
+/**
+ * The file name of the report titled [title] ([ReportKind.fileName] with the badge's or rank's
+ * name), such as "Camping merit badge report.pdf" or "Star rank report.pdf". Both a shared report
+ * and the name the file picker suggests use it.
  *
  * A character that a file name can't hold on a phone, SD card or computer, such as "/", is
  * replaced with "_", as the file picker replaces it when it saves a file (AOSP's

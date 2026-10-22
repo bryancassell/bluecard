@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.text
 
-import android.content.Context
 import android.os.LocaleList
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -47,6 +46,20 @@ class StringsLocalesTest {
         )
     }
 
+    // Without its digits, the first is the device's second, which a LocaleList can't repeat:
+    // Android 11 throws for it.
+    @Config(sdk = [30])
+    @Test
+    fun stringsLocales_firstWithoutItsDigitsIsAnotherOfTheDevices_listsItOnce() {
+        assertEquals(
+            LocaleList.forLanguageTags("en-US,fa-IR"),
+            stringsLocales(
+                LocaleList.forLanguageTags("en-US-u-nu-arab,en-US,fa-IR"),
+                Locale.forLanguageTag("en")
+            )
+        )
+    }
+
     // Serbian is written in Cyrillic or Latin script; "sr-RS" is Cyrillic.
     @Test
     fun stringsLocales_matchesScript() {
@@ -59,18 +72,10 @@ class StringsLocalesTest {
         )
     }
 
-    @Config(qualifiers = "fa")
-    @Test
-    fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() = runTest {
-        val locale = stringsLocale(ApplicationProvider.getApplicationContext<Context>())
-
-        assertEquals(Locale.forLanguageTag("en"), locale)
-    }
-
     // Compose Multiplatform's strings, and Compose's own Locale.current, read the default.
     @Config(qualifiers = "fa-rIR")
     @Test
-    fun useStringsLocalesByDefault_onPersianDevice_putsStringsLanguageFirst() {
+    fun useStringsLocalesByDefault_onPersianDevice_putsStringsLanguageFirst() = runTest {
         val locale = useStringsLocalesByDefault(ApplicationProvider.getApplicationContext())
 
         assertEquals(Locale.forLanguageTag("en"), locale)
@@ -88,7 +93,7 @@ class StringsLocalesTest {
         }
 
     @Test
-    fun useStringsLocalesByDefault_onDeviceInStringsLanguage_keepsDevicesLocales() {
+    fun useStringsLocalesByDefault_onDeviceInStringsLanguage_keepsDevicesLocales() = runTest {
         val device = LocaleList.getDefault()
 
         useStringsLocalesByDefault(ApplicationProvider.getApplicationContext())

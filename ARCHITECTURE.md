@@ -331,14 +331,14 @@ both taps of a double tap can reach it.
 - **Text inside a string follows the strings' language, not the device's.**
   `strings_language` in `strings.xml` names the language of the strings the app
   shows, which differs from the device's when the app has no strings for it.
-  `MainActivity` makes that language's locales the default
+  The app makes that language's locales the default
   (`useStringsLocalesByDefault`), since Compose Multiplatform picks strings and
-  plural forms by the default and has no public way to give it another: on a
-  Persian phone, English strings read "0 merit badges", not "0 merit badge".
-  `BlueCardApp` provides `LocalLocaleFormats` in its locale, so lists and dates
-  follow it too, and a sentence never mixes two languages. `%1$d` inserts Latin
-  digits, so a translation into a language with its own digits must format its
-  numbers first. Each translation's `strings.xml` must name its own language
+  plural forms by the default. `BlueCardApp` provides `LocalLocaleFormats` in its
+  locale, so lists and dates follow it too, and a sentence never mixes two
+  languages. Compose Multiplatform picks a translation by the phone's first
+  language only, and `%1$d` inserts Latin digits, so a translation into a
+  language with its own digits must format its numbers first. Each
+  translation's `strings.xml` must name its own language
   (`StringsLanguageTagTest`).
 - **Formatting, sorting and breaking text go through `LocaleFormats` and
   `TextRules`** (`text/`), not `java.text`, `android.icu`, `java.time.format`

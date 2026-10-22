@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import io.github.bryancassell.bluecard.text.TextRules
 import io.github.bryancassell.bluecard.text.useStringsLocalesByDefault
 import io.github.bryancassell.bluecard.ui.BlueCardApp
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -40,7 +41,8 @@ class MainActivity : ComponentActivity() {
         // out in its direction, so English strings read left-to-right on a Persian phone (see
         // ARCHITECTURE.md, Language and layout direction). Setting the direction on the activity
         // keeps its views, Compose, focus and resources in step.
-        val stringsLocale = useStringsLocalesByDefault(newBase)
+        // Blocks to read one string, as Compose Multiplatform's stringResource does on Android.
+        val stringsLocale = runBlocking { useStringsLocalesByDefault(newBase) }
         applyOverrideConfiguration(Configuration().apply { setLayoutDirection(stringsLocale) })
     }
 
