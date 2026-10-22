@@ -52,10 +52,11 @@ class SetAsideDamagedDatabaseDriverTest {
         BlueCardDatabase::class
     )
 
+    private val warningLog = FakeWarningLog()
     private val damagedProgress = FileDamagedProgressRepository(
         context,
         DeviceClock,
-        FakeWarningLog(),
+        warningLog,
         CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
         Dispatchers.Unconfined
     )
@@ -78,6 +79,7 @@ class SetAsideDamagedDatabaseDriverTest {
     private suspend fun BlueCardDatabase.readProgress() = progressDao().observeAll().first()
 
     private val folder = File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME)
+    private val damageFile = File(folder, "damage-found")
 
     /** The folders progress was set aside in. */
     private fun copies() = folder.listFiles { file -> file.isDirectory }.orEmpty().toList()
@@ -164,8 +166,8 @@ class SetAsideDamagedDatabaseDriverTest {
         // A minute apart, as the database's last save and the damage found in it could be, so
         // the new database Room makes is newer than the record.
         val now = System.currentTimeMillis()
-        file.setLastModified(now - 120_000)
-        File(folder, "damage-found").setLastModified(now - 60_000)
+        assertTrue(file.setLastModified(now - 120_000))
+        assertTrue(damageFile.setLastModified(now - 60_000))
         // Stops the set-aside and the record's deletion, as long as the tests don't run as root.
         folder.setWritable(false)
         val progress = try {
@@ -173,6 +175,8 @@ class SetAsideDamagedDatabaseDriverTest {
             val first = open()
             assertEquals(emptyList<BadgeProgressDetails>(), first.readProgress())
             assertTrue(damagedProgress.observeNoticePending().first())
+            assertEquals(emptyList<File>(), copies())
+            assertTrue(damageFile.exists())
             damagedProgress.dismissNotice()
             first.progressDao().insertBadge(
                 BadgeProgress("camping", VERSION, LocalDate(2026, 3, 1))
@@ -186,6 +190,32 @@ class SetAsideDamagedDatabaseDriverTest {
         }
 
         assertEquals(listOf("camping"), progress.map { it.badge.badgeId })
+        assertFalse(damagedProgress.observeNoticePending().first())
+        // The second launch only tried to delete the record again.
+        assertEquals(
+            listOf(
+                "Couldn't set aside a damaged database, so deleted it: $file",
+                "Couldn't delete $damageFile",
+                "Couldn't delete $damageFile"
+            ),
+            warningLog.warnings.map { it.message }
+        )
+    }
+
+    @Test
+    fun recordOlderThanTheDatabase_isCleared_andTheDatabaseStaysInUse() = runTest {
+        saveProgress(open())
+        damagedProgress.recordDamage()
+        // As when a set-aside couldn't delete the record, and Room made this database after it.
+        val now = System.currentTimeMillis()
+        assertTrue(damageFile.setLastModified(now - 120_000))
+        assertTrue(file.setLastModified(now - 60_000))
+
+        val progress = open().readProgress()
+
+        assertEquals(300, progress.size)
+        assertFalse(damageFile.exists())
+        assertEquals(emptyList<File>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
     }
 

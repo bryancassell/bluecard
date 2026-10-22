@@ -177,10 +177,10 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
 
         // The record stays, with the warning saying why. The database Room makes next is newer
         // than it, so isn't set aside for it.
-        assertTrue(repository.isDamageRecorded(database.toOkioPath()))
+        assertTrue(damageFile.exists())
         val warning = warningLog.warnings.single()
         assertEquals("DamagedProgress", warning.tag)
-        assertEquals("Couldn't delete ${File(folder, "damage-found")}", warning.message)
+        assertEquals("Couldn't delete $damageFile", warning.message)
         assertTrue("${warning.error}", warning.error is IOException)
     }
 
@@ -192,32 +192,41 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         repository.recordDamage()
         writeDatabase("" to "new progress")
         val now = System.currentTimeMillis()
-        damageFile.setLastModified(now - 120_000)
-        database.setLastModified(now - 60_000)
+        assertTrue(damageFile.setLastModified(now - 120_000))
+        assertTrue(database.setLastModified(now - 60_000))
     }
 
     @Test
-    fun isDamageRecorded_whenTheRecordIsOlderThanTheDatabase_isFalse_andClearsIt() {
+    fun isDamageRecorded_whenTheRecordIsOlderThanTheDatabase_isFalse_andKeepsIt() {
         recordOlderThanTheDatabase()
 
         assertFalse(repository.isDamageRecorded(database.toOkioPath()))
+        assertTrue(damageFile.exists())
+    }
+
+    @Test
+    fun clearDamageRecord_deletesIt() {
+        recordOlderThanTheDatabase()
+
+        repository.clearDamageRecord()
+
         assertFalse(damageFile.exists())
         assertEquals(emptyList<FakeWarningLog.Warning>(), warningLog.warnings)
     }
 
     @Test
-    fun isDamageRecorded_whenAnOlderRecordCantBeCleared_isFalse_andWarns() {
+    fun clearDamageRecord_whenItCantBeDeleted_warns_andItStillDoesntCount() {
         recordOlderThanTheDatabase()
         // Stops the record being deleted, as long as the tests don't run as root.
         folder.setWritable(false)
-        val recorded = try {
-            repository.isDamageRecorded(database.toOkioPath())
+        try {
+            repository.clearDamageRecord()
         } finally {
             folder.setWritable(true)
         }
 
-        assertFalse(recorded)
         assertTrue(damageFile.exists())
+        assertFalse(repository.isDamageRecorded(database.toOkioPath()))
         val warning = warningLog.warnings.single()
         assertEquals("DamagedProgress", warning.tag)
         assertEquals("Couldn't delete $damageFile", warning.message)

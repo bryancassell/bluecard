@@ -115,10 +115,11 @@ class FileDamagedProgressRepository(
 
     /**
      * Records that SQLite found the database damaged while it was open, so it's set aside the
-     * next time the app opens it ([SetAsideDamagedDatabaseDriver]). If that can't be recorded,
-     * such as on a full disk, the next launch has only its check to find the damage. Damage the
-     * check misses then crashes the app at each launch until there's room for the record, which
-     * is an empty file, and the launch after that sets the database aside.
+     * next time the app opens it ([SetAsideDamagedDatabaseDriver]), unless the database is
+     * written after the record ([isDamageRecorded]). If that can't be recorded, such as on a full
+     * disk, the next launch has only its check to find the damage. Damage the check misses then
+     * crashes the app at each launch until there's room for the record, which is an empty file,
+     * and the launch after that sets the database aside.
      *
      * The record is written even if it's there, so it's newer than the database
      * ([isDamageRecorded]) even when an older one couldn't be deleted.
@@ -137,22 +138,29 @@ class FileDamagedProgressRepository(
      * Whether damage was recorded ([recordDamage]) and [database] not yet set aside. A record
      * older than [database] was left by a set-aside that couldn't delete it, such as when its
      * folder can't be written, since Room made [database] after it. Honoring it would set aside
-     * the scout's new progress at every launch (#377), so it's deleted instead.
+     * the scout's new progress at every launch (#377), so it doesn't count, and
+     * [clearDamageRecord] deletes it.
      *
      * Every statement fails once damage is found, but one already running on another connection
      * could still write the database after the record, so a real record looks older too. Then
      * the next launch has only its check, and damage the check misses crashes the app once more,
-     * which records it again.
+     * which records it again. File times come from the phone's clock, so a clock set back by
+     * more than the time between the two writes can make a real record look older, or one left
+     * over look newer, until the clock catches up.
      */
-    @Synchronized
     fun isDamageRecorded(database: Path): Boolean {
         val record = fileSystem.metadataOrNull(damageFile) ?: return false
         val recordedAt = record.lastModifiedAtMillis ?: return true
         val writtenAt = fileSystem.metadataOrNull(database)?.lastModifiedAtMillis ?: return true
-        if (recordedAt >= writtenAt) return true
-        fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
-        return false
+        return recordedAt >= writtenAt
     }
+
+    /**
+     * Deletes recorded damage that [isDamageRecorded] doesn't count. If it can't be deleted, it
+     * stays older than the database, so it still doesn't count.
+     */
+    @Synchronized
+    fun clearDamageRecord() = fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
 
     /**
      * Creates [file] with nothing in it. One that's there is left alone, since opening it to
