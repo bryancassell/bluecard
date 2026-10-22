@@ -21,10 +21,11 @@ import okio.IOException
  *
  * [block] starts in the caller's thread, so blocks start in the order they're run. After that
  * it isn't confined to a dispatcher (Dispatchers.Unconfined): it goes on in whichever thread
- * resumes it, so it must be main-safe, as any suspend function is. Its context never names a
- * dispatcher it isn't running on, so a `withContext` to IO always leaves the caller's thread
- * (#361). The Kotlin docs keep Unconfined for cases like this, where something must happen
- * right away. Two other dispatchers were tried:
+ * resumes it, which can be one Room or DataStore runs their own work on. So it must be
+ * main-safe, as any suspend function is, switching with `withContext` for blocking work. Its
+ * context never names a dispatcher it isn't running on, so a `withContext` to IO always leaves
+ * the caller's thread (#361). The Kotlin docs keep Unconfined for cases like this, where
+ * something must happen right away. Two other dispatchers were tried:
  * - This scope's, IO in the app. While the block ran in the caller's thread, its context named
  *   IO, so `withContext(IO)`, and Room's own switch to Dispatchers.IO, saw no change and ran
  *   there: withContext's same-dispatcher shortcut in kotlinx.coroutines 1.11.0, and Room's
@@ -35,6 +36,8 @@ import okio.IOException
  */
 suspend fun <T> CoroutineScope.runOutlivingCaller(block: suspend () -> T): T {
     val result = CompletableDeferred<T>()
+    // Not injected, unlike the app's other dispatchers: any other in its place would name a
+    // dispatcher the block may not be running on.
     launch(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
         try {
             result.complete(block())

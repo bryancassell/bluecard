@@ -288,13 +288,14 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             externalScope
         )
 
+        // One write of each kind: a single statement, and a transaction (afterStarting).
         repository.startBadge("archery", start.requirementsVersion, start.startedDate)
+        repository.markRequirementCompleted("archery", "1", null, start)
 
-        assertTrue(threads.isNotEmpty())
-        assertFalse(
-            "Used on ${threads.map { it.name }.distinct()}",
-            Thread.currentThread() in threads
-        )
+        // A copy, since Room's refresh after a write may still be adding to it.
+        val used = synchronized(threads) { threads.toList() }
+        assertTrue(used.isNotEmpty())
+        assertFalse("Used on ${used.map { it.name }.distinct()}", Thread.currentThread() in used)
     }
 
     /**

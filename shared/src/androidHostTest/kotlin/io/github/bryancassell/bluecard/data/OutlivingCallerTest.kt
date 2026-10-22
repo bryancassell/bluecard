@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.data
 
 import java.util.concurrent.Executors
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -8,6 +9,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.After
@@ -52,11 +55,13 @@ class OutlivingCallerTest {
 
     @Test
     fun blocks_startInTheOrderTheyreRun() = runTest {
+        // Its scheduler never runs, so a block dispatched to it never starts.
+        val heldScope = CoroutineScope(StandardTestDispatcher(TestCoroutineScheduler()))
         val started = mutableListOf<Int>()
 
         for (i in 1..3) {
             launch(start = CoroutineStart.UNDISPATCHED) {
-                scope.runOutlivingCaller { started += i }
+                heldScope.runOutlivingCaller { started += i }
             }
         }
 
@@ -65,7 +70,7 @@ class OutlivingCallerTest {
     }
 
     @Test
-    fun block_finishesEvenIfItsCallerIsCancelled() = runTest {
+    fun block_finishesEvenIfItsCallerIsCancelled() = runTest(timeout = 10.seconds) {
         val proceed = CompletableDeferred<Unit>()
         val finished = CompletableDeferred<Unit>()
 
