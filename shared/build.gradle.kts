@@ -11,7 +11,6 @@ plugins {
     // makes `check` run them. Android Studio's Kotlin Multiplatform module template applies it too.
     alias(libs.plugins.android.lint)
     alias(libs.plugins.kotlin.compose)
-    // For its resources only, for now: Compose and Material 3 are still Google's artifacts (#345).
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -80,7 +79,21 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // Compose's types are in this module's API, such as its composables' parameters and
+            // the color schemes the app's window theme matches.
+            api(libs.compose.runtime)
+            api(libs.compose.foundation)
+            api(libs.compose.ui)
+            api(libs.compose.material3)
+            implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.components.resources)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
+            implementation(libs.jetbrains.lifecycle.viewmodel.compose)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.jetbrains.navigationevent.compose)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.serialization.json)
             // Its dates and time zones are in this module's API, such as ZonedClock's.
             api(libs.kotlinx.datetime)
@@ -94,20 +107,10 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.lifecycle.runtime.ktx)
-            implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.androidx.lifecycle.viewmodel.compose)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-            implementation(libs.androidx.navigation3.runtime)
-            implementation(libs.androidx.navigation3.ui)
-            implementation(libs.koin.compose.viewmodel)
             implementation(libs.androidx.activity.compose)
-            // Compose's types are in this module's API, such as its composables' parameters and
-            // the color schemes the app's window theme matches.
+            // Google's Compose, which Compose Multiplatform's artifacts are on Android, at the
+            // versions the BOM pins.
             api(project.dependencies.platform(libs.androidx.compose.bom))
-            api(libs.androidx.compose.ui)
-            implementation(libs.androidx.compose.ui.graphics)
-            implementation(libs.androidx.compose.ui.tooling.preview)
-            api(libs.androidx.compose.material3)
         }
 
         getByName("androidHostTest").dependencies {

@@ -1,11 +1,5 @@
 package io.github.bryancassell.bluecard.ui.data
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
-import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +23,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.backup.exportFileName
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.clear_all_confirm_message
@@ -64,6 +59,8 @@ import io.github.bryancassell.bluecard.ui.ButtonText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
+import io.github.bryancassell.bluecard.ui.rememberCreateDocument
+import io.github.bryancassell.bluecard.ui.rememberOpenDocument
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.removalOutlinedButtonColors
 import kotlinx.datetime.LocalDate
@@ -114,8 +111,8 @@ fun DataManagementScreen(
     uiState: DataManagementUiState,
     today: () -> LocalDate,
     onEditProfile: () -> Unit,
-    onExport: (destination: Uri) -> Unit,
-    onImport: (source: Uri) -> Unit,
+    onExport: (destination: DocumentUri) -> Unit,
+    onImport: (source: DocumentUri) -> Unit,
     onMerge: () -> Unit,
     onReplace: () -> Unit,
     onChooseProfile: (fromFile: Boolean) -> Unit,
@@ -127,13 +124,8 @@ fun DataManagementScreen(
     modifier: Modifier = Modifier
 ) {
     val startOtherApp = rememberOtherAppStarter()
-    // Each is null when the scout leaves the file picker without choosing a file.
-    val createDocument = rememberLauncherForActivityResult(CreateDocument(JSON)) { destination ->
-        destination?.let(onExport)
-    }
-    val openDocument = rememberLauncherForActivityResult(OpenOpenableDocument()) { source ->
-        source?.let(onImport)
-    }
+    val createDocument = rememberCreateDocument(JSON, onCreated = onExport)
+    val openDocument = rememberOpenDocument(onOpened = onImport)
     val exportFileNameFormat = stringResource(Res.string.export_file_name)
     val noFileSaver = stringResource(Res.string.no_file_saver)
     val noFileOpener = stringResource(Res.string.data_management_no_file_opener)
@@ -274,17 +266,6 @@ private val Kind.text: StringResource
     }
 
 private const val JSON = "application/json"
-
-/**
- * Opens a document that can be read as a file, as the [ACTION_OPEN_DOCUMENT] docs say to ask
- * for: the file picker leaves out virtual documents, such as a Google Doc, which can't be.
- *
- * [ACTION_OPEN_DOCUMENT]: https://developer.android.com/reference/android/content/Intent#ACTION_OPEN_DOCUMENT
- */
-private class OpenOpenableDocument : OpenDocument() {
-    override fun createIntent(context: Context, input: Array<String>): Intent =
-        super.createIntent(context, input).addCategory(Intent.CATEGORY_OPENABLE)
-}
 
 /**
  * Any file. An export copied to the phone some other way may not be labeled as JSON, and the

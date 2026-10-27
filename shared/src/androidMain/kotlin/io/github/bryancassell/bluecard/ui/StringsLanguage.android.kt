@@ -25,12 +25,9 @@ fun stringsLocale(): Locale {
     }
 }
 
-/**
- * Writes dates, numbers, lists and typed text in the strings' locale ([stringsLocale]), for
- * [LocalLocaleFormats], so a sentence never mixes two languages.
- */
+/** Writes in [stringsLocale]. */
 @Composable
-fun rememberLocaleFormats(): LocaleFormats {
+actual fun rememberLocaleFormats(): LocaleFormats {
     val locale = stringsLocale()
     return remember(locale) { AndroidLocaleFormats(locale) }
 }

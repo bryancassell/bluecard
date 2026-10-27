@@ -1,8 +1,8 @@
 package io.github.bryancassell.bluecard.ui.data
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.backup.Backup
 import io.github.bryancassell.bluecard.data.backup.BackupReadResult
 import io.github.bryancassell.bluecard.data.backup.BackupRepository
@@ -64,7 +64,7 @@ class DataManagementViewModel(
     fun today(): LocalDate = clock.today()
 
     /** Exports the scout's data to [destination], a document they chose to create. */
-    fun export(destination: Uri) = work(Kind.ExportFailed) {
+    fun export(destination: DocumentUri) = work(Kind.ExportFailed) {
         backupRepository.exportBackup(destination)
     }
 
@@ -73,7 +73,7 @@ class DataManagementViewModel(
      * them whether to merge it or replace their data with it
      * ([DataManagementUiState.backupToImport]); otherwise it says why not.
      */
-    fun read(source: Uri) = work(Kind.ReadFailed) {
+    fun read(source: DocumentUri) = work(Kind.ReadFailed) {
         when (val result = backupRepository.readBackup(source)) {
             is BackupReadResult.Valid -> _uiState.update { it.copy(backupToImport = result.backup) }
             BackupReadResult.Invalid -> show(Kind.Invalid)

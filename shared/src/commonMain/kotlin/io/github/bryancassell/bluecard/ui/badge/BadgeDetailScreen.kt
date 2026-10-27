@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +26,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.report.ReportKind
 import io.github.bryancassell.bluecard.data.report.fileNameTitle
@@ -116,7 +116,7 @@ fun BadgeDetailScreen(
     onUnmarkCompleted: () -> Unit,
     onShareReport: () -> Unit,
     onReportShared: () -> Unit,
-    onSaveReport: (destination: Uri) -> Unit,
+    onSaveReport: (destination: DocumentUri) -> Unit,
     onReportFailureShown: (TaskFailure) -> Unit,
     onClear: () -> Unit,
     onSaveFailureShown: (TaskFailure) -> Unit,
@@ -173,7 +173,7 @@ private fun BadgeDetails(
     onUnmarkCompleted: () -> Unit,
     onShareReport: () -> Unit,
     onReportShared: () -> Unit,
-    onSaveReport: (destination: Uri) -> Unit,
+    onSaveReport: (destination: DocumentUri) -> Unit,
     onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {

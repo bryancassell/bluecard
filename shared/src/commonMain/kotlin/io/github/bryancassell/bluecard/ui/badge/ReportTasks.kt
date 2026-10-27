@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.net.Uri
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.ui.TaskFailure
@@ -23,10 +23,10 @@ class ReportTasks(
     warningLog: WarningLog
 ) {
     private val runner = TaskRunner(scope, warningLog)
-    private val toShare = MutableStateFlow<Uri?>(null)
+    private val toShare = MutableStateFlow<DocumentUri?>(null)
 
     /** The report, once it's ready to share, until the screen has opened the share sheet. */
-    val reportToShare: StateFlow<Uri?> = toShare.asStateFlow()
+    val reportToShare: StateFlow<DocumentUri?> = toShare.asStateFlow()
 
     /** The report couldn't be created or saved, and the scout hasn't been told yet. */
     val failure: StateFlow<TaskFailure?> = runner.failure
@@ -56,7 +56,7 @@ class ReportTasks(
     }
 
     /** Saves the report to [destination], a document the scout chose to create. */
-    fun save(destination: Uri) {
+    fun save(destination: DocumentUri) {
         val save = lastSave
         runner.launch {
             save?.join()

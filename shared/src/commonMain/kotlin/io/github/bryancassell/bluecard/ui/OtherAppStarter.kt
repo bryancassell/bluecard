@@ -1,14 +1,8 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalViewConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -21,11 +15,11 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun rememberOtherAppStarter(): OtherAppStarter {
-    val context = LocalContext.current
+    val otherApps = rememberOtherApps()
     val timeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
     val scope = rememberCoroutineScope()
-    return remember(context, timeoutMillis, scope) {
-        OtherAppStarter(context, timeoutMillis, scope)
+    return remember(otherApps, timeoutMillis, scope) {
+        OtherAppStarter(otherApps, timeoutMillis, scope)
     }
 }
 
@@ -50,23 +44,33 @@ fun rememberOtherAppStarter(): OtherAppStarter {
  * taps that came 140–200 ms after the first, as the other app took over, but not all of them.
  */
 class OtherAppStarter internal constructor(
-    private val context: Context,
+    private val otherApps: OtherApps,
     private val timeoutMillis: Long,
     private val scope: CoroutineScope
 ) {
     private var ignoring = false
 
-    /** Starts another app with [intent], or shows [noApp] if no app on the phone can. */
-    operator fun invoke(intent: Intent, noApp: String) {
-        tap { start(noApp) { context.startActivity(intent) } }
+    /** Opens the web page at [url] in the browser, or shows [noApp] if no app on the phone can. */
+    fun openWebPage(url: String, noApp: String) {
+        start(noApp) { otherApps.openWebPage(url) }
+    }
+
+    /** Opens the phone app with [phoneNumber], or shows [noApp] if no app on the phone can. */
+    fun dial(phoneNumber: String, noApp: String) {
+        start(noApp) { otherApps.dial(phoneNumber) }
+    }
+
+    /** Opens an email app to write to [address], or shows [noApp] if no app on the phone can. */
+    fun email(address: String, noApp: String) {
+        start(noApp) { otherApps.email(address) }
     }
 
     /**
-     * Launches [launcher] with [input], such as the system file picker with the name of the
-     * file to create, or shows [noApp] if no app on the phone can handle it.
+     * Opens [picker] with [input], such as the system file picker with the name of the file to
+     * create, or shows [noApp] if no app on the phone can handle it.
      */
-    fun <I> launch(launcher: ActivityResultLauncher<I>, input: I, noApp: String) {
-        tap { start(noApp) { launcher.launch(input) } }
+    fun <I> launch(picker: DocumentPicker<I>, input: I, noApp: String) {
+        start(noApp) { picker.launch(input) }
     }
 
     /**
@@ -85,11 +89,8 @@ class OtherAppStarter internal constructor(
         action()
     }
 
-    private fun start(noApp: String, start: () -> Unit) {
-        try {
-            start()
-        } catch (_: ActivityNotFoundException) {
-            Toast.makeText(context, noApp, Toast.LENGTH_SHORT).show()
-        }
+    /** Runs [start], which says whether an app started, as a tap, showing [noApp] if none did. */
+    private fun start(noApp: String, start: () -> Boolean) {
+        tap { if (!start()) otherApps.showMessage(noApp) }
     }
 }

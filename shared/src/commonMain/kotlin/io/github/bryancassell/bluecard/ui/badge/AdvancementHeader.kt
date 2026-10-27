@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,7 +26,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_no_browser
 import io.github.bryancassell.bluecard.resources.badge_detail_official_page
@@ -85,16 +83,12 @@ fun AdvancementHeader(
 /** Opens [officialUrl], a badge's or rank's official page, in the browser. */
 @Composable
 private fun OfficialPageButton(officialUrl: String, startOtherApp: OtherAppStarter) {
-    // ACTION_VIEW, as Compose's UriHandler uses, but started by the screen's OtherAppStarter, so
-    // it handles a double tap and "no app" as the page's other links to apps do, such as a
-    // counselor's phone and email.
-    val officialPage = Intent(Intent.ACTION_VIEW, officialUrl.toUri())
     // Shown when no app can open web links, as when parental controls block the browser.
     val noBrowser = stringResource(Res.string.badge_detail_no_browser)
     val openInBrowser = stringResource(Res.string.badge_detail_open_in_browser)
     // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
     OutlinedButton(
-        onClick = { startOtherApp(officialPage, noBrowser) },
+        onClick = { startOtherApp.openWebPage(officialUrl, noBrowser) },
         // The button keeps its own click action, with this label.
         modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
         colors = detailOutlinedButtonColors(),

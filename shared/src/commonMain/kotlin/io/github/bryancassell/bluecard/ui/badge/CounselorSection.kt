@@ -1,7 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -16,7 +14,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_add_counselor
@@ -60,28 +57,21 @@ fun CounselorSection(
         )
         counselor?.name?.let { CounselorItem(Res.drawable.ic_person, it) }
         counselor?.phone?.let {
-            // ACTION_DIAL fills in the number without calling it, so it needs no permission. It
-            // gets the number as typed, which is how it's stored.
-            val intent = Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null))
             val noApp = stringResource(Res.string.badge_detail_no_phone_app)
             ContactItem(
                 icon = Res.drawable.ic_call,
                 text = phone ?: it,
                 onClickLabel = stringResource(Res.string.badge_detail_call_counselor),
-                onClick = { startOtherApp(intent, noApp) }
+                onClick = { startOtherApp.dial(it, noApp) }
             )
         }
         counselor?.email?.let {
-            // Only email apps handle ACTION_SENDTO with a mailto: address. It keeps @ and + as
-            // they are, since some apps show the address as the link spells it, and encodes
-            // anything that would change the link, such as ? or #.
-            val intent = Intent(Intent.ACTION_SENDTO, "mailto:${Uri.encode(it, "@+")}".toUri())
             val noApp = stringResource(Res.string.badge_detail_no_email_app)
             ContactItem(
                 icon = Res.drawable.ic_email,
                 text = it,
                 onClickLabel = stringResource(Res.string.badge_detail_email_counselor),
-                onClick = { startOtherApp(intent, noApp) }
+                onClick = { startOtherApp.email(it, noApp) }
             )
         }
         // Lines the button's text up with the heading's.

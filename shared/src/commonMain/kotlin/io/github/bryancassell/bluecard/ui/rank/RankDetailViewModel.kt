@@ -1,9 +1,9 @@
 package io.github.bryancassell.bluecard.ui.rank
 
-import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.badgeStart
@@ -131,7 +131,7 @@ class RankDetailViewModel(
     }
 
     /** Saves the rank's report to [destination], a document the scout chose to create. */
-    fun saveReport(destination: Uri) {
+    fun saveReport(destination: DocumentUri) {
         report.save(destination)
     }
 

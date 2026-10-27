@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.net.Uri
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.progress.BadgeStatus
 import io.github.bryancassell.bluecard.data.progress.Counselor
@@ -65,7 +65,7 @@ sealed interface BadgeDetailUiState {
          * The badge's report, once it's ready to share, until the screen has opened the share
          * sheet with it.
          */
-        val reportToShare: Uri? = null,
+        val reportToShare: DocumentUri? = null,
         /** The report couldn't be created or saved, and the scout hasn't been told yet. */
         val reportFailure: TaskFailure? = null,
         /** The badge's progress couldn't be cleared, and the scout hasn't been told yet. */

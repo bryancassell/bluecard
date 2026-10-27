@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.ui.rank
 
-import android.net.Uri
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
@@ -71,7 +71,7 @@ sealed interface RankDetailUiState {
          * The rank's report, once it's ready to share, until the screen has opened the share
          * sheet with it.
          */
-        val reportToShare: Uri? = null,
+        val reportToShare: DocumentUri? = null,
         /** The report couldn't be created or saved, and the scout hasn't been told yet. */
         val reportFailure: TaskFailure? = null,
         /** A save couldn't be made, and the scout hasn't been told yet. */
