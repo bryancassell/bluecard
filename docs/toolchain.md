@@ -35,7 +35,8 @@ Run these from the repository root.
 
 | Command | What it does |
 |---|---|
-| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. This is the command CI runs. |
+| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. CI runs it, then the check below. |
+| `./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata` | Checks that common code calls only common APIs, as CI does after `build` (see [How the pieces fit together](#how-the-pieces-fit-together)). |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
@@ -72,14 +73,11 @@ which has no build types, so their source folders are `androidMain` and
 `androidHostTest` rather than `main` and `test`. The compiler plugins are
 Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
 
-**Common code** (`shared/src/commonMain/kotlin/`), which iOS will run too.
-While Android is `:shared`'s only target, the compiler lets common code call
-Android and JVM APIs, which would fail only once
-[#346](https://github.com/bryancassell/bluecard/issues/346) builds for iOS. CI
-checks it with
-`./gradlew -Pbluecard.checkCommonCode :shared:compileCommonMainKotlinMetadata`,
-which declares iOS's targets for that build only and needs no Xcode. Run it
-before pushing a change to common code.
+**Common code** (`shared/src/commonMain/kotlin/`), which iOS will run too, may
+call only common APIs. `./gradlew build` doesn't check that (the comment in
+`shared/build.gradle.kts` says why), so CI runs
+`./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata`.
+Run it before pushing a change to common code.
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database

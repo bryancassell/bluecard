@@ -1,8 +1,6 @@
 package io.github.bryancassell.bluecard.data.backup
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.ProviderInfo
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.room3.Room
@@ -61,7 +59,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 
 /** Exports to and imports from documents in a documents provider, as the file picker gives them. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -157,17 +154,7 @@ class JsonBackupRepositoryTest {
     private val documents = "io.github.bryancassell.bluecard.test.documents"
 
     // Like the provider the system file picker saves to and opens from.
-    private val documentsProvider = Robolectric.buildContentProvider(
-        FolderDocumentsProvider::class.java
-    ).create(
-        ProviderInfo().apply {
-            authority = documents
-            exported = true
-            grantUriPermissions = true
-            readPermission = Manifest.permission.MANAGE_DOCUMENTS
-            writePermission = Manifest.permission.MANAGE_DOCUMENTS
-        }
-    ).get()
+    private val documentsProvider = FolderDocumentsProvider.create(documents)
 
     @Before
     fun setUpDocuments() {

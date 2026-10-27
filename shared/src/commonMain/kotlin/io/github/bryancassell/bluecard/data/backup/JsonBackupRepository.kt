@@ -34,9 +34,7 @@ class JsonBackupRepository(
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : BackupRepository {
     override suspend fun exportBackup(destination: DocumentUri) = externalScope.runOutlivingCaller {
-        withContext(ioDispatcher) {
-            documents.save(destination) { encodeBackup(currentBackup()).encodeToByteArray() }
-        }
+        documents.save(destination) { encodeBackup(currentBackup()).encodeToByteArray() }
     }
 
     private suspend fun currentBackup(): Backup {

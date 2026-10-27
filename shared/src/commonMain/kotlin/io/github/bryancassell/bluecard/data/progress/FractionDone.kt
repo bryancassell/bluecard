@@ -66,7 +66,8 @@ fun Requirement.fractionDone(
 
         // bignum's toFloat, under a name of its own. On Android, BigDecimal is java.math's,
         // whose own toFloat() would come first and leave the import unused, so an IDE would
-        // remove it, though common code needs it.
+        // remove it, though common code needs it. On Android, bignum's is
+        // (this as Number).toFloat(), the same value (checked in bignum 1.0.5).
         else -> tracker?.loggedTowardNumber(trackerEntries[number].orEmpty())
             ?.let { (done, needed) -> beforeCheckOff(done.bigDecimalToFloat(), needed) }
             ?: 0f

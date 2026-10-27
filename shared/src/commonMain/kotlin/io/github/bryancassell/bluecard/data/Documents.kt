@@ -23,11 +23,14 @@ interface Documents {
      * Writes [content] to [destination], replacing what it held. The content is made before the
      * destination is opened, which empties it, so content that can't be made leaves a file the
      * scout chose to replace as it was. So does no content (null), such as a report on a badge
-     * that was just cleared, which writes nothing. It's main-safe.
+     * that was just cleared, which writes nothing.
      *
      * Throws what making the content throws, or an `IOException` if the document can't be
-     * opened or written. Either way, it doesn't leave behind the empty document the file picker
-     * made, or one that opening emptied.
+     * opened or written. When it writes nothing or throws, it doesn't leave behind the empty
+     * document the file picker made, or one that opening emptied.
+     *
+     * It's main-safe, and makes the content off the main thread too, so callers don't switch
+     * threads for it.
      */
     suspend fun save(destination: DocumentUri, content: suspend () -> ByteArray?)
 

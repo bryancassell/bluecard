@@ -82,9 +82,7 @@ class PdfReportRepository(
         }
 
     override suspend fun saveReport(advancementId: String, destination: DocumentUri) =
-        externalScope.runOutlivingCaller {
-            withContext(ioDispatcher) { save(advancementId, destination) }
-        }
+        externalScope.runOutlivingCaller { save(advancementId, destination) }
 
     /**
      * Writes the report to [destination] ([Documents.save]), or nothing when there's no report

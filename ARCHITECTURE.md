@@ -528,9 +528,9 @@ fails the build for a missing dependency, as Hilt did.
   imports, for common code
   ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
   `androidModule`, for what needs Android. Besides the repositories, they
-  provide a coroutine dispatcher (`@IoDispatcher`), an app-lifetime
-  `CoroutineScope` (`@ApplicationScope`), a `ZonedClock`, a `WarningLog`,
-  `TextRules` and `PhoneNumberFormat`, the dispatcher, clock and log so tests
+  provide a dispatcher (`@IoDispatcher`), an app-lifetime `CoroutineScope`
+  (`@ApplicationScope`), a `ZonedClock`, a `WarningLog`, `TextRules`,
+  `PhoneNumberFormat` and `Documents`, the dispatcher, clock and log so tests
   can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
