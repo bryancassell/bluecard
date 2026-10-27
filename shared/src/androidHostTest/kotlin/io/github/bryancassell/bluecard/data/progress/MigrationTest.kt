@@ -65,6 +65,7 @@ class MigrationTest {
     private fun open() =
         Room.databaseBuilder(context, DATABASE, BlueCardDatabaseConstructor::initialize)
             .setDriver(BundledSQLiteDriver())
+            .addColumnTypeConverter(Converters {})
             .build()
 
     @Test

@@ -64,7 +64,10 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private fun open(
         builder: RoomDatabase.Builder<BlueCardDatabase>,
         driver: SQLiteDriver = BundledSQLiteDriver()
-    ) = builder.setDriver(driver).build().also { databases += it }
+    ) = builder.setDriver(driver)
+        .addColumnTypeConverter(Converters {})
+        .build()
+        .also { databases += it }
 
     private val database =
         open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize))

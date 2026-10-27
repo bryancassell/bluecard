@@ -19,7 +19,8 @@ import okio.Path.Companion.toPath
  *
  * Damage found later, while reading or writing, is only recorded
  * ([FileDamagedProgressRepository.recordDamage]), since Room's other connections would keep
- * writing into the files if they were moved. The error goes on to the repository, which treats
+ * writing into the files if they were moved. That includes a stored value [Converters] can't
+ * read ([recordUnreadableValue]). The error goes on to the repository, which treats
  * it as a bug, so the app crashes, and the next run sets the database aside even if the check
  * passes, unless the database is written after the record
  * ([FileDamagedProgressRepository.isDamageRecorded]). Otherwise damage the check misses would
@@ -43,7 +44,7 @@ class SetAsideDamagedDatabaseDriver(
 
     // The damage found while the database is open, which every statement after it fails with.
     @Volatile
-    private var damage: SQLiteException? = null
+    private var damage: Exception? = null
 
     override fun open(fileName: String): SQLiteConnection {
         setAsideIfDamaged(fileName)
@@ -106,17 +107,26 @@ class SetAsideDamagedDatabaseDriver(
         }
     }
 
+    /**
+     * Records [error], from a stored value [Converters] couldn't read, as damage found while the
+     * database is open. `PRAGMA quick_check` doesn't find it, so the record is what sets the
+     * database aside at the next launch.
+     */
+    fun recordUnreadableValue(error: IllegalArgumentException) = record(error)
+
     private inline fun <T> recordingDamage(action: () -> T): T {
         damage?.let { throw it }
         return try {
             action()
         } catch (e: SQLiteException) {
-            if (e.isDamage()) {
-                damagedProgress.recordDamage()
-                damage = e
-            }
+            if (e.isDamage()) record(e)
             throw e
         }
+    }
+
+    private fun record(error: Exception) {
+        damagedProgress.recordDamage()
+        damage = error
     }
 
     private inner class DamageRecordingConnection(private val connection: SQLiteConnection) :

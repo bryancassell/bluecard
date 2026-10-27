@@ -458,7 +458,7 @@ both taps of a double tap can reach it.
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
 | `ReportRepository` | Building a badge's or rank's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
 | `BackupRepository` | Export and import of all user data | JSON written to or read from a user-chosen file |
-| `DamagedProgressRepository` | Progress set aside because SQLite found the database damaged, and whether the scout has been told | Files in the app's no-backup directory |
+| `DamagedProgressRepository` | Progress set aside because the database was found damaged, and whether the scout has been told | Files in the app's no-backup directory |
 
 - **Storage choice:** the DataStore guide says it is "ideal for small datasets"
   and to "consider using Room" for larger or relational data. The profile is two
