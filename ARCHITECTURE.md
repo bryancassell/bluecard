@@ -437,8 +437,8 @@ both taps of a double tap can reach it.
 - **A full-screen dialog sets its own system bar icons**, since its window
   doesn't get the ones `enableEdgeToEdge()` gives the activity's
   ([#299](https://github.com/bryancassell/bluecard/issues/299)). `MergeDialog`
-  calls `UseSystemBarIconsForTheme` (in `ui/data/ImportDialogs.kt`). Move it to
-  `ui/` when a second full-screen dialog needs it.
+  opens in `FullScreenDialog` (`ui/data/ImportDialogs.kt`), which sets them.
+  Move it to `ui/` when a second full-screen dialog needs it.
 - **Pick a color role that works in both schemes.** In the dark scheme the
   surface containers are lighter than the page, and `surfaceContainerLowest`
   is darker. A container that should stand out from the page, such as the

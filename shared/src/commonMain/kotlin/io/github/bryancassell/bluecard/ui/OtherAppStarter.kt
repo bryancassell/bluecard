@@ -51,11 +51,11 @@ class OtherAppStarter internal constructor(
     private var ignoring = false
 
     /**
-     * Starts another app with [start], such as `{ openWebPage(url) }`, or shows [noApp] if no app
-     * on the phone can handle it.
+     * Starts another app with [startApp], such as `{ openWebPage(url) }`, or shows [noApp] if no
+     * app on the phone can handle it.
      */
-    fun start(noApp: String, start: OtherApps.() -> Boolean) {
-        tap { if (!otherApps.start()) otherApps.showMessage(noApp) }
+    fun start(noApp: String, startApp: OtherApps.() -> Boolean) {
+        tap { if (!otherApps.startApp()) otherApps.showMessage(noApp) }
     }
 
     /**

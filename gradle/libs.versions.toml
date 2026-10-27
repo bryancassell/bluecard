@@ -24,7 +24,8 @@ composeMultiplatform = "1.12.2"
 composeMultiplatformMaterial3 = "1.9.0"
 # JetBrains' builds of Lifecycle's, Navigation 3's and Navigation Event's Compose libraries, for
 # common code. They come out after Google's, so they have versions of their own. On Android,
-# they're Google's artifacts, at these versions or Google's entries', whichever is higher.
+# they're Google's artifacts, at the versions they're built on, such as Navigation Event 1.1.1
+# for 1.1.0, or at Google's entries' versions where those are higher.
 lifecycleMultiplatform = "2.11.0"
 navigation3 = "1.2.0"
 navigation3Multiplatform = "1.2.0"
@@ -87,8 +88,8 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-# The Compose BOM pins compatible versions of every Compose library, so the
-# entries below it deliberately have no version.
+# The Compose BOM pins compatible versions of every Google Compose library, so the
+# androidx.compose entries below it deliberately have no version.
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -98,6 +99,7 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
 compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
 compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }
+compose-ui-tooling-preview = { group = "org.jetbrains.compose.ui", name = "ui-tooling-preview", version.ref = "composeMultiplatform" }
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMultiplatformMaterial3" }
 compose-components-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeMultiplatform" }
 jetbrains-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleMultiplatform" }

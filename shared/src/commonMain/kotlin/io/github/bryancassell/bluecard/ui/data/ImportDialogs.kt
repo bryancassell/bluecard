@@ -180,8 +180,9 @@ fun MergeDialog(
 
 /**
  * A dialog that fills the window, drawn behind the system bars, as the app's window is, rather
- * than leaving them over the dimmed page below. Its [content] keeps clear of them. Closing it, as
- * with Back, calls [onDismissRequest].
+ * than leaving them over the dimmed page below. Its [content] must keep clear of them itself, as
+ * with `windowInsetsPadding(WindowInsets.safeDrawing)`. Closing it, as with Back, calls
+ * [onDismissRequest].
  */
 @Composable
 internal expect fun FullScreenDialog(onDismissRequest: () -> Unit, content: @Composable () -> Unit)

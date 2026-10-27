@@ -12,7 +12,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import io.github.bryancassell.bluecard.data.DocumentUri
 
-/** Starts other apps with the screen's activity, as starting one from the app's context can't. */
+/**
+ * Starts other apps with the screen's activity, so each opens over BlueCard, in its task. From the
+ * app's context, each would need a task of its own.
+ */
 @Composable
 actual fun rememberOtherApps(): OtherApps {
     val context = LocalContext.current

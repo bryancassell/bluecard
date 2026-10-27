@@ -85,6 +85,7 @@ kotlin {
             api(libs.compose.foundation)
             api(libs.compose.ui)
             api(libs.compose.material3)
+            implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.components.resources)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
@@ -147,6 +148,9 @@ dependencies {
         version { strictly(libs.versions.sqlite.get()) }
     }
     add("kspAndroid", libs.androidx.room3.compiler)
+    // Android Studio's Compose previews need it at runtime. It isn't passed on to :app, which
+    // adds it to debug builds only.
+    "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
 }
 
 // The generated Res class, with the strings, icons and catalog in

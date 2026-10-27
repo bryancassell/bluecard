@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.core.content.IntentCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -25,8 +26,13 @@ import org.robolectric.shadows.ShadowToast
 @RunWith(AndroidJUnit4::class)
 class AndroidOtherAppsTest {
     private val application = ApplicationProvider.getApplicationContext<Application>()
-    private val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
-    private val otherApps = AndroidOtherApps(activity)
+    private val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup()
+    private val otherApps = AndroidOtherApps(activity.get())
+
+    @After
+    fun closeActivity() {
+        activity.close()
+    }
 
     private fun started(): Intent? = shadowOf(application).nextStartedActivity
 
