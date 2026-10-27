@@ -18,6 +18,12 @@ sealed interface RequirementDetailUiState {
         val advancementName: String,
         val requirement: RequirementItem,
         /**
+         * The [status] that [requirement] would have with the checkbox on its page ticked or
+         * unticked, or null if it would have none or has no checkbox. The page keeps room for it
+         * above the checkbox.
+         */
+        val statusIfToggled: RequirementStatus? = null,
+        /**
          * When the scout completed it, for a requirement they marked complete, or its own work,
          * for one with own work they marked complete ([RequirementItem.ownWork]). For one that's
          * complete once its tracker's rows are ([RequirementItem.completesFromRows]), or once the
@@ -78,4 +84,19 @@ sealed interface RequirementDetailUiState {
      * as when its progress is cleared.
      */
     data object Unavailable : RequirementDetailUiState
+}
+
+/** What the line under a requirement's summary says on its page. */
+enum class RequirementStatus { Completed, NotNeeded }
+
+/**
+ * The line under this requirement's summary on its page, or null for none. One the scout marks by
+ * hand has a "Completed" checkbox instead of [RequirementStatus.Completed]. One with own work has
+ * it, as its checkbox is only for that work. [RequirementStatus.NotNeeded] is as on its row, and
+ * one the scout marks by hand keeps its checkbox, for when they did it anyway.
+ */
+fun RequirementItem.status(): RequirementStatus? = when {
+    !markedByHand && completed -> RequirementStatus.Completed
+    notNeeded -> RequirementStatus.NotNeeded
+    else -> null
 }

@@ -411,6 +411,85 @@ class RequirementDetailViewModelTest {
     }
 
     @Test
+    fun statusIfToggled_ownWork_isCompletedOnceEnoughSubRequirementsAre() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("5")
+        startCollecting(viewModel)
+        assertNull(viewModel.ready().statusIfToggled)
+
+        progressRepository.markRequirementCompleted("camping", "5a", day, badgeStart)
+        progressRepository.markRequirementCompleted("camping", "5b", day, badgeStart)
+        assertNull(viewModel.ready().requirement.status())
+        assertEquals(RequirementStatus.Completed, viewModel.ready().statusIfToggled)
+
+        progressRepository.markRequirementCompleted("camping", "5", day, badgeStart)
+        assertEquals(RequirementStatus.Completed, viewModel.ready().requirement.status())
+        assertNull(viewModel.ready().statusIfToggled)
+    }
+
+    @Test
+    fun statusIfToggled_ownWork_isCompletedOnceEveryRowIsFilledIn() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("6")
+        startCollecting(viewModel)
+
+        saveWeek(1, day, number = "6")
+        assertNull(viewModel.ready().statusIfToggled)
+
+        saveWeek(2, day, number = "6")
+        assertEquals(RequirementStatus.Completed, viewModel.ready().statusIfToggled)
+
+        progressRepository.markRequirementCompleted("camping", "6", day, badgeStart)
+        assertNull(viewModel.ready().statusIfToggled)
+    }
+
+    @Test
+    fun statusIfToggled_markedByHand_isNotNeededOnlyIfEnoughWithoutIt() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("2b(1)")
+        startCollecting(viewModel)
+
+        // 2b needs one of its two choices. Ticked, 2b(1) is complete, so it shows nothing.
+        progressRepository.markRequirementCompleted("camping", "2b(2)", day, badgeStart)
+        assertEquals(RequirementStatus.NotNeeded, viewModel.ready().requirement.status())
+        assertNull(viewModel.ready().statusIfToggled)
+
+        progressRepository.markRequirementCompleted("camping", "2b(1)", day, badgeStart)
+        assertNull(viewModel.ready().requirement.status())
+        assertEquals(RequirementStatus.NotNeeded, viewModel.ready().statusIfToggled)
+
+        // Now 2b(1) alone gives 2b enough.
+        progressRepository.markRequirementNotCompleted("camping", "2b(2)")
+        assertNull(viewModel.ready().statusIfToggled)
+    }
+
+    @Test
+    fun statusIfToggled_completeFromSubRequirements_isNull() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("2")
+        startCollecting(viewModel)
+
+        progressRepository.markRequirementCompleted("camping", "2a", day, badgeStart)
+        progressRepository.markRequirementCompleted("camping", "2b(1)", day, badgeStart)
+
+        assertEquals(RequirementStatus.Completed, viewModel.ready().requirement.status())
+        assertNull(viewModel.ready().statusIfToggled)
+    }
+
+    @Test
+    fun statusIfToggled_completeFromRows_isNull() = runTest {
+        progressRepository.startBadge("camping", newest, started)
+        val viewModel = viewModel("4")
+        startCollecting(viewModel)
+
+        saveWeek(1, day)
+        saveWeek(2, day)
+
+        assertEquals(RequirementStatus.Completed, viewModel.ready().requirement.status())
+        assertNull(viewModel.ready().statusIfToggled)
+    }
+
+    @Test
     fun requirementWithTracker_showsItsEntries() = runTest {
         progressRepository.addTrackerEntry(
             "camping",

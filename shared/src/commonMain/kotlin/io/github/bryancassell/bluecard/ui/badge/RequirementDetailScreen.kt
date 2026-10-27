@@ -25,8 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -165,7 +167,12 @@ fun RequirementDetailScreen(
         is RequirementDetailUiState.Ready -> Box(modifier = modifier.imePadding()) {
             val scrollState = rememberScrollState()
             Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
-                RequirementHeader(uiState.advancementName, uiState.requirement, uiState.timeInRank)
+                RequirementHeader(
+                    uiState.advancementName,
+                    uiState.requirement,
+                    uiState.statusIfToggled,
+                    uiState.timeInRank
+                )
                 val requirement = uiState.requirement
                 // Its own work is stored as the requirement's own progress, like one marked by
                 // hand, so it has the same checkbox and date. Only a requirement with own work
@@ -257,6 +264,7 @@ fun RequirementDetailScreen(
 private fun RequirementHeader(
     advancementName: String,
     requirement: RequirementItem,
+    statusIfToggled: RequirementStatus?,
     timeInRank: TimeInRank?
 ) {
     Column(
@@ -283,32 +291,50 @@ private fun RequirementHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        // One the scout marks by hand has a "Completed" checkbox instead. One with own work
-        // shows it here, as its checkbox is only for that work.
-        //
-        // Not a live region, so screen readers aren't told when it appears or goes without the
-        // scout ticking anything: by its fixed-row tracker's last row being saved or a row of a
-        // full tracker deleted, or by its sub-requirements, own work or merit badges. TalkBack
-        // reads it here and as the row's state as the scout reaches them, as a sighted scout
-        // sees it on going back. Android 16's behavior changes ask that live regions be "used
-        // sparingly" (#109).
-        if (!requirement.markedByHand && requirement.completed) {
-            Text(
-                text = stringResource(Res.string.requirement_completed),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        // As on its row. One the scout marks by hand keeps its checkbox, for when they did it
-        // anyway.
-        if (requirement.notNeeded) {
-            Text(
-                text = stringResource(Res.string.requirement_not_needed),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        val status = requirement.status()
+        // Keeps the room of the line that ticking or unticking the checkbox below would show,
+        // laid out under this one without drawing it, so the line is as tall as the taller of
+        // the two. Otherwise "Completed" appearing as the scout ticked a requirement's own work
+        // pushed the checkbox down from under their finger, and "Not needed" going pulled it up
+        // (#148). Only then, as an empty line on every page would leave a gap under most
+        // summaries. Showing "Completed" under the checkbox instead put it below the own work's
+        // "Completed on" date, and leaving it out would leave the page not saying the
+        // requirement is complete. Its semantics are cleared, not hidden with
+        // hideFromAccessibility as text shown in another form is: the line isn't on the page.
+        if (status != null || statusIfToggled != null) {
+            Box {
+                if (statusIfToggled != null && statusIfToggled != status) {
+                    StatusLine(statusIfToggled, Modifier.drawWithContent {}.clearAndSetSemantics {})
+                }
+                status?.let { StatusLine(it) }
+            }
         }
     }
+}
+
+/**
+ * Not a live region, so screen readers aren't told when "Completed" appears or goes without the
+ * scout ticking anything: by its fixed-row tracker's last row being saved or a row of a full
+ * tracker deleted, or by its sub-requirements, own work or merit badges. TalkBack reads it here
+ * and as the row's state as the scout reaches them, as a sighted scout sees it on going back.
+ * Android 16's behavior changes ask that live regions be "used sparingly" (#109).
+ */
+@Composable
+private fun StatusLine(status: RequirementStatus, modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(
+            when (status) {
+                RequirementStatus.Completed -> Res.string.requirement_completed
+                RequirementStatus.NotNeeded -> Res.string.requirement_not_needed
+            }
+        ),
+        style = MaterialTheme.typography.titleSmall,
+        color = when (status) {
+            RequirementStatus.Completed -> MaterialTheme.colorScheme.primary
+            RequirementStatus.NotNeeded -> MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        modifier = modifier
+    )
 }
 
 /**

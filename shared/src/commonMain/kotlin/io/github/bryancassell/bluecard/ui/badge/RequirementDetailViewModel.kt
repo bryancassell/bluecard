@@ -14,11 +14,13 @@ import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.EarnedBadges
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.progress.RequirementProgress
 import io.github.bryancassell.bluecard.data.progress.TimeInRank
 import io.github.bryancassell.bluecard.data.progress.badgeStart
 import io.github.bryancassell.bluecard.data.progress.completesFromRows
 import io.github.bryancassell.bluecard.data.progress.completion
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
+import io.github.bryancassell.bluecard.data.progress.hasCheckbox
 import io.github.bryancassell.bluecard.data.progress.noLongerEarned
 import io.github.bryancassell.bluecard.data.progress.normalizedText
 import io.github.bryancassell.bluecard.data.progress.rowsCompletedDate
@@ -120,9 +122,21 @@ class RequirementDetailViewModel(
                     // something to clear.
                     val cleared = byId[advancementId]?.takeIf { hasRecorded }
                         ?.let { byId + (advancementId to it.withoutRequirements(numbersWithin)) }
+                    // Its status with its checkbox ticked or unticked: for its own work, if it
+                    // has any. The rest of what a tick saves, such as the date, doesn't change it.
+                    val statusIfToggled = if (requirement.hasCheckbox) {
+                        val mark = recorded ?: RequirementProgress(advancementId, number)
+                        val toggled = mark.copy(completed = !mark.completed)
+                        found.copy(recorded = found.recorded + (number to toggled))
+                            .item(requirement)
+                            .status()
+                    } else {
+                        null
+                    }
                     RecordedRequirement(
                         advancementName = found.advancement.name,
                         requirement = found.item(requirement),
+                        statusIfToggled = statusIfToggled,
                         // For one complete from its rows or from badges, the date it was
                         // completed on: for the former, the one the scout gave, if any.
                         completedDate = if (requirement.completesFromRows ||
@@ -163,6 +177,8 @@ class RequirementDetailViewModel(
     private class RecordedRequirement(
         val advancementName: String,
         val requirement: RequirementItem,
+        /** Its status with its checkbox ticked or unticked ([RequirementDetailUiState.Ready]). */
+        val statusIfToggled: RequirementStatus?,
         val completedDate: LocalDate?,
         val rowsCompletedDate: LocalDate?,
         val children: List<RequirementItem>,
@@ -207,6 +223,7 @@ class RequirementDetailViewModel(
         RequirementDetailUiState.Ready(
             advancementName = recorded.advancementName,
             requirement = recorded.requirement,
+            statusIfToggled = recorded.statusIfToggled,
             completedDate = recorded.completedDate,
             rowsCompletedDate = recorded.rowsCompletedDate,
             children = recorded.children,
