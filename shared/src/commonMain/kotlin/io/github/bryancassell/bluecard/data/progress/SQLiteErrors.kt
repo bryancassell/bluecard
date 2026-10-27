@@ -17,6 +17,12 @@ private val RESULT_CODE = Regex("""^Error code: (\d+)""")
 /** Whether SQLite found the database damaged. */
 fun SQLiteException.isDamage() = resultCode.let { it == SQLITE_CORRUPT || it == SQLITE_NOTADB }
 
+/**
+ * A driver error with [message], caused by [cause], for an error this app raises as one. Common
+ * code's constructor takes only a message (androidx.sqlite 2.7.1).
+ */
+internal expect fun sqliteException(message: String, cause: Throwable): SQLiteException
+
 // The primary result codes this app checks for.
 const val SQLITE_CORRUPT = 11
 const val SQLITE_CONSTRAINT = 19

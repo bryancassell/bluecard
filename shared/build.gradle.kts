@@ -23,8 +23,8 @@ plugins {
 kotlin {
     compilerOptions {
         // Expected and actual classes are in Beta, and the compiler warns of each: Room's database
-        // constructor and DocumentUri are. The Kotlin docs give this option to turn the warning
-        // off: https://kotlinlang.org/docs/multiplatform/multiplatform-expect-actual.html
+        // constructor, DocumentUri and Lock are. The Kotlin docs give this option to turn the
+        // warning off: https://kotlinlang.org/docs/multiplatform/multiplatform-expect-actual.html
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 

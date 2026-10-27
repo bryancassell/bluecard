@@ -55,7 +55,7 @@ class SetAsideDamagedDatabaseDriverTest {
 
     private val warningLog = FakeWarningLog()
     private val damagedProgress = FileDamagedProgressRepository(
-        context,
+        { context.noBackupFilesDir.toOkioPath() },
         DeviceClock,
         warningLog,
         CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),

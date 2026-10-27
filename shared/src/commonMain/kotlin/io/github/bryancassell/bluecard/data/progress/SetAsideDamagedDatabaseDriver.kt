@@ -5,8 +5,11 @@ import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteException
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.execSQL
+import io.github.bryancassell.bluecard.data.Lock
+import kotlin.concurrent.Volatile
 import okio.FileSystem
 import okio.Path.Companion.toPath
+import okio.SYSTEM
 
 /**
  * Opens Room's database with [driver], except that a damaged database is set aside
@@ -28,16 +31,16 @@ import okio.Path.Companion.toPath
  * saved into a database that will be set aside, even where Room catches the first error, as its
  * InvalidationTracker does (Room 3.0.3).
  *
- * [driver] is BundledSQLiteDriver. AndroidSQLiteDriver opens the database with Android's default
- * error handler, which deletes a damaged database and the files beside it, and takes no other
- * (checked in androidx.sqlite 2.7.1). Its SQLite calls use only androidx.sqlite's common
- * interfaces, but its lock, and FileDamagedProgressRepository's locks, Context and SQLiteDatabase,
- * need common replacements before iOS can use it (#346).
+ * On Android, [driver] is BundledSQLiteDriver. AndroidSQLiteDriver opens the database with
+ * Android's default error handler, which deletes a damaged database and the files beside it, and
+ * takes no other (checked in androidx.sqlite 2.7.1).
  */
 class SetAsideDamagedDatabaseDriver(
     private val driver: SQLiteDriver,
     private val damagedProgress: FileDamagedProgressRepository
 ) : SQLiteDriver by driver {
+    private val lock = Lock()
+
     // Set once the database is known to be undamaged or is set aside, so a check that fails for
     // another reason, such as a full disk, runs again at the next open.
     private var checked = false
@@ -52,9 +55,8 @@ class SetAsideDamagedDatabaseDriver(
     }
 
     /** The first time it's called, sets the database aside if it's damaged. */
-    @Synchronized
-    private fun setAsideIfDamaged(fileName: String) {
-        if (checked) return
+    private fun setAsideIfDamaged(fileName: String) = lock.withLock {
+        if (checked) return@withLock
         val database = fileName.toPath()
         // A record older than the database was left by a set-aside that couldn't delete it.
         // Cleared first, so damage the check finds now gets a record of its own, which the next
@@ -117,7 +119,7 @@ class SetAsideDamagedDatabaseDriver(
      * 3.0.3), so [error] itself would crash the app from Room's own coroutine scope as well.
      */
     fun recordUnreadableValue(error: IllegalArgumentException) =
-        record(SQLiteException("Error code: $SQLITE_CORRUPT, message: unreadable value", error))
+        record(sqliteException("Error code: $SQLITE_CORRUPT, message: unreadable value", error))
 
     private inline fun <T> recordingDamage(action: () -> T): T {
         damage?.let { throw it }

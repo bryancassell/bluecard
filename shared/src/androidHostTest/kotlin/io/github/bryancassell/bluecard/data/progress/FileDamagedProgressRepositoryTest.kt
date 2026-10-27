@@ -43,7 +43,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     // scope runs on the IO dispatcher, as the app's does.
     private fun newRepository(ioDispatcher: CoroutineDispatcher = Dispatchers.Unconfined) =
         FileDamagedProgressRepository(
-            context,
+            { context.noBackupFilesDir.toOkioPath() },
             clock,
             warningLog,
             CoroutineScope(SupervisorJob() + ioDispatcher),
