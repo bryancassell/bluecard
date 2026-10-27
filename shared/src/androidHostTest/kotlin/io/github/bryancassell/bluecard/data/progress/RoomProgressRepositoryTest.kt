@@ -64,7 +64,10 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private fun open(
         builder: RoomDatabase.Builder<BlueCardDatabase>,
         driver: SQLiteDriver = BundledSQLiteDriver()
-    ) = builder.setDriver(driver).build().also { databases += it }
+    ) = builder.setDriver(driver)
+        .addColumnTypeConverter(Converters {})
+        .build()
+        .also { databases += it }
 
     private val database =
         open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize))
@@ -266,6 +269,17 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             .exceptionOrNull()
 
         assertEquals(noCode, error)
+    }
+
+    // Half an emoji, as pasted or imported. Unescaped, SQLite joined it with the closing quote.
+    @Test
+    fun trackerValueWithALoneSurrogate_readsBackAsSaved() = runTest {
+        val values = mapOf("Notes" to "Trail \uD83D", "Place" to "\uDC22 camp 🏕")
+
+        repository.addTrackerEntry("archery", "9a", null, values, start.startedDate, start)
+
+        val stored = repository.observeProgress("archery").first()!!.trackerEntries.single()
+        assertEquals(values, stored.values)
     }
 
     @Test

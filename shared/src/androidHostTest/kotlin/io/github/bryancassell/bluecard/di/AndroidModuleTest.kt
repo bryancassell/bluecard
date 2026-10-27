@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.di
 
 import android.content.Context
+import androidx.room3.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -89,6 +91,28 @@ class AndroidModuleTest {
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertTrue(koin.get<DamagedProgressRepository>().observeNoticePending().first())
+    }
+
+    @Test
+    fun valueThatCantBeRead_isRecordedAsDamage() = runTest {
+        database.value.progressDao().insertBadge(
+            BadgeProgress("camping", LocalDate(2026, 1, 1), LocalDate(2026, 3, 1))
+        )
+        database.value.useWriterConnection { connection ->
+            connection.usePrepared("UPDATE badge_progress SET startedDate = '2026-03'") {
+                it.step()
+            }
+        }
+
+        val error = runCatching { database.value.progressDao().observeAll().first() }
+            .exceptionOrNull()
+
+        assertTrue("Expected the date's error, got $error", error is IllegalArgumentException)
+        // So the next launch sets the database aside.
+        assertTrue(
+            koin.get<FileDamagedProgressRepository>()
+                .isDamageRecorded(context.getDatabasePath("bluecard.db").toOkioPath())
+        )
     }
 
     @Test

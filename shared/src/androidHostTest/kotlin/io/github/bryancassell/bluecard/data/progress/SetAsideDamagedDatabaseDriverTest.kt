@@ -36,8 +36,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Opens the database as the app does, on files damaged as SQLite finds them, with the SQLite the
- * app bundles.
+ * Opens the database as the app does, on files damaged as SQLite finds them or with values
+ * [Converters] can't read, with the SQLite the app bundles.
  */
 @RunWith(AndroidJUnit4::class)
 class SetAsideDamagedDatabaseDriverTest {
@@ -71,12 +71,13 @@ class SetAsideDamagedDatabaseDriverTest {
     /** The driver as a new app run gets it. */
     private fun newDriver() = SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress)
 
-    private fun open(driver: SQLiteDriver = newDriver()) = Room.databaseBuilder(
+    private fun open(driver: SetAsideDamagedDatabaseDriver = newDriver()) = Room.databaseBuilder(
         context,
         BlueCardDatabase.NAME,
         BlueCardDatabaseConstructor::initialize
     )
         .setDriver(driver)
+        .addColumnTypeConverter(Converters(driver::recordUnreadableValue))
         .build()
         .also { databases += it }
 
@@ -158,6 +159,55 @@ class SetAsideDamagedDatabaseDriverTest {
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertArrayEquals(undamaged, setAside().readBytes())
+        assertTrue(damagedProgress.observeNoticePending().first())
+        assertFalse(damagedProgress.isDamageRecorded(file.toOkioPath()))
+    }
+
+    @Test
+    fun valueThatCantBeRead_isSetAsideAtTheNextLaunch_thoughTheCheckPasses() = runTest {
+        saveProgress(open())
+        // A byte changed by storage, in a page SQLite still finds valid.
+        val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
+            sqlite.execSQL("UPDATE badge_progress SET startedDate = '2026-0' || char(1) || '3-01'")
+            sqlite.prepare("PRAGMA quick_check").use {
+                it.step()
+                it.getText(0)
+            }
+        }
+        assertEquals("ok", check)
+        val damaged = file.readBytes()
+        val database = open()
+        val repository =
+            RoomProgressRepository(
+                database,
+                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            )
+
+        val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
+
+        // A bug, which crashes the app, rather than a load failure (IOException).
+        assertTrue(
+            "Expected the date's error, got $error",
+            error is IllegalArgumentException
+        )
+        // Even a statement that reads nothing fails after that, so nothing more is saved. It fails
+        // as SQLite's damage does, which Room's InvalidationTracker catches.
+        val next = runCatching {
+            database.useReaderConnection { it.usePrepared("SELECT 1") { select -> select.step() } }
+        }.exceptionOrNull()
+        assertTrue(
+            "Expected damage caused by the date's error, got $next",
+            next is SQLiteException && next.isDamage() && next.cause?.message == error?.message
+        )
+        assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
+        assertEquals(emptyList<File>(), copies())
+        assertFalse(damagedProgress.observeNoticePending().first())
+
+        database.close()
+        val progress = open().readProgress()
+
+        assertEquals(emptyList<BadgeProgressDetails>(), progress)
+        assertArrayEquals(damaged, setAside().readBytes())
         assertTrue(damagedProgress.observeNoticePending().first())
         assertFalse(damagedProgress.isDamageRecorded(file.toOkioPath()))
     }
