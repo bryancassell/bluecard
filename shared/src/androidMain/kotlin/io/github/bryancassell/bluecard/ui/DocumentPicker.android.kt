@@ -1,10 +1,8 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.compose.runtime.Composable
@@ -20,7 +18,7 @@ actual fun rememberCreateDocument(
         // Null when the scout leaves the file picker without saving.
         destination?.let(onCreated)
     }
-    return remember(launcher) { DocumentPicker(launcher::start) }
+    return remember(launcher) { DocumentPicker { startsApp { launcher.launch(it) } } }
 }
 
 @Composable
@@ -29,15 +27,7 @@ actual fun rememberOpenDocument(onOpened: (DocumentUri) -> Unit): DocumentPicker
         // Null when the scout leaves the file picker without choosing a file.
         source?.let(onOpened)
     }
-    return remember(launcher) { DocumentPicker(launcher::start) }
-}
-
-/** Launches the file picker with [input], or returns false if no app on the phone can. */
-private fun <I> ActivityResultLauncher<I>.start(input: I): Boolean = try {
-    launch(input)
-    true
-} catch (_: ActivityNotFoundException) {
-    false
+    return remember(launcher) { DocumentPicker { startsApp { launcher.launch(it) } } }
 }
 
 /**

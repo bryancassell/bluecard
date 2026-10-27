@@ -10,7 +10,8 @@ import io.github.bryancassell.bluecard.data.DocumentUri
 fun interface DocumentPicker<I> {
     /**
      * Opens the file picker with [input], such as the name of the file to create. Returns false
-     * if no app on the phone can.
+     * if no app on the phone can. Screens call it through [OtherAppStarter.launch], which ignores
+     * a double tap and shows a message when no app can.
      */
     fun launch(input: I): Boolean
 }

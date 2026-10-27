@@ -30,7 +30,7 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.scene.SinglePaneSceneStrategy
-import androidx.navigation3.scene.rememberNavigationEventState
+import androidx.navigation3.scene.rememberNavigationEventState as rememberSceneNavigationEventState
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.defaultTransitionSpec
@@ -244,7 +244,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     NavDisplay(
         sceneState = sceneState,
         // Nothing reports a back swipe to this state, so NavDisplay never plays one.
-        navigationEventState = rememberNavigationEventState(sceneState),
+        navigationEventState = rememberSceneNavigationEventState(sceneState),
         // Pages slide past the sides of their area. Clip them to it, so they don't draw under
         // a navigation bar or cutout at the side.
         modifier = modifier

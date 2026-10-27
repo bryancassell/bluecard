@@ -72,7 +72,9 @@ class OtherAppStarterTest {
         }
     }
 
-    private fun start() = composeTestRule.runOnIdle { startOtherApp.openWebPage(url, noApp) }
+    private fun start() = composeTestRule.runOnIdle {
+        startOtherApp.start(noApp) { openWebPage(url) }
+    }
 
     private fun launchPicker() = composeTestRule.runOnIdle {
         startOtherApp.launch(picker, "report.pdf", noApp)

@@ -85,7 +85,6 @@ kotlin {
             api(libs.compose.foundation)
             api(libs.compose.ui)
             api(libs.compose.material3)
-            implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.components.resources)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
@@ -109,7 +108,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.ktx)
             implementation(libs.androidx.activity.compose)
             // Google's Compose, which Compose Multiplatform's artifacts are on Android, at the
-            // versions the BOM pins.
+            // BOM's versions, or higher ones that Compose Multiplatform's artifacts depend on.
             api(project.dependencies.platform(libs.androidx.compose.bom))
         }
 
@@ -148,9 +147,6 @@ dependencies {
         version { strictly(libs.versions.sqlite.get()) }
     }
     add("kspAndroid", libs.androidx.room3.compiler)
-    // Android Studio's Compose previews need it at runtime. It isn't passed on to :app, which
-    // adds it to debug builds only.
-    "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
 }
 
 // The generated Res class, with the strings, icons and catalog in

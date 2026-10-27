@@ -62,7 +62,7 @@ fun CounselorSection(
                 icon = Res.drawable.ic_call,
                 text = phone ?: it,
                 onClickLabel = stringResource(Res.string.badge_detail_call_counselor),
-                onClick = { startOtherApp.dial(it, noApp) }
+                onClick = { startOtherApp.start(noApp) { dial(it) } }
             )
         }
         counselor?.email?.let {
@@ -71,7 +71,7 @@ fun CounselorSection(
                 icon = Res.drawable.ic_email,
                 text = it,
                 onClickLabel = stringResource(Res.string.badge_detail_email_counselor),
-                onClick = { startOtherApp.email(it, noApp) }
+                onClick = { startOtherApp.start(noApp) { email(it) } }
             )
         }
         // Lines the button's text up with the heading's.

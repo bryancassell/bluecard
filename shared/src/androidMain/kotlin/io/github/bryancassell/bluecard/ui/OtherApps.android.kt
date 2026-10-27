@@ -21,9 +21,7 @@ actual fun rememberOtherApps(): OtherApps {
 
 /** Starts other apps with intents from [context], and shows messages as toasts. */
 internal class AndroidOtherApps(private val context: Context) : OtherApps {
-    // ACTION_VIEW, as Compose's UriHandler uses, but started through the screen's
-    // OtherAppStarter, so it handles a double tap and "no app" as the page's other links to apps
-    // do, such as a counselor's phone and email.
+    // ACTION_VIEW, as Compose's UriHandler uses.
     override fun openWebPage(url: String) = start(Intent(Intent.ACTION_VIEW, url.toUri()))
 
     // ACTION_DIAL fills in the number without calling it, so it needs no permission. It gets the
@@ -54,10 +52,13 @@ internal class AndroidOtherApps(private val context: Context) : OtherApps {
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
     }
 
-    private fun start(intent: Intent): Boolean = try {
-        context.startActivity(intent)
-        true
-    } catch (_: ActivityNotFoundException) {
-        false
-    }
+    private fun start(intent: Intent): Boolean = startsApp { context.startActivity(intent) }
+}
+
+/** Runs [start], which starts another app, and returns false if no app on the phone can. */
+internal inline fun startsApp(start: () -> Unit): Boolean = try {
+    start()
+    true
+} catch (_: ActivityNotFoundException) {
+    false
 }

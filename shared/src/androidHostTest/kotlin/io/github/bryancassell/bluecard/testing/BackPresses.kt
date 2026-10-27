@@ -1,11 +1,13 @@
 package io.github.bryancassell.bluecard.testing
 
 import androidx.activity.OnBackPressedDispatcher
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.bryancassell.bluecard.ui.LocalUnsavedChanges
 import io.github.bryancassell.bluecard.ui.UnsavedChanges
 
@@ -27,7 +29,10 @@ class BackPresses {
     @Composable
     fun Content(content: @Composable () -> Unit) {
         dispatcher = LocalOnBackPressedDispatcherOwner.current!!.onBackPressedDispatcher
-        BackHandler { if (!unsavedChanges.askToDiscard()) closes++ }
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            onBackCompleted = { if (!unsavedChanges.askToDiscard()) closes++ }
+        )
         CompositionLocalProvider(LocalUnsavedChanges provides unsavedChanges, content = content)
     }
 

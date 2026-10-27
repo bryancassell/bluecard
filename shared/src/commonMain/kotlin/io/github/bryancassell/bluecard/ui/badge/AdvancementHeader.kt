@@ -88,7 +88,10 @@ private fun OfficialPageButton(officialUrl: String, startOtherApp: OtherAppStart
     val openInBrowser = stringResource(Res.string.badge_detail_open_in_browser)
     // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
     OutlinedButton(
-        onClick = { startOtherApp.openWebPage(officialUrl, noBrowser) },
+        // Through the screen's OtherAppStarter, not Compose's UriHandler, so it handles a double
+        // tap and "no app" as the page's other links to apps do, such as a counselor's phone and
+        // email.
+        onClick = { startOtherApp.start(noBrowser) { openWebPage(officialUrl) } },
         // The button keeps its own click action, with this label.
         modifier = Modifier.semantics { onClick(label = openInBrowser, action = null) },
         colors = detailOutlinedButtonColors(),

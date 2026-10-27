@@ -539,11 +539,12 @@ fails the build for a missing dependency, as Hilt did.
 ## Package layout
 
 `:app` and `:shared` use the same packages. `:shared`'s `androidMain` has only
-what needs Android. Common code reaches it through `expect` functions, with an
-interface where it needs a type, such as `rememberOtherApps()`, as the
+what needs Android. Common code reaches it through interfaces that
+`androidModule` provides (see [Dependency injection](#dependency-injection)),
+or, for Compose calls, which Koin can't make, through `expect` declarations,
+such as `rememberOtherApps()`, as the
 [Kotlin docs](https://kotlinlang.org/docs/multiplatform/multiplatform-connect-to-apis.html)
-suggest for simple cases; most are Compose calls, which Koin can't make. The
-Android `actual`s are in `.android.kt` files in the same package.
+suggest for simple cases. Their `actual`s are in `.android.kt` files.
 
 ```
 io.github.bryancassell.bluecard
@@ -994,7 +995,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
 | [Persistence](#repositories) | Room 3 on `BundledSQLiteDriver` for progress; Preferences DataStore for the profile | The DataStore guide's criteria; the same SQLite on Android and iOS |
 | [Dependency injection](#dependency-injection) | Koin, with its compiler plugin | Works on iOS, unlike Hilt, and still checks the graph at build time |
-| [Platform code](#package-layout) | `expect` functions, with interfaces where a type is needed | The Kotlin docs' approach for simple cases; most are Compose calls |
+| [Platform code](#package-layout) | Interfaces from Koin; `expect` declarations for Compose calls | Koin can't make Compose calls; the Kotlin docs' approach for simple cases |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays; a started badge stays on its version until the scout switches | The advancement rules allow finishing on the previous requirements |
 | [Ranks](#ranks) | Ranks share badges' catalog types and progress tables | The badge machinery carries over with no schema change |

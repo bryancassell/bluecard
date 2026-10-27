@@ -13,14 +13,18 @@ lifecycle = "2.11.0"
 activityCompose = "1.13.0"
 composeBom = "2026.09.00"
 # Compose Multiplatform: the Compose, strings, icons and catalog that common code builds against.
-# Its Android artifacts depend on Google's Compose, at the versions the BOM above pins.
+# Its Android artifacts depend on Google's Compose at the version it's built on, so Android gets
+# that version or the BOM's, whichever is higher. Raising this can raise Android's Compose.
 composeMultiplatform = "1.12.2"
 # Compose Multiplatform's Material 3. Its releases after 1.9.0 are alphas, which bring Google's
 # Material 3 alphas to Android; 1.9.0's Android artifact is Google's 1.4.0, the BOM's (#345).
+# It was built against Compose Multiplatform 1.9.1. On iOS, a symbol it needs that this
+# Compose lacks would link silently and throw when used, so #346 links iOS with
+# -Xpartial-linkage-loglevel=error, which fails the link instead.
 composeMultiplatformMaterial3 = "1.9.0"
 # JetBrains' builds of Lifecycle's, Navigation 3's and Navigation Event's Compose libraries, for
 # common code. They come out after Google's, so they have versions of their own. On Android,
-# they're Google's.
+# they're Google's artifacts, at these versions or Google's entries', whichever is higher.
 lifecycleMultiplatform = "2.11.0"
 navigation3 = "1.2.0"
 navigation3Multiplatform = "1.2.0"
@@ -94,7 +98,6 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
 compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
 compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }
-compose-ui-tooling-preview = { group = "org.jetbrains.compose.ui", name = "ui-tooling-preview", version.ref = "composeMultiplatform" }
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMultiplatformMaterial3" }
 compose-components-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeMultiplatform" }
 jetbrains-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleMultiplatform" }

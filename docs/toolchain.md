@@ -112,8 +112,10 @@ ways, listed at its top.
 
 **Version catalog** (`gradle/libs.versions.toml`). Every library and plugin
 version, and the SDK levels every module builds for, live in this one file. Build scripts refer to entries by alias, such
-as `libs.androidx.core.ktx`. Compose libraries are versioned together by the
-Compose BOM ("bill of materials").
+as `libs.androidx.core.ktx`. Common code builds against Compose Multiplatform's
+libraries, whose Android artifacts are Google's. Google's Compose libraries are
+versioned together by the Compose BOM ("bill of materials"), but a Compose
+Multiplatform update can raise them above it: the catalog's comments say how.
 
 **Kotlin build scripts** (`*.gradle.kts`). The build is configured in Kotlin,
 which gives type checking and IDE autocompletion.
