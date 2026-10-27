@@ -26,9 +26,9 @@ kotlinxCoroutines = "1.11.0"
 room3 = "3.0.3"
 # The SQLite that Room's driver bundles; the androidx.sqlite that Room 3.0.3 depends on.
 sqlite = "2.7.1"
-kotlinxSerialization = "1.11.0"
+kotlinxSerialization = "1.12.0"
 kotlinxDatetime = "0.8.0"
-datastore = "1.2.1"
+datastore = "1.3.0"
 coreSplashscreen = "1.2.0"
 # Decimal numbers that common code can use; its BigDecimal is java.math's on Android.
 bignum = "1.0.5"
