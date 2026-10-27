@@ -46,6 +46,7 @@ import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -496,67 +497,101 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
     }
 
-    // With 2a and 2c complete, ticking the own work completes the requirement. "Completed" shows
-    // above the checkbox, so its room is kept while it's empty, and the checkbox stays under the
-    // scout's finger.
+    /**
+     * [withOwnWork] with 2a and 2c complete, two of its three, so only its own work is left, as
+     * the ViewModel shows it.
+     */
+    private val onlyOwnWorkLeft = withOwnWork.copy(
+        requirement = withOwnWork.requirement.copy(
+            partlyCompleted = true,
+            completeCount = CompleteCount(2, 2),
+            stillToDo = "Pack your gear."
+        ),
+        children = withOwnWork.children.map {
+            if (it.number == "2c") it.copy(completed = true) else it
+        }
+    )
+
+    /** [onlyOwnWorkLeft] with its own work ticked, which completes it. */
+    private val ownWorkCompletesIt = onlyOwnWorkLeft.copy(
+        requirement = onlyOwnWorkLeft.requirement.copy(
+            completed = true,
+            ownWork = OwnWork("Pack your gear.", true),
+            partlyCompleted = false,
+            completeCount = null,
+            stillToDo = null
+        ),
+        completedDate = LocalDate(2026, 4, 15)
+    )
+
+    private fun ownWorkCheckbox() =
+        composeTestRule.onNode(hasText("Pack your gear.") and isToggleable())
+
+    // Ticking its own work completes it, and "Completed" shows above the checkbox. Its room is
+    // kept while it's empty, so the checkbox stays under the scout's finger.
     @Test
     fun checkingOwnWorkThatCompletesRequirement_leavesCheckboxWhereItIs() {
-        val unchecked = withOwnWork.copy(
-            requirement = withOwnWork.requirement.copy(stillToDo = "Pack your gear."),
-            children = withOwnWork.children.map {
-                if (it.number == "2c") it.copy(completed = true) else it
-            }
-        )
-        val checked = unchecked.copy(
-            requirement = unchecked.requirement.copy(
-                completed = true,
-                ownWork = OwnWork("Pack your gear.", true),
-                stillToDo = null
-            ),
-            completedDate = LocalDate(2026, 4, 15)
-        )
-        show(unchecked.copy(requirementIfToggled = checked.requirement))
-        val ownWorkCheckbox = composeTestRule.onNode(hasText("Pack your gear.") and isToggleable())
-        val uncheckedTop = ownWorkCheckbox.getUnclippedBoundsInRoot().top
+        show(onlyOwnWorkLeft.copy(statusIfToggled = RequirementStatus.Completed))
+        val uncheckedTop = ownWorkCheckbox().getUnclippedBoundsInRoot().top
         composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
 
-        uiState = checked.copy(requirementIfToggled = unchecked.requirement)
+        uiState = ownWorkCompletesIt
 
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
-        assertEquals(uncheckedTop, ownWorkCheckbox.getUnclippedBoundsInRoot().top)
+        assertEquals(uncheckedTop, ownWorkCheckbox().getUnclippedBoundsInRoot().top)
     }
 
     // Ticking a requirement that's no longer needed completes it, so "Not needed" goes, and its
     // room is kept so the checkbox doesn't move up from under the scout's finger.
     @Test
     fun checkingRequirementNoLongerNeeded_leavesCheckboxWhereItIs() {
-        val unchecked = leaf.copy(requirement = leaf.requirement.copy(notNeeded = true))
-        show(unchecked.copy(requirementIfToggled = completedLeaf.requirement))
+        show(leaf.copy(requirement = leaf.requirement.copy(notNeeded = true)))
         val checkbox = composeTestRule.onNode(hasText("Completed") and isToggleable())
         val uncheckedTop = checkbox.getUnclippedBoundsInRoot().top
 
-        uiState = completedLeaf.copy(requirementIfToggled = unchecked.requirement)
+        uiState = completedLeaf.copy(statusIfToggled = RequirementStatus.NotNeeded)
 
         composeTestRule.onNodeWithText("Not needed").assertDoesNotExist()
         assertEquals(uncheckedTop, checkbox.getUnclippedBoundsInRoot().top)
     }
 
-    // Unticked, the first is "Not needed", as the requirement it's part of has enough without
-    // it. The second is what gives that requirement enough, so unticked it's still needed, and no
-    // room is kept above its checkbox.
+    // Ticked or not, this one shows nothing above its checkbox, so no room is kept there: the
+    // checkbox sits the header's padding under the summary.
     @Test
     fun checkboxThatDoesNotChangeStatus_hasNoRoomKeptAboveIt() {
+        show(leaf)
+        val checkbox = composeTestRule.onNode(hasText("Completed") and isToggleable())
+        val uncheckedTop = checkbox.getUnclippedBoundsInRoot().top
+        val summaryBottom =
+            composeTestRule.onNodeWithText("Plan a campout.").getUnclippedBoundsInRoot().bottom
+        assertEquals(16.dp, uncheckedTop - summaryBottom)
+
+        uiState = completedLeaf
+
+        assertEquals(uncheckedTop, checkbox.getUnclippedBoundsInRoot().top)
+    }
+
+    // One with own work that a requirement it's part of has enough without is "Not needed"
+    // unticked and "Completed" ticked. On a page so narrow that "Not needed" takes two lines and
+    // "Completed" one, as a translation or larger text could make them, the line keeps the taller
+    // one's room. "Completed" is 72dp wide, "Not needed" 76dp, and the page leaves them 74dp.
+    @Config(qualifiers = "w106dp")
+    @Test
+    fun statusChangingHeight_leavesCheckboxWhereItIs() {
         show(
-            completedLeaf.copy(
-                requirementIfToggled = leaf.requirement.copy(notNeeded = true)
+            onlyOwnWorkLeft.copy(
+                requirement = withOwnWork.requirement.copy(notNeeded = true),
+                statusIfToggled = RequirementStatus.Completed
             )
         )
-        val checkbox = composeTestRule.onNode(hasText("Completed") and isToggleable())
-        val keptTop = checkbox.getUnclippedBoundsInRoot().top
+        val notNeeded = composeTestRule.onNodeWithText("Not needed").getUnclippedBoundsInRoot()
+        val uncheckedTop = ownWorkCheckbox().getUnclippedBoundsInRoot().top
 
-        uiState = completedLeaf.copy(requirementIfToggled = leaf.requirement)
+        uiState = ownWorkCompletesIt.copy(statusIfToggled = RequirementStatus.NotNeeded)
 
-        assertTrue(checkbox.getUnclippedBoundsInRoot().top < keptTop)
+        val completed = composeTestRule.onNodeWithText("Completed").getUnclippedBoundsInRoot()
+        assertTrue(notNeeded.bottom - notNeeded.top > completed.bottom - completed.top)
+        assertEquals(uncheckedTop, ownWorkCheckbox().getUnclippedBoundsInRoot().top)
     }
 
     @Test

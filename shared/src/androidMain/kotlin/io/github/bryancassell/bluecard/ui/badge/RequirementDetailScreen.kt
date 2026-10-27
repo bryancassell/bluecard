@@ -170,7 +170,7 @@ fun RequirementDetailScreen(
                 RequirementHeader(
                     uiState.advancementName,
                     uiState.requirement,
-                    uiState.requirementIfToggled,
+                    uiState.statusIfToggled,
                     uiState.timeInRank
                 )
                 val requirement = uiState.requirement
@@ -264,7 +264,7 @@ fun RequirementDetailScreen(
 private fun RequirementHeader(
     advancementName: String,
     requirement: RequirementItem,
-    requirementIfToggled: RequirementItem?,
+    statusIfToggled: RequirementStatus?,
     timeInRank: TimeInRank?
 ) {
     Column(
@@ -292,37 +292,24 @@ private fun RequirementHeader(
             )
         }
         val status = requirement.status()
-        val statusIfToggled = requirementIfToggled?.status()
-        if (status != null) {
-            StatusLine(status)
-        } else if (statusIfToggled != null) {
-            // Keeps the room of the line that ticking or unticking the checkbox below would show,
-            // without drawing it. Otherwise "Completed" appearing as the scout ticked a
-            // requirement's own work pushed the checkbox down from under their finger, and
-            // "Not needed" going pulled it up (#148). Only then, as an empty line on every page
-            // would leave a gap under most summaries. Showing "Completed" under the checkbox
-            // instead put it below the own work's "Completed on" date, and leaving it out would
-            // leave the page not saying the requirement is complete. Its semantics are cleared,
-            // not hidden with hideFromAccessibility as text shown in another form is: the line
-            // isn't on the page at all.
-            StatusLine(statusIfToggled, Modifier.drawWithContent {}.clearAndSetSemantics {})
+        // Keeps the room of the line that ticking or unticking the checkbox below would show,
+        // laid out under this one without drawing it, so the line is as tall as the taller of
+        // the two. Otherwise "Completed" appearing as the scout ticked a requirement's own work
+        // pushed the checkbox down from under their finger, and "Not needed" going pulled it up
+        // (#148). Only then, as an empty line on every page would leave a gap under most
+        // summaries. Showing "Completed" under the checkbox instead put it below the own work's
+        // "Completed on" date, and leaving it out would leave the page not saying the
+        // requirement is complete. Its semantics are cleared, not hidden with
+        // hideFromAccessibility as text shown in another form is: the line isn't on the page.
+        if (status != null || statusIfToggled != null) {
+            Box {
+                if (statusIfToggled != null && statusIfToggled != status) {
+                    StatusLine(statusIfToggled, Modifier.drawWithContent {}.clearAndSetSemantics {})
+                }
+                status?.let { StatusLine(it) }
+            }
         }
     }
-}
-
-/** What the line under a requirement's summary says on its page. */
-private enum class RequirementStatus { Completed, NotNeeded }
-
-/**
- * One the scout marks by hand has a "Completed" checkbox instead of [RequirementStatus.Completed].
- * One with own work has it, as its checkbox is only for that work. [RequirementStatus.NotNeeded]
- * is as on its row, and one the scout marks by hand keeps its checkbox, for when they did it
- * anyway.
- */
-private fun RequirementItem.status(): RequirementStatus? = when {
-    !markedByHand && completed -> RequirementStatus.Completed
-    notNeeded -> RequirementStatus.NotNeeded
-    else -> null
 }
 
 /**

@@ -21,6 +21,12 @@ val Requirement.isMarkedByHand: Boolean
     get() = children.isEmpty() && tracker?.rowCount == null && meritBadges == null
 
 /**
+ * Whether the scout marks this requirement, or its [own work][Requirement.ownWork], complete by
+ * hand, with a checkbox on its page.
+ */
+val Requirement.hasCheckbox: Boolean get() = isMarkedByHand || ownWork != null
+
+/**
  * Whether this requirement needs every row of its tracker filled in: it has no children, and its
  * tracker has a fixed number of rows. It may need its [own work][Requirement.ownWork] too.
  */
@@ -127,7 +133,7 @@ fun Requirement.hasPartDone(
     progress: Map<String, RequirementProgress>,
     trackerEntries: Map<String, List<TrackerEntry>>,
     earnedBadges: EarnedBadges = EarnedBadges.None
-): Boolean = ((isMarkedByHand || ownWork != null) && progress[number]?.completed == true) ||
+): Boolean = (hasCheckbox && progress[number]?.completed == true) ||
     hasTrackerRows(trackerEntries[number].orEmpty()) ||
     (meritBadges?.let { earnedBadges.toward(it).counted > 0 } == true) ||
     children.any { it.hasPartDone(progress, trackerEntries, earnedBadges) }
