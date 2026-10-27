@@ -414,8 +414,7 @@ with TalkBack's focus on "Don't allow": `tb double-tap` dismisses it.
 Open issues a tester is likely to run into. Report a match as the issue, not
 as a new bug. The coordinator checks the full list.
 
-- [#148](https://github.com/bryancassell/bluecard/issues/148): a
-  requirement's own-work checkbox moves when it completes the requirement.
+None at the moment.
 
 ## Test suites
 

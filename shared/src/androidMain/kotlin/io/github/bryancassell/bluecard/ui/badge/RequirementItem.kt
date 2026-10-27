@@ -53,12 +53,6 @@ data class RequirementItem(
      */
     val ownWork: OwnWork? = null,
     /**
-     * Whether ticking or unticking the checkbox on its page shows or hides "Completed" or
-     * "Not needed" under its summary: for one marked by hand that a requirement it's part of
-     * wouldn't need unticked, or one whose [ownWork] is all that decides whether it's complete.
-     */
-    val checkboxChangesStatus: Boolean = false,
-    /**
      * Whether part of it is done, though it isn't complete and is still needed: its own work, a
      * row of its tracker, or a requirement under it at any depth that's complete or partly done.
      */
@@ -119,9 +113,7 @@ data class CompleteCount(val complete: Int, val needed: Int)
 /**
  * [progress] and [trackerEntries] are what the scout recorded on the badge or rank, keyed by
  * requirement number. [partOfHasEnough] is whether a requirement this one is part of, at any
- * depth, has enough complete sub-requirements ([hasEnoughChildren]), and
- * [partOfHasEnoughUnmarked] whether it would without this one's own mark, as when the scout
- * unticks its checkbox. They differ only while this one's mark gives that requirement enough.
+ * depth, has enough complete sub-requirements ([hasEnoughChildren]).
  * [advancementCompletedOnPriorDate] is whether the scout marked the badge or rank completed on a
  * prior date. [earnedBadges] are the badges the scout has completed, which a rank's requirement
  * that asks for merit badges counts.
@@ -131,8 +123,7 @@ fun Requirement.toItem(
     trackerEntries: Map<String, List<TrackerEntry>>,
     partOfHasEnough: Boolean = false,
     advancementCompletedOnPriorDate: Boolean = false,
-    earnedBadges: EarnedBadges = EarnedBadges.None,
-    partOfHasEnoughUnmarked: Boolean = partOfHasEnough
+    earnedBadges: EarnedBadges = EarnedBadges.None
 ): RequirementItem {
     val completed = completion(progress, trackerEntries, earnedBadges) != null
     val notNeeded = partOfHasEnough && !completed
@@ -143,11 +134,10 @@ fun Requirement.toItem(
     } else {
         null
     }
-    // Enough sub-requirements are complete, or every row of its tracker is filled in, so it's
-    // complete once its own work is.
-    val ownWorkDecides = ownWork != null &&
+    // Still needed with enough sub-requirements complete, or every row of its tracker filled in,
+    // so its own work isn't.
+    val onlyOwnWorkLeft = ownWork != null && stillNeeded &&
         (hasEnoughChildren(progress, trackerEntries, earnedBadges) || hasEveryRow(trackerEntries))
-    val onlyOwnWorkLeft = ownWorkDecides && stillNeeded
     return RequirementItem(
         number = number,
         summary = summary,
@@ -158,10 +148,6 @@ fun Requirement.toItem(
         notNeeded = notNeeded,
         notRecorded = advancementCompletedOnPriorDate && stillNeeded && !partlyCompleted,
         ownWork = ownWork?.let { OwnWork(it, progress[number]?.completed == true) },
-        // Ticked, one marked by hand is complete, so not "Not needed", and unticked it's
-        // "Not needed" if the requirement it's part of has enough without it. One whose own work
-        // decides shows "Completed" ticked, and unticked nothing or "Not needed".
-        checkboxChangesStatus = if (isMarkedByHand) partOfHasEnoughUnmarked else ownWorkDecides,
         partlyCompleted = partlyCompleted,
         completeCount = completeCount,
         stillToDo = ownWork?.takeIf { onlyOwnWorkLeft },

@@ -150,29 +150,6 @@ class AdvancementRequirementsTest {
         assertTrue(found.item(withOwnWork.find("2b(1)")!!).notNeeded)
     }
 
-    // Ticked, a requirement marked by hand shows neither "Completed" nor "Not needed". Unticked,
-    // it's "Not needed" only if 2 has enough without it.
-    @Test
-    fun item_markedByHand_checkboxChangesStatus_onlyIfEnoughWithoutIt() {
-        val onlyIt = catalog.advancementRequirements(
-            "camping",
-            startedOn(newest.effectiveDate, "2a")
-        )!!
-        val both = catalog.advancementRequirements(
-            "camping",
-            startedOn(newest.effectiveDate, "2a", "2b(1)")
-        )!!
-        val other = catalog.advancementRequirements(
-            "camping",
-            startedOn(newest.effectiveDate, "2b(1)")
-        )!!
-
-        assertFalse(onlyIt.item(newest.find("2a")!!).checkboxChangesStatus)
-        assertTrue(both.item(newest.find("2a")!!).checkboxChangesStatus)
-        assertTrue(other.item(newest.find("2a")!!).checkboxChangesStatus)
-        assertFalse(other.item(newest.find("2b(1)")!!).checkboxChangesStatus)
-    }
-
     @Test
     fun item_beforeARequirementItsPartOfIsComplete_isNeeded() {
         val found = catalog.advancementRequirements("camping", null)!!

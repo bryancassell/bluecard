@@ -18,6 +18,11 @@ sealed interface RequirementDetailUiState {
         val advancementName: String,
         val requirement: RequirementItem,
         /**
+         * [requirement] as it would be with the checkbox on its page ticked or unticked, or null
+         * if it has none. The page keeps room for the line the checkbox would show above itself.
+         */
+        val requirementIfToggled: RequirementItem? = null,
+        /**
          * When the scout completed it, for a requirement they marked complete, or its own work,
          * for one with own work they marked complete ([RequirementItem.ownWork]). For one that's
          * complete once its tracker's rows are ([RequirementItem.completesFromRows]), or once the
