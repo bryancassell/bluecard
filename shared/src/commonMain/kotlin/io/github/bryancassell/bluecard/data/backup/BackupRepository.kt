@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.data.backup
 
-import android.net.Uri
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import kotlinx.datetime.LocalDate
 
@@ -17,10 +17,10 @@ interface BackupRepository {
      * chose. It finishes even if the caller is cancelled, such as when the scout leaves the
      * screen. Throws an [IllegalStateException] if the scout hasn't saved their profile.
      */
-    suspend fun exportBackup(destination: Uri)
+    suspend fun exportBackup(destination: DocumentUri)
 
     /** Reads the file at [source] and checks whether it can be imported, changing nothing. */
-    suspend fun readBackup(source: Uri): BackupReadResult
+    suspend fun readBackup(source: DocumentUri): BackupReadResult
 
     /**
      * Replaces the profile and all progress with [backup]'s. It finishes even if the caller is

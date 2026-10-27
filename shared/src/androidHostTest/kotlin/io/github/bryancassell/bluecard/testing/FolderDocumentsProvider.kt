@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.testing
 
+import android.Manifest
+import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.os.CancellationSignal
@@ -9,6 +11,8 @@ import android.provider.DocumentsContract.Root
 import android.provider.DocumentsProvider
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.concurrent.CopyOnWriteArrayList
+import org.robolectric.Robolectric
 
 /**
  * A documents provider over [folder], like the ones the system file picker saves to, so tests
@@ -29,12 +33,16 @@ class FolderDocumentsProvider : DocumentsProvider() {
      */
     var failWrites = false
 
+    /** The name of the thread each query, open and delete ran on, in the order they ran. */
+    val callThreads: MutableList<String> = CopyOnWriteArrayList()
+
     override fun onCreate() = true
 
     override fun queryRoots(projection: Array<out String>?): Cursor =
         MatrixCursor(projection ?: arrayOf(Root.COLUMN_ROOT_ID))
 
     override fun queryDocument(documentId: String, projection: Array<out String>?): Cursor {
+        callThreads += Thread.currentThread().name
         val columns = projection ?: arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_SIZE)
         val file = File(folder, documentId)
         return MatrixCursor(columns).apply {
@@ -61,6 +69,7 @@ class FolderDocumentsProvider : DocumentsProvider() {
         mode: String,
         signal: CancellationSignal?
     ): ParcelFileDescriptor {
+        callThreads += Thread.currentThread().name
         if (refuseOpening) throw SecurityException("This app can't write here")
         if (mode in unsupportedModes) throw FileNotFoundException("Unsupported mode: $mode")
         val file = File(folder, documentId)
@@ -72,6 +81,22 @@ class FolderDocumentsProvider : DocumentsProvider() {
     }
 
     override fun deleteDocument(documentId: String) {
+        callThreads += Thread.currentThread().name
         File(folder, documentId).delete()
+    }
+
+    companion object {
+        /** One that the app reaches through [authority], as it reaches the file picker's. */
+        fun create(authority: String): FolderDocumentsProvider = Robolectric.buildContentProvider(
+            FolderDocumentsProvider::class.java
+        ).create(
+            ProviderInfo().apply {
+                this.authority = authority
+                exported = true
+                grantUriPermissions = true
+                readPermission = Manifest.permission.MANAGE_DOCUMENTS
+                writePermission = Manifest.permission.MANAGE_DOCUMENTS
+            }
+        ).get()
     }
 }

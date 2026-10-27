@@ -33,7 +33,8 @@ class MigrationTest {
         InstrumentationRegistry.getInstrumentation(),
         context.getDatabasePath(DATABASE),
         BundledSQLiteDriver(),
-        BlueCardDatabase::class
+        BlueCardDatabase::class,
+        BlueCardDatabaseConstructor::initialize
     )
 
     /**
@@ -61,9 +62,10 @@ class MigrationTest {
     }
 
     /** Opens the migrated database as the app does. */
-    private fun open() = Room.databaseBuilder(context, BlueCardDatabase::class.java, DATABASE)
-        .setDriver(BundledSQLiteDriver())
-        .build()
+    private fun open() =
+        Room.databaseBuilder(context, DATABASE, BlueCardDatabaseConstructor::initialize)
+            .setDriver(BundledSQLiteDriver())
+            .build()
 
     @Test
     fun migrate1To2_keepsTrackerEntries_asLogEntries() = runTest {

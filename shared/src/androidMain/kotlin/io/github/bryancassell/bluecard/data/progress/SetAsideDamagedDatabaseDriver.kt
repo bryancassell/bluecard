@@ -31,7 +31,7 @@ import okio.Path.Companion.toPath
  * error handler, which deletes a damaged database and the files beside it, and takes no other
  * (checked in androidx.sqlite 2.7.1). Its SQLite calls use only androidx.sqlite's common
  * interfaces, but its lock, and FileDamagedProgressRepository's locks, Context and SQLiteDatabase,
- * need common replacements before iOS can use it (#345).
+ * need common replacements before iOS can use it (#346).
  */
 class SetAsideDamagedDatabaseDriver(
     private val driver: SQLiteDriver,

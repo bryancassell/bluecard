@@ -7,10 +7,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import io.github.bryancassell.bluecard.data.backup.BackupRepository
-import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
+import io.github.bryancassell.bluecard.data.ContentResolverDocuments
+import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
+import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.SetAsideDamagedDatabaseDriver
@@ -41,7 +42,7 @@ val androidModule = module {
     single<FileDamagedProgressRepository>() bind DamagedProgressRepository::class
     single<PdfReportRepository>() bind ReportRepository::class
     single<PdfDocumentWriter>() bind ReportPdfWriter::class
-    single<JsonBackupRepository>() bind BackupRepository::class
+    single<ContentResolverDocuments>() bind Documents::class
     single<AndroidTextRules>() bind TextRules::class
     single<AndroidPhoneNumberFormat>() bind PhoneNumberFormat::class
 }
@@ -57,7 +58,8 @@ private fun progressDatabase(
     context: Context,
     damagedProgress: FileDamagedProgressRepository
 ): BlueCardDatabase =
-    Room.databaseBuilder(context, BlueCardDatabase::class.java, BlueCardDatabase.NAME)
+    // Built by the constructor Room generates, as on iOS, rather than found by reflection.
+    Room.databaseBuilder(context, BlueCardDatabase.NAME, BlueCardDatabaseConstructor::initialize)
         .setDriver(SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress))
         .build()
 

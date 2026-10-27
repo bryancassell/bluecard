@@ -2,17 +2,16 @@ package io.github.bryancassell.bluecard.data.progress
 
 import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
+import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
+import androidx.room3.RoomDatabaseConstructor
 import kotlinx.coroutines.sync.Mutex
 
 // Each version's schema is in shared/schemas/, and MigrationTest checks each migration.
 // Version 2 added TrackerEntry.rowNumber, version 3 TrackerEntry.addedDate, and version 4
 // RequirementProgress.signedOffBy.
-//
-// On Android, Room 3 finds the generated BlueCardDatabase_Impl by reflection, and its keep rule
-// keeps it in release builds. iOS has no reflection to find it, so in common code (#345) this
-// needs @ConstructedBy, with an expect object whose actuals Room generates.
+@ConstructedBy(BlueCardDatabaseConstructor::class)
 @Database(
     entities = [BadgeProgress::class, RequirementProgress::class, TrackerEntry::class],
     version = 4,
@@ -40,4 +39,14 @@ abstract class BlueCardDatabase : RoomDatabase() {
          */
         const val NAME = "bluecard.db"
     }
+}
+
+/**
+ * Builds the database, without the reflection that iOS doesn't have. Room's compiler generates
+ * each platform's actual, so the IDE's warning that there is none is suppressed, as the Room for
+ * Kotlin Multiplatform guide does: https://developer.android.com/kotlin/multiplatform/room
+ */
+@Suppress("KotlinNoActualForExpect")
+expect object BlueCardDatabaseConstructor : RoomDatabaseConstructor<BlueCardDatabase> {
+    override fun initialize(): BlueCardDatabase
 }

@@ -1,14 +1,13 @@
 package io.github.bryancassell.bluecard.data.backup
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.ProviderInfo
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
@@ -25,6 +24,7 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
+import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -59,7 +59,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
-import org.robolectric.Robolectric
 
 /** Exports to and imports from documents in a documents provider, as the file picker gives them. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -130,11 +129,10 @@ class JsonBackupRepositoryTest {
         ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
         externalScope: CoroutineScope = this.externalScope
     ) = JsonBackupRepository(
-        context,
+        ContentResolverDocuments(context, FakeWarningLog(), ioDispatcher),
         catalogRepository,
         profileRepository,
         progressRepository,
-        FakeWarningLog(),
         ioDispatcher,
         externalScope
     )
@@ -156,17 +154,7 @@ class JsonBackupRepositoryTest {
     private val documents = "io.github.bryancassell.bluecard.test.documents"
 
     // Like the provider the system file picker saves to and opens from.
-    private val documentsProvider = Robolectric.buildContentProvider(
-        FolderDocumentsProvider::class.java
-    ).create(
-        ProviderInfo().apply {
-            authority = documents
-            exported = true
-            grantUriPermissions = true
-            readPermission = Manifest.permission.MANAGE_DOCUMENTS
-            writePermission = Manifest.permission.MANAGE_DOCUMENTS
-        }
-    ).get()
+    private val documentsProvider = FolderDocumentsProvider.create(documents)
 
     @Before
     fun setUpDocuments() {
@@ -526,7 +514,10 @@ class JsonBackupRepositoryTest {
     }
 
     private fun roomProgressRepository(): RoomProgressRepository {
-        val database = Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java)
+        val database = Room.inMemoryDatabaseBuilder(
+            context,
+            BlueCardDatabaseConstructor::initialize
+        )
             .setDriver(BundledSQLiteDriver())
             .build()
             .also { databases += it }

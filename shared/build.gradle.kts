@@ -22,6 +22,23 @@ plugins {
 }
 
 kotlin {
+    compilerOptions {
+        // Expected and actual classes are in Beta, and the compiler warns of each: Room's database
+        // constructor and DocumentUri are. The Kotlin docs give this option to turn the warning
+        // off: https://kotlinlang.org/docs/multiplatform/multiplatform-expect-actual.html
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
+    // With Android as the only target, the compiler lets common code call Android and JVM APIs.
+    // With iOS's targets too, compileCommonMainKotlinMetadata refuses them, and needs no Xcode,
+    // so CI runs it with -Pbluecard.checkCommonCode=true. The targets are declared only then:
+    // built always, they'd make `build` link and run tests on an iOS simulator, which needs Xcode.
+    // #346 declares them for good.
+    if (providers.gradleProperty("bluecard.checkCommonCode").orNull == "true") {
+        iosArm64()
+        iosSimulatorArm64()
+    }
+
     android {
         namespace = "io.github.bryancassell.bluecard.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -64,6 +81,14 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.components.resources)
+            implementation(libs.kotlinx.serialization.json)
+            // Its dates and time zones are in this module's API, such as ZonedClock's.
+            api(libs.kotlinx.datetime)
+            implementation(libs.koin.annotations)
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.bignum)
+            implementation(libs.okio)
         }
 
         androidMain.dependencies {
@@ -74,15 +99,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.androidx.navigation3.ui)
-            implementation(libs.kotlinx.serialization.json)
-            // Its dates and time zones are in this module's API, such as ZonedClock's.
-            api(libs.kotlinx.datetime)
             implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.annotations)
-            implementation(libs.androidx.room3.runtime)
-            implementation(libs.androidx.datastore.preferences)
-            implementation(libs.bignum)
-            implementation(libs.okio)
             implementation(libs.androidx.activity.compose)
             // Compose's types are in this module's API, such as its composables' parameters and
             // the color schemes the app's window theme matches.
@@ -282,7 +299,7 @@ configurations.consumable("coverageSourcesElements") {
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.VERIFICATION))
         attribute(coverageAttribute, "sources")
     }
-    // The main source sets' folders that exist, androidMain's now and common code's later.
+    // The main source sets' folders that exist: common code's and androidMain's.
     kotlin.sourceSets.filter { it.name.endsWith("Main") }
         .flatMap { it.kotlin.srcDirs }
         .filter { it.isDirectory }

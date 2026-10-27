@@ -149,9 +149,11 @@ val coverageExclusions = listOf(
     "**/BuildConfig.*",
     "**/Manifest*.*",
     "**/*PreviewKt*.class",
-    // Room: generated database and DAO implementations.
+    // Room: generated database and DAO implementations, and the database's constructor, the
+    // actual of BlueCardDatabase.kt's expect object.
     "**/*_Impl.class",
     "**/*_Impl\$*.class",
+    "**/BlueCardDatabaseConstructor.class",
     // Compose Multiplatform: the Res class and its accessors, generated from :shared's
     // composeResources into the package its build file names.
     "**/io/github/bryancassell/bluecard/resources/**",

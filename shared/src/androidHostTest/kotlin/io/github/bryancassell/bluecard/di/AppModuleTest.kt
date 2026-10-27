@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.di
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.backup.BackupRepository
+import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
 import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
@@ -48,5 +50,10 @@ class AppModuleTest {
     @Test
     fun profileRepository_isDataStoreProfileRepository() {
         assertTrue(koin.get<ProfileRepository>() is DataStoreProfileRepository)
+    }
+
+    @Test
+    fun backupRepository_isJsonBackupRepository() {
+        assertTrue(koin.get<BackupRepository>() is JsonBackupRepository)
     }
 }

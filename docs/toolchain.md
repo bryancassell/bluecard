@@ -35,7 +35,8 @@ Run these from the repository root.
 
 | Command | What it does |
 |---|---|
-| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. This is the command CI runs. |
+| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. CI runs it, then the check below. |
+| `./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata` | Checks that common code calls only common APIs, as CI does after `build` (see [How the pieces fit together](#how-the-pieces-fit-together)). |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
@@ -71,6 +72,12 @@ built with AGP's
 which has no build types, so their source folders are `androidMain` and
 `androidHostTest` rather than `main` and `test`. The compiler plugins are
 Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
+
+**Common code** (`shared/src/commonMain/kotlin/`), which iOS will run too, may
+call only common APIs. `./gradlew build` doesn't check that (the comment in
+`shared/build.gradle.kts` says why), so CI runs
+`./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata`.
+Run it before pushing a change to common code.
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
@@ -176,8 +183,9 @@ it.
 │   ├── build.gradle.kts
 │   ├── schemas/                Room database schemas (generated; commit them)
 │   └── src/
-│       ├── commonMain/         Strings, icons and the catalog, in composeResources/
-│       ├── androidMain/        Code and manifest
+│       ├── commonMain/         Code for iOS too, and strings, icons and the catalog
+│       │                       in composeResources/
+│       ├── androidMain/        Code that needs Android, and the manifest
 │       └── androidHostTest/    Local tests (run on your computer) and screenshots
 └── testing/                    Fakes and helpers that both modules' tests use
 ```
@@ -633,7 +641,8 @@ the checks have run on what `main` will have after the merge; if `main` has
 moved, merge it into the branch and wait for the checks again:
 
 - **Build** runs `./gradlew build`, the same command as locally, then checks
-  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged.
+  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged and
+  that common code builds for iOS.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to

@@ -1,14 +1,13 @@
 package io.github.bryancassell.bluecard.data.report
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.ProviderInfo
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
@@ -112,6 +111,7 @@ class PdfReportRepositoryTest {
         externalScope: CoroutineScope = this.externalScope
     ) = PdfReportRepository(
         context,
+        ContentResolverDocuments(context, warningLog, ioDispatcher),
         catalogRepository,
         progressRepository,
         profileRepository,
@@ -145,17 +145,7 @@ class PdfReportRepositoryTest {
     private val documents = "io.github.bryancassell.bluecard.test.documents"
 
     // Like the provider the system file picker saved to.
-    private val documentsProvider = Robolectric.buildContentProvider(
-        FolderDocumentsProvider::class.java
-    ).create(
-        ProviderInfo().apply {
-            authority = documents
-            exported = true
-            grantUriPermissions = true
-            readPermission = Manifest.permission.MANAGE_DOCUMENTS
-            writePermission = Manifest.permission.MANAGE_DOCUMENTS
-        }
-    ).get()
+    private val documentsProvider = FolderDocumentsProvider.create(documents)
 
     @Before
     fun setUpDocuments() {

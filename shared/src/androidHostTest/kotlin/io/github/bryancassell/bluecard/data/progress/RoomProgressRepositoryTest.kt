@@ -66,7 +66,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         driver: SQLiteDriver = BundledSQLiteDriver()
     ) = builder.setDriver(driver).build().also { databases += it }
 
-    private val database = open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java))
+    private val database =
+        open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize))
 
     /** The first exception that would crash the app: a bug in a write. */
     private val crash = CompletableDeferred<Throwable>()
@@ -90,8 +91,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         open(
             Room.databaseBuilder(
                 context,
-                BlueCardDatabase::class.java,
-                folder.newFolder(BlueCardDatabase.NAME).absolutePath
+                folder.newFolder(BlueCardDatabase.NAME).absolutePath,
+                BlueCardDatabaseConstructor::initialize
             )
         ),
         externalScope
@@ -103,7 +104,13 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val file = File(folder.root, BlueCardDatabase.NAME)
         File(file.path + ".lck").mkdirs()
         val repository = RoomProgressRepository(
-            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath)),
+            open(
+                Room.databaseBuilder(
+                    context,
+                    file.absolutePath,
+                    BlueCardDatabaseConstructor::initialize
+                )
+            ),
             externalScope
         )
 
@@ -122,7 +129,13 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val file = File(folder.root, BlueCardDatabase.NAME)
         BundledSQLiteDriver().open(file.path).use { it.execSQL("PRAGMA user_version = 1000") }
         val repository = RoomProgressRepository(
-            open(Room.databaseBuilder(context, BlueCardDatabase::class.java, file.absolutePath)),
+            open(
+                Room.databaseBuilder(
+                    context,
+                    file.absolutePath,
+                    BlueCardDatabaseConstructor::initialize
+                )
+            ),
             externalScope
         )
 
@@ -282,7 +295,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val threads = Collections.synchronizedList(mutableListOf<Thread>())
         val repository = RoomProgressRepository(
             open(
-                Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java),
+                Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize),
                 ThreadRecordingDriver(threads)
             ),
             externalScope
@@ -320,7 +333,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     /** A repository whose writes of requirement progress throw [error]. */
     private fun failingRequirementWrites(error: RuntimeException) = RoomProgressRepository(
         open(
-            Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java),
+            Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize),
             FailingRequirementWrites(error)
         ),
         externalScope

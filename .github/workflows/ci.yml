@@ -49,6 +49,11 @@ jobs:
           git status --porcelain -- shared/schemas
           test -z "$(git status --porcelain -- shared/schemas)"
 
+      # Common code may only call common APIs, which the Android build doesn't check
+      # (shared/build.gradle.kts).
+      - name: Check that common code builds for iOS
+        run: ./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata
+
       # On failure, keep the HTML reports (lint, tests), raw test results and
       # failed screenshot tests' images so they can be downloaded from the run's
       # summary page.

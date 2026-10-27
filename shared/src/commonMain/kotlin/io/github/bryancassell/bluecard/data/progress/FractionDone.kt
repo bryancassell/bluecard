@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.artificialpb.bignum.BigDecimal
 import io.github.artificialpb.bignum.plus
 import io.github.artificialpb.bignum.toBigDecimal
+import io.github.artificialpb.bignum.toFloat as bigDecimalToFloat
 import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
@@ -63,8 +64,12 @@ fun Requirement.fractionDone(
             progress
         )
 
+        // bignum's toFloat, under a name of its own. On Android, BigDecimal is java.math's,
+        // whose own toFloat() would come first and leave the import unused, so an IDE would
+        // remove it, though common code needs it. On Android, bignum's is
+        // (this as Number).toFloat(), the same value (checked in bignum 1.0.5).
         else -> tracker?.loggedTowardNumber(trackerEntries[number].orEmpty())
-            ?.let { (done, needed) -> beforeCheckOff(done.toFloat(), needed) }
+            ?.let { (done, needed) -> beforeCheckOff(done.bigDecimalToFloat(), needed) }
             ?: 0f
     }
 }

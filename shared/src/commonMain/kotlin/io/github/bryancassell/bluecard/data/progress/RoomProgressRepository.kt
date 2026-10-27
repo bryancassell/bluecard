@@ -171,8 +171,8 @@ class RoomProgressRepository(
      * badge is started, so only a mistake in the code can cause one. So is an error with no
      * result code, which comes from Room rather than SQLite, such as a failed foreign key check.
      *
-     * Damage crashes the app too, and the next launch sets the database aside
-     * ([SetAsideDamagedDatabaseDriver]). Reporting it as a load or save failure would leave the
+     * Damage crashes the app too, and on Android the next launch sets the database aside
+     * (`SetAsideDamagedDatabaseDriver`). Reporting it as a load or save failure would leave the
      * scout retrying on a database that stays damaged until the app restarts.
      *
      * Before Room first opens the database, it locks a file beside it, and reports a lock file

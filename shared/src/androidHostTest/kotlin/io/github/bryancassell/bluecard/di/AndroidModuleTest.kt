@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bryancassell.bluecard.data.backup.BackupRepository
-import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
+import io.github.bryancassell.bluecard.data.ContentResolverDocuments
+import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -124,8 +124,8 @@ class AndroidModuleTest {
     }
 
     @Test
-    fun backupRepository_isJsonBackupRepository() {
-        assertTrue(koin.get<BackupRepository>() is JsonBackupRepository)
+    fun documents_isContentResolverDocuments() {
+        assertTrue(koin.get<Documents>() is ContentResolverDocuments)
     }
 
     @Test

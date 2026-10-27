@@ -1,0 +1,42 @@
+package io.github.bryancassell.bluecard.data
+
+import okio.Source
+
+/**
+ * A document the scout chose with the platform's file picker, or a report to share. Common code
+ * only passes it on, to [Documents] or to the screen that shares it. On Android it's `Uri`
+ * itself, so Android has nothing to convert. iOS can't use `NSURL` itself, an open class, but a
+ * class of its own can hold the `NSURL` the file picker gives, with the access to the file that
+ * it carries, which a URL rebuilt from text may not.
+ */
+expect abstract class DocumentUri {
+    /** The URI as text. Abstract, as Android's `Uri` declares it. */
+    abstract override fun toString(): String
+}
+
+/**
+ * Reads and writes documents the scout chose with the platform's file picker. An interface, so
+ * each platform reaches them its own way: Android through the content resolver.
+ */
+interface Documents {
+    /**
+     * Writes [content] to [destination], replacing what it held. The content is made before the
+     * destination is opened, which empties it, so content that can't be made leaves a file the
+     * scout chose to replace as it was. So does no content (null), such as a report on a badge
+     * that was just cleared, which writes nothing.
+     *
+     * Throws what making the content throws, or an `IOException` if the document can't be
+     * opened or written. When it writes nothing or throws, it doesn't leave behind the empty
+     * document the file picker made, or one that opening emptied.
+     *
+     * It's main-safe, and makes the content off the main thread too, so callers don't switch
+     * threads for it.
+     */
+    suspend fun save(destination: DocumentUri, content: suspend () -> ByteArray?)
+
+    /**
+     * Opens [source] to read. Throws an `IOException` if it can't be opened. It blocks, as
+     * reading the source does, so call it off the main thread.
+     */
+    fun open(source: DocumentUri): Source
+}
