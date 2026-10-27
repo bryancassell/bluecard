@@ -72,6 +72,14 @@ which has no build types, so their source folders are `androidMain` and
 `androidHostTest` rather than `main` and `test`. The compiler plugins are
 Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
 
+**Common code** (`shared/src/commonMain/kotlin/`), which iOS will run too.
+While Android is `:shared`'s only target, the compiler lets common code call
+Android and JVM APIs, which would fail only once
+[#346](https://github.com/bryancassell/bluecard/issues/346) adds iOS. To check
+a change, add `iosArm64()` and `iosSimulatorArm64()` to the `kotlin` block in
+`shared/build.gradle.kts`, run `./gradlew :shared:compileCommonMainKotlinMetadata`,
+and take them out again. It doesn't need Xcode.
+
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
 code with it. Libraries whose generators run through KSP are added with
@@ -176,8 +184,9 @@ it.
 │   ├── build.gradle.kts
 │   ├── schemas/                Room database schemas (generated; commit them)
 │   └── src/
-│       ├── commonMain/         Strings, icons and the catalog, in composeResources/
-│       ├── androidMain/        Code and manifest
+│       ├── commonMain/         Code for iOS too, and strings, icons and the catalog
+│       │                       in composeResources/
+│       ├── androidMain/        Code that needs Android, and the manifest
 │       └── androidHostTest/    Local tests (run on your computer) and screenshots
 └── testing/                    Fakes and helpers that both modules' tests use
 ```

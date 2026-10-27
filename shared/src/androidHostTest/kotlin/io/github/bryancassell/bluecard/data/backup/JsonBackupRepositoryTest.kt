@@ -9,6 +9,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
@@ -130,11 +131,10 @@ class JsonBackupRepositoryTest {
         ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
         externalScope: CoroutineScope = this.externalScope
     ) = JsonBackupRepository(
-        context,
+        ContentResolverDocuments(context, FakeWarningLog()),
         catalogRepository,
         profileRepository,
         progressRepository,
-        FakeWarningLog(),
         ioDispatcher,
         externalScope
     )

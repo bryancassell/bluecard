@@ -1,6 +1,6 @@
 package io.github.bryancassell.bluecard.data.report
 
-import android.net.Uri
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.report_file_name
 import io.github.bryancassell.bluecard.resources.report_file_name_rank
@@ -18,11 +18,11 @@ import org.jetbrains.compose.resources.StringResource
  */
 interface ReportRepository {
     /**
-     * Writes badge or rank [advancementId]'s report to the app's cache, and returns a content
-     * URI that another app can read it from once it's granted permission, or null when it makes
-     * no report.
+     * Writes badge or rank [advancementId]'s report to the app's cache, and returns where another
+     * app can read it from, such as a content URI on Android, which it can read once it's granted
+     * permission. Returns null when it makes no report.
      */
-    suspend fun createReportToShare(advancementId: String): Uri?
+    suspend fun createReportToShare(advancementId: String): DocumentUri?
 
     /**
      * Writes badge or rank [advancementId]'s report to [destination], such as a document the
@@ -30,7 +30,7 @@ interface ReportRepository {
      * the screen. When it makes no report, it deletes [destination] if it's empty, as the file
      * picker creates it, and leaves it as it was otherwise.
      */
-    suspend fun saveReport(advancementId: String, destination: Uri)
+    suspend fun saveReport(advancementId: String, destination: DocumentUri)
 }
 
 /**

@@ -1,6 +1,8 @@
 package io.github.bryancassell.bluecard.di
 
 import io.github.bryancassell.bluecard.MainActivityViewModel
+import io.github.bryancassell.bluecard.data.backup.BackupRepository
+import io.github.bryancassell.bluecard.data.backup.JsonBackupRepository
 import io.github.bryancassell.bluecard.data.catalog.AssetCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
@@ -18,16 +20,10 @@ import io.github.bryancassell.bluecard.ui.onboarding.OnboardingViewModel
 import io.github.bryancassell.bluecard.ui.profile.EditProfileViewModel
 import io.github.bryancassell.bluecard.ui.rank.RankDetailViewModel
 import io.github.bryancassell.bluecard.ui.ranks.RanksViewModel
-import kotlin.time.Clock
-import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
-import org.koin.core.annotation.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -35,17 +31,10 @@ import org.koin.plugin.module.dsl.create
 import org.koin.plugin.module.dsl.single
 import org.koin.plugin.module.dsl.viewModel
 
-/** Marks the dispatcher for disk and other blocking work. */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class IoDispatcher
-
-/** Marks the scope for work that must finish even if the screen that started it closes. */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class ApplicationScope
-
-/** What the app is built from, apart from what needs Android to build ([androidModule]). */
+/**
+ * What the app is built from, apart from what needs Android to build ([androidModule]). It's in
+ * common code once the ViewModels it lists are (#345).
+ */
 val appModule = module {
     // Classes take the dispatcher instead of using Dispatchers directly, so tests can swap in a
     // test dispatcher.
@@ -57,6 +46,7 @@ val appModule = module {
     single<AssetCatalogRepository>() bind CatalogRepository::class
     single<RoomProgressRepository>() bind ProgressRepository::class
     single<DataStoreProfileRepository>() bind ProfileRepository::class
+    single<JsonBackupRepository>() bind BackupRepository::class
 
     viewModel<MainActivityViewModel>()
     viewModel<OnboardingViewModel>()
@@ -81,38 +71,3 @@ val appModule = module {
  */
 internal fun applicationScope(@IoDispatcher ioDispatcher: CoroutineDispatcher): CoroutineScope =
     CoroutineScope(SupervisorJob() + ioDispatcher)
-
-/** A clock with the time zone its dates, such as today's, are read in. */
-interface ZonedClock : Clock {
-    /**
-     * The zone now. Read it each time it's needed, rather than keeping it, as the device's can
-     * change while a page is open.
-     */
-    val timeZone: TimeZone
-
-    fun today(): LocalDate = todayIn(timeZone)
-}
-
-/**
- * The system clock in the device's time zone at the moment it's read. A zone read once, when the
- * clock was made, would go on giving "today" in the old zone on a page left open through a time
- * zone change, as when a scout travels to camp (#79).
- */
-internal object DeviceClock : ZonedClock {
-    override val timeZone: TimeZone get() = TimeZone.currentSystemDefault()
-
-    override fun now(): Instant = Clock.System.now()
-}
-
-/**
- * Where the app writes the failures it catches, such as stored data that couldn't be read. It
- * reports them nowhere else (ARCHITECTURE.md, Load and save failures), so this is the only way
- * to tell what failed and why. An interface, so each platform writes them its own way, and tests
- * can read them back: Android's `Log` throws in plain local tests. It's called from any thread,
- * such as the IO dispatcher's, so an implementation must be thread-safe. It must not throw either,
- * since callers write to it while handling a failure.
- */
-interface WarningLog {
-    /** Writes [message], and [error] if there is one, under [tag]. */
-    fun warn(tag: String, message: String, error: Throwable? = null)
-}

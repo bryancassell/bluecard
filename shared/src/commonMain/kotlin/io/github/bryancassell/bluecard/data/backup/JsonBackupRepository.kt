@@ -1,17 +1,14 @@
 package io.github.bryancassell.bluecard.data.backup
 
-import android.content.Context
-import android.net.Uri
+import io.github.bryancassell.bluecard.data.DocumentUri
+import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
-import io.github.bryancassell.bluecard.data.openDocument
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
-import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
-import io.github.bryancassell.bluecard.di.WarningLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
@@ -22,26 +19,23 @@ import okio.use
 
 /**
  * [BackupRepository] that writes and reads exports as JSON ([encodeBackup], [decodeBackup]),
- * through the content resolver, so it reaches any document the scout picks. A file is checked
- * against the catalog of badges and ranks in this version of the app.
+ * in the documents the scout picks ([documents]). A file is checked against the catalog of
+ * badges and ranks in this version of the app.
  *
  * Exporting and importing run in [externalScope], so each finishes even if the scout leaves
  * the screen ([runOutlivingCaller]).
  */
 class JsonBackupRepository(
-    private val context: Context,
+    private val documents: Documents,
     private val catalogRepository: CatalogRepository,
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
-    private val warningLog: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : BackupRepository {
-    override suspend fun exportBackup(destination: Uri) = externalScope.runOutlivingCaller {
+    override suspend fun exportBackup(destination: DocumentUri) = externalScope.runOutlivingCaller {
         withContext(ioDispatcher) {
-            context.contentResolver.saveDocument(destination, warningLog) {
-                encodeBackup(currentBackup()).encodeToByteArray()
-            }
+            documents.save(destination) { encodeBackup(currentBackup()).encodeToByteArray() }
         }
     }
 
@@ -52,19 +46,19 @@ class JsonBackupRepository(
         return Backup(profile, progressRepository.observeAllProgress().first())
     }
 
-    override suspend fun readBackup(source: Uri): BackupReadResult = withContext(ioDispatcher) {
-        val bytes = context.contentResolver.openDocument(source).buffer()
-            .use { it.readAtMost(MAX_FILE_SIZE) }
-            ?: return@withContext BackupReadResult.Invalid
-        val json = try {
-            bytes.decodeToString(throwOnInvalidSequence = true)
-        } catch (e: CharacterCodingException) {
-            // Not text, such as a photo. Caught here, since on Android it's an IOException too.
-            return@withContext BackupReadResult.Invalid
+    override suspend fun readBackup(source: DocumentUri): BackupReadResult =
+        withContext(ioDispatcher) {
+            val bytes = documents.open(source).buffer().use { it.readAtMost(MAX_FILE_SIZE) }
+                ?: return@withContext BackupReadResult.Invalid
+            val json = try {
+                bytes.decodeToString(throwOnInvalidSequence = true)
+            } catch (e: CharacterCodingException) {
+                // Not text, such as a photo. Caught here, since on Android it's an IOException too.
+                return@withContext BackupReadResult.Invalid
+            }
+            // An editor can add a byte order mark when it saves the file, which JSON doesn't allow.
+            decodeBackup(json.removePrefix("\uFEFF"), catalogRepository.getAdvancements())
         }
-        // An editor can add a byte order mark when it saves the file, which JSON doesn't allow.
-        decodeBackup(json.removePrefix("\uFEFF"), catalogRepository.getAdvancements())
-    }
 
     // Progress first: it's replaced in one transaction, so if that fails, nothing has changed.
     override suspend fun importBackup(backup: Backup) = externalScope.runOutlivingCaller {

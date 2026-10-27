@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.data
 
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -13,17 +14,21 @@ import okio.source
 
 private const val TAG = "Documents"
 
+actual typealias DocumentUri = Uri
+
+/** [Documents] through the content resolver, so they reach any document the scout picks. */
+class ContentResolverDocuments(private val context: Context, private val warningLog: WarningLog) :
+    Documents {
+    override suspend fun save(destination: DocumentUri, content: suspend () -> ByteArray?) =
+        context.contentResolver.saveDocument(destination, warningLog, content)
+
+    override fun open(source: DocumentUri): Source = context.contentResolver.openDocument(source)
+}
+
 /**
  * Writes [content] to [destination], a document the scout chose with the system file picker,
- * replacing what it held. The content is made before the destination is opened, which empties
- * it, so content that can't be made leaves a file the scout chose to replace as it was. So
- * does no content (null), such as a report on a badge that was just cleared, which writes
- * nothing.
- *
- * Throws what making the content throws, or an [IOException] if the document can't be opened
- * or written. Either way, it doesn't leave behind the empty document the file picker made, or
- * one that opening emptied. If that can't be deleted, or its size can't be read, that's
- * written to [warningLog].
+ * as [Documents.save] describes. If the document that failed can't be deleted, or its size
+ * can't be read, that's written to [warningLog].
  */
 suspend fun ContentResolver.saveDocument(
     destination: Uri,

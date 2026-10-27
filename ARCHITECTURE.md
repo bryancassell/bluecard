@@ -539,7 +539,7 @@ fails the build for a missing dependency, as Hilt did.
 
 ## Package layout
 
-`:app` and `:shared` use the same packages. `:shared`'s code is all in
+`:app` and `:shared` use the same packages. `:shared`'s UI layer is in
 `androidMain` until [#345](https://github.com/bryancassell/bluecard/issues/345)
 moves it to common code.
 
