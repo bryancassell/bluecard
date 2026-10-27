@@ -12,6 +12,7 @@ import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
+import io.github.bryancassell.bluecard.data.progress.Converters
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.SetAsideDamagedDatabaseDriver
@@ -57,11 +58,18 @@ internal object LogcatWarningLog : WarningLog {
 private fun progressDatabase(
     context: Context,
     damagedProgress: FileDamagedProgressRepository
-): BlueCardDatabase =
+): BlueCardDatabase {
+    val driver = SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress)
     // Built by the constructor Room generates, as on iOS, rather than found by reflection.
-    Room.databaseBuilder(context, BlueCardDatabase.NAME, BlueCardDatabaseConstructor::initialize)
-        .setDriver(SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress))
+    return Room.databaseBuilder(
+        context,
+        BlueCardDatabase.NAME,
+        BlueCardDatabaseConstructor::initialize
+    )
+        .setDriver(driver)
+        .addColumnTypeConverter(Converters(driver::recordUnreadableValue))
         .build()
+}
 
 // One for the app: DataStore allows only one instance per file in a process.
 private fun profileDataStore(

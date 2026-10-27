@@ -114,7 +114,7 @@ class FileDamagedProgressRepository(
     }
 
     /**
-     * Records that SQLite found the database damaged while it was open, so it's set aside the
+     * Records that the database was found damaged while it was open, so it's set aside the
      * next time the app opens it ([SetAsideDamagedDatabaseDriver]), unless the database is
      * written after the record ([isDamageRecorded]). If that can't be recorded, such as on a full
      * disk, the next launch has only its check to find the damage. Damage the check misses then
