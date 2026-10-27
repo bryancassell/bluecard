@@ -3,7 +3,7 @@ package io.github.bryancassell.bluecard.data.progress
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Progress set aside because SQLite found the database damaged, and whether the scout has been
+ * Progress set aside because the database was found damaged, and whether the scout has been
  * told (#70).
  */
 interface DamagedProgressRepository {

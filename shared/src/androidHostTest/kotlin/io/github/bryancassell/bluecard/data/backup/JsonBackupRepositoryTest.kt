@@ -25,6 +25,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
+import io.github.bryancassell.bluecard.data.progress.Converters
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -519,6 +520,7 @@ class JsonBackupRepositoryTest {
             BlueCardDatabaseConstructor::initialize
         )
             .setDriver(BundledSQLiteDriver())
+            .addColumnTypeConverter(Converters {})
             .build()
             .also { databases += it }
         return RoomProgressRepository(database, roomScope)
