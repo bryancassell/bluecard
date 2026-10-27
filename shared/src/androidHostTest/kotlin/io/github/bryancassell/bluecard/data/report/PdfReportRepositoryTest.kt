@@ -9,6 +9,7 @@ import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
@@ -112,6 +113,7 @@ class PdfReportRepositoryTest {
         externalScope: CoroutineScope = this.externalScope
     ) = PdfReportRepository(
         context,
+        ContentResolverDocuments(context, warningLog, ioDispatcher),
         catalogRepository,
         progressRepository,
         profileRepository,

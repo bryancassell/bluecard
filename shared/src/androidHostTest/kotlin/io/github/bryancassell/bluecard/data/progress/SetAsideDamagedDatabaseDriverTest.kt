@@ -49,7 +49,8 @@ class SetAsideDamagedDatabaseDriverTest {
         InstrumentationRegistry.getInstrumentation(),
         file,
         BundledSQLiteDriver(),
-        BlueCardDatabase::class
+        BlueCardDatabase::class,
+        BlueCardDatabaseConstructor::initialize
     )
 
     private val warningLog = FakeWarningLog()
@@ -70,11 +71,14 @@ class SetAsideDamagedDatabaseDriverTest {
     /** The driver as a new app run gets it. */
     private fun newDriver() = SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress)
 
-    private fun open(driver: SQLiteDriver = newDriver()) =
-        Room.databaseBuilder(context, BlueCardDatabase::class.java, BlueCardDatabase.NAME)
-            .setDriver(driver)
-            .build()
-            .also { databases += it }
+    private fun open(driver: SQLiteDriver = newDriver()) = Room.databaseBuilder(
+        context,
+        BlueCardDatabase.NAME,
+        BlueCardDatabaseConstructor::initialize
+    )
+        .setDriver(driver)
+        .build()
+        .also { databases += it }
 
     private suspend fun BlueCardDatabase.readProgress() = progressDao().observeAll().first()
 

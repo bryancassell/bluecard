@@ -5,10 +5,13 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import okio.Source
 import okio.source
 
@@ -16,11 +19,19 @@ private const val TAG = "Documents"
 
 actual typealias DocumentUri = Uri
 
-/** [Documents] through the content resolver, so they reach any document the scout picks. */
-class ContentResolverDocuments(private val context: Context, private val warningLog: WarningLog) :
-    Documents {
+/**
+ * [Documents] through the content resolver, so they reach any document the scout picks. Saving
+ * switches to [ioDispatcher], since it waits on the document's provider, such as a cloud drive.
+ */
+class ContentResolverDocuments(
+    private val context: Context,
+    private val warningLog: WarningLog,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
+) : Documents {
     override suspend fun save(destination: DocumentUri, content: suspend () -> ByteArray?) =
-        context.contentResolver.saveDocument(destination, warningLog, content)
+        withContext(ioDispatcher) {
+            context.contentResolver.saveDocument(destination, warningLog, content)
+        }
 
     override fun open(source: DocumentUri): Source = context.contentResolver.openDocument(source)
 }
@@ -30,7 +41,7 @@ class ContentResolverDocuments(private val context: Context, private val warning
  * as [Documents.save] describes. If the document that failed can't be deleted, or its size
  * can't be read, that's written to [warningLog].
  */
-suspend fun ContentResolver.saveDocument(
+private suspend fun ContentResolver.saveDocument(
     destination: Uri,
     warningLog: WarningLog,
     content: suspend () -> ByteArray?
@@ -64,7 +75,7 @@ suspend fun ContentResolver.saveDocument(
  * when one is opened to write ([openForWriting]), the app that holds it can refuse with an
  * exception that isn't an IOException, which is reported as one.
  */
-fun ContentResolver.openDocument(source: Uri): Source = try {
+private fun ContentResolver.openDocument(source: Uri): Source = try {
     openInputStream(source)
 } catch (e: RuntimeException) {
     throw IOException("Couldn't open $source", e)

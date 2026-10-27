@@ -29,6 +29,16 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
+    // With Android as the only target, the compiler lets common code call Android and JVM APIs.
+    // With iOS's targets too, compileCommonMainKotlinMetadata refuses them, and needs no Xcode,
+    // so CI runs it with -Pbluecard.checkCommonCode. The targets are declared only then: built
+    // always, they'd make `build` link and run tests on an iOS simulator, which needs Xcode. #346
+    // declares them for good.
+    if (providers.gradleProperty("bluecard.checkCommonCode").isPresent) {
+        iosArm64()
+        iosSimulatorArm64()
+    }
+
     android {
         namespace = "io.github.bryancassell.bluecard.shared"
         compileSdk = libs.versions.android.compileSdk.get().toInt()

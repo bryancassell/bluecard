@@ -75,10 +75,11 @@ Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
 **Common code** (`shared/src/commonMain/kotlin/`), which iOS will run too.
 While Android is `:shared`'s only target, the compiler lets common code call
 Android and JVM APIs, which would fail only once
-[#346](https://github.com/bryancassell/bluecard/issues/346) adds iOS. To check
-a change, add `iosArm64()` and `iosSimulatorArm64()` to the `kotlin` block in
-`shared/build.gradle.kts`, run `./gradlew :shared:compileCommonMainKotlinMetadata`,
-and take them out again. It doesn't need Xcode.
+[#346](https://github.com/bryancassell/bluecard/issues/346) builds for iOS. CI
+checks it with
+`./gradlew -Pbluecard.checkCommonCode :shared:compileCommonMainKotlinMetadata`,
+which declares iOS's targets for that build only and needs no Xcode. Run it
+before pushing a change to common code.
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
@@ -642,7 +643,8 @@ the checks have run on what `main` will have after the merge; if `main` has
 moved, merge it into the branch and wait for the checks again:
 
 - **Build** runs `./gradlew build`, the same command as locally, then checks
-  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged.
+  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged and
+  that common code builds for iOS.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to

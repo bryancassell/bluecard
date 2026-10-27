@@ -26,6 +26,7 @@ import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
+import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
@@ -131,7 +132,7 @@ class JsonBackupRepositoryTest {
         ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
         externalScope: CoroutineScope = this.externalScope
     ) = JsonBackupRepository(
-        ContentResolverDocuments(context, FakeWarningLog()),
+        ContentResolverDocuments(context, FakeWarningLog(), ioDispatcher),
         catalogRepository,
         profileRepository,
         progressRepository,
@@ -526,7 +527,10 @@ class JsonBackupRepositoryTest {
     }
 
     private fun roomProgressRepository(): RoomProgressRepository {
-        val database = Room.inMemoryDatabaseBuilder(context, BlueCardDatabase::class.java)
+        val database = Room.inMemoryDatabaseBuilder(
+            context,
+            BlueCardDatabaseConstructor::initialize
+        )
             .setDriver(BundledSQLiteDriver())
             .build()
             .also { databases += it }

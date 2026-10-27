@@ -1,8 +1,9 @@
 package io.github.bryancassell.bluecard.data.report
 
 import android.content.Context
-import android.net.Uri
 import androidx.core.content.FileProvider
+import io.github.bryancassell.bluecard.data.DocumentUri
+import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -11,7 +12,6 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
-import io.github.bryancassell.bluecard.data.saveDocument
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
@@ -45,6 +45,7 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
  */
 class PdfReportRepository(
     private val context: Context,
+    private val documents: Documents,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val profileRepository: ProfileRepository,
@@ -58,7 +59,7 @@ class PdfReportRepository(
 ) : ReportRepository {
     private val fileSystem = FileSystem.SYSTEM
 
-    override suspend fun createReportToShare(advancementId: String): Uri? =
+    override suspend fun createReportToShare(advancementId: String): DocumentUri? =
         withContext(ioDispatcher) {
             val report = report(advancementId) ?: return@withContext null
             val pages = layOut(report)
@@ -80,17 +81,17 @@ class PdfReportRepository(
             FileProvider.getUriForFile(context, fileProviderAuthority(context), file.toFile())
         }
 
-    override suspend fun saveReport(advancementId: String, destination: Uri) =
+    override suspend fun saveReport(advancementId: String, destination: DocumentUri) =
         externalScope.runOutlivingCaller {
             withContext(ioDispatcher) { save(advancementId, destination) }
         }
 
     /**
-     * Writes the report to [destination] ([saveDocument]), or nothing when there's no report
+     * Writes the report to [destination] ([Documents.save]), or nothing when there's no report
      * ([report]), as when the badge or rank was just cleared.
      */
-    private suspend fun save(advancementId: String, destination: Uri) =
-        context.contentResolver.saveDocument(destination, warningLog) {
+    private suspend fun save(advancementId: String, destination: DocumentUri) =
+        documents.save(destination) {
             report(advancementId)?.let { report ->
                 val pages = layOut(report)
                 Buffer().also { pdfWriter.write(pages, it) }.readByteArray()
