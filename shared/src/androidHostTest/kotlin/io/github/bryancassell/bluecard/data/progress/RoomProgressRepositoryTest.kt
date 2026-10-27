@@ -271,6 +271,17 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertEquals(noCode, error)
     }
 
+    // Half an emoji, as pasted or imported. Unescaped, SQLite joined it with the closing quote.
+    @Test
+    fun trackerValueWithALoneSurrogate_readsBackAsSaved() = runTest {
+        val values = mapOf("Notes" to "Trail \uD83D", "Place" to "\uDC22 camp 🏕")
+
+        repository.addTrackerEntry("archery", "9a", null, values, start.startedDate, start)
+
+        val stored = repository.observeProgress("archery").first()!!.trackerEntries.single()
+        assertEquals(values, stored.values)
+    }
+
     @Test
     fun writing_whenSomethingOtherThanSQLiteFails_throwsTheBugUnwrapped() = runTest {
         val bug = IllegalArgumentException("Test failure")

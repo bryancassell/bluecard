@@ -39,6 +39,43 @@ class ConvertersTest {
         assertEquals(emptyList<IllegalArgumentException>(), unreadable)
     }
 
+    // A value these can't read sets aside all the scout's progress, so a library update that
+    // can't read what it wrote must fail here first.
+    @Test
+    fun unusualDates_areReadBack() {
+        val dates = listOf(LocalDate(1, 1, 1), LocalDate(9999, 12, 31), LocalDate(2028, 2, 29))
+
+        val readBack = dates.map { converters.stringToLocalDate(converters.localDateToString(it)) }
+
+        assertEquals(dates, readBack)
+        assertEquals(emptyList<IllegalArgumentException>(), unreadable)
+    }
+
+    @Test
+    fun unusualTrackerValues_areReadBack() {
+        val values = mapOf(
+            "Quotes" to "\"a\" \\ b / c",
+            "Control" to "line\nbreak\ttab\r\u0000\u001f",
+            "Non-ASCII" to "Café Ñandú 日本 ‏",
+            "Emoji" to "🏕️ 👨‍👧",
+            "Lone surrogates" to "\uD83D \uDC22 \uD83D🏕 \uDFD5\uDFD5 \uD83D",
+            "" to "",
+            "{\"key\": [1]}" to "{}"
+        )
+
+        val readBack = converters.jsonToMap(converters.mapToJson(values))
+
+        assertEquals(values, readBack)
+        assertEquals(emptyList<IllegalArgumentException>(), unreadable)
+    }
+
+    @Test
+    fun loneSurrogates_areStoredEscaped_andPairsAsTheyAre() {
+        val stored = converters.mapToJson(mapOf("Notes" to "\uD83D \uDC22 🏕"))
+
+        assertEquals("""{"Notes":"\ud83d \udc22 ${"🏕"}"}""", stored)
+    }
+
     // The issue's example: a byte changed by storage, in a page SQLite still finds valid.
     @Test
     fun dateThatCantBeRead_isReported_andThrown() {

@@ -9,7 +9,7 @@ import okio.FileSystem
 import okio.Path.Companion.toPath
 
 /**
- * Opens Room's database with [driver], except that a database SQLite finds damaged is set aside
+ * Opens Room's database with [driver], except that a damaged database is set aside
  * ([FileDamagedProgressRepository.setAside]) rather than used (#70).
  *
  * The first time Room opens a connection in each app run, the database is checked on a

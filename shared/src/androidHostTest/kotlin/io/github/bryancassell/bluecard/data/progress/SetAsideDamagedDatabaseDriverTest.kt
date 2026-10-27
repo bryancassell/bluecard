@@ -36,8 +36,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Opens the database as the app does, on files damaged as SQLite finds them, with the SQLite the
- * app bundles.
+ * Opens the database as the app does, on files damaged as SQLite finds them or with values
+ * [Converters] can't read, with the SQLite the app bundles.
  */
 @RunWith(AndroidJUnit4::class)
 class SetAsideDamagedDatabaseDriverTest {
