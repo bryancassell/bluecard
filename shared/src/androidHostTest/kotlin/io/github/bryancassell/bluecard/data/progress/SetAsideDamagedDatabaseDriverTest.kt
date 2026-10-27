@@ -190,16 +190,18 @@ class SetAsideDamagedDatabaseDriverTest {
             "Expected the date's error, got $error",
             error is IllegalArgumentException
         )
-        // Even a statement that reads nothing fails after that, so nothing more is saved.
+        // Even a statement that reads nothing fails after that, so nothing more is saved. It fails
+        // as SQLite's damage does, which Room's InvalidationTracker catches.
         val next = runCatching {
             database.useReaderConnection { it.usePrepared("SELECT 1") { select -> select.step() } }
         }.exceptionOrNull()
         assertTrue(
-            "Expected the same error, got $next",
-            next is IllegalArgumentException && next.message == error?.message
+            "Expected damage caused by the date's error, got $next",
+            next is SQLiteException && next.isDamage() && next.cause?.message == error?.message
         )
         assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
         assertEquals(emptyList<File>(), copies())
+        assertFalse(damagedProgress.observeNoticePending().first())
 
         database.close()
         val progress = open().readProgress()
@@ -207,6 +209,7 @@ class SetAsideDamagedDatabaseDriverTest {
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertArrayEquals(damaged, setAside().readBytes())
         assertTrue(damagedProgress.observeNoticePending().first())
+        assertFalse(damagedProgress.isDamageRecorded(file.toOkioPath()))
     }
 
     @Test

@@ -24,7 +24,7 @@ import okio.Path.Companion.toPath
  * it as a bug, so the app crashes, and the next run sets the database aside even if the check
  * passes, unless the database is written after the record
  * ([FileDamagedProgressRepository.isDamageRecorded]). Otherwise damage the check misses would
- * crash every run. Every statement after that fails with the same error, so nothing more is
+ * crash every run. Every statement after that fails with the damage error, so nothing more is
  * saved into a database that will be set aside, even where Room catches the first error, as its
  * InvalidationTracker does (Room 3.0.3).
  *
@@ -44,7 +44,7 @@ class SetAsideDamagedDatabaseDriver(
 
     // The damage found while the database is open, which every statement after it fails with.
     @Volatile
-    private var damage: Exception? = null
+    private var damage: SQLiteException? = null
 
     override fun open(fileName: String): SQLiteConnection {
         setAsideIfDamaged(fileName)
@@ -111,8 +111,13 @@ class SetAsideDamagedDatabaseDriver(
      * Records [error], from a stored value [Converters] couldn't read, as damage found while the
      * database is open. `PRAGMA quick_check` doesn't find it, so the record is what sets the
      * database aside at the next launch.
+     *
+     * Later statements fail with SQLITE_CORRUPT, as for damage SQLite finds, caused by [error].
+     * Room's InvalidationTracker catches only a SQLiteException (`notifyInvalidation`, Room
+     * 3.0.3), so [error] itself would crash the app from Room's own coroutine scope as well.
      */
-    fun recordUnreadableValue(error: IllegalArgumentException) = record(error)
+    fun recordUnreadableValue(error: IllegalArgumentException) =
+        record(SQLiteException("Error code: $SQLITE_CORRUPT, message: unreadable value", error))
 
     private inline fun <T> recordingDamage(action: () -> T): T {
         damage?.let { throw it }
@@ -124,9 +129,11 @@ class SetAsideDamagedDatabaseDriver(
         }
     }
 
-    private fun record(error: Exception) {
-        damagedProgress.recordDamage()
+    // Statements stop first, so no commit starts while the record is written, which a checkpoint
+    // could leave the database newer than (isDamageRecorded).
+    private fun record(error: SQLiteException) {
         damage = error
+        damagedProgress.recordDamage()
     }
 
     private inner class DamageRecordingConnection(private val connection: SQLiteConnection) :

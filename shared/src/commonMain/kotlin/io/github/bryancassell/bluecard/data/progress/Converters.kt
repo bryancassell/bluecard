@@ -11,9 +11,12 @@ import kotlinx.serialization.json.Json
  * A stored value these can't read back is damage, and goes to [onUnreadableValue] before the
  * error is thrown (#363). The app stores only what these write, which SQLite keeps as it is
  * ([mapToJson]), and SQLite's journal keeps a write from being left half done, so only storage
- * that changed a cell's bytes can cause it. A library update that couldn't read what an earlier
- * version wrote would look the same, so ConvertersTest reads back unusual values too.
- * `PRAGMA quick_check` checks the database's structure, not what a cell holds, so it doesn't find
+ * that changed a cell's bytes can cause it. The exception is tracker values with half an emoji
+ * saved before [mapToJson] escaped it, which are set aside too, rather than guessed at: what
+ * SQLite made of one is also a real emoji. A library update that couldn't read what an earlier
+ * version wrote, or a migration that wrote a value these can't read, would look the same, so
+ * ConvertersTest reads back unusual values, and each MigrationTest reads its rows back through
+ * Room. `PRAGMA quick_check` checks the database's structure, not what a cell holds, so it doesn't find
  * it. On Android, the driver records it, as it does damage SQLite finds while reading, so the
  * next launch sets the database aside. Otherwise the error would crash the app at every launch,
  * since Home reads all the progress. Since it takes a parameter, Room can't make it, so each
@@ -52,15 +55,21 @@ class Converters(private val onUnreadableValue: (IllegalArgumentException) -> Un
 }
 
 // In JSON, a lone surrogate can only be inside a string, where \uXXXX stands for it.
-private fun String.escapingLoneSurrogates() = buildString {
-    val text = this@escapingLoneSurrogates
-    for ((i, char) in text.withIndex()) {
-        val paired = (char.isHighSurrogate() && text.getOrNull(i + 1)?.isLowSurrogate() == true) ||
-            (char.isLowSurrogate() && text.getOrNull(i - 1)?.isHighSurrogate() == true)
-        if (char.isSurrogate() && !paired) {
-            append("\\u").append(char.code.toString(16).padStart(4, '0'))
-        } else {
-            append(char)
+private fun String.escapingLoneSurrogates(): String {
+    if (none { it.isSurrogate() }) return this
+    val text = this
+    return buildString {
+        var i = 0
+        while (i < text.length) {
+            val char = text[i++]
+            when {
+                char.isHighSurrogate() && text.getOrNull(i)?.isLowSurrogate() == true ->
+                    append(char).append(text[i++])
+
+                char.isSurrogate() -> append("\\u").append(char.code.toString(16).padStart(4, '0'))
+
+                else -> append(char)
+            }
         }
     }
 }
