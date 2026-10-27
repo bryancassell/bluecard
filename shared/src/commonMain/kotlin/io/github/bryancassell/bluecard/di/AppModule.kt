@@ -23,6 +23,7 @@ import io.github.bryancassell.bluecard.ui.ranks.RanksViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -31,10 +32,7 @@ import org.koin.plugin.module.dsl.create
 import org.koin.plugin.module.dsl.single
 import org.koin.plugin.module.dsl.viewModel
 
-/**
- * What the app is built from, apart from what needs Android to build ([androidModule]). It's in
- * common code once the ViewModels it lists are (#345).
- */
+/** What the app is built from, apart from what needs Android to build (`androidModule`). */
 val appModule = module {
     // Classes take the dispatcher instead of using Dispatchers directly, so tests can swap in a
     // test dispatcher.

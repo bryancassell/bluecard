@@ -2,19 +2,14 @@ package io.github.bryancassell.bluecard.ui
 
 import android.app.Application
 import android.content.ActivityNotFoundException
-import android.content.Intent
 import androidx.activity.compose.LocalActivityResultRegistryOwner
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.core.app.ActivityOptionsCompat
-import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -36,11 +31,11 @@ class OtherAppStarterTest {
     val composeTestRule = createComposeRule()
 
     private val application = ApplicationProvider.getApplicationContext<Application>()
-    private val link = Intent(Intent.ACTION_VIEW, "https://www.scouting.org/".toUri())
+    private val url = "https://www.scouting.org/"
     private val noApp = "No app on this phone can open the link."
 
     private lateinit var startOtherApp: OtherAppStarter
-    private lateinit var picker: ActivityResultLauncher<String>
+    private lateinit var picker: DocumentPicker<String>
     private var doubleTapTimeoutMillis = 0L
 
     /** The inputs the file picker was launched with. */
@@ -72,19 +67,21 @@ class OtherAppStarterTest {
             CompositionLocalProvider(
                 LocalActivityResultRegistryOwner provides resultRegistryOwner
             ) {
-                picker = rememberLauncherForActivityResult(CreateDocument("application/pdf")) {}
+                picker = rememberCreateDocument("application/pdf") {}
             }
         }
     }
 
-    private fun start() = composeTestRule.runOnIdle { startOtherApp(link, noApp) }
+    private fun start() = composeTestRule.runOnIdle {
+        startOtherApp.start(noApp) { openWebPage(url) }
+    }
 
     private fun launchPicker() = composeTestRule.runOnIdle {
         startOtherApp.launch(picker, "report.pdf", noApp)
     }
 
     private fun assertStartedOnce() {
-        assertEquals(link.dataString, shadowOf(application).nextStartedActivity?.dataString)
+        assertEquals(url, shadowOf(application).nextStartedActivity?.dataString)
         assertNull(shadowOf(application).nextStartedActivity)
     }
 

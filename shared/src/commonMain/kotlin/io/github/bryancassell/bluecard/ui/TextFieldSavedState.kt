@@ -1,11 +1,12 @@
 package io.github.bryancassell.bluecard.ui
 
-import android.os.Bundle
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.core.os.bundleOf
 import androidx.lifecycle.SavedStateHandle
+import androidx.savedstate.SavedState
+import androidx.savedstate.read
+import androidx.savedstate.savedState
 
 /**
  * A text field's state whose text is kept if the system stops the app: it starts with the text
@@ -16,12 +17,12 @@ fun SavedStateHandle.textFieldState(key: String): TextFieldState =
 
 /**
  * The text [keepText] kept under [key] when the system stopped the app, or null if none.
- * A value under [key] that isn't the kind of Bundle [keepText] keeps is ignored. This is a
+ * A value under [key] that isn't the kind of [SavedState] [keepText] keeps is ignored. This is a
  * backstop: MainActivity keeps the extras of the intent that opened the app out of the
  * [SavedStateHandle]s BlueCard creates, but one created another way could still get them.
  */
 fun SavedStateHandle.restoredText(key: String): String? =
-    (get<Any?>(key) as? Bundle)?.getString(TEXT)
+    (get<Any?>(key) as? SavedState)?.read { getStringOrNull(TEXT) }
 
 /**
  * Keeps [state]'s text under [key] if the system stops the app. The text is read each time the
@@ -30,7 +31,7 @@ fun SavedStateHandle.restoredText(key: String): String? =
  * stack, so a change made after that isn't kept.
  */
 fun SavedStateHandle.keepText(key: String, state: TextFieldState) {
-    setSavedStateProvider(key) { bundleOf(TEXT to state.text.toString()) }
+    setSavedStateProvider(key) { savedState { putString(TEXT, state.text.toString()) } }
 }
 
 /**

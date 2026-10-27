@@ -1,7 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.text.TextUtils
-import android.view.View
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
@@ -320,17 +317,13 @@ private fun ColumnScope.DatePickerButtons(
 }
 
 /**
- * The direction of the language the picker shows its labels and dates in: the device's first
- * locale, which Material 3 reads from the configuration. The rest of the app is laid out in the
- * strings' language's direction instead.
+ * The direction of the language the picker shows its labels and dates in, which Material 3 takes
+ * from the device, not the strings. The rest of the app is laid out in the strings' language's
+ * direction instead.
  */
 @Composable
 @ReadOnlyComposable
-private fun pickerLayoutDirection(): LayoutDirection =
-    when (TextUtils.getLayoutDirectionFromLocale(LocalConfiguration.current.locales[0])) {
-        View.LAYOUT_DIRECTION_RTL -> LayoutDirection.Rtl
-        else -> LayoutDirection.Ltr
-    }
+internal expect fun pickerLayoutDirection(): LayoutDirection
 
 /** Dates up to [today]: nothing the scout records can be done in the future. */
 private class NotAfter(private val today: LocalDate) : SelectableDates {

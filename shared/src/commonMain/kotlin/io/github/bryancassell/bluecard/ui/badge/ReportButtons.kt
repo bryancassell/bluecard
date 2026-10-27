@@ -1,10 +1,5 @@
 package io.github.bryancassell.bluecard.ui.badge
 
-import android.content.ClipData
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.OutlinedButton
@@ -14,14 +9,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.report.reportFileName
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_save_report
 import io.github.bryancassell.bluecard.resources.badge_detail_share_report
 import io.github.bryancassell.bluecard.resources.no_file_saver
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
+import io.github.bryancassell.bluecard.ui.rememberCreateDocument
+import io.github.bryancassell.bluecard.ui.rememberOtherApps
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -38,14 +35,11 @@ private const val PDF = "application/pdf"
 fun ReportButtons(
     fileName: String,
     onShare: () -> Unit,
-    onSave: (destination: Uri) -> Unit,
+    onSave: (destination: DocumentUri) -> Unit,
     startOtherApp: OtherAppStarter,
     modifier: Modifier = Modifier
 ) {
-    val createDocument = rememberLauncherForActivityResult(CreateDocument(PDF)) { destination ->
-        // Null when the scout leaves the file picker without saving.
-        destination?.let(onSave)
-    }
+    val createDocument = rememberCreateDocument(PDF, onCreated = onSave)
     val noFilePicker = stringResource(Res.string.no_file_saver)
     // Wraps the buttons onto two lines when they don't fit on one, as with large text.
     FlowRow(
@@ -81,26 +75,11 @@ private fun ReportButton(text: StringResource, onClick: () -> Unit) {
  * page shows again. Going back from the page clears its ViewModel, and the report with it.
  */
 @Composable
-fun ShareReport(report: Uri, onShared: () -> Unit) {
-    val context = LocalContext.current
+fun ShareReport(report: DocumentUri, onShared: () -> Unit) {
+    val otherApps = rememberOtherApps()
     val currentOnShared by rememberUpdatedState(onShared)
     LaunchedEffect(report) {
-        context.startActivity(shareIntent(report))
+        otherApps.share(report, PDF)
         currentOnShared()
     }
-}
-
-/**
- * The share sheet, to send [report] to the app the scout picks. The clip data lets the share
- * sheet show the file, and the flag grants the app picked permission to read it:
- * https://developer.android.com/training/sharing/send#adding-rich-content-previews
- */
-private fun shareIntent(report: Uri): Intent {
-    val send = Intent(Intent.ACTION_SEND).apply {
-        type = PDF
-        putExtra(Intent.EXTRA_STREAM, report)
-        clipData = ClipData.newRawUri(null, report)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-    return Intent.createChooser(send, null)
 }

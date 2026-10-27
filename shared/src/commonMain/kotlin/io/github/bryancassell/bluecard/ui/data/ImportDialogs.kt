@@ -25,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -34,9 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -44,10 +41,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badges_completed
@@ -134,19 +127,10 @@ fun MergeDialog(
     val close: () -> Unit = {
         if (choices.anyFromFile) confirmingDiscard = true else onDismiss()
     }
-    Dialog(
-        onDismissRequest = close,
-        // Drawn behind the system bars, as the app's window is, rather than leaving them over
-        // the dimmed page below. Its status bar takes its top row's color, with no band as pages
-        // have: the top row already keeps the list, which scrolls under it, clear of the clock,
-        // and shares its color with the status bar, as Material's top app bar does before a page
-        // scrolls under it.
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
-    ) {
-        UseSystemBarIconsForTheme()
+    // Its status bar takes its top row's color, with no band as pages have: the top row already
+    // keeps the list, which scrolls under it, clear of the clock, and shares its color with the
+    // status bar, as Material's top app bar does before a page scrolls under it.
+    FullScreenDialog(onDismissRequest = close) {
         Surface(modifier = Modifier.fillMaxSize()) {
             IgnoreTouchesAsItOpens {
                 Column(modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -195,24 +179,13 @@ fun MergeDialog(
 }
 
 /**
- * Gives a full-screen dialog's system bars icons that show on its page: dark on the light page,
- * light on the dark one, as enableEdgeToEdge() chooses for MainActivity's. Android takes the
- * icons from the top full-screen window, which is the dialog's, and that window doesn't get
- * MainActivity's: on Android 8 its navigation bar icons were white on the light page (#299). The
- * window draws no bar backgrounds, so the dialog's own page, its surface color, shows behind the
- * bars.
+ * A dialog that fills the window, drawn behind the system bars, as the app's window is, rather
+ * than leaving them over the dimmed page below. Its [content] must keep clear of them itself, as
+ * with `windowInsetsPadding(WindowInsets.safeDrawing)`. Closing it, as with Back, calls
+ * [onDismissRequest].
  */
 @Composable
-private fun UseSystemBarIconsForTheme() {
-    val window = (LocalView.current.parent as DialogWindowProvider).window
-    val light = MaterialTheme.colorScheme.surface.luminance() > 0.5f
-    SideEffect {
-        WindowCompat.getInsetsController(window, window.decorView).run {
-            isAppearanceLightStatusBars = light
-            isAppearanceLightNavigationBars = light
-        }
-    }
-}
+internal expect fun FullScreenDialog(onDismissRequest: () -> Unit, content: @Composable () -> Unit)
 
 /**
  * Ignores touches on [content] for the double-tap timeout after it opens, so the second tap of a

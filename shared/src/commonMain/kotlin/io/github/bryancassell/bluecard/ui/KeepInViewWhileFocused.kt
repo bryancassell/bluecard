@@ -5,10 +5,6 @@ import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imeAnimationTarget
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
@@ -21,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.filterIsInstance
 
@@ -34,9 +29,6 @@ import kotlinx.coroutines.flow.filterIsInstance
  * matters more than Save, which is a scroll away. Scrolling keeps the page laid out as before; a
  * bar fixed above the keyboard would have taken room from the fields while typing.
  */
-// imeAnimationTarget is experimental, and the only way to tell the keyboard is still moving. A
-// change to it would fail the build when Compose is updated.
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun KeepInViewWhileFocused(scrollState: ScrollState, content: @Composable ColumnScope.() -> Unit) {
     val requester = remember { BringIntoViewRequester() }
@@ -44,9 +36,7 @@ fun KeepInViewWhileFocused(scrollState: ScrollState, content: @Composable Column
     var height by remember { mutableIntStateOf(0) }
     // Read here, they recompose only this function on each frame as the keyboard moves.
     val viewportHeight = scrollState.viewportSize
-    val density = LocalDensity.current
-    val keyboardMoving =
-        WindowInsets.ime.getBottom(density) != WindowInsets.imeAnimationTarget.getBottom(density)
+    val keyboardMoving = isKeyboardMoving()
     // The viewport's height when the keyboard last stopped, and whether a request is owed: focus
     // came in, or the last request is still running or was cut short by a change here, such as
     // the keyboard starting to move. Not read in composition, so changing them doesn't recompose.
@@ -92,3 +82,10 @@ fun KeepInViewWhileFocused(scrollState: ScrollState, content: @Composable Column
         content = content
     )
 }
+
+/**
+ * Whether the keyboard is opening or closing, read so that the caller recomposes on each frame
+ * as it moves.
+ */
+@Composable
+internal expect fun isKeyboardMoving(): Boolean

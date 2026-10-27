@@ -1,7 +1,6 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.activity.OnBackPressedDispatcher
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -19,9 +18,12 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.SinglePaneSceneStrategy
-import androidx.navigation3.scene.rememberNavigationEventState
+import androidx.navigation3.scene.rememberNavigationEventState as rememberSceneNavigationEventState
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import org.junit.Assert.assertEquals
@@ -63,7 +65,10 @@ class UnsavedChangesByPageTest {
             }
             // Always on, unlike the app's, so a Back before the next frame reaches it after a
             // page opens from Home.
-            BackHandler(onBack = goBack)
+            NavigationBackHandler(
+                state = rememberNavigationEventState(NavigationEventInfo.None),
+                onBackCompleted = goBack
+            )
             val sceneState = rememberSceneState(
                 entries = rememberDecoratedNavEntries(
                     backStack = backStack,
@@ -78,7 +83,7 @@ class UnsavedChangesByPageTest {
             )
             NavDisplay(
                 sceneState = sceneState,
-                navigationEventState = rememberNavigationEventState(sceneState)
+                navigationEventState = rememberSceneNavigationEventState(sceneState)
             )
         }
     }

@@ -285,8 +285,9 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   creation extras: the activity's default factory would still pass it them.
 - **Pages slide side by side** (`ui/navigation/PageTransitions.kt`); why,
   against Material 3's advice, is in [`PRD.md`](PRD.md#design-decisions). The
-  navigation root handles Back with its own `BackHandler`, added before the
-  screens so that a handler a screen adds goes first (`BlueCardNavDisplay.kt`).
+  navigation root handles Back with its own `NavigationBackHandler`, added
+  before the screens so that a handler a screen adds goes first
+  (`BlueCardNavDisplay.kt`).
 - **The navigation root decides whether Back asks before discarding unsaved
   changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
   arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no
@@ -436,8 +437,8 @@ both taps of a double tap can reach it.
 - **A full-screen dialog sets its own system bar icons**, since its window
   doesn't get the ones `enableEdgeToEdge()` gives the activity's
   ([#299](https://github.com/bryancassell/bluecard/issues/299)). `MergeDialog`
-  calls `UseSystemBarIconsForTheme` (in `ui/data/ImportDialogs.kt`). Move it to
-  `ui/` when a second full-screen dialog needs it.
+  opens in `FullScreenDialog` (`ui/data/ImportDialogs.kt`), which sets them.
+  Move it to `ui/` when a second full-screen dialog needs it.
 - **Pick a color role that works in both schemes.** In the dark scheme the
   surface containers are lighter than the page, and `surfaceContainerLowest`
   is darker. A container that should stand out from the page, such as the
@@ -524,10 +525,8 @@ names, only works on Android, and code shared with iOS must work there too
 [compiler plugin](https://insert-koin.io/docs/reference/koin-compiler/compile-safety)
 fails the build for a missing dependency, as Hilt did.
 
-- **Two modules list every definition** (`di/`): `appModule`, with no Android
-  imports, for common code
-  ([#345](https://github.com/bryancassell/bluecard/issues/345)), and
-  `androidModule`, for what needs Android. Besides the repositories, they
+- **Two modules list every definition** (`di/`): `appModule`, in common code,
+  and `androidModule`, for what needs Android. Besides the repositories, they
   provide a dispatcher (`@IoDispatcher`), an app-lifetime `CoroutineScope`
   (`@ApplicationScope`), a `ZonedClock`, a `WarningLog`, `TextRules`,
   `PhoneNumberFormat` and `Documents`, the dispatcher, clock and log so tests
@@ -540,8 +539,12 @@ fails the build for a missing dependency, as Hilt did.
 ## Package layout
 
 `:app` and `:shared` use the same packages. `:shared`'s `androidMain` has only
-what needs Android, and the UI layer until
-[#345](https://github.com/bryancassell/bluecard/issues/345).
+what needs Android. Common code reaches it through interfaces that
+`androidModule` provides (see [Dependency injection](#dependency-injection)),
+or, for Compose calls, which Koin can't make, through `expect` declarations,
+such as `rememberOtherApps()`, as the
+[Kotlin docs](https://kotlinlang.org/docs/multiplatform/multiplatform-connect-to-apis.html)
+suggest for simple cases. Their `actual`s are in `.android.kt` files.
 
 ```
 io.github.bryancassell.bluecard
@@ -992,6 +995,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
 | [Persistence](#repositories) | Room 3 on `BundledSQLiteDriver` for progress; Preferences DataStore for the profile | The DataStore guide's criteria; the same SQLite on Android and iOS |
 | [Dependency injection](#dependency-injection) | Koin, with its compiler plugin | Works on iOS, unlike Hilt, and still checks the graph at build time |
+| [Platform code](#package-layout) | Interfaces from Koin; `expect` declarations for Compose calls | Koin can't make Compose calls; the Kotlin docs' approach for simple cases |
 | [Catalog](#merit-badge-catalog) | Our own summaries in a bundled JSON file, linking to official pages; no official images | Scouting America's terms of use and trademarks |
 | [Requirement versions](#requirement-versions) | Every shipped version stays; a started badge stays on its version until the scout switches | The advancement rules allow finishing on the previous requirements |
 | [Ranks](#ranks) | Ranks share badges' catalog types and progress tables | The badge machinery carries over with no schema change |

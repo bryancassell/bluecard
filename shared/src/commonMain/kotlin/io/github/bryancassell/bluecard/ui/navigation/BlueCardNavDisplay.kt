@@ -1,6 +1,5 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.foundation.focusGroup
 import androidx.compose.runtime.Composable
@@ -23,7 +22,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -32,10 +30,13 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.scene.SinglePaneSceneStrategy
-import androidx.navigation3.scene.rememberNavigationEventState
+import androidx.navigation3.scene.rememberNavigationEventState as rememberSceneNavigationEventState
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.defaultTransitionSpec
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
 import io.github.bryancassell.bluecard.ui.badge.EditCounselorRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
@@ -85,7 +86,11 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // releasing it plays Back's slide, or asks first on a page with unsaved changes. When the
     // pages followed the finger, a released swipe finished slowly beside opening a page, so the
     // swipe gives up predictive back's peek at the page underneath (#104).
-    BackHandler(enabled = shownBackStack.size > 1, onBack = goBack)
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = shownBackStack.size > 1,
+        onBackCompleted = goBack
+    )
     val decoratedEntries = rememberDecoratedNavEntries(
         backStack = shownBackStack,
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
@@ -222,7 +227,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     // leaves touch mode asks too. A focusable View before the ComposeView, to take Android's
     // request, would also take it when a key is pressed with nothing focused, and as the app
     // starts.
-    val view = LocalView.current
+    val runAfterCurrentEvent = rememberRunAfterCurrentEvent()
     var isTakingFocusBack by remember { mutableStateOf(false) }
     // Tab and Shift+Tab clear focus as they wrap around, asking onExit below first, and then move
     // into the page themselves.
@@ -239,7 +244,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     NavDisplay(
         sceneState = sceneState,
         // Nothing reports a back swipe to this state, so NavDisplay never plays one.
-        navigationEventState = rememberNavigationEventState(sceneState),
+        navigationEventState = rememberSceneNavigationEventState(sceneState),
         // Pages slide past the sides of their area. Clip them to it, so they don't draw under
         // a navigation bar or cutout at the side.
         modifier = modifier
@@ -269,7 +274,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
                 if (hasFocus && !it.hasFocus) {
                     if (!isWrapping) {
                         isTakingFocusBack = true
-                        view.post { isTakingFocusBack = false }
+                        runAfterCurrentEvent { isTakingFocusBack = false }
                     }
                     isWrapping = false
                 }
@@ -310,3 +315,10 @@ private fun AnimatedContentTransitionScope<Scene<NavKey>>.replacesBackStack(): B
 // In a SinglePaneScene, previousEntries are the entries under the one it shows.
 private val Scene<NavKey>.bottomEntry: NavEntry<NavKey>
     get() = previousEntries.firstOrNull() ?: entries.first()
+
+/**
+ * Runs a task once the event being handled now, such as a focus change, is done: after the main
+ * thread's current message on Android.
+ */
+@Composable
+internal expect fun rememberRunAfterCurrentEvent(): (task: () -> Unit) -> Unit
