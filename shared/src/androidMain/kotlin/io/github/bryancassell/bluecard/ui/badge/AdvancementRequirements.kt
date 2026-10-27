@@ -40,9 +40,13 @@ data class AdvancementRequirements<out A : Advancement>(
     fun item(requirement: Requirement) = requirement.toItem(
         recorded,
         trackerEntries,
-        partOfHasEnough = partOfHasEnough(requirement.number),
+        partOfHasEnough = partOfHasEnough(requirement.number, recorded),
         advancementCompletedOnPriorDate = completedOnPriorDate,
-        earnedBadges = earnedBadges
+        earnedBadges = earnedBadges,
+        partOfHasEnoughUnmarked = partOfHasEnough(
+            requirement.number,
+            recorded - requirement.number
+        )
     )
 
     /**
@@ -59,11 +63,14 @@ data class AdvancementRequirements<out A : Advancement>(
 
     /**
      * Whether a requirement that the one numbered [number] is part of, at any depth, has enough
-     * complete sub-requirements ([hasEnoughChildren]).
+     * complete sub-requirements ([hasEnoughChildren]) with [progress] recorded.
      */
-    private fun partOfHasEnough(number: String): Boolean = version.pathTo(number).orEmpty()
+    private fun partOfHasEnough(
+        number: String,
+        progress: Map<String, RequirementProgress>
+    ): Boolean = version.pathTo(number).orEmpty()
         .dropLast(1)
-        .any { it.hasEnoughChildren(recorded, trackerEntries, earnedBadges) }
+        .any { it.hasEnoughChildren(progress, trackerEntries, earnedBadges) }
 }
 
 /**

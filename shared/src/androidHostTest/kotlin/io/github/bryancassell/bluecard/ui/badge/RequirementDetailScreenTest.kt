@@ -496,6 +496,66 @@ class RequirementDetailScreenTest {
         composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
     }
 
+    // Ticking the own work completes the requirement. "Completed" shows above the checkbox, so
+    // its room is kept while it's empty, and the checkbox stays under the scout's finger.
+    @Test
+    fun checkingOwnWorkThatCompletesRequirement_leavesCheckboxWhereItIs() {
+        show(
+            withOwnWork.copy(
+                requirement = withOwnWork.requirement.copy(checkboxChangesStatus = true)
+            )
+        )
+        val ownWorkCheckbox = composeTestRule.onNode(hasText("Pack your gear.") and isToggleable())
+        val uncheckedTop = ownWorkCheckbox.getUnclippedBoundsInRoot().top
+        composeTestRule.onNodeWithText("Completed").assertDoesNotExist()
+
+        uiState = ownWorkDone.copy(
+            requirement = ownWorkDone.requirement.copy(
+                completed = true,
+                checkboxChangesStatus = true
+            )
+        )
+
+        composeTestRule.onNodeWithText("Completed").assertIsDisplayed()
+        assertEquals(uncheckedTop, ownWorkCheckbox.getUnclippedBoundsInRoot().top)
+    }
+
+    // Ticking a requirement that's no longer needed completes it, so "Not needed" goes, and its
+    // room is kept so the checkbox doesn't move up from under the scout's finger.
+    @Test
+    fun checkingRequirementNoLongerNeeded_leavesCheckboxWhereItIs() {
+        show(
+            leaf.copy(
+                requirement = leaf.requirement.copy(notNeeded = true, checkboxChangesStatus = true)
+            )
+        )
+        val checkbox = composeTestRule.onNode(hasText("Completed") and isToggleable())
+        val uncheckedTop = checkbox.getUnclippedBoundsInRoot().top
+
+        uiState = completedLeaf.copy(
+            requirement = completedLeaf.requirement.copy(checkboxChangesStatus = true)
+        )
+
+        composeTestRule.onNodeWithText("Not needed").assertDoesNotExist()
+        assertEquals(uncheckedTop, checkbox.getUnclippedBoundsInRoot().top)
+    }
+
+    // Only a checkbox that shows or hides the line has its room kept above it.
+    @Test
+    fun checkboxThatDoesNotChangeStatus_hasNoRoomKeptAboveIt() {
+        show(
+            completedLeaf.copy(
+                requirement = completedLeaf.requirement.copy(checkboxChangesStatus = true)
+            )
+        )
+        val checkbox = composeTestRule.onNode(hasText("Completed") and isToggleable())
+        val keptTop = checkbox.getUnclippedBoundsInRoot().top
+
+        uiState = completedLeaf
+
+        assertTrue(checkbox.getUnclippedBoundsInRoot().top < keptTop)
+    }
+
     @Test
     fun subRequirements_showNeededCountAndCompletion() {
         show(ready)

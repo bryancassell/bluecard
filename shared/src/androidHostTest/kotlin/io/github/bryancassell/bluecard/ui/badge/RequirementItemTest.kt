@@ -60,6 +60,42 @@ class RequirementItemTest {
         assertFalse(item.notNeeded)
     }
 
+    // Ticking it takes "Not needed" away, and unticking brings it back.
+    @Test
+    fun markedByHand_partOfRequirementWithEnoughWithoutIt_checkboxChangesStatus() {
+        val unticked = leaf.toItem(emptyMap(), emptyMap(), partOfHasEnough = true)
+        val ticked = leaf.toItem(
+            done("1"),
+            emptyMap(),
+            partOfHasEnough = true,
+            partOfHasEnoughUnmarked = true
+        )
+
+        assertTrue(unticked.checkboxChangesStatus)
+        assertTrue(ticked.checkboxChangesStatus)
+    }
+
+    // Its page shows neither "Completed" nor "Not needed", ticked or not.
+    @Test
+    fun markedByHand_stillNeeded_checkboxDoesNotChangeStatus() {
+        assertFalse(leaf.toItem(emptyMap(), emptyMap()).checkboxChangesStatus)
+        assertFalse(leaf.toItem(done("1"), emptyMap()).checkboxChangesStatus)
+    }
+
+    // Ticked, it gives the requirement it's part of enough. Unticked, that requirement doesn't
+    // have enough, so it's still needed.
+    @Test
+    fun markedByHand_givingRequirementEnough_checkboxDoesNotChangeStatus() {
+        val ticked = leaf.toItem(
+            done("1"),
+            emptyMap(),
+            partOfHasEnough = true,
+            partOfHasEnoughUnmarked = false
+        )
+
+        assertFalse(ticked.checkboxChangesStatus)
+    }
+
     @Test
     fun someOfItsSubRequirements_isChoiceWithSubRequirements() {
         assertEquals(
@@ -164,6 +200,39 @@ class RequirementItemTest {
 
         assertNull(complete.stillToDo)
         assertNull(notNeeded.stillToDo)
+    }
+
+    // With enough sub-requirements complete, ticking its own work completes it, and unticking
+    // takes that back.
+    @Test
+    fun enoughSubRequirements_ownWorkCheckboxChangesStatus() {
+        assertTrue(ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap()).checkboxChangesStatus)
+        assertTrue(
+            ownWorkAndTwoOfThree.toItem(done("2", "2a", "2c"), emptyMap()).checkboxChangesStatus
+        )
+        assertTrue(
+            ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap(), partOfHasEnough = true)
+                .checkboxChangesStatus
+        )
+    }
+
+    // Ticked or not, it isn't complete: it stays as it is, or "Not needed".
+    @Test
+    fun subRequirementsStillNeeded_ownWorkCheckboxDoesNotChangeStatus() {
+        assertFalse(ownWorkAndTwoOfThree.toItem(done("2a"), emptyMap()).checkboxChangesStatus)
+        assertFalse(ownWorkAndTwoOfThree.toItem(done("2", "2a"), emptyMap()).checkboxChangesStatus)
+        assertFalse(
+            ownWorkAndTwoOfThree.toItem(emptyMap(), emptyMap(), partOfHasEnough = true)
+                .checkboxChangesStatus
+        )
+    }
+
+    @Test
+    fun withoutCheckbox_checkboxDoesNotChangeStatus() {
+        assertFalse(twoOfThree.toItem(done("2a", "2c"), emptyMap()).checkboxChangesStatus)
+        assertFalse(
+            twoOfThree.toItem(emptyMap(), emptyMap(), partOfHasEnough = true).checkboxChangesStatus
+        )
     }
 
     // It says what was never recorded, as the row's count still does.
@@ -405,6 +474,18 @@ class RequirementItemTest {
         assertNull(ownWorkAndWeeks.toItem(done("5"), mapOf("5" to listOf(week(1, 1)))).stillToDo)
         assertNull(ownWorkAndWeeks.toItem(done("5"), bothWeeks).stillToDo)
         assertNull(weeks.toItem(emptyMap(), bothWeeks).stillToDo)
+    }
+
+    @Test
+    fun everyRowFilled_ownWorkCheckboxChangesStatus_untilThen() {
+        val bothWeeks = mapOf("5" to listOf(week(1, 1), week(2, 2)))
+        assertTrue(ownWorkAndWeeks.toItem(emptyMap(), bothWeeks).checkboxChangesStatus)
+        assertTrue(ownWorkAndWeeks.toItem(done("5"), bothWeeks).checkboxChangesStatus)
+
+        assertFalse(
+            ownWorkAndWeeks.toItem(done("5"), mapOf("5" to listOf(week(1, 1))))
+                .checkboxChangesStatus
+        )
     }
 
     @Test

@@ -25,8 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -298,14 +300,32 @@ private fun RequirementHeader(
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary
             )
-        }
-        // As on its row. One the scout marks by hand keeps its checkbox, for when they did it
-        // anyway.
-        if (requirement.notNeeded) {
+        } else if (requirement.notNeeded) {
+            // As on its row. One the scout marks by hand keeps its checkbox, for when they did it
+            // anyway.
             Text(
                 text = stringResource(Res.string.requirement_not_needed),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else if (requirement.checkboxChangesStatus) {
+            // Keeps the room of the line the checkbox below would show, drawn invisible and
+            // hidden from screen readers. Otherwise "Completed" appearing as the scout ticked its
+            // own work pushed the checkbox down from under their finger, and "Not needed" going
+            // pulled it up (#148). Only while the checkbox would show it, as an empty line on
+            // every page would leave a gap under most summaries. Showing "Completed" under the
+            // checkbox instead put it below the own work's "Completed on" date, and leaving it out
+            // would leave the page not saying the requirement is complete.
+            Text(
+                text = stringResource(
+                    if (requirement.markedByHand) {
+                        Res.string.requirement_not_needed
+                    } else {
+                        Res.string.requirement_completed
+                    }
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.alpha(0f).clearAndSetSemantics {}
             )
         }
     }
