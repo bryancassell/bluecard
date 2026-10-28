@@ -24,6 +24,7 @@ import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import okio.Path.Companion.toOkioPath
 import org.koin.dsl.bind
@@ -40,7 +41,7 @@ val androidModule = module {
     // The database sets damaged progress aside with this same instance, so the notice shows
     // without the app reopening. So a test that fakes DamagedProgressRepository fakes
     // ProgressRepository too, or the real database tells the real one instead of the fake.
-    single<FileDamagedProgressRepository>() bind DamagedProgressRepository::class
+    single { create(::damagedProgressRepository) } bind DamagedProgressRepository::class
     single<PdfReportRepository>() bind ReportRepository::class
     single<PdfDocumentWriter>() bind ReportPdfWriter::class
     single<ContentResolverDocuments>() bind Documents::class
@@ -54,6 +55,20 @@ internal object LogcatWarningLog : WarningLog {
         Log.w(tag, message, error)
     }
 }
+
+private fun damagedProgressRepository(
+    context: Context,
+    clock: ZonedClock,
+    warningLog: WarningLog,
+    @ApplicationScope scope: CoroutineScope,
+    @IoDispatcher ioDispatcher: CoroutineDispatcher
+) = FileDamagedProgressRepository(
+    produceDirectory = { context.noBackupFilesDir.toOkioPath() },
+    clock = clock,
+    warningLog = warningLog,
+    externalScope = scope,
+    ioDispatcher = ioDispatcher
+)
 
 private fun progressDatabase(
     context: Context,

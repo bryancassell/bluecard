@@ -172,7 +172,7 @@ class RoomProgressRepository(
      * result code, which comes from Room rather than SQLite, such as a failed foreign key check.
      *
      * Damage crashes the app too, and on Android the next launch sets the database aside
-     * (`SetAsideDamagedDatabaseDriver`). Reporting it as a load or save failure would leave the
+     * ([SetAsideDamagedDatabaseDriver]). Reporting it as a load or save failure would leave the
      * scout retrying on a database that stays damaged until the app restarts.
      *
      * Before Room first opens the database, it locks a file beside it, and reports a lock file

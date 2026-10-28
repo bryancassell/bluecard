@@ -91,6 +91,11 @@ class AndroidModuleTest {
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertTrue(koin.get<DamagedProgressRepository>().observeNoticePending().first())
+        // In the no-backup directory, so a phone restored from a backup doesn't get the copy or a
+        // notice about progress it never had.
+        val copy = File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME)
+            .listFiles(File::isDirectory)
+        assertEquals(8192L, File(copy!!.single(), "bluecard.db").length())
     }
 
     @Test

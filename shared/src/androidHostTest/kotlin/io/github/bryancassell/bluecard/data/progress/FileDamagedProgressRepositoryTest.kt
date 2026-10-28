@@ -43,7 +43,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     // scope runs on the IO dispatcher, as the app's does.
     private fun newRepository(ioDispatcher: CoroutineDispatcher = Dispatchers.Unconfined) =
         FileDamagedProgressRepository(
-            context,
+            { context.noBackupFilesDir.toOkioPath() },
             clock,
             warningLog,
             CoroutineScope(SupervisorJob() + ioDispatcher),
@@ -70,8 +70,9 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     fun setAside_movesTheDatabaseAndItsFilesIntoAFolderNamedForWhen() {
         writeDatabase("" to "pages", "-wal" to "latest saves", "-shm" to "index")
 
-        repository.setAside(database.toOkioPath())
+        val setAside = repository.setAside(database.toOkioPath())
 
+        assertTrue(setAside)
         val copy = copies().single()
         assertTrue(copy.name, copy.name.startsWith("2026-10-02T090607Z-"))
         assertEquals("pages", File(copy, "bluecard.db").readText())
@@ -320,20 +321,25 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
 
     @Test
     fun setAside_whenTheFolderCantBeMade_deletesTheDatabase_andTellsTheScout() = runTest {
-        writeDatabase("" to "damaged", "-wal" to "latest saves")
+        writeDatabase(
+            "" to "damaged",
+            "-wal" to "latest saves",
+            "-shm" to "index",
+            "-journal" to "rollback"
+        )
         // Stops the folder being made, as long as the tests don't run as root, which CI doesn't.
         val noBackup = context.noBackupFilesDir
         noBackup.setWritable(false)
-        try {
+        val setAside = try {
             repository.setAside(database.toOkioPath())
         } finally {
             noBackup.setWritable(true)
         }
 
+        assertTrue(setAside)
         assertFalse(folder.exists())
         // Deleted, so SQLite creates a new database rather than opening the damaged one again.
-        assertFalse(database.exists())
-        assertFalse(File(database.path + "-wal").exists())
+        assertEquals(emptyList<String>(), database.parentFile!!.list()!!.toList())
         assertTrue(repository.observeNoticePending().first())
         // The only record that the scout's progress was deleted rather than kept.
         val warning = warningLog.warnings.single()
@@ -344,6 +350,81 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         )
         // The folder that couldn't be made, rather than some other failure.
         assertEquals("failed to create directory: $folder", warning.error?.message)
+    }
+
+    @Test
+    fun setAside_whenAFileBesideTheDatabaseCantBeDeleted_keepsTheDatabase_andDoesntTellTheScout() =
+        runTest {
+            writeDatabase("" to "damaged", "-shm" to "index")
+            // A log that can't be deleted, as a folder with something in it can't.
+            File(database.path + "-wal").apply { mkdirs() }.resolve("page").writeText("saves")
+            // Stops the folder being made, as long as the tests don't run as root.
+            val noBackup = context.noBackupFilesDir
+            noBackup.setWritable(false)
+            val setAside = try {
+                repository.setAside(database.toOkioPath())
+            } finally {
+                noBackup.setWritable(true)
+            }
+
+            assertFalse(setAside)
+            // Stopped at the log, so the database never opens again without it.
+            assertEquals("damaged", database.readText())
+            assertEquals("index", File(database.path + "-shm").readText())
+            assertFalse(repository.observeNoticePending().first())
+            val warning = warningLog.warnings.single()
+            assertEquals(
+                "Couldn't set aside or delete a damaged database: $database",
+                warning.message
+            )
+            assertEquals("failed to create directory: $folder", warning.error?.message)
+            assertTrue(
+                "${warning.error?.suppressed?.toList()}",
+                warning.error?.suppressed?.single() is IOException
+            )
+        }
+
+    @Test
+    fun setAside_whenTheDatabaseCantBeMovedOrDeleted_keepsRecordedDamage_withoutANotice() =
+        runTest {
+            writeDatabase("" to "damaged")
+            // Stops the database being moved or deleted, as long as the tests don't run as root.
+            val databases = database.parentFile!!
+            databases.setWritable(false)
+            val setAside = try {
+                repository.setAside(database.toOkioPath())
+            } finally {
+                databases.setWritable(true)
+            }
+
+            assertFalse(setAside)
+            assertEquals("damaged", database.readText())
+            // The folder made for it, with nothing moved in, isn't left looking like a copy.
+            assertEquals(emptyList<File>(), copies())
+            // So the next launch tries again.
+            assertTrue(newRepository().isDamageRecorded(database.toOkioPath()))
+            assertFalse(repository.observeNoticePending().first())
+            assertFalse(newRepository().observeNoticePending().first())
+            assertEquals(
+                listOf("Couldn't set aside or delete a damaged database: $database"),
+                warningLog.warnings.map { it.message }
+            )
+        }
+
+    @Test
+    fun setAside_again_whenItCantBeMovedOrDeleted_stillOwesTheScoutTheFirstNotice() = runTest {
+        setAsideDamagedProgress()
+        writeDatabase("" to "damaged again")
+        val databases = database.parentFile!!
+        databases.setWritable(false)
+        try {
+            repository.setAside(database.toOkioPath())
+        } finally {
+            databases.setWritable(true)
+        }
+
+        assertEquals("damaged again", database.readText())
+        assertTrue(newRepository().observeNoticePending().first())
     }
 
     @Test
