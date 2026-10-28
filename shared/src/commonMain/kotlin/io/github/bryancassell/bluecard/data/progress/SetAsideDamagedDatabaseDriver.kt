@@ -9,7 +9,7 @@ import io.github.bryancassell.bluecard.data.Lock
 import kotlin.concurrent.Volatile
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM
+import okio.SYSTEM as systemFileSystem
 
 /**
  * Opens Room's database with [driver], except that a damaged database is set aside
@@ -62,8 +62,10 @@ class SetAsideDamagedDatabaseDriver(
         // Cleared first, so damage the check finds now gets a record of its own, which the next
         // launch needs if the app stops partway through setting it aside.
         damagedProgress.clearLeftoverDamageRecord(database)
+        // Okio's extension for common code, under its own name, so an IDE doesn't remove its
+        // import: on Android, FileSystem's own SYSTEM would take precedence.
         if (damagedProgress.isDamageRecorded(database) ||
-            (FileSystem.SYSTEM.exists(database) && isDamaged(fileName))
+            (FileSystem.systemFileSystem.exists(database) && isDamaged(fileName))
         ) {
             damagedProgress.setAside(database)
         }

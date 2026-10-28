@@ -3,8 +3,6 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.bryancassell.bluecard.data.Lock
 import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
-import io.github.bryancassell.bluecard.di.ApplicationScope
-import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import kotlin.random.Random
@@ -21,7 +19,7 @@ import okio.FileSystem
 import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
-import okio.SYSTEM
+import okio.SYSTEM as systemFileSystem
 
 /**
  * [DamagedProgressRepository] that keeps each damaged database in a folder of its own, in the
@@ -40,10 +38,13 @@ class FileDamagedProgressRepository(
     produceDirectory: () -> Path,
     private val clock: ZonedClock,
     private val warningLog: WarningLog,
-    @param:ApplicationScope private val externalScope: CoroutineScope,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    private val externalScope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
-    private val fileSystem = FileSystem.SYSTEM
+    // Okio's extension for common code, under its own name: on Android, FileSystem's own SYSTEM,
+    // the same object, would take precedence and leave the import unused, so an IDE would remove
+    // it, though common code needs it (checked in Okio 3.18.2).
+    private val fileSystem = FileSystem.systemFileSystem
     private val lock = Lock()
 
     private val folder by lazy { produceDirectory() / FOLDER_NAME }
@@ -81,17 +82,21 @@ class FileDamagedProgressRepository(
      * kept, since an earlier one may hold more progress. [SetAsideDamagedDatabaseDriver] calls it
      * before Room opens the database, so a new one can be created in its place. Files that can't
      * be moved are deleted, as Android would delete them, so the new database doesn't open on top
-     * of them. Recorded damage ([recordDamage]) is cleared once they're moved.
+     * of them. Recorded damage ([recordDamage]) is cleared once they're moved or deleted.
+     *
+     * If they can be neither moved nor deleted, BlueCard doesn't start over, so the scout isn't
+     * told it did, and recorded damage stays, so the next launch tries again.
      */
     fun setAside(database: Path) = lock.withLock {
         // Recorded damage outlives the files if the app was stopped after moving them all.
         if (fileSystem.exists(database)) {
+            var noticeCreated = false
             // Warned after the try, so writing the warning can't be mistaken for the move failing.
             val (message, error) = try {
                 fileSystem.createDirectories(folder)
                 // Before the move, so the scout is told, and the next launch sets aside the rest,
                 // even if the app closes partway.
-                createIfMissing(noticeFile)
+                noticeCreated = createIfMissing(noticeFile)
                 createIfMissing(damageFile)
                 // Another name if this one is taken, since a copy that can't be made deletes the
                 // database.
@@ -104,11 +109,17 @@ class FileDamagedProgressRepository(
                 }
                 "Set aside a damaged database: $database" to null
             } catch (e: IOException) {
-                // SQLite keeps no other files beside the app's database. Master journals, which
-                // Android's SQLiteDatabase.deleteDatabase also deletes, are only written for a
-                // transaction across attached databases, and the app attaches none.
-                for (file in sqliteFiles(database)) fileSystem.deleteOrWarn(file, warningLog, TAG)
-                "Couldn't set aside a damaged database, so deleted it: $database" to e
+                try {
+                    delete(database)
+                    "Couldn't set aside a damaged database, so deleted it: $database" to e
+                } catch (deleteError: IOException) {
+                    e.addSuppressed(deleteError)
+                    // A notice that was already pending is still owed to the scout.
+                    if (noticeCreated) fileSystem.deleteOrWarn(noticeFile, warningLog, TAG)
+                    val kept = "Couldn't set aside or delete a damaged database: $database"
+                    warningLog.warn(TAG, kept, e)
+                    return@withLock
+                }
             }
             noticePending.value = true
             warningLog.warn(TAG, message, error)
@@ -172,11 +183,25 @@ class FileDamagedProgressRepository(
     }
 
     /**
-     * Creates [file] with nothing in it. One that's there is left alone, since opening it to
-     * write could fail, which in [setAside] would delete the database rather than set it aside.
+     * Creates [file] with nothing in it, and returns whether it did. One that's there is left
+     * alone, since opening it to write could fail, which in [setAside] would delete the database
+     * rather than set it aside.
      */
-    private fun createIfMissing(file: Path) {
-        if (!fileSystem.exists(file)) fileSystem.write(file) {}
+    private fun createIfMissing(file: Path): Boolean {
+        if (fileSystem.exists(file)) return false
+        fileSystem.write(file) {}
+        return true
+    }
+
+    /**
+     * Deletes [database] and the files SQLite keeps beside it, in [sqliteFiles]' order, stopping
+     * at the first that can't be deleted, so the database goes only once the rest have. SQLite
+     * keeps no other files beside the app's database. Master journals, which Android's
+     * SQLiteDatabase.deleteDatabase also deletes, are only written for a transaction across
+     * attached databases, and the app attaches none.
+     */
+    private fun delete(database: Path) {
+        for (file in sqliteFiles(database)) fileSystem.delete(file)
     }
 
     /**
