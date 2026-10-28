@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.data.progress
 import io.github.bryancassell.bluecard.data.Lock
 import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import kotlin.random.Random
@@ -15,11 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
-import okio.FileSystem
 import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
-import okio.SYSTEM as systemFileSystem
 
 /**
  * [DamagedProgressRepository] that keeps each damaged database in a folder of its own, in the
@@ -41,10 +40,7 @@ class FileDamagedProgressRepository(
     private val externalScope: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
-    // Okio's extension for common code, under its own name: on Android, FileSystem's own SYSTEM,
-    // the same object, would take precedence and leave the import unused, so an IDE would remove
-    // it, though common code needs it (checked in Okio 3.18.2).
-    private val fileSystem = FileSystem.systemFileSystem
+    private val fileSystem = systemFileSystem
     private val lock = Lock()
 
     private val folder by lazy { produceDirectory() / FOLDER_NAME }
@@ -57,7 +53,10 @@ class FileDamagedProgressRepository(
     override fun observeNoticePending(): Flow<Boolean> = noticePending
         .onStart {
             if (noticePending.value == null) {
-                val stored = withContext(ioDispatcher) { fileSystem.exists(noticeFile) }
+                // Under lock, so it can't see a notice file that setAside makes and then deletes.
+                val stored = withContext(ioDispatcher) {
+                    lock.withLock { fileSystem.exists(noticeFile) }
+                }
                 // Progress set aside while the file was checked has already made it true.
                 noticePending.compareAndSet(null, stored)
             }
@@ -84,23 +83,26 @@ class FileDamagedProgressRepository(
      * be moved are deleted, as Android would delete them, so the new database doesn't open on top
      * of them. Recorded damage ([recordDamage]) is cleared once they're moved or deleted.
      *
-     * If they can be neither moved nor deleted, BlueCard doesn't start over, so the scout isn't
-     * told it did, and recorded damage stays, so the next launch tries again.
+     * Returns false if they can be neither moved nor deleted. BlueCard doesn't start over then,
+     * so the scout isn't told it did, and recorded damage isn't cleared.
      */
-    fun setAside(database: Path) = lock.withLock {
+    fun setAside(database: Path): Boolean = lock.withLock {
         // Recorded damage outlives the files if the app was stopped after moving them all.
         if (fileSystem.exists(database)) {
             var noticeCreated = false
+            var copy: Path? = null
             // Warned after the try, so writing the warning can't be mistaken for the move failing.
             val (message, error) = try {
                 fileSystem.createDirectories(folder)
                 // Before the move, so the scout is told, and the next launch sets aside the rest,
-                // even if the app closes partway.
-                noticeCreated = createIfMissing(noticeFile)
+                // even if the app closes partway. Found before writing, which can create the
+                // file and then fail.
+                noticeCreated = !fileSystem.exists(noticeFile)
+                createIfMissing(noticeFile)
                 createIfMissing(damageFile)
                 // Another name if this one is taken, since a copy that can't be made deletes the
                 // database.
-                val copy = generateSequence { folder / copyName() }.first { !fileSystem.exists(it) }
+                copy = generateSequence { folder / copyName() }.first { !fileSystem.exists(it) }
                 fileSystem.createDirectory(copy, mustCreate = true)
                 // The folder is on the database's file system (produceDirectory), so each move
                 // is a rename, which atomicMove needs.
@@ -109,6 +111,10 @@ class FileDamagedProgressRepository(
                 }
                 "Set aside a damaged database: $database" to null
             } catch (e: IOException) {
+                // A folder nothing was moved into isn't a copy, and each launch that fails again
+                // would leave another.
+                copy?.takeIf { fileSystem.listOrNull(it)?.isEmpty() == true }
+                    ?.let { fileSystem.deleteOrWarn(it, warningLog, TAG) }
                 try {
                     delete(database)
                     "Couldn't set aside a damaged database, so deleted it: $database" to e
@@ -118,7 +124,7 @@ class FileDamagedProgressRepository(
                     if (noticeCreated) fileSystem.deleteOrWarn(noticeFile, warningLog, TAG)
                     val kept = "Couldn't set aside or delete a damaged database: $database"
                     warningLog.warn(TAG, kept, e)
-                    return@withLock
+                    return@withLock false
                 }
             }
             noticePending.value = true
@@ -127,6 +133,7 @@ class FileDamagedProgressRepository(
         // If it can't be deleted, the new database Room makes is newer than it, so the next
         // launch leaves that alone (isDamageRecorded).
         fileSystem.deleteOrWarn(damageFile, warningLog, TAG)
+        true
     }
 
     /**
@@ -183,14 +190,11 @@ class FileDamagedProgressRepository(
     }
 
     /**
-     * Creates [file] with nothing in it, and returns whether it did. One that's there is left
-     * alone, since opening it to write could fail, which in [setAside] would delete the database
-     * rather than set it aside.
+     * Creates [file] with nothing in it. One that's there is left alone, since opening it to
+     * write could fail, which in [setAside] would delete the database rather than set it aside.
      */
-    private fun createIfMissing(file: Path): Boolean {
-        if (fileSystem.exists(file)) return false
-        fileSystem.write(file) {}
-        return true
+    private fun createIfMissing(file: Path) {
+        if (!fileSystem.exists(file)) fileSystem.write(file) {}
     }
 
     /**

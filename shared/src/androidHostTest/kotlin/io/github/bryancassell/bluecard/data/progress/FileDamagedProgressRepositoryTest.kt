@@ -70,8 +70,9 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     fun setAside_movesTheDatabaseAndItsFilesIntoAFolderNamedForWhen() {
         writeDatabase("" to "pages", "-wal" to "latest saves", "-shm" to "index")
 
-        repository.setAside(database.toOkioPath())
+        val setAside = repository.setAside(database.toOkioPath())
 
+        assertTrue(setAside)
         val copy = copies().single()
         assertTrue(copy.name, copy.name.startsWith("2026-10-02T090607Z-"))
         assertEquals("pages", File(copy, "bluecard.db").readText())
@@ -329,12 +330,13 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
         // Stops the folder being made, as long as the tests don't run as root, which CI doesn't.
         val noBackup = context.noBackupFilesDir
         noBackup.setWritable(false)
-        try {
+        val setAside = try {
             repository.setAside(database.toOkioPath())
         } finally {
             noBackup.setWritable(true)
         }
 
+        assertTrue(setAside)
         assertFalse(folder.exists())
         // Deleted, so SQLite creates a new database rather than opening the damaged one again.
         assertEquals(emptyList<String>(), database.parentFile!!.list()!!.toList())
@@ -359,12 +361,13 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
             // Stops the folder being made, as long as the tests don't run as root.
             val noBackup = context.noBackupFilesDir
             noBackup.setWritable(false)
-            try {
+            val setAside = try {
                 repository.setAside(database.toOkioPath())
             } finally {
                 noBackup.setWritable(true)
             }
 
+            assertFalse(setAside)
             // Stopped at the log, so the database never opens again without it.
             assertEquals("damaged", database.readText())
             assertEquals("index", File(database.path + "-shm").readText())
@@ -388,13 +391,16 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
             // Stops the database being moved or deleted, as long as the tests don't run as root.
             val databases = database.parentFile!!
             databases.setWritable(false)
-            try {
+            val setAside = try {
                 repository.setAside(database.toOkioPath())
             } finally {
                 databases.setWritable(true)
             }
 
+            assertFalse(setAside)
             assertEquals("damaged", database.readText())
+            // The folder made for it, with nothing moved in, isn't left looking like a copy.
+            assertEquals(emptyList<File>(), copies())
             // So the next launch tries again.
             assertTrue(newRepository().isDamageRecorded(database.toOkioPath()))
             assertFalse(repository.observeNoticePending().first())

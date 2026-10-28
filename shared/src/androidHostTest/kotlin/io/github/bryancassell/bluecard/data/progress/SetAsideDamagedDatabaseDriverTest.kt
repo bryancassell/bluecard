@@ -106,6 +106,34 @@ class SetAsideDamagedDatabaseDriverTest {
     }
 
     @Test
+    fun damagedDatabaseThatCantBeSetAside_isntUsed_andIsSetAsideAtTheNextLaunch() = runTest {
+        file.parentFile!!.mkdirs()
+        val damaged = ByteArray(8192) { 7 }
+        file.writeBytes(damaged)
+        // Stops the database being moved or deleted, as long as the tests don't run as root.
+        val databases = file.parentFile!!
+        databases.setWritable(false)
+        val error = try {
+            runCatching { newDriver().open(file.path) }.exceptionOrNull()
+        } finally {
+            databases.setWritable(true)
+        }
+
+        assertTrue("Expected damage, got $error", error is SQLiteException && error.isDamage())
+        assertArrayEquals(damaged, file.readBytes())
+        assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
+        assertFalse(damagedProgress.observeNoticePending().first())
+
+        // The next launch.
+        val progress = open().readProgress()
+
+        assertEquals(emptyList<BadgeProgressDetails>(), progress)
+        // The only copy: the first try left no empty folder.
+        assertArrayEquals(damaged, setAside().readBytes())
+        assertTrue(damagedProgress.observeNoticePending().first())
+    }
+
+    @Test
     fun databaseWithDamagedPages_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
         saveProgressAndDamageIt()
         val damaged = file.readBytes()

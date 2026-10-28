@@ -6,10 +6,9 @@ import androidx.sqlite.SQLiteException
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.execSQL
 import io.github.bryancassell.bluecard.data.Lock
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import kotlin.concurrent.Volatile
-import okio.FileSystem
 import okio.Path.Companion.toPath
-import okio.SYSTEM as systemFileSystem
 
 /**
  * Opens Room's database with [driver], except that a damaged database is set aside
@@ -41,8 +40,8 @@ class SetAsideDamagedDatabaseDriver(
 ) : SQLiteDriver by driver {
     private val lock = Lock()
 
-    // Set once the database is known to be undamaged or is set aside, so a check that fails for
-    // another reason, such as a full disk, runs again at the next open.
+    // Set once the database is known to be undamaged, or is set aside or recorded as damaged, so a
+    // check that fails for another reason, such as a full disk, runs again at the next open.
     private var checked = false
 
     // The damage found while the database is open, which every statement after it fails with.
@@ -62,12 +61,14 @@ class SetAsideDamagedDatabaseDriver(
         // Cleared first, so damage the check finds now gets a record of its own, which the next
         // launch needs if the app stops partway through setting it aside.
         damagedProgress.clearLeftoverDamageRecord(database)
-        // Okio's extension for common code, under its own name, so an IDE doesn't remove its
-        // import: on Android, FileSystem's own SYSTEM would take precedence.
         if (damagedProgress.isDamageRecorded(database) ||
-            (FileSystem.systemFileSystem.exists(database) && isDamaged(fileName))
+            (systemFileSystem.exists(database) && isDamaged(fileName))
         ) {
-            damagedProgress.setAside(database)
+            // One that can be neither moved nor deleted is handled as damage found while it's
+            // open, so nothing more is saved into it, and the next launch tries again.
+            if (!damagedProgress.setAside(database)) {
+                record(SQLiteException("Error code: $SQLITE_CORRUPT, message: not set aside"))
+            }
         }
         checked = true
     }
