@@ -6,7 +6,7 @@
 android-compileSdk = "37"
 android-minSdk = "26"
 android-targetSdk = "37"
-agp = "9.4.1"
+agp = "9.5.0"
 kotlin = "2.4.21"
 coreKtx = "1.19.1"
 lifecycle = "2.11.0"
@@ -55,7 +55,7 @@ robolectric = "4.17"
 # Accessibility checks in Compose UI tests; see ARCHITECTURE.md (Compose UI and screenshot tests).
 accessibilityTestFramework = "4.1.1"
 # Screenshot tests under Robolectric; see ARCHITECTURE.md (Compose UI and screenshot tests).
-roborazzi = "1.76.0"
+roborazzi = "1.77.0"
 # Debug builds only; see ARCHITECTURE.md (Debug builds). 3.0 is still in alpha.
 leakcanary = "2.14"
 spotless = "8.10.4"
