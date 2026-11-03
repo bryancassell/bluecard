@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
+import io.github.bryancassell.bluecard.data.SystemFileCoordinator
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
@@ -47,8 +49,8 @@ val iosModule = module {
     // As on Android, the database sets damaged progress aside with this same instance, so the
     // notice shows without the app reopening.
     single { create(::damagedProgressRepository) } bind DamagedProgressRepository::class
-    single<ReportRepository> { UnfinishedReports }
-    single<Documents> { UnfinishedDocuments }
+    single<UnfinishedReports>() bind ReportRepository::class
+    single { create(::fileCoordinatorDocuments) } bind Documents::class
     single<IosTextRules>() bind TextRules::class
     single<PhoneNumberFormat> { UnformattedPhoneNumbers }
 }
@@ -142,6 +144,11 @@ private fun damagedProgressRepository(
     externalScope = scope,
     ioDispatcher = ioDispatcher
 )
+
+private fun fileCoordinatorDocuments(
+    warningLog: WarningLog,
+    @IoDispatcher ioDispatcher: CoroutineDispatcher
+) = FileCoordinatorDocuments(warningLog, ioDispatcher, SystemFileCoordinator)
 
 private fun progressDatabase(damagedProgress: FileDamagedProgressRepository): BlueCardDatabase {
     val driver = SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress)
