@@ -146,6 +146,21 @@ class DocumentPickerTest {
         assertEquals(listOf("closed", "picked BlueCard export.json", "closed"), events)
     }
 
+    // As when the scout taps again while the first picker still appears, which UIKit doesn't
+    // report as presented.
+    @OptIn(NativeRuntimeApi::class)
+    @Test
+    fun launch_whileAnEarlierPickerStillAppears_keepsItsDelegate() {
+        filePicker.launch("*/*")
+        filePicker.launch("*/*")
+        val (earlier, _) = shown
+
+        GC.collect()
+
+        earlier.delegate.documentPicker(earlier.picker, didPickDocumentsAtURLs = listOf(pickedUrl))
+        assertEquals(listOf("picked BlueCard export.json", "closed"), events)
+    }
+
     @Test
     fun launch_withNothingToShow_reportsNoMissingApp() {
         val picker = FilePicker<String>(UIViewController()) { null }

@@ -44,28 +44,23 @@ class FileCoordinatorDocuments internal constructor(
         withContext(ioDispatcher) {
             val url = destination.url
             url.withAccess {
-                val bytes = try {
-                    content()
-                } catch (e: Exception) {
-                    // The file picker made an empty document for the content, which isn't left
-                    // behind.
-                    deleteIfEmpty(url)
-                    throw e
-                }
-                if (bytes == null) {
-                    // As when making the content fails.
-                    deleteIfEmpty(url)
-                } else {
-                    try {
+                // The file picker made an empty document for the content, which isn't left
+                // behind when there's no content, or when making it or holding the document
+                // fails. Once writing has started, write deals with it.
+                var writing = false
+                try {
+                    val bytes = content()
+                    if (bytes == null) {
+                        deleteIfEmpty(url)
+                    } else {
                         coordinator.write(url, NSFileCoordinatorWritingForReplacing) { file ->
+                            writing = true
                             write(file, bytes)
                         }
-                    } catch (e: IOException) {
-                        // If the coordinator refused, the empty document is still there. If
-                        // writing failed, write has dealt with it, and this finds nothing to do.
-                        deleteIfEmpty(url)
-                        throw e
                     }
+                } catch (e: Exception) {
+                    if (!writing) deleteIfEmpty(url)
+                    throw e
                 }
             }
         }

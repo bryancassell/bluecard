@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.uikit.LocalUIViewController
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.FileUrl
+import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.di.NSLogWarningLog
 import okio.IOException
@@ -76,7 +77,7 @@ internal fun createDocument(
         ),
         onPicked = { onCreated(FileUrl(it)) },
         // Moved if the scout saved it, and still here if they didn't.
-        onClosed = { deleteOrLog(file) }
+        onClosed = { systemFileSystem.deleteOrWarn(file, NSLogWarningLog, TAG) }
     )
 }
 
@@ -87,7 +88,7 @@ internal fun createDocument(
 internal fun openDocument(mimeTypes: Array<String>, onOpened: (DocumentUri) -> Unit) =
     FilePicker.Launch(
         picker = UIDocumentPickerViewController(
-            forOpeningContentTypes = mimeTypes.mapNotNull(::contentType),
+            forOpeningContentTypes = mimeTypes.map(::contentType),
             asCopy = false
         ),
         onPicked = { onOpened(FileUrl(it)) },
@@ -97,22 +98,14 @@ internal fun openDocument(mimeTypes: Array<String>, onOpened: (DocumentUri) -> U
 /**
  * The type the file picker offers for [mimeType]. Android's wildcard for any type is any file
  * that can be read as bytes, which leaves out folders, as Android's file picker does with
- * `CATEGORY_OPENABLE`.
+ * `CATEGORY_OPENABLE`. So is a type iOS can't look up, rather than one the scout can't pick: a
+ * file is checked once it's read, as Import checks it.
  */
-internal fun contentType(mimeType: String): UTType? =
-    if (mimeType == "*/*") UTTypeData else UTType.typeWithMIMEType(mimeType)
+internal fun contentType(mimeType: String): UTType =
+    if (mimeType == "*/*") UTTypeData else UTType.typeWithMIMEType(mimeType) ?: UTTypeData
 
 /** Where a new document waits for the file picker to move it where the scout chooses. */
 internal fun newDocumentsFolder(): Path = NSTemporaryDirectory().toPath() / "new-documents"
-
-// From the file picker's delegate, where an exception would end the app.
-private fun deleteOrLog(file: Path) {
-    try {
-        systemFileSystem.delete(file, mustExist = false)
-    } catch (e: IOException) {
-        NSLogWarningLog.warn(TAG, "Couldn't delete $file", e)
-    }
-}
 
 /**
  * Shows the file picker that [prepare] makes from each launch's input over [viewController], or
@@ -129,17 +122,18 @@ internal class FilePicker<I>(
         val onClosed: () -> Unit
     )
 
-    // The file picker holds its delegate weakly, so this holds it while the picker shows.
-    private var shown: Delegate? = null
+    // The file picker holds its delegate weakly, so this holds each until its own picker
+    // closes, even one UIKit didn't yet report as presented when the next launch came.
+    private val shown = mutableSetOf<Delegate>()
 
     override fun launch(input: I): Boolean {
-        // A tap can still reach the page while a file picker opens over it, since it takes a
-        // moment. Another picker couldn't show, and its delegate would take the one showing's
-        // place here.
+        // Another picker can't show over one that does. UIKit lists a picker as presented only
+        // once it has appeared, so a launch while one appears gets past this, and UIKit refuses
+        // to show it.
         if (viewController.presentedViewController != null) return true
         val launch = prepare(input) ?: return true
-        val delegate = Delegate(launch) { if (shown === it) shown = null }
-        shown = delegate
+        val delegate = Delegate(launch) { shown -= it }
+        shown += delegate
         launch.picker.delegate = delegate
         viewController.presentViewController(launch.picker, animated = true, completion = null)
         return true

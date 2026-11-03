@@ -277,15 +277,9 @@ class FileCoordinatorDocumentsTest {
             block: (Path) -> T
         ): T {
             if (writing in refused) {
-                throw IOException(
-                    if (writing ==
-                        null
-                    ) {
-                        "Refused to read"
-                    } else {
-                        "Refused to write with $writing"
-                    }
-                )
+                val message =
+                    if (writing == null) "Refused to read" else "Refused to write with $writing"
+                throw IOException(message)
             }
             val file = checkNotNull(url.path).toPath()
             held += Held(file, writing)
