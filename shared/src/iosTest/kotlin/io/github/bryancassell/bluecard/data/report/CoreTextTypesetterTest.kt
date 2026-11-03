@@ -38,6 +38,15 @@ class CoreTextTypesetterTest {
         assertEquals(listOf("Camping"), text.lines())
     }
 
+    // Unlike StaticLayout, which gives empty text one empty line.
+    @Test
+    fun emptyText_hasNoLines_andNoHeight() {
+        val text = typesetter.layOut("", ReportStyle.Body, 300)
+
+        assertEquals(0, text.lineCount)
+        assertEquals(0f, text.height)
+    }
+
     @Test
     fun longText_breaksIntoLines_withEveryWordOnce_inOrder() {
         val text = typesetter.layOut(words, ReportStyle.Body, 200)
