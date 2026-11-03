@@ -19,6 +19,7 @@ import platform.Foundation.countryCode
 import platform.Foundation.currentLocale
 import platform.Foundation.languageCode
 import platform.Foundation.localeIdentifierFromComponents
+import platform.Foundation.preferredLanguages
 import platform.Foundation.scriptCode
 
 // The language the app's strings are in, which isn't always the device's: the app may not have
@@ -28,22 +29,31 @@ import platform.Foundation.scriptCode
 private const val APPLE_LANGUAGES = "AppleLanguages"
 
 /**
- * Saves the strings' language (`strings_language`) as the app's only preferred language, so
+ * Saves the strings' language (`strings_language`) as the app's first preferred language, so
  * Compose Multiplatform's strings pick their plural forms by its rules. It takes them from the
  * first of `NSLocale.preferredLanguages` (1.12.2), which is otherwise the device's: on an iPhone
  * set to French, which counts 0 as one, the English strings read "0 night". It's JetBrains'
  * workaround (https://kotlinlang.org/docs/multiplatform/compose-resource-environment.html), as
  * setting the default locale is on Android (`useStringsLocalesByDefault`). Material 3 takes the
  * language of its labels and date picker from it too, so they're in the strings' language, as
- * UIKit's own text already is in an app with no strings in the device's language.
+ * UIKit's own text already is in an app with no strings in the device's language. The device's
+ * languages follow it, as on Android (`stringsLocales`), for whatever reads past the first.
  *
- * Only the language is saved, with no region: Material 3 writes the date picker's dates in the
- * calendar of the locale it reads, which for en-IR is the Persian one.
+ * It's saved as `strings_language` names it, "en" for English, with no region: Material 3 writes
+ * the picker's dates in the calendar of the locale it reads, which for en-IR would be the Persian
+ * one. A translation needs its picker's calendar checked.
  *
  * iOS keeps it in the app's `AppleLanguages` user default, which outlasts the app, so the one
  * saved at the last launch is removed first. The strings' language is then read in the device's
  * own languages, and a change to them is seen at the next launch. The app calls this as it
  * starts, before Compose reads the language.
+ *
+ * Saving it was chosen over setting it for each launch only, in the argument domain, on PR #397.
+ * Once a translation is in the Xcode project, that has two costs to revisit. iOS keeps the
+ * language a scout picks for the app in Settings in the same user default, so this undoes the
+ * choice at each launch. And UIKit picks its language and layout direction from the saved list
+ * as the app starts, before this runs, so after the device's language changes, they're a launch
+ * behind the strings'.
  */
 fun useStringsLanguageByDefault() =
     useStringsLanguageByDefault { runBlocking { getString(Res.string.strings_language) } }
@@ -52,7 +62,9 @@ fun useStringsLanguageByDefault() =
 internal fun useStringsLanguageByDefault(stringsLanguage: () -> String) {
     val defaults = NSUserDefaults.standardUserDefaults
     defaults.removeObjectForKey(APPLE_LANGUAGES)
-    defaults.setObject(listOf(stringsLanguage()), APPLE_LANGUAGES)
+    val language = stringsLanguage()
+    val device = NSLocale.preferredLanguages.filterIsInstance<String>()
+    defaults.setObject((listOf(language) + device).distinct(), APPLE_LANGUAGES)
 }
 
 /**
@@ -62,9 +74,13 @@ internal fun useStringsLanguageByDefault(stringsLanguage: () -> String) {
  * its language from the app's Xcode localizations rather than the strings, and it keeps the
  * digits a scout can choose in Settings. "%1$d" in a string inserts Latin digits, so the language's
  * own are used instead, and a sentence never mixes two kinds, as on Android (`stringsLocales`).
+ *
+ * A tag with a region of its own, such as zh-TW, keeps it, since the region can be what marks its
+ * script or variant: zh in the US would be Simplified Chinese, and pt in the US Brazilian.
  */
 internal fun stringsLocale(stringsLanguage: String, region: String?): NSLocale {
     val language = NSLocale(NSLocale.canonicalLocaleIdentifierFromString(stringsLanguage))
+    if (language.countryCode != null) return language
     val components = listOfNotNull(
         NSLocaleLanguageCode to language.languageCode,
         language.scriptCode?.let { NSLocaleScriptCode to it },
@@ -77,12 +93,15 @@ internal fun stringsLocale(stringsLanguage: String, region: String?): NSLocale {
  * The device's region, such as "FR", and each one it changes to while the app runs. iOS's current
  * locale "does not change even when the person using the device changes region settings", Apple's
  * documentation of it says, but iOS posts [NSCurrentLocaleDidChangeNotification] when it does.
+ * Each is read with [currentRegion].
  */
-internal fun deviceRegions(): Flow<String?> = callbackFlow {
+internal fun deviceRegions(
+    currentRegion: () -> String? = { NSLocale.currentLocale.countryCode }
+): Flow<String?> = callbackFlow {
     val center = NSNotificationCenter.defaultCenter
     val observer = center.addObserverForName(NSCurrentLocaleDidChangeNotification, null, null) {
-        trySend(NSLocale.currentLocale.countryCode)
+        trySend(currentRegion())
     }
-    trySend(NSLocale.currentLocale.countryCode)
+    trySend(currentRegion())
     awaitClose { center.removeObserver(observer) }
 }

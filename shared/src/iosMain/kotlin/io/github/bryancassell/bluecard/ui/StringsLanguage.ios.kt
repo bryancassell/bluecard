@@ -19,7 +19,8 @@ import platform.Foundation.currentLocale
 @Composable
 actual fun rememberLocaleFormats(): LocaleFormats {
     val stringsLanguage = stringResource(Res.string.strings_language)
-    val region by remember { deviceRegions() }.collectAsState(NSLocale.currentLocale.countryCode)
+    val initialRegion = remember { NSLocale.currentLocale.countryCode }
+    val region by remember { deviceRegions() }.collectAsState(initialRegion)
     return remember(stringsLanguage, region) {
         IosLocaleFormats(stringsLocale(stringsLanguage, region))
     }

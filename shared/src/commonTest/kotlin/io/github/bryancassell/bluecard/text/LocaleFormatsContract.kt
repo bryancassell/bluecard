@@ -51,6 +51,12 @@ abstract class LocaleFormatsContract {
         assertEquals("0.29", total("0.29"))
     }
 
+    // More digits than a double holds, which would round it up to 10000000000000000.
+    @Test
+    fun formatTotal_withManyDigits_isWrittenExactly() {
+        assertEquals("9999999999999999.99", total("9999999999999999.99"))
+    }
+
     // Like the amount needed after it, and a comma can be what the scout typed as a decimal
     // separator.
     @Test
@@ -105,6 +111,25 @@ abstract class LocaleFormatsContract {
     @Test
     fun typedText_withNoLetters_inARightToLeftLocale_isWrappedAsLeftToRight() {
         assertEquals("\u200F\u202A555-0100\u202C\u200F", formats("fa").typedText("555-0100"))
+    }
+
+    // Punjabi is written left-to-right in Gurmukhi, but right-to-left in its Arabic script.
+    @Test
+    fun typedText_inALocaleWhoseScriptIsRightToLeft_isWrappedAsInARightToLeftLocale() {
+        assertEquals("\u200F\u202AAlex.\u202C\u200F", formats("pa-Arab").typedText("Alex."))
+    }
+
+    // U+20000, a CJK letter beyond the Basic Multilingual Plane, is left-to-right, so it decides
+    // the direction rather than the Persian name after it.
+    @Test
+    fun typedText_startingWithALetterBeyondTheBasicPlane_takesItsDirection() {
+        assertEquals("\uD840\uDC00علی\u200E", formats("en-US").typedText("\uD840\uDC00علی"))
+    }
+
+    // A right-to-left embedding sets the direction as a right-to-left letter does.
+    @Test
+    fun typedText_startingWithARightToLeftEmbedding_isWrappedToKeepIt() {
+        assertEquals("\u200E\u202B\u202BAlex\u202C\u200E", formats("en-US").typedText("\u202BAlex"))
     }
 
     @Test

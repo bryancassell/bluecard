@@ -358,7 +358,8 @@ both taps of a double tap can reach it.
   ([#341](https://github.com/bryancassell/bluecard/issues/341)). Nor can it use
   `\p{L}` in a regex, which Kotlin/Native matches against each half of a
   surrogate pair, so letters and digits go through `TextRules` too. Their
-  Android implementations wrap those, and their iOS ones Foundation's.
+  Android implementations wrap those, and their iOS ones wrap Foundation's
+  where it has an equivalent.
   ViewModels and the report get `TextRules` and
   `PhoneNumberFormat` from Koin; screens read `LocalTextRules`, which
   `BlueCardApp` provides.

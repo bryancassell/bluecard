@@ -33,8 +33,17 @@ class StringsLocalesTest {
     fun useStringsLanguageByDefault_makesItTheLanguageComposeReads() {
         useStringsLanguageByDefault { "fr" }
 
-        assertEquals(listOf<Any?>("fr"), NSLocale.preferredLanguages)
+        assertEquals("fr", NSLocale.preferredLanguages.first())
         assertEquals("fr", Locale.current.language)
+    }
+
+    @Test
+    fun useStringsLanguageByDefault_keepsTheDevicesLanguagesAfterIt() {
+        val device = NSLocale.preferredLanguages
+
+        useStringsLanguageByDefault { "fr" }
+
+        assertEquals(listOf<Any?>("fr") + device.filter { it != "fr" }, NSLocale.preferredLanguages)
     }
 
     // So the strings are picked by the device's languages, not by what the last launch saved.
@@ -72,21 +81,28 @@ class StringsLocalesTest {
         assertEquals("RS", locale.countryCode)
     }
 
+    // Traditional Chinese, which in another region would be Simplified.
+    @Test
+    fun stringsLocale_ofATagWithItsOwnRegion_keepsIt() {
+        assertEquals("TW", stringsLocale("zh-TW", "US").countryCode)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun deviceRegions_givesTheRegion_andAgainWhenTheLocaleChanges() = runTest {
-        val region = NSLocale.currentLocale.countryCode
+    fun deviceRegions_givesTheRegion_andTheNewOneWhenTheLocaleChanges() = runTest {
+        var region = "US"
         val regions = mutableListOf<String?>()
         val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
-            deviceRegions().toList(regions)
+            deviceRegions { region }.toList(regions)
         }
 
+        region = "FR"
         NSNotificationCenter.defaultCenter.postNotificationName(
             NSCurrentLocaleDidChangeNotification,
             null
         )
         collecting.cancel()
 
-        assertEquals(listOf(region, region), regions)
+        assertEquals(listOf<String?>("US", "FR"), regions)
     }
 }

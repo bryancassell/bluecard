@@ -65,14 +65,9 @@ class IosTextRules : TextRules {
         }
     }
 
-    // Foundation's letters are Unicode's categories L and M, so the marks M are taken out, as
-    // Java's letters are L only. Its decimal digits are Nd, as Java's digits are.
-    override fun isLetterOrDigit(codePoint: Int): Boolean {
-        val char = codePoint.toUInt()
-        val letter = NSCharacterSet.letterCharacterSet.longCharacterIsMember(char) &&
-            !NSCharacterSet.nonBaseCharacterSet.longCharacterIsMember(char)
-        return letter || NSCharacterSet.decimalDigitCharacterSet.longCharacterIsMember(char)
-    }
+    // Foundation's decimal digits are Unicode's category Nd, as Java's digits are.
+    override fun isLetterOrDigit(codePoint: Int): Boolean = isLetter(codePoint) ||
+        NSCharacterSet.decimalDigitCharacterSet.longCharacterIsMember(codePoint.toUInt())
 
     // The character that starts at or holds the code unit at [offset], or null at the end.
     @Suppress("CAST_NEVER_SUCCEEDS") // A Kotlin string is an NSString on iOS.
@@ -81,4 +76,14 @@ class IosTextRules : TextRules {
         return (text as NSString).rangeOfComposedCharacterSequenceAtIndex(offset.toULong())
             .useContents { location.toInt() until (location + length).toInt() }
     }
+}
+
+/**
+ * Whether [codePoint] is a letter, Unicode's category L, as Java's `Character.isLetter` tells.
+ * Foundation's letters are L and the marks M, so the marks are taken out.
+ */
+internal fun isLetter(codePoint: Int): Boolean {
+    val char = codePoint.toUInt()
+    return NSCharacterSet.letterCharacterSet.longCharacterIsMember(char) &&
+        !NSCharacterSet.nonBaseCharacterSet.longCharacterIsMember(char)
 }

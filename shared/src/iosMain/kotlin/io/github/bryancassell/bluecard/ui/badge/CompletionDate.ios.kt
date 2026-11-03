@@ -15,9 +15,12 @@ import platform.Foundation.characterDirectionForLanguage
 @Composable
 @ReadOnlyComposable
 internal actual fun pickerLayoutDirection(): LayoutDirection =
-    layoutDirectionOf(Locale.current.language)
+    layoutDirectionOf(Locale.current.toLanguageTag())
 
-/** The direction [language], an ISO 639 code such as "fa", is written in. */
+/**
+ * The direction [language], a BCP 47 tag such as "fa", is written in. Its script counts: "pa" is
+ * left-to-right, but "pa-Arab" right-to-left.
+ */
 internal fun layoutDirectionOf(language: String): LayoutDirection =
     when (NSLocale.characterDirectionForLanguage(language)) {
         NSLocaleLanguageDirectionRightToLeft -> LayoutDirection.Rtl

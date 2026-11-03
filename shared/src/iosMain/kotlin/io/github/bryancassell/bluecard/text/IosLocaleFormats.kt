@@ -18,8 +18,9 @@ import platform.Foundation.NSLocaleLanguageDirectionRightToLeft
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterDecimalStyle
 import platform.Foundation.NSTimeZone
+import platform.Foundation.canonicalLanguageIdentifierFromString
 import platform.Foundation.characterDirectionForLanguage
-import platform.Foundation.languageCode
+import platform.Foundation.localeIdentifier
 import platform.Foundation.timeZoneForSecondsFromGMT
 
 /**
@@ -85,9 +86,12 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
     override fun formatList(items: List<String>): String =
         listFormatter.stringFromItems(items) ?: ""
 
+    // By the locale's language and script, since the script can change it: Punjabi is written
+    // left-to-right, but right-to-left in its Arabic script (pa-Arab).
     private val rightToLeft by lazy {
-        NSLocale.characterDirectionForLanguage(locale.languageCode) ==
-            NSLocaleLanguageDirectionRightToLeft
+        NSLocale.characterDirectionForLanguage(
+            NSLocale.canonicalLanguageIdentifierFromString(locale.localeIdentifier)
+        ) == NSLocaleLanguageDirectionRightToLeft
     }
 
     // As Android's BidiFormatter wraps it: text whose first letter is in the other direction from
@@ -96,7 +100,7 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
     // counts as left-to-right. Other text that ends in the other direction gets a mark after it, so
     // what follows isn't drawn into it.
     override fun typedText(text: String): String {
-        val directions = codePoints(text).mapNotNull(::strongDirection)
+        val directions = codePoints(text).mapNotNull(::strongDirection).toList()
         val context = if (rightToLeft) Direction.RightToLeft else Direction.LeftToRight
         val mark = if (rightToLeft) RLM else LRM
         val first = directions.firstOrNull() ?: Direction.LeftToRight
@@ -116,36 +120,28 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
 
     // The direction a character sets, as Unicode's bidi classes would give it, which common Kotlin
     // doesn't have (Char.directionality is the JVM's). A letter is right-to-left in the Hebrew,
-    // Arabic and other right-to-left blocks, and left-to-right elsewhere, and so are the marks
-    // that set a direction. Digits, punctuation and spaces set none. Char.isLetter knows only the
-    // Basic Multilingual Plane, so beyond it only the right-to-left blocks count, such as Adlam's.
+    // Arabic and other right-to-left blocks, and left-to-right elsewhere, and so are the marks,
+    // embeddings and overrides that set a direction, which BidiFormatter's first-strong heuristic
+    // counts too. Digits, punctuation and spaces set none. Char.isLetter knows only the Basic
+    // Multilingual Plane, so beyond it Foundation tells a letter, such as U+20000, a CJK one.
     private fun strongDirection(codePoint: Int): Direction? = when {
-        codePoint == LRM.code -> Direction.LeftToRight
+        codePoint == LRM.code || codePoint == LRE.code || codePoint == LRO ->
+            Direction.LeftToRight
 
-        codePoint == RLM.code || codePoint == ALM -> Direction.RightToLeft
+        codePoint == RLM.code || codePoint == ALM || codePoint == RLE.code || codePoint == RLO ->
+            Direction.RightToLeft
 
-        codePoint > 0xFFFF ->
-            if (RIGHT_TO_LEFT_BLOCKS.any { codePoint in it }) Direction.RightToLeft else null
+        codePoint > 0xFFFF -> when {
+            RIGHT_TO_LEFT_BLOCKS.any { codePoint in it } -> Direction.RightToLeft
+            isLetter(codePoint) -> Direction.LeftToRight
+            else -> null
+        }
 
         !codePoint.toChar().isLetter() -> null
 
         RIGHT_TO_LEFT_BLOCKS.any { codePoint in it } -> Direction.RightToLeft
 
         else -> Direction.LeftToRight
-    }
-
-    private fun codePoints(text: String): Sequence<Int> = sequence {
-        var i = 0
-        while (i < text.length) {
-            val char = text[i]
-            if (char.isHighSurrogate() && i + 1 < text.length && text[i + 1].isLowSurrogate()) {
-                yield(0x10000 + ((char.code - 0xD800) shl 10) + (text[i + 1].code - 0xDC00))
-                i += 2
-            } else {
-                yield(char.code)
-                i++
-            }
-        }
     }
 
     private companion object {
@@ -161,12 +157,14 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
             )
 
         // The left-to-right and right-to-left marks and embeddings, the pop that ends an
-        // embedding, and the Arabic letter mark.
+        // embedding, the Arabic letter mark, and the overrides.
         val LRM = Char(0x200E)
         val RLM = Char(0x200F)
         val LRE = Char(0x202A)
         val RLE = Char(0x202B)
         val PDF = Char(0x202C)
         const val ALM = 0x061C
+        const val LRO = 0x202D
+        const val RLO = 0x202E
     }
 }
