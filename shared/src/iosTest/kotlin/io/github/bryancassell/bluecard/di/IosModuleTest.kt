@@ -75,19 +75,29 @@ class IosModuleTest {
             check(giveUpAt.hasNotPassedNow()) { "Another test run held the run lock" }
             usleep(100_000u)
         }
-        deleteAppFiles()
-        initKoin()
-        koin = KoinPlatform.getKoin()
+        // The lock is let go whatever fails, or each later test would wait the full time for it.
+        try {
+            deleteAppFiles()
+            initKoin()
+            koin = KoinPlatform.getKoin()
+        } catch (e: Throwable) {
+            stopKoin()
+            close(runLock)
+            throw e
+        }
     }
 
     @AfterTest
     fun stopApp() {
-        if (database.isInitialized()) database.value.close()
-        // Ends the profile's DataStore, which allows one instance per file in a process.
-        koin.get<CoroutineScope>(named<ApplicationScope>()).cancel()
-        stopKoin()
-        deleteAppFiles()
-        close(runLock)
+        try {
+            if (database.isInitialized()) database.value.close()
+            // Ends the profile's DataStore, which allows one instance per file in a process.
+            koin.get<CoroutineScope>(named<ApplicationScope>()).cancel()
+            stopKoin()
+            deleteAppFiles()
+        } finally {
+            close(runLock)
+        }
     }
 
     private fun deleteAppFiles() {
@@ -105,6 +115,8 @@ class IosModuleTest {
     fun lockFileThatCantBeOpened_isAStorageFailure() = runTest {
         // Opening a folder as the lock file fails, as it would on a full disk.
         fileSystem.createDirectory(directory / LOCK_FILE)
+        // Built here, so the test closes it after.
+        database.value
         val repository = koin.get<ProgressRepository>()
 
         val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()

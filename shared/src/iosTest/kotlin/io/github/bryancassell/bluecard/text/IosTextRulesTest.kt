@@ -28,6 +28,15 @@ class IosTextRulesTest {
         )
     }
 
+    // As Android's collator orders them, at its default strength.
+    @Test
+    fun englishOrder_putsLowercaseFirst() {
+        assertEquals(
+            listOf("bird study", "Bird Study"),
+            listOf("Bird Study", "bird study").sortedWith(textRules.englishOrder())
+        )
+    }
+
     /** The offsets in [text] that are boundaries between characters. */
     private fun characterBoundaries(text: String) =
         (0..text.length).filter { textRules.characterBoundaryAtOrBefore(text, it) == it }
@@ -87,6 +96,21 @@ class IosTextRulesTest {
     @Test
     fun lineBreaks_ofOneWord_areJustItsEnds() {
         assertEquals(listOf(0, 8), lineBreaks("Swimming"))
+    }
+
+    @Test
+    fun lineBreaks_areNeverAfterANoBreakSpace() {
+        assertEquals(listOf(0, 8), lineBreaks("6${0xA0.toChar()}nights"))
+    }
+
+    @Test
+    fun lineBreaks_keepANumberRangeWhole() {
+        assertEquals(listOf(0, 6, 12), lineBreaks("10-12 nights"))
+    }
+
+    @Test
+    fun lineBreaks_includeAroundAnEmDash() {
+        assertEquals(listOf(0, 7, 8, 16), lineBreaks("Camping${0x2014.toChar()}Advanced"))
     }
 
     @Test

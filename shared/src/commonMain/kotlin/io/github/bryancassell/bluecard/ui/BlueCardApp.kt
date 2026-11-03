@@ -43,7 +43,10 @@ fun BlueCardApp(
             val insets = ScaffoldDefaults.contentWindowInsets
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
-                topBar = { StatusBarBackground(insets) },
+                topBar = {
+                    // While loading, the page is its color alone, as iOS's launch screen is.
+                    if (uiState != MainActivityUiState.Loading) StatusBarBackground(insets)
+                },
                 contentWindowInsets = insets
             ) { innerPadding ->
                 when (uiState) {
@@ -76,8 +79,8 @@ fun BlueCardApp(
 /**
  * Fills the space behind the status bar in a color set apart from the page's: Material's color for
  * a top app bar that a page has scrolled under. A page scrolled up to the bar ends at its edge; on
- * the page's own color, its cut-off text ran into the clock (#315). It shows all the time:
- * showing it only once a page scrolls would need every page to say how far it's scrolled. As the
+ * the page's own color, its cut-off text ran into the clock (#315). It shows with every screen,
+ * not only once a page scrolls, which would need every page to say how far it's scrolled. As the
  * Scaffold's top bar, its height is where every page starts, so it's as tall as the top of the
  * Scaffold's [insets], which pages would start below without it: the status bar, or a window's
  * caption bar or a camera cutout where either is taller.

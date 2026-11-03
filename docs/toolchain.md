@@ -716,9 +716,9 @@ moved, merge it into the branch and wait for the checks again:
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to
-  5 minutes, less than Build's 6 to 9: Gradle builds the app and test APKs
-  while it downloads the emulator and system image, then boots the emulator
-  and runs the tests.
+  5 minutes, less than Build's 9 to 13 with the iOS code: Gradle builds the
+  app and test APKs while it downloads the emulator and system image, then
+  boots the emulator and runs the tests.
 
 A second workflow (`.github/workflows/docs.yml`) has one quick job, which must
 pass too:

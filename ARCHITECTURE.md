@@ -283,9 +283,7 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   `setKeepOnScreenCondition`, so the wrong screen never flashes first. The
   [splash screen guide](https://developer.android.com/develop/ui/views/launch/splash-screen)
   suggests holding the first frame for loading "a small amount of data, such as
-  loading in-app settings from a local disk". iOS can't hold its launch
-  screen, so the empty page after it, in the same color, stays until the
-  profile loads.
+  loading in-app settings from a local disk".
 - **Screens' `SavedStateHandle`s don't start with the launching intent's
   extras**, which any app could fill, since `MainActivity` is exported
   ([#83](https://github.com/bryancassell/bluecard/issues/83)). `MainActivity`

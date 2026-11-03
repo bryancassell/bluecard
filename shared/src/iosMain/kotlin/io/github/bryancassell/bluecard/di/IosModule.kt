@@ -80,17 +80,22 @@ internal fun nsLog(text: String) {
  */
 internal fun logMessages(text: String, maxBytes: Int = 1000): List<String> {
     val messages = mutableListOf<String>()
-    var message: String? = null
+    val message = StringBuilder()
+    var bytes = 0
+    var started = false
     for (piece in text.lines().flatMap { it.inPiecesOf(maxBytes) }) {
-        val joined = if (message == null) piece else "$message\n$piece"
-        if (joined.utf8Bytes() <= maxBytes) {
-            message = joined
+        val pieceBytes = piece.utf8Bytes()
+        if (started && bytes + 1 + pieceBytes <= maxBytes) {
+            message.append('\n').append(piece)
+            bytes += 1 + pieceBytes
         } else {
-            messages += message!!
-            message = piece
+            if (started) messages += message.toString()
+            message.clear().append(piece)
+            bytes = pieceBytes
+            started = true
         }
     }
-    messages += message.orEmpty()
+    messages += message.toString()
     return messages
 }
 
@@ -102,15 +107,20 @@ private fun String.inPiecesOf(maxBytes: Int): List<String> {
     var bytes = 0
     var i = 0
     while (i < length) {
-        val end = if (this[i].isHighSurrogate() && i + 1 < length) i + 2 else i + 1
-        val charBytes = substring(i, end).utf8Bytes()
+        val pair = this[i].isHighSurrogate() && i + 1 < length && this[i + 1].isLowSurrogate()
+        val charBytes = when {
+            pair -> 4
+            this[i].code < 0x80 -> 1
+            this[i].code < 0x800 -> 2
+            else -> 3
+        }
         if (bytes + charBytes > maxBytes) {
             pieces += substring(start, i)
             start = i
             bytes = 0
         }
         bytes += charBytes
-        i = end
+        i += if (pair) 2 else 1
     }
     pieces += substring(start)
     return pieces

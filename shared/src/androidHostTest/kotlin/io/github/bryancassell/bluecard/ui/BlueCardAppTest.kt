@@ -7,6 +7,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -35,7 +36,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * The Loading and LoadFailed states, and the status bar's background, which every state shows.
+ * The Loading and LoadFailed states, and the status bar's background, which every state but
+ * Loading shows.
  * MainActivityTest covers Ready, which needs Koin for the screens' ViewModels.
  */
 @RunWith(AndroidJUnit4::class)
@@ -135,28 +137,9 @@ class BlueCardAppTest {
      * on SDK 37, Robolectric 4.17 leaves a class's later captures blank.
      */
     private fun assertBandCovers(type: Int, scheme: ColorScheme = BlueCardLightColorScheme) {
-        lateinit var view: View
-        composeTestRule.setContent {
-            view = LocalView.current
-            BlueCardApp(
-                MainActivityUiState.LoadFailed,
-                AndroidTextRules(),
-                onDismissDamagedProgressNotice = {}
-            )
-        }
-        val inset = 24.dp
-        val insetPx = with(composeTestRule.density) { inset.roundToPx() }
-        composeTestRule.runOnUiThread {
-            view.dispatchApplyWindowInsets(
-                WindowInsets.Builder()
-                    .setInsets(type, Insets.of(0, insetPx, 0, 0))
-                    .setVisible(type, true)
-                    .build()
-            )
-        }
+        val pixels = drawWithInsetAtTop(MainActivityUiState.LoadFailed, type)
 
         // Both edges are clear of the message, so they show what's behind it.
-        val pixels = composeTestRule.onRoot().captureToImage().toPixelMap()
         for (x in listOf(0, pixels.width - 1)) {
             assertEquals(scheme.surfaceContainer, pixels[x, 0])
             assertEquals(scheme.surfaceContainer, pixels[x, insetPx - 1])
@@ -168,5 +151,41 @@ class BlueCardAppTest {
             "Couldn't load your data. Try closing and reopening BlueCard."
         )
             .assertTopPositionInRootIsEqualTo(inset + 16.dp)
+    }
+
+    // Android's splash screen covers it, but iOS's launch screen is gone by then and shows only
+    // the page's color, so a band appearing would be the first thing to change.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(sdk = [36])
+    @Test
+    fun loading_drawsOnlyThePagesColor_withNoBand() {
+        val pixels = drawWithInsetAtTop(MainActivityUiState.Loading, WindowInsets.Type.statusBars())
+
+        for (x in listOf(0, pixels.width - 1)) {
+            for (y in listOf(0, insetPx - 1, insetPx, pixels.height - 1)) {
+                assertEquals(BlueCardLightColorScheme.background, pixels[x, y])
+            }
+        }
+    }
+
+    private val inset = 24.dp
+    private val insetPx get() = with(composeTestRule.density) { inset.roundToPx() }
+
+    /** Draws [uiState] with a window [inset] of [type] across its top. */
+    private fun drawWithInsetAtTop(uiState: MainActivityUiState, type: Int): PixelMap {
+        lateinit var view: View
+        composeTestRule.setContent {
+            view = LocalView.current
+            BlueCardApp(uiState, AndroidTextRules(), onDismissDamagedProgressNotice = {})
+        }
+        composeTestRule.runOnUiThread {
+            view.dispatchApplyWindowInsets(
+                WindowInsets.Builder()
+                    .setInsets(type, Insets.of(0, insetPx, 0, 0))
+                    .setVisible(type, true)
+                    .build()
+            )
+        }
+        return composeTestRule.onRoot().captureToImage().toPixelMap()
     }
 }
