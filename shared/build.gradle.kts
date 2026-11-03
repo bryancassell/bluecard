@@ -30,8 +30,8 @@ kotlin {
 
     // iPhones and the simulator on Apple silicon Macs. The iOS app (iosApp/) links the framework,
     // named Shared, into itself, as JetBrains' templates do. Any host compiles these targets'
-    // code, but linking them and running their tests needs a Mac with Xcode, so CI's Linux job
-    // skips those (docs/toolchain.md).
+    // code, but linking them and running their tests needs a Mac with Xcode, so CI does those in
+    // its iOS job, on macOS (docs/toolchain.md).
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         target.binaries.framework {
             baseName = "Shared"
