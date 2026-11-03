@@ -9,6 +9,7 @@ import androidx.room3.Relation
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.catalog.isoDateOrNull
+import io.github.bryancassell.bluecard.text.isSurrogatePairAt
 import kotlinx.datetime.LocalDate
 
 // What the scout records, stored in Room. Badges and requirements are identified by
@@ -43,9 +44,9 @@ data class Counselor(
     val email: String? = null
 ) {
     /**
-     * This counselor with spaces around each field trimmed and empty fields removed, or null if
-     * no field is left. Room reads a counselor with every field empty back as null, so
-     * repositories store this form.
+     * This counselor with each field as [normalizedText] stores it, or null if no field is left.
+     * Room reads a counselor with every field empty back as null, so repositories store this
+     * form.
      */
     fun normalized(): Counselor? =
         Counselor(normalizedText(name), normalizedText(phone), normalizedText(email))
@@ -83,9 +84,28 @@ const val TRACKER_NUMBER_MAX_LENGTH = 20
 
 /**
  * Text the scout typed, such as a requirement's comment, as repositories store it: without
- * spaces around it, and null if nothing is left.
+ * spaces around it, with half an emoji replaced, and null if nothing is left.
  */
-fun normalizedText(text: String?): String? = text?.trim()?.ifEmpty { null }
+fun normalizedText(text: String?): String? =
+    text?.trim()?.withLoneSurrogatesReplaced()?.ifEmpty { null }
+
+/**
+ * This text with each lone UTF-16 surrogate, such as half an emoji that was pasted or imported,
+ * replaced with U+FFFD, the replacement character. As androidx.sqlite 2.7.1 bundles it, SQLite
+ * joins a lone surrogate with the character after it when it stores the text, so that character
+ * would be lost without the scout knowing (#390). The replacement is one UTF-16 unit, as the
+ * surrogate was, so the text still fits its field's length limit. It's done here rather than
+ * where the database binds text, so a page that compares its field's text in this form with
+ * what was saved finds no unsaved edit once it's saved. Tracker values are stored as JSON, where
+ * [Converters.mapToJson] escapes a lone surrogate instead.
+ */
+private fun String.withLoneSurrogatesReplaced(): String {
+    if (none { it.isSurrogate() }) return this
+    return CharArray(length) { i ->
+        val inPair = isSurrogatePairAt(this, i) || (i > 0 && isSurrogatePairAt(this, i - 1))
+        if (this[i].isSurrogate() && !inPair) '\uFFFD' else this[i]
+    }.concatToString()
+}
 
 @Entity(
     tableName = "requirement_progress",

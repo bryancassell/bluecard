@@ -129,6 +129,21 @@ abstract class ProgressRepositoryContract {
         )
     }
 
+    // Half an emoji, as pasted or imported. SQLite joined it with the character after it.
+    @Test
+    fun setCounselor_replacesHalfAnEmoji_andKeepsTheRest() = test {
+        repository.setCounselor(
+            BADGE,
+            Counselor("Pat\uD83D Lee", "555\uDC22-0100", "pat@example.com 🏕"),
+            badgeStart
+        )
+
+        assertEquals(
+            Counselor("Pat\uFFFD Lee", "555\uFFFD-0100", "pat@example.com 🏕"),
+            progress()!!.badge.counselor
+        )
+    }
+
     @Test
     fun setCounselor_dropsBlankFields_andRemovesAnEmptyCounselor() = test {
         repository.setCounselor(BADGE, Counselor(name = "Pat", phone = " ", email = ""), badgeStart)
@@ -259,6 +274,21 @@ abstract class ProgressRepositoryContract {
 
         assertEquals("Pat", requirement("1")?.signedOffBy)
         assertEquals("At camp.", requirement("1")?.comment)
+    }
+
+    // As setCounselor_replacesHalfAnEmoji_andKeepsTheRest.
+    @Test
+    fun setRequirementSignOffAndComment_replacesHalfAnEmoji_andKeepsTheRest() = test {
+        repository.setRequirementSignOffAndComment(
+            BADGE,
+            "1",
+            "Pat\uD83D Lee",
+            "\uDC22 Lake 🏕",
+            badgeStart
+        )
+
+        assertEquals("Pat\uFFFD Lee", requirement("1")?.signedOffBy)
+        assertEquals("\uFFFD Lake 🏕", requirement("1")?.comment)
     }
 
     @Test
