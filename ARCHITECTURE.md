@@ -294,7 +294,9 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   against Material 3's advice, is in [`PRD.md`](PRD.md#design-decisions). The
   navigation root handles Back with its own `NavigationBackHandler`, added
   before the screens so that a handler a screen adds goes first
-  (`BlueCardNavDisplay.kt`).
+  (`BlueCardNavDisplay.kt`). On iOS, it also puts a Back button above every
+  page but Home and Onboarding (`rememberBackButtonNavEntryDecorator`), so
+  pages draw none.
 - **The navigation root decides whether Back asks before discarding unsaved
   changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
   arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no

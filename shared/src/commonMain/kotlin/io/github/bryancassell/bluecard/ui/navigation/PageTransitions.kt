@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.ui.unit.IntOffset
@@ -44,3 +45,18 @@ fun AnimatedContentTransitionScope<*>.openPage(): ContentTransform =
 fun AnimatedContentTransitionScope<*>.closePage(): ContentTransform =
     slideIntoContainer(SlideDirection.End, slide) togetherWith
         slideOutOfContainer(SlideDirection.End, slide)
+
+// NavDisplay seeks a swipe's transition to the swipe's progress, which iOS measures as the finger's
+// travel over the screen's width. A linear slide keeps the pages under the finger, where the
+// standard curve would run ahead of it. Once the swipe is released, NavDisplay finishes the slide,
+// or takes it back, from where the finger left it.
+private val swipeSlide: FiniteAnimationSpec<IntOffset> =
+    tween(durationMillis = 375, easing = LinearEasing)
+
+/**
+ * Going back with a swipe that moves the pages, on iOS: the pages slide as they do for
+ * [closePage], with the finger.
+ */
+fun AnimatedContentTransitionScope<*>.followBackSwipe(): ContentTransform =
+    slideIntoContainer(SlideDirection.End, swipeSlide) togetherWith
+        slideOutOfContainer(SlideDirection.End, swipeSlide)

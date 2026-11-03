@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 
+/** Android's own Back leaves the pages without a Back button. */
+internal actual val usesIosBack: Boolean = false
+
 /** Posts the task to the view, which runs it after the message being handled now. */
 @Composable
 internal actual fun rememberRunAfterCurrentEvent(): (task: () -> Unit) -> Unit {

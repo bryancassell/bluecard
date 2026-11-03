@@ -5,6 +5,9 @@ import androidx.compose.runtime.remember
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 
+/** iOS has no system Back, only the edge swipe, which nothing on screen shows. */
+internal actual val usesIosBack: Boolean = true
+
 /** Queues the task on the main queue, which runs it after the event being handled now. */
 @Composable
 internal actual fun rememberRunAfterCurrentEvent(): (task: () -> Unit) -> Unit =
