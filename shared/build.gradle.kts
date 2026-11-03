@@ -28,14 +28,25 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    // With Android as the only target, the compiler lets common code call Android and JVM APIs.
-    // With iOS's targets too, compileCommonMainKotlinMetadata refuses them, and needs no Xcode,
-    // so CI runs it with -Pbluecard.checkCommonCode=true. The targets are declared only then:
-    // built always, they'd make `build` link and run tests on an iOS simulator, which needs Xcode.
-    // #346 declares them for good.
-    if (providers.gradleProperty("bluecard.checkCommonCode").orNull == "true") {
-        iosArm64()
-        iosSimulatorArm64()
+    // iPhones and the simulator on Apple silicon Macs. The iOS app (iosApp/) links the framework,
+    // named Shared, into itself, as JetBrains' templates do. Any host compiles these targets'
+    // code, but linking them and running their tests needs a Mac with Xcode, so CI's Linux job
+    // skips those (docs/toolchain.md).
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+            binaryOption("bundleId", "io.github.bryancassell.bluecard.shared")
+        }
+        target.binaries.all {
+            // Kotlin/Native links a call to something a library expected and doesn't find, such
+            // as a Compose function that Material 3 1.9.0 was built against and Compose 1.12.2
+            // doesn't have, so that it throws when it first runs, and says nothing by default
+            // (Kotlin 2.4.21's PartialLinkageLogLevel.DEFAULT is SILENT). This makes it fail the
+            // link instead. Run in Gradle's Kotlin daemon, the link prints only "There are linkage
+            // errors"; -Pkotlin.native.disableCompilerDaemon=true prints each one.
+            freeCompilerArgs += "-Xpartial-linkage-loglevel=error"
+        }
     }
 
     android {
@@ -95,6 +106,11 @@ kotlin {
             implementation(libs.jetbrains.navigationevent.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.serialization.json)
+            // Its flows and scopes are in this module's API, such as the repositories'. Without it,
+            // Compose's libraries bring in 1.9.0, whose annotations Kotlin 2.4.21 can't link on iOS
+            // (partial linkage, below), while the tests run on the 1.11.0 that coroutines-test
+            // brings.
+            api(libs.kotlinx.coroutines.core)
             // Its dates and time zones are in this module's API, such as ZonedClock's.
             api(libs.kotlinx.datetime)
             implementation(libs.koin.annotations)
@@ -111,6 +127,16 @@ kotlin {
             // Google's Compose, which Compose Multiplatform's artifacts are on Android, at the
             // BOM's versions, or higher ones that Compose Multiplatform's artifacts depend on.
             api(project.dependencies.platform(libs.androidx.compose.bom))
+        }
+
+        iosMain.dependencies {
+            implementation(libs.androidx.sqlite.bundled)
+        }
+
+        // Tests of iOS code, which `iosSimulatorArm64Test` runs on the simulator.
+        iosTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
 
         getByName("androidHostTest").dependencies {
@@ -148,6 +174,8 @@ dependencies {
         version { strictly(libs.versions.sqlite.get()) }
     }
     add("kspAndroid", libs.androidx.room3.compiler)
+    add("kspIosArm64", libs.androidx.room3.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room3.compiler)
     // Android Studio's Compose previews need it at runtime. It isn't passed on to :app, which
     // adds it to debug builds only.
     "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
@@ -302,8 +330,9 @@ configurations.consumable("coverageSourcesElements") {
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.VERIFICATION))
         attribute(coverageAttribute, "sources")
     }
-    // The main source sets' folders that exist: common code's and androidMain's.
-    kotlin.sourceSets.filter { it.name.endsWith("Main") }
+    // The folders that exist of the source sets Android's classes are built from: common code's
+    // and androidMain's.
+    kotlin.sourceSets.filter { it.name == "commonMain" || it.name == "androidMain" }
         .flatMap { it.kotlin.srcDirs }
         .filter { it.isDirectory }
         .forEach { outgoing.artifact(it) }

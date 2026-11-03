@@ -36,3 +36,9 @@ Thumbs.db
 
 # Kotlin
 .kotlin/
+
+# Xcode: each developer's window layout and breakpoints, signing team
+# (iosApp/Configuration/Config.xcconfig), and builds outside Xcode's DerivedData folder
+xcuserdata/
+iosApp/Configuration/Local.xcconfig
+iosApp/build/
