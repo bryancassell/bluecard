@@ -104,6 +104,29 @@ class PageTransitionsTest {
         composeTestRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
 
     @Test
+    fun crossfade_leavesBothPagesInPlace_untilTheOldOneHasFaded() {
+        composeTestRule.setContent {
+            NavDisplay(
+                backStack = backStack,
+                onBack = { backStack.removeLastOrNull() },
+                transitionSpec = { crossfade() },
+                entryProvider = entryProvider {
+                    entry<Home> { Text("Home") }
+                    entry<Badges> { Text("Badges") }
+                }
+            )
+        }
+        composeTestRule.mainClock.autoAdvance = false
+
+        navigate { add(Badges) }
+
+        assertEquals(0.dp, unclippedLeft("Home"))
+        assertEquals(0.dp, unclippedLeft("Badges"))
+        finishTransition()
+        assertFalse(isDrawn("Home"))
+    }
+
+    @Test
     fun backWhileOpeningPageSlidesIn_turnsThePagesAround_sideBySide() {
         launch(LayoutDirection.Ltr)
         val width = composeTestRule.onRoot().getBoundsInRoot().width

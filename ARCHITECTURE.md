@@ -292,11 +292,11 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   creation extras: the activity's default factory would still pass it them.
 - **Pages slide side by side** (`ui/navigation/PageTransitions.kt`); why,
   against Material 3's advice, is in [`PRD.md`](PRD.md#design-decisions). The
-  navigation root handles Back with its own `NavigationBackHandler`, added
-  before the screens so that a handler a screen adds goes first
-  (`BlueCardNavDisplay.kt`). On iOS, it also puts a Back button above every
-  page but Home and Onboarding (`rememberBackButtonNavEntryDecorator`), so
-  pages draw none.
+  navigation root handles Back with its own `NavigationBackHandler`s (two on
+  iOS), added before the screens so that a handler a screen adds goes first,
+  since the last one added that's on gets Back (`BlueCardNavDisplay.kt`). On
+  iOS, it also puts a Back button above every page but Home and Onboarding
+  (`rememberBackButtonNavEntryDecorator`), so pages draw none.
 - **The navigation root decides whether Back asks before discarding unsaved
   changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
   arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no

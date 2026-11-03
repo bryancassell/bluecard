@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.metadata
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.back
 import io.github.bryancassell.bluecard.resources.ic_arrow_back_ios_new
+import io.github.bryancassell.bluecard.ui.statusBarBand
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -43,9 +44,9 @@ val WithoutBackButton: Map<String, Any> = metadata { put(HasBackButton, false) }
  * The button shows only a chevron, which screen readers read as "Back". Apple's guidelines say
  * of the Back button: "Prefer the standard symbols for each, and don't use a text label that
  * says Back or Close" (https://developer.apple.com/design/human-interface-guidelines/toolbars).
- * The bar is the color of the band behind the status bar, so the two read as one, and a page
- * scrolled up to it ends at its edge rather than running into the chevron (#315). It slides
- * with its page.
+ * The bar is the color of the band behind the status bar ([statusBarBand]), so the two read as
+ * one, and a page scrolled up to it ends at its edge rather than running into the chevron
+ * (#315). It slides with its page.
  */
 @Composable
 fun rememberBackButtonNavEntryDecorator(
@@ -67,7 +68,7 @@ fun rememberBackButtonNavEntryDecorator(
 @Composable
 private fun BackButtonBar(onBack: () -> Unit) {
     // The icon button's 48dp touch target sets the bar's height, near iOS's 44pt bars.
-    Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer)) {
+    Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.statusBarBand)) {
         IconButton(onClick = onBack) {
             Icon(
                 painterResource(Res.drawable.ic_arrow_back_ios_new),

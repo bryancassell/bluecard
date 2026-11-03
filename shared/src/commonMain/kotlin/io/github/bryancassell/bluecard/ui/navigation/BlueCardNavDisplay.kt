@@ -33,7 +33,6 @@ import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.scene.rememberNavigationEventState as rememberSceneNavigationEventState
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.defaultTransitionSpec
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
@@ -214,16 +213,12 @@ fun BlueCardNavDisplay(
         onBackCompleted = goBack
     )
     if (iosBack) {
-        // Takes the swipe from the handler above while the page has unsaved changes, since the
-        // last handler added that's on gets it. So the page stays put, and releasing the swipe
-        // asks first, as on Android, rather than showing the page underneath and then taking it
-        // away. Back still decides from the back stack as it is when it arrives, so a frame's lag
-        // in turning this on or off only changes whether the pages move.
-        NavigationBackHandler(
-            state = rememberNavigationEventState(NavigationEventInfo.None),
-            isBackEnabled = shownBackStack.size > 1 &&
-                unsavedChanges.hasChanges(entries(shownBackStack.last())),
-            onBackCompleted = goBack
+        StillWhileUnsavedBackHandler(
+            hasUnsavedChanges = {
+                val shown = currentShownBackStack
+                shown.size > 1 && unsavedChanges.hasChanges(entries(shown.last()))
+            },
+            onBack = goBack
         )
     }
     // A focus target around the pages, which takes input focus from a page that's left with it,
@@ -322,11 +317,7 @@ fun BlueCardNavDisplay(
             .focusTarget()
             .focusRequester(page)
             .focusGroup(),
-        transitionSpec = {
-            // Neither back stack is a page of the other, so they crossfade, as NavDisplay
-            // does by default.
-            if (replacesBackStack()) defaultTransitionSpec<NavKey>()(this) else openPage()
-        },
+        transitionSpec = { if (replacesBackStack()) crossfade() else openPage() },
         popTransitionSpec = { closePage() },
         predictivePopTransitionSpec = { followBackSwipe() }
     )
@@ -337,6 +328,23 @@ fun BlueCardNavDisplay(
  * and a back swipe that moves the pages with the finger.
  */
 internal expect val usesIosBack: Boolean
+
+/**
+ * Takes a back swipe from the navigation root's handler while the page on top has unsaved changes,
+ * since the last handler added that's on gets it. So the page stays put, and releasing the swipe
+ * asks first, as on Android, rather than showing the page underneath and then taking it away.
+ * Back still decides from the back stack as it is when it arrives, so a frame's lag in turning this
+ * on or off only changes whether the pages move. It reads [hasUnsavedChanges] in a scope of its
+ * own, so a page's changes coming and going recompose only this, not the pages.
+ */
+@Composable
+private fun StillWhileUnsavedBackHandler(hasUnsavedChanges: () -> Boolean, onBack: () -> Unit) {
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = hasUnsavedChanges(),
+        onBackCompleted = onBack
+    )
+}
 
 private val ArrowKeys =
     setOf(Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight)
