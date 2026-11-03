@@ -14,10 +14,12 @@ import platform.Foundation.NSLocaleLanguageCode
 import platform.Foundation.NSLocaleScriptCode
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSUserDefaults
+import platform.Foundation.canonicalLanguageIdentifierFromString
 import platform.Foundation.canonicalLocaleIdentifierFromString
 import platform.Foundation.countryCode
 import platform.Foundation.currentLocale
 import platform.Foundation.languageCode
+import platform.Foundation.localeIdentifier
 import platform.Foundation.localeIdentifierFromComponents
 import platform.Foundation.preferredLanguages
 import platform.Foundation.scriptCode
@@ -29,24 +31,28 @@ import platform.Foundation.scriptCode
 private const val APPLE_LANGUAGES = "AppleLanguages"
 
 /**
- * Saves the strings' language (`strings_language`) as the app's first preferred language, so
- * Compose Multiplatform's strings pick their plural forms by its rules. It takes them from the
+ * Saves the strings' locale ([stringsLocale]) as the app's first preferred language, so Compose
+ * Multiplatform's strings pick their plural forms by its language's rules. It takes them from the
  * first of `NSLocale.preferredLanguages` (1.12.2), which is otherwise the device's: on an iPhone
  * set to French, which counts 0 as one, the English strings read "0 night". It's JetBrains'
  * workaround (https://kotlinlang.org/docs/multiplatform/compose-resource-environment.html), as
- * setting the default locale is on Android (`useStringsLocalesByDefault`). Material 3 takes the
- * language of its labels and date picker from it too, so they're in the strings' language, as
- * UIKit's own text already is in an app with no strings in the device's language. The device's
- * languages follow it, as on Android (`stringsLocales`), for whatever reads past the first.
+ * setting the default locale is on Android (`useStringsLocalesByDefault`). The device's languages
+ * follow it, as on Android (`stringsLocales`), for whatever reads past the first.
  *
- * It's saved as `strings_language` names it, "en" for English, with no region: Material 3 writes
- * the picker's dates in the calendar of the locale it reads, which for en-IR would be the Persian
- * one. A translation needs its picker's calendar checked.
+ * Material 3 reads it too: its labels are in the strings' language, as UIKit's own text already
+ * is in an app with no strings in the device's language, and the date picker writes its dates,
+ * and takes a typed one, in the device's region, as the app's own dates are ([IosLocaleFormats]).
+ * Saved as "en", an English (UK) iPhone's picker took 03/11/2026 as March 11. It's saved in the
+ * Gregorian calendar, such as en-GB-u-ca-gregory, since the picker writes its dates in the
+ * locale's own calendar, which for en-IR would be the Persian one. A change of region while the
+ * app runs reaches the picker at the next launch.
  *
  * iOS keeps it in the app's `AppleLanguages` user default, which outlasts the app, so the one
  * saved at the last launch is removed first. The strings' language is then read in the device's
  * own languages, and a change to them is seen at the next launch. The app calls this as it
- * starts, before Compose reads the language.
+ * starts, before Compose reads the language. Launching it with `-AppleLanguages`, as Xcode's App
+ * Language option and UI tests can, overrides it, since launch arguments outrank what an app
+ * saves.
  *
  * Saving it was chosen over setting it for each launch only, in the argument domain, on PR #397.
  * Once a translation is in the Xcode project, that has two costs to revisit. iOS keeps the
@@ -62,10 +68,20 @@ fun useStringsLanguageByDefault() =
 internal fun useStringsLanguageByDefault(stringsLanguage: () -> String) {
     val defaults = NSUserDefaults.standardUserDefaults
     defaults.removeObjectForKey(APPLE_LANGUAGES)
-    val language = stringsLanguage()
+    val first = gregorianLanguageTag(stringsLocale(stringsLanguage(), currentRegion()))
     val device = NSLocale.preferredLanguages.filterIsInstance<String>()
-    defaults.setObject((listOf(language) + device).distinct(), APPLE_LANGUAGES)
+    defaults.setObject((listOf(first) + device).distinct(), APPLE_LANGUAGES)
 }
+
+/**
+ * [locale] as a BCP 47 tag in the Gregorian calendar, such as en-GB-u-ca-gregory. Foundation
+ * would write en_GB@calendar=gregorian as "en-GB@calendar=gregorian", which isn't one.
+ */
+internal fun gregorianLanguageTag(locale: NSLocale): String =
+    NSLocale.canonicalLanguageIdentifierFromString(locale.localeIdentifier) + "-u-ca-gregory"
+
+/** The device's Region setting, such as "FR". */
+internal fun currentRegion(): String? = NSLocale.currentLocale.countryCode
 
 /**
  * The locale the app's strings are formatted in: their language, [stringsLanguage] (a BCP 47 tag
@@ -95,13 +111,12 @@ internal fun stringsLocale(stringsLanguage: String, region: String?): NSLocale {
  * documentation of it says, but iOS posts [NSCurrentLocaleDidChangeNotification] when it does.
  * Each is read with [currentRegion].
  */
-internal fun deviceRegions(
-    currentRegion: () -> String? = { NSLocale.currentLocale.countryCode }
-): Flow<String?> = callbackFlow {
-    val center = NSNotificationCenter.defaultCenter
-    val observer = center.addObserverForName(NSCurrentLocaleDidChangeNotification, null, null) {
+internal fun deviceRegions(currentRegion: () -> String? = ::currentRegion): Flow<String?> =
+    callbackFlow {
+        val center = NSNotificationCenter.defaultCenter
+        val observer = center.addObserverForName(NSCurrentLocaleDidChangeNotification, null, null) {
+            trySend(currentRegion())
+        }
         trySend(currentRegion())
+        awaitClose { center.removeObserver(observer) }
     }
-    trySend(currentRegion())
-    awaitClose { center.removeObserver(observer) }
-}

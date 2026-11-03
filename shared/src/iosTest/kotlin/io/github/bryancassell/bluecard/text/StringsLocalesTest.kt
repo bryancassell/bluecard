@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.text
 
 import androidx.compose.ui.text.intl.Locale
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -9,10 +10,12 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import platform.Foundation.NSCalendarIdentifierGregorian
 import platform.Foundation.NSCurrentLocaleDidChangeNotification
 import platform.Foundation.NSLocale
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSUserDefaults
+import platform.Foundation.calendarIdentifier
 import platform.Foundation.countryCode
 import platform.Foundation.currentLocale
 import platform.Foundation.languageCode
@@ -21,9 +24,10 @@ import platform.Foundation.preferredLanguages
 import platform.Foundation.scriptCode
 
 class StringsLocalesTest {
-    // What a test saved, so the simulator's languages are its own again for the next.
+    // What an earlier run or test saved, so the simulator's languages are its own.
+    @BeforeTest
     @AfterTest
-    fun removeSavedLanguage() {
+    fun removeSavedLanguages() {
         NSUserDefaults.standardUserDefaults.removeObjectForKey("AppleLanguages")
     }
 
@@ -33,8 +37,17 @@ class StringsLocalesTest {
     fun useStringsLanguageByDefault_makesItTheLanguageComposeReads() {
         useStringsLanguageByDefault { "fr" }
 
-        assertEquals("fr", NSLocale.preferredLanguages.first())
         assertEquals("fr", Locale.current.language)
+    }
+
+    // As the app's own dates are, which Material 3's date picker reads it for.
+    @Test
+    fun useStringsLanguageByDefault_savesItInTheDevicesRegion_inTheGregorianCalendar() {
+        useStringsLanguageByDefault { "fr" }
+
+        val saved = NSLocale(NSLocale.preferredLanguages.first() as String)
+        assertEquals(currentRegion(), saved.countryCode)
+        assertEquals(NSCalendarIdentifierGregorian, saved.calendarIdentifier)
     }
 
     @Test
@@ -43,7 +56,22 @@ class StringsLocalesTest {
 
         useStringsLanguageByDefault { "fr" }
 
-        assertEquals(listOf<Any?>("fr") + device.filter { it != "fr" }, NSLocale.preferredLanguages)
+        val first = gregorianLanguageTag(stringsLocale("fr", currentRegion()))
+        assertEquals(
+            listOf<Any?>(first) + device.filter {
+                it != first
+            },
+            NSLocale.preferredLanguages
+        )
+    }
+
+    // Iran's calendar is the Persian one.
+    @Test
+    fun gregorianLanguageTag_isTheLocaleInTheGregorianCalendar() {
+        val tag = gregorianLanguageTag(NSLocale("en_IR"))
+
+        assertEquals("en-IR-u-ca-gregory", tag)
+        assertEquals(NSCalendarIdentifierGregorian, NSLocale(tag).calendarIdentifier)
     }
 
     // So the strings are picked by the device's languages, not by what the last launch saved.

@@ -86,34 +86,42 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
     override fun formatList(items: List<String>): String =
         listFormatter.stringFromItems(items) ?: ""
 
-    // By the locale's language and script, since the script can change it: Punjabi is written
-    // left-to-right, but right-to-left in its Arabic script (pa-Arab).
-    private val rightToLeft by lazy {
-        NSLocale.characterDirectionForLanguage(
-            NSLocale.canonicalLanguageIdentifierFromString(locale.localeIdentifier)
-        ) == NSLocaleLanguageDirectionRightToLeft
+    private val rightToLeft by lazy { isRightToLeft(locale.localeIdentifier) }
+
+    // As Android's BidiFormatter.unicodeWrap wraps it. Text in the other direction from the
+    // locale's is embedded in its own, with a mark of the locale's direction on each side, so a
+    // Persian name keeps its final period at its end in an English sentence. Its direction is that
+    // of its first UTF-16 unit that has one, as BidiFormatter's first-strong heuristic reads it. A
+    // surrogate's is left-to-right, so text that starts beyond the Basic Multilingual Plane, as
+    // with an emoji, isn't embedded, and text with no direction counts as left-to-right. Other text
+    // gets a mark before it if its first code point with a direction is the other one, and after
+    // it if its last is, so what's around it isn't drawn into it.
+    override fun typedText(text: String): String {
+        val context = if (rightToLeft) Direction.RightToLeft else Direction.LeftToRight
+        val other = if (rightToLeft) Direction.LeftToRight else Direction.RightToLeft
+        val mark = if (rightToLeft) RLM else LRM
+        val direction = text.firstNotNullOfOrNull {
+            if (it.isSurrogate()) Direction.LeftToRight else strongDirection(it.code)
+        } ?: Direction.LeftToRight
+        val embedded = direction != context
+        val markBefore =
+            embedded || codePoints(text).firstNotNullOfOrNull(::strongDirection) == other
+        val markAfter = embedded || lastStrongDirection(text) == other
+        val embedding = if (direction == Direction.RightToLeft) RLE else LRE
+        return (if (markBefore) "$mark" else "") +
+            (if (embedded) "$embedding$text$PDF" else text) +
+            (if (markAfter) "$mark" else "")
     }
 
-    // As Android's BidiFormatter wraps it: text whose first letter is in the other direction from
-    // the locale's is embedded in its own, with a mark of the locale's direction on each side, so
-    // a Persian name keeps its final period at its end in an English sentence. Text with no letter
-    // counts as left-to-right. Other text that ends in the other direction gets a mark after it, so
-    // what follows isn't drawn into it.
-    override fun typedText(text: String): String {
-        val directions = codePoints(text).mapNotNull(::strongDirection).toList()
-        val context = if (rightToLeft) Direction.RightToLeft else Direction.LeftToRight
-        val mark = if (rightToLeft) RLM else LRM
-        val first = directions.firstOrNull() ?: Direction.LeftToRight
-        return when {
-            first != context -> {
-                val embedding = if (first == Direction.RightToLeft) RLE else LRE
-                "$mark$embedding$text$PDF$mark"
-            }
-
-            directions.lastOrNull().let { it != null && it != context } -> "$text$mark"
-
-            else -> text
+    // The direction of the last code point of [text] that has one, read from its end.
+    private fun lastStrongDirection(text: String): Direction? {
+        var end = text.length
+        while (end > 0) {
+            val start = if (end >= 2 && isSurrogatePairAt(text, end - 2)) end - 2 else end - 1
+            strongDirection(codePointAt(text, start))?.let { return it }
+            end = start
         }
+        return null
     }
 
     private enum class Direction { LeftToRight, RightToLeft }
@@ -168,3 +176,12 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
         const val RLO = 0x202E
     }
 }
+
+/**
+ * Whether [locale], a locale identifier or BCP 47 tag, is written right-to-left. Its script
+ * counts as well as its language: Punjabi is written left-to-right, but right-to-left in its
+ * Arabic script, pa-Arab.
+ */
+internal fun isRightToLeft(locale: String): Boolean = NSLocale.characterDirectionForLanguage(
+    NSLocale.canonicalLanguageIdentifierFromString(locale)
+) == NSLocaleLanguageDirectionRightToLeft

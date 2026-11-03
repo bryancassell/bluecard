@@ -132,6 +132,23 @@ abstract class LocaleFormatsContract {
         assertEquals("\u200E\u202B\u202BAlex\u202C\u200E", formats("en-US").typedText("\u202BAlex"))
     }
 
+    // BidiFormatter decides whether to embed by the first UTF-16 unit with a direction, and a
+    // surrogate's is left-to-right, so text that starts beyond the Basic Multilingual Plane isn't
+    // embedded. The marks around it go by code point, so this Persian name still gets them.
+    @Test
+    fun typedText_startingWithAnEmoji_isntEmbedded() {
+        assertEquals("\u200E\uD83D\uDE00علی\u200E", formats("en-US").typedText("\uD83D\uDE00علی"))
+    }
+
+    // Adlam, a right-to-left script beyond the Basic Multilingual Plane.
+    @Test
+    fun typedText_inAScriptBeyondTheBasicPlane_isBetweenMarks() {
+        assertEquals(
+            "\u200E\uD83A\uDD00\uD83A\uDD22\uD83A\uDD2A\u200E",
+            formats("en-US").typedText("\uD83A\uDD00\uD83A\uDD22\uD83A\uDD2A")
+        )
+    }
+
     @Test
     fun typedText_inTheLocalesDirection_isUnchanged() {
         assertEquals("Alex Scout", formats("en-US").typedText("Alex Scout"))

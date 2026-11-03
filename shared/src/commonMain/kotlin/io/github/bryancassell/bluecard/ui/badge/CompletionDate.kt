@@ -319,7 +319,7 @@ private fun ColumnScope.DatePickerButtons(
 /**
  * The direction of the language the picker shows its labels and dates in, which Material 3 takes
  * from the device on Android, not the strings. The rest of the app is laid out in the strings'
- * language's direction instead. On iOS, Material 3 reads the strings' language.
+ * language's direction instead. On iOS, Material 3 reads the strings' locale.
  */
 @Composable
 @ReadOnlyComposable

@@ -58,23 +58,7 @@ class IosLocaleFormatsTest : LocaleFormatsContract() {
         assertEquals(wrapped(text), formats.typedText(text))
     }
 
-    // Adlam's letters are beyond the Basic Multilingual Plane, as two UTF-16 units each.
-    @Test
-    fun typedText_inAScriptBeyondTheBasicPlane_isWrappedToKeepIt() {
-        val text = text(0x1E900, 0x1E922, 0x1E92A)
-
-        assertEquals(wrapped(text), formats.typedText(text))
-    }
-
-    private fun text(vararg codePoints: Int) = codePoints.joinToString("") {
-        if (it <= 0xFFFF) {
-            it.toChar().toString()
-        } else {
-            val offset = it - 0x10000
-            charArrayOf((0xD800 + (offset shr 10)).toChar(), (0xDC00 + (offset and 0x3FF)).toChar())
-                .concatToString()
-        }
-    }
+    private fun text(vararg codePoints: Int) = codePoints.joinToString("") { Char(it).toString() }
 
     // Between left-to-right marks, embedded as right-to-left.
     private fun wrapped(text: String) = text(0x200E, 0x202B) + text + text(0x202C, 0x200E)
