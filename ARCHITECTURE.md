@@ -63,7 +63,7 @@ own documentation says so, and each such claim links to the page.
 
 ## Overview
 
-BlueCard is a single-activity Android app built with Jetpack Compose. A scout
+BlueCard is an Android and iOS app built with Compose Multiplatform. A scout
 enters their name and unit number once, browses and searches the merit badge
 catalog, and records progress on each badge: counselor details, per-requirement
 completion dates and notes, larger trackers such as exercise logs, or a
@@ -77,10 +77,10 @@ What the architecture must provide, beyond the features listed in
 them.
 
 1. **All data stays on the device.** There is no server, account or app sync.
-   Android's own Auto Backup, which the scout can turn off, is the only
-   automatic copy off the device (see req. 4). The only network use is opening
-   official Scouting America pages in the browser, which the browser does, so
-   the app itself needs no internet access.
+   The system's own backup, Android's Auto Backup or iCloud Backup, which the
+   scout can turn off, is the only automatic copy off the device (see req. 4).
+   The only network use is opening official Scouting America pages in the
+   browser, which the browser does, so the app itself needs no internet access.
 2. **The merit badge catalog is our own data.** Scouting America's
    [terms of use](https://www.scouting.org/legal/terms-and-conditions/) forbid
    reusing or compiling their content without written permission, so the app
@@ -92,10 +92,12 @@ them.
 4. **Recorded progress survives a phone change**, through Android Auto Backup
    and the app's own export and import.
 5. **No special permissions.** Saving, sharing, exporting and importing go
-   through the system file picker and Sharesheet, so the app requests no
-   storage or other runtime permissions.
-6. **Runs on the project's `minSdk`** (currently API 26). Raising it is decided
-   case by case, when a feature or API needs it.
+   through the system's file picker and share sheet, so the app requests no
+   storage or other runtime permissions, on Android or iOS.
+6. **Runs on the project's `minSdk`** (currently API 26) **and iOS 17 or
+   later.** Raising either is decided case by case, when a feature or API needs
+   it. iOS 17 is the lowest that Xcode 27 can run and debug on an iPhone, so
+   every supported version can be checked on one.
 7. **New catalog content needs no new code.** Adding a badge, a requirements
    version or a tracker is a change to the catalog file only.
 8. **Testable with local tests and fakes.** Every class with logic can be
@@ -104,7 +106,8 @@ them.
    class.
 9. **Follows Android's architecture guidance**, meaning the items its
    recommendations page marks "strongly recommended" (see
-   [Architecture approach](#architecture-approach)).
+   [Architecture approach](#architecture-approach)). The iOS app runs the same
+   UI and data layers, so it follows it too.
 
 ## Success criteria
 
@@ -115,14 +118,14 @@ part of the app.
 
 | Outcome | Checks |
 |---|---|
-| Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through Android's system backup (req. 1) | The merged manifest declares no `INTERNET` permission. |
+| Everything works with no network connection, and the app itself sends no data off the device; data leaves only when the scout shares or exports it, or through the system's backup (req. 1) | The merged manifest declares no `INTERNET` permission. iOS has no such permission, so code review checks that iOS code opens no connection. |
 | The catalog contains only our own content (req. 2) | Catalog validation test requires an official page URL for every badge and rank **(CI)**. Catalog changes are reviewed against the authoring rules in [`docs/catalog.md`](docs/catalog.md). No badge images or logos in the app's resources. |
 | An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `shared/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
-| The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. |
-| The app runs on every Android version from `minSdk` up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. |
+| The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. The iOS app's `Info.plist` has no usage descriptions (`NS…UsageDescription`), which iOS requires before it asks for a permission. |
+| The app runs on every Android version from `minSdk` up and every iOS version from 17 up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. Xcode refuses Swift calls to APIs newer than iOS 17; code review checks Kotlin's calls to iOS APIs. |
 | A new tracker needs only catalog data (req. 7) | Tests render and store trackers defined only in test catalog data (`TrackerEntryViewModelTest`, `MainActivityTest`) **(CI)**. |
-| The code stays testable as it grows (req. 8) | Every class, except generated code, `@Preview` functions and `PdfDocumentWriter` (which only runs on a device), has at least 80% line coverage from local tests **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
+| The code stays testable as it grows (req. 8) | Every class, except generated code, `@Preview` functions, `PdfDocumentWriter` (which only runs on a device) and iOS code, has at least 80% line coverage from local tests **(CI)**. iOS code's classes have tests on the iOS simulator, whose coverage nothing measures ([#355](https://github.com/bryancassell/bluecard/issues/355)). Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
 
 ## Architecture approach
@@ -155,6 +158,10 @@ marks "strongly recommended":
   [modularization guide](https://developer.android.com/topic/modularization/patterns#test-modules)
   suggests. Within each, code is organized by package (see
   [Package layout](#package-layout)).
+- **The iOS app is an Xcode project, `iosApp/`,** that links `:shared` as a
+  framework and shows its UI in a `ComposeUIViewController`, as in JetBrains'
+  [recommended structure](https://kotlinlang.org/docs/multiplatform/multiplatform-project-recommended-structure.html).
+  Its Swift only starts it, so its code is in `:shared`.
 
 ```
 UI layer        Compose screens  ──events──▶  ViewModels (uiState: StateFlow)
@@ -525,12 +532,12 @@ names, only works on Android, and code shared with iOS must work there too
 [compiler plugin](https://insert-koin.io/docs/reference/koin-compiler/compile-safety)
 fails the build for a missing dependency, as Hilt did.
 
-- **Two modules list every definition** (`di/`): `appModule`, in common code,
-  and `androidModule`, for what needs Android. Besides the repositories, they
-  provide a dispatcher (`@IoDispatcher`), an app-lifetime `CoroutineScope`
-  (`@ApplicationScope`), a `ZonedClock`, a `WarningLog`, `TextRules`,
-  `PhoneNumberFormat` and `Documents`, the dispatcher, clock and log so tests
-  can replace them.
+- **Three modules list every definition** (`di/`): `appModule`, in common code,
+  and `androidModule` and `iosModule`, for what needs each platform. Besides
+  the repositories, they provide a dispatcher (`@IoDispatcher`), an
+  app-lifetime `CoroutineScope` (`@ApplicationScope`), a `ZonedClock`, a
+  `WarningLog`, `TextRules`, `PhoneNumberFormat` and `Documents`, the
+  dispatcher, clock and log so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could
@@ -538,13 +545,15 @@ fails the build for a missing dependency, as Hilt did.
 
 ## Package layout
 
-`:app` and `:shared` use the same packages. `:shared`'s `androidMain` has only
-what needs Android. Common code reaches it through interfaces that
-`androidModule` provides (see [Dependency injection](#dependency-injection)),
-or, for Compose calls, which Koin can't make, through `expect` declarations,
-such as `rememberOtherApps()`, as the
+`:app` and `:shared` use the same packages. `:shared`'s `androidMain` and
+`iosMain` have only what needs each platform. Common code reaches it through
+interfaces that `androidModule` and `iosModule` provide (see
+[Dependency injection](#dependency-injection)), or, for Compose calls, which
+Koin can't make, through `expect` declarations, such as `rememberOtherApps()`,
+as the
 [Kotlin docs](https://kotlinlang.org/docs/multiplatform/multiplatform-connect-to-apis.html)
-suggest for simple cases. Their `actual`s are in `.android.kt` files.
+suggest for simple cases. Their `actual`s are in `.android.kt` and `.ios.kt`
+files.
 
 ```
 io.github.bryancassell.bluecard
@@ -567,7 +576,7 @@ io.github.bryancassell.bluecard
 │   ├── report/         ReportRepository (PDF)
 │   └── backup/         BackupRepository and the export format
 ├── text/               The strings' locales, text formats and rules (LocaleFormats, TextRules)
-│                       and their Android implementations, and line breaks as spaces, for the
+│                       and each platform's implementations, and line breaks as spaces, for the
 │                       screens and for code outside Compose, such as the PDF report and import
 └── di/                 Koin modules
 ```
@@ -963,8 +972,8 @@ LeakCanary. Release builds have neither.
 [`docs/toolchain.md`](docs/toolchain.md#debug-tools) says how to use them.
 
 - **Debug builds have their own application ID,
-  `io.github.bryancassell.bluecard.debug`**
-  ([#245](https://github.com/bryancassell/bluecard/issues/245)). A test
+  `io.github.bryancassell.bluecard.debug`**, also the iOS app's debug bundle
+  ID ([#245](https://github.com/bryancassell/bluecard/issues/245)). A test
   release and a debug build are signed with different keys, so with one ID,
   installing either meant uninstalling the other, which deletes its data.
   Their launcher name is "BlueCard Debug", on an orange icon, since launchers
@@ -989,7 +998,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | Decision | Choice | Why |
 |---|---|---|
 | [Architecture](#architecture-approach) | UI and data layers; no domain layer yet | Android's recommendations; the domain layer is optional |
-| [Modules](#architecture-approach) | `:app` for the Android app, `:shared` for code to share with iOS, `:testing` for test code both use | AGP 9's Kotlin Multiplatform plugin can't be in the app's module |
+| [Modules](#architecture-approach) | `:app` for the Android app, `:shared` for code to share with iOS, `:testing` for test code both use; `iosApp/`, an Xcode project, for the iOS app | AGP 9's Kotlin Multiplatform plugin can't be in the app's module |
 | [Navigation](#navigation) | Navigation 3 | Named by the recommendations page; stable since 1.0.0 |
 | [Focus between pages](#navigation) | A focus target around the pages takes the focus a page lets go of | Otherwise Compose gives it to a page's first item, which opened the keyboard on Badges |
 | [Saved back stack](#navigation) | A `NavBackStack<BlueCardNavKey>` saved with the sealed interface's serializer | No reflection for R8 to break, and no experimental API |
@@ -1021,5 +1030,5 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked by hand | The app optimization guide recommends it |
 | [Release signing](#release-build) | `apksigner` signs when publishing, and Gradle builds unsigned; test builds are GitHub pre-releases | The key's password never reaches a Gradle build |
-| [Debug application ID](#debug-builds) | Debug builds' application ID ends in `.debug` | A debug build and a test release install side by side |
+| [Debug application ID](#debug-builds) | Debug builds' application ID, and iOS bundle ID, ends in `.debug` | A debug build and a test release install side by side |
 | [Debug tools](#debug-builds) | StrictMode and LeakCanary in debug builds only; StrictMode never crashes | They catch disk access and leaks while the app is in use |

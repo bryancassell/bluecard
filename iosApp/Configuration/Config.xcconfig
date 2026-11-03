@@ -1,0 +1,11 @@
+// The iOS app's settings that differ between developers' machines, under the project's own build
+// settings.
+//
+// A build for an iPhone is signed with your Apple developer team, which Local.xcconfig gives. Git
+// leaves that file out, so the repository holds no one's team (docs/toolchain.md, Running the iOS
+// app on an iPhone). It has one line:
+//
+//     DEVELOPMENT_TEAM = <your team ID>
+//
+// A build for the simulator needs no team, so the file can be missing.
+#include? "Local.xcconfig"

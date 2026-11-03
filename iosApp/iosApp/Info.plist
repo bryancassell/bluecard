@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    The keys Xcode's build settings can't set. Xcode adds the rest (GENERATE_INFOPLIST_FILE),
+    such as the display name, from the project's build settings.
+-->
+<plist version="1.0">
+<dict>
+	<!-- Lets Compose draw at up to 120 Hz on iPhones that can. Compose Multiplatform stops the
+	     app at launch without it. -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<!-- Only the page's color, light or dark, which the empty page that follows it shows until
+	     the profile loads. Apple's guidelines ask for a launch screen nearly identical to the
+	     first screen, without a logo:
+	     https://developer.apple.com/design/human-interface-guidelines/launching
+	     LaunchBackground is the color schemes' background, as Android's window background is
+	     (app/src/main/res/values/colors.xml). -->
+
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
+</dict>
+</plist>
