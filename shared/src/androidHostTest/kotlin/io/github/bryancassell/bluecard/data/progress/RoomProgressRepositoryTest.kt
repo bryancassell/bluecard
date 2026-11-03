@@ -271,6 +271,21 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertEquals(noCode, error)
     }
 
+    // replaceAll stores what it's given, so only Converters' escape keeps a lone surrogate from
+    // being joined with the JSON's closing quote, which left the JSON unreadable.
+    @Test
+    fun replaceAll_trackerValueWithALoneSurrogate_readsBackAsGiven() = runTest {
+        val values = mapOf("Notes" to "Trail \uD83D", "Place" to "\uDC22 camp 🏕")
+        val entry = TrackerEntry(badgeId = "archery", requirementNumber = "9a", values = values)
+
+        repository.replaceAll(
+            listOf(BadgeProgressDetails(start.progress("archery"), emptyList(), listOf(entry)))
+        )
+
+        val stored = repository.observeProgress("archery").first()!!.trackerEntries.single()
+        assertEquals(values, stored.values)
+    }
+
     @Test
     fun writing_whenSomethingOtherThanSQLiteFails_throwsTheBugUnwrapped() = runTest {
         val bug = IllegalArgumentException("Test failure")

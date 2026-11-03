@@ -271,6 +271,18 @@ class EditCounselorViewModelTest {
         assertFalse(viewModel.ready().changed)
     }
 
+    // The page compares its fields with what's saved as the repository stores them.
+    @Test
+    fun halfAnEmoji_savedWithAReplacementCharacter_isNoChange() = runTest {
+        saveCounselor(Counselor("Pat\uD83D Lee", "555\uDC22-0100"))
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.typeAll(Counselor("Pat\uD83D Lee", "555\uDC22-0100"))
+
+        assertFalse(viewModel.ready().changed)
+    }
+
     @Test
     fun save_someFieldsEmpty_savesTheRest() = runTest {
         progressRepository.startBadge("camping", newest, started)

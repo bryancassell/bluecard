@@ -38,6 +38,14 @@ abstract class ProfileRepositoryContract {
         assertEquals(Profile("Sam Scout", "456"), repository.observeProfile().first())
     }
 
+    // Half an emoji, as pasted or imported, stored as the app stores all the scout's text.
+    @Test
+    fun saveProfile_trimsSpaces_andReplacesHalfAnEmoji() = runTest {
+        repository.saveProfile(Profile(" Alex\uD83D Scout ", "\uDC22123 "))
+
+        assertEquals(Profile("Alex\uFFFD Scout", "\uFFFD123"), repository.observeProfile().first())
+    }
+
     @Test
     fun observeProfile_whenUnreadable_throwsIOException() = runTest {
         val error = runCatching {

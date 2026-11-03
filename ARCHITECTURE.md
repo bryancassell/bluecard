@@ -786,8 +786,8 @@ requirements version a badge is worked on (`BadgeVersion.kt`), all in
   so a save that fails doesn't leave the badge started. A new function that a
   screen can call before the badge is started should take one too.
 - **The repository cleans up what the scout types,** not the screens: it trims
-  spaces around each value and drops blank ones (`normalizedText`,
-  `normalizedTrackerValues`, `Counselor.normalized`).
+  values, replaces half an emoji, drops blanks (`normalizedText`,
+  `normalizedTrackerValues`, `Counselor.normalized`, `Profile.normalized`).
 - **A page that closes once its save succeeds closes itself from UI state**
   (`saved` or `done`), following the UI layer guide's
   [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),

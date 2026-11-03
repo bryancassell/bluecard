@@ -217,6 +217,18 @@ class EditProfileViewModelTest {
         assertEquals(Profile("Sam\uFFFD Scout", "Crew\uFFFD 7"), saved())
     }
 
+    // The page compares its fields with what's saved as the repository stores them.
+    @Test
+    fun halfAnEmoji_savedWithAReplacementCharacter_isNoChange() = runTest {
+        profileRepository.saveProfile(Profile("Alex\uD83D Scout", "123"))
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.typeAll(Profile("Alex\uD83D Scout", "123"))
+
+        assertFalse(viewModel.ready().changed)
+    }
+
     @Test
     fun unsavedFields_areKeptWhenProfileChanges() = runTest {
         val viewModel = viewModel()

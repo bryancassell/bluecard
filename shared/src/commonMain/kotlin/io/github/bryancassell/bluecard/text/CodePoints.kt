@@ -14,24 +14,32 @@ internal fun isSurrogatePairAt(text: String, index: Int): Boolean =
  * an emoji left by a paste.
  */
 internal fun isLoneSurrogateAt(text: String, index: Int): Boolean {
-    val pairStartsHere = isSurrogatePairAt(text, index)
+    if (!text[index].isSurrogate()) return false
     val pairEndsHere = index > 0 && isSurrogatePairAt(text, index - 1)
-    return text[index].isSurrogate() && !pairStartsHere && !pairEndsHere
+    return !isSurrogatePairAt(text, index) && !pairEndsHere
 }
 
 /**
- * [text] with each lone surrogate replaced with U+FFFD, the replacement character, as the app
- * stores what the scout types (`normalizedText`, `normalizedTrackerValues` and the profile's
- * pages). A lone surrogate isn't a character, and storing one loses more than it. As
- * androidx.sqlite 2.7.1 bundles it, SQLite joins one with the character after it, which is lost
- * (#390). Java's UTF-8 encoder, which an export and DataStore use on Android, writes `?` for it
- * (checked on the JVM). Replaced, the text reads back, exports and imports as it's shown. Each
- * UTF-16 unit stays one, so the text still fits its field's length limit.
+ * [text] with each lone surrogate replaced with [replacement]'s text for it, by default U+FFFD,
+ * the replacement character. The app stores what the scout types that way (`normalizedText`,
+ * `normalizedTrackerValues`, `Profile.normalized`). A lone surrogate isn't a character, and
+ * storing one loses more than it. As androidx.sqlite 2.7.1 bundles it, SQLite joins one with the
+ * character after it, which is lost (#390). Java's UTF-8 encoder, which an export and DataStore
+ * use on Android, writes `?` for it (checked on the JVM). Replaced, the text reads back, exports
+ * and imports as it's shown. U+FFFD is one UTF-16 unit, as the surrogate was, so the text still
+ * fits its field's length limit.
  */
-internal fun replacingLoneSurrogates(text: String): String {
-    if (text.indices.none { isLoneSurrogateAt(text, it) }) return text
-    return CharArray(text.length) { if (isLoneSurrogateAt(text, it)) '\uFFFD' else text[it] }
-        .concatToString()
+internal fun replacingLoneSurrogates(
+    text: String,
+    replacement: (Char) -> String = { "\uFFFD" }
+): String {
+    val first = text.indices.firstOrNull { isLoneSurrogateAt(text, it) } ?: return text
+    return buildString(text.length) {
+        appendRange(text, 0, first)
+        for (i in first until text.length) {
+            if (isLoneSurrogateAt(text, i)) append(replacement(text[i])) else append(text[i])
+        }
+    }
 }
 
 /**

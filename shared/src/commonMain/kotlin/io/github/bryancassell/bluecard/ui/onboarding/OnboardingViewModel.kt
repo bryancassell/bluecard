@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.di.WarningLog
-import io.github.bryancassell.bluecard.text.replacingLoneSurrogates
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
 import io.github.bryancassell.bluecard.ui.textFieldState
@@ -48,17 +47,13 @@ class OnboardingViewModel(
     )
 
     /**
-     * Saves the profile, trimmed and with half an emoji replaced ([replacingLoneSurrogates]).
-     * Does nothing while saving, once saved, or if either field is
-     * blank. Checks the fields' text directly, so it can save before [uiState] catches up with
-     * the last keystroke.
+     * Saves the profile, which the repository stores trimmed ([Profile.normalized]). Does
+     * nothing while saving, once saved, or if either field is blank. Checks the fields' text
+     * directly, so it can save before [uiState] catches up with the last keystroke.
      */
     fun save() {
         if (!currentUiState().canSave) return
-        val profile = Profile(
-            replacingLoneSurrogates(name.text.toString().trim()),
-            replacingLoneSurrogates(unitNumber.text.toString().trim())
-        )
+        val profile = Profile(name.text.toString(), unitNumber.text.toString())
         saveStatus.value = SaveStatus.Saving
         saves.launch {
             try {

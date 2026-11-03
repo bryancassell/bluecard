@@ -409,6 +409,18 @@ class TrackerEntryViewModelTest {
         assertEquals(listOf(mapOf("activity" to "Run")), entries().map { it.values })
     }
 
+    // The page compares its fields with what's saved as normalizedTrackerValues stores them.
+    @Test
+    fun halfAnEmoji_savedWithAReplacementCharacter_isNoChange() = runTest {
+        val id = addSession(mapOf("activity" to "Run\uD83D 5k"))
+        val viewModel = viewModel(entryId = id)
+        startCollecting(viewModel)
+
+        viewModel.type("activity", "Run\uD83D 5k")
+
+        assertFalse(viewModel.ready().changed)
+    }
+
     @Test
     fun onlySpaces_cantBeSaved() = runTest {
         val viewModel = viewModel()
