@@ -28,9 +28,10 @@ any machine and in CI.
 
    Check it worked: `java -version` and `adb --version` should both print a version.
 
-4. **Install Xcode**, for the iOS app, from the Mac App Store. Open it once,
-   accept its license, and install the iOS platform when it asks, which brings
-   the simulator. If `xcode-select -p` doesn't print
+4. **Install Xcode** from the Mac App Store. The iOS app needs it, and so does
+   `./gradlew build` on a Mac, which runs the iOS tests on the simulator. Open
+   it once, accept its license, and install the iOS platform when it asks,
+   which brings the simulator. If `xcode-select -p` doesn't print
    `/Applications/Xcode.app/Contents/Developer`, run
    `sudo xcode-select -s /Applications/Xcode.app`. Check it worked:
    `xcrun simctl list runtimes` lists an iOS runtime.

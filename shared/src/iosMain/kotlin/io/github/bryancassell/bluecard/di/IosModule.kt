@@ -64,13 +64,59 @@ internal object NSLogWarningLog : WarningLog {
 }
 
 /**
- * Writes [text] with NSLog. It's the format, with each % doubled so it prints as is: Kotlin passes
- * a string to a C function's variable arguments as C text, not the NSString that %@ needs, which
- * crashed the app.
+ * Writes [text] with NSLog, in as many messages as [logMessages] needs. Each is the format, with
+ * each % doubled so it prints as is: Kotlin passes a string to a C function's variable arguments
+ * as C text, not the NSString that %@ needs, which crashed the app.
  */
 internal fun nsLog(text: String) {
-    NSLog(text.replace("%", "%%"))
+    for (message in logMessages(text)) NSLog(message.replace("%", "%%"))
 }
+
+/**
+ * [text] in messages of up to [maxBytes] bytes of UTF-8, which the unified log keeps whole. It
+ * keeps only about the first 1,015 bytes of a message, then writes "<…>" (checked on an iOS 27
+ * simulator), which would cut a stack trace off after its first frames. A message ends at the
+ * end of a line where it can, so each frame stays on one line.
+ */
+internal fun logMessages(text: String, maxBytes: Int = 1000): List<String> {
+    val messages = mutableListOf<String>()
+    var message: String? = null
+    for (piece in text.lines().flatMap { it.inPiecesOf(maxBytes) }) {
+        val joined = if (message == null) piece else "$message\n$piece"
+        if (joined.utf8Bytes() <= maxBytes) {
+            message = joined
+        } else {
+            messages += message!!
+            message = piece
+        }
+    }
+    messages += message.orEmpty()
+    return messages
+}
+
+// The line, cut between characters into pieces of up to maxBytes bytes if it's longer.
+private fun String.inPiecesOf(maxBytes: Int): List<String> {
+    if (utf8Bytes() <= maxBytes) return listOf(this)
+    val pieces = mutableListOf<String>()
+    var start = 0
+    var bytes = 0
+    var i = 0
+    while (i < length) {
+        val end = if (this[i].isHighSurrogate() && i + 1 < length) i + 2 else i + 1
+        val charBytes = substring(i, end).utf8Bytes()
+        if (bytes + charBytes > maxBytes) {
+            pieces += substring(start, i)
+            start = i
+            bytes = 0
+        }
+        bytes += charBytes
+        i = end
+    }
+    pieces += substring(start)
+    return pieces
+}
+
+private fun String.utf8Bytes() = encodeToByteArray().size
 
 private fun damagedProgressRepository(
     clock: ZonedClock,
@@ -78,6 +124,8 @@ private fun damagedProgressRepository(
     @ApplicationScope scope: CoroutineScope,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) = FileDamagedProgressRepository(
+    // On the database's file system, as it must be. iCloud backs Application Support up, which
+    // the damaged copies must be left out of, so #349 marks their folder excluded from backup.
     produceDirectory = ::applicationSupportDirectory,
     clock = clock,
     warningLog = warningLog,

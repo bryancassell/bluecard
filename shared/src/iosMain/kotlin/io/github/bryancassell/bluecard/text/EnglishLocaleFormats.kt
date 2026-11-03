@@ -36,13 +36,14 @@ internal object EnglishLocaleFormats : LocaleFormats {
     // as right-to-left, with a left-to-right mark on each side, so a Persian name keeps its final
     // period at its end. Other text that ends right-to-left gets a mark after it, so what follows
     // isn't drawn into it.
-    override fun typedText(text: String): String {
-        val strong = text.mapNotNull(::strongDirection)
-        return when {
-            strong.firstOrNull() == Direction.RightToLeft -> "$LRM$RLE$text$PDF$LRM"
-            strong.lastOrNull() == Direction.RightToLeft -> "$text$LRM"
-            else -> text
-        }
+    override fun typedText(text: String): String = when {
+        text.firstNotNullOfOrNull(::strongDirection) == Direction.RightToLeft ->
+            "$LRM$RLE$text$PDF$LRM"
+
+        (text.lastIndex downTo 0).firstNotNullOfOrNull { strongDirection(text[it]) } ==
+            Direction.RightToLeft -> "$text$LRM"
+
+        else -> text
     }
 
     private enum class Direction { LeftToRight, RightToLeft }

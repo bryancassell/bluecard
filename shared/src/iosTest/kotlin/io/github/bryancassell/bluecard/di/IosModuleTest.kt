@@ -9,6 +9,7 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
+import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.initKoin
@@ -22,33 +23,58 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeSource
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import okio.IOException
 import org.koin.core.Koin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
+import platform.posix.LOCK_EX
+import platform.posix.LOCK_NB
+import platform.posix.O_CREAT
+import platform.posix.O_RDWR
+import platform.posix.close
+import platform.posix.errno
+import platform.posix.flock
+import platform.posix.open
+import platform.posix.usleep
 
 /**
  * Checks what [iosModule] provides, from Koin started as the iOS app starts it. The files go in
- * the simulator's Application Support directory, which every test run shares, so each test starts
- * without them, as a newly installed app does, and deletes them after.
+ * the simulator's Application Support directory, which every test run on the Mac shares, as
+ * Gradle runs each checkout's tests on the same simulator. So each test waits until no other run
+ * is in one, starts without the files, as a newly installed app does, and deletes them after.
  */
+@OptIn(ExperimentalForeignApi::class)
 class IosModuleTest {
     private val fileSystem = systemFileSystem
     private val directory = applicationSupportDirectory()
     private val databaseFile = directory / BlueCardDatabase.NAME
 
     private lateinit var koin: Koin
+    private var runLock = -1
 
     // Built only by the tests that use it.
     private val database = lazy { koin.get<BlueCardDatabase>() }
 
     @BeforeTest
     fun startApp() {
+        runLock = open((directory / RUN_LOCK_FILE).toString(), O_RDWR or O_CREAT, 0b110_100_100)
+        check(runLock >= 0) { "Couldn't open the run lock: errno $errno" }
+        // A time limit, so a run that hangs holding the lock fails this one rather than hanging
+        // it too.
+        val giveUpAt = TimeSource.Monotonic.markNow() + 5.minutes
+        while (flock(runLock, LOCK_EX or LOCK_NB) != 0) {
+            check(giveUpAt.hasNotPassedNow()) { "Another test run held the run lock" }
+            usleep(100_000u)
+        }
         deleteAppFiles()
         initKoin()
         koin = KoinPlatform.getKoin()
@@ -61,14 +87,34 @@ class IosModuleTest {
         koin.get<CoroutineScope>(named<ApplicationScope>()).cancel()
         stopKoin()
         deleteAppFiles()
+        close(runLock)
     }
 
     private fun deleteAppFiles() {
         for (suffix in listOf("", "-wal", "-shm", "-journal")) {
             fileSystem.delete(directory / "${BlueCardDatabase.NAME}$suffix")
         }
+        fileSystem.deleteRecursively(directory / LOCK_FILE)
         fileSystem.delete(directory / PROFILE_FILE)
         fileSystem.deleteRecursively(directory / FileDamagedProgressRepository.FOLDER_NAME)
+    }
+
+    // Room locks a file beside the database before it opens it. On iOS, its error for one it
+    // can't open has only a message, which counted as a bug, so a save crashed the app.
+    @Test
+    fun lockFileThatCantBeOpened_isAStorageFailure() = runTest {
+        // Opening a folder as the lock file fails, as it would on a full disk.
+        fileSystem.createDirectory(directory / LOCK_FILE)
+        val repository = koin.get<ProgressRepository>()
+
+        val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
+        val day = LocalDate(2026, 1, 1)
+        val writeError = runCatching {
+            repository.startBadge("camping", day, day)
+        }.exceptionOrNull()
+
+        assertIs<IOException>(readError, "$readError")
+        assertIs<IOException>(writeError, "$writeError")
     }
 
     @Test
@@ -159,5 +205,7 @@ class IosModuleTest {
 
     private companion object {
         const val PROFILE_FILE = "profile.preferences_pb"
+        const val LOCK_FILE = "${BlueCardDatabase.NAME}.lck"
+        const val RUN_LOCK_FILE = "IosModuleTest.lock"
     }
 }

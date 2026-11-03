@@ -176,9 +176,12 @@ class RoomProgressRepository(
      * scout retrying on a database that stays damaged until the app restarts.
      *
      * Before Room first opens the database, it locks a file beside it, and reports a lock file
-     * it can't create or lock as an IllegalStateException caused by the IOException (checked in
-     * Room 3.0.3's ExclusiveMutex and FileLock), so that's a storage failure too. A cancellation
-     * is an IllegalStateException as well, but stays one.
+     * it can't create or lock as an IllegalStateException ("Unable to open database …") caused
+     * by its own, so that's a storage failure too. On Android, that one is caused by the
+     * IOException (Room 3.0.3's ExclusiveMutex and FileLock). On iOS it has only a message, as
+     * "Unable to open lock file (Is a directory): '…'" or "Unable to lock file (…)", since Room's
+     * native FileLock calls POSIX directly (Room 3.0.3's FileLock.native.kt). A cancellation is
+     * an IllegalStateException as well, but stays one.
      */
     private fun Throwable.isStorageFailure(): Boolean = when (this) {
         is SQLiteException -> !isDamage() && when (resultCode) {
@@ -188,7 +191,9 @@ class RoomProgressRepository(
 
         is CancellationException -> false
 
-        is IllegalStateException -> generateSequence(cause) { it.cause }.any { it is IOException }
+        is IllegalStateException -> generateSequence<Throwable>(this) { it.cause }.any {
+            it is IOException || it.message?.let(LOCK_FILE_FAILURE::containsMatchIn) == true
+        }
 
         else -> false
     }
@@ -217,3 +222,6 @@ class RoomProgressRepository(
             database.withWriteTransaction { if (dao.isStarted(badgeId)) action() else notStarted }
         }
 }
+
+/** The start of the message of Room's error for a lock file it can't open or lock, on iOS. */
+private val LOCK_FILE_FAILURE = Regex("^Unable to (open lock file|lock file) \\(")
