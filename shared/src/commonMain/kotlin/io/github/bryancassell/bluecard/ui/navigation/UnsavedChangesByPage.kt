@@ -36,8 +36,7 @@ class UnsavedChangesByPage {
      */
     fun hasChanges(entry: NavEntry<*>): Boolean = unsavedChangesOf(entry.contentKey).changed
 
-    private fun unsavedChangesOf(contentKey: Any) =
-        pages.getOrPut(contentKey) { UnsavedChanges() }
+    private fun unsavedChangesOf(contentKey: Any) = pages.getOrPut(contentKey) { UnsavedChanges() }
 
     val decorator = NavEntryDecorator<NavKey>(
         onPop = { contentKey -> pages.remove(contentKey) },
