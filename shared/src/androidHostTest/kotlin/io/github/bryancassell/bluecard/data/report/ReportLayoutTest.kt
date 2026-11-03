@@ -450,6 +450,21 @@ class ReportLayoutTest : ReportPagingContract<StaticLayoutText>() {
 
     // A Persian name keeps its own direction, so its period stays at its end
     // (ARCHITECTURE.md, Language and layout direction).
+    // A paragraph separator ends a paragraph for the bidi algorithm, as a line break does.
+    @Test
+    fun typedTextWithAParagraphSeparator_keepsItsDirectionInEachParagraph() {
+        val first = "چادر زدم."
+        val second = "شام پختم."
+        val lines = layOut(
+            report(listOf(requirement("1", "Camp.", comment = "$first\u2029$second")))
+        ).single().lines
+
+        fun wrap(text: String) = BidiFormatter.getInstance(Locale.US).unicodeWrap(text)
+        val notes = lines.single { it.startsWith("Notes: ") }
+        assertTrue(notes, wrap(first) in notes)
+        assertTrue(notes, wrap(second) in lines.joinToString("\n"))
+    }
+
     @Test
     fun textTheScoutTyped_keepsItsOwnDirection() {
         val name = "علی رضایی."
@@ -467,24 +482,6 @@ class ReportLayoutTest : ReportPagingContract<StaticLayoutText>() {
 
         assertTrue(lines.toString(), "Created on 30 Sept 2026" in lines)
     }
-
-    /**
-     * A report with [count] requirements, each with a comment of one to a few lines. Their
-     * lengths depend on [count] too, so each count breaks its pages in other places.
-     */
-    private fun longReport(count: Int) = report(
-        (1..count).map {
-            requirement(
-                "$it",
-                "Requirement number $it of the badge.",
-                Completion(LocalDate(2026, 4, 1)),
-                comment = "A comment on requirement $it, ".repeat((it + count) % 7 + 1)
-            )
-        }
-    )
-
-    // Catches a title left at the foot of a page, away from what it's about, wherever the page
-    // breaks fall.
 
     /**
      * A report whose "Requirements" heading is further down the first page the longer [nameWords]

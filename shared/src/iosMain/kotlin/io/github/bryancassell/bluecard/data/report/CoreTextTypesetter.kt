@@ -103,21 +103,9 @@ class CoreTextText internal constructor(
             // Each line at its baseline, measured from the block's top, rather than the whole
             // frame shifted up by its height: the PDF then holds page-sized positions, which
             // readers that use 32-bit floats place exactly.
-            val lines = CTFrameGetLines(frame)
-            val count = CFArrayGetCount(lines).toInt()
-            memScoped {
-                val origins = allocArray<CGPoint>(count)
-                CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins)
-                for (index in 0 until count) {
-                    val line: CTLineRef? = CFArrayGetValueAtIndex(lines, index.convert())
-                        ?.reinterpret()
-                    CGContextSetTextPosition(
-                        context,
-                        origins[index].x,
-                        origins[index].y - FRAME_HEIGHT
-                    )
-                    CTLineDraw(line, context)
-                }
+            forEachLine(frame) { line, originX, originY ->
+                CGContextSetTextPosition(context, originX, originY - FRAME_HEIGHT)
+                CTLineDraw(line, context)
             }
             CGContextRestoreGState(context)
             CGContextSetTextMatrix(context, textMatrix)
@@ -168,20 +156,14 @@ class CoreTextTypesetter(
             check(shown == text.length) {
                 "Core Text left ${text.length - shown} characters out of its frame"
             }
-            val lines = CTFrameGetLines(frame)
-            val count = CFArrayGetCount(lines).toInt()
             memScoped {
-                val origins = allocArray<CGPoint>(count)
-                CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins)
                 val descent = alloc<CGFloatVar>()
                 val leading = alloc<CGFloatVar>()
-                for (index in 0 until count) {
-                    val line: CTLineRef? = CFArrayGetValueAtIndex(lines, index.convert())
-                        ?.reinterpret()
+                forEachLine(frame) { line, _, originY ->
                     starts += CTLineGetStringRange(line).useContents { location.toInt() }
                     CTLineGetTypographicBounds(line, null, descent.ptr, leading.ptr)
                     // Origins are on each line's baseline, up from the frame's bottom.
-                    val baseline = FRAME_HEIGHT - origins[index].y
+                    val baseline = FRAME_HEIGHT - originY
                     bottoms += (baseline + descent.value + leading.value).toFloat()
                 }
             }
@@ -191,10 +173,30 @@ class CoreTextTypesetter(
 }
 
 /**
+ * Runs [block] with each of [frame]'s lines, in order, and its origin: where its baseline starts,
+ * up from the frame's bottom.
+ */
+private inline fun forEachLine(
+    frame: CTFrameRef?,
+    block: (line: CTLineRef?, originX: Double, originY: Double) -> Unit
+) {
+    val lines = CTFrameGetLines(frame)
+    val count = CFArrayGetCount(lines).toInt()
+    memScoped {
+        val origins = allocArray<CGPoint>(count)
+        CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins)
+        for (index in 0 until count) {
+            val line: CTLineRef? = CFArrayGetValueAtIndex(lines, index.convert())?.reinterpret()
+            block(line, origins[index].x, origins[index].y)
+        }
+    }
+}
+
+/**
  * The height of the frame text is laid out in, which never reaches the PDF. Core Text leaves out
- * lines that don't fit, which `layOut` checks for. A report's longest paragraph is a tracker row's values, each at most 2,000
- * characters (`TRACKER_MULTILINE_TEXT_MAX_LENGTH`, which imports are held to as well), so even
- * with a line for each character it takes a small part of this.
+ * lines that don't fit, which `layOut` checks for. A report's longest paragraph is a tracker
+ * row's values, each at most 2,000 characters (`TRACKER_MULTILINE_TEXT_MAX_LENGTH`, which imports
+ * are held to as well), so even with a line for each character it takes a small part of this.
  */
 private const val FRAME_HEIGHT = 1_000_000.0
 

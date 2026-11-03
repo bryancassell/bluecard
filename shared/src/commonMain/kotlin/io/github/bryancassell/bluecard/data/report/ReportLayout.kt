@@ -371,10 +371,21 @@ private class ReportComposer<T : ReportText>(
         vararg args: Any
     ): String = getPluralString(environment, resource, quantity, *args)
 
-    // Text the scout typed keeps its own direction, as on screen. A line break ends a paragraph
-    // for the bidi algorithm, and the wrapping with it, so each line is wrapped on its own.
-    private fun typed(text: String): String =
-        text.lines().joinToString("\n") { formats.typedText(it) }
+    // Text the scout typed keeps its own direction, as on screen. A paragraph separator, such as
+    // a line break or a U+2029 pasted into notes, ends a paragraph for the bidi algorithm, and the
+    // wrapping with it, so each paragraph is wrapped on its own. A carriage return is made a line
+    // feed, as String.lines() made it, which StaticLayout breaks a line at.
+    private fun typed(text: String): String = buildString {
+        val lines = text.replace(CARRIAGE_RETURNS, "\n")
+        var start = 0
+        lines.forEachIndexed { index, char ->
+            if (char in PARAGRAPH_SEPARATORS) {
+                append(formats.typedText(lines.substring(start, index))).append(char)
+                start = index + 1
+            }
+        }
+        append(formats.typedText(lines.substring(start)))
+    }
 
     private fun date(date: LocalDate): String = formats.formatDate(date)
 
@@ -438,7 +449,10 @@ private class ReportComposer<T : ReportText>(
                 if (fitting > 0) {
                     val text = layout.text
                     val split = layout.lineStart(fitting)
-                    place(layOut(paragraph, text.substring(0, split)), paragraph)
+                    // Without the line break the page's last line may end with: StaticLayout
+                    // gives text that ends with one an empty line after it, which wasn't
+                    // measured to fit.
+                    place(layOut(paragraph, text.substring(0, split).removeSuffix("\n")), paragraph)
                     val rest = text.substring(split)
                     // Typed text in another direction keeps it on the next page.
                     layout = layOut(paragraph, openDirections(text.substring(0, split)) + rest)
@@ -511,6 +525,9 @@ internal fun openDirections(text: CharSequence): String {
     }
     return open.joinToString("")
 }
+
+/** A carriage return, or one with a line feed after it. */
+private val CARRIAGE_RETURNS = Regex("\\r\\n?")
 
 /**
  * The characters that end a paragraph for the bidi algorithm, which closes every embedding,

@@ -250,7 +250,7 @@ class PdfReportRepositoryTest {
         val report = repository.createReportToShare("chess")!!
 
         assertTrue("Notes: Taught my brother." in report.read())
-        val files = File(context.cacheDir, AndroidReportPlatform.REPORTS_FOLDER).list()
+        val files = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER).list()
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
     }
 
@@ -284,13 +284,13 @@ class PdfReportRepositoryTest {
         assertThrows<IOException> { repository.createReportToShare("chess") }
 
         assertEquals(written, earlier.read())
-        val files = File(context.cacheDir, AndroidReportPlatform.REPORTS_FOLDER).list()
+        val files = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER).list()
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
     }
 
     @Test
     fun createReportToShare_whenItFails_andWhatItWroteCantBeDeleted_throwsWhatFailed() = runTest {
-        val reports = File(context.cacheDir, AndroidReportPlatform.REPORTS_FOLDER)
+        val reports = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER)
         // Stops what was written being deleted, as long as the tests don't run as root.
         pdfWriter.beforeWrite = { reports.setWritable(false) }
         pdfWriter.failWrites = true
@@ -478,7 +478,7 @@ class PdfReportRepositoryTest {
 
         assertNull(repository.createReportToShare("chess"))
         assertNull(pdfWriter.lastWritten)
-        val files = File(context.cacheDir, AndroidReportPlatform.REPORTS_FOLDER).list()
+        val files = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER).list()
         assertEquals(emptyList<String>(), files.orEmpty().toList())
     }
 

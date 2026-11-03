@@ -15,14 +15,15 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
  * leaves out.
  */
 class AndroidReportPlatform(private val context: Context) : ReportPlatform<StaticLayoutText> {
-    // From the context's configuration, which any thread can read.
+    // Compose Multiplatform reads it from the default locale and the system's resources, which
+    // any thread can read.
     override suspend fun resourceEnvironment() = getSystemResourceEnvironment()
 
-    // The strings' locale comes from the configuration too, as the environment does.
     override suspend fun typesetter(environment: ResourceEnvironment) =
-        StaticLayoutTypesetter(stringsLocale(context))
+        StaticLayoutTypesetter(stringsLocale(context, environment))
 
-    override val shareFolder: Path get() = context.cacheDir.toOkioPath() / REPORTS_FOLDER
+    override val shareFolder: Path
+        get() = context.cacheDir.toOkioPath() / ReportPlatform.REPORTS_FOLDER
 
     // A content URI, which an app the report is shared with can read once it's granted
     // permission.
@@ -30,9 +31,6 @@ class AndroidReportPlatform(private val context: Context) : ReportPlatform<Stati
         FileProvider.getUriForFile(context, fileProviderAuthority(context), file.toFile())
 
     companion object {
-        /** The cache folder that reports to share are written to. */
-        const val REPORTS_FOLDER = "reports"
-
         /**
          * The authority of the `FileProvider` that shares reports, set in the manifest. It's
          * built from the application ID, because two installed apps can't declare the same one,

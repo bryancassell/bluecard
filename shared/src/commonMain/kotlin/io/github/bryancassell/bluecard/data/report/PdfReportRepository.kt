@@ -49,6 +49,11 @@ interface ReportPlatform<T : ReportText> {
 
     /** Where another app can read [file], a report in [shareFolder], from. */
     fun shareUri(file: Path): DocumentUri
+
+    companion object {
+        /** The name of each platform's [shareFolder]. */
+        const val REPORTS_FOLDER = "reports"
+    }
 }
 
 /**

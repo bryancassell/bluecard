@@ -125,7 +125,9 @@ class UIGraphicsPdfWriterTest {
     fun write_drawsTheFirstPage_downFromTheTopMargin_withItsNumberAtTheFoot() {
         val page = read(writePdf(pages)).pageAtIndex(0u)!!
 
-        val ink = ink(uiKitCoordinates = false) { page.drawWithBox(kPDFDisplayBoxMediaBox, it) }
+        val ink = bitmapInk(uiKitCoordinates = false) {
+            page.drawWithBox(kPDFDisplayBoxMediaBox, it)
+        }
 
         val margin = 54
         val firstLine = pages[0].texts[0].text.lineBottom(0)

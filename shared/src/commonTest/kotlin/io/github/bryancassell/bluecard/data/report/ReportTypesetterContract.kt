@@ -1,17 +1,28 @@
 package io.github.bryancassell.bluecard.data.report
 
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Behavior every [ReportTypesetter] must have, which report paging relies on. Runs against
- * Android's (StaticLayoutTypesetterTest) and iOS's (CoreTextTypesetterTest), which also check
- * where each draws its text.
+ * Behavior every [ReportTypesetter] must have: how it breaks lines, which report paging relies
+ * on, and where its text is drawn. Runs against Android's (StaticLayoutTypesetterTest) and iOS's
+ * (CoreTextTypesetterTest).
  */
 abstract class ReportTypesetterContract<T : ReportText> {
     /** A typesetter in US English. */
     protected abstract val typesetter: ReportTypesetter<T>
+
+    /** A typesetter for a locale written right to left. */
+    protected abstract val rightToLeftTypesetter: ReportTypesetter<T>
+
+    /**
+     * Draws [text] with its top left corner at ([x], [y]) on a white page, [PAGE_WIDTH] by
+     * [PAGE_HEIGHT] pixels, one a point, as the platform's PDF writer draws it, and finds where
+     * it's dark.
+     */
+    protected abstract fun ink(text: T, x: Float, y: Float): Ink
 
     private val words = (1..60).joinToString(" ") { "word$it" }
 
@@ -84,6 +95,60 @@ abstract class ReportTypesetterContract<T : ReportText> {
                 top = text.lineBottom(line)
             }
         }
+    }
+
+    @Test
+    fun text_isDrawnAtItsPlace_withinItsWidthAndHeight() {
+        val text = typesetter.layOut(words, ReportStyle.Body, 200)
+
+        val ink = ink(text, 50f, 60f)
+
+        assertTrue(ink.found, "Nothing was drawn")
+        assertTrue(ink.left >= 50, "Ink starts at x ${ink.left}")
+        assertTrue(ink.right < 50 + 200, "Ink ends at x ${ink.right}")
+        assertTrue(ink.top >= 60, "Ink starts at y ${ink.top}")
+        assertTrue(ink.bottom < 60 + text.height, "Ink ends at y ${ink.bottom}")
+    }
+
+    @Test
+    fun leftToRight_isDrawnFromTheLeft() {
+        val ink = ink(typesetter.layOut("Camping", ReportStyle.Body, 200), 50f, 60f)
+
+        assertTrue(ink.found, "Nothing was drawn")
+        assertTrue(ink.left - 50 < 50 + 200 - ink.right, "Ink is at x ${ink.left}–${ink.right}")
+    }
+
+    @Test
+    fun rightToLeft_isDrawnFromTheRight() {
+        val text = rightToLeftTypesetter.layOut("Camping", ReportStyle.Body, 200)
+
+        val ink = ink(text, 50f, 60f)
+
+        assertTrue(ink.found, "Nothing was drawn")
+        assertTrue(ink.left - 50 > 50 + 200 - ink.right, "Ink is at x ${ink.left}–${ink.right}")
+        assertTrue(ink.right < 50 + 200, "Ink ends at x ${ink.right}")
+    }
+
+    @Test
+    fun centered_isDrawnInTheMiddle() {
+        val text = typesetter.layOut("Page 1 of 2", ReportStyle.Footer, 200, centered = true)
+
+        val ink = ink(text, 50f, 60f)
+
+        assertTrue(ink.found, "Nothing was drawn")
+        // Pixels round, and the first and last letters' ink doesn't fill their whole width, so
+        // the space on each side can differ by a point or two.
+        val left = ink.left - 50
+        val right = 50 + 200 - 1 - ink.right
+        assertTrue(abs(left - right) <= 2, "Space on the left: $left, on the right: $right")
+    }
+
+    @Test
+    fun boldStyle_drawsMoreInk_thanBody() {
+        val bold = ink(typesetter.layOut("Camping", ReportStyle.Subheading, 300), 50f, 60f)
+        val body = ink(typesetter.layOut("Camping", ReportStyle.Body, 300), 50f, 60f)
+
+        assertTrue(bold.amount > body.amount, "Bold ${bold.amount}, body ${body.amount}")
     }
 
     companion object {

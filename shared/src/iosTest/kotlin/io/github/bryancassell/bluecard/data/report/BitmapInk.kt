@@ -21,26 +21,16 @@ import platform.CoreGraphics.CGImageAlphaInfo
 import platform.CoreGraphics.CGRectMake
 
 /**
- * Where drawing darkened a white page, in pixels from its top left corner, and how dark it made it
- * altogether. [found] is false when nothing was drawn.
- */
-internal class Ink(val left: Int, val right: Int, val top: Int, val bottom: Int, val amount: Int) {
-    val found: Boolean get() = right >= left
-}
-
-/**
  * Runs [draw] on a white, page-sized gray bitmap, one pixel a point, and finds where it's dark.
  * With [uiKitCoordinates], y grows downward, as in UIGraphicsPDFRenderer's context; otherwise
  * it grows upward from the bottom, as in a PDF page's.
  */
-internal fun ink(uiKitCoordinates: Boolean = true, draw: (CGContextRef?) -> Unit): Ink {
-    val width = PAGE_WIDTH
-    val height = PAGE_HEIGHT
+internal fun bitmapInk(uiKitCoordinates: Boolean = true, draw: (CGContextRef?) -> Unit): Ink {
     val gray = CGColorSpaceCreateDeviceGray()
     val context = CGBitmapContextCreate(
         null,
-        width.toULong(),
-        height.toULong(),
+        PAGE_WIDTH.toULong(),
+        PAGE_HEIGHT.toULong(),
         8u,
         0u,
         gray,
@@ -48,33 +38,19 @@ internal fun ink(uiKitCoordinates: Boolean = true, draw: (CGContextRef?) -> Unit
     )
     try {
         CGContextSetGrayFillColor(context, 1.0, 1.0)
-        CGContextFillRect(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
+        val page = CGRectMake(0.0, 0.0, PAGE_WIDTH.toDouble(), PAGE_HEIGHT.toDouble())
+        CGContextFillRect(context, page)
         if (uiKitCoordinates) {
-            CGContextTranslateCTM(context, 0.0, height.toDouble())
+            CGContextTranslateCTM(context, 0.0, PAGE_HEIGHT.toDouble())
             CGContextScaleCTM(context, 1.0, -1.0)
         }
         draw(context)
         // The bitmap's first row is the page's top.
         val pixels = CGBitmapContextGetData(context)!!.reinterpret<UByteVar>()
         val rowBytes = CGBitmapContextGetBytesPerRow(context).toInt()
-        var left = width
-        var right = -1
-        var top = height
-        var bottom = -1
-        var amount = 0
-        for (row in 0 until height) {
-            for (column in 0 until width) {
-                val darkness = 255 - pixels[row * rowBytes + column].toInt()
-                if (darkness > 128) {
-                    left = minOf(left, column)
-                    right = maxOf(right, column)
-                    top = minOf(top, row)
-                    bottom = maxOf(bottom, row)
-                }
-                amount += darkness
-            }
+        return Ink.of(PAGE_WIDTH, PAGE_HEIGHT) { column, row ->
+            255 - pixels[row * rowBytes + column].toInt()
         }
-        return Ink(left, right, top, bottom, amount)
     } finally {
         CGContextRelease(context)
         CGColorSpaceRelease(gray)

@@ -41,7 +41,8 @@ internal object IosReportPlatform : ReportPlatform<CoreTextText> {
         )
     }
 
-    override val shareFolder: Path get() = NSTemporaryDirectory().toPath() / "reports"
+    override val shareFolder: Path
+        get() = NSTemporaryDirectory().toPath() / ReportPlatform.REPORTS_FOLDER
 
     override fun shareUri(file: Path): DocumentUri = FileUrl(NSURL.fileURLWithPath(file.toString()))
 }

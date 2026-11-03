@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.di
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.FileCoordinator
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.FileUrl
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
@@ -14,8 +15,11 @@ import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.report.IosReportPlatform
 import io.github.bryancassell.bluecard.data.report.PdfReportRepository
+import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.data.report.UIGraphicsPdfWriter
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.initKoin
 import io.github.bryancassell.bluecard.text.IosTextRules
@@ -25,24 +29,29 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeSource
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import okio.IOException
+import okio.Path
 import okio.Path.Companion.toPath
 import org.koin.core.Koin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSFileCoordinatorWritingOptions
 import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSURL
 import platform.posix.LOCK_EX
 import platform.posix.LOCK_NB
 import platform.posix.O_CREAT
@@ -212,6 +221,38 @@ class IosModuleTest {
     // directory out.
     @Test
     fun reportToShare_isAPdf_inTheTemporaryDirectory() = runTest {
+        startCamping()
+
+        val report = koin.get<ReportRepository>().createReportToShare("camping")
+
+        val file = reportsFolder / "Camping merit badge report.pdf"
+        assertEquals(file.toString(), assertIs<FileUrl>(report).url.path)
+        assertEquals("%PDF-", fileSystem.read(file) { readUtf8(5) })
+    }
+
+    // As Save report saves to the empty document the file picker made.
+    @Test
+    fun saveReport_writesTheBadgesPdf_toTheDocument() = runTest {
+        startCamping()
+        val document = emptyDocument()
+
+        uncoordinatedReports().saveReport("camping", FileUrl(NSURL.fileURLWithPath("$document")))
+
+        assertEquals("%PDF-", fileSystem.read(document) { readUtf8(5) })
+    }
+
+    @Test
+    fun saveReport_forABadgeNotStarted_deletesTheEmptyDocument() = runTest {
+        startCamping()
+        val document = emptyDocument()
+
+        uncoordinatedReports().saveReport("hiking", FileUrl(NSURL.fileURLWithPath("$document")))
+
+        assertFalse(fileSystem.exists(document))
+    }
+
+    /** Saves a profile, and starts Camping by completing its first requirement. */
+    private suspend fun startCamping() {
         database.value
         koin.get<ProfileRepository>().saveProfile(Profile("Alex Scout", "123"))
         val camping = koin.get<CatalogRepository>().getBadges().first { it.id == "camping" }
@@ -220,12 +261,44 @@ class IosModuleTest {
         val first = version.requirements.first().number
         koin.get<ProgressRepository>()
             .markRequirementCompleted("camping", first, LocalDate(2026, 4, 1), start)
+    }
 
-        val report = koin.get<ReportRepository>().createReportToShare("camping")
+    /** An empty file, as the file picker makes for Save report, in [reportsFolder]. */
+    private fun emptyDocument(): Path {
+        fileSystem.createDirectories(reportsFolder)
+        return (reportsFolder / "Saved report.pdf").also { fileSystem.write(it) {} }
+    }
 
-        val file = reportsFolder / "Camping merit badge report.pdf"
-        assertEquals(file.toString(), assertIs<FileUrl>(report).url.path)
-        assertEquals("%PDF-", fileSystem.read(file) { readUtf8(5) })
+    /**
+     * The app's report repository, but saving without iOS's file coordinator, which fails each
+     * file in Gradle's tests (FileCoordinatorDocumentsTest).
+     */
+    private fun uncoordinatedReports(): ReportRepository = PdfReportRepository(
+        IosReportPlatform,
+        UIGraphicsPdfWriter(),
+        FileCoordinatorDocuments(NSLogWarningLog, ioDispatcher, UncoordinatedFiles),
+        koin.get(),
+        koin.get(),
+        koin.get(),
+        koin.get(),
+        koin.get(),
+        koin.get(),
+        koin.get(),
+        ioDispatcher,
+        koin.get(named<ApplicationScope>())
+    )
+
+    private val ioDispatcher get() = koin.get<CoroutineDispatcher>(named<IoDispatcher>())
+
+    /** Runs each block on the file as it is, holding nothing. */
+    private object UncoordinatedFiles : FileCoordinator {
+        override fun <T> read(url: NSURL, block: (Path) -> T): T = block(url.path!!.toPath())
+
+        override fun <T> write(
+            url: NSURL,
+            options: NSFileCoordinatorWritingOptions,
+            block: (Path) -> T
+        ): T = block(url.path!!.toPath())
     }
 
     @Test
@@ -243,7 +316,7 @@ class IosModuleTest {
         assertEquals("5551234567", koin.get<PhoneNumberFormat>().format("5551234567"))
     }
 
-    private val reportsFolder = NSTemporaryDirectory().toPath() / "reports"
+    private val reportsFolder = NSTemporaryDirectory().toPath() / ReportPlatform.REPORTS_FOLDER
 
     private companion object {
         const val PROFILE_FILE = "profile.preferences_pb"

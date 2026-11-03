@@ -8,6 +8,7 @@ import io.github.bryancassell.bluecard.resources.badges_count
 import java.util.Locale
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,7 +76,11 @@ class StringsLocalesTest {
     @Config(qualifiers = "fa")
     @Test
     fun stringsLocaleOutsideCompose_isStringsLanguage_notDevice() = runTest {
-        val locale = stringsLocale(ApplicationProvider.getApplicationContext())
+        val locale =
+            stringsLocale(
+                ApplicationProvider.getApplicationContext(),
+                getSystemResourceEnvironment()
+            )
 
         assertEquals(Locale.forLanguageTag("en"), locale)
     }
