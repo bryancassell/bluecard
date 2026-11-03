@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.data
 
 import io.github.bryancassell.bluecard.di.WarningLog
 import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
@@ -55,8 +56,15 @@ class FileCoordinatorDocuments internal constructor(
                     // As when making the content fails.
                     deleteIfEmpty(url)
                 } else {
-                    coordinator.coordinate(url, NSFileCoordinatorWritingForReplacing) { file ->
-                        write(file, bytes)
+                    try {
+                        coordinator.write(url, NSFileCoordinatorWritingForReplacing) { file ->
+                            write(file, bytes)
+                        }
+                    } catch (e: IOException) {
+                        // If the coordinator refused, the empty document is still there. If
+                        // writing failed, write has dealt with it, and this finds nothing to do.
+                        deleteIfEmpty(url)
+                        throw e
                     }
                 }
             }
@@ -72,7 +80,7 @@ class FileCoordinatorDocuments internal constructor(
         val url = source.url
         val accessing = url.startAccessingSecurityScopedResource()
         try {
-            val file = coordinator.coordinate(url, writing = null) { systemFileSystem.source(it) }
+            val file = coordinator.read(url) { systemFileSystem.source(it) }
             return object : ForwardingSource(file) {
                 override fun close() {
                     try {
@@ -115,9 +123,7 @@ class FileCoordinatorDocuments internal constructor(
      */
     private fun deleteIfEmpty(document: NSURL) {
         try {
-            coordinator.coordinate(document, NSFileCoordinatorWritingForDeleting) {
-                deleteFileIfEmpty(it)
-            }
+            coordinator.write(document, NSFileCoordinatorWritingForDeleting, ::deleteFileIfEmpty)
         } catch (e: IOException) {
             warningLog.warn(TAG, "Couldn't delete the document that failed", e)
         }
@@ -151,38 +157,72 @@ private inline fun <T> NSURL.withAccess(block: () -> T): T {
  * wait for it, and learn what changed: iOS's file coordinator ([SystemFileCoordinator]). An
  * interface, since iOS's doesn't work in tests: Gradle runs them on a simulator that isn't booted,
  * where it fails each file.
+ *
+ * Each runs [block] on the file at the URL while it's held, and returns what [block] returns. It
+ * throws an [IOException] if the file can't be held, such as one a cloud drive's app can't
+ * download.
  */
 internal interface FileCoordinator {
-    /**
-     * Runs [block] on the file at [url] while it's held for reading, or for writing with the
-     * [writing] options, and returns what [block] returns. Throws an [IOException] if it can't
-     * be held, such as a file a cloud drive's app can't download.
-     */
-    fun <T> coordinate(url: NSURL, writing: NSFileCoordinatorWritingOptions?, block: (Path) -> T): T
+    /** Holds the file at [url] for reading. */
+    fun <T> read(url: NSURL, block: (Path) -> T): T
+
+    /** Holds the file at [url] for writing, with [options], such as for replacing it. */
+    fun <T> write(url: NSURL, options: NSFileCoordinatorWritingOptions, block: (Path) -> T): T
 }
 
 /** iOS's file coordinator, `NSFileCoordinator`. */
+@OptIn(ExperimentalForeignApi::class)
 internal object SystemFileCoordinator : FileCoordinator {
-    // An exception can't pass through the coordinator's Objective-C code, which would end the
-    // app, so block's is caught and thrown again once the coordinator returns.
-    @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-    override fun <T> coordinate(
+    override fun <T> read(url: NSURL, block: (Path) -> T): T =
+        runCoordinated(url, block) { accessor ->
+            errorOf { error ->
+                NSFileCoordinator(filePresenter = null)
+                    .coordinateReadingItemAtURL(url, options = 0u, error, byAccessor = accessor)
+            }
+        }
+
+    override fun <T> write(
         url: NSURL,
-        writing: NSFileCoordinatorWritingOptions?,
+        options: NSFileCoordinatorWritingOptions,
         block: (Path) -> T
-    ): T = memScoped {
-        val error = alloc<ObjCObjectVar<NSError?>>()
-        var result: Result<T>? = null
-        val accessor = { coordinatedUrl: NSURL? ->
-            result = runCatching { block(checkNotNull(coordinatedUrl?.path).toPath()) }
+    ): T = runCoordinated(url, block) { accessor ->
+        errorOf { error ->
+            NSFileCoordinator(filePresenter = null)
+                .coordinateWritingItemAtURL(url, options, error = error, byAccessor = accessor)
         }
-        val coordinator = NSFileCoordinator(filePresenter = null)
-        if (writing == null) {
-            coordinator.coordinateReadingItemAtURL(url, options = 0u, error = error.ptr, accessor)
-        } else {
-            coordinator.coordinateWritingItemAtURL(url, writing, error.ptr, accessor)
-        }
-        val done = result ?: throw IOException("Couldn't reach $url: ${error.value}")
-        done.getOrThrow()
     }
 }
+
+/**
+ * Runs [block] on the file that [coordinate] gives its accessor, and returns what [block]
+ * returns. [coordinate] calls a file coordinator with the accessor, and returns the coordinator's
+ * error, if it has one.
+ *
+ * An exception can't pass through the coordinator's Objective-C code, which would end the app, so
+ * [block]'s is caught and thrown once the coordinator returns. If the coordinator doesn't run the
+ * accessor, or gives it no file, this throws an [IOException].
+ */
+internal fun <T> runCoordinated(
+    url: NSURL,
+    block: (Path) -> T,
+    coordinate: (accessor: (NSURL?) -> Unit) -> NSError?
+): T {
+    var result: Result<T>? = null
+    val error = coordinate { coordinatedUrl ->
+        result = runCatching {
+            val path = coordinatedUrl?.path ?: throw IOException("No file to reach $url")
+            block(path.toPath())
+        }
+    }
+    val done = result ?: throw IOException("Couldn't reach $url: $error")
+    return done.getOrThrow()
+}
+
+/** Calls [call] with a place for an error, and returns the error it puts there, if any. */
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+private inline fun errorOf(call: (CPointer<ObjCObjectVar<NSError?>>) -> Unit): NSError? =
+    memScoped {
+        val error = alloc<ObjCObjectVar<NSError?>>()
+        call(error.ptr)
+        error.value
+    }

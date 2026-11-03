@@ -3,6 +3,8 @@ package io.github.bryancassell.bluecard.ui
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.FileUrl
 import io.github.bryancassell.bluecard.data.systemFileSystem
+import kotlin.native.runtime.GC
+import kotlin.native.runtime.NativeRuntimeApi
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -44,6 +46,11 @@ class DocumentPickerTest {
             onPicked = { url -> events += "picked ${url.lastPathComponent}" },
             onClosed = { events += "closed" }
         ).also { shown += it }
+    }
+
+    /** A page that shows something over it, such as a file picker. */
+    private class ShowingViewController : UIViewController(nibName = null, bundle = null) {
+        override fun presentedViewController(): UIViewController = UIViewController()
     }
 
     private val FilePicker.Launch.delegate
@@ -116,6 +123,27 @@ class DocumentPickerTest {
         launch.delegate.documentPickerWasCancelled(launch.picker)
 
         assertEquals(listOf("closed"), events)
+    }
+
+    @Test
+    fun launch_whileSomethingShowsOverThePage_showsNoOtherPicker() {
+        val picker = FilePicker<String>(ShowingViewController()) { error("Not prepared") }
+
+        assertTrue(picker.launch("*/*"))
+    }
+
+    @OptIn(NativeRuntimeApi::class)
+    @Test
+    fun launch_whenAnEarlierPickerCloses_keepsTheLaterOnesDelegate() {
+        filePicker.launch("*/*")
+        filePicker.launch("*/*")
+        val (earlier, later) = shown
+
+        earlier.delegate.documentPickerWasCancelled(earlier.picker)
+        GC.collect()
+
+        later.delegate.documentPicker(later.picker, didPickDocumentsAtURLs = listOf(pickedUrl))
+        assertEquals(listOf("closed", "picked BlueCard export.json", "closed"), events)
     }
 
     @Test

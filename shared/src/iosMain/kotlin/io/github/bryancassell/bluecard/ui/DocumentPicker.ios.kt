@@ -8,7 +8,7 @@ import androidx.compose.ui.uikit.LocalUIViewController
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.FileUrl
 import io.github.bryancassell.bluecard.data.systemFileSystem
-import io.github.bryancassell.bluecard.di.nsLog
+import io.github.bryancassell.bluecard.di.NSLogWarningLog
 import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
@@ -22,6 +22,8 @@ import platform.UniformTypeIdentifiers.UTTypeData
 import platform.darwin.NSObject
 
 // iOS's file picker is always there, so launching it never reports that no app can.
+
+private const val TAG = "DocumentPicker"
 
 @Composable
 actual fun rememberCreateDocument(
@@ -64,7 +66,7 @@ internal fun createDocument(
         systemFileSystem.createDirectories(folder)
         systemFileSystem.write(file) {}
     } catch (e: IOException) {
-        nsLog("DocumentPicker: Couldn't make $file to save\n${e.stackTraceToString()}")
+        NSLogWarningLog.warn(TAG, "Couldn't make $file to save", e)
         return null
     }
     return FilePicker.Launch(
@@ -108,7 +110,7 @@ private fun deleteOrLog(file: Path) {
     try {
         systemFileSystem.delete(file, mustExist = false)
     } catch (e: IOException) {
-        nsLog("DocumentPicker: Couldn't delete $file\n${e.stackTraceToString()}")
+        NSLogWarningLog.warn(TAG, "Couldn't delete $file", e)
     }
 }
 
@@ -128,18 +130,22 @@ internal class FilePicker<I>(
     )
 
     // The file picker holds its delegate weakly, so this holds it while the picker shows.
-    private var delegate: Delegate? = null
+    private var shown: Delegate? = null
 
     override fun launch(input: I): Boolean {
+        // A tap can still reach the page while a file picker opens over it, since it takes a
+        // moment. Another picker couldn't show, and its delegate would take the one showing's
+        // place here.
+        if (viewController.presentedViewController != null) return true
         val launch = prepare(input) ?: return true
-        val delegate = Delegate(launch) { delegate = null }
-        this.delegate = delegate
+        val delegate = Delegate(launch) { if (shown === it) shown = null }
+        shown = delegate
         launch.picker.delegate = delegate
         viewController.presentViewController(launch.picker, animated = true, completion = null)
         return true
     }
 
-    private class Delegate(private val launch: Launch, private val onDone: () -> Unit) :
+    private class Delegate(private val launch: Launch, private val onDone: (Delegate) -> Unit) :
         NSObject(),
         UIDocumentPickerDelegateProtocol {
         override fun documentPicker(
@@ -156,7 +162,7 @@ internal class FilePicker<I>(
 
         private fun close() {
             launch.onClosed()
-            onDone()
+            onDone(this)
         }
     }
 }
