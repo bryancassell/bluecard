@@ -7,7 +7,6 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.SystemFileCoordinator
-import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
@@ -22,6 +21,7 @@ import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.data.report.UIGraphicsPdfWriter
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.text.IosTextRules
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
