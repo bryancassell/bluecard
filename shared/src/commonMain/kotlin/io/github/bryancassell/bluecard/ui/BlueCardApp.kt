@@ -23,10 +23,11 @@ import io.github.bryancassell.bluecard.ui.theme.BlueCardTheme
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The app's content. Shows nothing while loading; the splash screen covers it. Tells the scout
- * when their progress was damaged, over whichever screen is open, until they tap OK
- * ([onDismissDamagedProgressNotice]). The screens break text by [textRules] ([LocalTextRules]),
- * and write dates, numbers and lists in the strings' locale ([LocalLocaleFormats]).
+ * The app's content. Shows nothing while loading: Android's splash screen covers it, and on iOS
+ * it follows a launch screen of the same color. Tells the scout when their progress was damaged,
+ * over whichever screen is open, until they tap OK ([onDismissDamagedProgressNotice]). The
+ * screens break text by [textRules] ([LocalTextRules]), and write dates, numbers and lists in the
+ * strings' locale ([LocalLocaleFormats]).
  */
 @Composable
 fun BlueCardApp(

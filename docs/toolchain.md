@@ -1,8 +1,9 @@
 # Developer toolchain
 
 This project uses the standard Android setup: Android Studio, its bundled JDK,
-the Android SDK, and the Gradle wrapper. Everything that matters for a build is
-pinned in the repository, so the same commands work on any machine and in CI.
+the Android SDK, and the Gradle wrapper. The iOS app adds Xcode. Everything that
+matters for a build is pinned in the repository, so the same commands work on
+any machine and in CI.
 
 ## One-time machine setup (macOS)
 
@@ -27,6 +28,13 @@ pinned in the repository, so the same commands work on any machine and in CI.
 
    Check it worked: `java -version` and `adb --version` should both print a version.
 
+4. **Install Xcode**, for the iOS app, from the Mac App Store. Open it once,
+   accept its license, and install the iOS platform when it asks, which brings
+   the simulator. If `xcode-select -p` doesn't print
+   `/Applications/Xcode.app/Contents/Developer`, run
+   `sudo xcode-select -s /Applications/Xcode.app`. Check it worked:
+   `xcrun simctl list runtimes` lists an iOS runtime.
+
 You do **not** need to install Gradle, Kotlin, or a separate JDK.
 
 ## Everyday commands
@@ -35,8 +43,8 @@ Run these from the repository root.
 
 | Command | What it does |
 |---|---|
-| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. CI runs it, then the check below. |
-| `./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata` | Checks that common code calls only common APIs, as CI does after `build` (see [How the pieces fit together](#how-the-pieces-fit-together)). |
+| `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. On a Mac, it also runs the iOS tests; Xcode builds the iOS app's framework. CI runs it. |
+| `./gradlew :shared:iosSimulatorArm64Test` | Runs the iOS tests (`shared/src/iosTest`) on an iOS simulator. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
@@ -47,6 +55,42 @@ Run these from the repository root.
 | `./gradlew connectedAndroidTest` | Runs instrumented tests (`app/src/androidTest`) on an emulator or device. |
 | `./gradlew pixel6Api37DebugAndroidTest` | Runs instrumented tests on an API 37 emulator that Gradle downloads, starts and shuts down, as CI does. |
 | `./gradlew clean` | Deletes build outputs. Rarely needed; the build knows what changed. |
+
+## Running the iOS app
+
+Open `iosApp/iosApp.xcodeproj` in Xcode, choose a simulator such as iPhone 17
+as the run destination, and click Run. The Debug build installs as "BlueCard
+Debug", with the bundle ID `io.github.bryancassell.bluecard.debug`. Its first
+build takes several minutes while Gradle builds the shared code; later ones
+redo only what changed. From the terminal:
+
+```sh
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17' -derivedDataPath iosApp/build build
+xcrun simctl boot 'iPhone 17'
+xcrun simctl install 'iPhone 17' iosApp/build/Build/Products/Debug-iphonesimulator/BlueCard.app
+xcrun simctl launch 'iPhone 17' io.github.bryancassell.bluecard.debug
+```
+
+### Running the iOS app on an iPhone
+
+A build for an iPhone is signed with your Apple developer team. A free Apple
+account works for your own iPhone.
+
+1. Add your Apple account in Xcode's **Settings > Accounts**.
+2. Put your team's ID in `iosApp/Configuration/Local.xcconfig`, which git
+   ignores, so no one's team is in the repository:
+
+   ```
+   DEVELOPMENT_TEAM = ABCDE12345
+   ```
+
+   To find it, choose your team in the iosApp target's **Signing &
+   Capabilities** tab, run
+   `xcodebuild -project iosApp/iosApp.xcodeproj -showBuildSettings | grep DEVELOPMENT_TEAM`,
+   then undo the change Xcode made to `project.pbxproj`.
+3. Connect the iPhone, turn on **Settings > Privacy & Security > Developer
+   Mode** on it if it asks, and choose it as the run destination.
 
 ## How the pieces fit together
 
@@ -73,16 +117,25 @@ which has no build types, so their source folders are `androidMain` and
 `androidHostTest` rather than `main` and `test`. The compiler plugins are
 Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
 
-**Common code** (`shared/src/commonMain/kotlin/`), which iOS will run too, may
-call only common APIs. `./gradlew build` doesn't check that (the comment in
-`shared/build.gradle.kts` says why), so CI runs
-`./gradlew -Pbluecard.checkCommonCode=true :shared:compileCommonMainKotlinMetadata`.
-Run it before pushing a change to common code.
+**Common code** (`shared/src/commonMain/kotlin/`), which iOS runs too, may call
+only common APIs. Compiling it for iOS checks that, and any computer can, so
+`./gradlew build` does, in CI too. Linking and running the iOS tests need a Mac
+with Xcode, so CI's Linux runner skips them until
+[#355](https://github.com/bryancassell/bluecard/issues/355). `build` leaves
+linking the iOS app's framework to Xcode (`shared/build.gradle.kts` says why).
+
+**The iOS app** (`iosApp/`) is built by Xcode. Its first build phase runs
+`./gradlew :shared:embedAndSignAppleFrameworkForXcode`, which builds `:shared`
+as the `Shared` framework for that build's configuration and device. Xcode
+doesn't read `~/.zshrc`, so the phase runs Gradle with Android Studio's JDK
+unless `JAVA_HOME` is set. Xcode picks up Swift files added to
+`iosApp/iosApp/` without a change to the project file.
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
-code with it. Libraries whose generators run through KSP are added with
-`kspAndroid(...)` in `shared/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions.
+code with it. Libraries whose generators run through KSP are added for each
+target, with `kspAndroid(...)`, `kspIosArm64(...)` and
+`kspIosSimulatorArm64(...)` in `shared/build.gradle.kts`. KSP versions are no longer tied to Kotlin versions.
 
 **Koin's compiler plugin.** It writes the constructor calls for Koin's
 `single<T>()` and `viewModel<T>()`, and fails the build for a missing
@@ -169,6 +222,7 @@ it.
 │   └── dependabot.yml          Weekly dependency update pull requests
 ├── scripts/
 │   ├── check-test-rules.sh     Testing-rule checks run by the build
+│   ├── draw-ios-app-icons.swift  Draws the iOS app's icons from the Android icon's shapes
 │   └── qa/                     Emulator helper and seed data for the QA test plan
 ├── gradle.properties           Gradle and Android build settings
 ├── gradle/
@@ -188,8 +242,15 @@ it.
 │       ├── commonMain/         Code for iOS too, and strings, icons and the catalog
 │       │                       in composeResources/
 │       ├── androidMain/        Code that needs Android, and the manifest
-│       └── androidHostTest/    Local tests (run on your computer) and screenshots
-└── testing/                    Fakes and helpers that both modules' tests use
+│       ├── androidHostTest/    Local tests (run on your computer) and screenshots
+│       ├── iosMain/            Code that needs iOS
+│       └── iosTest/            Tests of iOS code (run on the iOS simulator)
+├── testing/                    Fakes and helpers that both modules' tests use
+└── iosApp/                     The iOS app, an Xcode project that shows :shared's UI
+    ├── iosApp.xcodeproj
+    ├── Configuration/          Settings that differ between machines, such as your
+    │                           signing team in Local.xcconfig, which git ignores
+    └── iosApp/                 Swift that starts the app, Info.plist, icons, launch color
 ```
 
 ## Tests: local vs instrumented
@@ -203,6 +264,11 @@ it.
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
   device. Fakes and helpers that tests in both modules use are in `:testing`;
   the rest stay with the tests that use them.
+- **iOS tests** (`shared/src/iosTest`) test code that only iOS runs, with
+  `kotlin.test`, on an iOS simulator, which needs Xcode:
+  `./gradlew :shared:iosSimulatorArm64Test`. Nothing measures their coverage,
+  and CI doesn't run them yet
+  ([#355](https://github.com/bryancassell/bluecard/issues/355)).
 - **Koin in tests.** ViewModel and other unit tests construct classes directly,
   passing fakes. In `:app`, Robolectric starts `BlueCardApplication`, and so
   Koin, before each test, and stops Koin when the test ends (`onTerminate()`);
@@ -643,8 +709,9 @@ the checks have run on what `main` will have after the merge; if `main` has
 moved, merge it into the branch and wait for the checks again:
 
 - **Build** runs `./gradlew build`, the same command as locally, then checks
-  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged and
-  that common code builds for iOS.
+  that it left the [Room schemas](#how-the-pieces-fit-together) unchanged. It
+  compiles the iOS code but, on Linux, can't link it or run its tests
+  ([#355](https://github.com/bryancassell/bluecard/issues/355)).
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to

@@ -350,3 +350,14 @@ configurations.consumable("coverageDataElements") {
         )
     ) { builtBy("testAndroidHostTest") }
 }
+
+// `build` checks the iOS code by compiling it, linking the test binary and running the tests on
+// the simulator, and leaves linking the app's framework to Xcode, whose build links the one it
+// needs (embedAndSignAppleFrameworkForXcode). `assemble` would link all four: a release link
+// takes 2m40s here, and in parallel they ran the Gradle daemon out of memory. Kotlin's docs
+// advise against release links and `assemble` while developing:
+// https://kotlinlang.org/docs/native-improving-compilation-time.html
+val frameworkLink = Regex("link(Debug|Release)Framework.*")
+tasks.named("assemble") {
+    setDependsOn(dependsOn.filterNot { it is TaskProvider<*> && frameworkLink.matches(it.name) })
+}
