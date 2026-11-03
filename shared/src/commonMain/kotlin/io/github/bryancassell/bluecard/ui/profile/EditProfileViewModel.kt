@@ -65,8 +65,8 @@ class EditProfileViewModel(
         EditProfileUiState.Loading
     )
 
-    /** What the fields hold, trimmed, as Onboarding saves them. */
-    private fun typed() = Profile(name.text.trim().toString(), unitNumber.text.trim().toString())
+    /** What the fields hold, as the repository stores it ([Profile.normalized]). */
+    private fun typed() = Profile(name.text.toString(), unitNumber.text.toString()).normalized()
 
     /** Whether [profile], which [typed] trims, has both values: a blank field is empty. */
     private fun isComplete(profile: Profile) =

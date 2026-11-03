@@ -1028,6 +1028,20 @@ class RequirementDetailViewModelTest {
         assertFalse(viewModel.ready().textChanged)
     }
 
+    // The page stays open after a save, and compares its field with what's saved as
+    // normalizedText stores it.
+    @Test
+    fun save_halfAnEmoji_isNoChangeOnceSaved() = runTest {
+        val viewModel = viewModel("1")
+        startCollecting(viewModel)
+
+        viewModel.typeComment("Done\uD83D at camp.")
+        viewModel.save()
+
+        assertEquals("Done\uFFFD at camp.", recorded("1")?.comment)
+        assertFalse(viewModel.ready().textChanged)
+    }
+
     @Test
     fun save_empty_removesIt() = runTest {
         progressRepository.startBadge("camping", newest, started)

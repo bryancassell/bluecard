@@ -47,13 +47,13 @@ class OnboardingViewModel(
     )
 
     /**
-     * Saves the profile, trimmed. Does nothing while saving, once saved, or if either field is
-     * blank. Checks the fields' text directly, so it can save before [uiState] catches up with
-     * the last keystroke.
+     * Saves the profile, which the repository stores trimmed ([Profile.normalized]). Does
+     * nothing while saving, once saved, or if either field is blank. Checks the fields' text
+     * directly, so it can save before [uiState] catches up with the last keystroke.
      */
     fun save() {
         if (!currentUiState().canSave) return
-        val profile = Profile(name.text.toString().trim(), unitNumber.text.toString().trim())
+        val profile = Profile(name.text.toString(), unitNumber.text.toString())
         saveStatus.value = SaveStatus.Saving
         saves.launch {
             try {

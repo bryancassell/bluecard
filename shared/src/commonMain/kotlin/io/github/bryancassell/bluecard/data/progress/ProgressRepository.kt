@@ -28,9 +28,9 @@ interface ProgressRepository {
     suspend fun startBadge(badgeId: String, requirementsVersion: LocalDate, startedDate: LocalDate)
 
     /**
-     * Sets the counselor, stored as [Counselor.normalized]: spaces around each field are trimmed,
-     * empty fields are dropped, and a counselor with none left is removed. A badge that hasn't
-     * been started is started with [start], as in [markRequirementCompleted].
+     * Sets the counselor, stored as [Counselor.normalized], so a counselor with no field left is
+     * removed. A badge that hasn't been started is started with [start], as in
+     * [markRequirementCompleted].
      */
     suspend fun setCounselor(badgeId: String, counselor: Counselor?, start: BadgeStart)
 

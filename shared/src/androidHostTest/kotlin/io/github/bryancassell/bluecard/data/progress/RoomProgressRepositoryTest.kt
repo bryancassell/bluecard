@@ -271,12 +271,16 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         assertEquals(noCode, error)
     }
 
-    // Half an emoji, as pasted or imported. Unescaped, SQLite joined it with the closing quote.
+    // replaceAll stores what it's given, so only Converters' escape keeps a lone surrogate from
+    // being joined with the JSON's closing quote, which left the JSON unreadable.
     @Test
-    fun trackerValueWithALoneSurrogate_readsBackAsSaved() = runTest {
+    fun replaceAll_trackerValueWithALoneSurrogate_readsBackAsGiven() = runTest {
         val values = mapOf("Notes" to "Trail \uD83D", "Place" to "\uDC22 camp 🏕")
+        val entry = TrackerEntry(badgeId = "archery", requirementNumber = "9a", values = values)
 
-        repository.addTrackerEntry("archery", "9a", null, values, start.startedDate, start)
+        repository.replaceAll(
+            listOf(BadgeProgressDetails(start.progress("archery"), emptyList(), listOf(entry)))
+        )
 
         val stored = repository.observeProgress("archery").first()!!.trackerEntries.single()
         assertEquals(values, stored.values)
