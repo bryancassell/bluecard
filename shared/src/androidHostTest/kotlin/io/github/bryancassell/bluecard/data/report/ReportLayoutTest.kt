@@ -150,7 +150,9 @@ class ReportLayoutTest {
     private fun layOut(
         report: AdvancementReport,
         locale: Locale = context.resources.configuration.locales[0]
-    ) = runBlocking { layOutReport(report, locale, getSystemResourceEnvironment()) }
+    ) = runBlocking {
+        layOutReport(report, getSystemResourceEnvironment(), StaticLayoutTypesetter(locale))
+    }
 
     @Test
     fun shortReport_isOnePage_withEverythingRecordedInOrder() {

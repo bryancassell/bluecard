@@ -9,8 +9,8 @@ import okio.BufferedSink
  * 4.17). So this is checked by an instrumented test (androidTest/.../PdfDocumentWriterTest) and
  * left out of the local tests' coverage check.
  */
-class PdfDocumentWriter : ReportPdfWriter {
-    override fun write(pages: List<ReportPage>, out: BufferedSink) {
+class PdfDocumentWriter : ReportPdfWriter<StaticLayoutText> {
+    override fun write(pages: List<ReportPage<StaticLayoutText>>, out: BufferedSink) {
         val document = PdfDocument()
         try {
             pages.forEachIndexed { index, page ->
