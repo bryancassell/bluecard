@@ -35,7 +35,10 @@ private class IosOtherApps(private val viewController: UIViewController) : Other
     override fun share(file: DocumentUri, mimeType: String) {
         // Over whatever shows, such as the file picker if the scout tapped Save report while the
         // report was being made: a view controller that's showing another can't show the share
-        // sheet, which would be lost.
+        // sheet, which would be lost. It's still lost if the report is ready while the picker is
+        // still appearing, which took up to 3.3 s for the first picker after launch: until it
+        // has, UIKit doesn't list it as presented, refuses the share sheet, and says so only in
+        // the log. The scout can tap Share report again.
         var presenter = viewController
         while (true) presenter = presenter.presentedViewController ?: break
         val shareSheet = UIActivityViewController(
