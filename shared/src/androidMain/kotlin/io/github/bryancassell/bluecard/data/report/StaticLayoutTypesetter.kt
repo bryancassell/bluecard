@@ -54,10 +54,12 @@ class StaticLayoutTypesetter(private val locale: Locale) : ReportTypesetter<Stat
     ): StaticLayoutText {
         val direction =
             if (rightToLeft) TextDirectionHeuristics.RTL else TextDirectionHeuristics.LTR
-        val alignment = if (centered) Layout.Alignment.ALIGN_CENTER else Layout.Alignment.ALIGN_NORMAL
+        val alignment =
+            if (centered) Layout.Alignment.ALIGN_CENTER else Layout.Alignment.ALIGN_NORMAL
+        val paint = paints.getValue(style)
         // The builder's defaults, simple line breaks without hyphens, depend only on the text
         // before each break, as ReportTypesetter asks.
-        val layout = StaticLayout.Builder.obtain(text, 0, text.length, paints.getValue(style), width)
+        val layout = StaticLayout.Builder.obtain(text, 0, text.length, paint, width)
             .setAlignment(alignment)
             .setTextDirection(direction)
             .setIncludePad(false)
@@ -68,5 +70,7 @@ class StaticLayoutTypesetter(private val locale: Locale) : ReportTypesetter<Stat
 
 /** Draws the page onto [canvas], which is [PAGE_WIDTH] by [PAGE_HEIGHT]. */
 fun ReportPage<StaticLayoutText>.draw(canvas: Canvas) {
-    texts.forEach { placed -> canvas.withTranslation(placed.x, placed.y) { placed.text.draw(this) } }
+    texts.forEach { placed ->
+        canvas.withTranslation(placed.x, placed.y) { placed.text.draw(this) }
+    }
 }

@@ -5,18 +5,18 @@ package io.github.bryancassell.bluecard.data.report
 import io.github.bryancassell.bluecard.text.LocaleFormats
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.UShortVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.readValue
 import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.set
 import kotlinx.cinterop.sizeOf
 import kotlinx.cinterop.useContents
-import kotlinx.cinterop.readValue
-import kotlinx.cinterop.set
-import kotlinx.cinterop.UShortVar
 import kotlinx.cinterop.value
 import platform.CoreFoundation.CFArrayGetCount
 import platform.CoreFoundation.CFArrayGetValueAtIndex
@@ -30,13 +30,13 @@ import platform.CoreFoundation.CFStringRef
 import platform.CoreFoundation.CFTypeRef
 import platform.CoreFoundation.kCFTypeDictionaryKeyCallBacks
 import platform.CoreFoundation.kCFTypeDictionaryValueCallBacks
+import platform.CoreGraphics.CGAffineTransformIdentity
 import platform.CoreGraphics.CGContextRef
 import platform.CoreGraphics.CGContextRestoreGState
 import platform.CoreGraphics.CGContextSaveGState
 import platform.CoreGraphics.CGContextScaleCTM
 import platform.CoreGraphics.CGContextSetTextMatrix
 import platform.CoreGraphics.CGContextTranslateCTM
-import platform.CoreGraphics.CGAffineTransformIdentity
 import platform.CoreGraphics.CGFloatVar
 import platform.CoreGraphics.CGPathCreateWithRect
 import platform.CoreGraphics.CGPoint
@@ -113,13 +113,11 @@ internal data class TextSetting(
 )
 
 /**
- * Lays a report's text out with Core Text in the system's font, as the screens show it, with
- * [formats] for the locale and lines that start at the right when [rightToLeft].
+ * Lays a report's text out with Core Text in the system's font, with [formats] for the locale,
+ * and lines that start at the right when [rightToLeft].
  */
-class CoreTextTypesetter(
-    override val formats: LocaleFormats,
-    override val rightToLeft: Boolean
-) : ReportTypesetter<CoreTextText> {
+class CoreTextTypesetter(override val formats: LocaleFormats, override val rightToLeft: Boolean) :
+    ReportTypesetter<CoreTextText> {
     override fun layOut(
         text: String,
         style: ReportStyle,
@@ -153,8 +151,10 @@ class CoreTextTypesetter(
 }
 
 /**
- * The height of the frame text is laid out in: more than any paragraph of a report takes, so
- * Core Text never leaves a line out.
+ * The height of the frame text is laid out in, as Core Text leaves out the lines that don't fit.
+ * A report's longest paragraph is a tracker row's values, each at most 2,000 characters
+ * (`TRACKER_MULTILINE_TEXT_MAX_LENGTH`, which imports are held to as well), so even with a line
+ * for each character it takes a small part of this.
  */
 private const val FRAME_HEIGHT = 1_000_000.0
 
@@ -165,14 +165,16 @@ private const val FRAME_HEIGHT = 1_000_000.0
  */
 private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef?) -> R): R {
     val created = mutableListOf<CFTypeRef?>()
-    fun <T : CPointer<*>> T?.released(): T? = also { created += it }
+    fun <T : CPointer<*>> T?.releasedLater(): T? = also { created += it }
     try {
         val style = setting.style
         val fontType = if (style.bold) kCTFontUIFontEmphasizedSystem else kCTFontUIFontSystem
-        val font = CTFontCreateUIFontForLanguage(fontType, style.size.toDouble(), null).released()
+        val font =
+            CTFontCreateUIFontForLanguage(fontType, style.size.toDouble(), null).releasedLater()
         val paragraphStyle = memScoped {
             val alignment = alloc<CTTextAlignmentVar>()
-            alignment.value = if (setting.centered) kCTTextAlignmentCenter else kCTTextAlignmentNatural
+            alignment.value =
+                if (setting.centered) kCTTextAlignmentCenter else kCTTextAlignmentNatural
             val direction = alloc<CTWritingDirectionVar>()
             direction.value = if (setting.rightToLeft) {
                 kCTWritingDirectionRightToLeft
@@ -187,21 +189,22 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
             settings[1].valueSize = sizeOf<CTWritingDirectionVar>().convert()
             settings[1].value = direction.ptr
             CTParagraphStyleCreate(settings, 2.convert())
-        }.released()
+        }.releasedLater()
         val attributes = CFDictionaryCreateMutable(
             null,
             2,
             kCFTypeDictionaryKeyCallBacks.ptr,
             kCFTypeDictionaryValueCallBacks.ptr
-        ).released()
+        ).releasedLater()
         CFDictionarySetValue(attributes, kCTFontAttributeName, font)
         CFDictionarySetValue(attributes, kCTParagraphStyleAttributeName, paragraphStyle)
-        val string = cfString(text).released()
-        val attributed = CFAttributedStringCreate(null, string, attributes).released()
-        val framesetter = CTFramesetterCreateWithAttributedString(attributed).released()
+        val string = cfString(text).releasedLater()
+        val attributed = CFAttributedStringCreate(null, string, attributes).releasedLater()
+        val framesetter = CTFramesetterCreateWithAttributedString(attributed).releasedLater()
         val bounds = CGRectMake(0.0, 0.0, setting.width.toDouble(), FRAME_HEIGHT)
-        val path = CGPathCreateWithRect(bounds, null).released()
-        val frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, null).released()
+        val path = CGPathCreateWithRect(bounds, null).releasedLater()
+        val frame =
+            CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, null).releasedLater()
         return block(frame)
     } finally {
         created.asReversed().forEach { it?.let(::CFRelease) }

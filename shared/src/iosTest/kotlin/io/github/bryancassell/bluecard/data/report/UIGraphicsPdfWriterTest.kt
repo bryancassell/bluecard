@@ -73,7 +73,9 @@ class UIGraphicsPdfWriterTest {
         Buffer().also { UIGraphicsPdfWriter().write(pages, it) }.readByteArray()
 
     private fun read(pdf: ByteArray): PDFDocument {
-        val data = pdf.usePinned { NSData.create(bytes = it.addressOf(0), length = pdf.size.toULong()) }
+        val data = pdf.usePinned {
+            NSData.create(bytes = it.addressOf(0), length = pdf.size.toULong())
+        }
         return checkNotNull(PDFDocument(data)) { "PDFKit can't read the PDF" }
     }
 

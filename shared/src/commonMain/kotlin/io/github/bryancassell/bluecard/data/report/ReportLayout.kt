@@ -180,7 +180,11 @@ private class ReportComposer<T : ReportText>(
         }
         add(ReportStyle.Body, string(kind))
         add(ReportStyle.Title, report.name, spaceBefore = 2f)
-        add(ReportStyle.Body, string(Res.string.report_scout, typed(profile.name)), spaceBefore = 8f)
+        add(
+            ReportStyle.Body,
+            string(Res.string.report_scout, typed(profile.name)),
+            spaceBefore = 8f
+        )
         add(ReportStyle.Body, string(Res.string.report_unit, typed(profile.unitNumber)))
         val status = when (report.kind) {
             ReportKind.MeritBadge -> completionText(report.completion)
@@ -443,7 +447,12 @@ private class ReportComposer<T : ReportText>(
         }
         return pages.mapIndexed { index, texts ->
             val number = string(Res.string.report_page, index + 1, pages.size)
-            val footer = typesetter.layOut(number, ReportStyle.Footer, CONTENT_WIDTH, centered = true)
+            val footer = typesetter.layOut(
+                number,
+                ReportStyle.Footer,
+                CONTENT_WIDTH,
+                centered = true
+            )
             ReportPage(texts + PlacedText(footer, MARGIN.toFloat(), FOOTER_TOP.toFloat()))
         }
     }
