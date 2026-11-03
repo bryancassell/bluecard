@@ -3,14 +3,18 @@ package io.github.bryancassell.bluecard.di
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
+import io.github.bryancassell.bluecard.data.FileUrl
+import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
 import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
+import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
+import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.initKoin
@@ -33,10 +37,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import okio.IOException
+import okio.Path.Companion.toPath
 import org.koin.core.Koin
 import org.koin.core.context.stopKoin
 import org.koin.core.qualifier.named
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSTemporaryDirectory
 import platform.posix.LOCK_EX
 import platform.posix.LOCK_NB
 import platform.posix.O_CREAT
@@ -108,6 +114,7 @@ class IosModuleTest {
         fileSystem.deleteRecursively(directory / LOCK_FILE)
         fileSystem.delete(directory / PROFILE_FILE)
         fileSystem.deleteRecursively(directory / FileDamagedProgressRepository.FOLDER_NAME)
+        fileSystem.deleteRecursively(reportsFolder)
     }
 
     // Room locks a file beside the database before it opens it. On iOS, its error for one it
@@ -197,8 +204,28 @@ class IosModuleTest {
     }
 
     @Test
-    fun reportRepository_isUnfinished() {
-        assertIs<UnfinishedReports>(koin.get<ReportRepository>())
+    fun reportRepository_isPdfReportRepository() {
+        assertIs<PdfReportRepository<*>>(koin.get<ReportRepository>())
+    }
+
+    // The share sheet reads the file through its URL, and iCloud backup leaves the temporary
+    // directory out.
+    @Test
+    fun reportToShare_isAPdf_inTheTemporaryDirectory() = runTest {
+        database.value
+        koin.get<ProfileRepository>().saveProfile(Profile("Alex Scout", "123"))
+        val camping = koin.get<CatalogRepository>().getBadges().first { it.id == "camping" }
+        val version = camping.requirementVersions.first()
+        val start = BadgeStart(version.effectiveDate, LocalDate(2026, 3, 1))
+        val first = version.requirements.first().number
+        koin.get<ProgressRepository>()
+            .markRequirementCompleted("camping", first, LocalDate(2026, 4, 1), start)
+
+        val report = koin.get<ReportRepository>().createReportToShare("camping")
+
+        val file = reportsFolder / "Camping merit badge report.pdf"
+        assertEquals(file.toString(), assertIs<FileUrl>(report).url.path)
+        assertEquals("%PDF-", fileSystem.read(file) { readUtf8(5) })
     }
 
     @Test
@@ -215,6 +242,8 @@ class IosModuleTest {
     fun phoneNumberFormat_leavesNumbersAsTyped() = runTest {
         assertEquals("5551234567", koin.get<PhoneNumberFormat>().format("5551234567"))
     }
+
+    private val reportsFolder = NSTemporaryDirectory().toPath() / "reports"
 
     private companion object {
         const val PROFILE_FILE = "profile.preferences_pb"
