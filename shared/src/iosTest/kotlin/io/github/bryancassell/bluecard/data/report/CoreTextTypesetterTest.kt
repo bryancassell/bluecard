@@ -42,6 +42,33 @@ class CoreTextTypesetterTest {
         assertEquals(words.split(" "), text.lines().flatMap { it.split(" ") })
     }
 
+    // Notes typed in scripts that break lines without spaces, or are written right to left.
+    @Test
+    fun longTextInOtherScripts_breaksIntoLinesWithinTheWidth_withEveryCharacterOnce() {
+        val notes = listOf(
+            "我们在湖边露营了三个晚上，学会了搭帐篷、生火和辨认星座。",
+            "เราไปตั้งแคมป์ที่ทะเลสาบสามคืนและเรียนรู้การกางเต็นท์",
+            "ما سه شب کنار دریاچه کمپ زدیم و برپا کردن چادر را یاد گرفتیم. "
+        ).map { it.repeat(6) }
+
+        notes.forEach { note ->
+            val text = typesetter.layOut(note, ReportStyle.Body, 200)
+
+            val ink = ink { text.draw(it, 50f, 60f) }
+            assertTrue(text.lineCount > 1, "Expected several lines for \"${note.take(10)}…\"")
+            assertEquals(
+                note.filterNot { it.isWhitespace() },
+                text.lines().joinToString("").filterNot { it.isWhitespace() }
+            )
+            assertTrue(ink.found, "Nothing was drawn")
+            assertTrue(
+                ink.left >= 50 && ink.right < 50 + 200,
+                "Ink is at x ${ink.left}–${ink.right}"
+            )
+            assertTrue(ink.bottom < 60 + text.height, "Ink ends at y ${ink.bottom}")
+        }
+    }
+
     @Test
     fun lineBreak_startsANewLine() {
         val text = typesetter.layOut("Planned with my patrol.\nWe camped.", ReportStyle.Body, 300)
