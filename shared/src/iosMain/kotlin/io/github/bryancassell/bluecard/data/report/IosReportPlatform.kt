@@ -4,7 +4,10 @@ import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.FileUrl
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.strings_language
-import io.github.bryancassell.bluecard.text.EnglishLocaleFormats
+import io.github.bryancassell.bluecard.text.IosLocaleFormats
+import io.github.bryancassell.bluecard.text.currentRegion
+import io.github.bryancassell.bluecard.text.isRightToLeft
+import io.github.bryancassell.bluecard.text.stringsLocale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.Path
@@ -27,13 +30,16 @@ internal object IosReportPlatform : ReportPlatform<CoreTextText> {
     override suspend fun resourceEnvironment() =
         withContext(Dispatchers.Main.immediate) { getSystemResourceEnvironment() }
 
-    // In the strings' language, written as the screens write it: in English, left to right,
-    // until #350 gives iOS the strings' locale.
-    override suspend fun typesetter(environment: ResourceEnvironment) = CoreTextTypesetter(
-        formats = EnglishLocaleFormats,
-        rightToLeft = false,
-        language = getString(environment, Res.string.strings_language)
-    )
+    // In the strings' locale, in the device's region, and in their language's direction, as the
+    // screens write and lay out text (rememberLocaleFormats).
+    override suspend fun typesetter(environment: ResourceEnvironment): CoreTextTypesetter {
+        val language = getString(environment, Res.string.strings_language)
+        return CoreTextTypesetter(
+            formats = IosLocaleFormats(stringsLocale(language, currentRegion())),
+            rightToLeft = isRightToLeft(language),
+            language = language
+        )
+    }
 
     override val shareFolder: Path get() = NSTemporaryDirectory().toPath() / "reports"
 

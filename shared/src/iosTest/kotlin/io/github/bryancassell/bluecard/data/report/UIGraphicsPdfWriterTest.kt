@@ -8,7 +8,6 @@ import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
 import io.github.bryancassell.bluecard.data.progress.Counselor
-import io.github.bryancassell.bluecard.text.EnglishLocaleFormats
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,7 +30,7 @@ import platform.PDFKit.kPDFDisplayBoxMediaBox
  * simulator, as PdfDocumentWriterTest checks Android's writer on a device.
  */
 class UIGraphicsPdfWriterTest {
-    private val typesetter = CoreTextTypesetter(EnglishLocaleFormats, false, "en")
+    private val typesetter = CoreTextTypesetter(usEnglish, false, "en")
     private val note = TrackerColumn("note", "Note", TrackerColumnType.MULTILINE_TEXT)
 
     // Long enough to take several pages, with a tracker and notes as a real badge has.

@@ -36,8 +36,8 @@ class BadgesViewModel(
         snapshotFlow { query.text.toString() }
     ) { badges, progress, search ->
         val progressById = progress.associateBy { it.badge.badgeId }
-        val words = searchWords(search)
-        val matches = badges.filter { it.badge.matchesSearch(words) }
+        val words = searchWords(search, textRules)
+        val matches = badges.filter { it.badge.matchesSearch(words, textRules) }
         if (matches.isEmpty() && words.isNotEmpty()) {
             BadgesUiState.NoMatches
         } else {

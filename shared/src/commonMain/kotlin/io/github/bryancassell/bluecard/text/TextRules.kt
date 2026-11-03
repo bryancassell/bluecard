@@ -31,4 +31,11 @@ interface TextRules {
      * anywhere else breaks a word. The start and end of the text are line breaks.
      */
     fun isLineBreak(text: String, offset: Int): Boolean
+
+    /**
+     * Whether [codePoint] is a letter or a decimal digit (Unicode's categories L and Nd), as
+     * Java's `Character.isLetterOrDigit` tells, including beyond the Basic Multilingual Plane,
+     * which `Char.isLetterOrDigit` can't: U+20000 is a CJK letter written as two surrogates.
+     */
+    fun isLetterOrDigit(codePoint: Int): Boolean
 }

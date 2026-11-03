@@ -2,7 +2,6 @@
 
 package io.github.bryancassell.bluecard.data.report
 
-import io.github.bryancassell.bluecard.text.EnglishLocaleFormats
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +17,7 @@ import platform.CoreGraphics.CGContextSetTextMatrix
 
 /** Lays text out with Core Text and draws it into a bitmap, on the iOS simulator. */
 class CoreTextTypesetterTest {
-    private val typesetter = CoreTextTypesetter(EnglishLocaleFormats, false, "en")
+    private val typesetter = CoreTextTypesetter(usEnglish, false, "en")
     private val words = (1..60).joinToString(" ") { "word$it" }
 
     @Test
@@ -158,7 +157,7 @@ class CoreTextTypesetterTest {
 
     @Test
     fun rightToLeft_isDrawnFromTheRight() {
-        val rightToLeft = CoreTextTypesetter(EnglishLocaleFormats, true, "en")
+        val rightToLeft = CoreTextTypesetter(usEnglish, true, "en")
         val text = rightToLeft.layOut("Camping", ReportStyle.Body, 200)
 
         val ink = ink { text.draw(it, 50f, 60f) }
@@ -200,7 +199,7 @@ class CoreTextTypesetterTest {
     @Test
     fun language_picksTheGlyphs() {
         fun drawn(language: String): Ink {
-            val text = CoreTextTypesetter(EnglishLocaleFormats, false, language)
+            val text = CoreTextTypesetter(usEnglish, false, language)
                 .layOut("直骨", ReportStyle.Title, 300)
             return ink { text.draw(it, 50f, 60f) }
         }

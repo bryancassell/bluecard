@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.data.report
 
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.Completion
-import io.github.bryancassell.bluecard.text.EnglishLocaleFormats
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -16,7 +15,7 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
  * StaticLayout's, on the iOS simulator.
  */
 class CoreTextReportLayoutTest {
-    private val typesetter = CoreTextTypesetter(EnglishLocaleFormats, false, "en")
+    private val typesetter = CoreTextTypesetter(usEnglish, false, "en")
 
     private fun requirement(number: Int, summary: String, comment: String) = ReportRequirement(
         number = "$number",

@@ -1,9 +1,25 @@
 package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.runtime.Composable
-import io.github.bryancassell.bluecard.text.EnglishLocaleFormats
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.strings_language
+import io.github.bryancassell.bluecard.text.IosLocaleFormats
 import io.github.bryancassell.bluecard.text.LocaleFormats
+import io.github.bryancassell.bluecard.text.currentRegion
+import io.github.bryancassell.bluecard.text.deviceRegions
+import io.github.bryancassell.bluecard.text.stringsLocale
+import org.jetbrains.compose.resources.stringResource
 
-/** Writes in US English, the strings' only language on iOS until #350. */
+/** Writes in the strings' locale ([stringsLocale]), in the device's region as it changes. */
 @Composable
-actual fun rememberLocaleFormats(): LocaleFormats = EnglishLocaleFormats
+actual fun rememberLocaleFormats(): LocaleFormats {
+    val stringsLanguage = stringResource(Res.string.strings_language)
+    val initialRegion = remember { currentRegion() }
+    val region by remember { deviceRegions() }.collectAsState(initialRegion)
+    return remember(stringsLanguage, region) {
+        IosLocaleFormats(stringsLocale(stringsLanguage, region))
+    }
+}

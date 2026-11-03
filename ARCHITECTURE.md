@@ -341,7 +341,10 @@ both taps of a double tap can reach it.
   shows, which differs from the device's when the app has no strings for it.
   The app makes that language's locales the default
   (`useStringsLocalesByDefault`), since Compose Multiplatform picks strings and
-  plural forms by the default. `BlueCardApp` provides `LocalLocaleFormats` in its
+  plural forms by the default. On iOS it picks them by the first preferred
+  language, so the app saves the strings' locale as that
+  (`useStringsLanguageByDefault`), and Material 3's labels and date picker
+  follow it there too. `BlueCardApp` provides `LocalLocaleFormats` in its
   locale, so lists and dates follow it too, and a sentence never mixes two
   languages. Compose Multiplatform picks a translation by the phone's first
   language only, and `%1$d` inserts Latin digits, so a translation into a
@@ -352,10 +355,12 @@ both taps of a double tap can reach it.
   `TextRules` and `PhoneNumberFormat`** (`text/`), not `java.text`,
   `android.icu`, `java.time.format`, `BidiFormatter` or `PhoneNumberUtils`,
   which code shared with iOS can't call
-  ([#341](https://github.com/bryancassell/bluecard/issues/341)). Their Android
-  implementations wrap those. ViewModels and the report get `TextRules` and
-  `PhoneNumberFormat` from Koin; screens read `LocalTextRules`, which
-  `BlueCardApp` provides.
+  ([#341](https://github.com/bryancassell/bluecard/issues/341)). Nor can it use
+  `\p{L}` in a regex, which Kotlin/Native matches against each half of a
+  surrogate pair, so `TextRules` classifies surrogate pairs. Their Android
+  implementations wrap those; most iOS ones wrap Foundation's. ViewModels and
+  the report get `TextRules` and `PhoneNumberFormat` from Koin; screens read
+  `LocalTextRules`, which `BlueCardApp` provides.
 - **Punctuation that joins text comes from `strings.xml` too**
   ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
   " · " between a tracker row's values or the ": " after a label, so a
@@ -366,7 +371,9 @@ both taps of a double tap can reach it.
   phone the English strings are laid out left-to-right, as on an English phone;
   mirrored, they would read as broken English. The manifest keeps
   `android:supportsRtl="true"`, so a right-to-left translation would be laid
-  out right-to-left with no other change.
+  out right-to-left with no other change. On iOS, UIKit takes the direction
+  from the language iOS picks among the Xcode project's localizations, so a
+  translation must be added there too.
 - **Text the scout types keeps its own direction** (`ui/TypedText.kt`). Fields
   the scout types in use `typedTextFieldStyle()`. Typed text shown on screen,
   alone or inside one of the app's strings, goes through
