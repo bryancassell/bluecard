@@ -634,6 +634,30 @@ class BackupFormatTest {
         assertEquals(valid(withLineBreaks), decode(encodeBackup(withLineBreaks)))
     }
 
+    // Half an emoji in a JSON escape (\ud83d), stored as when the scout types it.
+    @Test
+    fun decodeBackup_replacesHalfAnEmojiInText() {
+        val file = exportJson
+            .replaceFirst(""""Alex Scout"""", """"Alex\ud83d Scout"""")
+            .replaceFirst(""""Pitched a tent."""", """"Pitched a \ud83d tent."""")
+            .replaceFirst(""""Pat Lee"""", """"Pat\udc22 Lee"""")
+            .replaceFirst(""""Lake"""", """"\ud83dLake"""")
+            .replaceFirst(""""Mr. Rivera"""", """"Mr.\udc22 Rivera"""")
+
+        val backup = (decode(file) as BackupReadResult.Valid).backup
+        fun progress(badgeId: String) = backup.progress.single { it.badge.badgeId == badgeId }
+
+        assertEquals("Alex\uFFFD Scout", backup.profile.name)
+        val camping = progress("camping")
+        assertEquals("Pitched a \uFFFD tent.", camping.requirements.first().comment)
+        assertEquals("Pat\uFFFD Lee", camping.badge.counselor?.name)
+        assertEquals(
+            "\uFFFDLake",
+            camping.trackerEntries.firstNotNullOf { it.values["place"] }
+        )
+        assertEquals("Mr.\uFFFD Rivera", progress("tenderfoot").requirements.single().signedOffBy)
+    }
+
     // As each single-line field replaces them, so the text stored is the text the scout sees.
     @Test
     fun decodeBackup_replacesLineBreaksInSingleLineText_withSpaces() {

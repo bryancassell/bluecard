@@ -9,6 +9,7 @@ import androidx.room3.Relation
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
 import io.github.bryancassell.bluecard.data.catalog.isoDateOrNull
+import io.github.bryancassell.bluecard.text.replacingLoneSurrogates
 import kotlinx.datetime.LocalDate
 
 // What the scout records, stored in Room. Badges and requirements are identified by
@@ -43,9 +44,9 @@ data class Counselor(
     val email: String? = null
 ) {
     /**
-     * This counselor with spaces around each field trimmed and empty fields removed, or null if
-     * no field is left. Room reads a counselor with every field empty back as null, so
-     * repositories store this form.
+     * This counselor with each field as [normalizedText] stores it, or null if no field is left.
+     * Room reads a counselor with every field empty back as null, so repositories store this
+     * form.
      */
     fun normalized(): Counselor? =
         Counselor(normalizedText(name), normalizedText(phone), normalizedText(email))
@@ -83,9 +84,13 @@ const val TRACKER_NUMBER_MAX_LENGTH = 20
 
 /**
  * Text the scout typed, such as a requirement's comment, as repositories store it: without
- * spaces around it, and null if nothing is left.
+ * spaces around it, with half an emoji replaced ([replacingLoneSurrogates]), and null if nothing
+ * is left. The replacement is made here rather than where the database binds text, so a page
+ * that compares its field's text in this form with what was saved finds no unsaved edit once
+ * it's saved.
  */
-fun normalizedText(text: String?): String? = text?.trim()?.ifEmpty { null }
+fun normalizedText(text: String?): String? =
+    text?.trim()?.let(::replacingLoneSurrogates)?.ifEmpty { null }
 
 @Entity(
     tableName = "requirement_progress",
@@ -192,11 +197,11 @@ fun TrackerDefinition.columnValues(entry: TrackerEntry): List<Pair<TrackerColumn
     columns.mapNotNull { column -> entry.values[column.id]?.let { column to it } }
 
 /**
- * Tracker values as repositories store them: without spaces around each value, and without
- * values that are blank.
+ * Tracker values as repositories store them: without spaces around each value, with half an
+ * emoji replaced, as in [normalizedText], and without values that are blank.
  */
 fun normalizedTrackerValues(values: Map<String, String>): Map<String, String> =
-    values.mapValues { it.value.trim() }.filterValues { it.isNotEmpty() }
+    values.mapValues { replacingLoneSurrogates(it.value.trim()) }.filterValues { it.isNotEmpty() }
 
 /**
  * A date column's stored value as a date, or null if it isn't one. The app stores dates as

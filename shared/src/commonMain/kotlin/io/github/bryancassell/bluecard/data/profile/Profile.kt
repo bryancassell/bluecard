@@ -1,7 +1,18 @@
 package io.github.bryancassell.bluecard.data.profile
 
+import io.github.bryancassell.bluecard.text.replacingLoneSurrogates
+
 /** The scout, as entered on first launch or changed since. */
-data class Profile(val name: String, val unitNumber: String)
+data class Profile(val name: String, val unitNumber: String) {
+    /**
+     * This profile as repositories store it: each value without spaces around it, and with half
+     * an emoji replaced ([replacingLoneSurrogates]).
+     */
+    fun normalized() = Profile(
+        replacingLoneSurrogates(name.trim()),
+        replacingLoneSurrogates(unitNumber.trim())
+    )
+}
 
 // The longest text each field takes. A text field's text is saved with its screen's state,
 // which has a size limit, so a huge paste mustn't reach it. An import holds a file to the same
