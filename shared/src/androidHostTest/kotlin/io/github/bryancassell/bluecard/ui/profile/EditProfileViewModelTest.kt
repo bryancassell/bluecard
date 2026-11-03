@@ -205,6 +205,18 @@ class EditProfileViewModelTest {
         assertEquals(Profile("Sam Scout", "Crew 7"), saved())
     }
 
+    // Half an emoji, as pasted, stored as the app stores all the text the scout types.
+    @Test
+    fun save_replacesHalfAnEmoji() = runTest {
+        val viewModel = viewModel()
+        startCollecting(viewModel)
+
+        viewModel.typeAll(Profile("Sam\uD83D Scout", "Crew\uDC22 7"))
+        viewModel.save()
+
+        assertEquals(Profile("Sam\uFFFD Scout", "Crew\uFFFD 7"), saved())
+    }
+
     @Test
     fun unsavedFields_areKeptWhenProfileChanges() = runTest {
         val viewModel = viewModel()

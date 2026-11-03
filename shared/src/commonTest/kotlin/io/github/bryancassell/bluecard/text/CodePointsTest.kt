@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.text
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class CodePointsTest {
@@ -34,5 +35,29 @@ class CodePointsTest {
 
         assertFalse(isSurrogatePairAt(lone, 1))
         assertEquals(listOf('a'.code, 0xD840), codePoints(lone).toList())
+    }
+
+    // 🐢 is high then low. A low surrogate first, a high one before a whole 🐢, and a high one last.
+    private val high = Char(0xD83D)
+    private val low = Char(0xDC22)
+    private val mixed = "$low $high$high$low$high"
+
+    @Test
+    fun isLoneSurrogateAt_isTrueOnlyForASurrogateOutsideAPair() {
+        assertEquals(listOf(0, 2, 5), mixed.indices.filter { isLoneSurrogateAt(mixed, it) })
+    }
+
+    @Test
+    fun replacingLoneSurrogates_replacesEachWithTheReplacementCharacter_andKeepsWholeEmoji() {
+        val r = Char(0xFFFD)
+
+        assertEquals("$r $r$high$low$r", replacingLoneSurrogates(mixed))
+    }
+
+    @Test
+    fun replacingLoneSurrogates_withoutALoneSurrogate_returnsTheTextItself() {
+        val text = "Lake $high$low"
+
+        assertSame(text, replacingLoneSurrogates(text))
     }
 }

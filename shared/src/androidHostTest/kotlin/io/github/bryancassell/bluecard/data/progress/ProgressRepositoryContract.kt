@@ -476,6 +476,18 @@ abstract class ProgressRepositoryContract {
         assertEquals(listOf(mapOf("minutes" to "30")), trackerValues("7a"))
     }
 
+    // As setCounselor_replacesHalfAnEmoji_andKeepsTheRest. Converters escapes a lone surrogate,
+    // but an export would write it as "?".
+    @Test
+    fun trackerValues_replaceHalfAnEmoji_andKeepTheRest() = test {
+        addLogEntry("7a", mapOf("activity" to "Trail \uD83D", "notes" to "\uDC22 camp 🏕"))
+
+        assertEquals(
+            listOf(mapOf("activity" to "Trail \uFFFD", "notes" to "\uFFFD camp 🏕")),
+            trackerValues("7a")
+        )
+    }
+
     @Test
     fun clearRequirements_removesOnlyThoseRequirements_andTheBadgeStaysStarted() = test {
         repository.markRequirementCompleted(BADGE, "1", day, badgeStart)

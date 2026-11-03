@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.data.progress
 
 import androidx.room3.ColumnTypeConverter
 import androidx.room3.ProvidedColumnTypeConverter
+import io.github.bryancassell.bluecard.text.isLoneSurrogateAt
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 
@@ -31,11 +32,12 @@ class Converters(private val onUnreadableValue: (IllegalArgumentException) -> Un
     fun stringToLocalDate(text: String?): LocalDate? = text?.let { reading { LocalDate.parse(it) } }
 
     /**
-     * Stored as JSON, with each lone UTF-16 surrogate escaped (`\ud83d`), such as half an emoji
-     * that was pasted or imported. As androidx.sqlite 2.7.1 bundles it, SQLite joins a lone
-     * surrogate with the character after it when it stores the text. Here that's the closing
-     * quote, so the JSON couldn't be read back (RoomProgressRepositoryTest). Escaped, it's ASCII,
-     * and [jsonToMap] gives back the same text.
+     * Stored as JSON, with each lone UTF-16 surrogate escaped (`\ud83d`). Repositories replace
+     * one before storing ([normalizedTrackerValues], #390), but [ProgressRepository.replaceAll]
+     * stores what it's given. As androidx.sqlite 2.7.1 bundles it, SQLite joins a lone surrogate
+     * with the character after it when it stores the text. Here that could be the closing quote,
+     * so the JSON couldn't be read back. Escaped, it's ASCII, and [jsonToMap] gives back the same
+     * text.
      */
     @ColumnTypeConverter
     fun mapToJson(values: Map<String, String>): String =
@@ -56,19 +58,14 @@ class Converters(private val onUnreadableValue: (IllegalArgumentException) -> Un
 
 // In JSON, a lone surrogate can only be inside a string, where \uXXXX stands for it.
 private fun String.escapingLoneSurrogates(): String {
-    if (none { it.isSurrogate() }) return this
     val text = this
+    if (text.indices.none { isLoneSurrogateAt(text, it) }) return text
     return buildString {
-        var i = 0
-        while (i < text.length) {
-            val char = text[i++]
-            when {
-                char.isHighSurrogate() && text.getOrNull(i)?.isLowSurrogate() == true ->
-                    append(char).append(text[i++])
-
-                char.isSurrogate() -> append("\\u").append(char.code.toString(16).padStart(4, '0'))
-
-                else -> append(char)
+        text.forEachIndexed { i, char ->
+            if (isLoneSurrogateAt(text, i)) {
+                append("\\u").append(char.code.toString(16).padStart(4, '0'))
+            } else {
+                append(char)
             }
         }
     }

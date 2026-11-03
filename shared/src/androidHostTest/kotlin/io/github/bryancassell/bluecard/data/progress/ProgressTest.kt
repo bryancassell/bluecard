@@ -9,12 +9,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ProgressTest {
-    // A low surrogate first, a high one before a whole emoji, and a high one last.
-    @Test
-    fun normalizedText_replacesEachLoneSurrogate_andKeepsWholeEmoji() {
-        assertEquals("\uFFFD \uFFFD🐢\uFFFD", normalizedText(" \uDC22 \uD83D\uD83D\uDC22\uD83D "))
-    }
-
     private val columns = listOf(TrackerColumn("notes", "Notes", TrackerColumnType.TEXT))
     private val log = TrackerDefinition(columns, "session", "sessions")
     private val weeks = TrackerDefinition(columns, "week", "weeks", rowCount = 3)

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.di.WarningLog
+import io.github.bryancassell.bluecard.text.replacingLoneSurrogates
 import io.github.bryancassell.bluecard.ui.StoredTextFields
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskRunner
@@ -65,8 +66,11 @@ class EditProfileViewModel(
         EditProfileUiState.Loading
     )
 
-    /** What the fields hold, trimmed, as Onboarding saves them. */
-    private fun typed() = Profile(name.text.trim().toString(), unitNumber.text.trim().toString())
+    /** What the fields hold, trimmed and with half an emoji replaced, as Onboarding saves them. */
+    private fun typed() = Profile(
+        replacingLoneSurrogates(name.text.trim().toString()),
+        replacingLoneSurrogates(unitNumber.text.trim().toString())
+    )
 
     /** Whether [profile], which [typed] trims, has both values: a blank field is empty. */
     private fun isComplete(profile: Profile) =
