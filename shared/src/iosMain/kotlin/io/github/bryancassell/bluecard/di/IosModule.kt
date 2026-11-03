@@ -7,6 +7,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.SystemFileCoordinator
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
@@ -44,6 +45,8 @@ import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSLog
+import platform.Foundation.NSURL
+import platform.Foundation.NSURLIsExcludedFromBackupKey
 import platform.Foundation.NSUserDomainMask
 
 /** What the app is built from that needs iOS to build, such as where its files go. */
@@ -144,9 +147,8 @@ private fun damagedProgressRepository(
     @ApplicationScope scope: CoroutineScope,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) = FileDamagedProgressRepository(
-    // On the database's file system, as it must be. iCloud backs Application Support up, which
-    // the damaged copies must be left out of, so #349 marks their folder excluded from backup.
-    produceDirectory = ::applicationSupportDirectory,
+    // In Application Support, so on the database's file system, as it must be.
+    produceDirectory = { noBackupDirectory(applicationSupportDirectory(), warningLog) },
     clock = clock,
     warningLog = warningLog,
     externalScope = scope,
@@ -201,3 +203,33 @@ internal fun applicationSupportDirectory(): Path = memScoped {
     )
     path.toPath()
 }
+
+/**
+ * The folder in [parent] that backups leave out, as Android's no-backup directory is, for
+ * damaged progress. It's made if it isn't there. iCloud backs up an app's files but for `tmp`,
+ * `Library/Caches` and what's marked `isExcludedFromBackup`, and a folder marked so is left out
+ * with everything in it:
+ * https://developer.apple.com/documentation/foundation/optimizing-your-app-s-data-for-icloud-backup
+ *
+ * Apple says some file operations clear the mark, so it's set each time the app first needs
+ * the folder. If it can't be, the folder is used anyway, with a warning: a backup that has the
+ * damaged copies only takes more room, while a damaged database that can't be moved here is
+ * deleted.
+ */
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+internal fun noBackupDirectory(parent: Path, warningLog: WarningLog): Path = memScoped {
+    val directory = parent / NO_BACKUP_FOLDER
+    systemFileSystem.createDirectories(directory)
+    val error = alloc<ObjCObjectVar<NSError?>>()
+    val url = NSURL.fileURLWithPath(directory.toString())
+    if (!url.setResourceValue(true, NSURLIsExcludedFromBackupKey, error.ptr)) {
+        val reason = error.value?.localizedDescription
+        warningLog.warn(TAG, "Couldn't leave $directory out of backups: $reason")
+    }
+    directory
+}
+
+/** The folder [noBackupDirectory] gives, in Application Support. */
+internal const val NO_BACKUP_FOLDER = "no-backup"
+
+private const val TAG = "IosModule"

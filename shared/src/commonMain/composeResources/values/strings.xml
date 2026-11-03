@@ -89,6 +89,10 @@
     <!-- Shown when tapping the counselor's email address, if no app on the phone can send
          email. -->
     <string name="badge_detail_no_email_app">No app on this phone can send email.</string>
+    <!-- The button that closes a message that no app on the phone can open a link, such as
+         "No app on this phone can call the number.", on an iPhone or iPad, where the message
+         is an alert. -->
+    <string name="no_app_ok">OK</string>
     <!-- Heading of the page for entering the badge's merit badge counselor. -->
     <string name="edit_counselor_title">Counselor</string>
     <string name="edit_counselor_name">Name</string>
