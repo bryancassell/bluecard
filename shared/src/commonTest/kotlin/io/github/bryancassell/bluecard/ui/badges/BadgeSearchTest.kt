@@ -3,13 +3,18 @@ package io.github.bryancassell.bluecard.ui.badges
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Requirement
 import io.github.bryancassell.bluecard.data.catalog.RequirementsVersion
+import io.github.bryancassell.bluecard.text.platformTextRules
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class BadgeSearchTest {
+    private val textRules = platformTextRules()
+
+    private fun searchWords(query: String) = searchWords(query, textRules)
+
     private fun badge(name: String, summary: String) = MeritBadge(
         id = name.lowercase().replace(' ', '-'),
         name = name,
@@ -22,7 +27,7 @@ class BadgeSearchTest {
         )
     )
 
-    private fun MeritBadge.matches(query: String) = matchesSearch(searchWords(query))
+    private fun MeritBadge.matches(query: String) = matchesSearch(searchWords(query), textRules)
 
     private val fitness = badge(
         "Personal Fitness",

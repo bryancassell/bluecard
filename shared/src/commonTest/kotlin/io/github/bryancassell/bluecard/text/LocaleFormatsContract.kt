@@ -1,13 +1,13 @@
 package io.github.bryancassell.bluecard.text
 
 import io.github.artificialpb.bignum.bigDecimalOf
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDate
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 /**
- * Behavior every [LocaleFormats] must have. Runs against Android's (AndroidLocaleFormatsTest), and
- * is for the iOS one to run too (#350). Unlike the repositories, it has no fake: other tests use
+ * Behavior every [LocaleFormats] must have. Runs against Android's (AndroidLocaleFormatsTest) and
+ * iOS's (IosLocaleFormatsTest). Unlike the repositories, it has no fake: other tests use
  * Android's, which runs in local tests, so what they check is what the app shows.
  */
 abstract class LocaleFormatsContract {
@@ -43,6 +43,18 @@ abstract class LocaleFormatsContract {
     fun formatTotal_roundsDown() {
         assertEquals("5.99", total("5.999"))
         assertEquals("4.33", total("4.3333333333"))
+    }
+
+    // In binary floating point, 0.29 is a little under it, which rounding down would write as 0.28.
+    @Test
+    fun formatTotal_withTwoDecimalPlaces_isWrittenExactly() {
+        assertEquals("0.29", total("0.29"))
+    }
+
+    // More digits than a double holds, which would round it up to 10000000000000000.
+    @Test
+    fun formatTotal_withManyDigits_isWrittenExactly() {
+        assertEquals("9999999999999999.99", total("9999999999999999.99"))
     }
 
     // Like the amount needed after it, and a comma can be what the scout typed as a decimal
@@ -87,6 +99,54 @@ abstract class LocaleFormatsContract {
     @Test
     fun typedText_leftToRight_inARightToLeftLocale_isWrappedToKeepIt() {
         assertEquals("\u200F\u202AAlex.\u202C\u200F", formats("fa").typedText("Alex."))
+    }
+
+    // So what follows it in a right-to-left translation's sentence isn't drawn into it.
+    @Test
+    fun typedText_endingInAnotherDirection_inARightToLeftLocale_isFollowedByAMark() {
+        assertEquals("علی Alex\u200F", formats("fa").typedText("علی Alex"))
+    }
+
+    // Text with no letters, such as a phone number, counts as left-to-right.
+    @Test
+    fun typedText_withNoLetters_inARightToLeftLocale_isWrappedAsLeftToRight() {
+        assertEquals("\u200F\u202A555-0100\u202C\u200F", formats("fa").typedText("555-0100"))
+    }
+
+    // Punjabi is written left-to-right in Gurmukhi, but right-to-left in its Arabic script.
+    @Test
+    fun typedText_inALocaleWhoseScriptIsRightToLeft_isWrappedAsInARightToLeftLocale() {
+        assertEquals("\u200F\u202AAlex.\u202C\u200F", formats("pa-Arab").typedText("Alex."))
+    }
+
+    // U+20000, a CJK letter beyond the Basic Multilingual Plane, is left-to-right, so it decides
+    // the direction rather than the Persian name after it.
+    @Test
+    fun typedText_startingWithALetterBeyondTheBasicPlane_takesItsDirection() {
+        assertEquals("\uD840\uDC00علی\u200E", formats("en-US").typedText("\uD840\uDC00علی"))
+    }
+
+    // A right-to-left embedding sets the direction as a right-to-left letter does.
+    @Test
+    fun typedText_startingWithARightToLeftEmbedding_isWrappedToKeepIt() {
+        assertEquals("\u200E\u202B\u202BAlex\u202C\u200E", formats("en-US").typedText("\u202BAlex"))
+    }
+
+    // BidiFormatter decides whether to embed by the first UTF-16 unit with a direction, and a
+    // surrogate's is left-to-right, so text that starts beyond the Basic Multilingual Plane isn't
+    // embedded. The marks around it go by code point, so this Persian name still gets them.
+    @Test
+    fun typedText_startingWithAnEmoji_isntEmbedded() {
+        assertEquals("\u200E\uD83D\uDE00علی\u200E", formats("en-US").typedText("\uD83D\uDE00علی"))
+    }
+
+    // Adlam, a right-to-left script beyond the Basic Multilingual Plane.
+    @Test
+    fun typedText_inAScriptBeyondTheBasicPlane_isBetweenMarks() {
+        assertEquals(
+            "\u200E\uD83A\uDD00\uD83A\uDD22\uD83A\uDD2A\u200E",
+            formats("en-US").typedText("\uD83A\uDD00\uD83A\uDD22\uD83A\uDD2A")
+        )
     }
 
     @Test
