@@ -47,9 +47,7 @@ import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 
 // A badge's or rank's report, laid out on US Letter pages, as Scouting America is in the US.
-// Sizes are in PDF points, 1/72 of an inch. What the report says, and where each paragraph goes
-// on which page, is decided here for every platform. Each platform breaks the text into lines
-// (ReportTypesetter) and draws it (ReportPdfWriter) with its own text engine.
+// Sizes are in PDF points, 1/72 of an inch.
 
 /** The width of a report's pages: 8.5 inches. */
 const val PAGE_WIDTH = 612
@@ -83,7 +81,7 @@ enum class ReportStyle(val size: Float, val bold: Boolean) {
 interface ReportText {
     val text: String
 
-    /** How many lines [text] takes. */
+    /** How many lines [text] takes: at least one, as empty text takes one empty line. */
     val lineCount: Int
 
     /** Where line [line] starts in [text]. It ends where the next one starts. */
@@ -94,7 +92,7 @@ interface ReportText {
 }
 
 /** How tall the block is: down to the bottom of its last line. */
-val ReportText.height: Float get() = if (lineCount == 0) 0f else lineBottom(lineCount - 1)
+val ReportText.height: Float get() = lineBottom(lineCount - 1)
 
 /** The block's text, a line at a time, without the spaces and line breaks around each line. */
 fun ReportText.lines(): List<String> = List(lineCount) {
@@ -485,7 +483,8 @@ private class ReportComposer<T : ReportText>(
  * The bidi embeddings, overrides and isolates that are still open at the end of [text], in
  * order, to start the rest of a split paragraph with. Text the scout typed in another direction
  * is wrapped in an embedding ([LocaleFormats.typedText]), so the rest of it keeps its direction
- * on the next page. A line break closes them all, as it ends a paragraph for the bidi algorithm.
+ * on the next page. A paragraph separator closes them all, as it ends a paragraph for the bidi
+ * algorithm: a line break, or a separator such as U+2029 that notes can hold.
  */
 internal fun openDirections(text: CharSequence): String {
     val open = ArrayDeque<Char>()
@@ -503,11 +502,18 @@ internal fun openDirections(text: CharSequence): String {
                 if (isolate >= 0) repeat(open.size - isolate) { open.removeLast() }
             }
 
-            '\n' -> open.clear()
+            in PARAGRAPH_SEPARATORS -> open.clear()
         }
     }
     return open.joinToString("")
 }
+
+/**
+ * The characters that end a paragraph for the bidi algorithm, which closes every embedding,
+ * override and isolate there: those whose bidi class is B (Unicode's DerivedBidiClass.txt).
+ */
+private const val PARAGRAPH_SEPARATORS =
+    "\n\r\u001C\u001D\u001E\u0085\u2029"
 
 /** Left-to-right and right-to-left embeddings and overrides. */
 private const val EMBEDDINGS = "\u202A\u202B\u202D\u202E"

@@ -2,10 +2,10 @@
 
 package io.github.bryancassell.bluecard.data.report
 
+import cnames.structs.__CFString
 import io.github.bryancassell.bluecard.text.LocaleFormats
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.UShortVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.convert
@@ -14,7 +14,6 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.readValue
 import kotlinx.cinterop.reinterpret
-import kotlinx.cinterop.set
 import kotlinx.cinterop.sizeOf
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.value
@@ -25,7 +24,6 @@ import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFDictionarySetValue
 import platform.CoreFoundation.CFRangeMake
 import platform.CoreFoundation.CFRelease
-import platform.CoreFoundation.CFStringCreateWithCharacters
 import platform.CoreFoundation.CFStringRef
 import platform.CoreFoundation.CFTypeRef
 import platform.CoreFoundation.kCFTypeDictionaryKeyCallBacks
@@ -45,6 +43,7 @@ import platform.CoreText.CTFontCreateUIFontForLanguage
 import platform.CoreText.CTFrameDraw
 import platform.CoreText.CTFrameGetLineOrigins
 import platform.CoreText.CTFrameGetLines
+import platform.CoreText.CTFrameGetVisibleStringRange
 import platform.CoreText.CTFrameRef
 import platform.CoreText.CTFramesetterCreateFrame
 import platform.CoreText.CTFramesetterCreateWithAttributedString
@@ -58,6 +57,7 @@ import platform.CoreText.CTWritingDirectionVar
 import platform.CoreText.kCTFontAttributeName
 import platform.CoreText.kCTFontUIFontEmphasizedSystem
 import platform.CoreText.kCTFontUIFontSystem
+import platform.CoreText.kCTLanguageAttributeName
 import platform.CoreText.kCTParagraphStyleAttributeName
 import platform.CoreText.kCTParagraphStyleSpecifierAlignment
 import platform.CoreText.kCTParagraphStyleSpecifierBaseWritingDirection
@@ -65,6 +65,8 @@ import platform.CoreText.kCTTextAlignmentCenter
 import platform.CoreText.kCTTextAlignmentNatural
 import platform.CoreText.kCTWritingDirectionLeftToRight
 import platform.CoreText.kCTWritingDirectionRightToLeft
+import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSString
 
 /**
  * A report's text laid out by Core Text, in lines that start at [starts] in [text] and end at
@@ -104,30 +106,49 @@ class CoreTextText internal constructor(
     }
 }
 
-/** How a [CoreTextText] is set: in [style], up to [width] points wide, and how it's aligned. */
+/**
+ * How a [CoreTextText] is set: in [style], up to [width] points wide, how it's aligned, and in
+ * which [language].
+ */
 internal data class TextSetting(
     val style: ReportStyle,
     val width: Int,
     val centered: Boolean,
-    val rightToLeft: Boolean
+    val rightToLeft: Boolean,
+    val language: String
 )
 
 /**
  * Lays a report's text out with Core Text in the system's font, with [formats] for the locale,
- * and lines that start at the right when [rightToLeft].
+ * and lines that start at the right when [rightToLeft]. Text is set in [language], a BCP 47 tag
+ * such as "en", which picks the glyphs of characters that languages draw differently, such as
+ * Chinese and Japanese kanji, and how lines break, as StaticLayout's text locale does on Android.
  */
-class CoreTextTypesetter(override val formats: LocaleFormats, override val rightToLeft: Boolean) :
-    ReportTypesetter<CoreTextText> {
+class CoreTextTypesetter(
+    override val formats: LocaleFormats,
+    override val rightToLeft: Boolean,
+    private val language: String
+) : ReportTypesetter<CoreTextText> {
     override fun layOut(
         text: String,
         style: ReportStyle,
         width: Int,
         centered: Boolean
     ): CoreTextText {
-        val setting = TextSetting(style, width, centered, rightToLeft)
+        val setting = TextSetting(style, width, centered, rightToLeft, language)
+        // Core Text gives empty text no lines. It gets one empty line, as StaticLayout gives it
+        // and ReportText asks, as high as a line of a space.
+        if (text.isEmpty()) {
+            val space = layOut(" ", style, width, centered)
+            return CoreTextText(text, setting, listOf(0), listOf(space.lineBottom(0)))
+        }
         val starts = mutableListOf<Int>()
         val bottoms = mutableListOf<Float>()
         withFrame(text, setting) { frame ->
+            val shown = CTFrameGetVisibleStringRange(frame).useContents { length.toInt() }
+            check(shown == text.length) {
+                "Core Text left ${text.length - shown} characters out of its frame"
+            }
             val lines = CTFrameGetLines(frame)
             val count = CFArrayGetCount(lines).toInt()
             memScoped {
@@ -151,10 +172,10 @@ class CoreTextTypesetter(override val formats: LocaleFormats, override val right
 }
 
 /**
- * The height of the frame text is laid out in, as Core Text leaves out the lines that don't fit.
- * A report's longest paragraph is a tracker row's values, each at most 2,000 characters
- * (`TRACKER_MULTILINE_TEXT_MAX_LENGTH`, which imports are held to as well), so even with a line
- * for each character it takes a small part of this.
+ * The height of the frame text is laid out in. Core Text leaves out lines that don't fit, which
+ * `layOut` checks for. A report's longest paragraph is a tracker row's values, each at most 2,000
+ * characters (`TRACKER_MULTILINE_TEXT_MAX_LENGTH`, which imports are held to as well), so even
+ * with a line for each character it takes a small part of this.
  */
 private const val FRAME_HEIGHT = 1_000_000.0
 
@@ -168,9 +189,10 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
     fun <T : CPointer<*>> T?.releasedLater(): T? = also { created += it }
     try {
         val style = setting.style
+        val language = cfString(setting.language).releasedLater()
         val fontType = if (style.bold) kCTFontUIFontEmphasizedSystem else kCTFontUIFontSystem
         val font =
-            CTFontCreateUIFontForLanguage(fontType, style.size.toDouble(), null).releasedLater()
+            CTFontCreateUIFontForLanguage(fontType, style.size.toDouble(), language).releasedLater()
         val paragraphStyle = memScoped {
             val alignment = alloc<CTTextAlignmentVar>()
             alignment.value =
@@ -192,12 +214,15 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
         }.releasedLater()
         val attributes = CFDictionaryCreateMutable(
             null,
-            2,
+            3,
             kCFTypeDictionaryKeyCallBacks.ptr,
             kCFTypeDictionaryValueCallBacks.ptr
         ).releasedLater()
         CFDictionarySetValue(attributes, kCTFontAttributeName, font)
         CFDictionarySetValue(attributes, kCTParagraphStyleAttributeName, paragraphStyle)
+        CFDictionarySetValue(attributes, kCTLanguageAttributeName, language)
+        // A CFString of the same UTF-16 code units, so a line's position in it is its index in
+        // text.
         val string = cfString(text).releasedLater()
         val attributed = CFAttributedStringCreate(null, string, attributes).releasedLater()
         val framesetter = CTFramesetterCreateWithAttributedString(attributed).releasedLater()
@@ -211,12 +236,6 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
     }
 }
 
-/**
- * [text] as a new CFString, its UTF-16 code units copied as they are, so a line's position in it
- * is its position in [text]. The caller releases it.
- */
-private fun cfString(text: String): CFStringRef? = memScoped {
-    val characters = allocArray<UShortVar>(text.length)
-    text.forEachIndexed { index, char -> characters[index] = char.code.toUShort() }
-    CFStringCreateWithCharacters(null, characters, text.length.convert())
-}
+/** [text] as a CFString that the caller releases. */
+private fun cfString(text: String): CFStringRef? =
+    CFBridgingRetain(text as NSString)?.reinterpret<__CFString>()

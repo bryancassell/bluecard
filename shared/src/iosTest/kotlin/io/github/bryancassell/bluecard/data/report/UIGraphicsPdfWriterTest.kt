@@ -31,7 +31,7 @@ import platform.PDFKit.kPDFDisplayBoxMediaBox
  * simulator, as PdfDocumentWriterTest checks Android's writer on a device.
  */
 class UIGraphicsPdfWriterTest {
-    private val typesetter = CoreTextTypesetter(EnglishLocaleFormats, rightToLeft = false)
+    private val typesetter = CoreTextTypesetter(EnglishLocaleFormats, false, "en")
     private val note = TrackerColumn("note", "Note", TrackerColumnType.MULTILINE_TEXT)
 
     // Long enough to take several pages, with a tracker and notes as a real badge has.
@@ -118,6 +118,24 @@ class UIGraphicsPdfWriterTest {
             val found = written.sumOf { Regex(Regex.escape(title)).findAll(it).count() }
             assertEquals(1, found, "\"$title\" in the PDF")
         }
+    }
+
+    // So the renderer's context is UIKit's, as CoreTextText.draw takes it: text drawn upside
+    // down or mirrored would still be read as text.
+    @Test
+    fun write_drawsTheFirstPage_downFromTheTopMargin_withItsNumberAtTheFoot() {
+        val page = read(writePdf(pages)).pageAtIndex(0u)!!
+
+        val ink = ink(uiKitCoordinates = false) { page.drawWithBox(kPDFDisplayBoxMediaBox, it) }
+
+        val margin = 54
+        val firstLine = pages[0].texts[0].text.lineBottom(0)
+        assertTrue(ink.found, "Nothing was drawn")
+        assertTrue(ink.top in margin..<margin + firstLine.toInt(), "Ink starts at y ${ink.top}")
+        assertTrue(ink.left >= margin, "Ink starts at x ${ink.left}")
+        assertTrue(ink.right < PAGE_WIDTH - margin, "Ink ends at x ${ink.right}")
+        // The page number, in the bottom margin.
+        assertTrue(ink.bottom in PAGE_HEIGHT - margin..<PAGE_HEIGHT, "Ink ends at y ${ink.bottom}")
     }
 
     private fun String.withoutSpaces() = filterNot { it.isWhitespace() }

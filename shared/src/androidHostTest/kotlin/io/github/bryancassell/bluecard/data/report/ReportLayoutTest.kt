@@ -593,6 +593,11 @@ class ReportLayoutTest {
         assertEquals(rle, openDirections("$rle a$lri b$rle c$pdi"))
         // A line break ends the paragraph, and everything open in it.
         assertEquals("", openDirections("$rle a\nb"))
+        // So do the other paragraph separators, such as one pasted into notes.
+        assertEquals("", openDirections("$rle a\u2029b"))
+        assertEquals("", openDirections("$rle a\u0085b"))
+        // A line separator only breaks the line.
+        assertEquals(rle, openDirections("$rle a\u2028b"))
     }
 
     @Test
