@@ -11,22 +11,29 @@ import platform.CoreFoundation.CFStringTokenizerGetCurrentTokenRange
 import platform.CoreFoundation.CFStringTokenizerGoToTokenAtIndex
 import platform.CoreFoundation.kCFStringTokenizerUnitLineBreak
 import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSCharacterSet
+import platform.Foundation.NSLocale
+import platform.Foundation.NSMakeRange
 import platform.Foundation.NSString
+import platform.Foundation.compare
 import platform.Foundation.rangeOfComposedCharacterSequenceAtIndex
 
 /**
  * [TextRules] on iOS. Characters are Foundation's composed character sequences, which keep an
  * emoji or a letter and its accent mark whole, and line breaks are Core Foundation's, which follow
- * Unicode's line breaking rules as Android's ICU does. Sorting is a plain-Kotlin stand-in for
- * English names until #350.
+ * Unicode's line breaking rules as Android's ICU does. Sorting is Foundation's comparison in
+ * English, which follows the English collation rules, as Android's collator does, and letters and
+ * digits are Foundation's character sets.
  */
 @OptIn(ExperimentalForeignApi::class)
 class IosTextRules : TextRules {
-    // Ignores case and then breaks ties by it, lowercase first, as Android's collator does. Unlike
-    // it, an accented letter sorts after the base letters, which the catalog's English names don't
-    // have.
-    override fun englishOrder(): Comparator<String> =
-        String.CASE_INSENSITIVE_ORDER.thenByDescending { it }
+    @Suppress("CAST_NEVER_SUCCEEDS") // A Kotlin string is an NSString on iOS.
+    override fun englishOrder(): Comparator<String> {
+        val english = NSLocale("en")
+        return Comparator { a, b ->
+            (a as NSString).compare(b, 0u, NSMakeRange(0u, a.length.toULong()), english).toInt()
+        }
+    }
 
     override fun characterBoundaryAtOrBefore(text: String, offset: Int): Int =
         characterAt(text, offset)?.first ?: offset
@@ -56,6 +63,15 @@ class IosTextRules : TextRules {
             CFRelease(tokenizer)
             CFRelease(string)
         }
+    }
+
+    // Foundation's letters are Unicode's categories L and M, so the marks M are taken out, as
+    // Java's letters are L only. Its decimal digits are Nd, as Java's digits are.
+    override fun isLetterOrDigit(codePoint: Int): Boolean {
+        val char = codePoint.toUInt()
+        val letter = NSCharacterSet.letterCharacterSet.longCharacterIsMember(char) &&
+            !NSCharacterSet.nonBaseCharacterSet.longCharacterIsMember(char)
+        return letter || NSCharacterSet.decimalDigitCharacterSet.longCharacterIsMember(char)
     }
 
     // The character that starts at or holds the code unit at [offset], or null at the end.

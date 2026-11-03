@@ -1,13 +1,15 @@
 package io.github.bryancassell.bluecard.text
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 /**
- * Behavior every [TextRules] must have. Runs against Android's (AndroidTextRulesTest), and is for
- * the iOS one to run too (#350). Unlike the repositories, it has no fake: other tests use
- * Android's, which runs in local tests, so what they check is what the app does.
+ * Behavior every [TextRules] must have. Runs against Android's (AndroidTextRulesTest) and iOS's
+ * (IosTextRulesTest). Unlike the repositories, it has no fake: other tests use Android's, which
+ * runs in local tests, so what they check is what the app does.
  */
 abstract class TextRulesContract {
     protected abstract val textRules: TextRules
@@ -119,5 +121,33 @@ abstract class TextRulesContract {
     @Test
     fun lineBreaks_includeAfterAHyphen() {
         assertEquals(listOf(0, 6, 14), lineBreaks("Eagle-required"))
+    }
+
+    @Test
+    fun lineBreaks_afterSeveralSpaces_areBeforeTheNextWord() {
+        assertEquals(listOf(0, 4, 6), lineBreaks("Go  on"))
+    }
+
+    @Test
+    fun isLetterOrDigit_isTrueForLettersAndDecimalDigits() {
+        assertTrue(textRules.isLetterOrDigit('a'.code))
+        assertTrue(textRules.isLetterOrDigit('7'.code))
+        // An Arabic letter and an Arabic-Indic digit.
+        assertTrue(textRules.isLetterOrDigit(0x0639))
+        assertTrue(textRules.isLetterOrDigit(0x0663))
+        // A CJK letter beyond the Basic Multilingual Plane.
+        assertTrue(textRules.isLetterOrDigit(0x20000))
+    }
+
+    @Test
+    fun isLetterOrDigit_isFalseForEverythingElse() {
+        assertFalse(textRules.isLetterOrDigit(' '.code))
+        assertFalse(textRules.isLetterOrDigit('.'.code))
+        // A combining acute accent, which is a mark, not a letter.
+        assertFalse(textRules.isLetterOrDigit(0x0301))
+        // A superscript two, which is a number, but not a decimal digit.
+        assertFalse(textRules.isLetterOrDigit(0x00B2))
+        // A grinning face, a symbol beyond the Basic Multilingual Plane.
+        assertFalse(textRules.isLetterOrDigit(0x1F600))
     }
 }

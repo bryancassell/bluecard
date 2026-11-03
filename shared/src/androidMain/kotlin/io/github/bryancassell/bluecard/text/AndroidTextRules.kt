@@ -20,6 +20,8 @@ class AndroidTextRules : TextRules {
     override fun isLineBreak(text: String, offset: Int): Boolean =
         BreakIterator.getLineInstance().apply { setText(text) }.isBoundary(offset)
 
+    override fun isLetterOrDigit(codePoint: Int): Boolean = Character.isLetterOrDigit(codePoint)
+
     // ICU works out boundaries near the offset it's asked about, not across the whole text.
     private fun characters(text: String): BreakIterator =
         BreakIterator.getCharacterInstance().apply { setText(text) }

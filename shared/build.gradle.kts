@@ -133,9 +133,14 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
         }
 
+        // Tests that run on Android and iOS alike, such as the contract tests that both
+        // platforms' implementations of an interface must pass.
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
+
         // Tests of iOS code, which `iosSimulatorArm64Test` runs on the simulator.
         iosTest.dependencies {
-            implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
 

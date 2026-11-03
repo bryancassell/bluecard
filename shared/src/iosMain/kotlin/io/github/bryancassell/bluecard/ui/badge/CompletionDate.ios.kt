@@ -8,7 +8,10 @@ import platform.Foundation.NSLocale
 import platform.Foundation.NSLocaleLanguageDirectionRightToLeft
 import platform.Foundation.characterDirectionForLanguage
 
-/** The direction of the device's first language, Compose's current locale. #350 checks it. */
+/**
+ * The direction of Compose's current locale, the first preferred language, which Material 3 reads
+ * on iOS. The app makes it the strings' language (`useStringsLanguageByDefault`).
+ */
 @Composable
 @ReadOnlyComposable
 internal actual fun pickerLayoutDirection(): LayoutDirection =

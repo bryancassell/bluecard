@@ -4,31 +4,28 @@ import io.github.artificialpb.bignum.bigDecimalOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDate
+import platform.Foundation.NSLocale
+import platform.Foundation.canonicalLocaleIdentifierFromString
 
-// LocaleFormatsContract's cases in US English, which this writes as Android's formatters do.
-class EnglishLocaleFormatsTest {
-    private val formats = EnglishLocaleFormats
+class IosLocaleFormatsTest : LocaleFormatsContract() {
+    override fun formats(languageTag: String) =
+        IosLocaleFormats(NSLocale(NSLocale.canonicalLocaleIdentifierFromString(languageTag)))
 
-    @Test
-    fun formatDate_isWrittenOut() {
-        assertEquals("Apr 15, 2026", formats.formatDate(LocalDate(2026, 4, 15)))
-    }
+    private val formats = formats("en-US")
 
     @Test
     fun formatDate_hasNoLeadingZero() {
         assertEquals("Sep 5, 2026", formats.formatDate(LocalDate(2026, 9, 5)))
     }
 
-    private fun total(text: String) = formats.formatTotal(bigDecimalOf(text))
-
+    // Iran's calendar is the Persian one, which NSDateFormatter would otherwise write in.
     @Test
-    fun formatTotal_writesUpToTwoDecimalPlaces_withoutTrailingZeros() {
-        assertEquals("4.25", total("4.25"))
-        assertEquals("4.5", total("4.50"))
-        assertEquals("2", total("2.0"))
+    fun formatDate_inARegionWithAnotherCalendar_isInTheGregorianCalendar() {
+        assertEquals("Apr 15, 2026", formats("en-IR").formatDate(LocalDate(2026, 4, 15)))
     }
 
-    // Trailing zeros come off as an exponent, 1E+2, which the total is written without.
+    private fun total(text: String) = formats.formatTotal(bigDecimalOf(text))
+
     @Test
     fun formatTotal_ofTens_isWrittenOut() {
         assertEquals("100", total("100"))
@@ -36,29 +33,7 @@ class EnglishLocaleFormatsTest {
     }
 
     @Test
-    fun formatTotal_roundsDown() {
-        assertEquals("5.99", total("5.999"))
-        assertEquals("4.33", total("4.3333333333"))
-    }
-
-    @Test
-    fun formatTotal_doesntGroupDigits() {
-        assertEquals("1250.5", total("1250.5"))
-    }
-
-    @Test
-    fun formatList_joinsTheItemsInASentence() {
-        assertEquals("Swimming", formats.formatList(listOf("Swimming")))
-        assertEquals("Hiking and Swimming", formats.formatList(listOf("Hiking", "Swimming")))
-        assertEquals(
-            "Cycling, Hiking, and Swimming",
-            formats.formatList(listOf("Cycling", "Hiking", "Swimming"))
-        )
-    }
-
-    @Test
-    fun typedText_inAnotherDirection_isWrappedToKeepIt() {
-        assertEquals("\u200E\u202Bعلی.\u202C\u200E", formats.typedText("علی."))
+    fun typedText_inHebrew_isWrappedToKeepIt() {
         assertEquals("\u200E\u202Bשרה\u202C\u200E", formats.typedText("שרה"))
     }
 
@@ -105,8 +80,7 @@ class EnglishLocaleFormatsTest {
     private fun wrapped(text: String) = text(0x200E, 0x202B) + text + text(0x202C, 0x200E)
 
     @Test
-    fun typedText_inTheLocalesDirection_isUnchanged() {
-        assertEquals("Alex Scout", formats.typedText("Alex Scout"))
+    fun typedText_withNoLetters_isUnchanged() {
         assertEquals("555-0100", formats.typedText("555-0100"))
     }
 }
