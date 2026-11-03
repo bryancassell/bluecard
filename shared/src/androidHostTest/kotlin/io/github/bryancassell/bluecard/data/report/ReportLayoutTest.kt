@@ -20,6 +20,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import java.math.BigDecimal
 import java.util.Locale
 import kotlinx.coroutines.runBlocking
@@ -38,8 +39,10 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class ReportLayoutTest {
+class ReportLayoutTest : ReportPagingContract<StaticLayoutText>() {
     private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    override val typesetter = StaticLayoutTypesetter(Locale.US)
 
     private val date = TrackerColumn("date", "Date", TrackerColumnType.DATE)
     private val nights = TrackerColumn("nights", "Nights", TrackerColumnType.NUMBER)
@@ -150,7 +153,9 @@ class ReportLayoutTest {
     private fun layOut(
         report: AdvancementReport,
         locale: Locale = context.resources.configuration.locales[0]
-    ) = runBlocking { layOutReport(report, locale, getSystemResourceEnvironment()) }
+    ) = runBlocking {
+        layOutReport(report, getSystemResourceEnvironment(), StaticLayoutTypesetter(locale))
+    }
 
     @Test
     fun shortReport_isOnePage_withEverythingRecordedInOrder() {
@@ -445,6 +450,21 @@ class ReportLayoutTest {
 
     // A Persian name keeps its own direction, so its period stays at its end
     // (ARCHITECTURE.md, Language and layout direction).
+    // A paragraph separator ends a paragraph for the bidi algorithm, as a line break does.
+    @Test
+    fun typedTextWithAParagraphSeparator_keepsItsDirectionInEachParagraph() {
+        val first = "چادر زدم."
+        val second = "شام پختم."
+        val lines = layOut(
+            report(listOf(requirement("1", "Camp.", comment = "$first\u2029$second")))
+        ).single().lines
+
+        fun wrap(text: String) = BidiFormatter.getInstance(Locale.US).unicodeWrap(text)
+        val notes = lines.single { it.startsWith("Notes: ") }
+        assertTrue(notes, wrap(first) in notes)
+        assertTrue(notes, wrap(second) in lines.joinToString("\n"))
+    }
+
     @Test
     fun textTheScoutTyped_keepsItsOwnDirection() {
         val name = "علی رضایی."
@@ -461,50 +481,6 @@ class ReportLayoutTest {
         val lines = layOut(camping, Locale.forLanguageTag("en-GB")).single().lines
 
         assertTrue(lines.toString(), "Created on 30 Sept 2026" in lines)
-    }
-
-    /**
-     * A report with [count] requirements, each with a comment of one to a few lines. Their
-     * lengths depend on [count] too, so each count breaks its pages in other places.
-     */
-    private fun longReport(count: Int) = report(
-        (1..count).map {
-            requirement(
-                "$it",
-                "Requirement number $it of the badge.",
-                Completion(LocalDate(2026, 4, 1)),
-                comment = "A comment on requirement $it, ".repeat((it + count) % 7 + 1)
-            )
-        }
-    )
-
-    @Test
-    fun longReport_continuesOnMorePages_eachNumbered() {
-        val pages = layOut(longReport(60))
-
-        assertTrue("Expected several pages, got ${pages.size}", pages.size > 2)
-        pages.forEachIndexed { index, page ->
-            assertEquals("Page ${index + 1} of ${pages.size}", page.lines.last())
-        }
-        // Every requirement is there once, in order.
-        val titles = pages.flatMap { it.lines }.filter { it.endsWith("of the badge.") }
-        assertEquals((1..60).map { "$it. Requirement number $it of the badge." }, titles)
-    }
-
-    // Catches a title left at the foot of a page, away from what it's about, wherever the page
-    // breaks fall.
-    @Test
-    fun requirementTitle_isNeverLastOnAPage() {
-        for (count in 20..60) {
-            val pages = layOut(longReport(count))
-            pages.dropLast(1).forEachIndexed { index, page ->
-                val last = page.lines.dropLast(1).last()
-                assertFalse(
-                    "Page ${index + 1} of $count requirements ends with \"$last\"",
-                    last.endsWith("of the badge.")
-                )
-            }
-        }
     }
 
     /**
@@ -591,19 +567,37 @@ class ReportLayoutTest {
         assertEquals(rle, openDirections("$rle a$lri b$rle c$pdi"))
         // A line break ends the paragraph, and everything open in it.
         assertEquals("", openDirections("$rle a\nb"))
+        // So do the other paragraph separators, such as one pasted into notes.
+        assertEquals("", openDirections("$rle a\u2029b"))
+        assertEquals("", openDirections("$rle a\u0085b"))
+        // A line separator only breaks the line.
+        assertEquals(rle, openDirections("$rle a\u2028b"))
     }
 
-    @Test
-    fun paragraphLongerThanThePageSpace_continuesOnTheNextPage_withEveryWordOnce() {
-        val words = (1..1200).map { "word$it" }
-        val pages = layOut(
-            report(listOf(requirement("1", "Write.", comment = words.joinToString(" "))))
-        )
+    // As a typesetter whose every line is taller than a page might. The time limit stops a run
+    // that adds pages without end, which would otherwise run until it's out of memory.
+    @Test(timeout = 20_000)
+    fun lineTallerThanAPage_fails_ratherThanAddingPagesWithoutEnd() {
+        class TallText(override val text: String) : ReportText {
+            override val lineCount = 1
 
-        assertTrue(pages.size > 1)
-        val text = pages.flatMap { it.lines.dropLast(1) }.joinToString(" ")
-        val written = Regex("word\\d+").findAll(text).map { it.value }.toList()
-        assertEquals(words, written)
+            override fun lineStart(line: Int) = 0
+
+            override fun lineBottom(line: Int) = PAGE_HEIGHT + 1f
+        }
+        val tall = object : ReportTypesetter<TallText> {
+            override val formats = AndroidLocaleFormats(Locale.US)
+            override val rightToLeft = false
+
+            override fun layOut(text: String, style: ReportStyle, width: Int, centered: Boolean) =
+                TallText(text)
+        }
+
+        val failure = runCatching {
+            runBlocking { layOutReport(camping, getSystemResourceEnvironment(), tall) }
+        }.exceptionOrNull()
+
+        assertTrue("$failure", failure is IllegalStateException)
     }
 
     @Test

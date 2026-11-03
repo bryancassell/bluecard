@@ -3,7 +3,7 @@ package io.github.bryancassell.bluecard
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.github.bryancassell.bluecard.data.report.PdfReportRepository
+import io.github.bryancassell.bluecard.data.report.AndroidReportPlatform
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +19,7 @@ class ReportsProviderTest {
 
     @Test
     fun reportsProvider_isNamedAfterTheApplicationId() {
-        val authority = PdfReportRepository.fileProviderAuthority(context)
+        val authority = AndroidReportPlatform.fileProviderAuthority(context)
 
         val provider = context.packageManager.resolveContentProvider(authority, 0)
 

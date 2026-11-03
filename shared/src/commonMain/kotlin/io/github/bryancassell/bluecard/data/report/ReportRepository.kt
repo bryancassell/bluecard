@@ -18,9 +18,9 @@ import org.jetbrains.compose.resources.StringResource
  */
 interface ReportRepository {
     /**
-     * Writes badge or rank [advancementId]'s report to the app's cache, and returns where another
-     * app can read it from, such as a content URI on Android, which it can read once it's granted
-     * permission. Returns null when it makes no report.
+     * Writes badge or rank [advancementId]'s report to a folder of the app's that isn't backed up,
+     * and returns where another app can read it from, such as a content URI on Android, which it
+     * can read once it's granted permission. Returns null when it makes no report.
      */
     suspend fun createReportToShare(advancementId: String): DocumentUri?
 

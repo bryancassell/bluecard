@@ -16,10 +16,13 @@ import io.github.bryancassell.bluecard.data.progress.Converters
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.SetAsideDamagedDatabaseDriver
+import io.github.bryancassell.bluecard.data.report.AndroidReportPlatform
 import io.github.bryancassell.bluecard.data.report.PdfDocumentWriter
 import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
+import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.data.report.StaticLayoutText
 import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.AndroidTextRules
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
@@ -42,7 +45,8 @@ val androidModule = module {
     // without the app reopening. So a test that fakes DamagedProgressRepository fakes
     // ProgressRepository too, or the real database tells the real one instead of the fake.
     single { create(::damagedProgressRepository) } bind DamagedProgressRepository::class
-    single<PdfReportRepository>() bind ReportRepository::class
+    single<PdfReportRepository<StaticLayoutText>>() bind ReportRepository::class
+    single<AndroidReportPlatform>() bind ReportPlatform::class
     single<PdfDocumentWriter>() bind ReportPdfWriter::class
     single<ContentResolverDocuments>() bind Documents::class
     single<AndroidTextRules>() bind TextRules::class

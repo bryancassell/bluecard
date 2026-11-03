@@ -14,7 +14,13 @@ import io.github.bryancassell.bluecard.data.progress.Converters
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.SetAsideDamagedDatabaseDriver
+import io.github.bryancassell.bluecard.data.report.CoreTextText
+import io.github.bryancassell.bluecard.data.report.IosReportPlatform
+import io.github.bryancassell.bluecard.data.report.PdfReportRepository
+import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
+import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.data.report.UIGraphicsPdfWriter
 import io.github.bryancassell.bluecard.text.IosTextRules
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
@@ -49,7 +55,9 @@ val iosModule = module {
     // As on Android, the database sets damaged progress aside with this same instance, so the
     // notice shows without the app reopening.
     single { create(::damagedProgressRepository) } bind DamagedProgressRepository::class
-    single<UnfinishedReports>() bind ReportRepository::class
+    single<PdfReportRepository<CoreTextText>>() bind ReportRepository::class
+    single<ReportPlatform<CoreTextText>> { IosReportPlatform }
+    single<UIGraphicsPdfWriter>() bind ReportPdfWriter::class
     single { create(::fileCoordinatorDocuments) } bind Documents::class
     single<IosTextRules>() bind TextRules::class
     single<PhoneNumberFormat> { UnformattedPhoneNumbers }

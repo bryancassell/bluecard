@@ -1,16 +1,5 @@
 package io.github.bryancassell.bluecard.data.report
 
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Typeface
-import android.text.Layout
-import android.text.StaticLayout
-import android.text.TextDirectionHeuristics
-import android.text.TextPaint
-import android.view.View
-import androidx.core.graphics.withTranslation
-import androidx.core.text.layoutDirection
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
 import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
 import io.github.bryancassell.bluecard.data.progress.Completion
@@ -49,9 +38,7 @@ import io.github.bryancassell.bluecard.resources.tracker_count_of
 import io.github.bryancassell.bluecard.resources.tracker_row_title
 import io.github.bryancassell.bluecard.resources.tracker_total
 import io.github.bryancassell.bluecard.resources.tracker_value_separator
-import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import io.github.bryancassell.bluecard.text.LocaleFormats
-import java.util.Locale
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.ResourceEnvironment
@@ -78,50 +65,8 @@ private const val INDENT = 18
 /** The top of the page number, in the bottom margin. */
 private const val FOOTER_TOP = CONTENT_BOTTOM + 18
 
-/** One page of a report: blocks of text, each at its place on the page. */
-class ReportPage internal constructor(private val texts: List<PlacedText>) {
-    /** The page's text, a line at a time, in the order it's laid out. */
-    val lines: List<String> get() = texts.flatMap { it.lines() }
-
-    /** Draws the page onto [canvas], which is [PAGE_WIDTH] by [PAGE_HEIGHT]. */
-    fun draw(canvas: Canvas) {
-        texts.forEach { it.draw(canvas) }
-    }
-}
-
-/** A block of text laid out by [layout], with its top left corner at ([x], [y]). */
-internal class PlacedText(
-    private val layout: StaticLayout,
-    private val x: Float,
-    private val y: Float
-) {
-    fun lines(): List<String> = List(layout.lineCount) {
-        layout.text.substring(layout.getLineStart(it), layout.getLineEnd(it)).trim()
-    }
-
-    fun draw(canvas: Canvas) {
-        canvas.withTranslation(x, y) { layout.draw(this) }
-    }
-}
-
-/**
- * Lays [report] out on pages, with its strings from [environment], such as
- * `getSystemResourceEnvironment()`, which reads the default locale the app makes the strings'
- * (`useStringsLocalesByDefault`). Dates and totals are formatted in [locale], the strings' locale
- * (`stringsLocale`), and text is laid out in its direction (ARCHITECTURE.md, Language and layout
- * direction).
- */
-suspend fun layOutReport(
-    report: AdvancementReport,
-    locale: Locale,
-    environment: ResourceEnvironment
-): List<ReportPage> {
-    val valueSeparator = getString(environment, Res.string.tracker_value_separator)
-    return ReportComposer(locale, environment, valueSeparator).apply { add(report) }.pages()
-}
-
-/** The text styles of a report. */
-private enum class Style(val size: Float, val bold: Boolean) {
+/** The text styles of a report, in the platform's default font. */
+enum class ReportStyle(val size: Float, val bold: Boolean) {
     Title(20f, true),
     Heading(14f, true),
     Subheading(11f, true),
@@ -129,10 +74,83 @@ private enum class Style(val size: Float, val bold: Boolean) {
     Footer(9f, false)
 }
 
+/**
+ * A block of [text], broken into lines by a platform's [ReportTypesetter]. Positions are in points
+ * down from the block's top.
+ */
+interface ReportText {
+    val text: String
+
+    /** How many lines [text] takes: at least one, as empty text takes one empty line. */
+    val lineCount: Int
+
+    /** Where line [line] starts in [text]. It ends where the next one starts. */
+    fun lineStart(line: Int): Int
+
+    /** The bottom of line [line], which is the top of the line after it. */
+    fun lineBottom(line: Int): Float
+}
+
+/** How tall the block is: down to the bottom of its last line. */
+val ReportText.height: Float get() = lineBottom(lineCount - 1)
+
+/** The block's text, a line at a time, without the spaces and line breaks around each line. */
+fun ReportText.lines(): List<String> = List(lineCount) {
+    val end = if (it + 1 < lineCount) lineStart(it + 1) else text.length
+    text.substring(lineStart(it), end).trim()
+}
+
+/**
+ * Breaks a report's text into lines with a platform's text engine, in one locale: the strings'
+ * (ARCHITECTURE.md, Language and layout direction).
+ */
+interface ReportTypesetter<T : ReportText> {
+    /** Writes dates, totals and text the scout typed in the locale, as the screens do. */
+    val formats: LocaleFormats
+
+    /** Whether the locale is written right to left, so text starts at the right margin. */
+    val rightToLeft: Boolean
+
+    /**
+     * Breaks [text] in [style] into lines up to [width] points wide, each starting where the
+     * locale's lines start, or [centered]. A line break in [text] starts a new line.
+     *
+     * Where each line breaks must depend only on the text before it, without hyphens, so the
+     * rest of a paragraph that's split across pages, laid out again on its own, breaks the same
+     * way.
+     */
+    fun layOut(text: String, style: ReportStyle, width: Int, centered: Boolean = false): T
+}
+
+/** One page of a report: blocks of text, each at its place on the page. */
+class ReportPage<T : ReportText> internal constructor(val texts: List<PlacedText<T>>) {
+    /** The page's text, a line at a time, in the order it's laid out. */
+    val lines: List<String> get() = texts.flatMap { it.text.lines() }
+}
+
+/** A block of [text] with its top left corner at ([x], [y]) on the page. */
+class PlacedText<T : ReportText>(val text: T, val x: Float, val y: Float)
+
+/**
+ * Lays [report] out on pages, with its strings from [environment], such as
+ * `getSystemResourceEnvironment()`, which reads the default locale the app makes the strings'
+ * (`useStringsLocalesByDefault`). [typesetter] is in the strings' locale: dates and totals are
+ * formatted in it, and text is laid out in its direction (ARCHITECTURE.md, Language and layout
+ * direction).
+ */
+suspend fun <T : ReportText> layOutReport(
+    report: AdvancementReport,
+    environment: ResourceEnvironment,
+    typesetter: ReportTypesetter<T>
+): List<ReportPage<T>> {
+    val valueSeparator = getString(environment, Res.string.tracker_value_separator)
+    return ReportComposer(typesetter, environment, valueSeparator).apply { add(report) }.pages()
+}
+
 /** A paragraph of a report, before it's placed on a page. */
 private class Paragraph(
     val text: String,
-    val style: Style,
+    val style: ReportStyle,
     val indent: Int,
     /** Space above it, unless it starts a page. */
     val spaceBefore: Float,
@@ -141,26 +159,14 @@ private class Paragraph(
 )
 
 /** Writes a report's paragraphs, then places them on pages. */
-private class ReportComposer(
-    private val locale: Locale,
+private class ReportComposer<T : ReportText>(
+    private val typesetter: ReportTypesetter<T>,
     private val environment: ResourceEnvironment,
     // Between a tracker row's values, as on screen.
     private val valueSeparator: String
 ) {
-    private val rightToLeft =
-        locale.layoutDirection == View.LAYOUT_DIRECTION_RTL
-
     // Dates, totals and typed text are written as on screen.
-    private val formats = AndroidLocaleFormats(locale)
-
-    private val paints = Style.entries.associateWith { style ->
-        TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            textSize = style.size
-            typeface = if (style.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
-            color = Color.BLACK
-            textLocale = locale
-        }
-    }
+    private val formats = typesetter.formats
 
     private val paragraphs = mutableListOf<Paragraph>()
 
@@ -170,18 +176,22 @@ private class ReportComposer(
             ReportKind.MeritBadge -> Res.string.report_kind
             ReportKind.Rank -> Res.string.report_kind_rank
         }
-        add(Style.Body, string(kind))
-        add(Style.Title, report.name, spaceBefore = 2f)
-        add(Style.Body, string(Res.string.report_scout, typed(profile.name)), spaceBefore = 8f)
-        add(Style.Body, string(Res.string.report_unit, typed(profile.unitNumber)))
+        add(ReportStyle.Body, string(kind))
+        add(ReportStyle.Title, report.name, spaceBefore = 2f)
+        add(
+            ReportStyle.Body,
+            string(Res.string.report_scout, typed(profile.name)),
+            spaceBefore = 8f
+        )
+        add(ReportStyle.Body, string(Res.string.report_unit, typed(profile.unitNumber)))
         val status = when (report.kind) {
             ReportKind.MeritBadge -> completionText(report.completion)
             ReportKind.Rank -> earnedText(report)
         }
-        add(Style.Body, status)
+        add(ReportStyle.Body, status)
         val version = date(report.requirementsVersion)
-        add(Style.Body, string(Res.string.report_requirements_version, version))
-        add(Style.Body, string(Res.string.report_created_on, date(report.createdDate)))
+        add(ReportStyle.Body, string(Res.string.report_requirements_version, version))
+        add(ReportStyle.Body, string(Res.string.report_created_on, date(report.createdDate)))
         report.counselor?.let { counselor ->
             addHeading(Res.string.report_counselor)
             counselor.name?.let { addLabeled(Res.string.report_counselor_name, typed(it)) }
@@ -197,7 +207,7 @@ private class ReportComposer(
     private suspend fun add(requirement: ReportRequirement, depth: Int) {
         val indent = depth * INDENT
         add(
-            Style.Subheading,
+            ReportStyle.Subheading,
             string(Res.string.report_requirement, requirement.number, requirement.summary),
             indent,
             spaceBefore = 10f,
@@ -205,14 +215,14 @@ private class ReportComposer(
         )
         requirement.requiredCount?.let {
             val choice = string(Res.string.requirement_choice, it, requirement.children.size)
-            add(Style.Body, choice, indent)
+            add(ReportStyle.Body, choice, indent)
         }
         val status = when {
             requirement.notNeeded -> string(Res.string.requirement_not_needed)
             requirement.notRecorded -> string(Res.string.requirement_not_recorded)
             else -> completionText(requirement.completion)
         }
-        add(Style.Body, status, indent)
+        add(ReportStyle.Body, status, indent)
         requirement.signedOffBy?.let {
             addLabeled(Res.string.report_signed_off_by, typed(it), indent)
         }
@@ -243,7 +253,7 @@ private class ReportComposer(
         val lines = listOf(count) + totals
         lines.forEachIndexed { index, line ->
             add(
-                Style.Body,
+                ReportStyle.Body,
                 line,
                 indent,
                 spaceBefore = if (index == 0) 4f else 0f,
@@ -252,13 +262,13 @@ private class ReportComposer(
         }
         tracker.rows.forEach { row ->
             add(
-                Style.Subheading,
+                ReportStyle.Subheading,
                 string(Res.string.tracker_row_title, definition.rowTitle, row.number),
                 indent,
                 spaceBefore = 4f,
                 keepWithNext = row.values.isNotEmpty()
             )
-            if (row.values.isNotEmpty()) add(Style.Body, valuesText(row.values), indent)
+            if (row.values.isNotEmpty()) add(ReportStyle.Body, valuesText(row.values), indent)
         }
     }
 
@@ -288,7 +298,7 @@ private class ReportComposer(
         )
         counts.forEachIndexed { index, line ->
             add(
-                Style.Body,
+                ReportStyle.Body,
                 line,
                 indent,
                 spaceBefore = if (index == 0) 4f else 0f,
@@ -302,7 +312,7 @@ private class ReportComposer(
                 string(Res.string.requirement_merit_badge_eagle_required)
                     .takeIf { earned.countsAsEagleRequired(needed) }
             )
-            add(Style.Body, parts.joinToString(valueSeparator), indent)
+            add(ReportStyle.Body, parts.joinToString(valueSeparator), indent)
         }
     }
 
@@ -361,31 +371,42 @@ private class ReportComposer(
         vararg args: Any
     ): String = getPluralString(environment, resource, quantity, *args)
 
-    // Text the scout typed keeps its own direction, as on screen. A line break ends a paragraph
-    // for the bidi algorithm, and the wrapping with it, so each line is wrapped on its own.
-    private fun typed(text: String): String =
-        text.lines().joinToString("\n") { formats.typedText(it) }
+    // Text the scout typed keeps its own direction, as on screen. A paragraph separator, such as
+    // a line break or a U+2029 pasted into notes, ends a paragraph for the bidi algorithm, and the
+    // wrapping with it, so each paragraph is wrapped on its own. A carriage return is made a line
+    // feed, as String.lines() made it, which StaticLayout breaks a line at.
+    private fun typed(text: String): String = buildString {
+        val lines = text.replace(CARRIAGE_RETURNS, "\n")
+        var start = 0
+        lines.forEachIndexed { index, char ->
+            if (char in PARAGRAPH_SEPARATORS) {
+                append(formats.typedText(lines.substring(start, index))).append(char)
+                start = index + 1
+            }
+        }
+        append(formats.typedText(lines.substring(start)))
+    }
 
     private fun date(date: LocalDate): String = formats.formatDate(date)
 
     private fun add(
-        style: Style,
+        style: ReportStyle,
         text: String,
         indent: Int = 0,
         spaceBefore: Float = 0f,
         keepWithNext: Boolean = false
     ) {
         // What follows a heading sits the same distance under it, whatever it is.
-        val space = if (paragraphs.lastOrNull()?.style == Style.Heading) 4f else spaceBefore
+        val space = if (paragraphs.lastOrNull()?.style == ReportStyle.Heading) 4f else spaceBefore
         paragraphs += Paragraph(text, style, indent, space, keepWithNext)
     }
 
     private suspend fun addHeading(text: StringResource) {
-        add(Style.Heading, string(text), spaceBefore = 18f, keepWithNext = true)
+        add(ReportStyle.Heading, string(text), spaceBefore = 18f, keepWithNext = true)
     }
 
     private suspend fun addLabeled(label: StringResource, value: String, indent: Int = 0) {
-        add(Style.Body, string(Res.string.report_labeled_value, string(label), value), indent)
+        add(ReportStyle.Body, string(Res.string.report_labeled_value, string(label), value), indent)
     }
 
     /**
@@ -393,17 +414,17 @@ private class ReportComposer(
      * keeps printed pages in order. A paragraph that doesn't fit at the foot of a page continues
      * on the next one, unless it's kept with the paragraph after it.
      */
-    suspend fun pages(): List<ReportPage> {
+    suspend fun pages(): List<ReportPage<T>> {
         val layouts = paragraphs.map { layOut(it, it.text) }
-        val pages = mutableListOf(mutableListOf<PlacedText>())
+        val pages = mutableListOf(mutableListOf<PlacedText<T>>())
         // The top of the next line.
         var y = MARGIN.toFloat()
         fun newPage() {
-            pages += mutableListOf<PlacedText>()
+            pages += mutableListOf<PlacedText<T>>()
             y = MARGIN.toFloat()
         }
-        fun place(layout: StaticLayout, paragraph: Paragraph) {
-            val x = if (rightToLeft) MARGIN else MARGIN + paragraph.indent
+        fun place(layout: T, paragraph: Paragraph) {
+            val x = if (typesetter.rightToLeft) MARGIN else MARGIN + paragraph.indent
             pages.last() += PlacedText(layout, x.toFloat(), y)
             y += layout.height
         }
@@ -417,17 +438,24 @@ private class ReportComposer(
             var layout = layouts[index]
             while (true) {
                 val fitting = (0 until layout.lineCount).count {
-                    y + layout.getLineBottom(it) <= CONTENT_BOTTOM
+                    y + layout.lineBottom(it) <= CONTENT_BOTTOM
                 }
                 if (fitting == layout.lineCount) break
-                // Every line fits on an empty page, as text is at most 20 points high.
+                // A line that didn't fit on an empty page would add empty pages without end. None
+                // is near a page high: the largest style's font is 20 points.
+                check(fitting > 0 || pages.last().isNotEmpty()) {
+                    "A ${paragraph.style} line is taller than a page"
+                }
                 if (fitting > 0) {
                     val text = layout.text
-                    val split = layout.getLineStart(fitting)
-                    place(layOut(paragraph, text.subSequence(0, split)), paragraph)
-                    val rest = text.subSequence(split, text.length)
+                    val split = layout.lineStart(fitting)
+                    // Without the line break the page's last line may end with: StaticLayout
+                    // gives text that ends with one an empty line after it, which wasn't
+                    // measured to fit.
+                    place(layOut(paragraph, text.substring(0, split).removeSuffix("\n")), paragraph)
+                    val rest = text.substring(split)
                     // Typed text in another direction keeps it on the next page.
-                    layout = layOut(paragraph, openDirections(text.subSequence(0, split)) + rest)
+                    layout = layOut(paragraph, openDirections(text.substring(0, split)) + rest)
                 }
                 newPage()
             }
@@ -435,7 +463,12 @@ private class ReportComposer(
         }
         return pages.mapIndexed { index, texts ->
             val number = string(Res.string.report_page, index + 1, pages.size)
-            val footer = layOut(number, Style.Footer, CONTENT_WIDTH, Layout.Alignment.ALIGN_CENTER)
+            val footer = typesetter.layOut(
+                number,
+                ReportStyle.Footer,
+                CONTENT_WIDTH,
+                centered = true
+            )
             ReportPage(texts + PlacedText(footer, MARGIN.toFloat(), FOOTER_TOP.toFloat()))
         }
     }
@@ -447,7 +480,7 @@ private class ReportComposer(
      * by a requirement's title, which is kept with its next line too, moves to the next page
      * with both.
      */
-    private fun keptHeight(index: Int, layouts: List<StaticLayout>): Float {
+    private fun keptHeight(index: Int, layouts: List<T>): Float {
         var height = 0f
         var last = index
         while (paragraphs[last].keepWithNext && last < paragraphs.lastIndex) {
@@ -455,38 +488,21 @@ private class ReportComposer(
             last++
         }
         // The last paragraph of a report has none after it.
-        if (last == index) return layouts[index].height.toFloat()
-        return height + layouts[last].getLineBottom(0)
+        if (last == index) return layouts[index].height
+        return height + layouts[last].lineBottom(0)
     }
 
     /** [text], all or part of [paragraph], laid out in its style. */
-    private fun layOut(paragraph: Paragraph, text: CharSequence): StaticLayout =
-        layOut(text, paragraph.style, CONTENT_WIDTH - paragraph.indent)
-
-    private fun layOut(
-        text: CharSequence,
-        style: Style,
-        width: Int,
-        alignment: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL
-    ): StaticLayout {
-        val direction =
-            if (rightToLeft) TextDirectionHeuristics.RTL else TextDirectionHeuristics.LTR
-        // The builder's defaults, simple line breaks without hyphens, depend only on the text
-        // before each break, so the rest of a paragraph that's split across pages breaks the
-        // same way on its own.
-        return StaticLayout.Builder.obtain(text, 0, text.length, paints.getValue(style), width)
-            .setAlignment(alignment)
-            .setTextDirection(direction)
-            .setIncludePad(false)
-            .build()
-    }
+    private fun layOut(paragraph: Paragraph, text: String): T =
+        typesetter.layOut(text, paragraph.style, CONTENT_WIDTH - paragraph.indent)
 }
 
 /**
  * The bidi embeddings, overrides and isolates that are still open at the end of [text], in
  * order, to start the rest of a split paragraph with. Text the scout typed in another direction
  * is wrapped in an embedding ([LocaleFormats.typedText]), so the rest of it keeps its direction
- * on the next page. A line break closes them all, as it ends a paragraph for the bidi algorithm.
+ * on the next page. A paragraph separator closes them all, as it ends a paragraph for the bidi
+ * algorithm: a line break, or a separator such as U+2029 that notes can hold.
  */
 internal fun openDirections(text: CharSequence): String {
     val open = ArrayDeque<Char>()
@@ -504,11 +520,21 @@ internal fun openDirections(text: CharSequence): String {
                 if (isolate >= 0) repeat(open.size - isolate) { open.removeLast() }
             }
 
-            '\n' -> open.clear()
+            in PARAGRAPH_SEPARATORS -> open.clear()
         }
     }
     return open.joinToString("")
 }
+
+/** A carriage return, or one with a line feed after it. */
+private val CARRIAGE_RETURNS = Regex("\\r\\n?")
+
+/**
+ * The characters that end a paragraph for the bidi algorithm, which closes every embedding,
+ * override and isolate there: those whose bidi class is B (Unicode's DerivedBidiClass.txt).
+ */
+private const val PARAGRAPH_SEPARATORS =
+    "\n\r\u001C\u001D\u001E\u0085\u2029"
 
 /** Left-to-right and right-to-left embeddings and overrides. */
 private const val EMBEDDINGS = "\u202A\u202B\u202D\u202E"

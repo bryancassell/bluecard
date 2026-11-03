@@ -6,6 +6,7 @@ import androidx.core.os.LocaleListCompat
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.strings_language
 import java.util.Locale
+import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.getString
 
 // The language the app's strings are in, which isn't always the device's: the app may not have
@@ -39,10 +40,13 @@ suspend fun useStringsLocalesByDefault(context: Context): Locale {
 
 /**
  * The locale the app's strings are formatted in, from [stringsLocales], for code outside Compose,
- * such as the PDF report.
+ * such as the PDF report, with the strings' language read in [environment], so it's the language
+ * of the strings read in it too.
  */
-suspend fun stringsLocale(context: Context): Locale =
-    stringsLocales(context.resources.configuration.locales, stringsLanguage())[0]
+suspend fun stringsLocale(context: Context, environment: ResourceEnvironment): Locale {
+    val language = Locale.forLanguageTag(getString(environment, Res.string.strings_language))
+    return stringsLocales(context.resources.configuration.locales, language)[0]
+}
 
 /**
  * The locales to load and format the app's strings in. First, the device's first locale in the

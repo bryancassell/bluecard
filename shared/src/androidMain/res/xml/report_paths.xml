@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The files FileProvider can share: badge reports, in the cache folder's reports folder
-     (PdfReportRepository). -->
+     (AndroidReportPlatform). -->
 <paths>
     <cache-path
         name="reports"

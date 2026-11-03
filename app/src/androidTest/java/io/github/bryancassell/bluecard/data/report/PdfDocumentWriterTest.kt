@@ -74,7 +74,7 @@ class PdfDocumentWriterTest {
 
     private val pages = runBlocking {
         val locale = context.resources.configuration.locales[0]
-        layOutReport(report, locale, getSystemResourceEnvironment())
+        layOutReport(report, getSystemResourceEnvironment(), StaticLayoutTypesetter(locale))
     }
 
     @After

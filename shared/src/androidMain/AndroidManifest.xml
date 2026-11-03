@@ -3,7 +3,7 @@
 
     <application>
         <!-- Shares badge reports with the app the scout picks in the share sheet, which gets
-             permission to read only the report it's sent (PdfReportRepository). -->
+             permission to read only the report it's sent (AndroidReportPlatform). -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.reports"

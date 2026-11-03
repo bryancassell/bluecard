@@ -14,10 +14,13 @@ import io.github.bryancassell.bluecard.data.progress.BadgeProgressDetails
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.DamagedProgressRepository
 import io.github.bryancassell.bluecard.data.progress.FileDamagedProgressRepository
+import io.github.bryancassell.bluecard.data.report.AndroidReportPlatform
 import io.github.bryancassell.bluecard.data.report.PdfDocumentWriter
 import io.github.bryancassell.bluecard.data.report.PdfReportRepository
 import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
+import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
+import io.github.bryancassell.bluecard.data.report.StaticLayoutText
 import io.github.bryancassell.bluecard.testing.AppKoinRule
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
 import io.github.bryancassell.bluecard.text.AndroidPhoneNumberFormat
@@ -144,12 +147,17 @@ class AndroidModuleTest {
 
     @Test
     fun reportRepository_isPdfReportRepository() {
-        assertTrue(koin.get<ReportRepository>() is PdfReportRepository)
+        assertTrue(koin.get<ReportRepository>() is PdfReportRepository<*>)
     }
 
     @Test
     fun pdfWriter_isPdfDocumentWriter() {
-        assertTrue(koin.get<ReportPdfWriter>() is PdfDocumentWriter)
+        assertTrue(koin.get<ReportPdfWriter<StaticLayoutText>>() is PdfDocumentWriter)
+    }
+
+    @Test
+    fun reportPlatform_isAndroidReportPlatform() {
+        assertTrue(koin.get<ReportPlatform<StaticLayoutText>>() is AndroidReportPlatform)
     }
 
     @Test
