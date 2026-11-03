@@ -801,7 +801,8 @@ viewing PDFs, is still in beta, and needs API 28. Sharing goes through the
 [Android Sharesheet](https://developer.android.com/training/sharing/send) with
 a `FileProvider` URI, and saving through the
 [system file picker](https://developer.android.com/training/data-storage/shared/documents-files),
-so neither needs storage permissions (req. 5).
+so neither needs storage permissions (req. 5). On iOS, they go through the share
+sheet and the file picker, which need no permission either.
 
 ### Clearing data
 
@@ -1027,7 +1028,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text goes on the `Text` inside it | TalkBack read one on the button and then the text too |
 | [Live regions](#live-regions) | A live region is set only when its text should be read out | Compose reports a node's first layout as a change |
 | [PDF](#pdf-report) | Pages laid out in common code; lines broken and drawn with `StaticLayout` and `PdfDocument`, or Core Text and `UIGraphicsPDFRenderer` | One set of page rules; `androidx.pdf` is a viewer, in beta, and needs API 28 |
-| [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker, Sharesheet, FileProvider; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
+| [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker and share sheet, with a FileProvider on Android; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
 | [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |
 | [Backup](#backup) | Auto Backup of the databases and DataStore only | Records survive a phone change, with no app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |

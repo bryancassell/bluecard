@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.di
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -197,12 +198,12 @@ class IosModuleTest {
 
     @Test
     fun reportRepository_isUnfinished() {
-        assertSame(UnfinishedReports, koin.get<ReportRepository>())
+        assertIs<UnfinishedReports>(koin.get<ReportRepository>())
     }
 
     @Test
-    fun documents_isUnfinished() {
-        assertSame(UnfinishedDocuments, koin.get<Documents>())
+    fun documents_isFileCoordinatorDocuments() {
+        assertIs<FileCoordinatorDocuments>(koin.get<Documents>())
     }
 
     @Test
