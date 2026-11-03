@@ -39,8 +39,10 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class ReportLayoutTest {
+class ReportLayoutTest : ReportPagingContract<StaticLayoutText>() {
     private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    override val typesetter = StaticLayoutTypesetter(Locale.US)
 
     private val date = TrackerColumn("date", "Date", TrackerColumnType.DATE)
     private val nights = TrackerColumn("nights", "Nights", TrackerColumnType.NUMBER)
@@ -481,34 +483,8 @@ class ReportLayoutTest {
         }
     )
 
-    @Test
-    fun longReport_continuesOnMorePages_eachNumbered() {
-        val pages = layOut(longReport(60))
-
-        assertTrue("Expected several pages, got ${pages.size}", pages.size > 2)
-        pages.forEachIndexed { index, page ->
-            assertEquals("Page ${index + 1} of ${pages.size}", page.lines.last())
-        }
-        // Every requirement is there once, in order.
-        val titles = pages.flatMap { it.lines }.filter { it.endsWith("of the badge.") }
-        assertEquals((1..60).map { "$it. Requirement number $it of the badge." }, titles)
-    }
-
     // Catches a title left at the foot of a page, away from what it's about, wherever the page
     // breaks fall.
-    @Test
-    fun requirementTitle_isNeverLastOnAPage() {
-        for (count in 20..60) {
-            val pages = layOut(longReport(count))
-            pages.dropLast(1).forEachIndexed { index, page ->
-                val last = page.lines.dropLast(1).last()
-                assertFalse(
-                    "Page ${index + 1} of $count requirements ends with \"$last\"",
-                    last.endsWith("of the badge.")
-                )
-            }
-        }
-    }
 
     /**
      * A report whose "Requirements" heading is further down the first page the longer [nameWords]
@@ -599,19 +575,6 @@ class ReportLayoutTest {
         assertEquals("", openDirections("$rle a\u0085b"))
         // A line separator only breaks the line.
         assertEquals(rle, openDirections("$rle a\u2028b"))
-    }
-
-    @Test
-    fun paragraphLongerThanThePageSpace_continuesOnTheNextPage_withEveryWordOnce() {
-        val words = (1..1200).map { "word$it" }
-        val pages = layOut(
-            report(listOf(requirement("1", "Write.", comment = words.joinToString(" "))))
-        )
-
-        assertTrue(pages.size > 1)
-        val text = pages.flatMap { it.lines.dropLast(1) }.joinToString(" ")
-        val written = Regex("word\\d+").findAll(text).map { it.value }.toList()
-        assertEquals(words, written)
     }
 
     // As a typesetter whose every line is taller than a page might. The time limit stops a run

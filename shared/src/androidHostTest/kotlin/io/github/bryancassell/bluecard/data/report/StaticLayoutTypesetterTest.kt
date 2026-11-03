@@ -17,70 +17,14 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * Lays text out with StaticLayout and draws it into a bitmap, with Robolectric's native graphics,
- * which measure, break and draw text with real fonts, as a phone does. CoreTextTypesetterTest
- * checks iOS's typesetter the same way.
+ * which measure, break and draw text with real fonts, as a phone does. What every typesetter must
+ * do is in [ReportTypesetterContract].
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-class StaticLayoutTypesetterTest {
-    private val typesetter = StaticLayoutTypesetter(Locale.US)
+class StaticLayoutTypesetterTest : ReportTypesetterContract<StaticLayoutText>() {
+    override val typesetter = StaticLayoutTypesetter(Locale.US)
     private val words = (1..60).joinToString(" ") { "word$it" }
-
-    @Test
-    fun shortText_isOneLine() {
-        val text = typesetter.layOut("Camping", ReportStyle.Body, 300)
-
-        assertEquals(1, text.lineCount)
-        assertEquals(0, text.lineStart(0))
-        assertEquals(listOf("Camping"), text.lines())
-    }
-
-    @Test
-    fun emptyText_isOneEmptyLine_asTallAsALine() {
-        val text = typesetter.layOut("", ReportStyle.Body, 300)
-
-        assertEquals(1, text.lineCount)
-        assertEquals(typesetter.layOut("Camping", ReportStyle.Body, 300).height, text.height)
-    }
-
-    @Test
-    fun longText_breaksIntoLines_withEveryWordOnce_inOrder() {
-        val text = typesetter.layOut(words, ReportStyle.Body, 200)
-
-        assertTrue("Expected several lines, got ${text.lineCount}", text.lineCount > 1)
-        assertEquals(words.split(" "), text.lines().flatMap { it.split(" ") })
-    }
-
-    @Test
-    fun lineBreak_startsANewLine() {
-        val text = typesetter.layOut("Planned with my patrol.\nWe camped.", ReportStyle.Body, 300)
-
-        assertEquals(listOf("Planned with my patrol.", "We camped."), text.lines())
-    }
-
-    // As ReportTypesetter asks, so a paragraph split across pages reads the same.
-    @Test
-    fun restOfAParagraph_laidOutOnItsOwn_breaksTheSameWay() {
-        val whole = typesetter.layOut(words, ReportStyle.Body, 200)
-
-        val rest = typesetter.layOut(words.substring(whole.lineStart(2)), ReportStyle.Body, 200)
-
-        assertEquals(whole.lines().drop(2), rest.lines())
-    }
-
-    @Test
-    fun lines_areEachBelowTheOneBefore_atLeastTheFontsSizeApart() {
-        ReportStyle.entries.forEach { style ->
-            val text = typesetter.layOut(words, style, 200)
-
-            var top = 0f
-            repeat(text.lineCount) { line ->
-                val height = text.lineBottom(line) - top
-                assertTrue("$style line $line is $height high", height >= style.size)
-                top = text.lineBottom(line)
-            }
-        }
-    }
 
     @Test
     fun formats_andDirection_areTheLocales() {

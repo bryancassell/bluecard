@@ -6,16 +6,18 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 /**
- * ReportLayoutTest's paging cases, with Core Text's line heights and breaks in place of
- * StaticLayout's, on the iOS simulator.
+ * How a report is placed on pages, with each platform's line heights and breaks. Runs with
+ * Android's typesetter (ReportLayoutTest, which checks the rest of the layout too) and iOS's
+ * (CoreTextPagingTest).
  */
-class CoreTextReportLayoutTest {
-    private val typesetter = CoreTextTypesetter(usEnglish, false, "en")
+abstract class ReportPagingContract<T : ReportText> {
+    /** A typesetter in US English. */
+    protected abstract val typesetter: ReportTypesetter<T>
 
     private fun requirement(number: Int, summary: String, comment: String) = ReportRequirement(
         number = "$number",
@@ -53,24 +55,24 @@ class CoreTextReportLayoutTest {
         }
     )
 
-    private fun layOut(report: AdvancementReport) = runBlocking {
+    private suspend fun layOut(report: AdvancementReport) =
         layOutReport(report, getSystemResourceEnvironment(), typesetter)
-    }
 
     @Test
-    fun longReport_continuesOnMorePages_eachNumbered_withEveryRequirementOnceInOrder() {
+    fun longReport_continuesOnMorePages_eachNumbered() = runTest {
         val pages = layOut(longReport(60))
 
         assertTrue(pages.size > 2, "Expected several pages, got ${pages.size}")
         pages.forEachIndexed { index, page ->
             assertEquals("Page ${index + 1} of ${pages.size}", page.lines.last())
         }
+        // Every requirement is there once, in order.
         val titles = pages.flatMap { it.lines }.filter { it.endsWith("of the badge.") }
         assertEquals((1..60).map { "$it. Requirement number $it of the badge." }, titles)
     }
 
     @Test
-    fun requirementTitle_isNeverLastOnAPage() {
+    fun requirementTitle_isNeverLastOnAPage() = runTest {
         for (count in 20..60) {
             val pages = layOut(longReport(count))
             pages.dropLast(1).forEachIndexed { index, page ->
@@ -84,7 +86,7 @@ class CoreTextReportLayoutTest {
     }
 
     @Test
-    fun paragraphLongerThanThePageSpace_continuesOnTheNextPage_withEveryWordOnce() {
+    fun paragraphLongerThanThePageSpace_continuesOnTheNextPage_withEveryWordOnce() = runTest {
         val words = (1..1200).map { "word$it" }
         val pages = layOut(report(listOf(requirement(1, "Write.", words.joinToString(" ")))))
 
@@ -95,11 +97,14 @@ class CoreTextReportLayoutTest {
     }
 
     @Test
-    fun everyLine_isInsideTheMargins() {
+    fun everyBlock_isInsideTheMargins() = runTest {
         layOut(longReport(60)).forEach { page ->
             page.texts.dropLast(1).forEach { placed ->
                 assertTrue(placed.y >= 54, "A block starts at y ${placed.y}")
-                assertTrue(placed.y + placed.text.height <= PAGE_HEIGHT - 54)
+                assertTrue(
+                    placed.y + placed.text.height <= PAGE_HEIGHT - 54,
+                    "A block ends at y ${placed.y + placed.text.height}"
+                )
             }
         }
     }

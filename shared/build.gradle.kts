@@ -137,10 +137,6 @@ kotlin {
         // platforms' implementations of an interface must pass.
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-
-        // Tests of iOS code, which `iosSimulatorArm64Test` runs on the simulator.
-        iosTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
         }
 
