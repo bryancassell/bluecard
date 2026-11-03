@@ -216,7 +216,7 @@ fun BlueCardNavDisplay(
         StillWhileUnsavedBackHandler(
             hasUnsavedChanges = {
                 val shown = currentShownBackStack
-                shown.size > 1 && unsavedChanges.hasChanges(entries(shown.last()))
+                shown.size > 1 && unsavedChanges.getOrCreate(entries(shown.last())).changed
             },
             onBack = goBack
         )
