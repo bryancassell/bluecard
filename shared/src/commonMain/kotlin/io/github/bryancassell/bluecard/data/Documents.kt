@@ -16,7 +16,8 @@ expect abstract class DocumentUri {
 
 /**
  * Reads and writes documents the scout chose with the platform's file picker. An interface, so
- * each platform reaches them its own way: Android through the content resolver.
+ * each platform reaches them its own way: Android through the content resolver, and iOS through
+ * a file coordinator.
  */
 interface Documents {
     /**

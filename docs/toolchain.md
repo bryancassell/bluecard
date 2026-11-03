@@ -269,7 +269,11 @@ it.
   `kotlin.test`, on an iOS simulator, which needs Xcode:
   `./gradlew :shared:iosSimulatorArm64Test`. Nothing measures their coverage,
   and CI doesn't run them yet
-  ([#355](https://github.com/bryancassell/bluecard/issues/355)).
+  ([#355](https://github.com/bryancassell/bluecard/issues/355)). Gradle runs
+  them on a simulator that isn't booted, which has none of iOS's system
+  services: file coordination fails, and a type can't be looked up by its MIME
+  type. Code that needs one takes a stand-in in tests, as
+  `FileCoordinatorDocuments` takes its `FileCoordinator`.
 - **Koin in tests.** ViewModel and other unit tests construct classes directly,
   passing fakes. In `:app`, Robolectric starts `BlueCardApplication`, and so
   Koin, before each test, and stops Koin when the test ends (`onTerminate()`);
