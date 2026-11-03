@@ -8,7 +8,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.cinterop.CValue
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
+import platform.CoreGraphics.CGAffineTransform
+import platform.CoreGraphics.CGAffineTransformMakeScale
+import platform.CoreGraphics.CGContextGetTextMatrix
+import platform.CoreGraphics.CGContextSetTextMatrix
 
 /** Lays text out with Core Text and draws it into a bitmap, on the iOS simulator. */
 class CoreTextTypesetterTest {
@@ -121,6 +127,23 @@ class CoreTextTypesetterTest {
         assertTrue(ink.right < 50 + 200, "Ink ends at x ${ink.right}")
         assertTrue(ink.top >= 60, "Ink starts at y ${ink.top}")
         assertTrue(ink.bottom < 60 + text.height, "Ink ends at y ${ink.bottom}")
+    }
+
+    // The text matrix isn't part of the graphics state, which saving and restoring it leaves out.
+    @Test
+    fun draw_leavesTheContextsTextMatrixAsItWas() {
+        val text = typesetter.layOut("Camping", ReportStyle.Body, 200)
+        var after: CValue<CGAffineTransform>? = null
+
+        ink { context ->
+            CGContextSetTextMatrix(context, CGAffineTransformMakeScale(2.0, 3.0))
+            text.draw(context, 50f, 60f)
+            after = CGContextGetTextMatrix(context)
+        }
+
+        after!!.useContents {
+            assertEquals(listOf(2.0, 0.0, 0.0, 3.0, 0.0, 0.0), listOf(a, b, c, d, tx, ty))
+        }
     }
 
     @Test

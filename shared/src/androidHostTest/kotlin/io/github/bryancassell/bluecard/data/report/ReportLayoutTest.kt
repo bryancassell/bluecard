@@ -20,6 +20,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.EarnedBadge
 import io.github.bryancassell.bluecard.data.progress.MeritBadgeCredit
 import io.github.bryancassell.bluecard.data.progress.TrackerTotal
+import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import java.math.BigDecimal
 import java.util.Locale
 import kotlinx.coroutines.runBlocking
@@ -611,6 +612,32 @@ class ReportLayoutTest {
         val text = pages.flatMap { it.lines.dropLast(1) }.joinToString(" ")
         val written = Regex("word\\d+").findAll(text).map { it.value }.toList()
         assertEquals(words, written)
+    }
+
+    // As a typesetter whose every line is taller than a page might. The time limit stops a run
+    // that adds pages without end, which would otherwise run until it's out of memory.
+    @Test(timeout = 20_000)
+    fun lineTallerThanAPage_fails_ratherThanAddingPagesWithoutEnd() {
+        class TallText(override val text: String) : ReportText {
+            override val lineCount = 1
+
+            override fun lineStart(line: Int) = 0
+
+            override fun lineBottom(line: Int) = PAGE_HEIGHT + 1f
+        }
+        val tall = object : ReportTypesetter<TallText> {
+            override val formats = AndroidLocaleFormats(Locale.US)
+            override val rightToLeft = false
+
+            override fun layOut(text: String, style: ReportStyle, width: Int, centered: Boolean) =
+                TallText(text)
+        }
+
+        val failure = runCatching {
+            runBlocking { layOutReport(camping, getSystemResourceEnvironment(), tall) }
+        }.exceptionOrNull()
+
+        assertTrue("$failure", failure is IllegalStateException)
     }
 
     @Test

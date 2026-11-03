@@ -1,8 +1,6 @@
 package io.github.bryancassell.bluecard.text
 
-import cnames.structs.__CFString
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.useContents
 import platform.CoreFoundation.CFRangeMake
 import platform.CoreFoundation.CFRelease
@@ -10,7 +8,6 @@ import platform.CoreFoundation.CFStringTokenizerCreate
 import platform.CoreFoundation.CFStringTokenizerGetCurrentTokenRange
 import platform.CoreFoundation.CFStringTokenizerGoToTokenAtIndex
 import platform.CoreFoundation.kCFStringTokenizerUnitLineBreak
-import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSString
 import platform.Foundation.rangeOfComposedCharacterSequenceAtIndex
 
@@ -37,10 +34,9 @@ class IosTextRules : TextRules {
 
     // Each line-break token runs from one place a line may break to the next, so [offset] is one
     // where the token that holds it starts.
-    @Suppress("CAST_NEVER_SUCCEEDS") // A Kotlin string is an NSString on iOS.
     override fun isLineBreak(text: String, offset: Int): Boolean {
         if (offset == 0 || offset == text.length) return true
-        val string = CFBridgingRetain(text as NSString)!!.reinterpret<__CFString>()
+        val string = text.toCFString()
         val tokenizer = CFStringTokenizerCreate(
             null,
             string,

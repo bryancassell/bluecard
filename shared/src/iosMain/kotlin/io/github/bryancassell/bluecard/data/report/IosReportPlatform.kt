@@ -5,9 +5,13 @@ import io.github.bryancassell.bluecard.data.FileUrl
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.strings_language
 import io.github.bryancassell.bluecard.text.EnglishLocaleFormats
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okio.Path
 import okio.Path.Companion.toPath
+import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 
@@ -17,12 +21,18 @@ import platform.Foundation.NSURL
  * through its file URL.
  */
 internal object IosReportPlatform : ReportPlatform<CoreTextText> {
+    // On the main thread: Compose Multiplatform 1.12.2 reads it from UIScreen.mainScreen's trait
+    // collection on iOS (seen in its iOS library), which UIKit allows only there. From the main
+    // thread, as the screens ask for reports, it doesn't wait.
+    override suspend fun resourceEnvironment() =
+        withContext(Dispatchers.Main.immediate) { getSystemResourceEnvironment() }
+
     // In the strings' language, written as the screens write it: in English, left to right,
     // until #350 gives iOS the strings' locale.
-    override suspend fun typesetter() = CoreTextTypesetter(
+    override suspend fun typesetter(environment: ResourceEnvironment) = CoreTextTypesetter(
         formats = EnglishLocaleFormats,
         rightToLeft = false,
-        language = getString(Res.string.strings_language)
+        language = getString(environment, Res.string.strings_language)
     )
 
     override val shareFolder: Path get() = NSTemporaryDirectory().toPath() / "reports"

@@ -2,8 +2,8 @@
 
 package io.github.bryancassell.bluecard.data.report
 
-import cnames.structs.__CFString
 import io.github.bryancassell.bluecard.text.LocaleFormats
+import io.github.bryancassell.bluecard.text.toCFString
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
@@ -24,29 +24,30 @@ import platform.CoreFoundation.CFDictionaryCreateMutable
 import platform.CoreFoundation.CFDictionarySetValue
 import platform.CoreFoundation.CFRangeMake
 import platform.CoreFoundation.CFRelease
-import platform.CoreFoundation.CFStringRef
 import platform.CoreFoundation.CFTypeRef
 import platform.CoreFoundation.kCFTypeDictionaryKeyCallBacks
 import platform.CoreFoundation.kCFTypeDictionaryValueCallBacks
 import platform.CoreGraphics.CGAffineTransformIdentity
+import platform.CoreGraphics.CGContextGetTextMatrix
 import platform.CoreGraphics.CGContextRef
 import platform.CoreGraphics.CGContextRestoreGState
 import platform.CoreGraphics.CGContextSaveGState
 import platform.CoreGraphics.CGContextScaleCTM
 import platform.CoreGraphics.CGContextSetTextMatrix
+import platform.CoreGraphics.CGContextSetTextPosition
 import platform.CoreGraphics.CGContextTranslateCTM
 import platform.CoreGraphics.CGFloatVar
 import platform.CoreGraphics.CGPathCreateWithRect
 import platform.CoreGraphics.CGPoint
 import platform.CoreGraphics.CGRectMake
 import platform.CoreText.CTFontCreateUIFontForLanguage
-import platform.CoreText.CTFrameDraw
 import platform.CoreText.CTFrameGetLineOrigins
 import platform.CoreText.CTFrameGetLines
 import platform.CoreText.CTFrameGetVisibleStringRange
 import platform.CoreText.CTFrameRef
 import platform.CoreText.CTFramesetterCreateFrame
 import platform.CoreText.CTFramesetterCreateWithAttributedString
+import platform.CoreText.CTLineDraw
 import platform.CoreText.CTLineGetStringRange
 import platform.CoreText.CTLineGetTypographicBounds
 import platform.CoreText.CTLineRef
@@ -65,8 +66,6 @@ import platform.CoreText.kCTTextAlignmentCenter
 import platform.CoreText.kCTTextAlignmentNatural
 import platform.CoreText.kCTWritingDirectionLeftToRight
 import platform.CoreText.kCTWritingDirectionRightToLeft
-import platform.Foundation.CFBridgingRetain
-import platform.Foundation.NSString
 
 /**
  * A report's text laid out by Core Text, in lines that start at [starts] in [text] and end at
@@ -94,14 +93,34 @@ class CoreTextText internal constructor(
      */
     fun draw(context: CGContextRef?, x: Float, y: Float) {
         withFrame(text, setting) { frame ->
+            // The text matrix isn't part of the graphics state, so it's put back by hand.
+            val textMatrix = CGContextGetTextMatrix(context)
             CGContextSaveGState(context)
-            // Core Text draws with y growing upward, from the frame's bottom.
+            // Core Text draws with y growing upward.
             CGContextTranslateCTM(context, x.toDouble(), y.toDouble())
             CGContextScaleCTM(context, 1.0, -1.0)
-            CGContextTranslateCTM(context, 0.0, -FRAME_HEIGHT)
             CGContextSetTextMatrix(context, CGAffineTransformIdentity.readValue())
-            CTFrameDraw(frame, context)
+            // Each line at its baseline, measured from the block's top, rather than the whole
+            // frame shifted up by its height: the PDF then holds page-sized positions, which
+            // readers that use 32-bit floats place exactly.
+            val lines = CTFrameGetLines(frame)
+            val count = CFArrayGetCount(lines).toInt()
+            memScoped {
+                val origins = allocArray<CGPoint>(count)
+                CTFrameGetLineOrigins(frame, CFRangeMake(0, 0), origins)
+                for (index in 0 until count) {
+                    val line: CTLineRef? = CFArrayGetValueAtIndex(lines, index.convert())
+                        ?.reinterpret()
+                    CGContextSetTextPosition(
+                        context,
+                        origins[index].x,
+                        origins[index].y - FRAME_HEIGHT
+                    )
+                    CTLineDraw(line, context)
+                }
+            }
             CGContextRestoreGState(context)
+            CGContextSetTextMatrix(context, textMatrix)
         }
     }
 }
@@ -127,7 +146,7 @@ internal data class TextSetting(
 class CoreTextTypesetter(
     override val formats: LocaleFormats,
     override val rightToLeft: Boolean,
-    private val language: String
+    val language: String
 ) : ReportTypesetter<CoreTextText> {
     override fun layOut(
         text: String,
@@ -172,8 +191,8 @@ class CoreTextTypesetter(
 }
 
 /**
- * The height of the frame text is laid out in. Core Text leaves out lines that don't fit, which
- * `layOut` checks for. A report's longest paragraph is a tracker row's values, each at most 2,000
+ * The height of the frame text is laid out in, which never reaches the PDF. Core Text leaves out
+ * lines that don't fit, which `layOut` checks for. A report's longest paragraph is a tracker row's values, each at most 2,000
  * characters (`TRACKER_MULTILINE_TEXT_MAX_LENGTH`, which imports are held to as well), so even
  * with a line for each character it takes a small part of this.
  */
@@ -189,7 +208,7 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
     fun <T : CPointer<*>> T?.releasedLater(): T? = also { created += it }
     try {
         val style = setting.style
-        val language = cfString(setting.language).releasedLater()
+        val language = setting.language.toCFString().releasedLater()
         val fontType = if (style.bold) kCTFontUIFontEmphasizedSystem else kCTFontUIFontSystem
         val font =
             CTFontCreateUIFontForLanguage(fontType, style.size.toDouble(), language).releasedLater()
@@ -221,9 +240,8 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
         CFDictionarySetValue(attributes, kCTFontAttributeName, font)
         CFDictionarySetValue(attributes, kCTParagraphStyleAttributeName, paragraphStyle)
         CFDictionarySetValue(attributes, kCTLanguageAttributeName, language)
-        // A CFString of the same UTF-16 code units, so a line's position in it is its index in
-        // text.
-        val string = cfString(text).releasedLater()
+        // Of the same UTF-16 code units, so a line's position in it is its index in text.
+        val string = text.toCFString().releasedLater()
         val attributed = CFAttributedStringCreate(null, string, attributes).releasedLater()
         val framesetter = CTFramesetterCreateWithAttributedString(attributed).releasedLater()
         val bounds = CGRectMake(0.0, 0.0, setting.width.toDouble(), FRAME_HEIGHT)
@@ -235,7 +253,3 @@ private fun <R> withFrame(text: String, setting: TextSetting, block: (CTFrameRef
         created.asReversed().forEach { it?.let(::CFRelease) }
     }
 }
-
-/** [text] as a CFString that the caller releases. */
-private fun cfString(text: String): CFStringRef? =
-    CFBridgingRetain(text as NSString)?.reinterpret<__CFString>()

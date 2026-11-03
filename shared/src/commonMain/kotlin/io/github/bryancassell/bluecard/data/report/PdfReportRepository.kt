@@ -26,8 +26,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import okio.Buffer
 import okio.Path
+import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 /**
  * What [PdfReportRepository] needs from each platform, besides its PDF writer: a typesetter, and
@@ -35,10 +35,14 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
  */
 interface ReportPlatform<T : ReportText> {
     /**
-     * A typesetter in the strings' locale. It's asked for each report, so a report follows a
-     * change to the phone's language.
+     * Compose resources' environment, as the system has it, to read a report's strings in. It's
+     * read once for each report, so a report follows a change to the phone's language, and every
+     * string in it, and its typesetter, is in one language.
      */
-    suspend fun typesetter(): ReportTypesetter<T>
+    suspend fun resourceEnvironment(): ResourceEnvironment
+
+    /** A typesetter in the strings' locale, for strings read in [environment]. */
+    suspend fun typesetter(environment: ResourceEnvironment): ReportTypesetter<T>
 
     /** The folder that reports to share are written to, which isn't backed up. */
     val shareFolder: Path
@@ -73,13 +77,16 @@ class PdfReportRepository<T : ReportText>(
 ) : ReportRepository {
     private val fileSystem = systemFileSystem
 
-    override suspend fun createReportToShare(advancementId: String): DocumentUri? =
-        withContext(ioDispatcher) {
+    override suspend fun createReportToShare(advancementId: String): DocumentUri? {
+        // Before switching threads: iOS reads it on the main thread, which the screens call from.
+        val environment = platform.resourceEnvironment()
+        return withContext(ioDispatcher) {
             val report = report(advancementId) ?: return@withContext null
-            val pages = layOut(report)
+            val pages = layOut(report, environment)
             val folder = platform.shareFolder
             fileSystem.createDirectories(folder)
-            val file = folder / reportFileName(getString(report.kind.fileNameTitle, report.name))
+            val title = getString(environment, report.kind.fileNameTitle, report.name)
+            val file = folder / reportFileName(title)
             // Written beside the report's file, then renamed over it in one step: an app that an
             // earlier report was shared with, such as an email app that reads it only to send it,
             // never reads a partly written one, and a report that fails leaves that one as it was.
@@ -94,6 +101,7 @@ class PdfReportRepository<T : ReportText>(
             }
             platform.shareUri(file)
         }
+    }
 
     override suspend fun saveReport(advancementId: String, destination: DocumentUri) =
         externalScope.runOutlivingCaller { save(advancementId, destination) }
@@ -102,13 +110,15 @@ class PdfReportRepository<T : ReportText>(
      * Writes the report to [destination] ([Documents.save]), or nothing when there's no report
      * ([report]), as when the badge or rank was just cleared.
      */
-    private suspend fun save(advancementId: String, destination: DocumentUri) =
+    private suspend fun save(advancementId: String, destination: DocumentUri) {
+        val environment = platform.resourceEnvironment()
         documents.save(destination) {
             report(advancementId)?.let { report ->
-                val pages = layOut(report)
+                val pages = layOut(report, environment)
                 Buffer().also { pdfWriter.write(pages, it) }.readByteArray()
             }
         }
+    }
 
     /**
      * Badge or rank [advancementId]'s report, or null for a badge that isn't started or a rank
@@ -144,10 +154,10 @@ class PdfReportRepository<T : ReportText>(
         return report.copy(counselorPhone = phoneNumberFormat.format(phone))
     }
 
-    // Read for each report, so it follows a change to the phone's language. The environment is
-    // read once, as it reads the system's configuration, so every string is in one language.
-    private suspend fun layOut(report: AdvancementReport): List<ReportPage<T>> =
-        layOutReport(report, getSystemResourceEnvironment(), platform.typesetter())
+    private suspend fun layOut(
+        report: AdvancementReport,
+        environment: ResourceEnvironment
+    ): List<ReportPage<T>> = layOutReport(report, environment, platform.typesetter(environment))
 
     private companion object {
         const val TAG = "Report"

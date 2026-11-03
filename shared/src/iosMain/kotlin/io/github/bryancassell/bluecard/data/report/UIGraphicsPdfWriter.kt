@@ -7,6 +7,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.reinterpret
 import okio.BufferedSink
+import okio.IOException
 import platform.CoreGraphics.CGRectMake
 import platform.UIKit.UIGraphicsPDFRenderer
 import platform.UIKit.UIGraphicsPDFRendererFormat
@@ -34,7 +35,10 @@ class UIGraphicsPdfWriter : ReportPdfWriter<CoreTextText> {
                 failure = e
             }
         }
+        // Thrown as it is, as Android's writer lets one through: a failure while drawing is a bug.
         failure?.let { throw it }
-        out.write(pdf.bytes!!.reinterpret<ByteVar>().readBytes(pdf.length.toInt()))
+        // The renderer makes no PDF, and no error, when it can't make its PDF context.
+        val bytes = pdf.bytes ?: throw IOException("UIGraphicsPDFRenderer made no PDF")
+        out.write(bytes.reinterpret<ByteVar>().readBytes(pdf.length.toInt()))
     }
 }

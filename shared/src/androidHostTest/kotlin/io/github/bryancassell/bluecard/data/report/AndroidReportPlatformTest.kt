@@ -50,7 +50,7 @@ class AndroidReportPlatformTest {
     @Config(qualifiers = "fa")
     @Test
     fun typesetter_onPersianPhone_isInTheStringsLocale() = runTest {
-        val typesetter = platform.typesetter()
+        val typesetter = platform.typesetter(platform.resourceEnvironment())
 
         assertFalse(typesetter.rightToLeft)
         assertEquals("Sep 30, 2026", typesetter.formats.formatDate(LocalDate(2026, 9, 30)))
@@ -59,7 +59,7 @@ class AndroidReportPlatformTest {
     @Config(qualifiers = "en-rGB")
     @Test
     fun typesetter_followsThePhonesRegion() = runTest {
-        val formats = platform.typesetter().formats
+        val formats = platform.typesetter(platform.resourceEnvironment()).formats
 
         assertEquals("30 Sept 2026", formats.formatDate(LocalDate(2026, 9, 30)))
     }

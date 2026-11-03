@@ -430,7 +430,11 @@ private class ReportComposer<T : ReportText>(
                     y + layout.lineBottom(it) <= CONTENT_BOTTOM
                 }
                 if (fitting == layout.lineCount) break
-                // Every line fits on an empty page, as text is at most 20 points high.
+                // A line that didn't fit on an empty page would add empty pages without end. None
+                // is near a page high: the largest style's font is 20 points.
+                check(fitting > 0 || pages.last().isNotEmpty()) {
+                    "A ${paragraph.style} line is taller than a page"
+                }
                 if (fitting > 0) {
                     val text = layout.text
                     val split = layout.lineStart(fitting)

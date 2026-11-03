@@ -6,6 +6,8 @@ import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.text.stringsLocale
 import okio.Path
 import okio.Path.Companion.toOkioPath
+import org.jetbrains.compose.resources.ResourceEnvironment
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 /**
  * Reports on Android: laid out with [StaticLayoutTypesetter], and shared from the cache folder's
@@ -13,7 +15,12 @@ import okio.Path.Companion.toOkioPath
  * leaves out.
  */
 class AndroidReportPlatform(private val context: Context) : ReportPlatform<StaticLayoutText> {
-    override suspend fun typesetter() = StaticLayoutTypesetter(stringsLocale(context))
+    // From the context's configuration, which any thread can read.
+    override suspend fun resourceEnvironment() = getSystemResourceEnvironment()
+
+    // The strings' locale comes from the configuration too, as the environment does.
+    override suspend fun typesetter(environment: ResourceEnvironment) =
+        StaticLayoutTypesetter(stringsLocale(context))
 
     override val shareFolder: Path get() = context.cacheDir.toOkioPath() / REPORTS_FOLDER
 
