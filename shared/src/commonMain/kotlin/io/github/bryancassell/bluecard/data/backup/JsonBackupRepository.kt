@@ -31,7 +31,7 @@ class JsonBackupRepository(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val outlivingWork: OutlivingWork
 ) : BackupRepository {
-    override suspend fun exportBackup(destination: DocumentUri) = outlivingWork.run {
+    override suspend fun exportBackup(destination: DocumentUri) = outlivingWork.runOutlivingCaller {
         documents.save(destination) { encodeBackup(currentBackup()).encodeToByteArray() }
     }
 
@@ -57,7 +57,7 @@ class JsonBackupRepository(
         }
 
     // Progress first: it's replaced in one transaction, so if that fails, nothing has changed.
-    override suspend fun importBackup(backup: Backup) = outlivingWork.run {
+    override suspend fun importBackup(backup: Backup) = outlivingWork.runOutlivingCaller {
         progressRepository.replaceAll(backup.progress)
         profileRepository.saveProfile(backup.profile)
     }
@@ -67,7 +67,7 @@ class JsonBackupRepository(
         backup: Backup,
         fromFile: Set<String>,
         profileFromFile: Boolean
-    ) = outlivingWork.run {
+    ) = outlivingWork.runOutlivingCaller {
         progressRepository.merge(backup.progress, replacing = fromFile)
         if (profileFromFile) profileRepository.saveProfile(backup.profile)
     }

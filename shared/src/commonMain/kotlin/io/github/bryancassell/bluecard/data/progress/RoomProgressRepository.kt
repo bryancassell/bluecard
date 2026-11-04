@@ -143,14 +143,15 @@ class RoomProgressRepository(
 
     /**
      * Runs [write] as [outlivingWork] and waits for it. If the caller is cancelled, only the
-     * wait is: the write still finishes ([OutlivingWork.run]). Reports a database that can't be
-     * written, such as one that can't be opened or a full disk, as an [IOException], in the same
-     * way as [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too,
-     * but it crashes the app through the app-lifetime scope even if the caller is gone.
+     * wait is: the write still finishes ([OutlivingWork.runOutlivingCaller]). Reports a database
+     * that can't be written, such as one that can't be opened or a full disk, as an
+     * [IOException], in the same way as [readFailuresAsIOException]. Any other exception is a
+     * bug: the caller gets it too, but it crashes the app through the app-lifetime scope even if
+     * the caller is gone.
      */
     // Started in the caller's thread, so writes queue for the database's writeOrder in the order
     // they're made.
-    private suspend fun <T> writing(write: suspend () -> T): T = outlivingWork.run {
+    private suspend fun <T> writing(write: suspend () -> T): T = outlivingWork.runOutlivingCaller {
         try {
             database.writeOrder.withLock { write() }
         } catch (e: Exception) {

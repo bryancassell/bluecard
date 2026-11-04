@@ -57,17 +57,14 @@ class SetAsideDamagedDatabaseDriverTest {
 
     private val warningLog = FakeWarningLog()
 
-    // Runs each piece of work in its caller's thread until it suspends.
-    private fun unconfinedOutlivingWork() = OutlivingWork(
-        CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
-        NoBackgroundTime
-    )
+    // As the app's scope, which outlives the screens.
+    private val outlivingWork = OutlivingWork(CoroutineScope(SupervisorJob()), NoBackgroundTime)
 
     private val damagedProgress = FileDamagedProgressRepository(
         { context.noBackupFilesDir.toOkioPath() },
         DeviceClock,
         warningLog,
-        unconfinedOutlivingWork(),
+        outlivingWork,
         Dispatchers.Unconfined
     )
     private val databases = mutableListOf<BlueCardDatabase>()
@@ -165,7 +162,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val repository =
             RoomProgressRepository(
                 database,
-                unconfinedOutlivingWork()
+                outlivingWork
             )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -217,7 +214,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val repository =
             RoomProgressRepository(
                 database,
-                unconfinedOutlivingWork()
+                outlivingWork
             )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -415,7 +412,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val driver = newDriver()
         val repository = RoomProgressRepository(
             open(driver),
-            unconfinedOutlivingWork()
+            outlivingWork
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -570,7 +567,7 @@ class SetAsideDamagedDatabaseDriverTest {
         }
         val repository = RoomProgressRepository(
             open(SetAsideDamagedDatabaseDriver(failing, damagedProgress)),
-            unconfinedOutlivingWork()
+            outlivingWork
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()

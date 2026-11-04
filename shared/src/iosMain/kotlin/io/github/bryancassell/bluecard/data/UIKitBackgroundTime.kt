@@ -13,7 +13,7 @@ import platform.UIKit.UIBackgroundTaskInvalid
  * then. The work goes on until iOS suspends the app, and finishes when the scout comes back, or
  * is lost if iOS ends the app first. A Room write is lost whole then, since it's one transaction.
  */
-internal class UIKitBackgroundTime(private val tasks: BackgroundTasks) : BackgroundTime {
+internal class UIKitBackgroundTime(internal val tasks: BackgroundTasks) : BackgroundTime {
     override suspend fun <T> whileRunning(block: suspend () -> T): T {
         val task = HeldTask(tasks)
         try {
@@ -32,12 +32,17 @@ private class HeldTask(private val tasks: BackgroundTasks) {
     private var ended = false
 
     init {
-        // UIKit refuses one when the app is out of background time.
-        val begun = tasks.begin(TASK_NAME, ::end).takeIf { it != UIBackgroundTaskInvalid }
-        // If the time ran out before begin returned, as it can when work begins off the main
-        // thread, the expiration handler found no task to end, so it's ended here.
-        val endedFirst = lock.withLock { ended.also { if (!it) task = begun } }
-        if (endedFirst && begun != null) tasks.end(begun)
+        // Held while beginning, so an expiration handler that runs on the main thread before
+        // begin returns on another waits for the task and ends it itself, as UIKit expects of
+        // the handler. One that runs inside begin, on the same thread, finds no task, so the
+        // task is ended as soon as begin returns.
+        val endedFirst = lock.withLock {
+            // UIKit refuses one when the app is out of background time.
+            val begun = tasks.begin(TASK_NAME, ::end).takeIf { it != UIBackgroundTaskInvalid }
+            if (!ended) task = begun
+            begun.takeIf { ended }
+        }
+        if (endedFirst != null) tasks.end(endedFirst)
     }
 
     fun end() {

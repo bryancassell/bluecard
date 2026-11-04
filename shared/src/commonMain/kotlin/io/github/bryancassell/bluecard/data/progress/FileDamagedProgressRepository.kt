@@ -63,7 +63,7 @@ class FileDamagedProgressRepository(
         .filterNotNull()
 
     // Finishes even if the caller is cancelled, such as when the scout taps OK and leaves.
-    override suspend fun dismissNotice() = outlivingWork.run {
+    override suspend fun dismissNotice() = outlivingWork.runOutlivingCaller {
         withContext(ioDispatcher) {
             lock.withLock {
                 // If it can't be deleted, the notice still goes for now, but shows again when the

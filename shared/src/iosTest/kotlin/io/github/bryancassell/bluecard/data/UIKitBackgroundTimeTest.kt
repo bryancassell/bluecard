@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
@@ -11,6 +12,14 @@ import kotlinx.coroutines.test.runTest
 import okio.IOException
 import platform.UIKit.UIBackgroundTaskIdentifier
 import platform.UIKit.UIBackgroundTaskInvalid
+import platform.darwin.DISPATCH_QUEUE_PRIORITY_DEFAULT
+import platform.darwin.DISPATCH_TIME_FOREVER
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_global_queue
+import platform.darwin.dispatch_semaphore_create
+import platform.darwin.dispatch_semaphore_signal
+import platform.darwin.dispatch_semaphore_wait
+import platform.posix.usleep
 
 class UIKitBackgroundTimeTest {
     private val tasks = FakeBackgroundTasks()
@@ -48,9 +57,21 @@ class UIKitBackgroundTimeTest {
         assertEquals(1, tasks.ended.size)
     }
 
-    // As when work begins off the main thread, and the handler runs on it before begin returns.
+    // As when work begins off the main thread, and the handler runs on the main thread before
+    // begin returns. UIKit ends the app if a task is still running once its handler returns.
     @Test
-    fun timeRunningOutBeforeBeginReturns_endsTheTask_once() = runTest {
+    fun timeRunningOutOnAnotherThreadWhileBeginning_isEndedByTheHandler() = runTest {
+        tasks.runOutOnAnotherThreadWhileBeginning = true
+
+        time.whileRunning { tasks.awaitHandler() }
+
+        assertEquals(true, tasks.endedByHandler)
+        assertEquals(1, tasks.ended.size)
+    }
+
+    // As when the handler runs inside begin, on the thread that's beginning.
+    @Test
+    fun timeRunningOutInsideBegin_endsTheTask_once() = runTest {
         tasks.runOutWhileBeginning = true
 
         val during = time.whileRunning { tasks.running.toList() }
@@ -99,12 +120,25 @@ class UIKitBackgroundTimeTest {
     }
 
     /** Begins tasks as UIKit does, and fails a test that ends one that isn't running. */
+    @OptIn(ExperimentalForeignApi::class)
     private class FakeBackgroundTasks : BackgroundTasks {
         /** Whether to refuse each task, as UIKit does when the app is out of time. */
         var refuse = false
 
-        /** Whether each task's time runs out before [begin] returns it. */
+        /** Whether each task's time runs out inside [begin], on the thread that's beginning. */
         var runOutWhileBeginning = false
+
+        /**
+         * Whether each task's time runs out on another thread while [begin] is still running, as
+         * UIKit's main thread can while work begins on another.
+         */
+        var runOutOnAnotherThreadWhileBeginning = false
+
+        /** Whether the task was ended by the time its expiration handler returned. */
+        var endedByHandler: Boolean? = null
+            private set
+
+        private val handlerDone = dispatch_semaphore_create(0)
 
         /** The tasks begun and not yet ended, oldest first. */
         val running = mutableListOf<UIBackgroundTaskIdentifier>()
@@ -121,7 +155,23 @@ class UIKitBackgroundTimeTest {
             running += task
             expirationHandlers[task] = expired
             if (runOutWhileBeginning) expired()
+            if (runOutOnAnotherThreadWhileBeginning) {
+                dispatch_async(
+                    dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u)
+                ) {
+                    expired()
+                    endedByHandler = task !in running
+                    dispatch_semaphore_signal(handlerDone)
+                }
+                // Time for the handler to run before begin returns.
+                usleep(100_000u)
+            }
             return task
+        }
+
+        /** Waits for the handler that [runOutOnAnotherThreadWhileBeginning] runs to return. */
+        fun awaitHandler() {
+            dispatch_semaphore_wait(handlerDone, DISPATCH_TIME_FOREVER)
         }
 
         override fun end(task: UIBackgroundTaskIdentifier) {

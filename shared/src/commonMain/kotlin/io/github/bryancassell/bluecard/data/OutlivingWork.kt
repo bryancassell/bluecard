@@ -45,7 +45,7 @@ class OutlivingWork(
      *   running on, or none, and each write waited for that dispatcher, usually Main, to hand on
      *   the write lock.
      */
-    suspend fun <T> run(block: suspend () -> T): T {
+    suspend fun <T> runOutlivingCaller(block: suspend () -> T): T {
         val result = CompletableDeferred<T>()
         // Not injected, unlike the app's other dispatchers: any other in its place would name a
         // dispatcher the block may not be running on.
@@ -68,8 +68,8 @@ class OutlivingWork(
 interface BackgroundTime {
     /**
      * Runs [block], keeping the app running until it returns or throws. It calls [block] at once,
-     * in the caller's thread, without suspending first, since [OutlivingWork.run]'s blocks start
-     * in the order they're run only if it does.
+     * in the caller's thread, without suspending first, since the blocks of
+     * [OutlivingWork.runOutlivingCaller] start in the order they're run only if it does.
      */
     suspend fun <T> whileRunning(block: suspend () -> T): T
 }

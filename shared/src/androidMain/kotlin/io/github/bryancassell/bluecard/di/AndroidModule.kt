@@ -41,9 +41,9 @@ import org.koin.plugin.module.dsl.single
 /** What the app is built from that needs Android to build, such as a [Context]. */
 val androidModule = module {
     single<WarningLog> { LogcatWarningLog }
-    // None, as before #354: the data layer guide has work outlive the screen with the
-    // app-lifetime scope alone. Android 14 can still freeze the app once it's been in the
-    // background a while, which #417 checks for long work.
+    // None: the data layer guide has work outlive the screen with the app-lifetime scope alone.
+    // Android 14 can still freeze the app once it's been in the background a while, which could
+    // pause long work (#417).
     single<BackgroundTime> { NoBackgroundTime }
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }

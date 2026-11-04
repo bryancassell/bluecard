@@ -107,7 +107,7 @@ class PdfReportRepository<T : ReportText>(
     }
 
     override suspend fun saveReport(advancementId: String, destination: DocumentUri) =
-        outlivingWork.run { save(advancementId, destination) }
+        outlivingWork.runOutlivingCaller { save(advancementId, destination) }
 
     /**
      * Writes the report to [destination] ([Documents.save]), or nothing when there's no report

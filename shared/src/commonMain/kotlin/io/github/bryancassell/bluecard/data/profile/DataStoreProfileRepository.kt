@@ -29,7 +29,7 @@ class DataStoreProfileRepository(
 
     override suspend fun saveProfile(profile: Profile) {
         val stored = profile.normalized()
-        outlivingWork.run {
+        outlivingWork.runOutlivingCaller {
             dataStore.edit {
                 it[NAME] = stored.name
                 it[UNIT_NUMBER] = stored.unitNumber

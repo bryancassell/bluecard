@@ -6,6 +6,7 @@ import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinator
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.FileUrl
+import io.github.bryancassell.bluecard.data.UIApplicationBackgroundTasks
 import io.github.bryancassell.bluecard.data.UIKitBackgroundTime
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
@@ -220,8 +221,9 @@ class IosModuleTest {
     }
 
     @Test
-    fun backgroundTime_isUIKitBackgroundTime() {
-        assertIs<UIKitBackgroundTime>(koin.get<BackgroundTime>())
+    fun backgroundTime_asksUIKitForTime() {
+        val time = assertIs<UIKitBackgroundTime>(koin.get<BackgroundTime>())
+        assertSame(UIApplicationBackgroundTasks, time.tasks)
     }
 
     @Test
