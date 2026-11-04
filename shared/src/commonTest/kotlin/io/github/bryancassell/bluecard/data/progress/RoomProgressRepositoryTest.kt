@@ -11,6 +11,8 @@ import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import io.github.bryancassell.bluecard.data.Lock
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.testing.TemporaryDirectory
 import kotlin.coroutines.CoroutineContext
@@ -80,10 +82,11 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private val externalScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> crash.complete(e) }
     )
+    private val outlivingWork = OutlivingWork(externalScope, NoBackgroundTime)
 
     private val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 4, 15))
 
-    override val repository by lazy { RoomProgressRepository(database, externalScope) }
+    override val repository by lazy { RoomProgressRepository(database, outlivingWork) }
 
     override fun unreadableRepository() = unopenableRepository()
 
@@ -92,14 +95,14 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     // A folder where the database file should be, so SQLite can't open it.
     private fun unopenableRepository(): RoomProgressRepository {
         systemFileSystem.createDirectories(databaseFile)
-        return RoomProgressRepository(open(databaseBuilder(databaseFile)), externalScope)
+        return RoomProgressRepository(open(databaseBuilder(databaseFile)), outlivingWork)
     }
 
     @Test
     fun readingAndWriting_whenRoomCantLockTheDatabase_throwIOException() = runTest {
         // A folder where Room's lock file goes, so Room can't create it.
         systemFileSystem.createDirectories("$databaseFile.lck".toPath())
-        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), externalScope)
+        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), outlivingWork)
 
         val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
         val writeError = runCatching {
@@ -115,7 +118,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         // A database from a newer app version, which Room has no migration down from.
         BundledSQLiteDriver().open(databaseFile.toString())
             .use { it.execSQL("PRAGMA user_version = 1000") }
-        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), externalScope)
+        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), outlivingWork)
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
@@ -288,7 +291,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val threads = Threads()
         val repository = RoomProgressRepository(
             open(inMemoryDatabaseBuilder(), ThreadRecordingDriver(threads)),
-            externalScope
+            outlivingWork
         )
 
         // One write of each kind: a single statement, and a transaction (afterStarting).
@@ -333,7 +336,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     /** A repository whose writes of requirement progress throw [error]. */
     private fun failingRequirementWrites(error: RuntimeException) = RoomProgressRepository(
         open(inMemoryDatabaseBuilder(), FailingRequirementWrites(error)),
-        externalScope
+        outlivingWork
     )
 
     private suspend fun ProgressRepository.startAndRecord() {
@@ -397,8 +400,8 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun writes_happenInTheOrderTheyreMade() = runTest(timeout = 10.seconds) {
         val dispatcher = HeldDispatcher()
-        val repository =
-            RoomProgressRepository(database, CoroutineScope(SupervisorJob() + dispatcher))
+        val scope = CoroutineScope(SupervisorJob() + dispatcher)
+        val repository = RoomProgressRepository(database, OutlivingWork(scope, NoBackgroundTime))
 
         val writes = (1..20).map { i ->
             launch(start = CoroutineStart.UNDISPATCHED) {
@@ -419,7 +422,8 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         runTest(timeout = 10.seconds) {
             val dispatcher = HeldDispatcher()
             val scope = CoroutineScope(SupervisorJob() + dispatcher)
-            val (first, second) = List(2) { RoomProgressRepository(database, scope) }
+            val work = OutlivingWork(scope, NoBackgroundTime)
+            val (first, second) = List(2) { RoomProgressRepository(database, work) }
 
             val writes = (1..20).map { i ->
                 launch(start = CoroutineStart.UNDISPATCHED) {

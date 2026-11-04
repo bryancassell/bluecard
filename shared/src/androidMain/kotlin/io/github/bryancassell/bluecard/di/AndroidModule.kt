@@ -7,8 +7,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
@@ -38,6 +41,10 @@ import org.koin.plugin.module.dsl.single
 /** What the app is built from that needs Android to build, such as a [Context]. */
 val androidModule = module {
     single<WarningLog> { LogcatWarningLog }
+    // None: the data layer guide has work outlive the screen with the app-lifetime scope alone.
+    // Android 14 can still freeze the app once it's been in the background a while, which could
+    // pause long work (#417).
+    single<BackgroundTime> { NoBackgroundTime }
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }
 
@@ -64,13 +71,13 @@ private fun damagedProgressRepository(
     context: Context,
     clock: ZonedClock,
     warningLog: WarningLog,
-    @ApplicationScope scope: CoroutineScope,
+    outlivingWork: OutlivingWork,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) = FileDamagedProgressRepository(
     produceDirectory = { context.noBackupFilesDir.toOkioPath() },
     clock = clock,
     warningLog = warningLog,
-    externalScope = scope,
+    outlivingWork = outlivingWork,
     ioDispatcher = ioDispatcher
 )
 
