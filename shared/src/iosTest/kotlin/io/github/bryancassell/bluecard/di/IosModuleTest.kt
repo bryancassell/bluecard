@@ -329,8 +329,8 @@ class IosModuleTest {
     }
 
     @Test
-    fun phoneNumberFormat_leavesNumbersAsTyped() = runTest {
-        assertEquals("5551234567", koin.get<PhoneNumberFormat>().format("5551234567"))
+    fun phoneNumberFormat_followsUsRules() = runTest {
+        assertEquals("(555) 123-4567", koin.get<PhoneNumberFormat>().format("5551234567"))
     }
 
     private val reportsFolder = NSTemporaryDirectory().toPath() / ReportPlatform.REPORTS_FOLDER
