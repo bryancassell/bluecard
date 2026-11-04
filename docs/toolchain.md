@@ -722,8 +722,11 @@ moved, merge it into the branch and wait for the checks again:
   compiles the iOS code but, on Linux, can't link it or run its tests.
 - **iOS** runs on macOS: the common and iOS tests on the simulator, with
   `./gradlew :shared:iosSimulatorArm64Test`, then a build of the iOS app for
-  the simulator, as in [Running the iOS app](#running-the-ios-app). Its first
-  run, with no caches, took 13 minutes. It uses GitHub's `macos-26` image and
+  the simulator, as in [Running the iOS app](#running-the-ios-app). It caches
+  `~/.konan`, Kotlin/Native's compiler and the caches it builds of each
+  library, keyed on the version catalog. Restoring that 439 MB entry cut the
+  job from 11m39s to 6m35s in PR #401, since the tests' link took 26 seconds
+  instead of 6 minutes. It uses GitHub's `macos-26` image and
   selects its Xcode 26.6, so the Xcode CI builds with changes only in a pull
   request. Xcode 27 is on GitHub's `xcode-27` image, which GitHub calls a
   preview that "can be unstable" and may queue
