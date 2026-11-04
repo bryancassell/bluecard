@@ -4,19 +4,15 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -26,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -70,6 +65,7 @@ import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
+import io.github.bryancassell.bluecard.ui.ToggleRow
 import io.github.bryancassell.bluecard.ui.navigation.RequirementDetail
 import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
 import io.github.bryancassell.bluecard.ui.rememberTextLengthLimit
@@ -183,7 +179,7 @@ fun RequirementDetailScreen(
                 val ownWork = requirement.ownWork
                 if (requirement.markedByHand || ownWork != null) {
                     val checked = ownWork?.completed ?: requirement.completed
-                    CompletedCheckbox(
+                    ToggleRow(
                         label = ownWork?.summary ?: stringResource(
                             Res.string.requirement_completed
                         ),
@@ -359,29 +355,6 @@ private fun timeInRankText(timeInRank: TimeInRank): String {
         TimeInRank.Eligibility.RankBelowNotEarned -> Res.plurals.requirement_time_in_rank_not_earned
     }
     return pluralStringResource(withoutDate, months, months, rankBelow)
-}
-
-/**
- * The whole row toggles the checkbox, and screen readers read it as one checkbox. A long
- * [label], such as a summary of a requirement's own work, wraps.
- */
-@Composable
-private fun CompletedCheckbox(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange)
-            .heightIn(min = 56.dp)
-            .padding(horizontal = 16.dp)
-    ) {
-        Checkbox(checked = checked, onCheckedChange = null)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-        )
-    }
 }
 
 /**

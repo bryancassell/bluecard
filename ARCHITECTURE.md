@@ -439,12 +439,11 @@ both taps of a double tap can reach it.
   `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
   chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
   takes no colors from the wallpaper (no dynamic color).
-- **Buttons are the app's own** (`ui/Buttons.kt`), so each gets the platform's
-  press feedback (`ui/PressFeedback.kt`), as
-  [`PRD.md`](PRD.md#design-decisions)'s iOS look and conventions row chooses.
-  Rows and cards get it from the theme's `LocalIndication`. A Material
-  component with its own ripple, such as a `Checkbox` with `onCheckedChange`,
-  still ripples on iOS.
+- **Buttons and toggles are the app's own** (`ui/Buttons.kt`, `ui/Toggles.kt`),
+  so each takes iOS's form and press feedback (`ui/PressFeedback.kt`) there, as
+  [`PRD.md`](PRD.md#design-decisions)'s iOS look and conventions row chooses. Rows and cards get press feedback from the
+  theme's `LocalIndication`. A Material component with its own ripple still
+  ripples on iOS.
 - **Dates are picked in our own dialog**, `CompletionDatePickerDialog`, not
   Material's `DatePickerDialog`, which is always as wide as its calendar
   ([#306](https://github.com/bryancassell/bluecard/issues/306)). Compare the two
