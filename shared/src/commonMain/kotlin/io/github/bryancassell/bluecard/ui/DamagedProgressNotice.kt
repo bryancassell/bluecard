@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.damaged_progress_message
@@ -25,7 +24,9 @@ fun DamagedProgressNotice(onDismiss: () -> Unit) {
         title = { Text(stringResource(Res.string.damaged_progress_title)) },
         text = { Text(stringResource(Res.string.damaged_progress_message)) },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.damaged_progress_ok)) }
+            BlueCardTextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.damaged_progress_ok))
+            }
         }
     )
 }

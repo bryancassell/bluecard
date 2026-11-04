@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +34,8 @@ import io.github.bryancassell.bluecard.resources.home_open_data_management
 import io.github.bryancassell.bluecard.resources.home_open_ranks
 import io.github.bryancassell.bluecard.resources.home_unit
 import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.ui.BlueCardButton
+import io.github.bryancassell.bluecard.ui.BlueCardOutlinedButton
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.badges.BadgeListItem
@@ -121,13 +121,16 @@ fun HomeScreen(
             if (uiState.badgesInProgress.isNotEmpty()) {
                 BadgesInProgress(uiState.badgesInProgress, onOpenBadge)
             }
-            Button(onClick = onOpenBadges, modifier = inset.fillMaxWidth()) {
+            BlueCardButton(onClick = onOpenBadges, modifier = inset.fillMaxWidth()) {
                 Text(stringResource(Res.string.home_open_badges))
             }
-            Button(onClick = onOpenRanks, modifier = inset.fillMaxWidth()) {
+            BlueCardButton(onClick = onOpenRanks, modifier = inset.fillMaxWidth()) {
                 Text(stringResource(Res.string.home_open_ranks))
             }
-            OutlinedButton(onClick = onOpenDataManagement, modifier = inset.fillMaxWidth()) {
+            BlueCardOutlinedButton(
+                onClick = onOpenDataManagement,
+                modifier = inset.fillMaxWidth()
+            ) {
                 Text(stringResource(Res.string.home_open_data_management))
             }
         }

@@ -5,7 +5,6 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.confirm_dialog_cancel
@@ -37,12 +36,14 @@ fun ConfirmDialog(
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {
-            TextButton(onClick = { if (!opening) onConfirm() }, colors = removalButtonColors()) {
+            BlueCardTextButton(onClick = {
+                if (!opening) onConfirm()
+            }, colors = removalButtonColors()) {
                 Text(confirmLabel)
             }
         },
         dismissButton = {
-            TextButton(onClick = { if (!opening) onDismiss() }) {
+            BlueCardTextButton(onClick = { if (!opening) onDismiss() }) {
                 Text(stringResource(Res.string.confirm_dialog_cancel))
             }
         }

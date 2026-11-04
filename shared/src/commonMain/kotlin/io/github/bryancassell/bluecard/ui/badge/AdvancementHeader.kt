@@ -14,7 +14,6 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -31,6 +30,7 @@ import io.github.bryancassell.bluecard.resources.badge_detail_no_browser
 import io.github.bryancassell.bluecard.resources.badge_detail_official_page
 import io.github.bryancassell.bluecard.resources.badge_detail_open_in_browser
 import io.github.bryancassell.bluecard.resources.ic_open_in_new
+import io.github.bryancassell.bluecard.ui.BlueCardOutlinedButton
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.badges.BadgeProgressBar
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
@@ -87,7 +87,7 @@ private fun OfficialPageButton(officialUrl: String, startOtherApp: OtherAppStart
     val noBrowser = stringResource(Res.string.badge_detail_no_browser)
     val openInBrowser = stringResource(Res.string.badge_detail_open_in_browser)
     // Outlined, with an "open in new" icon, so it stands out and says it leaves the app.
-    OutlinedButton(
+    BlueCardOutlinedButton(
         // Through the screen's OtherAppStarter, not Compose's UriHandler, so it handles a double
         // tap and "no app" as the page's other links to apps do, such as a counselor's phone and
         // email.

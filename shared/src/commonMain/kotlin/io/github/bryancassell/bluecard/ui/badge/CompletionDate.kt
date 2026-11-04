@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +20,7 @@ import io.github.bryancassell.bluecard.resources.labeled_date_button
 import io.github.bryancassell.bluecard.resources.requirement_add_date
 import io.github.bryancassell.bluecard.resources.requirement_change_date
 import io.github.bryancassell.bluecard.resources.requirement_remove_date
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import io.github.bryancassell.bluecard.ui.ButtonText
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
@@ -88,7 +88,7 @@ fun EditableDate(
  */
 @Composable
 private fun DateButton(text: String, label: String?, onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
+    BlueCardTextButton(onClick = onClick) {
         ButtonText(
             text = text,
             description = label?.let { stringResource(Res.string.labeled_date_button, text, it) }

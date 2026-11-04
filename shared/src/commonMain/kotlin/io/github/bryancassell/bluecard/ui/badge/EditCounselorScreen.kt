@@ -12,7 +12,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -42,6 +41,7 @@ import io.github.bryancassell.bluecard.resources.edit_counselor_title
 import io.github.bryancassell.bluecard.resources.load_failed
 import io.github.bryancassell.bluecard.resources.requirements_unavailable
 import io.github.bryancassell.bluecard.resources.save_failed
+import io.github.bryancassell.bluecard.ui.BlueCardButton
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
@@ -187,7 +187,7 @@ private fun CounselorFields(
                     imeAction = ImeAction.Done
                 )
             )
-            Button(
+            BlueCardButton(
                 onClick = {
                     onSave()
                     // Done editing: closes the keyboard.
