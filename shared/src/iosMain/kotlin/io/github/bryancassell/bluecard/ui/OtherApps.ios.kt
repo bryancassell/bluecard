@@ -17,7 +17,7 @@ import platform.Foundation.NSURL
 import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIAlertAction
-import platform.UIKit.UIAlertActionStyleDefault
+import platform.UIKit.UIAlertActionStyleCancel
 import platform.UIKit.UIAlertController
 import platform.UIKit.UIAlertControllerStyleAlert
 import platform.UIKit.UIApplication
@@ -47,13 +47,15 @@ internal class IosOtherApps(
     // iOS asks the scout to call or cancel, so nothing calls without their say, as Android's
     // ACTION_DIAL only fills the number in. It's dialed as typed, without spaces, which RFC 3966
     // doesn't allow in a tel: URL: https://www.rfc-editor.org/rfc/rfc3966#section-3
+    // Nor with invisible format characters, such as the U+202D and U+202C that iOS's Contacts
+    // puts around a number it copies, which the URL would otherwise carry, encoded.
     // Apple says its Phone app doesn't dial a number with * or #, so a tap on one may do
     // nothing:
     // https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/PhoneLinks/PhoneLinks.html
     // It's still passed as typed, as on Android, rather than cut short or refused, until an
     // iPhone shows what iOS does with one (#357).
     override fun dial(phoneNumber: String) =
-        open(url("tel", phoneNumber.filterNot { it.isWhitespace() }, keep = "+"))
+        open(url("tel", phoneNumber.filterNot { it.isWhitespace() || it.isFormat() }, keep = "+"))
 
     // Keeps @ and + as Android's email() does, since some apps show the address as the link
     // spells it.
@@ -82,6 +84,9 @@ internal class IosOtherApps(
 
     // The text is the title, as Apple's guidelines ask of a sentence that says what happened:
     // https://developer.apple.com/design/human-interface-guidelines/alerts
+    // OK has the cancel style, which Apple gives an action that "leaves things unchanged", as
+    // closing this does. An alert with no cancel action may not close on the Escape key or
+    // VoiceOver's escape gesture, which can't be checked on a simulator (#357).
     override fun showMessage(text: String) {
         val alert = UIAlertController.alertControllerWithTitle(
             title = text,
@@ -89,7 +94,7 @@ internal class IosOtherApps(
             preferredStyle = UIAlertControllerStyleAlert
         )
         alert.addAction(
-            UIAlertAction.actionWithTitle(ok, style = UIAlertActionStyleDefault, handler = null)
+            UIAlertAction.actionWithTitle(ok, style = UIAlertActionStyleCancel, handler = null)
         )
         topViewController().presentViewController(alert, animated = true, completion = null)
     }
@@ -124,6 +129,7 @@ internal class IosOtherApps(
  * `Uri.encode` keeps. Half an emoji, which UTF-8 can't encode, is replaced as saving replaces it
  * (#390), so the link still opens, as Android passes the same text on.
  */
+@Suppress("CAST_NEVER_SUCCEEDS") // A Kotlin string is an NSString on iOS.
 private fun url(scheme: String, text: String, keep: String): NSURL? {
     val allowed = NSCharacterSet.characterSetWithCharactersInString(UNRESERVED + keep)
     val encoded = (replacingLoneSurrogates(text) as NSString)
@@ -132,6 +138,9 @@ private fun url(scheme: String, text: String, keep: String): NSURL? {
 }
 
 // The characters Android's Uri.encode leaves as they are.
+// An invisible character that controls text, such as a direction mark (Unicode's Cf).
+private fun Char.isFormat() = category == CharCategory.FORMAT
+
 private const val UNRESERVED =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-!.~'()*"
 

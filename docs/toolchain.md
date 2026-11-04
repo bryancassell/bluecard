@@ -424,12 +424,17 @@ on one what a backup would take:
 
 1. Run the Debug app on a simulator (see
    [Running the iOS app](#running-the-ios-app)), go through Onboarding and open
-   a badge, since Room makes the database only when it first opens it.
+   a badge, since Room makes the database only when it first opens it. Then
+   find the app's folder on the Mac:
+
+   ```sh
+   container=$(xcrun simctl get_app_container 'iPhone 17' io.github.bryancassell.bluecard.debug data)
+   ```
+
 2. To see damaged progress set aside too, quit the app, damage its database and
    open it again:
 
    ```sh
-   container=$(xcrun simctl get_app_container 'iPhone 17' io.github.bryancassell.bluecard.debug data)
    xcrun simctl terminate 'iPhone 17' io.github.bryancassell.bluecard.debug
    head -c 8192 /dev/urandom > "$container/Library/Application Support/bluecard.db"
    xcrun simctl launch 'iPhone 17' io.github.bryancassell.bluecard.debug

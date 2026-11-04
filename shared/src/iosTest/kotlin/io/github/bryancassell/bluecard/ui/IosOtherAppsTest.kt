@@ -10,6 +10,7 @@ import kotlin.test.assertTrue
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIAlertAction
+import platform.UIKit.UIAlertActionStyleCancel
 import platform.UIKit.UIAlertController
 import platform.UIKit.UIViewController
 
@@ -86,6 +87,14 @@ class IosOtherAppsTest {
         assertEquals(listOf<String?>("tel:+1(555)123-4567"), urls.opened)
     }
 
+    // As iOS's Contacts copies a number, between left-to-right override and pop formatting.
+    @Test
+    fun dial_leavesOutInvisibleFormatCharacters() {
+        otherApps().dial("\u202D+1 (555) 123-4567\u202C")
+
+        assertEquals(listOf<String?>("tel:+1(555)123-4567"), urls.opened)
+    }
+
     // A # would end the number, and the rest would be the link's fragment.
     @Test
     fun dial_encodesWhatWouldChangeTheLink() {
@@ -140,6 +149,7 @@ class IosOtherAppsTest {
         assertNull(alert.message)
         val action = assertIs<UIAlertAction>(alert.actions.single())
         assertEquals("OK", action.title)
+        assertEquals(UIAlertActionStyleCancel, action.style)
     }
 
     @Test

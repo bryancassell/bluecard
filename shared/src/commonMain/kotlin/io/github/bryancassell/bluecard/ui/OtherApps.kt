@@ -12,7 +12,10 @@ interface OtherApps {
     /** Opens the web page at [url] in the browser. */
     fun openWebPage(url: String): Boolean
 
-    /** Opens the phone app with [phoneNumber] filled in, without calling it. */
+    /**
+     * Opens the phone app with [phoneNumber], without calling it: Android fills the number in,
+     * and iOS asks the scout whether to call it.
+     */
     fun dial(phoneNumber: String): Boolean
 
     /** Opens an email app to write to [address]. */

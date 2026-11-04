@@ -182,10 +182,11 @@ private fun profileDataStore(@ApplicationScope scope: CoroutineScope): DataStore
     )
 
 /**
- * The app's Application Support directory, where the progress database, the profile and damaged
- * progress go. It's made if it isn't there yet, as it isn't when the app first starts. Apple's
- * File System Programming Guide names it for "app-created data files", which iCloud backs up,
- * and Documents for files the scout made, which the Files app can show:
+ * The app's Application Support directory, where the progress database and the profile go, and
+ * the folder backups leave out ([noBackupDirectory]). It's made if it isn't there yet, as it
+ * isn't when the app first starts. Apple's File System Programming Guide names it for
+ * "app-created data files", which iCloud backs up, and Documents for files the scout made, which
+ * the Files app can show:
  * https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
@@ -213,12 +214,14 @@ internal fun applicationSupportDirectory(): Path = memScoped {
  *
  * Apple says some file operations clear the mark, so it's set each time the app first needs
  * the folder, which is when the database first opens in each launch. If it can't be, the folder
- * is used anyway, with a warning: a backup that has the damaged copies only takes more room,
- * while a damaged database that can't be moved here is deleted.
+ * is used anyway, with a warning: a backup that has the damaged copies takes more room, and a
+ * phone restored from it shows the notice about them, while a damaged database that can't be
+ * moved here is deleted.
  *
  * If the folder can't be made, such as on a full disk, that's a warning too, and it's still
  * given: throwing would stop the database from opening, as finding it is part of that. Setting
- * progress aside then makes it, or fails as it would have here, and the next launch marks it.
+ * progress aside then makes it, or fails as it would have here. The folder it makes is marked
+ * only at the next launch, so a backup until then takes it, as when the mark can't be set.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 internal fun noBackupDirectory(parent: Path, warningLog: WarningLog): Path = memScoped {
