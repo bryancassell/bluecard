@@ -24,6 +24,7 @@ fun SQLiteException.isDamage() = resultCode.let { it == SQLITE_CORRUPT || it == 
 internal expect fun sqliteException(message: String, cause: Throwable): SQLiteException
 
 // The primary result codes this app checks for.
+const val SQLITE_ERROR = 1
 const val SQLITE_CORRUPT = 11
 const val SQLITE_CONSTRAINT = 19
 const val SQLITE_MISMATCH = 20
