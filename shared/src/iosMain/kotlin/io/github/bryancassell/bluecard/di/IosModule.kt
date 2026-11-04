@@ -22,6 +22,7 @@ import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.data.report.UIGraphicsPdfWriter
 import io.github.bryancassell.bluecard.data.systemFileSystem
+import io.github.bryancassell.bluecard.text.IosPhoneNumberFormat
 import io.github.bryancassell.bluecard.text.IosTextRules
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
@@ -63,7 +64,7 @@ val iosModule = module {
     single<UIGraphicsPdfWriter>() bind ReportPdfWriter::class
     single { create(::fileCoordinatorDocuments) } bind Documents::class
     single<IosTextRules>() bind TextRules::class
-    single<PhoneNumberFormat> { UnformattedPhoneNumbers }
+    single<PhoneNumberFormat> { IosPhoneNumberFormat }
 }
 
 /**

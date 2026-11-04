@@ -1,7 +1,7 @@
 package io.github.bryancassell.bluecard.text
 
 /**
- * Formats phone numbers the scout typed by US rules, which come from the platform: Kotlin's
+ * Formats phone numbers the scout typed by US rules, which come from libphonenumber: Kotlin's
  * common libraries don't have them. Unlike [LocaleFormats], they don't depend on the strings'
  * language. Behavior every implementation must have is in `PhoneNumberFormatContract`.
  */
@@ -18,3 +18,33 @@ interface PhoneNumberFormat {
      */
     suspend fun format(number: String): String
 }
+
+/**
+ * [number] as [formatInOriginalFormat] writes it, where that changes only its spaces and
+ * punctuation, as [PhoneNumberFormat.format] promises. Otherwise, and where it returns null for a
+ * number it can't read, [number] as typed.
+ *
+ * [formatInOriginalFormat] is libphonenumber's, with US rules, which keeps a number typed with +
+ * in international form. It skips text before the number and some after it, so it would drop a
+ * label such as "Cell: ". And with no international format for 7 US digits, +1 555-0100 comes
+ * back as +1 5550100. Both are left as typed.
+ */
+internal fun formatOnlyPunctuation(
+    number: String,
+    formatInOriginalFormat: (String) -> String?
+): String {
+    if (!number.all { it in '0'..'9' || it in "+-.()/" || it.isWhitespace() }) return number
+    val formatted = formatInOriginalFormat(number) ?: return number
+    return if (digitBreaks(formatted).containsAll(digitBreaks(number))) formatted else number
+}
+
+private val DIGITS = Regex("[0-9]+")
+
+/**
+ * Where [text]'s groups of digits end, but for the last, counted in digits: {3, 6} for
+ * "555-123-4567". Formatting changes no digit, so a break typed and missing from the formatted
+ * number means it joined digits typed apart.
+ */
+private fun digitBreaks(text: String): Set<Int> =
+    DIGITS.findAll(text).map { it.value.length }.runningReduce(Int::plus).toList().dropLast(1)
+        .toSet()

@@ -62,9 +62,8 @@ ios_untested=(
     # MainViewController() shows the app's composables, as above, and IosModuleTest starts Koin
     # with initKoin(), as the app does.
     MainViewController.kt
-    # Return a constant or their input.
+    # Returns a constant.
     ui/KeepInViewWhileFocused.ios.kt
-    di/UnformattedPhoneNumbers.kt
 )
 ios_main=shared/src/iosMain/kotlin/io/github/bryancassell/bluecard
 ios_test=shared/src/iosTest/kotlin/io/github/bryancassell/bluecard

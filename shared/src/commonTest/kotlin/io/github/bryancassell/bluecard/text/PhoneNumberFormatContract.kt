@@ -1,14 +1,14 @@
 package io.github.bryancassell.bluecard.text
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 /**
  * Behavior every [PhoneNumberFormat] must have. Runs against Android's
- * (AndroidPhoneNumberFormatTest), and is for the iOS one to run too (#350). Unlike the
- * repositories, it has no fake: other tests use Android's, which runs in local tests, so what they
- * check is what the app shows.
+ * (AndroidPhoneNumberFormatTest) and iOS's (IosPhoneNumberFormatTest). Unlike the repositories, it
+ * has no fake: other tests use Android's, which runs in local tests, so what they check is what
+ * the app shows.
  */
 abstract class PhoneNumberFormatContract {
     protected abstract val phoneNumberFormat: PhoneNumberFormat
@@ -26,6 +26,13 @@ abstract class PhoneNumberFormatContract {
     fun withACountryCode_followsItsCountrysRules() = runTest {
         assertEquals("+1 555-123-4567", format("+15551234567"))
         assertEquals("+44 20 7946 0958", format("+442079460958"))
+    }
+
+    // As dialed from the US: the national prefix 1, and the international prefix 011.
+    @Test
+    fun withAUsDialingPrefix_keepsIt() = runTest {
+        assertEquals("1 555-123-4567", format("15551234567"))
+        assertEquals("011 44 20 7946 0958", format("011442079460958"))
     }
 
     // Formatted, the words would be dropped, or an extension spelled differently.
