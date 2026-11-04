@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.badge
 import io.github.bryancassell.bluecard.text.gregorianCalendar
 import io.github.bryancassell.bluecard.text.toLocalDate
 import io.github.bryancassell.bluecard.text.toNSDate
+import io.github.bryancassell.bluecard.ui.dismissOnceSettled
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import io.github.bryancassell.bluecard.ui.toUIColor
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -38,7 +39,6 @@ import platform.UIKit.presentationController
 import platform.UIKit.sheetPresentationController
 import platform.UIKit.systemBackgroundColor
 import platform.UIKit.systemBlueColor
-import platform.UIKit.transitionCoordinator
 import platform.darwin.NSObject
 
 /**
@@ -127,24 +127,9 @@ internal class DatePickerSheet(
         if (controller.presentingViewController == null) onRefused()
     }
 
-    /**
-     * Closes the sheet. UIKit ignores a dismissal while the sheet appears, or while the scout
-     * swipes it down and may yet drag it back up, so then it's closed once that ends, unless it
-     * ended closed.
-     */
+    /** Closes the sheet, once it's done appearing or the scout is done swiping it down. */
     fun close() {
-        val transition = controller.transitionCoordinator
-        if (transition == null) {
-            dismissIfShown()
-        } else {
-            transition.animateAlongsideTransition(null) { dismissIfShown() }
-        }
-    }
-
-    private fun dismissIfShown() {
-        if (controller.presentingViewController != null) {
-            controller.dismissViewControllerAnimated(true, completion = null)
-        }
+        controller.dismissOnceSettled()
     }
 
     /**
