@@ -3,6 +3,8 @@
 package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.ui.graphics.Color
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -21,18 +23,17 @@ import platform.UIKit.UIControlStateNormal
 import platform.UIKit.UITraitCollection
 import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.resolvedColorWithTraitCollection
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 /** Checks PressFeedback.ios.kt's values against UIKit's. */
 class PressFeedbackTest {
-    private fun traits(darkTheme: Boolean) = UITraitCollection.traitCollectionWithUserInterfaceStyle(
-        if (darkTheme) {
-            UIUserInterfaceStyle.UIUserInterfaceStyleDark
-        } else {
-            UIUserInterfaceStyle.UIUserInterfaceStyleLight
-        }
-    )
+    private fun traits(darkTheme: Boolean) =
+        UITraitCollection.traitCollectionWithUserInterfaceStyle(
+            if (darkTheme) {
+                UIUserInterfaceStyle.UIUserInterfaceStyleDark
+            } else {
+                UIUserInterfaceStyle.UIUserInterfaceStyleLight
+            }
+        )
 
     private fun UIColor.toColor(darkTheme: Boolean): Color = memScoped {
         val red = alloc<CGFloatVar>()
@@ -41,7 +42,12 @@ class PressFeedbackTest {
         val alpha = alloc<CGFloatVar>()
         resolvedColorWithTraitCollection(traits(darkTheme))
             .getRed(red.ptr, green.ptr, blue.ptr, alpha.ptr)
-        Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat(), alpha.value.toFloat())
+        Color(
+            red.value.toFloat(),
+            green.value.toFloat(),
+            blue.value.toFloat(),
+            alpha.value.toFloat()
+        )
     }
 
     @Test
@@ -67,7 +73,11 @@ class PressFeedbackTest {
         val background = button.configuration!!.updatedConfigurationForButton(button).background
             .resolvedBackgroundColorForTintColor(button.tintColor)
 
-        assertEquals(FILLED_BUTTON_PRESSED_ALPHA, background.toColor(darkTheme = false).alpha, 0.001f)
+        assertEquals(
+            FILLED_BUTTON_PRESSED_ALPHA,
+            background.toColor(darkTheme = false).alpha,
+            0.001f
+        )
     }
 
     @Test
@@ -84,7 +94,11 @@ class PressFeedbackTest {
                 .updatedConfigurationForState(state)
                 .resolvedBackgroundColorForTintColor(UIColor.blackColor)
 
-            assertEquals(highlighted.toColor(darkTheme), rowHighlightColor(darkTheme), "dark: $darkTheme")
+            assertEquals(
+                highlighted.toColor(darkTheme),
+                rowHighlightColor(darkTheme),
+                "dark: $darkTheme"
+            )
         }
     }
 }

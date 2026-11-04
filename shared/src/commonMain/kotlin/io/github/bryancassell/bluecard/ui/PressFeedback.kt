@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.invalidateDraw
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 // How what the scout presses responds (PRD.md, iOS look and conventions). Android keeps Material's
@@ -118,27 +120,25 @@ private abstract class PressNode(
     protected val pressed: Float get() = animatable.value
 
     override fun onAttach() {
-        coroutineScope.launch {
-            val presses = mutableSetOf<PressInteraction.Press>()
-            interactionSource.interactions.collect { interaction ->
-                when (interaction) {
-                    is PressInteraction.Press -> presses += interaction
-                    is PressInteraction.Release -> presses -= interaction.press
-                    is PressInteraction.Cancel -> presses -= interaction.press
-                    else -> return@collect
-                }
-                // Read now: a quick tap's release can arrive before this runs, and the press must
-                // still show. The animatable stops a fade still running when a press snaps it back.
-                val isPressed = presses.isNotEmpty()
-                launch {
-                    if (isPressed) {
-                        animatable.snapTo(1f)
-                        invalidateDraw()
-                    } else {
-                        animatable.animateTo(0f, tween(fadeMillis)) { invalidateDraw() }
-                    }
+        val presses = mutableSetOf<PressInteraction.Press>()
+        interactionSource.interactions.onEach { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> presses += interaction
+                is PressInteraction.Release -> presses -= interaction.press
+                is PressInteraction.Cancel -> presses -= interaction.press
+                else -> return@onEach
+            }
+            // Read now: a quick tap's release can arrive before this runs, and the press must
+            // still show. The animatable stops a fade still running when a press snaps it back.
+            val isPressed = presses.isNotEmpty()
+            coroutineScope.launch {
+                if (isPressed) {
+                    animatable.snapTo(1f)
+                    invalidateDraw()
+                } else {
+                    animatable.animateTo(0f, tween(fadeMillis)) { invalidateDraw() }
                 }
             }
-        }
+        }.launchIn(coroutineScope)
     }
 }

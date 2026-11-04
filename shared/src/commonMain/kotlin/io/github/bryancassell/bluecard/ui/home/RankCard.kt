@@ -94,7 +94,7 @@ fun RankCard(
             contentColor = colors.onPrimary
         )
     ) {
-        // Inside the card rather than on it, so the ripple keeps to the card's shape.
+        // Inside the card rather than on it, so the press feedback keeps to the card's shape.
         val opensNextRank = if (nextRank == null) {
             Modifier
         } else {

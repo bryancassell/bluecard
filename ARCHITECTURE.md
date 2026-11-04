@@ -439,6 +439,11 @@ both taps of a double tap can reach it.
   `ui/theme/Color.kt`), as [`PRD.md`](PRD.md#design-decisions)'s Colors row
   chooses. It follows the system's dark mode (`isSystemInDarkTheme()`), and
   takes no colors from the wallpaper (no dynamic color).
+- **Buttons are the app's own** (`BlueCardButton` and the others in
+  `ui/Buttons.kt`), so each gets the platform's press feedback
+  (`ui/PressFeedback.kt`), as [`PRD.md`](PRD.md#design-decisions)'s iOS look
+  and conventions row chooses. Rows and cards get it from the theme's
+  `LocalIndication`.
 - **Dates are picked in our own dialog**, `CompletionDatePickerDialog`, not
   Material's `DatePickerDialog`, which is always as wide as its calendar
   ([#306](https://github.com/bryancassell/bluecard/issues/306)). Compare the two
@@ -1039,6 +1044,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored | A rank's status depends on the others |
 | [Rank sign-off](#ranks) | A `requirement_progress` column, saved with the notes in one write | No new table, and one Save can't half-fail |
 | [Text fields](#text-fields) | `TextFieldState` held in the ViewModel, its text kept in `SavedStateHandle` | The text field guide's recommendation |
+| [Press feedback](#theme) | The app's own buttons; the theme's `LocalIndication` for rows | Material's buttons always draw a ripple, which Google supports turning off only per component |
 | [Load failures](#load-and-save-failures) | An `IOException` reading data shows a message in the screen's place; anything else crashes | Errors belong in UI state; crashes reach Android vitals |
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals | Automatic reports need the `INTERNET` permission (req. 1) |
 | [Damaged database](#storage-errors) | Damaged files are set aside, never deleted, and the scout is told | Progress is never lost without the scout knowing |

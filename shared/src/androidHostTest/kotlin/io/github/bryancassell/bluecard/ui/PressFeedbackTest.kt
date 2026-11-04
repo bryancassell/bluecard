@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
@@ -145,6 +146,17 @@ class PressFeedbackTest {
 
         interactionSource.tryEmit(PressInteraction.Cancel(press))
         composeTestRule.mainClock.advanceTimeBy(FADE_MILLIS + 16)
+
+        assertShown(Color.Black)
+    }
+
+    @Test
+    fun dim_focus_isNotAPress() {
+        // As when a hardware keyboard's Tab reaches a button.
+        show(Dim, Color.Black)
+
+        assertTrue(interactionSource.tryEmit(FocusInteraction.Focus()))
+        composeTestRule.mainClock.advanceTimeByFrame()
 
         assertShown(Color.Black)
     }
