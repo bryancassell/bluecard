@@ -35,6 +35,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.assertColor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -66,7 +67,13 @@ class TogglesTest {
     private fun showIosToggle() {
         composeTestRule.setContent {
             var checked by remember { mutableStateOf(false) }
-            ToggleRow(label, checked, onCheckedChange = { checked = it }, iosSwitch = true)
+            ToggleRow(
+                label,
+                checked,
+                onCheckedChange = { checked = it },
+                background = Color.White,
+                iosSwitch = true
+            )
         }
     }
 
@@ -128,6 +135,7 @@ class TogglesTest {
                         "Completed",
                         checked = false,
                         onCheckedChange = {},
+                        background = Color.White,
                         iosSwitch = iosSwitch
                     )
                 }
@@ -139,16 +147,6 @@ class TogglesTest {
     /** The color at the row's start, in its padding, where nothing else draws. */
     private fun rowStart(): Color = composeTestRule.onNodeWithText("Completed").captureToImage()
         .toPixelMap().let { it[2, it.height / 2] }
-
-    private fun assertColor(expected: Color, shown: Color) {
-        // One step of 8-bit color either way, from rounding.
-        val step = 1.5f / 255
-        listOf(
-            expected.red to shown.red,
-            expected.green to shown.green,
-            expected.blue to shown.blue
-        ).forEach { (want, got) -> assertEquals("$expected, shown $shown", want, got, step) }
-    }
 
     private fun pressRow() {
         composeTestRule.onNodeWithText("Completed").performTouchInput { down(center) }

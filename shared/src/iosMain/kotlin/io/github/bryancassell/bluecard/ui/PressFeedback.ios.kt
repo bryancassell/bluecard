@@ -43,13 +43,14 @@ internal fun UIColor.toComposeColor(traits: UITraitCollection): Color = memScope
     Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat(), alpha.value.toFloat())
 }
 
-/** This color for UIKit, whose `colorWithRed` takes extended sRGB. */
-internal fun Color.toUIColor(): UIColor = convert(ColorSpaces.ExtendedSrgb).run {
-    UIColor.colorWithRed(
-        red = red.toDouble(),
-        green = green.toDouble(),
-        blue = blue.toDouble(),
-        alpha = alpha.toDouble()
+/** This color for UIKit, whose `colorWithRed` takes extended sRGB, which an sRGB color is too. */
+internal fun Color.toUIColor(): UIColor {
+    val srgb = if (colorSpace.isSrgb) this else convert(ColorSpaces.ExtendedSrgb)
+    return UIColor.colorWithRed(
+        red = srgb.red.toDouble(),
+        green = srgb.green.toDouble(),
+        blue = srgb.blue.toDouble(),
+        alpha = srgb.alpha.toDouble()
     )
 }
 

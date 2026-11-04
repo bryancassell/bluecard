@@ -1046,7 +1046,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Rank status](#ranks) | Derived in one place from every rank's progress, never stored | A rank's status depends on the others |
 | [Rank sign-off](#ranks) | A `requirement_progress` column, saved with the notes in one write | No new table, and one Save can't half-fail |
 | [Text fields](#text-fields) | `TextFieldState` held in the ViewModel, its text kept in `SavedStateHandle` | The text field guide's recommendation |
-| [Press feedback](#theme) | The app's own buttons and toggles; the theme's `LocalIndication` for rows | Each can then show iOS's press feedback in place of the ripple |
+| [Press feedback](#theme) | The app's own buttons and toggles; the theme's `LocalIndication` for rows | Each can then take iOS's press feedback, and toggles its form |
 | [Load failures](#load-and-save-failures) | An `IOException` reading data shows a message in the screen's place; anything else crashes | Errors belong in UI state; crashes reach Android vitals |
 | [Crash reporting](#load-and-save-failures) | None in the app; Google Play's Android vitals | Automatic reports need the `INTERNET` permission (req. 1) |
 | [Damaged database](#storage-errors) | Damaged files are set aside, never deleted, and the scout is told | Progress is never lost without the scout knowing |

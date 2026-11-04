@@ -184,7 +184,8 @@ fun RequirementDetailScreen(
                             Res.string.requirement_completed
                         ),
                         checked = checked,
-                        onCheckedChange = onCompletedChange
+                        onCheckedChange = onCompletedChange,
+                        background = MaterialTheme.colorScheme.background
                     )
                     if (checked) {
                         CompletionDate(uiState.completedDate, today, onCompletedDateChange)

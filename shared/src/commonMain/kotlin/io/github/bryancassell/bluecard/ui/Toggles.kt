@@ -58,21 +58,22 @@ internal expect fun PlatformSwitch(
 /**
  * A row labeled [label] that toggles [checked] wherever it's tapped, which screen readers read as
  * one control. It shows a checkbox at its start, or with [iosSwitch], the platform's switch at its
- * end, as iOS's own rows do. A long label wraps. [background] is the color the row is on, the
- * page's unless it's on a card or a dialog.
+ * end, as iOS's own rows do. A long label wraps. [background] is the color the row is on, such as
+ * the page's, which UIKit's switch is drawn on: nothing on Android shows a wrong one.
  */
 @Composable
 internal fun ToggleRow(
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    background: Color = MaterialTheme.colorScheme.background,
+    background: Color,
+    modifier: Modifier = Modifier,
     iosSwitch: Boolean = usesIosToggles
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .toggleable(
                 value = checked,
@@ -110,13 +111,14 @@ internal fun ChoiceRow(
     selected: Boolean,
     onClick: () -> Unit,
     contentDescription: String,
+    modifier: Modifier = Modifier,
     iosCheckmark: Boolean = usesIosToggles,
     content: @Composable () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)

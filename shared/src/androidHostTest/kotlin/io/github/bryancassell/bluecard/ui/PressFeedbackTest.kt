@@ -32,6 +32,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.assertColor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -96,16 +97,6 @@ class PressFeedbackTest {
         composeTestRule.onNodeWithTag(tag).captureToImage().toPixelMap().let {
             it[it.width / 2, it.height / 2]
         }
-
-    private fun assertColor(expected: Color, shown: Color) {
-        // One step of 8-bit color either way, from rounding.
-        val step = 1.5f / 255
-        listOf(
-            expected.red to shown.red,
-            expected.green to shown.green,
-            expected.blue to shown.blue
-        ).forEach { (want, got) -> assertEquals("$expected, shown $shown", want, got, step) }
-    }
 
     @Test
     fun dim_drawsAsIs_untilPressed() {
@@ -306,7 +297,9 @@ class PressFeedbackTest {
 
     @Test
     fun focusAndHoverHighlight_pressed_drawsNothing() {
-        // A switch row's, which iOS's own apps don't turn grey while held.
+        // A switch row's, which iOS's own apps don't turn grey while held. That it ignores the
+        // press, so as not to redraw, isn't tested: Robolectric draws only when captured, so
+        // there's no redraw to count.
         show(FocusAndHoverHighlight, Color.White)
 
         press()
