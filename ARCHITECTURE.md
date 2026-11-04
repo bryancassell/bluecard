@@ -162,7 +162,8 @@ marks "strongly recommended":
 - **The iOS app is an Xcode project, `iosApp/`,** that links `:shared` as a
   framework and shows its UI in a `ComposeUIViewController`, as in JetBrains'
   [recommended structure](https://kotlinlang.org/docs/multiplatform/multiplatform-project-recommended-structure.html).
-  Its Swift only starts it, so its code is in `:shared`.
+  Its Swift only starts it and keeps its saved state (see
+  [Screen state](#screen-state)), so its code is in `:shared`.
 
 ```
 UI layer        Compose screens  ──events──▶  ViewModels (uiState: StateFlow)
@@ -195,7 +196,10 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   calls it as it opens (`PickDate` in `ui/badge/CompletionDate.kt`).
 - **What a page remembers survives the system stopping the app.** It's kept in
   the ViewModel's `SavedStateHandle`, as a text field's text is (see
-  [Text fields](#text-fields)). A date, such as Badge detail's unmarked date, is
+  [Text fields](#text-fields)). On iOS, where Compose Multiplatform keeps it
+  only in memory, `SceneSavedState` keeps it with the app's scene, in SwiftUI's
+  `@SceneStorage`. It saves only the types a `SavedState` holds, and only a
+  page's ViewModels save to it. A date, such as Badge detail's unmarked date, is
   kept as its epoch day and read with `dateFromEpochDay`
   (`ui/SavedStateDate.kt`). A key observed with
   `getStateFlow` is set to null to forget it, not removed: `remove` drops the

@@ -6,7 +6,7 @@ import UIKit
 /// and the keyboard itself, as on Android.
 struct ContentView: View {
     /// What the pages remember, which iOS keeps with the scene, so they come back after iOS ends
-    /// the app in the background, and drops when the scout closes the app in the app switcher.
+    /// the app in the background (`SceneSavedState`).
     @SceneStorage("savedState") private var savedState = ""
 
     var body: some View {
