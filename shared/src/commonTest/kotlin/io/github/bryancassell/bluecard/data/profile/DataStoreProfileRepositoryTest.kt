@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -65,6 +66,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     @AfterTest
     fun closeDataStores() {
         try {
+            externalScope.cancel()
             runBlocking { jobs.forEach { it.cancelAndJoin() } }
         } finally {
             folder.delete()

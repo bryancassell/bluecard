@@ -314,10 +314,11 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
         whileReadOnly(noBackup) { repository.recordDamage() }
 
         assertFalse(repository.isDamageRecorded(database))
+        assertFalse(exists(folder))
         val warning = warningLog.warnings.single()
         assertEquals("DamagedProgress", warning.tag)
         assertEquals("Couldn't record a damaged database", warning.message)
-        // The folder that couldn't be made, rather than some other failure.
+        // The folder that couldn't be made, which the JVM's message names, not some other failure.
         assertEquals(cantCreateDirectoryMessage(folder), warning.error?.message)
     }
 
@@ -344,7 +345,7 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
             "Couldn't set aside a damaged database, so deleted it: $database",
             warning.message
         )
-        // The folder that couldn't be made, rather than some other failure.
+        // The folder that couldn't be made, which the JVM's message names, not some other failure.
         assertEquals(cantCreateDirectoryMessage(folder), warning.error?.message)
     }
 
@@ -360,6 +361,7 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
             val setAside = whileReadOnly(noBackup) { repository.setAside(database) }
 
             assertFalse(setAside)
+            assertFalse(exists(folder))
             // Stopped at the log, so the database never opens again without it.
             assertEquals("damaged", readText(database))
             assertEquals("index", readText("$database-shm".toPath()))

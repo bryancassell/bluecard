@@ -23,5 +23,5 @@ class AndroidRoomProgressRepositoryTest : RoomProgressRepositoryTest() {
     override fun databaseBuilder(file: Path) =
         Room.databaseBuilder(context, file.toString(), BlueCardDatabaseConstructor::initialize)
 
-    override fun currentThreadId() = Thread.currentThread().threadId()
+    override fun currentThread() = Thread.currentThread().let { "${it.name} #${it.threadId()}" }
 }

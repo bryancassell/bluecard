@@ -55,11 +55,12 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     /** A builder for a database in [file]. */
     protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
 
-    /** An ID for the thread that calls it, which no other running thread has. */
-    protected abstract fun currentThreadId(): Long
+    /** The name of the thread that calls it, with an ID no other running thread has. */
+    protected abstract fun currentThread(): String
 
     // Made only for the tests that use files.
     private val folder = lazy { TemporaryDirectory() }
+    private val databaseFile by lazy { folder.value.path / BlueCardDatabase.NAME }
     private val databases = mutableListOf<BlueCardDatabase>()
 
     private fun open(
@@ -93,17 +94,15 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
     // A folder where the database file should be, so SQLite can't open it.
     private fun unopenableRepository(): RoomProgressRepository {
-        val file = folder.value.path / BlueCardDatabase.NAME
-        systemFileSystem.createDirectories(file)
-        return RoomProgressRepository(open(databaseBuilder(file)), externalScope)
+        systemFileSystem.createDirectories(databaseFile)
+        return RoomProgressRepository(open(databaseBuilder(databaseFile)), externalScope)
     }
 
     @Test
     fun readingAndWriting_whenRoomCantLockTheDatabase_throwIOException() = runTest {
         // A folder where Room's lock file goes, so Room can't create it.
-        val file = folder.value.path / BlueCardDatabase.NAME
-        systemFileSystem.createDirectories("$file.lck".toPath())
-        val repository = RoomProgressRepository(open(databaseBuilder(file)), externalScope)
+        systemFileSystem.createDirectories("$databaseFile.lck".toPath())
+        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), externalScope)
 
         val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
         val writeError = runCatching {
@@ -117,9 +116,9 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun observing_whenMigrationIsMissing_throwsTheBugUnwrapped() = runTest {
         // A database from a newer app version, which Room has no migration down from.
-        val file = folder.value.path / BlueCardDatabase.NAME
-        BundledSQLiteDriver().open(file.toString()).use { it.execSQL("PRAGMA user_version = 1000") }
-        val repository = RoomProgressRepository(open(databaseBuilder(file)), externalScope)
+        BundledSQLiteDriver().open(databaseFile.toString())
+            .use { it.execSQL("PRAGMA user_version = 1000") }
+        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), externalScope)
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
@@ -289,7 +288,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     fun writing_usesTheDatabaseOffTheCallersThread() = runTest {
         // Room runs queries on Dispatchers.IO by default, which externalScope runs on, as in the
         // app.
-        val threads = ThreadIds()
+        val threads = Threads()
         val repository = RoomProgressRepository(
             open(inMemoryDatabaseBuilder(), ThreadRecordingDriver(threads)),
             externalScope
@@ -302,32 +301,32 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         // A copy, since Room's refresh after a write may still be adding to it.
         val used = threads.toList()
         assertTrue(used.isNotEmpty())
-        assertFalse(currentThreadId() in used, "Used on ${used.distinct()}")
+        assertFalse(currentThread() in used, "Used on ${used.distinct()}")
     }
 
-    /** The IDs of threads, added from any of them. */
-    private class ThreadIds {
+    /** The names of threads, added from any of them. */
+    private class Threads {
         private val lock = Lock()
-        private val ids = mutableListOf<Long>()
+        private val names = mutableListOf<String>()
 
-        fun add(id: Long) = lock.withLock { ids += id }
+        fun add(name: String) = lock.withLock { names += name }
 
-        fun toList() = lock.withLock { ids.toList() }
+        fun toList() = lock.withLock { names.toList() }
     }
 
     /**
      * BundledSQLiteDriver, recording in [threads] the thread that opens each connection, which is
      * where the app's driver sets a damaged database aside, and that prepares each statement.
      */
-    private inner class ThreadRecordingDriver(private val threads: ThreadIds) : SQLiteDriver {
+    private inner class ThreadRecordingDriver(private val threads: Threads) : SQLiteDriver {
         private val driver = BundledSQLiteDriver()
 
         override fun open(fileName: String): SQLiteConnection {
-            threads.add(currentThreadId())
+            threads.add(currentThread())
             val connection = driver.open(fileName)
             return object : SQLiteConnection by connection {
                 override fun prepare(sql: String): SQLiteStatement {
-                    threads.add(currentThreadId())
+                    threads.add(currentThread())
                     return connection.prepare(sql)
                 }
             }
