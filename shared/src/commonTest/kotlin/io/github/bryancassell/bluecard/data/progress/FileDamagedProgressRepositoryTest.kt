@@ -28,18 +28,11 @@ import okio.Path.Companion.toPath
 
 /**
  * Runs the repository contract against files in a temporary folder, and checks how damaged
- * progress is set aside. Each platform's test runs it with that platform's way of changing a
- * file's permissions, which common code has none of.
+ * progress is set aside. Each platform's test runs it with that platform's message for a folder
+ * that can't be made.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
-    /**
-     * Lets the owner write in [path], or stops them, returning whether it could. Stopping them
-     * keeps files in a folder from being made, moved or deleted, as long as the tests don't run
-     * as root, which CI doesn't.
-     */
-    protected abstract fun setWritable(path: Path, writable: Boolean): Boolean
-
     /** The message of Okio's error for [directory], which can't be made. */
     protected abstract fun cantCreateDirectoryMessage(directory: Path): String
 
@@ -97,18 +90,6 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
 
     /** The folders progress was set aside in. */
     private fun copies() = fileSystem.list(folder).filter { fileSystem.metadata(it).isDirectory }
-
-    /** Runs [action] while the owner can't write in [path]. Inline, so [action] can suspend. */
-    private inline fun <T> whileReadOnly(path: Path, action: () -> T): T {
-        check(setWritable(path, false)) { "Couldn't make $path read-only" }
-        try {
-            return action()
-        } finally {
-            // Unchecked, so it can't hide the test's own failure, such as a file that's gone. A
-            // folder left read-only fails deleteFiles.
-            setWritable(path, true)
-        }
-    }
 
     @Test
     fun setAside_movesTheDatabaseAndItsFilesIntoAFolderNamedForWhen() {

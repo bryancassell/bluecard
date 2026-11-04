@@ -1,8 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import android.content.Context
-import android.database.SQLException
-import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import androidx.room3.testing.MigrationTestHelper
 import androidx.room3.useReaderConnection
 import androidx.sqlite.SQLiteConnection
@@ -11,51 +9,58 @@ import androidx.sqlite.SQLiteException
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.di.DeviceClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
-import java.io.File
-import java.io.IOException
-import java.io.RandomAccessFile
+import io.github.bryancassell.bluecard.testing.TemporaryDirectory
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import okio.Path.Companion.toOkioPath
-import org.junit.After
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
+import okio.IOException
+import okio.Path
+import okio.Path.Companion.toPath
+import okio.buffer
+import okio.use
 
 /**
  * Opens the database as the app does, on files damaged as SQLite finds them or with values
- * [Converters] can't read, with the SQLite the app bundles.
+ * [Converters] can't read, with the SQLite the app bundles. Each platform's test runs it with that
+ * platform's database builder, since SQLite's errors are the platform's own.
  */
-@RunWith(AndroidJUnit4::class)
-class SetAsideDamagedDatabaseDriverTest {
-    private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val file = context.getDatabasePath(BlueCardDatabase.NAME)
+abstract class SetAsideDamagedDatabaseDriverTest {
+    /** A builder for a database in [file]. */
+    protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
 
-    @get:Rule
-    val helper = MigrationTestHelper(
-        InstrumentationRegistry.getInstrumentation(),
-        file,
-        BundledSQLiteDriver(),
-        BlueCardDatabase::class,
-        BlueCardDatabaseConstructor::initialize
-    )
+    /** [migrationTestHelper] for [file], in the platform's test, which closes its connections. */
+    protected abstract val helper: MigrationTestHelper
+
+    /** The error [error] was raised for, where the platform's [sqliteException] keeps it. */
+    protected abstract fun causeOf(error: SQLiteException): Throwable?
+
+    private val fileSystem = systemFileSystem
+    private val temporary = TemporaryDirectory()
+
+    // As Android's folders for the app's databases and for what backups leave out.
+    private val noBackup = temporary.path / "no_backup"
+    protected val file = temporary.path / "databases" / BlueCardDatabase.NAME
+
+    init {
+        fileSystem.createDirectory(noBackup)
+        fileSystem.createDirectory(file.parent!!)
+    }
 
     private val warningLog = FakeWarningLog()
     private val damagedProgress = FileDamagedProgressRepository(
-        { context.noBackupFilesDir.toOkioPath() },
+        { noBackup },
         DeviceClock,
         warningLog,
         CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
@@ -63,19 +68,16 @@ class SetAsideDamagedDatabaseDriverTest {
     )
     private val databases = mutableListOf<BlueCardDatabase>()
 
-    @After
-    fun closeDatabases() {
+    @AfterTest
+    fun closeDatabasesAndDeleteFiles() {
         databases.forEach { it.close() }
+        temporary.delete()
     }
 
     /** The driver as a new app run gets it. */
     private fun newDriver() = SetAsideDamagedDatabaseDriver(BundledSQLiteDriver(), damagedProgress)
 
-    private fun open(driver: SetAsideDamagedDatabaseDriver = newDriver()) = Room.databaseBuilder(
-        context,
-        BlueCardDatabase.NAME,
-        BlueCardDatabaseConstructor::initialize
-    )
+    private fun open(driver: SetAsideDamagedDatabaseDriver = newDriver()) = databaseBuilder(file)
         .setDriver(driver)
         .addColumnTypeConverter(Converters(driver::recordUnreadableValue))
         .build()
@@ -83,45 +85,53 @@ class SetAsideDamagedDatabaseDriverTest {
 
     private suspend fun BlueCardDatabase.readProgress() = progressDao().observeAll().first()
 
-    private val folder = File(context.noBackupFilesDir, FileDamagedProgressRepository.FOLDER_NAME)
-    private val damageFile = File(folder, "damage-found")
+    private val folder = noBackup / FileDamagedProgressRepository.FOLDER_NAME
+    private val damageFile = folder / "damage-found"
 
     /** The folders progress was set aside in. */
-    private fun copies() = folder.listFiles { file -> file.isDirectory }.orEmpty().toList()
+    private fun copies() = fileSystem.listOrNull(folder).orEmpty()
+        .filter { fileSystem.metadata(it).isDirectory }
 
     /** The database file set aside, the only one in its folder's only copy. */
-    private fun setAside() = copies().single().resolve(BlueCardDatabase.NAME)
+    private fun setAside() = copies().single() / BlueCardDatabase.NAME
+
+    private fun readBytes(file: Path) = fileSystem.read(file) { readByteArray() }
+
+    private fun writeBytes(file: Path, bytes: ByteArray) = fileSystem.write(file) { write(bytes) }
+
+    private fun lastModified(file: Path) = fileSystem.metadata(file).lastModifiedAtMillis!!
+
+    /** Deletes the database and the files SQLite keeps beside it, as Context.deleteDatabase does. */
+    private fun deleteDatabase() {
+        for (suffix in listOf("", "-journal", "-wal", "-shm")) {
+            fileSystem.delete("$file$suffix".toPath())
+        }
+    }
 
     @Test
     fun databaseDamagedBeforeItOpens_isSetAside_andAnEmptyOneOpens() = runTest {
-        file.parentFile!!.mkdirs()
         val damaged = ByteArray(8192) { 7 }
-        file.writeBytes(damaged)
+        writeBytes(file, damaged)
 
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(damaged, setAside().readBytes())
+        assertContentEquals(damaged, readBytes(setAside()))
         assertTrue(damagedProgress.observeNoticePending().first())
     }
 
     @Test
     fun damagedDatabaseThatCantBeSetAside_isntUsed_andIsSetAsideAtTheNextLaunch() = runTest {
-        file.parentFile!!.mkdirs()
         val damaged = ByteArray(8192) { 7 }
-        file.writeBytes(damaged)
-        // Stops the database being moved or deleted, as long as the tests don't run as root.
-        val databases = file.parentFile!!
-        databases.setWritable(false)
-        val error = try {
-            runCatching { newDriver().open(file.path) }.exceptionOrNull()
-        } finally {
-            databases.setWritable(true)
+        writeBytes(file, damaged)
+        // Stops the database being moved or deleted.
+        val error = whileReadOnly(file.parent!!) {
+            runCatching { newDriver().open(file.toString()) }.exceptionOrNull()
         }
 
-        assertTrue("Expected damage, got $error", error is SQLiteException && error.isDamage())
-        assertArrayEquals(damaged, file.readBytes())
-        assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
+        assertTrue(error is SQLiteException && error.isDamage(), "Expected damage, got $error")
+        assertContentEquals(damaged, readBytes(file))
+        assertTrue(damagedProgress.isDamageRecorded(file))
         assertFalse(damagedProgress.observeNoticePending().first())
 
         // The next launch.
@@ -129,19 +139,19 @@ class SetAsideDamagedDatabaseDriverTest {
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         // The only copy: the first try left no empty folder.
-        assertArrayEquals(damaged, setAside().readBytes())
+        assertContentEquals(damaged, readBytes(setAside()))
         assertTrue(damagedProgress.observeNoticePending().first())
     }
 
     @Test
     fun databaseWithDamagedPages_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
         saveProgressAndDamageIt()
-        val damaged = file.readBytes()
+        val damaged = readBytes(file)
 
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(damaged, setAside().readBytes())
+        assertContentEquals(damaged, readBytes(setAside()))
         assertTrue(damagedProgress.observeNoticePending().first())
     }
 
@@ -151,7 +161,7 @@ class SetAsideDamagedDatabaseDriverTest {
         // after it's checked would.
         val driver = newDriver()
         val undamaged = saveProgressAndDamageIt(open(driver))
-        val damagedAt = file.lastModified()
+        val damagedAt = lastModified(file)
         val database = open(driver)
         val repository =
             RoomProgressRepository(
@@ -163,39 +173,39 @@ class SetAsideDamagedDatabaseDriverTest {
 
         // A bug, which crashes the app, rather than a load failure (IOException).
         assertTrue(
-            "Expected SQLite to find the damage, got $error",
-            error is SQLiteException && error.isDamage()
+            error is SQLiteException && error.isDamage(),
+            "Expected SQLite to find the damage, got $error"
         )
         // Even a statement that reads nothing fails after that, so nothing more is saved.
         val next = runCatching {
             database.useReaderConnection { it.usePrepared("SELECT 1") { select -> select.step() } }
         }.exceptionOrNull()
         assertTrue(
-            "Expected the same error, got $next",
-            next is SQLiteException && next.message == error?.message
+            next is SQLiteException && next.message == error.message,
+            "Expected the same error, got $next"
         )
-        assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
-        assertEquals(emptyList<File>(), copies())
+        assertTrue(damagedProgress.isDamageRecorded(file))
+        assertEquals(emptyList<Path>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
 
         // The next launch, with damage the check doesn't find. Nothing saves into the database
         // once the damage is found, so putting the file back keeps its time from before that.
         databases.last().close()
-        file.writeBytes(undamaged)
-        assertTrue(file.setLastModified(damagedAt))
+        writeBytes(file, undamaged)
+        setLastModified(file, damagedAt)
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(undamaged, setAside().readBytes())
+        assertContentEquals(undamaged, readBytes(setAside()))
         assertTrue(damagedProgress.observeNoticePending().first())
-        assertFalse(damagedProgress.isDamageRecorded(file.toOkioPath()))
+        assertFalse(damagedProgress.isDamageRecorded(file))
     }
 
     @Test
     fun valueThatCantBeRead_isSetAsideAtTheNextLaunch_thoughTheCheckPasses() = runTest {
         saveProgress(open())
         // A byte changed by storage, in a page SQLite still finds valid.
-        val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
+        val check = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
             sqlite.execSQL("UPDATE badge_progress SET startedDate = '2026-0' || char(1) || '3-01'")
             sqlite.prepare("PRAGMA quick_check").use {
                 it.step()
@@ -203,7 +213,7 @@ class SetAsideDamagedDatabaseDriverTest {
             }
         }
         assertEquals("ok", check)
-        val damaged = file.readBytes()
+        val damaged = readBytes(file)
         val database = open()
         val repository =
             RoomProgressRepository(
@@ -214,30 +224,27 @@ class SetAsideDamagedDatabaseDriverTest {
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
         // A bug, which crashes the app, rather than a load failure (IOException).
-        assertTrue(
-            "Expected the date's error, got $error",
-            error is IllegalArgumentException
-        )
+        assertTrue(error is IllegalArgumentException, "Expected the date's error, got $error")
         // Even a statement that reads nothing fails after that, so nothing more is saved. It fails
         // as SQLite's damage does, which Room's InvalidationTracker catches.
         val next = runCatching {
             database.useReaderConnection { it.usePrepared("SELECT 1") { select -> select.step() } }
         }.exceptionOrNull()
         assertTrue(
-            "Expected damage caused by the date's error, got $next",
-            next is SQLiteException && next.isDamage() && next.cause?.message == error?.message
+            next is SQLiteException && next.isDamage() && causeOf(next)?.message == error.message,
+            "Expected damage caused by the date's error, got $next"
         )
-        assertTrue(damagedProgress.isDamageRecorded(file.toOkioPath()))
-        assertEquals(emptyList<File>(), copies())
+        assertTrue(damagedProgress.isDamageRecorded(file))
+        assertEquals(emptyList<Path>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
 
         database.close()
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(damaged, setAside().readBytes())
+        assertContentEquals(damaged, readBytes(setAside()))
         assertTrue(damagedProgress.observeNoticePending().first())
-        assertFalse(damagedProgress.isDamageRecorded(file.toOkioPath()))
+        assertFalse(damagedProgress.isDamageRecorded(file))
     }
 
     @Test
@@ -247,16 +254,15 @@ class SetAsideDamagedDatabaseDriverTest {
         damagedProgress.recordDamage()
         // As the database's last save and the damage found in it could be, so the new database
         // Room makes is newer than the record.
-        dateInOrder(older = file.toOkioPath(), newer = damageFile.toOkioPath())
-        // Stops the set-aside and the record's deletion, as long as the tests don't run as root.
-        folder.setWritable(false)
-        val progress = try {
+        dateInOrder(older = file, newer = damageFile)
+        // Stops the set-aside and the record's deletion.
+        val progress = whileReadOnly(folder) {
             // The launch after the damage was found, which can't set it aside, so deletes it.
             val first = open()
             assertEquals(emptyList<BadgeProgressDetails>(), first.readProgress())
             assertTrue(damagedProgress.observeNoticePending().first())
-            assertEquals(emptyList<File>(), copies())
-            assertTrue(damageFile.exists())
+            assertEquals(emptyList<Path>(), copies())
+            assertTrue(fileSystem.exists(damageFile))
             damagedProgress.dismissNotice()
             first.progressDao().insertBadge(
                 BadgeProgress("camping", VERSION, LocalDate(2026, 3, 1))
@@ -265,8 +271,6 @@ class SetAsideDamagedDatabaseDriverTest {
 
             // The launch after that, with the record still there.
             open().readProgress()
-        } finally {
-            folder.setWritable(true)
         }
 
         assertEquals(listOf("camping"), progress.map { it.badge.badgeId })
@@ -287,13 +291,13 @@ class SetAsideDamagedDatabaseDriverTest {
         saveProgress(open())
         damagedProgress.recordDamage()
         // As when a set-aside couldn't delete the record, and Room made this database after it.
-        dateInOrder(older = damageFile.toOkioPath(), newer = file.toOkioPath())
+        dateInOrder(older = damageFile, newer = file)
 
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
-        assertFalse(damageFile.exists())
-        assertEquals(emptyList<File>(), copies())
+        assertFalse(fileSystem.exists(damageFile))
+        assertEquals(emptyList<Path>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
     }
 
@@ -304,16 +308,16 @@ class SetAsideDamagedDatabaseDriverTest {
      */
     private suspend fun saveProgressAndDamageIt(database: BlueCardDatabase = open()): ByteArray {
         saveProgress(database)
-        val (pageSize, lastTablePage) = BundledSQLiteDriver().open(file.path).use { sqlite ->
+        val (pageSize, lastTablePage) = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
             sqlite.longFor("PRAGMA page_size") to
                 sqlite.longFor("SELECT max(rootpage) FROM sqlite_master")
         }
-        val undamaged = file.readBytes()
-        RandomAccessFile(file, "rw").use {
+        val undamaged = readBytes(file)
+        fileSystem.openReadWrite(file).use {
             val firstDamaged = lastTablePage * pageSize
-            assertTrue("Expected pages after the tables' first ones", it.length() > firstDamaged)
-            it.seek(firstDamaged)
-            it.write(ByteArray((it.length() - firstDamaged).toInt()) { 0x55 })
+            assertTrue(it.size() > firstDamaged, "Expected pages after the tables' first ones")
+            val damaged = (it.size() - firstDamaged).toInt()
+            it.write(firstDamaged, ByteArray(damaged) { 0x55 }, 0, damaged)
         }
         return undamaged
     }
@@ -337,39 +341,39 @@ class SetAsideDamagedDatabaseDriverTest {
     fun databaseWithAPageNothingUses_staysInUse() = runTest {
         saveProgress(open())
         addPageNothingUses()
-        val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
+        val check = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
             sqlite.prepare("PRAGMA quick_check").use {
                 it.step()
                 it.getText(0)
             }
         }
-        assertTrue(check, check.endsWith(": never used"))
+        assertTrue(check.endsWith(": never used"), check)
 
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
-        assertEquals(emptyList<File>(), copies())
+        assertEquals(emptyList<Path>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
     }
 
     /**
      * Adds a page to the end of the database and counts it in the database's size, with nothing
-     * using it, as when a page leaks. SQLite trusts the size in the header
-     * (https://www.sqlite.org/fileformat2.html#in_header_database_size).
+     * using it, as when a page leaks. SQLite trusts the size in the header, whose numbers are
+     * big-endian (https://www.sqlite.org/fileformat2.html#in_header_database_size).
      */
-    private fun addPageNothingUses() = RandomAccessFile(file, "rw").use {
-        it.seek(16)
-        val pageSize = it.readUnsignedShort().let { size -> if (size == 1) 65536 else size }
-        it.seek(28)
-        val pages = it.readInt()
-        it.setLength((pages + 1L) * pageSize)
-        it.seek(28)
-        it.writeInt(pages + 1)
+    private fun addPageNothingUses() = fileSystem.openReadWrite(file).use {
+        val pageSize = it.source(16).buffer().use { header ->
+            header.readShort().toInt() and 0xFFFF
+        }
+            .let { size -> if (size == 1) 65536 else size }
+        val pages = it.source(28).buffer().use { header -> header.readInt() }
+        it.resize((pages + 1L) * pageSize)
+        it.sink(28).buffer().use { header -> header.writeInt(pages + 1) }
     }
 
     @Test
     fun connectionWhoseLogLimitsFail_isClosed_andTheErrorGoesOn() {
-        val full = SQLException("Error code: 13, message: database or disk is full")
+        val full = SQLiteException("Error code: 13, message: database or disk is full")
         var closed = false
         val failing = object : SQLiteDriver {
             override fun open(fileName: String) = object : SQLiteConnection {
@@ -382,7 +386,7 @@ class SetAsideDamagedDatabaseDriverTest {
         }
 
         val error = runCatching {
-            SetAsideDamagedDatabaseDriver(failing, damagedProgress).open(file.path)
+            SetAsideDamagedDatabaseDriver(failing, damagedProgress).open(file.toString())
         }.exceptionOrNull()
 
         assertEquals(full, error)
@@ -391,9 +395,7 @@ class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun connections_limitTheWriteAheadLog_asAndroidsSQLiteDoes() {
-        file.parentFile!!.mkdirs()
-
-        newDriver().open(file.path).use {
+        newDriver().open(file.toString()).use {
             assertEquals(524288L, it.longFor("PRAGMA journal_size_limit"))
             assertEquals(100L, it.longFor("PRAGMA wal_autocheckpoint"))
         }
@@ -402,7 +404,7 @@ class SetAsideDamagedDatabaseDriverTest {
     @Test
     fun checkThatFailsForAnotherReason_movesNothing_andRunsAgainAtTheNextOpen() = runTest {
         // A folder where the database file should be, so SQLite can't open it.
-        file.mkdirs()
+        fileSystem.createDirectory(file)
         val driver = newDriver()
         val repository = RoomProgressRepository(
             open(driver),
@@ -412,19 +414,19 @@ class SetAsideDamagedDatabaseDriverTest {
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
         // A load failure, as for a full disk.
-        assertTrue("Expected an IOException, got $error", error is IOException)
-        assertTrue(file.isDirectory)
-        assertEquals(emptyList<File>(), copies())
+        assertTrue(error is IOException, "Expected an IOException, got $error")
+        assertTrue(fileSystem.metadata(file).isDirectory)
+        assertEquals(emptyList<Path>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
 
         // Room tries again at the next read.
-        file.delete()
+        fileSystem.delete(file)
         val damaged = ByteArray(8192) { 7 }
-        file.writeBytes(damaged)
+        writeBytes(file, damaged)
         val progress = repository.observeAllProgress().first()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(damaged, setAside().readBytes())
+        assertContentEquals(damaged, readBytes(setAside()))
     }
 
     @Test
@@ -544,7 +546,7 @@ class SetAsideDamagedDatabaseDriverTest {
     @Test
     fun identityHashQueryThatFailsForAnotherReason_movesNothing() = runTest {
         saveProgress(open())
-        val busy = SQLException("Error code: 5, message: database is locked")
+        val busy = SQLiteException("Error code: 5, message: database is locked")
         // Fails Room's identity query, which the check runs too, as another app run might.
         val failing = object : SQLiteDriver {
             override fun open(fileName: String): SQLiteConnection {
@@ -567,8 +569,8 @@ class SetAsideDamagedDatabaseDriverTest {
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
         // A load failure, as for a full disk, rather than damage.
-        assertTrue("Expected an IOException, got $error", error is IOException)
-        assertEquals(emptyList<File>(), copies())
+        assertTrue(error is IOException, "Expected an IOException, got $error")
+        assertEquals(emptyList<Path>(), copies())
         assertFalse(damagedProgress.observeNoticePending().first())
     }
 
@@ -581,7 +583,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
-        assertEquals(emptyList<File>(), copies())
+        assertEquals(emptyList<Path>(), copies())
         databases.last().close()
         assertEquals(saved, savedHeader())
     }
@@ -595,7 +597,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
-        assertEquals(emptyList<File>(), copies())
+        assertEquals(emptyList<Path>(), copies())
         databases.last().close()
         assertEquals(saved, savedHeader())
     }
@@ -604,12 +606,12 @@ class SetAsideDamagedDatabaseDriverTest {
     fun identityHashes_areTheOnesRoomSaves() = runTest {
         // Each version's from its schema in shared/schemas/.
         val saved = (1..BlueCardDatabase.VERSION).map { version ->
-            context.deleteDatabase(BlueCardDatabase.NAME)
+            deleteDatabase()
             helper.createDatabase(version).close()
             version to savedHeader().second
         }
         // This build's as the app saves it.
-        context.deleteDatabase(BlueCardDatabase.NAME)
+        deleteDatabase()
         open().readProgress()
         databases.single().close()
         val (savedVersion, savedHash) = savedHeader()
@@ -618,22 +620,22 @@ class SetAsideDamagedDatabaseDriverTest {
         assertEquals(saved.last().second, savedHash)
         saved.forEach {
             assertTrue(
-                "BlueCardDatabase.IDENTITY_HASHES needs $it, the hash Room saves for its version.",
-                it in BlueCardDatabase.IDENTITY_HASHES
+                it in BlueCardDatabase.IDENTITY_HASHES,
+                "BlueCardDatabase.IDENTITY_HASHES needs $it, the hash Room saves for its version."
             )
         }
         // Any other line keeps an old hash for its version, which no version has now.
         (BlueCardDatabase.IDENTITY_HASHES - saved.toSet()).forEach { (version, hash) ->
-            assertTrue("$version isn't a version", version in 1..BlueCardDatabase.VERSION)
+            assertTrue(version in 1..BlueCardDatabase.VERSION, "$version isn't a version")
             assertTrue(
-                "($version, $hash) has another version's hash",
-                saved.none { it.second == hash }
+                saved.none { it.second == hash },
+                "($version, $hash) has another version's hash"
             )
         }
     }
 
     /** The database file's Room version and identity hash. */
-    private fun savedHeader() = BundledSQLiteDriver().open(file.path).use { sqlite ->
+    private fun savedHeader() = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
         val hash = sqlite.prepare("SELECT identity_hash FROM room_master_table").use {
             it.step()
             it.getText(0)
@@ -647,10 +649,10 @@ class SetAsideDamagedDatabaseDriverTest {
 
         // Room's error for a missing migration, which crashes the app.
         assertTrue(
-            "Expected Room's missing migration error, got $error",
-            error is IllegalStateException && error.message.orEmpty().contains("migration")
+            error is IllegalStateException && error.message.orEmpty().contains("migration"),
+            "Expected Room's missing migration error, got $error"
         )
-        assertEquals(emptyList<File>(), copies())
+        assertEquals(emptyList<Path>(), copies())
     }
 
     /** Saves enough badges to fill several pages, then [changeFile]. */
@@ -664,7 +666,7 @@ class SetAsideDamagedDatabaseDriverTest {
      * the file as it is after them.
      */
     private fun changeFile(vararg changes: String): ByteArray {
-        val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
+        val check = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
             changes.forEach { sqlite.execSQL(it) }
             sqlite.prepare("PRAGMA quick_check").use {
                 it.step()
@@ -672,7 +674,7 @@ class SetAsideDamagedDatabaseDriverTest {
             }
         }
         assertEquals("ok", check)
-        return file.readBytes()
+        return readBytes(file)
     }
 
     /** Opens the database, as the next app run does, and checks it sets [damaged] aside. */
@@ -680,7 +682,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val progress = open().readProgress()
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
-        assertArrayEquals(damaged, setAside().readBytes())
+        assertContentEquals(damaged, readBytes(setAside()))
         assertTrue(damagedProgress.observeNoticePending().first())
     }
 

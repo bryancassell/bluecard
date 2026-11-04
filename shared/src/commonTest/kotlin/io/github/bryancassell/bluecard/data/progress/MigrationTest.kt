@@ -1,13 +1,13 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import android.content.Context
-import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import androidx.room3.testing.MigrationTestHelper
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
+import io.github.bryancassell.bluecard.testing.TemporaryDirectory
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -15,27 +15,25 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.junit.Assert.assertEquals
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
+import okio.Path
 
 /**
  * Checks each database migration: that it makes the schema committed in shared/schemas/, and that
- * progress stored before it reads back the same after it.
+ * progress stored before it reads back the same after it. Each platform's test runs it with that
+ * platform's database builder.
  */
-@RunWith(AndroidJUnit4::class)
-class MigrationTest {
-    private val context = ApplicationProvider.getApplicationContext<Context>()
+abstract class MigrationTest {
+    /** A builder for a database in [file]. */
+    protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
 
-    @get:Rule
-    val helper = MigrationTestHelper(
-        InstrumentationRegistry.getInstrumentation(),
-        context.getDatabasePath(DATABASE),
-        BundledSQLiteDriver(),
-        BlueCardDatabase::class,
-        BlueCardDatabaseConstructor::initialize
-    )
+    /** [migrationTestHelper] for [file], in the platform's test, which closes its connections. */
+    protected abstract val helper: MigrationTestHelper
+
+    private val folder = TemporaryDirectory()
+    protected val file = folder.path / DATABASE
+
+    @AfterTest
+    fun deleteFiles() = folder.delete()
 
     /**
      * Migrates the database to [version] and checks it against that version's committed schema.
@@ -51,22 +49,19 @@ class MigrationTest {
             assertEquals(schemaTables(version) + "room_master_table", tables)
         }
 
-    /** The tables in [version]'s committed schema, which the Room Gradle plugin adds to the assets. */
+    /** The tables in [version]'s committed schema. */
     private fun schemaTables(version: Int): Set<String> {
-        val schema = InstrumentationRegistry.getInstrumentation().context.assets
-            .open("${BlueCardDatabase::class.java.name}/$version.json")
-            .use { Json.parseToJsonElement(it.reader().readText()) }
+        val schema = Json.parseToJsonElement(committedSchema(version))
         return schema.jsonObject.getValue("database").jsonObject.getValue("entities").jsonArray
             .map { it.jsonObject.getValue("tableName").jsonPrimitive.content }
             .toSet()
     }
 
     /** Opens the migrated database as the app does. */
-    private fun open() =
-        Room.databaseBuilder(context, DATABASE, BlueCardDatabaseConstructor::initialize)
-            .setDriver(BundledSQLiteDriver())
-            .addColumnTypeConverter(Converters {})
-            .build()
+    private fun open() = databaseBuilder(file)
+        .setDriver(BundledSQLiteDriver())
+        .addColumnTypeConverter(Converters {})
+        .build()
 
     @Test
     fun migrate1To2_keepsTrackerEntries_asLogEntries() = runTest {
