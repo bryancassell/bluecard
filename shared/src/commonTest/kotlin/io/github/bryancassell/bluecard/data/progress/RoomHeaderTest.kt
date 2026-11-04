@@ -4,89 +4,106 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * The rule on a table of its own, with version 4 current, so later versions of the app's table
+ * don't change what these check. SetAsideDamagedDatabaseDriverTest checks the app's table.
+ */
 class RoomHeaderTest {
-    private val current = BlueCardDatabase.VERSION.toLong()
-    private val currentHash = hashOf(BlueCardDatabase.VERSION)
-    private val olderHash = hashOf(BlueCardDatabase.VERSION - 1)
-
-    private fun hashOf(version: Int) =
-        BlueCardDatabase.IDENTITY_HASHES.first { it.first == version }.second
+    private fun isDamaged(
+        version: Long,
+        hash: String?,
+        hashes: List<Pair<Int, String>> = HASHES,
+        currentVersion: Int = 4
+    ) = isRoomHeaderDamaged(version, hash, hashes, currentVersion)
 
     @Test
     fun eachVersionWithItsHash_isntDamaged() {
-        BlueCardDatabase.IDENTITY_HASHES.forEach { (version, hash) ->
-            assertFalse(isRoomHeaderDamaged(version.toLong(), hash), "Version $version")
+        HASHES.forEach { (version, hash) ->
+            assertFalse(isDamaged(version.toLong(), hash), "Version $version")
         }
     }
 
     @Test
     fun thisBuildsVersion_withAnotherHashOrNone_isDamaged() {
-        assertTrue(isRoomHeaderDamaged(current, UNKNOWN_HASH))
-        assertTrue(isRoomHeaderDamaged(current, null))
-        assertTrue(isRoomHeaderDamaged(current, olderHash))
+        assertTrue(isDamaged(4, UNKNOWN_HASH))
+        assertTrue(isDamaged(4, null))
+        assertTrue(isDamaged(4, HASH_3))
     }
 
     @Test
     fun knownHash_withAVersionThatDidntHaveIt_isDamaged() {
-        assertTrue(isRoomHeaderDamaged(current or 64L, currentHash))
-        assertTrue(isRoomHeaderDamaged(current - 1, currentHash))
-        assertTrue(isRoomHeaderDamaged(-current, currentHash))
+        assertTrue(isDamaged(4L or 64, HASH_4))
+        assertTrue(isDamaged(3, HASH_4))
         // An older database whose version changed, before Room migrates it.
-        assertTrue(isRoomHeaderDamaged(current - 2, olderHash))
+        assertTrue(isDamaged(2, HASH_3))
+    }
+
+    @Test
+    fun negativeVersion_isDamaged_whateverTheHash() {
+        assertTrue(isDamaged(-4, HASH_4))
+        assertTrue(isDamaged(-4, UNKNOWN_HASH))
+        assertTrue(isDamaged(-4, null))
     }
 
     @Test
     fun versionZero_withThisBuildsHashOrAnUnknownOne_isLeftToRoom() {
         // Room keeps tables of this build's schema and saves the version and hash again.
-        assertFalse(isRoomHeaderDamaged(0, currentHash))
-        assertFalse(isRoomHeaderDamaged(0, null))
-        assertFalse(isRoomHeaderDamaged(0, UNKNOWN_HASH))
+        assertFalse(isDamaged(0, HASH_4))
+        assertFalse(isDamaged(0, null))
+        assertFalse(isDamaged(0, UNKNOWN_HASH))
     }
 
     @Test
     fun versionZero_withAnOlderHash_isDamaged() {
         // Room would check an older schema's tables against this build's, and refuse them.
-        assertTrue(isRoomHeaderDamaged(0, olderHash))
+        assertTrue(isDamaged(0, HASH_3))
     }
 
     @Test
     fun olderVersion_withAnUnknownHashOrNone_isLeftToRoom() {
         // Room migrates it without reading the hash, then saves this build's.
-        assertFalse(isRoomHeaderDamaged(current - 1, UNKNOWN_HASH))
-        assertFalse(isRoomHeaderDamaged(current - 1, null))
+        assertFalse(isDamaged(3, UNKNOWN_HASH))
+        assertFalse(isDamaged(3, null))
     }
 
     @Test
     fun newerVersion_withAnUnknownHash_isLeftToRoom() {
         // A newer build's database, which Room refuses on purpose.
-        assertFalse(isRoomHeaderDamaged(current + 1, UNKNOWN_HASH))
+        assertFalse(isDamaged(5, UNKNOWN_HASH))
     }
 
     @Test
     fun versionThatKeptTheSchema_sharesItsHash_andIsntDamaged() {
         // As when version 5's migration only changes data.
-        val hashes = listOf(4 to HASH, 5 to HASH)
+        val hashes = HASHES + (5 to HASH_4)
 
-        assertFalse(isRoomHeaderDamaged(4, HASH, hashes, currentVersion = 5))
-        assertFalse(isRoomHeaderDamaged(5, HASH, hashes, currentVersion = 5))
-        assertFalse(isRoomHeaderDamaged(0, HASH, hashes, currentVersion = 5))
-        assertTrue(isRoomHeaderDamaged(3, HASH, hashes, currentVersion = 5))
-        assertTrue(isRoomHeaderDamaged(6, HASH, hashes, currentVersion = 5))
+        assertFalse(isDamaged(4, HASH_4, hashes, currentVersion = 5))
+        assertFalse(isDamaged(5, HASH_4, hashes, currentVersion = 5))
+        assertFalse(isDamaged(0, HASH_4, hashes, currentVersion = 5))
+        assertTrue(isDamaged(3, HASH_4, hashes, currentVersion = 5))
+        assertTrue(isDamaged(6, HASH_4, hashes, currentVersion = 5))
     }
 
     @Test
     fun versionWithTwoHashes_acceptsBoth() {
         // As when a Room update computes another hash for a version installed databases keep.
-        val hashes = listOf(4 to HASH, 4 to UNKNOWN_HASH)
+        val hashes = HASHES + (4 to UNKNOWN_HASH)
 
-        assertFalse(isRoomHeaderDamaged(4, HASH, hashes, currentVersion = 4))
-        assertFalse(isRoomHeaderDamaged(4, UNKNOWN_HASH, hashes, currentVersion = 4))
+        assertFalse(isDamaged(4, HASH_4, hashes))
+        assertFalse(isDamaged(4, UNKNOWN_HASH, hashes))
     }
 
     private companion object {
-        const val HASH = "bdfb11170140a5d1e2c7675c1126dcb3"
+        const val HASH_3 = "3e67ea8b76032a8049f6f3cad8313660"
+        const val HASH_4 = "bdfb11170140a5d1e2c7675c1126dcb3"
+        val HASHES = listOf(
+            1 to "380113d95e4e8e587e57cce0d98668d1",
+            2 to "67dcaffcb2188a16a46be6fa4f75ba25",
+            3 to HASH_3,
+            4 to HASH_4
+        )
 
-        // A hash no version of this app has had.
+        // A hash no version in HASHES has.
         const val UNKNOWN_HASH = "0123456789abcdef0123456789abcdef"
     }
 }

@@ -78,7 +78,8 @@ class SetAsideDamagedDatabaseDriver(
      * the database damaged, or Room's own values in it are ([hasDamagedRoomHeader]). The check
      * reports what it finds as rows of text, and fails with SQLITE_CORRUPT or SQLITE_NOTADB if it
      * can't read the database's structure, such as in a file that isn't a database. Any other
-     * failure says nothing about damage, so it's thrown.
+     * failure says nothing about damage, so it's thrown, except where [hasDamagedRoomHeader]
+     * counts SQLITE_ERROR.
      *
      * Pages that nothing uses ("Page 37: never used") only waste space: every read still works,
      * and Android's SQLite kept using such a database, so they don't count.
@@ -101,27 +102,30 @@ class SetAsideDamagedDatabaseDriver(
     /**
      * Whether storage has changed Room's schema version or identity hash ([isRoomHeaderDamaged]).
      *
-     * A database without `room_master_table` is left to Room, which checks the tables against
-     * this build's schema and saves the table again (`checkIdentity`, Room 3.0.3). One whose
+     * Without `room_master_table`, Room checks the tables against this build's schema and saves
+     * the table again (`checkIdentity`, Room 3.0.3), but only with a version from 0 to this
+     * build's. Any other one is damage, since every build saves the table. A table whose
      * definition no longer has the column fails Room's own query at every launch, with
-     * SQLITE_ERROR, so that's damage too.
+     * SQLITE_ERROR, so that's damage too, unless the version is a newer build's, which Room
+     * refuses on purpose ([isRoomHeaderDamaged]).
      */
     private fun SQLiteConnection.hasDamagedRoomHeader(): Boolean {
         val version = prepare("PRAGMA user_version").use {
             it.step()
             it.getLong(0)
         }
+        val versions = 0..BlueCardDatabase.VERSION.toLong()
         val hasIdentityTable = prepare(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'room_master_table'"
         ).use { it.step() }
-        if (!hasIdentityTable) return false
+        if (!hasIdentityTable) return version !in versions
         val identityHash = try {
             // Room's own query, from RoomMasterTable, which it keeps internal.
             prepare("SELECT identity_hash FROM room_master_table WHERE id = 42 LIMIT 1").use {
                 if (it.step() && !it.isNull(0)) it.getText(0) else null
             }
         } catch (e: SQLiteException) {
-            if (e.resultCode == SQLITE_ERROR) return true else throw e
+            if (e.resultCode == SQLITE_ERROR) return version <= versions.last else throw e
         }
         return isRoomHeaderDamaged(version, identityHash)
     }

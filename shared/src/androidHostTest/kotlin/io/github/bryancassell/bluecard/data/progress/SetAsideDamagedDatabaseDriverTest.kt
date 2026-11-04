@@ -448,17 +448,21 @@ class SetAsideDamagedDatabaseDriverTest {
         // As a newer build leaves it: a higher version, with its own schema's identity hash.
         changeSavedProgress(
             "PRAGMA user_version = ${BlueCardDatabase.VERSION + 1}",
-            "UPDATE room_master_table SET identity_hash = '0123456789abcdef0123456789abcdef'"
+            "UPDATE room_master_table SET identity_hash = '$UNKNOWN_HASH'"
         )
 
-        val error = runCatching { open().readProgress() }.exceptionOrNull()
+        assertRefusedByRoom()
+    }
 
-        // Room's error for a missing migration, which crashes the app as a bug.
-        assertTrue(
-            "Expected Room's missing migration error, got $error",
-            error is IllegalStateException && error.message.orEmpty().contains("migration")
+    @Test
+    fun newerDatabaseWithAnIdentityTableThisBuildCantRead_isRefusedByRoom() = runTest {
+        // As a newer build's Room could leave it, if it ever defined the table otherwise.
+        changeSavedProgress(
+            "PRAGMA user_version = ${BlueCardDatabase.VERSION + 1}",
+            *RENAME_IDENTITY_COLUMN
         )
-        assertEquals(emptyList<File>(), copies())
+
+        assertRefusedByRoom()
     }
 
     @Test
@@ -483,24 +487,31 @@ class SetAsideDamagedDatabaseDriverTest {
     }
 
     @Test
+    fun nullIdentityHash_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress("UPDATE room_master_table SET identity_hash = NULL")
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
     fun higherVersionWithThisSchema_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        // This build's version with a bit changed by storage.
-        val damaged = changeSavedProgress("PRAGMA user_version = ${BlueCardDatabase.VERSION or 64}")
+        // A version no build has had, as when storage changes a bit of version 4 to make 68.
+        val damaged = changeSavedProgress("PRAGMA user_version = ${BlueCardDatabase.VERSION + 64}")
 
         assertSetAsideWhenItOpens(damaged)
     }
 
     @Test
     fun lowerVersionWithThisSchema_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        val damaged = changeSavedProgress("PRAGMA user_version = ${BlueCardDatabase.VERSION - 1}")
+        // Version 1, whose schema every later version has changed.
+        val damaged = changeSavedProgress("PRAGMA user_version = 1")
 
         assertSetAsideWhenItOpens(damaged)
     }
 
     @Test
     fun olderDatabaseWithAnotherVersion_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        val older = BlueCardDatabase.VERSION - 1
-        helper.createDatabase(older).use {
+        helper.createDatabase(3).use {
             it.execSQL(
                 """
                 INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
@@ -508,73 +519,118 @@ class SetAsideDamagedDatabaseDriverTest {
                 """
             )
         }
-        val damaged = changeFile("PRAGMA user_version = ${older - 1}")
+        val damaged = changeFile("PRAGMA user_version = 2")
 
         assertSetAsideWhenItOpens(damaged)
     }
 
     @Test
     fun identityTableWithoutItsColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        // Its definition changed by storage into SQL that still reads, which Room's query fails.
+        val damaged = changeSavedProgress(*RENAME_IDENTITY_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun missingIdentityTableWithAVersionNoBuildHas_isSetAsideWhenItOpens() = runTest {
         val damaged = changeSavedProgress(
-            "PRAGMA writable_schema = ON",
-            """
-            UPDATE sqlite_master SET sql = replace(sql, 'identity_hash', 'identity_hasj')
-            WHERE name = 'room_master_table'
-            """,
-            "PRAGMA writable_schema = OFF"
+            "DROP TABLE room_master_table",
+            "PRAGMA user_version = ${BlueCardDatabase.VERSION + 64}"
         )
 
         assertSetAsideWhenItOpens(damaged)
     }
 
     @Test
+    fun identityHashQueryThatFailsForAnotherReason_movesNothing() = runTest {
+        saveProgress(open())
+        val busy = SQLException("Error code: 5, message: database is locked")
+        // Fails Room's identity query, which the check runs too, as another app run might.
+        val failing = object : SQLiteDriver {
+            override fun open(fileName: String): SQLiteConnection {
+                val connection = BundledSQLiteDriver().open(fileName)
+                return object : SQLiteConnection by connection {
+                    override fun prepare(sql: String): SQLiteStatement =
+                        if ("FROM room_master_table WHERE" in sql) {
+                            throw busy
+                        } else {
+                            connection.prepare(sql)
+                        }
+                }
+            }
+        }
+        val repository = RoomProgressRepository(
+            open(SetAsideDamagedDatabaseDriver(failing, damagedProgress)),
+            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+        )
+
+        val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
+
+        // A load failure, as for a full disk, rather than damage.
+        assertTrue("Expected an IOException, got $error", error is IOException)
+        assertEquals(emptyList<File>(), copies())
+        assertFalse(damagedProgress.observeNoticePending().first())
+    }
+
+    @Test
     fun versionZero_isLeftToRoom_whichKeepsTheProgress_andSavesTheVersionAgain() = runTest {
-        changeSavedProgress("PRAGMA user_version = 0")
+        saveProgress(open())
+        val saved = savedHeader()
+        changeFile("PRAGMA user_version = 0")
 
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
         assertEquals(emptyList<File>(), copies())
         databases.last().close()
-        assertEquals(BlueCardDatabase.VERSION.toLong() to currentHash(), savedHeader())
+        assertEquals(saved, savedHeader())
     }
 
     @Test
     fun missingIdentityTable_isLeftToRoom_whichKeepsTheProgress_andSavesTheHashAgain() = runTest {
-        changeSavedProgress("DROP TABLE room_master_table")
+        saveProgress(open())
+        val saved = savedHeader()
+        changeFile("DROP TABLE room_master_table")
 
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
         assertEquals(emptyList<File>(), copies())
         databases.last().close()
-        assertEquals(BlueCardDatabase.VERSION.toLong() to currentHash(), savedHeader())
+        assertEquals(saved, savedHeader())
     }
 
     @Test
     fun identityHashes_areTheOnesRoomSaves() = runTest {
-        // Each version's from its schema in shared/schemas/, then this build's as the app saves it.
+        // Each version's from its schema in shared/schemas/.
         val saved = (1..BlueCardDatabase.VERSION).map { version ->
             context.deleteDatabase(BlueCardDatabase.NAME)
             helper.createDatabase(version).close()
             version to savedHeader().second
         }
+        // This build's as the app saves it.
         context.deleteDatabase(BlueCardDatabase.NAME)
         open().readProgress()
         databases.single().close()
+        val (savedVersion, savedHash) = savedHeader()
 
-        (saved + (BlueCardDatabase.VERSION to savedHeader().second)).forEach {
+        assertEquals(BlueCardDatabase.VERSION.toLong(), savedVersion)
+        assertEquals(saved.last().second, savedHash)
+        saved.forEach {
             assertTrue(
                 "BlueCardDatabase.IDENTITY_HASHES needs $it, the hash Room saves for its version.",
                 it in BlueCardDatabase.IDENTITY_HASHES
             )
         }
+        // Any other line keeps an old hash for its version, which no version has now.
+        (BlueCardDatabase.IDENTITY_HASHES - saved.toSet()).forEach { (version, hash) ->
+            assertTrue("$version isn't a version", version in 1..BlueCardDatabase.VERSION)
+            assertTrue(
+                "($version, $hash) has another version's hash",
+                saved.none { it.second == hash }
+            )
+        }
     }
-
-    /** This build's identity hash. */
-    private fun currentHash() =
-        BlueCardDatabase.IDENTITY_HASHES.last { it.first == BlueCardDatabase.VERSION }.second
 
     /** The database file's Room version and identity hash. */
     private fun savedHeader() = BundledSQLiteDriver().open(file.path).use { sqlite ->
@@ -583,6 +639,18 @@ class SetAsideDamagedDatabaseDriverTest {
             it.getText(0)
         }
         sqlite.longFor("PRAGMA user_version") to hash
+    }
+
+    /** Opens the database, as the next app run does, and checks Room refuses it as a bug. */
+    private suspend fun assertRefusedByRoom() {
+        val error = runCatching { open().readProgress() }.exceptionOrNull()
+
+        // Room's error for a missing migration, which crashes the app.
+        assertTrue(
+            "Expected Room's missing migration error, got $error",
+            error is IllegalStateException && error.message.orEmpty().contains("migration")
+        )
+        assertEquals(emptyList<File>(), copies())
     }
 
     /** Saves enough badges to fill several pages, then [changeFile]. */
@@ -618,5 +686,18 @@ class SetAsideDamagedDatabaseDriverTest {
 
     private companion object {
         val VERSION: LocalDate = LocalDate(2026, 1, 1)
+
+        // A hash no version of the database has had.
+        const val UNKNOWN_HASH = "0123456789abcdef0123456789abcdef"
+
+        /** Changes `room_master_table`'s definition, as storage could, into SQL that still reads. */
+        val RENAME_IDENTITY_COLUMN = arrayOf(
+            "PRAGMA writable_schema = ON",
+            """
+            UPDATE sqlite_master SET sql = replace(sql, 'identity_hash', 'identity_hasj')
+            WHERE name = 'room_master_table'
+            """,
+            "PRAGMA writable_schema = OFF"
+        )
     }
 }

@@ -157,11 +157,10 @@ the database version and adding a migration, or existing users' data can't be
 opened. CI fails if the build changes the files, which also catches a Room
 update that computes a different identity hash for the same schema.
 
-Each new version, even one that keeps the schema, also needs its identity hash
-in `BlueCardDatabase.IDENTITY_HASHES`, or the app would take databases of that
-version for damaged ones and set them aside. `SetAsideDamagedDatabaseDriverTest`
-fails until it's there. If a Room update changes a version's hash, keep the old
-line beside the new one, since installed databases keep the old hash.
+Each new version, even one that keeps the schema, also needs a line with its
+identity hash in `BlueCardDatabase.IDENTITY_HASHES`, which
+`SetAsideDamagedDatabaseDriverTest` fails without. After a Room update that
+changes a version's hash, keep its old line too.
 
 **Compose Multiplatform resources** (`shared/src/commonMain/composeResources/`).
 The strings, icons and catalog, which common code can read, unlike Android
