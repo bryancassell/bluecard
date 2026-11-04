@@ -47,6 +47,19 @@ abstract class PhoneNumberFormatContract {
         assertEquals("011 44 20 7946 0958", format("011442079460958"))
     }
 
+    // libphonenumber reads these two as spaces too, and no other whitespace.
+    @Test
+    fun withANoBreakOrIdeographicSpace_isFormatted() = runTest {
+        assertEquals("(214) 555-0142", format("214\u00A0555\u00A00142"))
+        assertEquals("(214) 555-0142", format("214\u3000555\u30000142"))
+    }
+
+    @Test
+    fun withATab_isAsTyped() = runTest {
+        assertEquals("214\t555\t0142", format("214\t555\t0142"))
+        assertEquals("2145550142\t", format("2145550142\t"))
+    }
+
     // Formatted, the words would be dropped, or an extension spelled differently.
     @Test
     fun withWordsInIt_isAsTyped() = runTest {
