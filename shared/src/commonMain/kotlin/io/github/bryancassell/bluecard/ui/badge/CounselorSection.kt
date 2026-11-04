@@ -7,7 +7,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -26,6 +25,7 @@ import io.github.bryancassell.bluecard.resources.badge_detail_no_phone_app
 import io.github.bryancassell.bluecard.resources.ic_call
 import io.github.bryancassell.bluecard.resources.ic_email
 import io.github.bryancassell.bluecard.resources.ic_person
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.rememberOtherAppStarter
 import io.github.bryancassell.bluecard.ui.typedText
@@ -75,7 +75,7 @@ fun CounselorSection(
             )
         }
         // Lines the button's text up with the heading's.
-        TextButton(onClick = onEdit, modifier = Modifier.padding(horizontal = 4.dp)) {
+        BlueCardTextButton(onClick = onEdit, modifier = Modifier.padding(horizontal = 4.dp)) {
             val label = if (counselor == null) {
                 Res.string.badge_detail_add_counselor
             } else {

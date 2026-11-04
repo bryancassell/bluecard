@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +15,7 @@ import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badge_detail_save_report
 import io.github.bryancassell.bluecard.resources.badge_detail_share_report
 import io.github.bryancassell.bluecard.resources.no_file_saver
+import io.github.bryancassell.bluecard.ui.BlueCardOutlinedButton
 import io.github.bryancassell.bluecard.ui.OtherAppStarter
 import io.github.bryancassell.bluecard.ui.rememberCreateDocument
 import io.github.bryancassell.bluecard.ui.rememberOtherApps
@@ -58,7 +58,7 @@ fun ReportButtons(
 /** A button for the report, outlined as the official link is. */
 @Composable
 private fun ReportButton(text: StringResource, onClick: () -> Unit) {
-    OutlinedButton(
+    BlueCardOutlinedButton(
         onClick = onClick,
         colors = detailOutlinedButtonColors(),
         border = detailOutlinedButtonBorder()

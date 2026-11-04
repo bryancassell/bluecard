@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +24,7 @@ import io.github.bryancassell.bluecard.resources.onboarding_not_affiliated
 import io.github.bryancassell.bluecard.resources.onboarding_save
 import io.github.bryancassell.bluecard.resources.onboarding_title
 import io.github.bryancassell.bluecard.resources.save_failed
+import io.github.bryancassell.bluecard.ui.BlueCardButton
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.TaskFailureSnackbarHost
@@ -92,7 +92,7 @@ fun OnboardingScreen(
                     onDone = onSave
                 )
             }
-            Button(
+            BlueCardButton(
                 onClick = onSave,
                 enabled = uiState.canSave,
                 modifier = Modifier.fillMaxWidth()

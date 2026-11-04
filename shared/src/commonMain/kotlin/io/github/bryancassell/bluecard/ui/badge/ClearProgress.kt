@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +13,7 @@ import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.clear_progress
 import io.github.bryancassell.bluecard.resources.clear_progress_confirm
 import io.github.bryancassell.bluecard.resources.removal_message_unearns
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.removalButtonColors
@@ -33,7 +33,7 @@ fun ClearProgress(
     modifier: Modifier = Modifier
 ) {
     var confirming by rememberSaveable { mutableStateOf(false) }
-    TextButton(
+    BlueCardTextButton(
         onClick = { confirming = true },
         colors = removalButtonColors(),
         // Lines the button's text up with the page's, as for Add counselor.

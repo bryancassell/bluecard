@@ -9,7 +9,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -34,6 +33,7 @@ import io.github.bryancassell.bluecard.resources.tracker_row_title
 import io.github.bryancassell.bluecard.resources.tracker_total
 import io.github.bryancassell.bluecard.resources.tracker_value_separator
 import io.github.bryancassell.bluecard.text.lineBreaksAsSpaces
+import io.github.bryancassell.bluecard.ui.BlueCardOutlinedButton
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.typedText
@@ -98,7 +98,10 @@ fun TrackerSection(
             TrackerRowItem(tracker.rowTitle, row, onOpen = { onOpenRow(row) })
         }
         if (tracker.addsRows) {
-            OutlinedButton(onClick = onAddRow, modifier = Modifier.padding(horizontal = 16.dp)) {
+            BlueCardOutlinedButton(
+                onClick = onAddRow,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
                 Icon(
                     painterResource(Res.drawable.ic_add),
                     contentDescription = null,

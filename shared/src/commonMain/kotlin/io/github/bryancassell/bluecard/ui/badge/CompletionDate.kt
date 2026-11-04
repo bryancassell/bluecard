@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -50,7 +49,9 @@ import io.github.bryancassell.bluecard.resources.labeled_date_button
 import io.github.bryancassell.bluecard.resources.requirement_add_date
 import io.github.bryancassell.bluecard.resources.requirement_change_date
 import io.github.bryancassell.bluecard.resources.requirement_remove_date
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import io.github.bryancassell.bluecard.ui.ButtonText
+import io.github.bryancassell.bluecard.ui.MaterialPressFeedback
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -121,7 +122,7 @@ fun EditableDate(
  */
 @Composable
 private fun DateButton(text: String, label: String?, onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
+    BlueCardTextButton(onClick = onClick) {
         ButtonText(
             text = text,
             description = label?.let { stringResource(Res.string.labeled_date_button, text, it) }
@@ -256,12 +257,14 @@ private fun DatePickerSurface(
             // away: opening at its week would depend on Material's private layout sizes, which
             // an update could change.
             Box(Modifier.weight(1f, fill = false)) {
-                DatePicker(
-                    state = state,
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    showModeToggle = calendarFits,
-                    focusRequester = focusRequester.takeIf { calendarFits && calendarShown }
-                )
+                MaterialPressFeedback {
+                    DatePicker(
+                        state = state,
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        showModeToggle = calendarFits,
+                        focusRequester = focusRequester.takeIf { calendarFits && calendarShown }
+                    )
+                }
             }
             DatePickerButtons(state, onConfirm, onDismiss)
         }
@@ -300,14 +303,14 @@ private fun ColumnScope.DatePickerButtons(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        TextButton(onClick = onDismiss) {
+        BlueCardTextButton(onClick = onDismiss) {
             Text(stringResource(Res.string.date_picker_cancel))
         }
         // Null while a typed date isn't valid. One the picker doesn't offer can still be
         // selected when it's restored with an earlier today, as when the system stopped the app
         // and the scout then crossed a date line westward.
         val selected = state.selectedDateMillis?.takeIf(state.selectableDates::isSelectableDate)
-        TextButton(
+        BlueCardTextButton(
             onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
             enabled = selected != null
         ) {

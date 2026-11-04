@@ -17,12 +17,10 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -67,6 +65,8 @@ import io.github.bryancassell.bluecard.resources.merge_title
 import io.github.bryancassell.bluecard.resources.merge_unearns
 import io.github.bryancassell.bluecard.resources.ranks_earned
 import io.github.bryancassell.bluecard.ui.AnnouncedText
+import io.github.bryancassell.bluecard.ui.BlueCardIconButton
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
@@ -89,15 +89,15 @@ fun ImportDialog(onMerge: () -> Unit, onReplace: () -> Unit, onDismiss: () -> Un
         title = { Text(stringResource(Res.string.import_choose_title)) },
         text = { Text(stringResource(Res.string.import_choose_message)) },
         confirmButton = {
-            TextButton(onClick = onMerge) { Text(stringResource(Res.string.import_merge)) }
+            BlueCardTextButton(onClick = onMerge) { Text(stringResource(Res.string.import_merge)) }
         },
         // The dialog lays out these buttons, then the confirm button, wrapping them if they
         // don't fit on one line.
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            BlueCardTextButton(onClick = onDismiss) {
                 Text(stringResource(Res.string.confirm_dialog_cancel))
             }
-            TextButton(onClick = onReplace, colors = removalButtonColors()) {
+            BlueCardTextButton(onClick = onReplace, colors = removalButtonColors()) {
                 Text(stringResource(Res.string.import_replace_all))
             }
         }
@@ -137,7 +137,7 @@ fun MergeDialog(
                             .heightIn(min = 64.dp)
                             .padding(horizontal = 4.dp)
                     ) {
-                        IconButton(onClick = close) {
+                        BlueCardIconButton(onClick = close) {
                             Icon(
                                 painterResource(Res.drawable.ic_close),
                                 contentDescription = stringResource(Res.string.merge_close)
@@ -151,7 +151,7 @@ fun MergeDialog(
                                 .padding(horizontal = 12.dp)
                                 .semantics { heading() }
                         )
-                        TextButton(onClick = onConfirm) {
+                        BlueCardTextButton(onClick = onConfirm) {
                             Text(stringResource(Res.string.merge_confirm))
                         }
                     }

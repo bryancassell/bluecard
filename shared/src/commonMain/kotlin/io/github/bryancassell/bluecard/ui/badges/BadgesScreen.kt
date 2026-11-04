@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -51,6 +50,7 @@ import io.github.bryancassell.bluecard.resources.badges_title
 import io.github.bryancassell.bluecard.resources.ic_close
 import io.github.bryancassell.bluecard.resources.ic_search
 import io.github.bryancassell.bluecard.resources.load_failed
+import io.github.bryancassell.bluecard.ui.BlueCardIconButton
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
 import io.github.bryancassell.bluecard.ui.ScreenMessage
 import io.github.bryancassell.bluecard.ui.rememberSingleLineInput
@@ -268,7 +268,7 @@ private fun SearchField(query: TextFieldState, onClear: () -> Unit) {
                 // field was already focused with the keyboard closed. TalkBack's focus moves
                 // to the field too, even when the field already had input focus (checked with
                 // TalkBack 17 on Android 17).
-                IconButton(onClick = {
+                BlueCardIconButton(onClick = {
                     onClear()
                     query.clearText()
                     focusRequester.requestFocus()
