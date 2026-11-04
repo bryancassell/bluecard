@@ -89,7 +89,7 @@ them.
 3. **Recorded progress survives app updates.** Catalog changes, including new
    requirement versions, ship with app updates and never lose a scout's
    progress or attach it to the wrong requirements.
-4. **Recorded progress survives a phone change**, through Android Auto Backup
+4. **Recorded progress survives a phone change**, through the system's backup
    and the app's own export and import.
 5. **No special permissions.** Saving, sharing, exporting and importing go
    through the system's file picker and share sheet, so the app requests no
@@ -856,15 +856,16 @@ merge it with their data or replace everything with it.
 
 ### Backup
 
-Android [Auto Backup](https://developer.android.com/identity/data/autobackup)
-stays on, so the Room database and DataStore file are backed up to the scout's
-Google Drive and restored on a new phone (req. 4). This is Android's system
-backup, not app sync, and the scout can turn it off in system settings.
+The system's backup (req. 1) stays on, so the Room database and DataStore file
+are restored on a new phone (req. 4).
 
-- **Backup rules include only the databases and DataStore directories**
-  (`res/xml/data_extraction_rules.xml` and `res/xml/backup_rules.xml`). A
-  library that stores data in either directory would be backed up too, so
-  check new dependencies for that.
+- **Android's backup rules include only the databases and DataStore
+  directories** (`res/xml/data_extraction_rules.xml` and
+  `res/xml/backup_rules.xml`).
+- **iOS backs up everything but `tmp`, `Library/Caches` and what's marked
+  excluded.** Reports and new exports go in `tmp`, and damaged progress in a
+  marked folder (`noBackupDirectory`).
+- Check new dependencies for data they store where it's backed up.
 
 ## Testing approach
 
@@ -1040,7 +1041,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [PDF](#pdf-report) | Pages laid out in common code; lines broken and drawn with `StaticLayout` and `PdfDocument`, or Core Text and `UIGraphicsPDFRenderer` | One set of page rules; `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker and share sheet, with a FileProvider on Android; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
 | [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |
-| [Backup](#backup) | Auto Backup of the databases and DataStore only | Records survive a phone change, with no app sync |
+| [Backup](#backup) | The system's backup, without damaged progress or files to share | Records survive a phone change, with no app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator, iOS's writer on the simulator | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |

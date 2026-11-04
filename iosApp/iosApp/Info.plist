@@ -10,6 +10,15 @@
 	     app at launch without it. -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- The link schemes the app asks iOS whether any app can open (canOpenURL), for the
+	     official pages and a counselor's phone number and email address (OtherApps.ios.kt).
+	     iOS answers no for a scheme not listed here. -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>tel</string>
+		<string>mailto</string>
+	</array>
 	<!-- Only the page's color, light or dark, which the empty page that follows it shows until
 	     the profile loads. Apple's guidelines ask for a launch screen nearly identical to the
 	     first screen, without a logo:
