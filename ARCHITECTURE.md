@@ -907,10 +907,10 @@ before launching it, by loading a module of them, as `MainActivityTest` does
 
 ### Room and migration tests
 
-Room repository tests (`RoomProgressRepositoryTest`), migration tests
+Room's repository (`RoomProgressRepositoryTest`, iOS too), migration
 (`MigrationTest`) and damaged database tests
-(`SetAsideDamagedDatabaseDriverTest`) run locally with Robolectric, on the
-SQLite the app bundles (see `BundledSqlitePerSandbox`).
+(`SetAsideDamagedDatabaseDriverTest`) run on the app's bundled SQLite, under
+Robolectric on Android (see `BundledSqlitePerSandbox`).
 
 ### Compose UI and screenshot tests
 
