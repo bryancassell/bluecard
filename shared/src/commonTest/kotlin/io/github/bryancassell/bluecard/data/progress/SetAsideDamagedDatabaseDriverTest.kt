@@ -539,6 +539,41 @@ abstract class SetAsideDamagedDatabaseDriverTest {
     }
 
     @Test
+    fun tableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress(*RENAME_COUNSELOR_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun olderTableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        helper.createDatabase(3).use {
+            it.execSQL(
+                """
+                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
+                VALUES ('camping', '2026-01-01', '2026-03-01')
+                """
+            )
+        }
+        val damaged = changeFile(*RENAME_COUNSELOR_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun foreignKeyToARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress(
+            *changeDefinition(
+                "requirement_progress",
+                "REFERENCES `badge_progress`(`badgeId`)",
+                "REFERENCES `badge_progress`(`badgeIe`)"
+            )
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
     fun missingIdentityTableWithAVersionNoBuildHas_isSetAsideWhenItOpens() = runTest {
         val damaged = changeSavedProgress(
             "DROP TABLE room_master_table",
@@ -639,6 +674,41 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         }
     }
 
+    @Test
+    fun tables_areTheOnesRoomCreates() = runTest {
+        // Each version's from its schema in shared/schemas/.
+        (1..BlueCardDatabase.VERSION).forEach { version ->
+            deleteDatabase()
+            helper.createDatabase(version).use { assertTables(version, it) }
+        }
+        // This build's as the app creates them.
+        deleteDatabase()
+        open().readProgress()
+        databases.single().close()
+        BundledSQLiteDriver().open(file.toString()).use {
+            assertTables(BlueCardDatabase.VERSION, it)
+        }
+    }
+
+    /** Checks that [BlueCardDatabase.TABLES] has [connection]'s tables, as of [version]. */
+    private fun assertTables(version: Int, connection: SQLiteConnection) {
+        // Room's and SQLite's own tables aside.
+        val names = connection.prepare(
+            """
+            SELECT name FROM sqlite_master WHERE type = 'table'
+            AND name NOT IN ('room_master_table', 'sqlite_sequence')
+            """
+        ).use { buildSet { while (it.step()) add(it.getText(0)) } }
+        assertEquals(names, BlueCardDatabase.TABLES.map { it.name }.toSet())
+        BlueCardDatabase.TABLES.forEach {
+            assertEquals(
+                connection.readTableDefinition(it.name),
+                it.definitionAt(version),
+                "BlueCardDatabase.TABLES needs ${it.name} as of version $version"
+            )
+        }
+    }
+
     /** The database file's Room version and identity hash. */
     private fun savedHeader() = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
         val hash = sqlite.prepare("SELECT identity_hash FROM room_master_table").use {
@@ -697,14 +767,20 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         // A hash no version of the database has had.
         const val UNKNOWN_HASH = "0123456789abcdef0123456789abcdef"
 
-        /** Changes `room_master_table`'s definition, as storage could, into SQL that still reads. */
-        val RENAME_IDENTITY_COLUMN = arrayOf(
+        /**
+         * Changes [table]'s definition, as storage could, into SQL that still reads: [old] in it
+         * becomes [new].
+         */
+        fun changeDefinition(table: String, old: String, new: String) = arrayOf(
             "PRAGMA writable_schema = ON",
-            """
-            UPDATE sqlite_master SET sql = replace(sql, 'identity_hash', 'identity_hasj')
-            WHERE name = 'room_master_table'
-            """,
+            "UPDATE sqlite_master SET sql = replace(sql, '$old', '$new') WHERE name = '$table'",
             "PRAGMA writable_schema = OFF"
         )
+
+        val RENAME_IDENTITY_COLUMN =
+            changeDefinition("room_master_table", "identity_hash", "identity_hasj")
+
+        val RENAME_COUNSELOR_COLUMN =
+            changeDefinition("badge_progress", "counselor_name", "counselor_namf")
     }
 }

@@ -75,11 +75,11 @@ class SetAsideDamagedDatabaseDriver(
 
     /**
      * Whether `PRAGMA quick_check` (https://www.sqlite.org/pragma.html#pragma_quick_check) finds
-     * the database damaged, or Room's own values in it are ([hasDamagedRoomHeader]). The check
-     * reports what it finds as rows of text, and fails with SQLITE_CORRUPT or SQLITE_NOTADB if it
-     * can't read the database's structure, such as in a file that isn't a database. Any other
-     * failure says nothing about damage, so it's thrown, except where [hasDamagedRoomHeader]
-     * counts SQLITE_ERROR.
+     * the database damaged, or Room's own values in it are ([hasDamagedRoomHeader]), or its
+     * tables' definitions are ([hasDamagedTables]). The check reports what it finds as rows of
+     * text, and fails with SQLITE_CORRUPT or SQLITE_NOTADB if it can't read the database's
+     * structure, such as in a file that isn't a database. Any other failure says nothing about
+     * damage, so it's thrown, except where [hasDamagedRoomHeader] counts SQLITE_ERROR.
      *
      * Pages that nothing uses ("Page 37: never used") only waste space: every read still works,
      * and Android's SQLite kept using such a database, so they don't count.
@@ -92,15 +92,20 @@ class SetAsideDamagedDatabaseDriver(
             val problems = connection.prepare("PRAGMA quick_check").use { check ->
                 buildList { while (check.step()) add(check.getText(0)) }
             }
-            problems.any { it != "ok" && !UNUSED_PAGE.matches(it) } ||
-                connection.hasDamagedRoomHeader()
+            if (problems.any { it != "ok" && !UNUSED_PAGE.matches(it) }) return@use true
+            val version = connection.prepare("PRAGMA user_version").use {
+                it.step()
+                it.getLong(0)
+            }
+            connection.hasDamagedRoomHeader(version) || connection.hasDamagedTables(version)
         }
     } catch (e: SQLiteException) {
         if (e.isDamage()) true else throw e
     }
 
     /**
-     * Whether storage has changed Room's schema version or identity hash ([isRoomHeaderDamaged]).
+     * Whether storage has changed Room's schema [version] or identity hash
+     * ([isRoomHeaderDamaged]).
      *
      * Without `room_master_table`, Room checks the tables against this build's schema and saves
      * the table again (`checkIdentity`, Room 3.0.3), but only with a version from 0 to this
@@ -109,11 +114,7 @@ class SetAsideDamagedDatabaseDriver(
      * SQLITE_ERROR, so that's damage too, unless the version is a newer build's, which Room
      * refuses on purpose ([isRoomHeaderDamaged]).
      */
-    private fun SQLiteConnection.hasDamagedRoomHeader(): Boolean {
-        val version = prepare("PRAGMA user_version").use {
-            it.step()
-            it.getLong(0)
-        }
+    private fun SQLiteConnection.hasDamagedRoomHeader(version: Long): Boolean {
         val versions = 0..BlueCardDatabase.VERSION.toLong()
         val hasIdentityTable = prepare(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'room_master_table'"
@@ -129,6 +130,26 @@ class SetAsideDamagedDatabaseDriver(
         }
         return isRoomHeaderDamaged(version, identityHash)
     }
+
+    /**
+     * Whether storage has changed a table's definition into SQL that still reads, such as
+     * `counselor_name` into `counselor_namf` (#408). `quick_check` checks the b-trees, not names,
+     * and Room compares the tables with its schema only when it creates or migrates the database,
+     * or finds no `room_master_table` (Room 3.0.3). So in a database of this build's version,
+     * Room's read of the table fails at every launch, since it looks the columns up by name. Each
+     * statement that names the column, or writes through a changed foreign key, fails too, with
+     * SQLITE_ERROR. An older version fails Room's check after migrating, also at every launch.
+     *
+     * Those errors can also come from a bug, and only their message text tells them apart. A
+     * definition that differs from the one Room made for [version] comes from storage alone. Only
+     * what statements name is compared: a changed key column or index makes SQLite report the
+     * schema as SQLITE_CORRUPT. Room checks a version-0 database's tables itself, after creating
+     * any that are missing, and refuses a newer build's on purpose ([isRoomHeaderDamaged]).
+     */
+    private fun SQLiteConnection.hasDamagedTables(version: Long): Boolean =
+        version in 1..BlueCardDatabase.VERSION.toLong() && BlueCardDatabase.TABLES.any {
+            readTableDefinition(it.name) != it.definitionAt(version.toInt())
+        }
 
     /**
      * Limits the write-ahead log as Android's SQLite does on each of its connections (its
