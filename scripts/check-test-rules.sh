@@ -50,13 +50,13 @@ ios_tests=(
     data/Documents.ios.kt:FileCoordinatorDocumentsTest
     data/DocumentUri.ios.kt:FileUrlTest
     ui/OtherApps.ios.kt:IosOtherAppsTest
-    ui/badge/CompletionDate.ios.kt:PickerLayoutDirectionTest
 )
 # These files have no test, for the reason above each, and leave the list when they get one.
 ios_untested=(
     # Composables, which nothing tests on iOS until Compose UI tests run there (#355). A change to
     # one is checked on the simulator.
     ui/StringsLanguage.ios.kt
+    ui/badge/CompletionDate.ios.kt
     ui/data/ImportDialogs.ios.kt
     ui/navigation/BlueCardNavDisplay.ios.kt
     # MainViewController() shows the app's composables, as above, and IosModuleTest starts Koin

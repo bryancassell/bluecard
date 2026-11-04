@@ -3,10 +3,6 @@ package io.github.bryancassell.bluecard.text
 import io.github.artificialpb.bignum.BigDecimal
 import io.github.artificialpb.bignum.RoundingMode
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.number
-import platform.Foundation.NSCalendar
-import platform.Foundation.NSCalendarIdentifierGregorian
-import platform.Foundation.NSDateComponents
 import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSDateFormatterMediumStyle
 import platform.Foundation.NSDateFormatterNoStyle
@@ -17,11 +13,9 @@ import platform.Foundation.NSLocaleDecimalSeparator
 import platform.Foundation.NSLocaleLanguageDirectionRightToLeft
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterDecimalStyle
-import platform.Foundation.NSTimeZone
 import platform.Foundation.canonicalLanguageIdentifierFromString
 import platform.Foundation.characterDirectionForLanguage
 import platform.Foundation.localeIdentifier
-import platform.Foundation.timeZoneForSecondsFromGMT
 
 /**
  * [LocaleFormats] in [locale], with Foundation's formatters. The screens get one in the strings'
@@ -31,14 +25,7 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
     // Each is made when it's first needed, as on Android. Apple documents its date and number
     // formatters as thread-safe since iOS 7, so one of each serves every call.
 
-    // The Gregorian calendar, which the dates scouts record are in, whatever the locale's own
-    // calendar is, as Android's java.time writes them. Iran's, for one, is the Persian calendar,
-    // so without this, en_IR writes Apr 15, 2026 as "Farvardin 26, 1405 AP".
-    private val gregorian by lazy {
-        NSCalendar(calendarIdentifier = NSCalendarIdentifierGregorian)!!.apply {
-            timeZone = NSTimeZone.timeZoneForSecondsFromGMT(0)
-        }
-    }
+    private val gregorian by lazy { gregorianCalendar() }
 
     private val dateFormatter by lazy {
         NSDateFormatter().apply {
@@ -63,14 +50,8 @@ class IosLocaleFormats(private val locale: NSLocale) : LocaleFormats {
         NSListFormatter().apply { locale = this@IosLocaleFormats.locale }
     }
 
-    override fun formatDate(date: LocalDate): String {
-        val day = NSDateComponents().apply {
-            year = date.year.toLong()
-            month = date.month.number.toLong()
-            this.day = date.day.toLong()
-        }
-        return dateFormatter.stringFromDate(gregorian.dateFromComponents(day)!!)
-    }
+    override fun formatDate(date: LocalDate): String =
+        dateFormatter.stringFromDate(date.toNSDate(gregorian))
 
     // Rounded down here, exactly, since the formatter may round in binary floating point, where
     // 0.29 is just under 0.29 and would round down to 0.28. Rounded to the nearest, as it is by
