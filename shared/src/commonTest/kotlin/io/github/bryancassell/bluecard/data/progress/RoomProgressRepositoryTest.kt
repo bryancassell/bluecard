@@ -47,15 +47,12 @@ import okio.Path.Companion.toPath
 /**
  * Runs the repository contract against Room on the SQLite the app bundles (BundledSQLiteDriver),
  * and checks how Room's errors reach the scout and that writes outlive their callers. Each
- * platform's test runs it with that platform's database builders, since Room's errors, its
- * lock file and the threads it writes on are the platform's own.
+ * platform's test runs it with that platform's in-memory database builder, since Room's errors,
+ * its lock file and the threads it writes on are the platform's own.
  */
 abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     /** A builder for a database that's only in memory. */
     protected abstract fun inMemoryDatabaseBuilder(): RoomDatabase.Builder<BlueCardDatabase>
-
-    /** A builder for a database in [file]. */
-    protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
 
     /** The name of the thread that calls it, with an ID no other running thread has. */
     protected abstract fun currentThread(): String

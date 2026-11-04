@@ -1,6 +1,7 @@
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.variant.ScopedArtifacts
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 // The code the Android app and, later, the iOS app share (ARCHITECTURE.md, Architecture
 // approach).
@@ -141,6 +142,9 @@ kotlin {
             implementation(project(":testing"))
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            // MigrationTestHelper, which checks each database migration against the committed
+            // schemas.
+            implementation(libs.androidx.room3.testing)
         }
 
         getByName("androidHostTest").dependencies {
@@ -150,9 +154,6 @@ kotlin {
             implementation(libs.robolectric)
             // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
             implementation(libs.androidx.lifecycle.viewmodel.testing)
-            // MigrationTestHelper, which checks each database migration against the committed
-            // schemas.
-            implementation(libs.androidx.room3.testing)
             implementation(libs.androidx.junit)
             // Compose UI tests bring in an older Espresso that fails on SDK 37 under Robolectric.
             implementation(libs.androidx.espresso.core)
@@ -181,6 +182,13 @@ dependencies {
     // Android Studio's Compose previews need it at runtime. It isn't passed on to :app, which
     // adds it to debug builds only.
     "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
+    constraints {
+        // iOS's MigrationTestHelper reads the schemas with kotlinx-serialization-json-okio, which
+        // room3-testing 3.0.3 asks for at 1.8.1. Gradle raises kotlinx-serialization-json to this
+        // build's version but not this separate module, and 1.8.1's reader uses a class 1.12.0
+        // doesn't have, so the iOS test binary failed to link. This raises it without adding it.
+        "commonTestImplementation"(libs.kotlinx.serialization.json.okio)
+    }
 }
 
 // The generated Res class, with the strings, icons and catalog in
@@ -281,6 +289,19 @@ tasks.withType<Test>().configureEach {
     }
 }
 
+// iOS's MigrationTestHelper reads each database version's schema from a folder, and a test on the
+// simulator starts in the simulator's own data folder, so it gets the schemas' absolute path. The
+// simulator passes on a variable whose name has the SIMCTL_CHILD_ prefix, without it
+// (`xcrun simctl help spawn`). The schemas are an input by their relative path, as the bundled
+// SQLite library is above, and the absolute path isn't one. Room's copy of a new version's schema
+// declares no outputs, so the input doesn't order the tests after it; mustRunAfter does.
+tasks.withType<KotlinNativeSimulatorTest>().configureEach {
+    val schemas = layout.projectDirectory.dir("schemas")
+    environment("SIMCTL_CHILD_BLUECARD_SCHEMAS", schemas.asFile.absolutePath, tracked = false)
+    inputs.dir(schemas).withPropertyName("schemas").withPathSensitivity(PathSensitivity.RELATIVE)
+    mustRunAfter("copyRoomSchemas")
+}
+
 // :app's coverage gate counts this module's classes, with the coverage that both modules' local
 // tests record (app/build.gradle.kts). They're handed over as Gradle's guide to sharing outputs
 // between projects describes, rather than :app reading this module's tasks or build folder:
@@ -306,14 +327,16 @@ val coverageClasses = tasks.register<Sync>("coverageClasses") {
 }
 androidComponents {
     onVariants { variant ->
-        // MigrationTestHelper reads each database version's schema from assets. The Room plugin
-        // adds the schemas to device tests' assets only, and migration tests run locally, so
-        // the host tests' assets carry them too; the library's own assets don't, so the app
-        // doesn't ship them. Nothing makes merging assets wait for Room to copy a new database
-        // version's schema here, so the first test run after a version bump can miss it, and
-        // MigrationTest fails until it runs again (#96). Room's schema copy declares no
-        // outputs, so Gradle can't order other tasks after it, and working around that needed
-        // more build code than a rerun is worth.
+        // Android's MigrationTestHelper reads each database version's schema from assets. The
+        // Room plugin adds the schemas to device tests' assets only, and migration tests run
+        // locally, so the host tests' assets carry them too; the library's own assets don't, so
+        // the app doesn't ship them. Nothing makes merging assets wait for Room to copy a new
+        // database version's schema here, so the first test run after a version bump can miss
+        // it, and Android's tests that read the schemas, AndroidMigrationTest and
+        // AndroidSetAsideDamagedDatabaseDriverTest, fail until they run again (#96); iOS's read
+        // the folder. Room's schema copy declares no outputs, so Gradle can't order the merge
+        // after it by its inputs, and working around that needed more build code than a rerun is
+        // worth.
         variant.hostTests.values.forEach { it.sources.assets?.addStaticSourceDirectory("schemas") }
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
             .use(coverageClasses)

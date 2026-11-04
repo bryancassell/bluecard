@@ -1,17 +1,13 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import okio.Path
 
-/** [FileDamagedProgressRepositoryTest] with java.io.File, on the JVM. */
+/** [FileDamagedProgressRepositoryTest] on the JVM. */
 class AndroidFileDamagedProgressRepositoryTest : FileDamagedProgressRepositoryTest() {
-    override fun setWritable(path: Path, writable: Boolean) =
-        File(path.toString()).setWritable(writable)
-
     // Okio's JVM file system names the directory (Okio 3.18.2).
     override fun cantCreateDirectoryMessage(directory: Path) =
         "failed to create directory: $directory"
