@@ -45,7 +45,7 @@ Run these from the repository root.
 | Command | What it does |
 |---|---|
 | `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. On a Mac, it also runs the iOS tests; Xcode builds the iOS app's framework. CI runs it. |
-| `./gradlew :shared:iosSimulatorArm64Test` | Runs the iOS tests (`shared/src/iosTest`) on an iOS simulator. |
+| `./gradlew :shared:iosSimulatorArm64Test` | Runs the iOS and common tests (`shared/src/iosTest`, `shared/src/commonTest`) on an iOS simulator. CI's iOS job runs it. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
@@ -121,16 +121,18 @@ Compose, and kotlinx.serialization (for `@Serializable` navigation keys).
 **Common code** (`shared/src/commonMain/kotlin/`), which iOS runs too, may call
 only common APIs. Compiling it for iOS checks that, and any computer can, so
 `./gradlew build` does, in CI too. Linking and running the iOS tests need a Mac
-with Xcode, so CI's Linux runner skips them until
-[#355](https://github.com/bryancassell/bluecard/issues/355). `build` leaves
-linking the iOS app's framework to Xcode (`shared/build.gradle.kts` says why).
+with Xcode, so CI's Linux runner skips them, and its iOS job runs them
+([Continuous integration](#continuous-integration)). `build` leaves linking the
+iOS app's framework to Xcode (`shared/build.gradle.kts` says why).
 
 **The iOS app** (`iosApp/`) is built by Xcode. Its first build phase runs
 `./gradlew :shared:embedAndSignAppleFrameworkForXcode`, which builds `:shared`
 as the `Shared` framework for that build's configuration and device. Xcode
 doesn't read `~/.zshrc`, so the phase runs Gradle with Android Studio's JDK
 unless `JAVA_HOME` is set. Xcode picks up Swift files added to
-`iosApp/iosApp/` without a change to the project file.
+`iosApp/iosApp/` without a change to the project file. Its `iosApp` scheme is
+shared (`iosApp.xcodeproj/xcshareddata/xcschemes/`), so `xcodebuild -scheme
+iosApp` finds it in CI even if Xcode's automatic schemes are turned off.
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
@@ -267,9 +269,10 @@ it.
   the rest stay with the tests that use them.
 - **iOS tests** (`shared/src/iosTest`) test code that only iOS runs, with
   `kotlin.test`, on an iOS simulator, which needs Xcode:
-  `./gradlew :shared:iosSimulatorArm64Test`. Nothing measures their coverage,
-  and CI doesn't run them yet
-  ([#355](https://github.com/bryancassell/bluecard/issues/355)). Gradle runs
+  `./gradlew :shared:iosSimulatorArm64Test`, which runs the common tests
+  (`shared/src/commonTest`) there too, as CI's iOS job does. Nothing measures
+  their coverage, so the build checks that each iOS file has a test instead
+  (see [Testing rules the build enforces](#testing-rules-the-build-enforces)). Gradle runs
   them on a simulator that isn't booted, which has none of iOS's system
   services: file coordination fails, and a type can't be looked up by its MIME
   type. Code that needs one takes a stand-in in tests, as
@@ -320,6 +323,7 @@ when it can detect that one is broken:
 | New code has at least 80% line coverage | Approximated as: every class in `:app` and `:shared` has at least 80% line coverage from both modules' local tests (task `jacocoDebugCoverageVerification`). Both modules' tests count, since `MainActivityTest` is the only test that reaches some of `:shared`'s classes, such as `BlueCardNavDisplay`. Generated code (Android and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in either module's local tests. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
+| iOS code has tests, since nothing measures its coverage | Every file in `shared/src/iosMain` needs a test in the same package of `iosTest` named after it (`CFStrings.kt` has `CFStringsTest`, `Lock.ios.kt` has `LockTest`), or the test `scripts/check-test-rules.sh`'s `ios_tests` names for it. A `commonTest` test doesn't count, since it may test only common code. `ios_untested` lists the files that have none, each with its reason. The check fails when a listed file gets a test or either list names a file that's gone. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
 
 The other rules need a person to judge, so they are checked in code review:
@@ -752,15 +756,29 @@ debug build's backup includes them along with the scout's data.
 ## Continuous integration
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on
-pushes to `main`. Two jobs run side by side, and both must pass before a pull
+pushes to `main`. Three jobs run side by side, and all must pass before a pull
 request can merge. The pull request must also be up to date with `main`, so
 the checks have run on what `main` will have after the merge; if `main` has
 moved, merge it into the branch and wait for the checks again:
 
 - **Build** runs `./gradlew build`, the same command as locally, then checks
   that it left the [Room schemas](#how-the-pieces-fit-together) unchanged. It
-  compiles the iOS code but, on Linux, can't link it or run its tests
-  ([#355](https://github.com/bryancassell/bluecard/issues/355)).
+  compiles the iOS code but, on Linux, can't link it or run its tests.
+- **iOS** runs on macOS: the common and iOS tests on the simulator, with
+  `./gradlew :shared:iosSimulatorArm64Test`, then a build of the iOS app for
+  the simulator, as in [Running the iOS app](#running-the-ios-app). It caches
+  `~/.konan`, Kotlin/Native's compiler and the caches it builds of each
+  library, keyed on the version catalog. Restoring that 439 MB entry cut the
+  job from 11m39s to 6m35s in PR #401, since the tests' link took 26 seconds
+  instead of 6 minutes. It uses GitHub's `macos-26` image and
+  selects its Xcode 26.6, so the Xcode CI builds with changes only in a pull
+  request. Xcode 27 is on GitHub's `xcode-27` image, which GitHub calls a
+  preview that "can be unstable" and may queue
+  ([announcement](https://github.com/actions/runner-images/issues/14404)), so
+  move to Xcode 27 once an image that's out of preview has it. Until then, CI
+  runs the tests on iOS 26 and a Mac with Xcode 27 on iOS 27, so a test of
+  text layout or formatting that fails on only one may be a difference between
+  iOS versions.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to

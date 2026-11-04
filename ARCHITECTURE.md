@@ -56,6 +56,7 @@ own documentation says so, and each such claim links to the page.
   - [Room and migration tests](#room-and-migration-tests)
   - [Compose UI and screenshot tests](#compose-ui-and-screenshot-tests)
   - [Catalog, report and backup tests](#catalog-report-and-backup-tests)
+  - [iOS tests](#ios-tests)
   - [Instrumented tests in CI](#instrumented-tests-in-ci)
 - [Release build](#release-build)
 - [Debug builds](#debug-builds)
@@ -123,9 +124,9 @@ part of the app.
 | An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `shared/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. The iOS app's `Info.plist` has no usage descriptions (`NS…UsageDescription`), which iOS requires before it asks for a permission. |
-| The app runs on every Android version from `minSdk` up and every iOS version from 17 up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. Xcode refuses Swift calls to APIs newer than iOS 17; code review checks Kotlin's calls to iOS APIs. |
+| The app runs on every Android version from `minSdk` up and every iOS version from 17 up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. Xcode refuses Swift calls to APIs newer than iOS 17 **(CI)**; code review checks Kotlin's calls to iOS APIs. |
 | A new tracker needs only catalog data (req. 7) | Tests render and store trackers defined only in test catalog data (`TrackerEntryViewModelTest`, `MainActivityTest`) **(CI)**. |
-| The code stays testable as it grows (req. 8) | Every class, except generated code, `@Preview` functions, `PdfDocumentWriter` (which only runs on a device) and iOS code, has at least 80% line coverage from local tests **(CI)**. iOS code's classes have tests on the iOS simulator, whose coverage nothing measures ([#355](https://github.com/bryancassell/bluecard/issues/355)). Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
+| The code stays testable as it grows (req. 8) | Every class, except generated code, `@Preview` functions, `PdfDocumentWriter` (which only runs on a device) and iOS code, has at least 80% line coverage from local tests **(CI)**. Each iOS code file has a test on the iOS simulator, or a reason the build lists **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
 
 ## Architecture approach
@@ -945,8 +946,15 @@ tests check the layout and drawing (`ReportLayoutTest`) and use a fake PDF
 writer (`PdfReportRepositoryTest`), and an instrumented test
 (`PdfDocumentWriterTest`) writes a real PDF and reads it back.
 `PdfDocumentWriter` is left out of the per-class coverage check, as are the
-classes Room generates. iOS's are checked on the simulator
-(`CoreTextTypesetterTest`, `UIGraphicsPdfWriterTest`).
+classes Room generates.
+
+### iOS tests
+
+Nothing measures iOS code's coverage, since JaCoCo and
+[Kover](https://github.com/Kotlin/kotlinx-kover) measure only JVM code. So
+each `iosMain` file has a simulator test instead, which
+`scripts/check-test-rules.sh` checks for by name, apart from the files it
+lists with a reason, such as composables until Compose UI tests run on iOS.
 
 ### Instrumented tests in CI
 
@@ -1043,7 +1051,8 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |
 | [Backup](#backup) | The system's backup, without damaged progress or files to share | Records survive a phone change, with no app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
-| [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator, iOS's writer on the simulator | `PdfDocument` doesn't run under Robolectric |
+| [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator | `PdfDocument` doesn't run under Robolectric |
+| [iOS tests](#ios-tests) | A simulator test for each `iosMain` file, or a listed reason | Nothing measures iOS code's coverage |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked by hand | The app optimization guide recommends it |
 | [Release signing](#release-build) | `apksigner` signs when publishing, and Gradle builds unsigned; test builds are GitHub pre-releases | The key's password never reaches a Gradle build |

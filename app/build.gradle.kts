@@ -227,7 +227,8 @@ val jacocoDebugCoverageReport = tasks.register<JacocoReport>("jacocoDebugCoverag
 // Testing rules from CLAUDE.md that a text search can catch.
 val checkTestRules = tasks.register<Exec>("checkTestRules") {
     group = "verification"
-    description = "Fails on skipped tests, logic classes without tests, or mocking libraries."
+    description =
+        "Fails on skipped tests, logic classes or iOS files without tests, or mocking libraries."
     commandLine(rootProject.file("scripts/check-test-rules.sh"))
 }
 
