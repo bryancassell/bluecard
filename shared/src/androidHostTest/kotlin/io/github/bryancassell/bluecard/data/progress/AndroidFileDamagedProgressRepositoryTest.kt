@@ -9,14 +9,10 @@ import okio.Path
 
 /** [FileDamagedProgressRepositoryTest] with java.io.File, on the JVM. */
 class AndroidFileDamagedProgressRepositoryTest : FileDamagedProgressRepositoryTest() {
-    override fun setWritable(path: Path, writable: Boolean) {
-        check(File(path.toString()).setWritable(writable)) { "Couldn't change $path" }
-    }
+    override fun setWritable(path: Path, writable: Boolean) =
+        File(path.toString()).setWritable(writable)
 
-    override fun setLastModified(path: Path, millis: Long) {
-        check(File(path.toString()).setLastModified(millis)) { "Couldn't date $path" }
-    }
-
+    // Okio's JVM file system names the directory (Okio 3.18.2).
     override fun cantCreateDirectoryMessage(directory: Path) =
         "failed to create directory: $directory"
 

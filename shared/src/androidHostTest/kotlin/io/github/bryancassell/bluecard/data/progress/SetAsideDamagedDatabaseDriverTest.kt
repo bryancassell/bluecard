@@ -247,7 +247,7 @@ class SetAsideDamagedDatabaseDriverTest {
         damagedProgress.recordDamage()
         // As the database's last save and the damage found in it could be, so the new database
         // Room makes is newer than the record.
-        dateInOrder(older = file, newer = damageFile)
+        dateInOrder(older = file.toOkioPath(), newer = damageFile.toOkioPath())
         // Stops the set-aside and the record's deletion, as long as the tests don't run as root.
         folder.setWritable(false)
         val progress = try {
@@ -287,7 +287,7 @@ class SetAsideDamagedDatabaseDriverTest {
         saveProgress(open())
         damagedProgress.recordDamage()
         // As when a set-aside couldn't delete the record, and Room made this database after it.
-        dateInOrder(older = damageFile, newer = file)
+        dateInOrder(older = damageFile.toOkioPath(), newer = file.toOkioPath())
 
         val progress = open().readProgress()
 

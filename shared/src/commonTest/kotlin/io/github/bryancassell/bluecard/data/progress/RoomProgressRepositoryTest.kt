@@ -58,7 +58,8 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     /** An ID for the thread that calls it, which no other running thread has. */
     protected abstract fun currentThreadId(): Long
 
-    private val folder = TemporaryDirectory()
+    // Made only for the tests that use files.
+    private val folder = lazy { TemporaryDirectory() }
     private val databases = mutableListOf<BlueCardDatabase>()
 
     private fun open(
@@ -92,7 +93,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
     // A folder where the database file should be, so SQLite can't open it.
     private fun unopenableRepository(): RoomProgressRepository {
-        val file = folder.path / BlueCardDatabase.NAME
+        val file = folder.value.path / BlueCardDatabase.NAME
         systemFileSystem.createDirectories(file)
         return RoomProgressRepository(open(databaseBuilder(file)), externalScope)
     }
@@ -100,7 +101,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun readingAndWriting_whenRoomCantLockTheDatabase_throwIOException() = runTest {
         // A folder where Room's lock file goes, so Room can't create it.
-        val file = folder.path / BlueCardDatabase.NAME
+        val file = folder.value.path / BlueCardDatabase.NAME
         systemFileSystem.createDirectories("$file.lck".toPath())
         val repository = RoomProgressRepository(open(databaseBuilder(file)), externalScope)
 
@@ -116,7 +117,7 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun observing_whenMigrationIsMissing_throwsTheBugUnwrapped() = runTest {
         // A database from a newer app version, which Room has no migration down from.
-        val file = folder.path / BlueCardDatabase.NAME
+        val file = folder.value.path / BlueCardDatabase.NAME
         BundledSQLiteDriver().open(file.toString()).use { it.execSQL("PRAGMA user_version = 1000") }
         val repository = RoomProgressRepository(open(databaseBuilder(file)), externalScope)
 
@@ -475,8 +476,11 @@ abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
     @AfterTest
     fun closeDatabases() {
-        externalScope.cancel()
-        databases.forEach { it.close() }
-        folder.delete()
+        try {
+            externalScope.cancel()
+            databases.forEach { it.close() }
+        } finally {
+            if (folder.isInitialized()) folder.value.delete()
+        }
     }
 }

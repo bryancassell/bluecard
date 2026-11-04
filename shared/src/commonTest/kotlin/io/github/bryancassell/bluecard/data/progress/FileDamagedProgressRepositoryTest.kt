@@ -9,7 +9,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -30,18 +29,16 @@ import okio.Path.Companion.toPath
 /**
  * Runs the repository contract against files in a temporary folder, and checks how damaged
  * progress is set aside. Each platform's test runs it with that platform's way of changing a
- * file's permissions and times, which common code has none of.
+ * file's permissions, which common code has none of.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
     /**
-     * Lets the owner write in [path], or stops them. Stopping them keeps files in a folder from
-     * being made, moved or deleted, as long as the tests don't run as root, which CI doesn't.
+     * Lets the owner write in [path], or stops them, returning whether it could. Stopping them
+     * keeps files in a folder from being made, moved or deleted, as long as the tests don't run
+     * as root, which CI doesn't.
      */
-    protected abstract fun setWritable(path: Path, writable: Boolean)
-
-    /** Sets when [path] was last changed, in milliseconds since 1970. */
-    protected abstract fun setLastModified(path: Path, millis: Long)
+    protected abstract fun setWritable(path: Path, writable: Boolean): Boolean
 
     /** The message of Okio's error for [directory], which can't be made. */
     protected abstract fun cantCreateDirectoryMessage(directory: Path): String
@@ -103,10 +100,12 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
 
     /** Runs [action] while the owner can't write in [path]. Inline, so [action] can suspend. */
     private inline fun <T> whileReadOnly(path: Path, action: () -> T): T {
-        setWritable(path, false)
+        check(setWritable(path, false)) { "Couldn't make $path read-only" }
         try {
             return action()
         } finally {
+            // Unchecked, so it can't hide the test's own failure, such as a file that's gone. A
+            // folder left read-only fails deleteFiles.
             setWritable(path, true)
         }
     }
@@ -219,16 +218,6 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
         assertEquals("DamagedProgress", warning.tag)
         assertEquals("Couldn't delete $damageFile", warning.message)
         assertTrue(warning.error is IOException, "${warning.error}")
-    }
-
-    /**
-     * Dates [older] two minutes ago and [newer] one minute ago, as files written at two launches
-     * would be, so their times can't tie.
-     */
-    private fun dateInOrder(older: Path, newer: Path) {
-        val now = Clock.System.now().toEpochMilliseconds()
-        setLastModified(older, now - 120_000)
-        setLastModified(newer, now - 60_000)
     }
 
     /** As when a set-aside couldn't delete the record and Room made a new database later. */

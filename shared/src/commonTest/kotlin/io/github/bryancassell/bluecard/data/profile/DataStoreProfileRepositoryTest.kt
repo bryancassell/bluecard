@@ -64,8 +64,11 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
 
     @AfterTest
     fun closeDataStores() {
-        runBlocking { jobs.forEach { it.cancelAndJoin() } }
-        folder.delete()
+        try {
+            runBlocking { jobs.forEach { it.cancelAndJoin() } }
+        } finally {
+            folder.delete()
+        }
     }
 
     @Test
