@@ -1,20 +1,42 @@
 package io.github.bryancassell.bluecard.ui.badge
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.unit.LayoutDirection
-import io.github.bryancassell.bluecard.text.isRightToLeft
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.uikit.LocalUIViewController
+import io.github.bryancassell.bluecard.resources.Res
+import io.github.bryancassell.bluecard.resources.strings_language
+import io.github.bryancassell.bluecard.text.currentRegion
+import io.github.bryancassell.bluecard.text.stringsLocale
+import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.stringResource
 
 /**
- * The direction of Compose's current locale, the first preferred language, which Material 3 reads
- * on iOS. The app makes it the strings' locale (`useStringsLanguageByDefault`).
+ * iOS's own calendar, in a sheet from the bottom of the window ([DatePickerSheet]), in the
+ * strings' locale ([stringsLocale]), as the page's dates are. The sheet shows while this is
+ * composed, so it closes once the page stops asking.
  */
 @Composable
-@ReadOnlyComposable
-internal actual fun pickerLayoutDirection(): LayoutDirection =
-    layoutDirectionOf(Locale.current.toLanguageTag())
-
-/** The direction [language], a BCP 47 tag such as "fa" or "pa-Arab", is written in. */
-internal fun layoutDirectionOf(language: String): LayoutDirection =
-    if (isRightToLeft(language)) LayoutDirection.Rtl else LayoutDirection.Ltr
+internal actual fun CompletionDatePicker(
+    initial: LocalDate,
+    today: LocalDate,
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val viewController = LocalUIViewController.current
+    val stringsLanguage = stringResource(Res.string.strings_language)
+    val currentOnConfirm by rememberUpdatedState(onConfirm)
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
+    DisposableEffect(viewController) {
+        val sheet = DatePickerSheet(
+            initial = initial,
+            today = today,
+            locale = stringsLocale(stringsLanguage, currentRegion()),
+            onConfirm = { currentOnConfirm(it) },
+            onCancel = { currentOnDismiss() }
+        )
+        sheet.show(over = viewController)
+        onDispose(sheet::close)
+    }
+}
