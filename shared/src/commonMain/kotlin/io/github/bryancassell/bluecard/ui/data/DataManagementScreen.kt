@@ -10,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,6 +54,7 @@ import io.github.bryancassell.bluecard.resources.import_read_failed
 import io.github.bryancassell.bluecard.resources.merge_done
 import io.github.bryancassell.bluecard.resources.no_file_saver
 import io.github.bryancassell.bluecard.resources.save_failed
+import io.github.bryancassell.bluecard.ui.BlueCardOutlinedButton
 import io.github.bryancassell.bluecard.ui.ButtonText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.MessageSnackbarHost
@@ -244,7 +244,7 @@ private fun Section(
             .semantics { heading() }
     )
     Text(text = stringResource(description), style = MaterialTheme.typography.bodyMedium)
-    OutlinedButton(onClick = onClick, enabled = enabled, colors = colors) {
+    BlueCardOutlinedButton(onClick = onClick, enabled = enabled, colors = colors) {
         ButtonText(
             text = stringResource(button),
             description = buttonDescription?.let { stringResource(it) }

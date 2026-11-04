@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import io.github.bryancassell.bluecard.resources.edit_profile_save
 import io.github.bryancassell.bluecard.resources.edit_profile_title
 import io.github.bryancassell.bluecard.resources.load_failed
 import io.github.bryancassell.bluecard.resources.save_failed
+import io.github.bryancassell.bluecard.ui.BlueCardButton
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.ScreenLoadingIndicator
@@ -132,7 +132,7 @@ private fun Fields(
             // Done only closes the keyboard, where Onboarding's also saves: as on the
             // counselor's page, the scout decides when to save, since saving closes the page.
             UnitNumberField(unitNumber = unitNumber)
-            Button(
+            BlueCardButton(
                 onClick = {
                     onSave()
                     // Done editing: closes the keyboard.

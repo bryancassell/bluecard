@@ -16,11 +16,9 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.then
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +53,8 @@ import io.github.bryancassell.bluecard.resources.tracker_entry_no_date
 import io.github.bryancassell.bluecard.resources.tracker_entry_save
 import io.github.bryancassell.bluecard.resources.tracker_entry_unavailable
 import io.github.bryancassell.bluecard.resources.tracker_row_title
+import io.github.bryancassell.bluecard.ui.BlueCardButton
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
@@ -307,7 +307,7 @@ private fun TrackerEntryButtons(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (uiState.hasSavedEntry) {
-            TextButton(
+            BlueCardTextButton(
                 onClick = { confirmingDelete = true },
                 enabled = uiState.canDelete,
                 colors = removalButtonColors()
@@ -316,7 +316,7 @@ private fun TrackerEntryButtons(
             }
         }
         Spacer(Modifier.weight(1f))
-        Button(
+        BlueCardButton(
             onClick = {
                 onSave()
                 // Done editing: closes the keyboard.

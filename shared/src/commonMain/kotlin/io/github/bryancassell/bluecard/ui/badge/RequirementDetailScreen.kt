@@ -16,7 +16,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -63,6 +62,7 @@ import io.github.bryancassell.bluecard.resources.requirement_time_in_rank_eligib
 import io.github.bryancassell.bluecard.resources.requirement_time_in_rank_no_date
 import io.github.bryancassell.bluecard.resources.requirement_time_in_rank_not_earned
 import io.github.bryancassell.bluecard.resources.save_failed
+import io.github.bryancassell.bluecard.ui.BlueCardButton
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import io.github.bryancassell.bluecard.ui.KeepInViewWhileFocused
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
@@ -445,7 +445,7 @@ private fun TextFields(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
-            Button(
+            BlueCardButton(
                 onClick = {
                     onSave()
                     // Done editing: closes the keyboard.
