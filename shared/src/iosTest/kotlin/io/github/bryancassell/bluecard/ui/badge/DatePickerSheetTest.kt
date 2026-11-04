@@ -4,16 +4,19 @@ import androidx.compose.ui.graphics.Color
 import io.github.bryancassell.bluecard.text.gregorianCalendar
 import io.github.bryancassell.bluecard.text.toLocalDate
 import io.github.bryancassell.bluecard.text.toNSDate
-import io.github.bryancassell.bluecard.ui.theme.BlueCardDarkColorScheme
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.ref.WeakReference
+import kotlin.native.runtime.GC
+import kotlin.native.runtime.NativeRuntimeApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.autoreleasepool
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
@@ -22,9 +25,7 @@ import platform.CoreGraphics.CGFloatVar
 import platform.Foundation.NSCalendarIdentifierGregorian
 import platform.Foundation.NSLocale
 import platform.Foundation.NSTimeZone
-import platform.Foundation.defaultTimeZone
 import platform.Foundation.localeIdentifier
-import platform.Foundation.setDefaultTimeZone
 import platform.Foundation.timeZoneWithName
 import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
 import platform.UIKit.UIColor
@@ -36,39 +37,27 @@ import platform.UIKit.UIViewController
 import platform.UIKit.navigationItem
 import platform.UIKit.presentationController
 import platform.UIKit.resolvedColorWithTraitCollection
+import platform.UIKit.systemBlueColor
 
 // The sheet can't be shown here, with no app window, so these tap its buttons, and swipe it
 // down, by calling what UIKit would.
 @OptIn(ExperimentalForeignApi::class)
 class DatePickerSheetTest {
     private val today = LocalDate(2026, 5, 20)
-    private val light = UIUserInterfaceStyle.UIUserInterfaceStyleLight
-    private val dark = UIUserInterfaceStyle.UIUserInterfaceStyleDark
     private val events = mutableListOf<String>()
 
-    // West of UTC, where the evening is already the next day in UTC. Each test runs in it, so
-    // they pass in any time zone the simulator is in.
+    // West of UTC, where the evening is already the next day in UTC.
     private val timeZone = assertNotNull(NSTimeZone.timeZoneWithName("America/Los_Angeles"))
-    private val deviceTimeZone = NSTimeZone.defaultTimeZone
 
-    // The days as the device's calendar has them.
+    // The days as the app's calendar has them.
     private val calendar = gregorianCalendar(timeZone)
-
-    @BeforeTest
-    fun setTimeZone() {
-        NSTimeZone.setDefaultTimeZone(timeZone)
-    }
-
-    @AfterTest
-    fun restoreTimeZone() {
-        NSTimeZone.setDefaultTimeZone(deviceTimeZone)
-    }
 
     private fun sheet(initial: LocalDate = LocalDate(2026, 5, 18), locale: String = "en_US") =
         DatePickerSheet(
             initial = initial,
             today = today,
             locale = NSLocale(locale),
+            timeZone = timeZone,
             onConfirm = { events += "picked $it" },
             onCancel = { events += "cancelled" }
         )
@@ -95,32 +84,36 @@ class DatePickerSheetTest {
     }
 
     @Test
-    fun picker_offersNoDayAfterToday() {
+    fun picker_offersTheDaysFrom1900_toToday() {
         val picker = sheet().picker
 
+        assertEquals(LocalDate(1900, 1, 1), assertNotNull(picker.minimumDate).toLocalDate(calendar))
         assertEquals(today, assertNotNull(picker.maximumDate).toLocalDate(calendar))
     }
 
     // The picker marks the day it's in there as today, which is the app's today. In UTC, it
     // marked tomorrow every evening west of UTC.
     @Test
-    fun picker_isInTheGregorianCalendar_inTheDevicesTimeZone() {
+    fun picker_isInTheTimeZoneGiven() {
         val picker = sheet().picker
 
-        assertEquals(NSCalendarIdentifierGregorian, picker.calendar.calendarIdentifier)
         assertEquals(timeZone.name, picker.calendar.timeZone.name)
         assertEquals(timeZone.name, picker.timeZone?.name)
     }
 
+    // Iran's calendar is the Persian one (#398).
     @Test
-    fun picker_isInTheLocaleGiven() {
-        assertEquals("en_IR", sheet(locale = "en_IR").picker.locale?.localeIdentifier)
+    fun picker_inALocaleWithAnotherCalendar_isInTheGregorianCalendar() {
+        val picker = sheet(locale = "en_IR").picker
+
+        assertEquals("en_IR", picker.locale?.localeIdentifier)
+        assertEquals(NSCalendarIdentifierGregorian, picker.calendar.calendarIdentifier)
     }
 
     @Test
     fun done_givesTheDayPicked() {
         val sheet = sheet()
-        sheet.picker.date = LocalDate(2026, 5, 2).toNSDate(sheet.picker.calendar)
+        sheet.picker.date = LocalDate(2026, 5, 2).toNSDate(calendar)
 
         sheet.doneButton.primaryAction!!.performWithSender(null, target = null)
 
@@ -147,6 +140,14 @@ class DatePickerSheetTest {
         assertEquals(listOf("cancelled"), events)
     }
 
+    // As while another sheet appears. Here, UIKit refuses since the page has no window.
+    @Test
+    fun show_whenUIKitWont_cancels() {
+        sheet().show(over = UIViewController())
+
+        assertEquals(listOf("cancelled"), events)
+    }
+
     @Test
     fun bar_hasCancelFirst_thenDone() {
         val sheet = sheet()
@@ -158,33 +159,54 @@ class DatePickerSheetTest {
     }
 
     @Test
-    fun tint_isTheAppsPrimaryColor() {
+    fun tint_isTheAppsPrimaryColor_orInDarkModeIOSsBlue() {
         val tint = assertNotNull(sheet().controller.view.tintColor)
 
-        assertColor(BlueCardLightColorScheme.primary, tint, light)
-        assertColor(BlueCardDarkColorScheme.primary, tint, dark)
+        assertColor(BlueCardLightColorScheme.primary, tint.resolved(Light))
+        assertColor(UIColor.systemBlueColor.resolved(Dark), tint.resolved(Dark))
     }
 
-    // Under Done's white check, the dark scheme's primary was about 2:1.
+    // Kotlin/Native can't free a cycle through Objective-C objects, so a button's action or the
+    // sheet's height that refers back to the sheet would keep the sheet, its page's callbacks
+    // with it, after it closes.
+    @OptIn(NativeRuntimeApi::class, ExperimentalNativeApi::class)
     @Test
-    fun done_isThePrimaryColor_orInDarkModeThePrimaryContainer() {
-        val tint = assertNotNull(sheet().doneButton.tintColor)
+    fun sheet_onceNothingRefersToIt_isFreed() {
+        val sheet = weakSheet()
 
-        assertColor(BlueCardLightColorScheme.primary, tint, light)
-        assertColor(BlueCardDarkColorScheme.primaryContainer, tint, dark)
+        GC.collect()
+
+        assertNull(sheet.value)
     }
 
-    private fun assertColor(expected: Color, color: UIColor, style: UIUserInterfaceStyle) {
-        val traits = UITraitCollection.traitCollectionWithUserInterfaceStyle(style)
-        val resolved = color.resolvedColorWithTraitCollection(traits)
-        memScoped {
-            val red = alloc<CGFloatVar>()
-            val green = alloc<CGFloatVar>()
-            val blue = alloc<CGFloatVar>()
-            assertTrue(resolved.getRed(red.ptr, green.ptr, blue.ptr, alpha = null))
-            assertEquals(expected.red.toDouble(), red.value, 0.001, "$style")
-            assertEquals(expected.green.toDouble(), green.value, 0.001, "$style")
-            assertEquals(expected.blue.toDouble(), blue.value, 0.001, "$style")
-        }
+    // Made in a function of its own, so no reference to the sheet stays on the test's stack.
+    @OptIn(ExperimentalNativeApi::class)
+    private fun weakSheet() = autoreleasepool { WeakReference(sheet()) }
+
+    private fun UIColor.resolved(style: UIUserInterfaceStyle) = resolvedColorWithTraitCollection(
+        UITraitCollection.traitCollectionWithUserInterfaceStyle(style)
+    )
+
+    private fun assertColor(expected: Color, color: UIColor) = memScoped {
+        val red = alloc<CGFloatVar>()
+        val green = alloc<CGFloatVar>()
+        val blue = alloc<CGFloatVar>()
+        assertTrue(color.getRed(red.ptr, green.ptr, blue.ptr, alpha = null))
+        assertEquals(expected.red.toDouble(), red.value, 0.001)
+        assertEquals(expected.green.toDouble(), green.value, 0.001)
+        assertEquals(expected.blue.toDouble(), blue.value, 0.001)
+    }
+
+    private fun assertColor(expected: UIColor, color: UIColor) = memScoped {
+        val red = alloc<CGFloatVar>()
+        val green = alloc<CGFloatVar>()
+        val blue = alloc<CGFloatVar>()
+        assertTrue(expected.getRed(red.ptr, green.ptr, blue.ptr, alpha = null))
+        assertColor(Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat()), color)
+    }
+
+    private companion object {
+        val Light = UIUserInterfaceStyle.UIUserInterfaceStyleLight
+        val Dark = UIUserInterfaceStyle.UIUserInterfaceStyleDark
     }
 }

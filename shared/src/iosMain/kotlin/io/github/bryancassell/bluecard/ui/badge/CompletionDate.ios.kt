@@ -4,18 +4,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.uikit.LocalUIViewController
-import io.github.bryancassell.bluecard.resources.Res
-import io.github.bryancassell.bluecard.resources.strings_language
-import io.github.bryancassell.bluecard.text.currentRegion
-import io.github.bryancassell.bluecard.text.stringsLocale
+import io.github.bryancassell.bluecard.ui.rememberStringsLocale
 import kotlinx.datetime.LocalDate
-import org.jetbrains.compose.resources.stringResource
+import kotlinx.datetime.TimeZone
+import platform.Foundation.NSTimeZone
+import platform.Foundation.localTimeZone
+import platform.Foundation.timeZoneWithName
 
 /**
  * iOS's own calendar, in a sheet from the bottom of the window ([DatePickerSheet]), in the
- * strings' locale ([stringsLocale]), as the page's dates are. The sheet shows while this is
- * composed, so it closes once the page stops asking.
+ * strings' locale, as the page's dates are, and in the time zone the app's today is in
+ * (`DeviceClock`). The sheet shows while this is composed, so it closes once the page stops
+ * asking. The keyboard goes down first, as Android's does when its dialog opens, since it would
+ * cover the half-height calendar's last weeks. It comes back once the sheet closes.
  */
 @Composable
 internal actual fun CompletionDatePicker(
@@ -25,14 +28,18 @@ internal actual fun CompletionDatePicker(
     onDismiss: () -> Unit
 ) {
     val viewController = LocalUIViewController.current
-    val stringsLanguage = stringResource(Res.string.strings_language)
+    val keyboard = LocalSoftwareKeyboardController.current
+    val locale = rememberStringsLocale()
     val currentOnConfirm by rememberUpdatedState(onConfirm)
     val currentOnDismiss by rememberUpdatedState(onDismiss)
     DisposableEffect(viewController) {
+        keyboard?.hide()
         val sheet = DatePickerSheet(
             initial = initial,
             today = today,
-            locale = stringsLocale(stringsLanguage, currentRegion()),
+            locale = locale,
+            timeZone = NSTimeZone.timeZoneWithName(TimeZone.currentSystemDefault().id)
+                ?: NSTimeZone.localTimeZone,
             onConfirm = { currentOnConfirm(it) },
             onCancel = { currentOnDismiss() }
         )

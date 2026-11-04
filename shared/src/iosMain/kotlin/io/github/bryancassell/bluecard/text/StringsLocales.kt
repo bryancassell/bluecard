@@ -41,9 +41,9 @@ private const val APPLE_LANGUAGES = "AppleLanguages"
  *
  * Material 3 reads it too: its labels are in the strings' language, as UIKit's own text already
  * is in an app with no strings in the device's language. It's saved in the device's region and
- * the Gregorian calendar, such as en-GB-u-ca-gregory, for Material 3's date picker, which wrote
- * and read dates by them. iOS has shown its own picker since #352, so nothing reads them now.
- * They were kept, by agreement, rather than change what each launch saves in the same change.
+ * the Gregorian calendar, such as en-GB-u-ca-gregory, which Material 3's date picker wrote and
+ * read dates by. iOS shows its own picker instead (`DatePickerSheet`), and nothing else in the
+ * app reads them.
  *
  * iOS keeps it in the app's `AppleLanguages` user default, which outlasts the app, so the one
  * saved at the last launch is removed first. The strings' language is then read in the device's

@@ -40,7 +40,7 @@ class StringsLocalesTest {
         assertEquals("fr", Locale.current.language)
     }
 
-    // As the app's own dates are, which Material 3's date picker read it for until #352.
+    // As the app's own dates are.
     @Test
     fun useStringsLanguageByDefault_savesItInTheDevicesRegion_inTheGregorianCalendar() {
         useStringsLanguageByDefault { "fr" }
