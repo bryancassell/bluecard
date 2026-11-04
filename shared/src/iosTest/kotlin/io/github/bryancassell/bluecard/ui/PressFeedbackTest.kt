@@ -4,6 +4,7 @@ package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -86,10 +87,17 @@ class PressFeedbackTest {
 
     @Test
     fun aColor_isTheSameInUIKit() {
-        // The light and dark pages' backgrounds, which the switch is drawn on, and a translucent
-        // color.
-        for (color in listOf(Color(0xFFEAF1FE), Color(0xFF00132D), Color(0x80123456))) {
-            val inUIKit = color.toUIColor().toComposeColor(interfaceStyle(darkTheme = false))
+        // The light and dark pages' backgrounds, which the switch is drawn on, a translucent
+        // color, and the light page's in Display P3, which must be converted to sRGB for UIKit.
+        val light = Color(0xFFEAF1FE)
+        val colors = listOf(
+            light to light,
+            Color(0xFF00132D) to Color(0xFF00132D),
+            Color(0x80123456) to Color(0x80123456),
+            light.convert(ColorSpaces.DisplayP3) to light
+        )
+        for ((given, color) in colors) {
+            val inUIKit = given.toUIColor().toComposeColor(interfaceStyle(darkTheme = false))
 
             listOf(
                 color.red to inUIKit.red,

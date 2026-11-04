@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -42,13 +43,15 @@ internal fun UIColor.toComposeColor(traits: UITraitCollection): Color = memScope
     Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat(), alpha.value.toFloat())
 }
 
-/** This color for UIKit, in sRGB as the theme's colors are. */
-internal fun Color.toUIColor(): UIColor = UIColor.colorWithRed(
-    red = red.toDouble(),
-    green = green.toDouble(),
-    blue = blue.toDouble(),
-    alpha = alpha.toDouble()
-)
+/** This color for UIKit, whose `colorWithRed` takes extended sRGB. */
+internal fun Color.toUIColor(): UIColor = convert(ColorSpaces.ExtendedSrgb).run {
+    UIColor.colorWithRed(
+        red = red.toDouble(),
+        green = green.toDouble(),
+        blue = blue.toDouble(),
+        alpha = alpha.toDouble()
+    )
+}
 
 /** The background UIKit gives a highlighted list row, `systemGray4`, in light or dark mode. */
 internal fun rowHighlightColor(darkTheme: Boolean): Color =

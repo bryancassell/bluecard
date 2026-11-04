@@ -79,12 +79,13 @@ internal fun rowPressHighlight(color: Color, darkTheme: Boolean) = PressHighligh
 )
 
 /**
- * A row's feedback on iOS with no press: only the focus and hover layers ([PressHighlight]), since
- * its press draws a transparent color. It's for a row with a switch, which iOS's own apps don't
- * turn grey while held, as the switch shows the tap (#352).
+ * A row's feedback on iOS with no press, only the focus and hover layers. It's for a row with a
+ * switch, which iOS's own apps don't turn grey while held, as the switch shows the tap (#352). It
+ * draws the layers as the other rows' highlight does, rather than as Material's ripple does for
+ * buttons ([FocusAndHoverRippleAlpha]), so its focus looks like theirs.
  */
 internal val FocusAndHoverHighlight =
-    PressHighlight(Color.Transparent, BlendMode.SrcOver, fadeMillis = PRESS_FADE_MILLIS)
+    PressHighlight(color = null, BlendMode.SrcOver, fadeMillis = PRESS_FADE_MILLIS)
 
 /**
  * Material's ripple without its press, which iOS's dim and highlight replace. Its focus and hover
@@ -169,17 +170,18 @@ internal class PressDim(private val pressedAlpha: Float, private val fadeMillis:
 }
 
 /**
- * Blends [color] over what it's on, with [blendMode], while pressed. Once let go, it fades back
- * over [fadeMillis], so a quick tap still shows. As a row's indication in the ripple's place, it
- * also shows the ripple's focus and hover layer ([FocusAndHoverRippleAlpha]).
+ * Blends [color] over what it's on, with [blendMode], while pressed, or with no [color], shows no
+ * press. Once let go, it fades back over [fadeMillis], so a quick tap still shows. As a row's
+ * indication in the ripple's place, it also shows the ripple's focus and hover layer
+ * ([FocusAndHoverRippleAlpha]).
  */
 internal class PressHighlight(
-    private val color: Color,
+    private val color: Color?,
     private val blendMode: BlendMode,
     private val fadeMillis: Int
 ) : IndicationNodeFactory {
     override fun create(interactionSource: InteractionSource): DelegatableNode =
-        object : PressNode(interactionSource, fadeMillis) {
+        object : PressNode(interactionSource, fadeMillis, showsPress = color != null) {
             override fun ContentDrawScope.draw() {
                 drawContent()
                 // Drawn here rather than by delegating to Material's ripple node: of two draw
@@ -189,7 +191,9 @@ internal class PressHighlight(
                     drawRect(currentValueOf(LocalContentColor), alpha = stateLayer)
                 }
                 val pressed = pressed
-                if (pressed > 0f) drawRect(color, alpha = pressed, blendMode = blendMode)
+                if (color != null && pressed > 0f) {
+                    drawRect(color, alpha = pressed, blendMode = blendMode)
+                }
             }
         }
 
@@ -201,11 +205,13 @@ internal class PressHighlight(
 
 /**
  * Follows [interactionSource]: [pressed] is 1 from a press, and falls to 0 over [fadeMillis] once
- * it ends. [stateLayerAlpha] is the ripple's alpha for focus or hover, or 0.
+ * it ends. Without [showsPress], presses are ignored, so they don't redraw. [stateLayerAlpha] is
+ * the ripple's alpha for focus or hover, or 0.
  */
 private abstract class PressNode(
     private val interactionSource: InteractionSource,
-    private val fadeMillis: Int
+    private val fadeMillis: Int,
+    private val showsPress: Boolean = true
 ) : Modifier.Node(),
     DrawModifierNode,
     CompositionLocalConsumerModifierNode {
@@ -226,6 +232,7 @@ private abstract class PressNode(
         val states = mutableListOf<Interaction>()
         var fade: Job? = null
         interactionSource.interactions.onEach { interaction ->
+            if (interaction is PressInteraction && !showsPress) return@onEach
             when (interaction) {
                 is PressInteraction.Press -> presses += interaction
                 is PressInteraction.Release -> presses -= interaction.press

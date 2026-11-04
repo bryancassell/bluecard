@@ -27,6 +27,8 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -69,15 +71,18 @@ class TogglesTest {
     }
 
     @Test
-    fun iosToggle_isOneSwitch_thatTappingItsLabelToggles() {
+    fun iosToggle_isOneSwitch_thatTappingItsLabelOrSwitchToggles() {
         showIosToggle()
-
         // Merged into one node, which screen readers read.
-        composeTestRule.onNodeWithText("Completed")
+        val row = composeTestRule.onNodeWithText("Completed")
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch))
             .assertIsOff()
-            .performClick()
-            .assertIsOn()
+
+        composeTestRule.onNodeWithText("Completed", useUnmergedTree = true).performClick()
+        row.assertIsOn()
+
+        switch().performClick()
+        row.assertIsOff()
     }
 
     @Test
@@ -119,7 +124,12 @@ class TogglesTest {
         composeTestRule.setContent {
             ProvideIosRowHighlight(rowPressHighlight(Color(0xFFD1D1D6), darkTheme = false)) {
                 Box(Modifier.background(Color.White)) {
-                    ToggleRow("Completed", checked = false, onCheckedChange = {}, iosSwitch)
+                    ToggleRow(
+                        "Completed",
+                        checked = false,
+                        onCheckedChange = {},
+                        iosSwitch = iosSwitch
+                    )
                 }
             }
         }
@@ -173,6 +183,7 @@ class TogglesTest {
                     ChoiceRow(
                         selected = chosen == index,
                         onClick = { chosen = index },
+                        contentDescription = "Read as $label",
                         iosCheckmark = true
                     ) { Text(label) }
                 }
@@ -180,8 +191,21 @@ class TogglesTest {
         }
     }
 
+    private fun option(label: String) =
+        composeTestRule.onNodeWithContentDescription("Read as $label")
+
     private fun checkmark() =
         composeTestRule.onNodeWithTag(CHOICE_CHECKMARK_TAG, useUnmergedTree = true)
+
+    @Test
+    fun choice_isReadAsItsDescription_inPlaceOfItsText() {
+        showIosChoices()
+
+        option("This phone")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Text))
+        composeTestRule.onAllNodesWithText("This phone").assertCountEquals(0)
+    }
 
     @Test
     fun iosChoices_markOnlyTheChosenOne_atItsRowsEnd() {
@@ -189,13 +213,11 @@ class TogglesTest {
 
         composeTestRule.onAllNodesWithTag(CHOICE_CHECKMARK_TAG, useUnmergedTree = true)
             .assertCountEquals(1)
-        val phone = composeTestRule.onNodeWithText("This phone")
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
-            .assertIsSelected()
+        val phone = option("This phone").assertIsSelected()
         assertEquals(phone.bounds.right, checkmark().bounds.right, 0.5f)
         assertTrue(phone.bounds.contains(checkmark().bounds.center))
 
-        val file = composeTestRule.onNodeWithText("The file").performClick().assertIsSelected()
+        val file = option("The file").performClick().assertIsSelected()
         phone.assertIsNotSelected()
         composeTestRule.onAllNodesWithTag(CHOICE_CHECKMARK_TAG, useUnmergedTree = true)
             .assertCountEquals(1)
@@ -208,7 +230,7 @@ class TogglesTest {
         val text = composeTestRule.onNodeWithText(LONG_LABEL, useUnmergedTree = true)
         val chosen = text.bounds
 
-        composeTestRule.onNodeWithText("The file").performClick()
+        option("The file").performClick()
 
         assertEquals(chosen, text.bounds)
     }

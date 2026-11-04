@@ -18,8 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.ic_check
@@ -43,21 +46,27 @@ internal expect val usesIosToggles: Boolean
 /**
  * The platform's own switch, showing [checked]: UIKit's on iOS, and Material's on Android, where
  * only tests show one. It takes no touches, since the row it's in is the control ([ToggleRow]).
+ * [background] is the color behind it, which UIKit's is drawn on.
  */
 @Composable
-internal expect fun PlatformSwitch(checked: Boolean, modifier: Modifier = Modifier)
+internal expect fun PlatformSwitch(
+    checked: Boolean,
+    background: Color,
+    modifier: Modifier = Modifier
+)
 
 /**
  * A row labeled [label] that toggles [checked] wherever it's tapped, which screen readers read as
  * one control. It shows a checkbox at its start, or with [iosSwitch], the platform's switch at its
- * end, as iOS's own rows do. A long label wraps. It's on the page's background, which iOS's switch
- * is drawn on.
+ * end, as iOS's own rows do. A long label wraps. [background] is the color the row is on, the
+ * page's unless it's on a card or a dialog.
  */
 @Composable
 internal fun ToggleRow(
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    background: Color = MaterialTheme.colorScheme.background,
     iosSwitch: Boolean = usesIosToggles
 ) {
     Row(
@@ -87,20 +96,20 @@ internal fun ToggleRow(
             // Leaves the switch its room beside a label that wraps.
             modifier = Modifier.weight(1f).padding(vertical = 8.dp)
         )
-        if (iosSwitch) PlatformSwitch(checked, Modifier.testTag(TOGGLE_SWITCH_TAG))
+        if (iosSwitch) PlatformSwitch(checked, background, Modifier.testTag(TOGGLE_SWITCH_TAG))
     }
 }
 
 /**
  * One of a few options, which tapping anywhere on the row chooses, with [content] beside its
  * mark. It shows a radio button at its start, or with [iosCheckmark], a checkmark at its end while
- * [selected]. [modifier] is applied after the row's selection, such as for its semantics.
+ * [selected]. Screen readers read it as one option, labeled [contentDescription].
  */
 @Composable
 internal fun ChoiceRow(
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    contentDescription: String,
     iosCheckmark: Boolean = usesIosToggles,
     content: @Composable () -> Unit
 ) {
@@ -111,7 +120,9 @@ internal fun ChoiceRow(
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-            .then(modifier)
+            // A label of its own rather than its lines merged, which TalkBack read without the
+            // first one once it was scrolled off screen (#323).
+            .clearAndSetSemantics { this.contentDescription = contentDescription }
             .padding(vertical = 8.dp)
     ) {
         // The row is the control, so the radio button isn't one of its own.
