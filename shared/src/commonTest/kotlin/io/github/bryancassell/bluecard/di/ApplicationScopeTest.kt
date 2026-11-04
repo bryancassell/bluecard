@@ -1,0 +1,41 @@
+package io.github.bryancassell.bluecard.di
+
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ApplicationScopeTest {
+    private val dispatcher = UnconfinedTestDispatcher()
+    private val scope = applicationScope(dispatcher)
+
+    @Test
+    fun applicationScope_runsOnGivenDispatcher() {
+        var ranOn: Any? = null
+
+        scope.launch { ranOn = coroutineContext[ContinuationInterceptor] }
+
+        assertEquals(dispatcher, ranOn)
+        scope.cancel()
+    }
+
+    @Test
+    fun applicationScope_keepsRunningWhenOneCoroutineFails() {
+        val failures = mutableListOf<Throwable>()
+
+        scope.launch(CoroutineExceptionHandler { _, e -> failures += e }) {
+            throw IllegalStateException("A bug")
+        }
+
+        assertEquals(1, failures.size)
+        assertTrue(scope.isActive)
+        scope.cancel()
+    }
+}
