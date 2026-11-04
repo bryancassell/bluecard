@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.testing.AccessibilityChecks
 import io.github.bryancassell.bluecard.testing.BackPresses
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -77,6 +78,7 @@ class ConfirmDiscardOnBackTest {
         show()
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Discard").performClick()
 
         assertEquals(1, discards)
@@ -90,6 +92,7 @@ class ConfirmDiscardOnBackTest {
         show()
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertEquals(0, discards)
@@ -103,6 +106,7 @@ class ConfirmDiscardOnBackTest {
         show()
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         // Espresso's pressBack doesn't reach the dialog's window under Robolectric, so Back is
         // sent to the dialog itself.
         composeTestRule.runOnIdle {

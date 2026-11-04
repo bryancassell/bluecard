@@ -1,9 +1,12 @@
 package io.github.bryancassell.bluecard.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -17,7 +20,9 @@ import androidx.compose.ui.unit.width
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.BackSwipes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -39,14 +44,18 @@ class PageTransitionsTest {
 
     private val backStack = mutableStateListOf<NavKey>(Home)
 
+    private val swipes = BackSwipes(composeTestRule)
+
     private fun launch(layoutDirection: LayoutDirection) {
         composeTestRule.setContent {
+            swipes.Connect()
             CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                 NavDisplay(
                     backStack = backStack,
                     onBack = { backStack.removeLastOrNull() },
                     transitionSpec = { openPage() },
                     popTransitionSpec = { closePage() },
+                    predictivePopTransitionSpec = { swipeEdge -> followBackSwipe(swipeEdge) },
                     entryProvider = entryProvider {
                         entry<Home> { Text("Home") }
                         entry<Badges> { Text("Badges") }
@@ -102,6 +111,44 @@ class PageTransitionsTest {
 
     private fun isDrawn(text: String) =
         composeTestRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+
+    @Test
+    fun rightToLeft_swipeFromTheRightEdge_movesThePagesLeftWithTheFinger() {
+        backStack.add(Badges)
+        // Pages as wide as the screen, as the app's are, so the slide's whole pixels don't round
+        // pages a few characters wide.
+        composeTestRule.setContent {
+            swipes.Connect()
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                NavDisplay(
+                    backStack = backStack,
+                    onBack = { backStack.removeLastOrNull() },
+                    predictivePopTransitionSpec = { swipeEdge -> followBackSwipe(swipeEdge) },
+                    entryProvider = entryProvider {
+                        entry<Home> { Box(Modifier.fillMaxSize()) { Text("Home") } }
+                        entry<Badges> { Box(Modifier.fillMaxSize()) { Text("Badges") } }
+                    }
+                )
+            }
+        }
+        composeTestRule.mainClock.autoAdvance = false
+        val width = composeTestRule.onRoot().getBoundsInRoot().width
+
+        swipes.start(progress = 0.4f, edge = NavigationEvent.EDGE_RIGHT)
+        // NavDisplay seeks the pages to the swipe a few frames later.
+        repeat(5) {
+            composeTestRule.mainClock.advanceTimeByFrame()
+            composeTestRule.waitForIdle()
+        }
+
+        // Each page's text ends at its right edge, where a right-to-left page starts. Badges has
+        // moved 40% of the width toward the left, with Home beside it on the right.
+        assertEquals((width * 0.6f).value, unclippedRight("Badges").value, 1f)
+        assertEquals((unclippedRight("Badges") + width).value, unclippedRight("Home").value, 1f)
+    }
+
+    private fun unclippedRight(text: String) =
+        composeTestRule.onNodeWithText(text).getUnclippedBoundsInRoot().right
 
     @Test
     fun crossfade_leavesBothPagesInPlace_untilTheOldOneHasFaded() {

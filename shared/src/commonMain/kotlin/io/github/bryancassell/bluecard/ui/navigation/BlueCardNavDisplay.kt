@@ -29,13 +29,17 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
+import androidx.navigation3.scene.SceneInfo
 import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.scene.rememberNavigationEventState as rememberSceneNavigationEventState
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.NavigationEventState
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.bryancassell.bluecard.ui.UnsavedChanges
 import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
 import io.github.bryancassell.bluecard.ui.badge.EditCounselorRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
@@ -88,25 +92,32 @@ fun BlueCardNavDisplay(
         }
     }
     // Only while the page is on top, so a double tap can't close the page under it too.
-    val backButtons = rememberBackButtonNavEntryDecorator(onBack = { contentKey ->
-        if (entries(currentShownBackStack.last()).contentKey == contentKey) goBack()
-    })
+    val backButtons = if (iosBack) {
+        rememberBackButtonNavEntryDecorator(onBack = { contentKey ->
+            if (entries(currentShownBackStack.last()).contentKey == contentKey) goBack()
+        })
+    } else {
+        null
+    }
+    // NavDisplay moves the pages with a back swipe as this state reports it, on iOS.
+    lateinit var swipeState: NavigationEventState<SceneInfo<NavKey>>
+    val isSwiping = { swipeState.transitionState is NavigationEventTransitionState.InProgress }
     val decoratedEntries = rememberDecoratedNavEntries(
         backStack = shownBackStack,
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
         // cleared when the entry leaves the back stack, and ignore touches on screens that
         // are animating, so a double tap can't press a control on the screen it opened. Keep
         // focus out of a screen that's leaving, so a key can't move focus onto it, to be lost as
-        // it goes. On iOS, put a Back button above the screen, inside the cover that ignores
-        // touches.
+        // it goes. Do both while a swipe holds the pages part way. On iOS, put a Back button above
+        // the screen, inside the cover that ignores touches.
         entryDecorators = listOfNotNull(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
-            rememberIgnoreTouchesNavEntryDecorator(),
-            rememberRefuseFocusWhileLeavingNavEntryDecorator(),
+            rememberIgnoreTouchesNavEntryDecorator(isSwiping),
+            rememberRefuseFocusWhileLeavingNavEntryDecorator(isSwiping),
             drawnScreens.decorator,
             unsavedChanges.decorator,
-            backButtons.takeIf { iosBack }
+            backButtons
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.
@@ -198,8 +209,7 @@ fun BlueCardNavDisplay(
         sceneStrategies = listOf(SinglePaneSceneStrategy()),
         onBack = goBack
     )
-    // NavDisplay moves the pages with a back swipe as this state reports it.
-    val swipeState = rememberSceneNavigationEventState(sceneState)
+    swipeState = rememberSceneNavigationEventState(sceneState)
     // The back handler, added before the screens, so any a screen adds goes first.
     // On Android, NavDisplay's state isn't given to it, so nothing reports a swipe to NavDisplay,
     // and a back swipe doesn't move the pages; releasing it plays Back's slide, or asks first on a
@@ -214,9 +224,10 @@ fun BlueCardNavDisplay(
     )
     if (iosBack) {
         StillWhileUnsavedBackHandler(
-            hasUnsavedChanges = {
-                val shown = currentShownBackStack
-                shown.size > 1 && unsavedChanges.getOrCreate(entries(shown.last())).changed
+            topPage = if (shownBackStack.size > 1) {
+                unsavedChanges.getOrCreate(entries(shownBackStack.last()))
+            } else {
+                null
             },
             onBack = goBack
         )
@@ -319,7 +330,7 @@ fun BlueCardNavDisplay(
             .focusGroup(),
         transitionSpec = { if (replacesBackStack()) crossfade() else openPage() },
         popTransitionSpec = { closePage() },
-        predictivePopTransitionSpec = { followBackSwipe() }
+        predictivePopTransitionSpec = { swipeEdge -> followBackSwipe(swipeEdge) }
     )
 }
 
@@ -330,18 +341,19 @@ fun BlueCardNavDisplay(
 internal expect val usesIosBack: Boolean
 
 /**
- * Takes a back swipe from the navigation root's handler while the page on top has unsaved changes,
- * since the last handler added that's on gets it. So the page stays put, and releasing the swipe
- * asks first, as on Android, rather than showing the page underneath and then taking it away.
- * Back still decides from the back stack as it is when it arrives, so a frame's lag in turning this
- * on or off only changes whether the pages move. It reads [hasUnsavedChanges] in a scope of its
- * own, so a page's changes coming and going recompose only this, not the pages.
+ * Takes a back swipe from the navigation root's handler while [topPage], the page on top, has
+ * unsaved changes, since the last handler added that's on gets it. So the page stays put, and
+ * releasing the swipe asks first, as on Android, rather than showing the page underneath and then
+ * taking it away. Back still decides from the back stack as it is when it arrives, so a frame's
+ * lag in turning this on or off only changes whether the pages move. It reads the page's changes
+ * in a scope of its own, so their coming and going recompose only this, not the pages. With no
+ * [topPage], as on Home, there's nothing to go back to.
  */
 @Composable
-private fun StillWhileUnsavedBackHandler(hasUnsavedChanges: () -> Boolean, onBack: () -> Unit) {
+private fun StillWhileUnsavedBackHandler(topPage: UnsavedChanges?, onBack: () -> Unit) {
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        isBackEnabled = hasUnsavedChanges(),
+        isBackEnabled = topPage?.changed == true,
         onBackCompleted = onBack
     )
 }

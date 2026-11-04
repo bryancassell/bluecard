@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -29,14 +30,28 @@ import kotlinx.coroutines.delay
  * An arriving screen takes taps once the timeout ends, even while it's still sliding in.
  * `dropUnlessResumed`, which #56 dropped, ignored taps for the whole animation. Taps further
  * apart than the timeout aren't a double tap to the platform either.
+ *
+ * Every screen ignores touches while [isSwiping]: a back swipe that moves the pages, as on iOS,
+ * can hold the screen under the top one on view for as long as the finger stays down, though it
+ * isn't on top. In iOS's own apps, neither page takes touches until the swipe ends.
  */
 @Composable
-fun <T : Any> rememberIgnoreTouchesNavEntryDecorator(): NavEntryDecorator<T> = remember {
-    NavEntryDecorator(decorate = { entry -> IgnoreTouchesDuringTransition { entry.Content() } })
+fun <T : Any> rememberIgnoreTouchesNavEntryDecorator(
+    isSwiping: () -> Boolean = { false }
+): NavEntryDecorator<T> {
+    val currentIsSwiping by rememberUpdatedState(isSwiping)
+    return remember {
+        NavEntryDecorator(decorate = { entry ->
+            IgnoreTouchesDuringTransition(isSwiping = { currentIsSwiping() }) { entry.Content() }
+        })
+    }
 }
 
 @Composable
-private fun IgnoreTouchesDuringTransition(content: @Composable () -> Unit) {
+private fun IgnoreTouchesDuringTransition(
+    isSwiping: () -> Boolean,
+    content: @Composable () -> Unit
+) {
     val transition = LocalNavAnimatedContentScope.current.transition
     val leaving = transition.targetState != EnterExitState.Visible
     // A screen shown without a transition, such as the first one, isn't arriving.
@@ -52,7 +67,7 @@ private fun IgnoreTouchesDuringTransition(content: @Composable () -> Unit) {
     // anywhere a screen under it could.
     Box(Modifier.fillMaxSize()) {
         content()
-        if (leaving || arriving) {
+        if (leaving || arriving || isSwiping()) {
             // A cover that takes touches and does nothing with them. Hit testing stops at the
             // topmost layout that takes touches, so nothing under the cover sees them.
             Box(Modifier.matchParentSize().pointerInput(Unit) {})

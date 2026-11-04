@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.ui.unit.IntOffset
+import androidx.navigationevent.NavigationEvent
 
 // Pages slide the full width of their area, side by side, as Navigation 3's animation guide
 // shows: https://developer.android.com/guide/navigation/navigation-3/animate-destinations
@@ -59,15 +60,29 @@ private val swipeSlide: FiniteAnimationSpec<IntOffset> =
     tween(durationMillis = SLIDE_MILLIS, easing = LinearEasing)
 
 /**
- * Going back with a swipe that moves the pages, on iOS: the pages slide as they do for
- * [closePage], with the finger.
+ * Going back with a swipe that moves the pages, on iOS: the pages slide side by side, as they do
+ * for [closePage], with the finger, away from the edge the swipe started at ([swipeEdge], a
+ * NavigationEvent edge). That's toward the end in the layout's direction, since iOS starts a back
+ * swipe at the start edge.
  */
-fun AnimatedContentTransitionScope<*>.followBackSwipe(): ContentTransform = slideToEnd(swipeSlide)
+fun AnimatedContentTransitionScope<*>.followBackSwipe(swipeEdge: Int): ContentTransform = slideTo(
+    when (swipeEdge) {
+        NavigationEvent.EDGE_LEFT -> SlideDirection.Right
+        NavigationEvent.EDGE_RIGHT -> SlideDirection.Left
+        else -> SlideDirection.End
+    },
+    swipeSlide
+)
 
 private fun AnimatedContentTransitionScope<*>.slideToEnd(
     spec: FiniteAnimationSpec<IntOffset>
-): ContentTransform = slideIntoContainer(SlideDirection.End, spec) togetherWith
-    slideOutOfContainer(SlideDirection.End, spec)
+): ContentTransform = slideTo(SlideDirection.End, spec)
+
+private fun AnimatedContentTransitionScope<*>.slideTo(
+    direction: SlideDirection,
+    spec: FiniteAnimationSpec<IntOffset>
+): ContentTransform =
+    slideIntoContainer(direction, spec) togetherWith slideOutOfContainer(direction, spec)
 
 /**
  * Onboarding and the rest of the app replacing each other: neither is a page of the other, so they

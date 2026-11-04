@@ -3,6 +3,7 @@ package io.github.bryancassell.bluecard.ui.navigation
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -215,6 +217,19 @@ class BlueCardNavDisplayIosBackTest {
         // Data management has moved 40% of the width, with Home beside it.
         assertEquals((width * 0.4f).value, (dataManagement().left() - atRest).value, 1f)
         assertEquals((dataManagement().left() - width).value, home().left().value, 1f)
+    }
+
+    @Test
+    fun swipe_held_leavesThePageUnderneathTakingNoInput() {
+        launch()
+        openDataManagement()
+        startSwipeAndHold(progress = 0.4f)
+        // Past the double-tap timeout, when a page that's opening starts taking input.
+        composeTestRule.mainClock.advanceTimeBy(500)
+
+        composeTestRule.onNodeWithText("Manage data").requestFocus()
+
+        composeTestRule.onNodeWithText("Manage data").assertIsNotFocused()
     }
 
     @Test

@@ -8,9 +8,9 @@ import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 
 /**
- * Back swipes from the left edge, reported with their progress as iOS's edge swipe reports them:
- * the finger's travel over the screen's width. [Connect] connects them to the back handlers of
- * the content composed with it.
+ * Back swipes, reported with their progress as iOS's edge swipe reports them: the finger's travel
+ * over the screen's width. [Connect] connects them to the back handlers of the content composed
+ * with it.
  */
 class BackSwipes(private val rule: ComposeContentTestRule) {
     private val input = DirectNavigationEventInput()
@@ -24,10 +24,13 @@ class BackSwipes(private val rule: ComposeContentTestRule) {
         }
     }
 
-    /** Starts a swipe and moves the finger [progress] of the way across. */
-    fun start(progress: Float) = rule.runOnUiThread {
-        input.backStarted(event(0f))
-        input.backProgressed(event(progress))
+    /**
+     * Starts a swipe at [edge], the left edge unless it's NavigationEvent.EDGE_RIGHT as in a
+     * right-to-left layout, and moves the finger [progress] of the way across.
+     */
+    fun start(progress: Float, edge: Int = NavigationEvent.EDGE_LEFT) = rule.runOnUiThread {
+        input.backStarted(NavigationEvent(swipeEdge = edge, progress = 0f))
+        input.backProgressed(NavigationEvent(swipeEdge = edge, progress = progress))
     }
 
     /** Lets go far or fast enough to go back. */
@@ -35,7 +38,4 @@ class BackSwipes(private val rule: ComposeContentTestRule) {
 
     /** Lets go short of going back, or moves the finger back to the edge. */
     fun cancel() = rule.runOnUiThread { input.backCancelled() }
-
-    private fun event(progress: Float) =
-        NavigationEvent(swipeEdge = NavigationEvent.EDGE_LEFT, progress = progress)
 }

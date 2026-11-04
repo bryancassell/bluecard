@@ -324,7 +324,8 @@ both taps of a double tap can reach it.
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)). The merge's
-  full-screen dialog does the same as it opens (`IgnoreTouchesAsItOpens`).
+  full-screen dialog and `ConfirmDialog` do the same as they open
+  (`isOpeningForDoubleTap`), and every screen while a back swipe is held.
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
   open another app. After a tap, it ignores taps for the double-tap timeout

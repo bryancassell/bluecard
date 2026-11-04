@@ -2,7 +2,10 @@ package io.github.bryancassell.bluecard.ui.navigation
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
@@ -28,6 +31,7 @@ class RefuseFocusWhileLeavingNavEntryDecoratorTest {
     val composeTestRule = createComposeRule()
 
     private val backStack = mutableStateListOf<NavKey>(Home)
+    private var swiping by mutableStateOf(false)
 
     private fun launch(vararg keys: NavKey) {
         backStack.clear()
@@ -38,7 +42,7 @@ class RefuseFocusWhileLeavingNavEntryDecoratorTest {
                 onBack = { backStack.removeLastOrNull() },
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberRefuseFocusWhileLeavingNavEntryDecorator()
+                    rememberRefuseFocusWhileLeavingNavEntryDecorator(isSwiping = { swiping })
                 ),
                 entryProvider = entryProvider {
                     entry<Home> { Button(onClick = {}) { Text("Home button") } }
@@ -87,6 +91,19 @@ class RefuseFocusWhileLeavingNavEntryDecoratorTest {
         badgesButton().requestFocus()
 
         badgesButton().assertIsFocused()
+    }
+
+    @Test
+    fun whileSwiping_screensRefuseFocus_untilTheSwipeEnds() {
+        launch(Home)
+        swiping = true
+
+        homeButton().requestFocus()
+        homeButton().assertIsNotFocused()
+
+        swiping = false
+        homeButton().requestFocus()
+        homeButton().assertIsFocused()
     }
 
     @Test

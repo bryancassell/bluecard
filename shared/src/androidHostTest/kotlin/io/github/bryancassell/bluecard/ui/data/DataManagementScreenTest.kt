@@ -56,6 +56,7 @@ import io.github.bryancassell.bluecard.testing.hostView
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.testing.waitRunningPostedWork
 import io.github.bryancassell.bluecard.text.AndroidLocaleFormats
 import io.github.bryancassell.bluecard.ui.data.DataManagementMessage.Kind
@@ -597,6 +598,7 @@ class DataManagementScreenTest {
         showMergeChoices(choices)
 
         closeButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
 
         composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Your changes haven't been saved.").assertIsDisplayed()
@@ -613,6 +615,7 @@ class DataManagementScreenTest {
         showMergeChoices(choices)
 
         pressBackOnTopDialog()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
@@ -749,6 +752,7 @@ class DataManagementScreenTest {
         show(started)
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Clear all progress?").assertIsDisplayed()
         composeTestRule
             .onNodeWithText(
@@ -768,6 +772,7 @@ class DataManagementScreenTest {
         show(started)
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertEquals(0, clears)
@@ -779,6 +784,7 @@ class DataManagementScreenTest {
         show(started)
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         // As for the import dialog, Back is sent to the dialog itself.
         composeTestRule.runOnIdle {
             (ShadowDialog.getLatestDialog() as ComponentDialog).onBackPressedDispatcher
