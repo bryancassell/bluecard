@@ -1,0 +1,516 @@
+package io.github.bryancassell.bluecard.ui.badge
+
+import io.github.bryancassell.bluecard.data.catalog.ColumnTotal
+import io.github.bryancassell.bluecard.data.catalog.MeritBadge
+import io.github.bryancassell.bluecard.data.catalog.MeritBadgesNeeded
+import io.github.bryancassell.bluecard.data.catalog.Requirement
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumn
+import io.github.bryancassell.bluecard.data.catalog.TrackerColumnType
+import io.github.bryancassell.bluecard.data.catalog.TrackerDefinition
+import io.github.bryancassell.bluecard.data.progress.EarnedBadge
+import io.github.bryancassell.bluecard.data.progress.EarnedBadges
+import io.github.bryancassell.bluecard.data.progress.RequirementProgress
+import io.github.bryancassell.bluecard.data.progress.TrackerEntry
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.datetime.LocalDate
+
+class RequirementItemTest {
+    private val leaf = Requirement("1", "Plan a campout.")
+    private val twoOfThree = Requirement(
+        "2",
+        "Do two of these.",
+        requiredCount = 2,
+        children = listOf(
+            Requirement("2a", "Cook a meal."),
+            Requirement("2b", "Lead a hike."),
+            Requirement("2c", "Pitch a tent.")
+        )
+    )
+
+    private fun done(vararg numbers: String) =
+        numbers.associateWith { RequirementProgress("camping", it, completed = true) }
+
+    @Test
+    fun leaf_isMarkedByHand() {
+        assertEquals(
+            RequirementItem("1", "Plan a campout.", null, false, markedByHand = true),
+            leaf.toItem(emptyMap(), emptyMap())
+        )
+    }
+
+    @Test
+    fun leaf_markedComplete_isCompleted() {
+        assertTrue(leaf.toItem(done("1"), emptyMap()).completed)
+    }
+
+    @Test
+    fun partOfCompletedRequirement_whenNotComplete_isNotNeeded() {
+        assertTrue(leaf.toItem(emptyMap(), emptyMap(), partOfHasEnough = true).notNeeded)
+    }
+
+    @Test
+    fun partOfCompletedRequirement_whenComplete_isCompletedRatherThanNotNeeded() {
+        val item = leaf.toItem(done("1"), emptyMap(), partOfHasEnough = true)
+
+        assertTrue(item.completed)
+        assertFalse(item.notNeeded)
+    }
+
+    @Test
+    fun someOfItsSubRequirements_isChoiceWithSubRequirements() {
+        assertEquals(
+            RequirementItem(
+                "2",
+                "Do two of these.",
+                Choice(2, 3),
+                false,
+                markedByHand = false
+            ),
+            twoOfThree.toItem(emptyMap(), emptyMap())
+        )
+    }
+
+    @Test
+    fun choice_isCompletedOnceEnoughAreDone() {
+        assertFalse(twoOfThree.toItem(done("2a"), emptyMap()).completed)
+        assertTrue(twoOfThree.toItem(done("2a", "2c"), emptyMap()).completed)
+    }
+
+    private val ownWorkAndTwoOfThree = twoOfThree.copy(ownWork = "Pack your gear.")
+
+    @Test
+    fun ownWork_isMarkedOnItsOwn_andTheRequirementIsCompletedOnlyWithEnoughChildren() {
+        val marked = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
+        assertEquals(OwnWork("Pack your gear.", completed = true), marked.ownWork)
+        assertFalse(marked.markedByHand)
+        assertFalse(marked.completed)
+
+        val children = ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap())
+        assertEquals(OwnWork("Pack your gear.", completed = false), children.ownWork)
+        assertFalse(children.completed)
+
+        assertTrue(ownWorkAndTwoOfThree.toItem(done("2", "2a", "2c"), emptyMap()).completed)
+    }
+
+    @Test
+    fun withoutOwnWork_hasNone() {
+        assertNull(twoOfThree.toItem(done("2"), emptyMap()).ownWork)
+        assertNull(leaf.toItem(done("1"), emptyMap()).ownWork)
+    }
+
+    @Test
+    fun nothingComplete_isNotPartlyCompleted() {
+        val item = twoOfThree.toItem(emptyMap(), emptyMap())
+
+        assertFalse(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun someSubRequirementsComplete_isPartlyCompleted_countedTowardTheNumberNeeded() {
+        val item = twoOfThree.toItem(done("2a"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertEquals(CompleteCount(1, 2), item.completeCount)
+    }
+
+    @Test
+    fun allSubRequirementsNeeded_countsTowardAllOfThem() {
+        val all = twoOfThree.copy(requiredCount = null)
+
+        assertEquals(CompleteCount(2, 3), all.toItem(done("2a", "2c"), emptyMap()).completeCount)
+    }
+
+    @Test
+    fun complete_isNotPartlyCompleted() {
+        val item = twoOfThree.toItem(done("2a", "2c"), emptyMap())
+
+        assertFalse(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun enoughSubRequirementsButNotOwnWork_isPartlyCompleted_countingNoMoreThanNeeded() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2a", "2b", "2c"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertEquals(CompleteCount(2, 2), item.completeCount)
+    }
+
+    // Only its own work is left, so the row says what that is.
+    @Test
+    fun enoughSubRequirementsButNotOwnWork_hasItsOwnWorkStillToDo() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap())
+
+        assertEquals("Pack your gear.", item.stillToDo)
+    }
+
+    @Test
+    fun subRequirementsStillNeeded_haveNothingStillToDo() {
+        assertNull(ownWorkAndTwoOfThree.toItem(emptyMap(), emptyMap()).stillToDo)
+        assertNull(ownWorkAndTwoOfThree.toItem(done("2a"), emptyMap()).stillToDo)
+        assertNull(ownWorkAndTwoOfThree.toItem(done("2", "2a"), emptyMap()).stillToDo)
+    }
+
+    @Test
+    fun completeOrNotNeeded_hasNothingStillToDo() {
+        val complete = ownWorkAndTwoOfThree.toItem(done("2", "2a", "2c"), emptyMap())
+        val notNeeded =
+            ownWorkAndTwoOfThree.toItem(done("2a", "2c"), emptyMap(), partOfHasEnough = true)
+
+        assertNull(complete.stillToDo)
+        assertNull(notNeeded.stillToDo)
+    }
+
+    // It says what was never recorded, as the row's count still does.
+    @Test
+    fun onBadgeCompletedOnPriorDate_ownWorkIsStillToDo() {
+        val item = ownWorkAndTwoOfThree.toItem(
+            done("2a", "2c"),
+            emptyMap(),
+            advancementCompletedOnPriorDate = true
+        )
+
+        assertEquals("Pack your gear.", item.stillToDo)
+    }
+
+    @Test
+    fun ownWorkComplete_isPartlyCompleted_withNoCount() {
+        val item = ownWorkAndTwoOfThree.toItem(done("2"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun requirementFurtherDownComplete_isPartlyCompleted_withNoCount() {
+        val deep = Requirement(
+            "7",
+            "Do these.",
+            children = listOf(
+                Requirement(
+                    "7a",
+                    "Do these too.",
+                    children = listOf(Requirement("7a(1)", "One."), Requirement("7a(2)", "Two."))
+                ),
+                Requirement("7b", "B.")
+            )
+        )
+
+        val item = deep.toItem(done("7a(1)"), emptyMap())
+
+        assertTrue(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun onBadgeCompletedOnPriorDate_whenStillNeeded_isNotRecorded() {
+        fun Requirement.notRecorded(
+            progress: Map<String, RequirementProgress> = emptyMap(),
+            partOfHasEnough: Boolean = false,
+            advancementCompletedOnPriorDate: Boolean = true
+        ) = toItem(
+            progress,
+            emptyMap(),
+            partOfHasEnough,
+            advancementCompletedOnPriorDate
+        ).notRecorded
+
+        assertTrue(leaf.notRecorded())
+        assertTrue(twoOfThree.notRecorded())
+
+        // Part of it was recorded.
+        assertFalse(twoOfThree.notRecorded(done("2a")))
+        assertFalse(leaf.notRecorded(done("1")))
+        assertFalse(leaf.notRecorded(partOfHasEnough = true))
+        assertFalse(leaf.notRecorded(advancementCompletedOnPriorDate = false))
+    }
+
+    @Test
+    fun notNeeded_isNotPartlyCompleted() {
+        val item = twoOfThree.toItem(done("2a"), emptyMap(), partOfHasEnough = true)
+
+        assertTrue(item.notNeeded)
+        assertFalse(item.partlyCompleted)
+        assertNull(item.completeCount)
+    }
+
+    @Test
+    fun countOfAllItsSubRequirements_isNoChoice() {
+        val both = Requirement(
+            "3",
+            "Do both.",
+            requiredCount = 2,
+            children = listOf(Requirement("3a", "A."), Requirement("3b", "B."))
+        )
+
+        assertNull(both.toItem(emptyMap(), emptyMap()).choice)
+    }
+
+    private val log = Requirement(
+        "4",
+        "Keep a camping log.",
+        tracker = TrackerDefinition(
+            listOf(TrackerColumn("night", "Night", TrackerColumnType.DATE)),
+            "night",
+            "nights"
+        )
+    )
+
+    @Test
+    fun log_isMarkedByHand() {
+        assertTrue(log.toItem(emptyMap(), emptyMap()).markedByHand)
+        assertFalse(log.toItem(emptyMap(), emptyMap()).completesFromRows)
+        assertTrue(log.toItem(done("4"), emptyMap()).completed)
+    }
+
+    // Requirement 4 again, asking for at least two nights.
+    private val logOfTwo = log.copy(tracker = log.tracker!!.copy(rowsNeeded = 2))
+
+    private fun nights(count: Int) = mapOf(
+        "4" to List(count) {
+            TrackerEntry(it.toLong(), "camping", "4", values = mapOf("night" to "2026-05-01"))
+        }
+    )
+
+    // "2 of 2 nights" doesn't complete it, so the row says checking it off is still to do.
+    @Test
+    fun logWithTheRowsItNeeds_hasCheckingItOffLeft() {
+        assertFalse(logOfTwo.toItem(emptyMap(), nights(1)).checkOffLeft)
+        assertTrue(logOfTwo.toItem(emptyMap(), nights(2)).checkOffLeft)
+        assertTrue(logOfTwo.toItem(emptyMap(), nights(3)).checkOffLeft)
+        assertNull(logOfTwo.toItem(emptyMap(), nights(2)).stillToDo)
+    }
+
+    @Test
+    fun logCompleteOrNotNeeded_hasNothingLeftToCheckOff() {
+        assertFalse(logOfTwo.toItem(done("4"), nights(2)).checkOffLeft)
+        assertFalse(logOfTwo.toItem(emptyMap(), nights(2), partOfHasEnough = true).checkOffLeft)
+    }
+
+    // It says what was never recorded, as own work still to do does.
+    @Test
+    fun onBadgeCompletedOnPriorDate_logWithTheRowsItNeedsHasCheckingItOffLeft() {
+        val item = logOfTwo.toItem(emptyMap(), nights(2), advancementCompletedOnPriorDate = true)
+
+        assertTrue(item.checkOffLeft)
+    }
+
+    // As Life 4 asks: 6 hours, with at least 3 of them on conservation.
+    private val sixHoursThreeOnConservation = Requirement(
+        "4",
+        "Give six hours of service.",
+        tracker = TrackerDefinition(
+            listOf(
+                TrackerColumn(
+                    "hours",
+                    "Hours",
+                    TrackerColumnType.NUMBER,
+                    ColumnTotal(6, "hour", "hours")
+                ),
+                TrackerColumn(
+                    "conservation",
+                    "Conservation hours",
+                    TrackerColumnType.NUMBER,
+                    ColumnTotal(3, "conservation hour", "conservation hours", partOf = "hours")
+                )
+            ),
+            "project",
+            "projects"
+        )
+    )
+
+    private fun project(hours: String, conservation: String) = mapOf(
+        "4" to listOf(
+            TrackerEntry(
+                1,
+                "life",
+                "4",
+                values = mapOf(
+                    "hours" to hours,
+                    "conservation" to conservation
+                )
+            )
+        )
+    )
+
+    @Test
+    fun logWithItsTotals_hasCheckingItOffLeftOnceEveryTotalIsReached() {
+        assertFalse(sixHoursThreeOnConservation.toItem(emptyMap(), project("6", "2")).checkOffLeft)
+        assertTrue(sixHoursThreeOnConservation.toItem(emptyMap(), project("6", "3")).checkOffLeft)
+    }
+
+    // Its children decide it, so it has no checkbox to check off. Only a catalog the catalog
+    // test rejects could give it a log with a number.
+    @Test
+    fun requirementWithChildren_hasNothingLeftToCheckOff() {
+        val childrenAndLog = twoOfThree.copy(tracker = logOfTwo.tracker)
+        val entries = mapOf("2" to nights(2)["4"]!!)
+
+        assertFalse(childrenAndLog.toItem(emptyMap(), entries).checkOffLeft)
+    }
+
+    private val weeks = Requirement(
+        "5",
+        "Save for two weeks.",
+        tracker = TrackerDefinition(
+            listOf(TrackerColumn("saved", "Saved", TrackerColumnType.NUMBER)),
+            "week",
+            "weeks",
+            rowCount = 2
+        )
+    )
+
+    private fun week(id: Long, rowNumber: Int) =
+        TrackerEntry(id, "camping", "5", rowNumber, mapOf("saved" to "5"))
+
+    @Test
+    fun fixedRowTracker_isCompletedOnceEveryRowIsFilled() {
+        assertFalse(weeks.toItem(emptyMap(), emptyMap()).markedByHand)
+        assertTrue(weeks.toItem(emptyMap(), emptyMap()).completesFromRows)
+        assertFalse(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).completed)
+        assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).completed)
+        // Marking it complete by hand doesn't count.
+        assertFalse(weeks.toItem(done("5"), emptyMap()).completed)
+    }
+
+    private val ownWorkAndWeeks = weeks.copy(ownWork = "Compare the two weeks.")
+
+    @Test
+    fun fixedRowTrackerAndOwnWork_isCompletedOnceBothAreDone() {
+        val bothWeeks = mapOf("5" to listOf(week(1, 1), week(2, 2)))
+        val item = ownWorkAndWeeks.toItem(emptyMap(), bothWeeks)
+        assertFalse(item.markedByHand)
+        assertFalse(item.completesFromRows)
+        assertEquals(OwnWork("Compare the two weeks.", completed = false), item.ownWork)
+        assertFalse(item.completed)
+        assertFalse(ownWorkAndWeeks.toItem(done("5"), mapOf("5" to listOf(week(1, 1)))).completed)
+
+        assertTrue(ownWorkAndWeeks.toItem(done("5"), bothWeeks).completed)
+    }
+
+    // Only its own work is left, so the row says what that is.
+    @Test
+    fun everyRowFilledButNotOwnWork_hasItsOwnWorkStillToDo() {
+        val bothWeeks = mapOf("5" to listOf(week(1, 1), week(2, 2)))
+        assertEquals(
+            "Compare the two weeks.",
+            ownWorkAndWeeks.toItem(emptyMap(), bothWeeks).stillToDo
+        )
+
+        assertNull(ownWorkAndWeeks.toItem(done("5"), mapOf("5" to listOf(week(1, 1)))).stillToDo)
+        assertNull(ownWorkAndWeeks.toItem(done("5"), bothWeeks).stillToDo)
+        assertNull(weeks.toItem(emptyMap(), bothWeeks).stillToDo)
+    }
+
+    @Test
+    fun trackerPartlyFilled_isPartlyCompleted_untilComplete() {
+        assertTrue(weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1)))).partlyCompleted)
+        assertFalse(
+            weeks.toItem(emptyMap(), mapOf("5" to listOf(week(1, 1), week(2, 2)))).partlyCompleted
+        )
+    }
+
+    @Test
+    fun tracker_countsItsOwnRequirementsEntries() {
+        val entries = listOf(
+            TrackerEntry(1, "camping", "4", values = mapOf("night" to "2026-05-01")),
+            TrackerEntry(2, "camping", "4", values = mapOf("night" to "2026-05-02"))
+        )
+
+        assertEquals(
+            TrackerCount(2, null, "nights"),
+            log.toItem(emptyMap(), mapOf("4" to entries, "5" to entries.take(1))).tracker
+        )
+    }
+
+    @Test
+    fun noTracker_hasNoCount() {
+        assertNull(leaf.toItem(emptyMap(), emptyMap()).tracker)
+    }
+
+    // Two merit badges, one of them Eagle-required.
+    private val meritBadges = Requirement(
+        "3",
+        "Earn two merit badges.",
+        meritBadges = MeritBadgesNeeded(total = 2, eagleRequired = 1)
+    )
+
+    private fun earned(vararg eagleRequired: Boolean) = EarnedBadges(
+        eagleRequired.mapIndexed { index, counts ->
+            EarnedBadge(
+                MeritBadge(
+                    "badge-$index",
+                    "Badge $index",
+                    "S.",
+                    "https://www.scouting.org/",
+                    counts,
+                    null,
+                    emptyList()
+                ),
+                LocalDate(2026, 5, 1),
+                counts
+            )
+        }
+    )
+
+    @Test
+    fun meritBadges_arentMarkedByHand_andCarryTheBadgesCredit() {
+        val earned = earned(false)
+
+        assertEquals(
+            RequirementItem(
+                "3",
+                "Earn two merit badges.",
+                null,
+                false,
+                markedByHand = false,
+                partlyCompleted = true,
+                meritBadges = earned.toward(MeritBadgesNeeded(2, 1))
+            ),
+            meritBadges.toItem(emptyMap(), emptyMap(), earnedBadges = earned)
+        )
+    }
+
+    @Test
+    fun meritBadges_withNoBadges_haveNothingDone() {
+        val item = meritBadges.toItem(emptyMap(), emptyMap())
+
+        assertFalse(item.partlyCompleted)
+        assertEquals(0, item.meritBadges?.completed)
+    }
+
+    @Test
+    fun meritBadges_withEnoughBadges_areCompleted() {
+        val item = meritBadges.toItem(emptyMap(), emptyMap(), earnedBadges = earned(false, true))
+
+        assertTrue(item.completed)
+        assertFalse(item.partlyCompleted)
+    }
+
+    // A rank marked earned without recording its requirements.
+    @Test
+    fun meritBadges_onARankMarkedEarned_areNotRecorded_untilABadgeCounts() {
+        assertTrue(
+            meritBadges.toItem(emptyMap(), emptyMap(), advancementCompletedOnPriorDate = true)
+                .notRecorded
+        )
+        assertFalse(
+            meritBadges.toItem(
+                emptyMap(),
+                emptyMap(),
+                advancementCompletedOnPriorDate = true,
+                earnedBadges = earned(true)
+            ).notRecorded
+        )
+    }
+
+    @Test
+    fun otherRequirements_haveNoMeritBadgesCredit() {
+        assertNull(leaf.toItem(emptyMap(), emptyMap(), earnedBadges = earned(true)).meritBadges)
+    }
+}

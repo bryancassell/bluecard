@@ -32,6 +32,7 @@ kotlin {
     // named Shared, into itself, as JetBrains' templates do. Any host compiles these targets'
     // code, but linking them and running their tests needs a Mac with Xcode. CI's iOS job, on
     // macOS, links the simulator target, Debug only, and runs its tests (docs/toolchain.md).
+    // :testing declares the same targets, for the common tests.
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         target.binaries.framework {
             baseName = "Shared"
@@ -136,12 +137,12 @@ kotlin {
         // Tests that run on Android and iOS alike, such as the contract tests that both
         // platforms' implementations of an interface must pass.
         commonTest.dependencies {
+            implementation(project(":testing"))
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
 
         getByName("androidHostTest").dependencies {
-            implementation(project(":testing"))
             // androidContext(), for AppKoinRule.
             implementation(libs.koin.android)
             implementation(libs.junit)

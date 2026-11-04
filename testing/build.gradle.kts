@@ -3,7 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 // Fakes and test helpers that both :shared's and :app's local tests use, as Android's
 // modularization guide suggests for test code more than one module needs:
 // https://developer.android.com/topic/modularization/patterns#test-modules
-// Code only one module's tests use stays with them.
+// Code only one module's tests use stays with them. What :shared's common tests use, which run
+// on the JVM and the iOS simulator, is common code. The rest is in androidMain, such as
+// FakeReportRepository, which returns Android Uris, and the Compose UI test helpers.
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -12,6 +14,10 @@ plugins {
 }
 
 kotlin {
+    // :shared's iOS targets, since its common tests use this module on each of them.
+    iosArm64()
+    iosSimulatorArm64()
+
     android {
         namespace = "io.github.bryancassell.bluecard.testing"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -33,8 +39,13 @@ kotlin {
     }
 
     sourceSets {
-        androidMain.dependencies {
+        commonMain.dependencies {
             implementation(project(":shared"))
+            // IOException, which the fakes throw, as the repositories do.
+            implementation(libs.okio)
+        }
+
+        androidMain.dependencies {
             implementation(libs.compose.components.resources)
             implementation(libs.androidx.core.ktx)
             implementation(libs.junit)

@@ -48,7 +48,7 @@ Run these from the repository root.
 | `./gradlew :shared:iosSimulatorArm64Test` | Runs the iOS and common tests (`shared/src/iosTest`, `shared/src/commonTest`) on an iOS simulator. CI's iOS job runs it. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
-| `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
+| `./gradlew test` | Runs local tests only (`app/src/test`, `shared/src/androidHostTest` and `shared/src/commonTest`). |
 | `./gradlew jacocoDebugCoverageReport` | Writes an HTML report of the coverage the build checks to `app/build/reports/jacoco/jacocoDebugCoverageReport/html/index.html`. |
 | `./gradlew lint` | Runs Android lint. Reports are in each module's `build/reports/`. |
 | `./gradlew assembleDebug` | Builds an installable debug APK (`app/build/outputs/apk/debug/`). |
@@ -250,6 +250,7 @@ it.
 │   └── src/
 │       ├── commonMain/         Code for iOS too, and strings, icons and the catalog
 │       │                       in composeResources/
+│       ├── commonTest/         Tests that run on the JVM and the iOS simulator
 │       ├── androidMain/        Code that needs Android, and the manifest
 │       ├── androidHostTest/    Local tests (run on your computer) and screenshots
 │       ├── iosMain/            Code that needs iOS
@@ -264,15 +265,17 @@ it.
 
 ## Tests: local vs instrumented
 
-- **Local tests** (`shared/src/androidHostTest`, and `app/src/test` for tests
-  of `MainActivity`, `BlueCardApplication` and what the app module declares)
-  run on your computer's JVM in seconds. Plain
+- **Local tests** (`shared/src/androidHostTest` and `shared/src/commonTest`,
+  and `app/src/test` for tests of `MainActivity`, `BlueCardApplication` and
+  what the app module declares) run on your computer's JVM in seconds. Plain
   logic tests need nothing else. Tests of activities and Compose UI use
   [Robolectric](https://developer.android.com/training/testing/local-tests/robolectric),
   which simulates Android on the JVM: mark the class with
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
-  device. Fakes and helpers that tests in both modules use are in `:testing`;
-  the rest stay with the tests that use them.
+  device, and in `commonTest`, with `kotlin.test` rather than JUnit, unless it
+  needs Android or the JVM, since the iOS simulator runs those too. Fakes and
+  helpers that tests in both modules use are in `:testing`, in its `commonMain`
+  if common tests use them; the rest stay with the tests that use them.
 - **iOS tests** (`shared/src/iosTest`) test code that only iOS runs, with
   `kotlin.test`, on an iOS simulator, which needs Xcode:
   `./gradlew :shared:iosSimulatorArm64Test`, which runs the common tests
