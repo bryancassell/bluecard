@@ -4,6 +4,7 @@ import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.FocusInteraction
+import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
@@ -27,12 +28,12 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-// iOS's values (PressFeedback.ios.kt), drawn here since Compose UI tests don't run on iOS yet.
-private const val FADE_MILLIS = 250L
-private val Dim = PressDim(pressedAlpha = 0.2f, fadeMillis = FADE_MILLIS.toInt())
-private val LightHighlight =
-    PressHighlight(Color(0xFFD1D1D6), BlendMode.Multiply, FADE_MILLIS.toInt())
-private val DarkHighlight = PressHighlight(Color(0xFF3A3A3C), BlendMode.Screen, FADE_MILLIS.toInt())
+// What iOS draws, drawn here since Compose UI tests don't run on iOS yet. The colors are UIKit's
+// highlighted row in light and dark mode, which iOS reads from UIKit (rowHighlightColor).
+private const val FADE_MILLIS = PRESS_FADE_MILLIS.toLong()
+private val Dim = buttonPressDim(filled = false)
+private val LightHighlight = rowPressHighlight(Color(0xFFD1D1D6), darkTheme = false)
+private val DarkHighlight = rowPressHighlight(Color(0xFF3A3A3C), darkTheme = true)
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -140,6 +141,31 @@ class PressFeedbackTest {
     }
 
     @Test
+    fun dim_aQuickTapWhileFading_isFullyDimmedAgain() {
+        // A quick tap in a scrolling page arrives as a press and its release together.
+        show(Dim, Color.Black)
+        release(press())
+        composeTestRule.mainClock.advanceTimeBy(FADE_MILLIS / 2)
+        val press = PressInteraction.Press(Offset.Zero)
+        interactionSource.tryEmit(press)
+        interactionSource.tryEmit(PressInteraction.Release(press))
+
+        composeTestRule.mainClock.advanceTimeByFrame()
+
+        assertShown(Color(0xFFCCCCCC))
+    }
+
+    @Test
+    fun filledDim_whilePressed_drawsAtItsAlpha() {
+        show(buttonPressDim(filled = true), Color.Black)
+
+        press()
+
+        // Black at 0.75 over the white page.
+        assertShown(Color(0xFF404040))
+    }
+
+    @Test
     fun dim_aCancelledPress_fadesToo() {
         show(Dim, Color.Black)
         val press = press()
@@ -193,6 +219,44 @@ class PressFeedbackTest {
         show(DarkHighlight, Color.White)
 
         press()
+
+        assertShown(Color.White)
+    }
+
+    @Test
+    fun highlight_focused_showsTheRipplesFocusLayer() {
+        // As the ripple it takes the place of did: the content color at Material's focus alpha.
+        show(LightHighlight, Color.White)
+
+        assertTrue(interactionSource.tryEmit(FocusInteraction.Focus()))
+        composeTestRule.mainClock.advanceTimeBy(100)
+
+        val focused = 1f - FocusAndHoverRippleAlpha.focusedAlpha
+        assertShown(Color(focused, focused, focused))
+    }
+
+    @Test
+    fun highlight_hovered_showsTheRipplesHoverLayer() {
+        show(LightHighlight, Color.White)
+
+        assertTrue(interactionSource.tryEmit(HoverInteraction.Enter()))
+        composeTestRule.mainClock.advanceTimeByFrame()
+
+        val hovered = 1f - FocusAndHoverRippleAlpha.hoveredAlpha
+        assertShown(Color(hovered, hovered, hovered))
+    }
+
+    @Test
+    fun highlight_focusAndHoverEnded_showsNoLayer() {
+        show(LightHighlight, Color.White)
+        val focus = FocusInteraction.Focus()
+        val enter = HoverInteraction.Enter()
+        interactionSource.tryEmit(focus)
+        interactionSource.tryEmit(enter)
+
+        interactionSource.tryEmit(FocusInteraction.Unfocus(focus))
+        interactionSource.tryEmit(HoverInteraction.Exit(enter))
+        composeTestRule.mainClock.advanceTimeByFrame()
 
         assertShown(Color.White)
     }

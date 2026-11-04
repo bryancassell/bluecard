@@ -2,15 +2,9 @@
 
 package io.github.bryancassell.bluecard.ui
 
-import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.alloc
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.ptr
-import kotlinx.cinterop.value
-import platform.CoreGraphics.CGFloatVar
 import platform.CoreGraphics.CGRectMake
 import platform.QuartzCore.CATransaction
 import platform.UIKit.UIBackgroundConfiguration
@@ -20,36 +14,9 @@ import platform.UIKit.UIButtonTypeSystem
 import platform.UIKit.UICellConfigurationState
 import platform.UIKit.UIColor
 import platform.UIKit.UIControlStateNormal
-import platform.UIKit.UITraitCollection
-import platform.UIKit.UIUserInterfaceStyle
-import platform.UIKit.resolvedColorWithTraitCollection
 
-/** Checks PressFeedback.ios.kt's values against UIKit's. */
+/** Checks the press feedback's values against UIKit's. */
 class PressFeedbackTest {
-    private fun traits(darkTheme: Boolean) =
-        UITraitCollection.traitCollectionWithUserInterfaceStyle(
-            if (darkTheme) {
-                UIUserInterfaceStyle.UIUserInterfaceStyleDark
-            } else {
-                UIUserInterfaceStyle.UIUserInterfaceStyleLight
-            }
-        )
-
-    private fun UIColor.toColor(darkTheme: Boolean): Color = memScoped {
-        val red = alloc<CGFloatVar>()
-        val green = alloc<CGFloatVar>()
-        val blue = alloc<CGFloatVar>()
-        val alpha = alloc<CGFloatVar>()
-        resolvedColorWithTraitCollection(traits(darkTheme))
-            .getRed(red.ptr, green.ptr, blue.ptr, alpha.ptr)
-        Color(
-            red.value.toFloat(),
-            green.value.toFloat(),
-            blue.value.toFloat(),
-            alpha.value.toFloat()
-        )
-    }
-
     @Test
     fun aButton_dimsAsASystemButtonsTitleDoes() {
         val button = UIButton.buttonWithType(UIButtonTypeSystem)
@@ -75,7 +42,7 @@ class PressFeedbackTest {
 
         assertEquals(
             FILLED_BUTTON_PRESSED_ALPHA,
-            background.toColor(darkTheme = false).alpha,
+            background.toComposeColor(interfaceStyle(darkTheme = false)).alpha,
             0.001f
         )
     }
@@ -88,14 +55,15 @@ class PressFeedbackTest {
     @Test
     fun aRow_isHighlightedAsAListCell() {
         for (darkTheme in listOf(false, true)) {
-            val state = UICellConfigurationState(traitCollection = traits(darkTheme))
+            val traits = interfaceStyle(darkTheme)
+            val state = UICellConfigurationState(traitCollection = traits)
             state.setHighlighted(true)
             val highlighted = UIBackgroundConfiguration.listPlainCellConfiguration()
                 .updatedConfigurationForState(state)
                 .resolvedBackgroundColorForTintColor(UIColor.blackColor)
 
             assertEquals(
-                highlighted.toColor(darkTheme),
+                highlighted.toComposeColor(traits),
                 rowHighlightColor(darkTheme),
                 "dark: $darkTheme"
             )

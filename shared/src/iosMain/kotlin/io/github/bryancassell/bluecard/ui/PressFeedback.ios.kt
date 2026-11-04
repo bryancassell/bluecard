@@ -6,11 +6,11 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
@@ -24,68 +24,44 @@ import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.resolvedColorWithTraitCollection
 import platform.UIKit.systemGray4Color
 
-// UIKit's own values, read from UIKit on the iOS 27.0 simulator. PressFeedbackTest checks them
-// against UIKit, so a change in iOS fails it.
-
-/** A system button's title while pressed (`UIButton` of type `.system`). */
-internal const val BUTTON_PRESSED_ALPHA = 0.2f
-
-/**
- * A filled button's background while pressed (`UIButton.Configuration.filled()`). Here it dims
- * the whole button, label too, which differs little at this alpha and needs no access to the
- * button's colors.
- */
-internal const val FILLED_BUTTON_PRESSED_ALPHA = 0.75f
-
-/** How long a press takes to fade once let go: iOS's default animation duration. */
-internal const val PRESS_FADE_MILLIS = 250
-
-/** The background UIKit gives a highlighted list row, `systemGray4`, in light or dark mode. */
-internal fun rowHighlightColor(darkTheme: Boolean): Color = memScoped {
-    val style = if (darkTheme) {
-        UIUserInterfaceStyle.UIUserInterfaceStyleDark
-    } else {
-        UIUserInterfaceStyle.UIUserInterfaceStyleLight
-    }
-    val color = UIColor.systemGray4Color.resolvedColorWithTraitCollection(
-        UITraitCollection.traitCollectionWithUserInterfaceStyle(style)
+/** UIKit's traits for light or dark mode. */
+internal fun interfaceStyle(darkTheme: Boolean): UITraitCollection =
+    UITraitCollection.traitCollectionWithUserInterfaceStyle(
+        if (darkTheme) {
+            UIUserInterfaceStyle.UIUserInterfaceStyleDark
+        } else {
+            UIUserInterfaceStyle.UIUserInterfaceStyleLight
+        }
     )
+
+/** This color as it shows with [traits]. */
+internal fun UIColor.toComposeColor(traits: UITraitCollection): Color = memScoped {
     val red = alloc<CGFloatVar>()
     val green = alloc<CGFloatVar>()
     val blue = alloc<CGFloatVar>()
     val alpha = alloc<CGFloatVar>()
-    color.getRed(red.ptr, green.ptr, blue.ptr, alpha.ptr)
-    Color(
-        red.value.toFloat(),
-        green.value.toFloat(),
-        blue.value.toFloat(),
-        alpha.value.toFloat()
-    )
+    resolvedColorWithTraitCollection(traits).getRed(red.ptr, green.ptr, blue.ptr, alpha.ptr)
+    Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat(), alpha.value.toFloat())
 }
 
-/**
- * UIKit replaces a highlighted row's background with [rowHighlightColor]. A row here draws its own
- * background, such as `ListItem`'s, so the highlight is blended over it instead: multiplied in
- * light mode and screened in dark mode. That gives exactly UIKit's color over the white and black
- * of UIKit's rows, darkens or lightens other backgrounds in proportion, and keeps text readable.
- */
+/** The background UIKit gives a highlighted list row, `systemGray4`, in light or dark mode. */
+internal fun rowHighlightColor(darkTheme: Boolean): Color =
+    UIColor.systemGray4Color.toComposeColor(interfaceStyle(darkTheme))
+
 @Composable
 internal actual fun ProvidePressFeedback(darkTheme: Boolean, content: @Composable () -> Unit) {
-    val highlight = remember(darkTheme) {
-        PressHighlight(
-            color = rowHighlightColor(darkTheme),
-            blendMode = if (darkTheme) BlendMode.Screen else BlendMode.Multiply,
-            fadeMillis = PRESS_FADE_MILLIS
-        )
-    }
+    val highlight =
+        remember(darkTheme) { rowPressHighlight(rowHighlightColor(darkTheme), darkTheme) }
     CompositionLocalProvider(LocalIndication provides highlight, content = content)
 }
 
-private val ButtonDim = PressDim(BUTTON_PRESSED_ALPHA, PRESS_FADE_MILLIS)
-private val FilledButtonDim = PressDim(FILLED_BUTTON_PRESSED_ALPHA, PRESS_FADE_MILLIS)
+private val ButtonDim = buttonPressDim(filled = false)
+private val FilledButtonDim = buttonPressDim(filled = true)
 
-// Material's buttons always draw a ripple, which only LocalRippleConfiguration turns off. Google
+// Material's buttons always draw a ripple, which only LocalRippleConfiguration changes. Google
 // supports that for a component, not across the app, so it's provided around each one.
+private val FocusAndHoverRipple = RippleConfiguration(rippleAlpha = FocusAndHoverRippleAlpha)
+
 @Composable
 internal actual fun ButtonPressFeedback(
     filled: Boolean,
@@ -93,13 +69,18 @@ internal actual fun ButtonPressFeedback(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val dim = if (filled) FilledButtonDim else ButtonDim
-    CompositionLocalProvider(LocalRippleConfiguration provides null) {
+    CompositionLocalProvider(LocalRippleConfiguration provides FocusAndHoverRipple) {
         content(interactionSource, Modifier.indication(interactionSource, dim))
     }
 }
 
-// The ripple is turned off for the date picker as for a button. Its selection, which shows at
-// once, is its feedback.
+// The date picker's controls are Material's own, out of reach of the dim and highlight, so they
+// show only focus and hover. A day shows its selection at once. The month arrows, the mode toggle
+// and the year menu show nothing while held, though each acts as soon as it's let go, until #352
+// revisits the date picker, by agreement.
 @Composable
 internal actual fun MaterialPressFeedback(content: @Composable () -> Unit) =
-    CompositionLocalProvider(LocalRippleConfiguration provides null, content = content)
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides FocusAndHoverRipple,
+        content = content
+    )
