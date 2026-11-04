@@ -321,7 +321,7 @@ when it can detect that one is broken:
 | New code has at least 80% line coverage | Approximated as: every class in `:app` and `:shared` has at least 80% line coverage from both modules' local tests (task `jacocoDebugCoverageVerification`). Both modules' tests count, since `MainActivityTest` is the only test that reaches some of `:shared`'s classes, such as `BlueCardNavDisplay`. Generated code (Android and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in either module's local tests. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
-| iOS code has tests, since nothing measures its coverage | Every file in `shared/src/iosMain` needs a test in `iosTest` or `commonTest` named after the file, or after a class, object or top-level function it declares (`pickerLayoutDirection` has `PickerLayoutDirectionTest`). `scripts/check-test-rules.sh` lists the files that have none, each with its reason, and fails when a listed file gets a test or is gone. |
+| iOS code has tests, since nothing measures its coverage | Every file in `shared/src/iosMain` needs a test in the same package of `iosTest` or `commonTest`, named after the file, or after a class, object or top-level function it declares that isn't private (`pickerLayoutDirection` has `PickerLayoutDirectionTest`). `scripts/check-test-rules.sh` lists the files that have none, each with its reason, and fails when a listed file gets a test or is gone. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
 
 The other rules need a person to judge, so they are checked in code review:
@@ -720,12 +720,16 @@ moved, merge it into the branch and wait for the checks again:
   compiles the iOS code but, on Linux, can't link it or run its tests.
 - **iOS** runs on macOS: the common and iOS tests on the simulator, with
   `./gradlew :shared:iosSimulatorArm64Test`, then a build of the iOS app for
-  the simulator, as in [Running the iOS app](#running-the-ios-app). It uses
-  GitHub's `macos-26` image and selects its Xcode 26.6, so the Xcode CI builds
-  with changes only in a pull request. Xcode 27 is on GitHub's `xcode-27`
-  image, which GitHub calls a preview that "can be unstable" and may queue
+  the simulator, as in [Running the iOS app](#running-the-ios-app). Its first
+  run, with no caches, took 13 minutes. It uses GitHub's `macos-26` image and
+  selects its Xcode 26.6, so the Xcode CI builds with changes only in a pull
+  request. Xcode 27 is on GitHub's `xcode-27` image, which GitHub calls a
+  preview that "can be unstable" and may queue
   ([announcement](https://github.com/actions/runner-images/issues/14404)), so
-  move to Xcode 27 once an image that's out of preview has it.
+  move to Xcode 27 once an image that's out of preview has it. Until then, CI
+  runs the tests on iOS 26 and a Mac with Xcode 27 on iOS 27, so a test of
+  text layout or formatting that fails on only one may be a difference between
+  iOS versions.
 - **Instrumented tests** runs `app/src/androidTest` on an API 37 emulator, with
   `./gradlew pixel6Api37DebugAndroidTest` (see
   [Tests: local vs instrumented](#tests-local-vs-instrumented)). It takes 3 to
