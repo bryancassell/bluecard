@@ -274,9 +274,11 @@ it.
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
   device, and in `commonTest`, with `kotlin.test` rather than JUnit, unless it
   needs Android or the JVM, since the iOS simulator runs those too. A common
-  test whose setup differs on each platform, such as Room's database builders,
-  is abstract, with a subclass in each platform's tests
-  (`RoomProgressRepositoryTest`). Fakes and
+  test whose setup differs on each platform is abstract, with a subclass in
+  each platform's tests, which gives what only that test needs
+  (`RoomProgressRepositoryTest`'s in-memory database) and can run it under
+  Robolectric on Android. Setup that several common tests share is an expected
+  function instead (`databaseBuilder`, `setWritable`). Fakes and
   helpers that tests in both modules use are in `:testing`, in its `commonMain`
   if common tests use them; the rest stay with the tests that use them.
 - **iOS tests** (`shared/src/iosTest`) test code that only iOS runs, or give
@@ -311,9 +313,9 @@ it.
   `./gradlew recordRoborazziAndroidHostTest` records them again; review
   the new images in the diff.
 - **Migration tests after a database version bump.** The first test run can
-  merge assets before Room writes the new schema, so `AndroidMigrationTest`
-  fails.
-  Run the tests again
+  merge assets before Room writes the new schema, so the Android tests that
+  read the schemas, `AndroidMigrationTest` and
+  `AndroidSetAsideDamagedDatabaseDriverTest`, fail. Run the tests again
   ([#96](https://github.com/bryancassell/bluecard/issues/96)).
 - **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.
   Use them only for behavior that needs a real Android runtime. They are slower

@@ -293,11 +293,13 @@ tasks.withType<Test>().configureEach {
 // simulator starts in the simulator's own data folder, so it gets the schemas' absolute path. The
 // simulator passes on a variable whose name has the SIMCTL_CHILD_ prefix, without it
 // (`xcrun simctl help spawn`). The schemas are an input by their relative path, as the bundled
-// SQLite library is above, and the absolute path isn't one.
+// SQLite library is above, and the absolute path isn't one. Room's copy of a new version's schema
+// declares no outputs, so the input doesn't order the tests after it; mustRunAfter does.
 tasks.withType<KotlinNativeSimulatorTest>().configureEach {
     val schemas = layout.projectDirectory.dir("schemas")
     environment("SIMCTL_CHILD_BLUECARD_SCHEMAS", schemas.asFile.absolutePath, tracked = false)
     inputs.dir(schemas).withPropertyName("schemas").withPathSensitivity(PathSensitivity.RELATIVE)
+    mustRunAfter("copyRoomSchemas")
 }
 
 // :app's coverage gate counts this module's classes, with the coverage that both modules' local
@@ -330,9 +332,11 @@ androidComponents {
         // locally, so the host tests' assets carry them too; the library's own assets don't, so
         // the app doesn't ship them. Nothing makes merging assets wait for Room to copy a new
         // database version's schema here, so the first test run after a version bump can miss
-        // it, and AndroidMigrationTest fails until it runs again (#96); iOS's reads the folder.
-        // Room's schema copy declares no outputs, so Gradle can't order other tasks after it, and
-        // working around that needed more build code than a rerun is worth.
+        // it, and Android's tests that read the schemas, AndroidMigrationTest and
+        // AndroidSetAsideDamagedDatabaseDriverTest, fail until they run again (#96); iOS's read
+        // the folder. Room's schema copy declares no outputs, so Gradle can't order the merge
+        // after it by its inputs, and working around that needed more build code than a rerun is
+        // worth.
         variant.hostTests.values.forEach { it.sources.assets?.addStaticSourceDirectory("schemas") }
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
             .use(coverageClasses)
