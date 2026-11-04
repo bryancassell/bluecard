@@ -16,14 +16,15 @@ import platform.Foundation.timeZoneForSecondsFromGMT
  * The Gregorian calendar, which the dates scouts record are in, whatever the locale's own
  * calendar is, as Android's java.time writes them. Iran's, for one, is the Persian calendar, so
  * without it, en_IR writes Apr 15, 2026 as "Farvardin 26, 1405 AP". Its days start at midnight
- * UTC, so a date reads as the same day in any time zone.
+ * in [timeZone]. In UTC, the default, a date reads as the same day in any time zone.
  */
-internal fun gregorianCalendar(): NSCalendar =
-    NSCalendar(calendarIdentifier = NSCalendarIdentifierGregorian).apply {
-        timeZone = NSTimeZone.timeZoneForSecondsFromGMT(0)
-    }
+internal fun gregorianCalendar(
+    timeZone: NSTimeZone = NSTimeZone.timeZoneForSecondsFromGMT(0)
+): NSCalendar = NSCalendar(calendarIdentifier = NSCalendarIdentifierGregorian).apply {
+    this.timeZone = timeZone
+}
 
-/** The start of this day in [calendar], a [gregorianCalendar]. */
+/** The start of this day in [calendar], a [gregorianCalendar], in its time zone. */
 internal fun LocalDate.toNSDate(calendar: NSCalendar): NSDate {
     val day = NSDateComponents().apply {
         year = this@toNSDate.year.toLong()
@@ -33,8 +34,11 @@ internal fun LocalDate.toNSDate(calendar: NSCalendar): NSDate {
     return calendar.dateFromComponents(day)!!
 }
 
-/** The day this is in, in [calendar], a [gregorianCalendar]. */
+/** The day this is in, in [calendar], a [gregorianCalendar], in its time zone. */
 internal fun NSDate.toLocalDate(calendar: NSCalendar): LocalDate {
-    val day = calendar.components(NSCalendarUnitYear or NSCalendarUnitMonth or NSCalendarUnitDay, this)
+    val day = calendar.components(
+        NSCalendarUnitYear or NSCalendarUnitMonth or NSCalendarUnitDay,
+        this
+    )
     return LocalDate(day.year.toInt(), day.month.toInt(), day.day.toInt())
 }

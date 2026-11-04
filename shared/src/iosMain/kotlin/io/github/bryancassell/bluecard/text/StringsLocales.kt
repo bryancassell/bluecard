@@ -40,12 +40,10 @@ private const val APPLE_LANGUAGES = "AppleLanguages"
  * follow it, as on Android (`stringsLocales`), for whatever reads past the first.
  *
  * Material 3 reads it too: its labels are in the strings' language, as UIKit's own text already
- * is in an app with no strings in the device's language, and the date picker writes its dates,
- * and takes a typed one, in the device's region, as the app's own dates are ([IosLocaleFormats]).
- * Saved as "en", an English (UK) iPhone's picker took 03/11/2026 as March 11. It's saved in the
- * Gregorian calendar, such as en-GB-u-ca-gregory, since the picker writes its dates in the
- * locale's own calendar, which for en-IR would be the Persian one. A change of region while the
- * app runs reaches the picker at the next launch.
+ * is in an app with no strings in the device's language. It's saved in the device's region and
+ * the Gregorian calendar, such as en-GB-u-ca-gregory, for Material 3's date picker, which wrote
+ * and read dates by them. iOS has shown its own picker since #352, so nothing reads them now.
+ * They were kept, by agreement, rather than change what each launch saves in the same change.
  *
  * iOS keeps it in the app's `AppleLanguages` user default, which outlasts the app, so the one
  * saved at the last launch is removed first. The strings' language is then read in the device's

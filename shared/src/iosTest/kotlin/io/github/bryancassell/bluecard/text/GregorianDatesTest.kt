@@ -27,7 +27,9 @@ class GregorianDatesTest {
 
     @Test
     fun toLocalDate_afterToNSDate_isTheSameDay() {
-        for (date in listOf(LocalDate(1900, 1, 1), LocalDate(2024, 2, 29), LocalDate(2026, 12, 31))) {
+        val dates = listOf(LocalDate(1900, 1, 1), LocalDate(2024, 2, 29), LocalDate(2026, 12, 31))
+
+        for (date in dates) {
             assertEquals(date, date.toNSDate(calendar).toLocalDate(calendar))
         }
     }

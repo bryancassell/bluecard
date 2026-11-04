@@ -11,6 +11,8 @@ import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
 import kotlinx.datetime.LocalDate
 import platform.Foundation.NSLocale
+import platform.Foundation.NSTimeZone
+import platform.Foundation.localTimeZone
 import platform.UIKit.NSLayoutConstraint
 import platform.UIKit.UIAction
 import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
@@ -28,6 +30,7 @@ import platform.UIKit.UISheetPresentationControllerDetent
 import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.UIViewController
 import platform.UIKit.colorWithDynamicProvider
+import platform.UIKit.navigationController
 import platform.UIKit.navigationItem
 import platform.UIKit.presentationController
 import platform.UIKit.sheetPresentationController
@@ -43,7 +46,9 @@ import platform.darwin.NSObject
  *
  * Its days are in the Gregorian calendar, as the app's dates are, in [locale]'s language and
  * order, so the region's own calendar, such as Iran's Persian one, never shows. Material 3's
- * picker read a date typed into it in the region's calendar (#398).
+ * picker read a date typed into it in the region's calendar (#398). Each day's accessibility
+ * label is still in the region's calendar, as "Sunday, Aban 10" for November 1, so screen
+ * readers hear the day there. Giving [locale] the Gregorian calendar too didn't change it (#406).
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class DatePickerSheet(
@@ -53,7 +58,10 @@ internal class DatePickerSheet(
     private val onConfirm: (LocalDate) -> Unit,
     private val onCancel: () -> Unit
 ) {
-    private val gregorian = gregorianCalendar()
+    // In the device's time zone, as the app's today is: the picker marks the day it's in there
+    // as today. In UTC, it marked tomorrow every evening west of UTC, as a day that can't be
+    // picked.
+    private val gregorian = gregorianCalendar(NSTimeZone.localTimeZone)
 
     val picker = UIDatePicker().apply {
         datePickerMode = UIDatePickerMode.UIDatePickerModeDate
@@ -74,9 +82,9 @@ internal class DatePickerSheet(
     val doneButton = UIBarButtonItem(
         barButtonSystemItem = UIBarButtonSystemItem.UIBarButtonSystemItemDone,
         primaryAction = UIAction.actionWithHandler { onConfirm(picker.date.toLocalDate(gregorian)) }
-    )
+    ).apply { tintColor = DoneTint }
 
-    private val page = UIViewController(nibName = null, bundle = null).apply {
+    private val page = Page().apply {
         // A scroll view's content clears the sheet's bar by itself. The picker scrolls where the
         // sheet is shorter than it, as in landscape.
         val scroll = UIScrollView()
@@ -107,16 +115,22 @@ internal class DatePickerSheet(
         view.tintColor = Tint
         presentationController?.delegate = dismissal
         sheetPresentationController?.detents = listOf(
-            // As tall as the picker and the bar, or as the window allows.
             UISheetPresentationControllerDetent.customDetentWithIdentifier(null) { context ->
-                val pickerHeight =
-                    picker.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize.readValue()).useContents {
-                        height
-                    }
-                val barHeight = navigationBar.frame.useContents { size.height }
-                minOf(pickerHeight + barHeight, context!!.maximumDetentValue)
+                minOf(contentHeight(), context!!.maximumDetentValue)
             }
         )
+    }
+
+    /**
+     * The picker's height, and the page's safe area above it: the bar, and on iOS 27 the margin
+     * above the bar, 15 pt on an iPhone 17. Counting the bar alone left the sheet that much
+     * shorter than the picker, so its last week ran into the sheet's edge.
+     */
+    private fun contentHeight(): Double {
+        val pickerHeight = picker.systemLayoutSizeFittingSize(
+            UILayoutFittingCompressedSize.readValue()
+        ).useContents { height }
+        return pickerHeight + page.view.safeAreaInsets.useContents { top }
     }
 
     /** Shows the sheet over [viewController]. */
@@ -128,6 +142,25 @@ internal class DatePickerSheet(
     fun close() {
         if (controller.presentingViewController != null && !controller.isBeingDismissed()) {
             controller.dismissViewControllerAnimated(true, completion = null)
+        }
+    }
+
+    /**
+     * The sheet's page, which has the sheet work out its height again when the top of the page's
+     * safe area moves. The bar's place is known only once the sheet is laid out, after it first
+     * asks how tall to be. (`viewSafeAreaInsetsDidChange` would say so directly, but it's declared
+     * in a category, which Kotlin can't override.)
+     */
+    private class Page : UIViewController(nibName = null, bundle = null) {
+        private var safeAreaTop = 0.0
+
+        override fun viewDidLayoutSubviews() {
+            super.viewDidLayoutSubviews()
+            val top = view.safeAreaInsets.useContents { top }
+            if (top != safeAreaTop) {
+                safeAreaTop = top
+                navigationController?.sheetPresentationController?.invalidateDetents()
+            }
         }
     }
 
@@ -144,10 +177,20 @@ internal class DatePickerSheet(
         /** The pages' side margin. */
         const val SIDE_MARGIN = 16.0
 
-        /** The app's primary color, which iOS tints the picker's days and Done with. */
-        val Tint = UIColor.colorWithDynamicProvider { traits ->
-            val dark = traits?.userInterfaceStyle == UIUserInterfaceStyle.UIUserInterfaceStyleDark
-            (if (dark) BlueCardDarkColorScheme else BlueCardLightColorScheme).primary.toUIColor()
+        /** The app's primary color, which iOS tints the picker's days with. */
+        val Tint = dynamicColor(BlueCardLightColorScheme.primary, BlueCardDarkColorScheme.primary)
+
+        /**
+         * Done's color, which iOS fills it with under a white check. The dark scheme's primary is
+         * too light for that, about 2:1, so in dark mode it's the primary container, as Material
+         * fills a container under light content.
+         */
+        val DoneTint =
+            dynamicColor(BlueCardLightColorScheme.primary, BlueCardDarkColorScheme.primaryContainer)
+
+        fun dynamicColor(light: Color, dark: Color) = UIColor.colorWithDynamicProvider { traits ->
+            val isDark = traits?.userInterfaceStyle == UIUserInterfaceStyle.UIUserInterfaceStyleDark
+            (if (isDark) dark else light).toUIColor()
         }
 
         fun Color.toUIColor() = UIColor.colorWithRed(
