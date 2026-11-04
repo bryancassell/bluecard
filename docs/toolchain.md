@@ -229,6 +229,7 @@ it.
 │   ├── workflows/ci.yml        Continuous integration
 │   └── dependabot.yml          Weekly dependency update pull requests
 ├── scripts/
+│   ├── check-code-rules.sh     ARCHITECTURE.md convention checks run by the build
 │   ├── check-test-rules.sh     Testing-rule checks run by the build
 │   ├── draw-ios-app-icons.swift  Draws the iOS app's icons from the Android icon's shapes
 │   └── qa/                     Emulator helper and seed data for the QA test plan

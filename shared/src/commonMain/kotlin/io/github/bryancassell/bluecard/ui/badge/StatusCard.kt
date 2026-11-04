@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.ic_event_available
+import io.github.bryancassell.bluecard.ui.BlueCardFilledTonalButton
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 
@@ -140,7 +140,7 @@ private fun MarkOnDateButton(
     modifier: Modifier = Modifier
 ) {
     PickDate(initial, today, onPick) { onClick ->
-        FilledTonalButton(
+        BlueCardFilledTonalButton(
             onClick = onClick,
             modifier = modifier,
             contentPadding = ButtonDefaults.ButtonWithIconContentPadding

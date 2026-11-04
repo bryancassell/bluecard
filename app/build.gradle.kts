@@ -232,7 +232,16 @@ val checkTestRules = tasks.register<Exec>("checkTestRules") {
     commandLine(rootProject.file("scripts/check-test-rules.sh"))
 }
 
-tasks.named("check") { dependsOn(jacocoDebugCoverageVerification, checkTestRules) }
+// Conventions from ARCHITECTURE.md that a text search can catch.
+val checkCodeRules = tasks.register<Exec>("checkCodeRules") {
+    group = "verification"
+    description = "Fails on Material's buttons used outside the app's own (ui/Buttons.kt)."
+    commandLine(rootProject.file("scripts/check-code-rules.sh"))
+}
+
+tasks.named("check") {
+    dependsOn(jacocoDebugCoverageVerification, checkTestRules, checkCodeRules)
+}
 
 // Count code that runs under Robolectric, which loads app classes in its own class loader.
 // https://github.com/robolectric/robolectric/issues/2230

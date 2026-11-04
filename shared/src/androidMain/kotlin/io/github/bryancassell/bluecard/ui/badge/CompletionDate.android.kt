@@ -23,7 +23,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -46,6 +45,7 @@ import androidx.compose.ui.window.DialogProperties
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.date_picker_cancel
 import io.github.bryancassell.bluecard.resources.date_picker_ok
+import io.github.bryancassell.bluecard.ui.BlueCardTextButton
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -204,14 +204,14 @@ private fun ColumnScope.DatePickerButtons(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        TextButton(onClick = onDismiss) {
+        BlueCardTextButton(onClick = onDismiss) {
             Text(stringResource(Res.string.date_picker_cancel))
         }
         // Null while a typed date isn't valid. One the picker doesn't offer can still be
         // selected when it's restored with an earlier today, as when the system stopped the app
         // and the scout then crossed a date line westward.
         val selected = state.selectedDateMillis?.takeIf(state.selectableDates::isSelectableDate)
-        TextButton(
+        BlueCardTextButton(
             onClick = { selected?.let { onConfirm(it.toPickerDate()) } },
             enabled = selected != null
         ) {
