@@ -79,6 +79,14 @@ internal fun rowPressHighlight(color: Color, darkTheme: Boolean) = PressHighligh
 )
 
 /**
+ * A row's feedback on iOS with no press: only the focus and hover layers ([PressHighlight]), since
+ * its press draws a transparent color. It's for a row with a switch, which iOS's own apps don't
+ * turn grey while held, as the switch shows the tap (#352).
+ */
+internal val FocusAndHoverHighlight =
+    PressHighlight(Color.Transparent, BlendMode.SrcOver, fadeMillis = PRESS_FADE_MILLIS)
+
+/**
  * Material's ripple without its press, which iOS's dim and highlight replace. Its focus and hover
  * layers stay, so a hardware keyboard's focus and a pointer still show.
  */

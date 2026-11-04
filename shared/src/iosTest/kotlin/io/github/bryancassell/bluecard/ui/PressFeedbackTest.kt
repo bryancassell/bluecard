@@ -3,6 +3,7 @@
 package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -16,7 +17,7 @@ import platform.UIKit.UICellConfigurationState
 import platform.UIKit.UIColor
 import platform.UIKit.UIControlStateNormal
 
-/** Checks the press feedback's values against UIKit's. */
+/** Checks the press feedback's values against UIKit's, and colors converted for UIKit. */
 class PressFeedbackTest {
     @Test
     fun aButton_dimsAsASystemButtonsTitleDoes() {
@@ -80,6 +81,22 @@ class PressFeedbackTest {
                 rowHighlightColor(darkTheme),
                 "dark: $darkTheme"
             )
+        }
+    }
+
+    @Test
+    fun aColor_isTheSameInUIKit() {
+        // The light and dark pages' backgrounds, which the switch is drawn on, and a translucent
+        // color.
+        for (color in listOf(Color(0xFFEAF1FE), Color(0xFF00132D), Color(0x80123456))) {
+            val inUIKit = color.toUIColor().toComposeColor(interfaceStyle(darkTheme = false))
+
+            listOf(
+                color.red to inUIKit.red,
+                color.green to inUIKit.green,
+                color.blue to inUIKit.blue,
+                color.alpha to inUIKit.alpha
+            ).forEach { (want, got) -> assertEquals(want, got, 0.001f, "$color, got $inUIKit") }
         }
     }
 }

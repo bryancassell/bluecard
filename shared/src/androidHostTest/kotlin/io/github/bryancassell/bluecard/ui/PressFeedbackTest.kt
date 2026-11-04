@@ -305,6 +305,27 @@ class PressFeedbackTest {
     }
 
     @Test
+    fun focusAndHoverHighlight_pressed_drawsNothing() {
+        // A switch row's, which iOS's own apps don't turn grey while held.
+        show(FocusAndHoverHighlight, Color.White)
+
+        press()
+
+        assertShown(Color.White)
+    }
+
+    @Test
+    fun focusAndHoverHighlight_focused_showsTheRipplesFocusLayer() {
+        show(FocusAndHoverHighlight, Color.White)
+
+        assertTrue(interactionSource.tryEmit(FocusInteraction.Focus()))
+        composeTestRule.mainClock.advanceTimeBy(100)
+
+        val focused = 1f - FocusAndHoverRippleAlpha.focusedAlpha
+        assertShown(Color(focused, focused, focused))
+    }
+
+    @Test
     fun theSameFeedback_isEqual() {
         // Compose compares indications to decide whether to make new nodes.
         assertEquals(Dim, PressDim(0.2f, FADE_MILLIS.toInt()))

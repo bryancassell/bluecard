@@ -20,7 +20,7 @@ import platform.UIKit.resolvedColorWithTraitCollection
 import platform.UIKit.systemGray4Color
 
 // iOS's press feedback is in common code, where Android's Compose UI tests check it. This file
-// reads UIKit's color for it and provides it.
+// reads UIKit's color for it and provides it, and converts colors between UIKit and Compose.
 
 /** UIKit's traits for light or dark mode. */
 internal fun interfaceStyle(darkTheme: Boolean): UITraitCollection =
@@ -41,6 +41,14 @@ internal fun UIColor.toComposeColor(traits: UITraitCollection): Color = memScope
     resolvedColorWithTraitCollection(traits).getRed(red.ptr, green.ptr, blue.ptr, alpha.ptr)
     Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat(), alpha.value.toFloat())
 }
+
+/** This color for UIKit, in sRGB as the theme's colors are. */
+internal fun Color.toUIColor(): UIColor = UIColor.colorWithRed(
+    red = red.toDouble(),
+    green = green.toDouble(),
+    blue = blue.toDouble(),
+    alpha = alpha.toDouble()
+)
 
 /** The background UIKit gives a highlighted list row, `systemGray4`, in light or dark mode. */
 internal fun rowHighlightColor(darkTheme: Boolean): Color =

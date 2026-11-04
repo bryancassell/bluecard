@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Text
@@ -10,6 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -20,11 +24,13 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -100,6 +106,63 @@ class TogglesTest {
         assertTrue("The label ends before the switch", longLabel.right < switch().bounds.left)
         assertEquals(shortSwitch.width, switch().bounds.width, 0.5f)
         assertEquals(shortSwitch.right, switch().bounds.right, 0.5f)
+    }
+
+    /**
+     * Shows a toggle on a white page with iOS's row highlight as the theme's, as `BlueCardTheme`
+     * gives it on iOS. Its focus layer is checked on the indication, in PressFeedbackTest: a test
+     * focusing the row here passed or failed with the order the tests ran in, though the row was
+     * focused, in keyboard mode.
+     */
+    private fun showOnWhiteWithRowHighlight(iosSwitch: Boolean) {
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.setContent {
+            ProvideIosRowHighlight(rowPressHighlight(Color(0xFFD1D1D6), darkTheme = false)) {
+                Box(Modifier.background(Color.White)) {
+                    ToggleRow("Completed", checked = false, onCheckedChange = {}, iosSwitch)
+                }
+            }
+        }
+        composeTestRule.mainClock.advanceTimeByFrame()
+    }
+
+    /** The color at the row's start, in its padding, where nothing else draws. */
+    private fun rowStart(): Color = composeTestRule.onNodeWithText("Completed").captureToImage()
+        .toPixelMap().let { it[2, it.height / 2] }
+
+    private fun assertColor(expected: Color, shown: Color) {
+        // One step of 8-bit color either way, from rounding.
+        val step = 1.5f / 255
+        listOf(
+            expected.red to shown.red,
+            expected.green to shown.green,
+            expected.blue to shown.blue
+        ).forEach { (want, got) -> assertEquals("$expected, shown $shown", want, got, step) }
+    }
+
+    private fun pressRow() {
+        composeTestRule.onNodeWithText("Completed").performTouchInput { down(center) }
+        composeTestRule.mainClock.advanceTimeBy(100)
+    }
+
+    @Test
+    fun iosToggle_held_doesntTurnGrey() {
+        // As iOS's own switch rows don't. The grey would also cover UIKit's switch.
+        showOnWhiteWithRowHighlight(iosSwitch = true)
+
+        pressRow()
+
+        assertColor(Color.White, rowStart())
+    }
+
+    @Test
+    fun checkboxToggle_held_turnsGreyWithTheTheme() {
+        // So the test above would see the grey if it were drawn.
+        showOnWhiteWithRowHighlight(iosSwitch = false)
+
+        pressRow()
+
+        assertColor(Color(0xFFD1D1D6), rowStart())
     }
 
     private fun showIosChoices(firstLabel: String = "This phone") {

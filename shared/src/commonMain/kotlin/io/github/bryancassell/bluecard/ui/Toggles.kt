@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -49,7 +50,8 @@ internal expect fun PlatformSwitch(checked: Boolean, modifier: Modifier = Modifi
 /**
  * A row labeled [label] that toggles [checked] wherever it's tapped, which screen readers read as
  * one control. It shows a checkbox at its start, or with [iosSwitch], the platform's switch at its
- * end, as iOS's own rows do. A long label wraps.
+ * end, as iOS's own rows do. A long label wraps. It's on the page's background, which iOS's switch
+ * is drawn on.
  */
 @Composable
 internal fun ToggleRow(
@@ -65,6 +67,10 @@ internal fun ToggleRow(
             .fillMaxWidth()
             .toggleable(
                 value = checked,
+                interactionSource = null,
+                // No grey while held, as on iOS's own switch rows. The grey would also cover
+                // UIKit's switch, which is under Compose's canvas, as PlatformSwitch says.
+                indication = if (iosSwitch) FocusAndHoverHighlight else LocalIndication.current,
                 // Compose gives iOS's VoiceOver a switch's trait for Role.Switch, and none for
                 // Role.Checkbox (SemanticConfigurationUtils.ios.kt, Compose UI 1.12.2).
                 role = if (iosSwitch) Role.Switch else Role.Checkbox,
