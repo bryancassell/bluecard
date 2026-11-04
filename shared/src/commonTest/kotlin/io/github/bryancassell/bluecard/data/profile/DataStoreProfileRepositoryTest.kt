@@ -2,6 +2,8 @@ package io.github.bryancassell.bluecard.data.profile
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.testing.TemporaryDirectory
 import kotlin.test.AfterTest
@@ -40,6 +42,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     private val externalScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> uncaught += e }
     )
+    private val outlivingWork = OutlivingWork(externalScope, NoBackgroundTime)
 
     /** A new DataStore on [file], as a new app process would create. */
     private fun newDataStore(produceFile: () -> Path = { file }): DataStore<Preferences> {
@@ -51,7 +54,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     }
 
     private fun newRepository(produceFile: () -> Path = { file }) =
-        DataStoreProfileRepository(newDataStore(produceFile), externalScope)
+        DataStoreProfileRepository(newDataStore(produceFile), outlivingWork)
 
     override val repository = newRepository()
 
@@ -111,7 +114,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
                 return dataStore.updateData(transform).also { written.complete(Unit) }
             }
         }
-        val repository = DataStoreProfileRepository(held, externalScope)
+        val repository = DataStoreProfileRepository(held, outlivingWork)
 
         val caller = launch(start = CoroutineStart.UNDISPATCHED) {
             repository.saveProfile(Profile("Alex Scout", "123"))
@@ -134,7 +137,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
                 transform: suspend (Preferences) -> Preferences
             ): Preferences = throw IOException("Disk full")
         }
-        val repository = DataStoreProfileRepository(full, externalScope)
+        val repository = DataStoreProfileRepository(full, outlivingWork)
 
         val error = runCatching {
             repository.saveProfile(Profile("Alex Scout", "123"))

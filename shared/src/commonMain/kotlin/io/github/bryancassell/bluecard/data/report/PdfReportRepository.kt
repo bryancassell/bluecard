@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.data.report
 
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.deleteOrWarn
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -9,9 +10,7 @@ import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
-import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.data.systemFileSystem
-import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
@@ -20,7 +19,6 @@ import io.github.bryancassell.bluecard.text.TextRules
 import kotlin.random.Random
 import kotlin.random.nextULong
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
@@ -63,8 +61,8 @@ interface ReportPlatform<T : ReportText> {
  * progress doesn't delete it: an app it was shared with, such as an email app that reads it only
  * when it sends, may still need it.
  *
- * Saving runs in [externalScope], so a report finishes saving even if the scout leaves the
- * screen ([runOutlivingCaller]).
+ * Saving runs as [outlivingWork], so a report finishes saving even if the scout leaves the
+ * screen.
  */
 class PdfReportRepository<T : ReportText>(
     private val platform: ReportPlatform<T>,
@@ -78,7 +76,7 @@ class PdfReportRepository<T : ReportText>(
     private val phoneNumberFormat: PhoneNumberFormat,
     private val warningLog: WarningLog,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @param:ApplicationScope private val externalScope: CoroutineScope
+    private val outlivingWork: OutlivingWork
 ) : ReportRepository {
     private val fileSystem = systemFileSystem
 
@@ -109,7 +107,7 @@ class PdfReportRepository<T : ReportText>(
     }
 
     override suspend fun saveReport(advancementId: String, destination: DocumentUri) =
-        externalScope.runOutlivingCaller { save(advancementId, destination) }
+        outlivingWork.runOutlivingCaller { save(advancementId, destination) }
 
     /**
      * Writes the report to [destination] ([Documents.save]), or nothing when there's no report

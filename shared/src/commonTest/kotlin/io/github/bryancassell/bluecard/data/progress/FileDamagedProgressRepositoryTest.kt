@@ -1,5 +1,7 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
@@ -66,7 +68,7 @@ abstract class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryCont
             { noBackup },
             clock,
             warningLog,
-            CoroutineScope(SupervisorJob() + ioDispatcher),
+            OutlivingWork(CoroutineScope(SupervisorJob() + ioDispatcher), NoBackgroundTime),
             ioDispatcher
         )
 
