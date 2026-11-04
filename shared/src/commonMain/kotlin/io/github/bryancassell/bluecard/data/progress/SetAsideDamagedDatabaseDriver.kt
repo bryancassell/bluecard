@@ -99,45 +99,31 @@ class SetAsideDamagedDatabaseDriver(
     }
 
     /**
-     * Whether Room's schema version (the file's `user_version`) and its identity hash (in
-     * `room_master_table`) disagree on whether the database has this build's schema. Storage
-     * can change either without `quick_check` noticing, since SQLite doesn't use them, and Room
-     * then refuses the database at every launch (#389). With this build's version, a changed or
-     * missing hash fails Room's identity check (`checkIdentity`, Room 3.0.3). With this build's
-     * hash, a higher version has no migration, and a lower one runs migrations on a schema that
-     * already has their columns, which fails with SQLITE_ERROR "duplicate column name", a load
-     * failure.
+     * Whether storage has changed Room's schema version or identity hash ([isRoomHeaderDamaged]).
      *
-     * Left to Room, which keeps the progress or refuses it as before:
-     * - Version 0. Room's create path keeps the tables it finds if they're this schema's, and
-     *   saves the version and hash again.
-     * - No `room_master_table`. Room's identity check then checks the tables in the same way,
-     *   and saves the hash again.
-     * - Neither is this build's. That's an older database, which Room migrates, or a newer
-     *   build's, which it refuses with a missing migration, a crash on purpose: reinstalling the
-     *   newer build opens it again, and setting it aside would tell the scout it's damaged. A
-     *   newer version that kept this schema would have this hash, and would be set aside.
-     *
-     * Room also accepts a "legacy" hash, from an older way of computing it. No database here has
-     * one: every Room version the app has used computed this hash for this schema, as version
-     * 4's file in shared/schemas/ shows, which CI fails the build for changing.
+     * A database without `room_master_table` is left to Room, which checks the tables against
+     * this build's schema and saves the table again (`checkIdentity`, Room 3.0.3). One whose
+     * definition no longer has the column fails Room's own query at every launch, with
+     * SQLITE_ERROR, so that's damage too.
      */
     private fun SQLiteConnection.hasDamagedRoomHeader(): Boolean {
         val version = prepare("PRAGMA user_version").use {
             it.step()
             it.getLong(0)
         }
-        if (version == 0L) return false
         val hasIdentityTable = prepare(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'room_master_table'"
         ).use { it.step() }
         if (!hasIdentityTable) return false
-        // Room's own query, from RoomMasterTable, which it keeps internal.
-        val identityHash = prepare(
-            "SELECT identity_hash FROM room_master_table WHERE id = 42 LIMIT 1"
-        ).use { if (it.step() && !it.isNull(0)) it.getText(0) else null }
-        return (version == BlueCardDatabase.VERSION.toLong()) !=
-            (identityHash == BlueCardDatabase.IDENTITY_HASH)
+        val identityHash = try {
+            // Room's own query, from RoomMasterTable, which it keeps internal.
+            prepare("SELECT identity_hash FROM room_master_table WHERE id = 42 LIMIT 1").use {
+                if (it.step() && !it.isNull(0)) it.getText(0) else null
+            }
+        } catch (e: SQLiteException) {
+            if (e.resultCode == SQLITE_ERROR) return true else throw e
+        }
+        return isRoomHeaderDamaged(version, identityHash)
     }
 
     /**

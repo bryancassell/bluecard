@@ -463,9 +463,13 @@ class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun changedIdentityHash_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        // A byte of it changed by storage.
+        // Its first character changed by storage.
         val damaged = changeSavedProgress(
-            "UPDATE room_master_table SET identity_hash = '0' || substr(identity_hash, 2)"
+            """
+            UPDATE room_master_table SET identity_hash =
+                CASE substr(identity_hash, 1, 1) WHEN '0' THEN '1' ELSE '0' END ||
+                substr(identity_hash, 2)
+            """
         )
 
         assertSetAsideWhenItOpens(damaged)
@@ -480,62 +484,118 @@ class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun higherVersionWithThisSchema_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        // Version 4 with a bit changed by storage.
-        val damaged = changeSavedProgress("PRAGMA user_version = 68")
+        // This build's version with a bit changed by storage.
+        val damaged = changeSavedProgress("PRAGMA user_version = ${BlueCardDatabase.VERSION or 64}")
 
         assertSetAsideWhenItOpens(damaged)
     }
 
     @Test
     fun lowerVersionWithThisSchema_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        val damaged = changeSavedProgress("PRAGMA user_version = 3")
+        val damaged = changeSavedProgress("PRAGMA user_version = ${BlueCardDatabase.VERSION - 1}")
 
         assertSetAsideWhenItOpens(damaged)
     }
 
     @Test
-    fun versionZero_isLeftToRoom_whichKeepsTheProgress() = runTest {
+    fun olderDatabaseWithAnotherVersion_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val older = BlueCardDatabase.VERSION - 1
+        helper.createDatabase(older).use {
+            it.execSQL(
+                """
+                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
+                VALUES ('camping', '2026-01-01', '2026-03-01')
+                """
+            )
+        }
+        val damaged = changeFile("PRAGMA user_version = ${older - 1}")
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun identityTableWithoutItsColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // Its definition changed by storage into SQL that still reads, which Room's query fails.
+        val damaged = changeSavedProgress(
+            "PRAGMA writable_schema = ON",
+            """
+            UPDATE sqlite_master SET sql = replace(sql, 'identity_hash', 'identity_hasj')
+            WHERE name = 'room_master_table'
+            """,
+            "PRAGMA writable_schema = OFF"
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun versionZero_isLeftToRoom_whichKeepsTheProgress_andSavesTheVersionAgain() = runTest {
         changeSavedProgress("PRAGMA user_version = 0")
 
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
         assertEquals(emptyList<File>(), copies())
+        databases.last().close()
+        assertEquals(BlueCardDatabase.VERSION.toLong() to currentHash(), savedHeader())
     }
 
     @Test
-    fun missingIdentityTable_isLeftToRoom_whichKeepsTheProgress() = runTest {
+    fun missingIdentityTable_isLeftToRoom_whichKeepsTheProgress_andSavesTheHashAgain() = runTest {
         changeSavedProgress("DROP TABLE room_master_table")
 
         val progress = open().readProgress()
 
         assertEquals(300, progress.size)
         assertEquals(emptyList<File>(), copies())
+        databases.last().close()
+        assertEquals(BlueCardDatabase.VERSION.toLong() to currentHash(), savedHeader())
     }
 
     @Test
-    fun identityHash_isTheOneRoomWrites() = runTest {
-        val written = open().useReaderConnection { connection ->
-            connection.usePrepared("SELECT identity_hash FROM room_master_table") {
-                it.step()
-                it.getText(0)
-            }
+    fun identityHashes_areTheOnesRoomSaves() = runTest {
+        // Each version's from its schema in shared/schemas/, then this build's as the app saves it.
+        val saved = (1..BlueCardDatabase.VERSION).map { version ->
+            context.deleteDatabase(BlueCardDatabase.NAME)
+            helper.createDatabase(version).close()
+            version to savedHeader().second
         }
+        context.deleteDatabase(BlueCardDatabase.NAME)
+        open().readProgress()
+        databases.single().close()
 
-        assertEquals(
-            "Room wrote another identity hash, as for a new schema version. " +
-                "Update BlueCardDatabase.IDENTITY_HASH.",
-            written,
-            BlueCardDatabase.IDENTITY_HASH
-        )
+        (saved + (BlueCardDatabase.VERSION to savedHeader().second)).forEach {
+            assertTrue(
+                "BlueCardDatabase.IDENTITY_HASHES needs $it, the hash Room saves for its version.",
+                it in BlueCardDatabase.IDENTITY_HASHES
+            )
+        }
+    }
+
+    /** This build's identity hash. */
+    private fun currentHash() =
+        BlueCardDatabase.IDENTITY_HASHES.last { it.first == BlueCardDatabase.VERSION }.second
+
+    /** The database file's Room version and identity hash. */
+    private fun savedHeader() = BundledSQLiteDriver().open(file.path).use { sqlite ->
+        val hash = sqlite.prepare("SELECT identity_hash FROM room_master_table").use {
+            it.step()
+            it.getText(0)
+        }
+        sqlite.longFor("PRAGMA user_version") to hash
+    }
+
+    /** Saves enough badges to fill several pages, then [changeFile]. */
+    private suspend fun changeSavedProgress(vararg changes: String): ByteArray {
+        saveProgress(open())
+        return changeFile(*changes)
     }
 
     /**
-     * Saves enough badges to fill several pages, then runs [changes] on them, which leave
-     * nothing `PRAGMA quick_check` finds. Gives the file as it is after them.
+     * Runs [changes] on the database file, which leave nothing `PRAGMA quick_check` finds. Gives
+     * the file as it is after them.
      */
-    private suspend fun changeSavedProgress(vararg changes: String): ByteArray {
-        saveProgress(open())
+    private fun changeFile(vararg changes: String): ByteArray {
         val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
             changes.forEach { sqlite.execSQL(it) }
             sqlite.prepare("PRAGMA quick_check").use {

@@ -154,10 +154,14 @@ isn't missing; `./gradlew clean build` checks again from scratch, as Koin's
 version's schema there as JSON. Commit these files: they show schema changes in
 review, and future migration tests read them. Changing an entity means raising
 the database version and adding a migration, or existing users' data can't be
-opened. It also means updating `BlueCardDatabase.IDENTITY_HASH` to the new
-schema's hash, or the app would set every database aside as damaged.
-`SetAsideDamagedDatabaseDriverTest` fails until it's updated. CI fails if the build changes them, which also catches a Room update
-that computes a different identity hash for the same schema.
+opened. CI fails if the build changes the files, which also catches a Room
+update that computes a different identity hash for the same schema.
+
+Each new version, even one that keeps the schema, also needs its identity hash
+in `BlueCardDatabase.IDENTITY_HASHES`, or the app would take databases of that
+version for damaged ones and set them aside. `SetAsideDamagedDatabaseDriverTest`
+fails until it's there. If a Room update changes a version's hash, keep the old
+line beside the new one, since installed databases keep the old hash.
 
 **Compose Multiplatform resources** (`shared/src/commonMain/composeResources/`).
 The strings, icons and catalog, which common code can read, unlike Android

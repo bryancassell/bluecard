@@ -43,13 +43,23 @@ abstract class BlueCardDatabase : RoomDatabase() {
         const val VERSION = 4
 
         /**
-         * The identity hash Room saves in the database for [VERSION]'s schema, as in its file in
-         * shared/schemas/. [SetAsideDamagedDatabaseDriver] compares a database's with it before
-         * Room opens it. Room's own copy is in the code it generates, which it keeps internal
-         * (`RoomOpenDelegate`, Room 3.0.3). SetAsideDamagedDatabaseDriverTest fails until this is
-         * updated for a new version.
+         * Each schema version, with the identity hash Room saves in a database of that version,
+         * as in the version's file in shared/schemas/. [SetAsideDamagedDatabaseDriver] checks a
+         * database's pair against them before Room opens it. Room keeps its own copy of only
+         * the latest, in code it keeps internal (`RoomOpenDelegate`, Room 3.0.3).
+         *
+         * Room computes the hash from the tables alone, so a new version that keeps its schema,
+         * such as one whose migration only changes data, has a line of its own with the same
+         * hash. If a Room update ever computes another hash for a version, as CI would show, the
+         * old line stays beside the new one, since installed databases keep the old hash.
+         * SetAsideDamagedDatabaseDriverTest fails until every version's hash is here.
          */
-        const val IDENTITY_HASH = "bdfb11170140a5d1e2c7675c1126dcb3"
+        val IDENTITY_HASHES = listOf(
+            1 to "380113d95e4e8e587e57cce0d98668d1",
+            2 to "67dcaffcb2188a16a46be6fa4f75ba25",
+            3 to "3e67ea8b76032a8049f6f3cad8313660",
+            4 to "bdfb11170140a5d1e2c7675c1126dcb3"
+        )
     }
 }
 
