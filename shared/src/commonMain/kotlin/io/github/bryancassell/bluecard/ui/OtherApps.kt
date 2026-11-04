@@ -21,7 +21,10 @@ interface OtherApps {
     /** Opens the share sheet, to send [file], of [mimeType], to the app the scout picks. */
     fun share(file: DocumentUri, mimeType: String)
 
-    /** Shows [text] briefly over the screen, such as that no app could open a link. */
+    /**
+     * Shows [text], such as that no app could open a link: briefly on Android, and on iOS in an
+     * alert the scout closes.
+     */
     fun showMessage(text: String)
 }
 

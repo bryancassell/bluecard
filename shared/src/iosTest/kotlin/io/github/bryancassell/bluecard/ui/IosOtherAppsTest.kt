@@ -121,11 +121,12 @@ class IosOtherAppsTest {
         assertEquals(emptyList(), urls.opened)
     }
 
-    // Saving replaces half an emoji (#390), but if one got through, UTF-8 couldn't encode it.
+    // Saving replaces half an emoji (#390), but UTF-8 couldn't encode one that got through, and
+    // "No app on this phone can call the number." would be wrong.
     @Test
-    fun link_thatCantBeEncoded_opensNothing() {
-        assertFalse(otherApps().dial("555 1234 \uD83D"))
-        assertEquals(emptyList(), urls.opened)
+    fun halfAnEmoji_isReplaced_andTheLinkOpens() {
+        assertTrue(otherApps().dial("555 1234 \uD83D"))
+        assertEquals(listOf<String?>("tel:5551234%EF%BF%BD"), urls.opened)
     }
 
     @Test

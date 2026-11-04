@@ -6,7 +6,7 @@ import androidx.compose.ui.uikit.LocalUIViewController
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.no_app_ok
-import kotlinx.cinterop.BetaInteropApi
+import io.github.bryancassell.bluecard.text.replacingLoneSurrogates
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import org.jetbrains.compose.resources.stringResource
@@ -14,7 +14,6 @@ import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSCharacterSet
 import platform.Foundation.NSString
 import platform.Foundation.NSURL
-import platform.Foundation.create
 import platform.Foundation.stringByAddingPercentEncodingWithAllowedCharacters
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIAlertAction
@@ -48,6 +47,11 @@ internal class IosOtherApps(
     // iOS asks the scout to call or cancel, so nothing calls without their say, as Android's
     // ACTION_DIAL only fills the number in. It's dialed as typed, without spaces, which RFC 3966
     // doesn't allow in a tel: URL: https://www.rfc-editor.org/rfc/rfc3966#section-3
+    // Apple says its Phone app doesn't dial a number with * or #, so a tap on one may do
+    // nothing:
+    // https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/PhoneLinks/PhoneLinks.html
+    // It's still passed as typed, as on Android, rather than cut short or refused, until an
+    // iPhone shows what iOS does with one (#357).
     override fun dial(phoneNumber: String) =
         open(url("tel", phoneNumber.filterNot { it.isWhitespace() }, keep = "+"))
 
@@ -105,7 +109,8 @@ internal class IosOtherApps(
     }
 
     // canOpenURL is how Apple has an app find out whether any app can open a link, and after
-    // it's true, it guarantees openURL opens it:
+    // it's true, Apple guarantees openURL launches an app for it, so openURL's own answer, which
+    // comes later, isn't waited for:
     // https://developer.apple.com/documentation/uikit/uiapplication/canopenurl(_:)
     private fun open(url: NSURL?): Boolean {
         if (url == null || !urls.canOpen(url)) return false
@@ -116,12 +121,12 @@ internal class IosOtherApps(
 
 /**
  * The URL with [scheme] for [text], which is percent-encoded but for [keep] and what Android's
- * `Uri.encode` keeps, or null if it can't be, as for text with half an emoji.
+ * `Uri.encode` keeps. Half an emoji, which UTF-8 can't encode, is replaced as saving replaces it
+ * (#390), so the link still opens, as Android passes the same text on.
  */
-@OptIn(BetaInteropApi::class)
-internal fun url(scheme: String, text: String, keep: String): NSURL? {
+private fun url(scheme: String, text: String, keep: String): NSURL? {
     val allowed = NSCharacterSet.characterSetWithCharactersInString(UNRESERVED + keep)
-    val encoded = NSString.create(string = text)
+    val encoded = (replacingLoneSurrogates(text) as NSString)
         .stringByAddingPercentEncodingWithAllowedCharacters(allowed) ?: return null
     return NSURL.URLWithString("$scheme:$encoded")
 }

@@ -1038,7 +1038,7 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [PDF](#pdf-report) | Pages laid out in common code; lines broken and drawn with `StaticLayout` and `PdfDocument`, or Core Text and `UIGraphicsPDFRenderer` | One set of page rules; `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker and share sheet, with a FileProvider on Android; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
 | [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |
-| [Backup](#backup) | The system's backup, of the database and DataStore only | Records survive a phone change, with no app sync |
+| [Backup](#backup) | The system's backup, without damaged progress or files to share | Records survive a phone change, with no app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
 | [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator, iOS's writer on the simulator | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |

@@ -416,13 +416,11 @@ but leaves backup on, so turn backup off afterwards if it was off in step 1.
 
 ### Checking backup on iOS
 
-On iOS, iCloud Backup copies the app's files except `tmp`, `Library/Caches`
-and what's marked excluded from backup, with everything in a marked folder
-([Apple's guide](https://developer.apple.com/documentation/foundation/optimizing-your-app-s-data-for-icloud-backup)).
-The app marks one folder, `Library/Application Support/no-backup`
-(`noBackupDirectory` in `IosModule.kt`). `NoBackupDirectoryTest` and
-`IosModuleTest` check the marks. A simulator makes no backups, so after
-changing where the app stores data, check on one what a backup would take:
+What iCloud Backup takes is in
+[ARCHITECTURE.md's Backup section](../ARCHITECTURE.md#backup), and
+`NoBackupDirectoryTest` and `IosModuleTest` check the folder it leaves out. A
+simulator makes no backups, so after changing where the app stores data, check
+on one what a backup would take:
 
 1. Run the Debug app on a simulator (see
    [Running the iOS app](#running-the-ios-app)), go through Onboarding and open

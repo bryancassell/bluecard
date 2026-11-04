@@ -176,16 +176,7 @@ class IosModuleTest {
         val copy = fileSystem.list(damagedProgressFolder)
             .single { fileSystem.metadata(it).isDirectory }
         assertEquals(8192L, fileSystem.metadata(copy / BlueCardDatabase.NAME).size)
-    }
-
-    // So a phone restored from a backup gets neither the copies nor a notice about them.
-    @Test
-    fun damagedProgress_isInAFolderBackupsLeaveOut() = runTest {
-        fileSystem.write(databaseFile) { write(ByteArray(8192) { 7 }) }
-
-        database.value.progressDao().observeAll().first()
-
-        assertTrue(fileSystem.exists(damagedProgressFolder))
+        // So a phone restored from a backup gets neither the copies nor a notice about them.
         assertTrue(isExcludedFromBackup(directory / NO_BACKUP_FOLDER))
     }
 

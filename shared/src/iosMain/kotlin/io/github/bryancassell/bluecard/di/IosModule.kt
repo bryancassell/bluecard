@@ -212,14 +212,23 @@ internal fun applicationSupportDirectory(): Path = memScoped {
  * https://developer.apple.com/documentation/foundation/optimizing-your-app-s-data-for-icloud-backup
  *
  * Apple says some file operations clear the mark, so it's set each time the app first needs
- * the folder. If it can't be, the folder is used anyway, with a warning: a backup that has the
- * damaged copies only takes more room, while a damaged database that can't be moved here is
- * deleted.
+ * the folder, which is when the database first opens in each launch. If it can't be, the folder
+ * is used anyway, with a warning: a backup that has the damaged copies only takes more room,
+ * while a damaged database that can't be moved here is deleted.
+ *
+ * If the folder can't be made, such as on a full disk, that's a warning too, and it's still
+ * given: throwing would stop the database from opening, as finding it is part of that. Setting
+ * progress aside then makes it, or fails as it would have here, and the next launch marks it.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 internal fun noBackupDirectory(parent: Path, warningLog: WarningLog): Path = memScoped {
     val directory = parent / NO_BACKUP_FOLDER
-    systemFileSystem.createDirectories(directory)
+    try {
+        systemFileSystem.createDirectories(directory)
+    } catch (e: IOException) {
+        warningLog.warn(TAG, "Couldn't make $directory", e)
+        return@memScoped directory
+    }
     val error = alloc<ObjCObjectVar<NSError?>>()
     val url = NSURL.fileURLWithPath(directory.toString())
     if (!url.setResourceValue(true, NSURLIsExcludedFromBackupKey, error.ptr)) {

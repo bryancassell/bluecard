@@ -1,6 +1,7 @@
 package io.github.bryancassell.bluecard.di
 
 import io.github.bryancassell.bluecard.data.systemFileSystem
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -26,12 +27,8 @@ class NoBackupDirectoryTest {
     private val fileSystem = systemFileSystem
     private val parent =
         NSTemporaryDirectory().toPath() / "NoBackupDirectoryTest-${Random.nextLong()}"
-    private val warnings = mutableListOf<String>()
-    private val warningLog = object : WarningLog {
-        override fun warn(tag: String, message: String, error: Throwable?) {
-            warnings += message
-        }
-    }
+    private val warningLog = FakeWarningLog()
+    private val warnings get() = warningLog.warnings.map { it.message }
 
     @AfterTest
     fun deleteFiles() {
@@ -73,6 +70,20 @@ class NoBackupDirectoryTest {
         assertEquals(folder, directory)
         assertFalse(isExcludedFromBackup(directory))
         assertTrue(warnings.single().startsWith("Couldn't leave $folder out of backups"))
+    }
+
+    // As on a full disk. Throwing would stop the progress database from opening.
+    @Test
+    fun folderThatCantBeMade_isWarnedAbout_andStillGiven() {
+        // A file where the parent folder should be, so nothing can be made in it.
+        fileSystem.createDirectories(parent)
+        val notAFolder = parent / "file"
+        fileSystem.write(notAFolder) {}
+
+        val directory = noBackupDirectory(notAFolder, warningLog)
+
+        assertEquals(notAFolder / NO_BACKUP_FOLDER, directory)
+        assertEquals(listOf("Couldn't make $directory"), warnings)
     }
 }
 
