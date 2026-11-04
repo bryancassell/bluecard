@@ -345,7 +345,7 @@ line.
 
 ## Checking backup and restore
 
-The app's data is copied to a new phone by Android's
+On Android, the app's data is copied to a new phone by
 [Auto Backup](https://developer.android.com/identity/data/autobackup). Two files
 in `app/src/main/res/xml/` list what is backed up, which is only the databases
 directory and the DataStore directory: `data_extraction_rules.xml` for Android
@@ -417,6 +417,50 @@ script switches back to the Google backup transport before reinstalling,
 because that transport performs the restore; if it's skipped, logcat shows
 "Can't restore from D2d Transport". Its cleanup selects that transport again
 but leaves backup on, so turn backup off afterwards if it was off in step 1.
+
+### Checking backup on iOS
+
+What iCloud Backup takes is in
+[ARCHITECTURE.md's Backup section](../ARCHITECTURE.md#backup), and
+`NoBackupDirectoryTest` and `IosModuleTest` check the folder it leaves out. A
+simulator makes no backups, so after changing where the app stores data, check
+on one what a backup would take:
+
+1. Run the Debug app on a simulator (see
+   [Running the iOS app](#running-the-ios-app)), go through Onboarding and open
+   a badge, since Room makes the database only when it first opens it. Then
+   find the app's folder on the Mac:
+
+   ```sh
+   container=$(xcrun simctl get_app_container 'iPhone 17' io.github.bryancassell.bluecard.debug data)
+   ```
+
+2. To see damaged progress set aside too, quit the app, damage its database and
+   open it again:
+
+   ```sh
+   xcrun simctl terminate 'iPhone 17' io.github.bryancassell.bluecard.debug
+   head -c 8192 /dev/urandom > "$container/Library/Application Support/bluecard.db"
+   xcrun simctl launch 'iPhone 17' io.github.bryancassell.bluecard.debug
+   ```
+
+3. List the files a backup would take, then what's marked:
+
+   ```sh
+   cd "$container"
+   find . \( -path ./tmp -o -path ./Library/Caches \
+     -o -xattrname com.apple.metadata:com_apple_backup_excludeItem \) -prune -o -type f -print
+   find . -xattrname com.apple.metadata:com_apple_backup_excludeItem
+   ```
+
+   Besides what iOS keeps there itself
+   (`.com.apple.mobile_container_manager.metadata.plist`,
+   `Library/Saved Application State/` and `Library/SplashBoard/`), expect only
+   `bluecard.db` with its `-wal`, `-shm` and `.lck` files, and
+   `profile.preferences_pb`, in `Library/Application Support/`, and the app's
+   user defaults, `Library/Preferences/io.github.bryancassell.bluecard.debug.plist`,
+   which hold the language it saves at each launch. Only `no-backup` should be
+   marked, and after step 2 it holds `damaged-progress/`.
 
 ## Checking a release build
 

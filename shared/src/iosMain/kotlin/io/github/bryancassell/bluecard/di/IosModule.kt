@@ -21,6 +21,7 @@ import io.github.bryancassell.bluecard.data.report.ReportPdfWriter
 import io.github.bryancassell.bluecard.data.report.ReportPlatform
 import io.github.bryancassell.bluecard.data.report.ReportRepository
 import io.github.bryancassell.bluecard.data.report.UIGraphicsPdfWriter
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.text.IosTextRules
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
@@ -44,6 +45,8 @@ import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSLog
+import platform.Foundation.NSURL
+import platform.Foundation.NSURLIsExcludedFromBackupKey
 import platform.Foundation.NSUserDomainMask
 
 /** What the app is built from that needs iOS to build, such as where its files go. */
@@ -144,9 +147,8 @@ private fun damagedProgressRepository(
     @ApplicationScope scope: CoroutineScope,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) = FileDamagedProgressRepository(
-    // On the database's file system, as it must be. iCloud backs Application Support up, which
-    // the damaged copies must be left out of, so #349 marks their folder excluded from backup.
-    produceDirectory = ::applicationSupportDirectory,
+    // In Application Support, so on the database's file system, as it must be.
+    produceDirectory = { noBackupDirectory(applicationSupportDirectory(), warningLog) },
     clock = clock,
     warningLog = warningLog,
     externalScope = scope,
@@ -180,10 +182,11 @@ private fun profileDataStore(@ApplicationScope scope: CoroutineScope): DataStore
     )
 
 /**
- * The app's Application Support directory, where the progress database, the profile and damaged
- * progress go. It's made if it isn't there yet, as it isn't when the app first starts. Apple's
- * File System Programming Guide names it for "app-created data files", which iCloud backs up,
- * and Documents for files the scout made, which the Files app can show:
+ * The app's Application Support directory, where the progress database and the profile go, and
+ * the folder backups leave out ([noBackupDirectory]). It's made if it isn't there yet, as it
+ * isn't when the app first starts. Apple's File System Programming Guide names it for
+ * "app-created data files", which iCloud backs up, and Documents for files the scout made, which
+ * the Files app can show:
  * https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
@@ -201,3 +204,44 @@ internal fun applicationSupportDirectory(): Path = memScoped {
     )
     path.toPath()
 }
+
+/**
+ * The folder in [parent] that backups leave out, as Android's no-backup directory is, for
+ * damaged progress. It's made if it isn't there. iCloud backs up an app's files but for `tmp`,
+ * `Library/Caches` and what's marked `isExcludedFromBackup`, and a folder marked so is left out
+ * with everything in it:
+ * https://developer.apple.com/documentation/foundation/optimizing-your-app-s-data-for-icloud-backup
+ *
+ * Apple says some file operations clear the mark, so it's set each time the app first needs
+ * the folder, which is when the database first opens in each launch. If it can't be, the folder
+ * is used anyway, with a warning: a backup that has the damaged copies takes more room, and a
+ * phone restored from it shows the notice about them, while a damaged database that can't be
+ * moved here is deleted.
+ *
+ * If the folder can't be made, such as on a full disk, that's a warning too, and it's still
+ * given: throwing would stop the database from opening, as finding it is part of that. Setting
+ * progress aside then makes it, or fails as it would have here. The folder it makes is marked
+ * only at the next launch, so a backup until then takes it, as when the mark can't be set.
+ */
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+internal fun noBackupDirectory(parent: Path, warningLog: WarningLog): Path = memScoped {
+    val directory = parent / NO_BACKUP_FOLDER
+    try {
+        systemFileSystem.createDirectories(directory)
+    } catch (e: IOException) {
+        warningLog.warn(TAG, "Couldn't make $directory", e)
+        return@memScoped directory
+    }
+    val error = alloc<ObjCObjectVar<NSError?>>()
+    val url = NSURL.fileURLWithPath(directory.toString())
+    if (!url.setResourceValue(true, NSURLIsExcludedFromBackupKey, error.ptr)) {
+        val reason = error.value?.localizedDescription
+        warningLog.warn(TAG, "Couldn't leave $directory out of backups: $reason")
+    }
+    directory
+}
+
+/** The folder [noBackupDirectory] gives, in Application Support. */
+internal const val NO_BACKUP_FOLDER = "no-backup"
+
+private const val TAG = "IosModule"

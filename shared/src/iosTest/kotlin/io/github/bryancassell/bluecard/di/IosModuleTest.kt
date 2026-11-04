@@ -122,7 +122,7 @@ class IosModuleTest {
         }
         fileSystem.deleteRecursively(directory / LOCK_FILE)
         fileSystem.delete(directory / PROFILE_FILE)
-        fileSystem.deleteRecursively(directory / FileDamagedProgressRepository.FOLDER_NAME)
+        fileSystem.deleteRecursively(directory / NO_BACKUP_FOLDER)
         fileSystem.deleteRecursively(reportsFolder)
     }
 
@@ -173,10 +173,27 @@ class IosModuleTest {
 
         assertEquals(emptyList<BadgeProgressDetails>(), progress)
         assertTrue(koin.get<DamagedProgressRepository>().observeNoticePending().first())
-        val copy = fileSystem.list(directory / FileDamagedProgressRepository.FOLDER_NAME)
+        val copy = fileSystem.list(damagedProgressFolder)
             .single { fileSystem.metadata(it).isDirectory }
         assertEquals(8192L, fileSystem.metadata(copy / BlueCardDatabase.NAME).size)
+        // So a phone restored from a backup gets neither the copies nor a notice about them.
+        assertTrue(isExcludedFromBackup(directory / NO_BACKUP_FOLDER))
     }
+
+    @Test
+    fun databaseAndProfile_areBackedUp() = runTest {
+        database.value.progressDao().insertBadge(
+            BadgeProgress("camping", LocalDate(2026, 1, 1), LocalDate(2026, 3, 1))
+        )
+        koin.get<ProfileRepository>().saveProfile(Profile("Alex Scout", "123"))
+
+        assertFalse(isExcludedFromBackup(directory))
+        assertFalse(isExcludedFromBackup(databaseFile))
+        assertFalse(isExcludedFromBackup(directory / PROFILE_FILE))
+    }
+
+    private val damagedProgressFolder =
+        directory / NO_BACKUP_FOLDER / FileDamagedProgressRepository.FOLDER_NAME
 
     @Test
     fun damagedProgressRepository_isTheOneTheDatabaseSetsProgressAsideWith() {
