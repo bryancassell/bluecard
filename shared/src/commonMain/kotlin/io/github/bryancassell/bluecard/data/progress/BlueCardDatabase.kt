@@ -14,7 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 @ConstructedBy(BlueCardDatabaseConstructor::class)
 @Database(
     entities = [BadgeProgress::class, RequirementProgress::class, TrackerEntry::class],
-    version = 4,
+    version = BlueCardDatabase.VERSION,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -38,6 +38,18 @@ abstract class BlueCardDatabase : RoomDatabase() {
          * they don't name it; BackupRulesTest checks that they cover it.
          */
         const val NAME = "bluecard.db"
+
+        /** The schema version, which Room saves as the database file's `user_version`. */
+        const val VERSION = 4
+
+        /**
+         * The identity hash Room saves in the database for [VERSION]'s schema, as in its file in
+         * shared/schemas/. [SetAsideDamagedDatabaseDriver] compares a database's with it before
+         * Room opens it. Room's own copy is in the code it generates, which it keeps internal
+         * (`RoomOpenDelegate`, Room 3.0.3). SetAsideDamagedDatabaseDriverTest fails until this is
+         * updated for a new version.
+         */
+        const val IDENTITY_HASH = "bdfb11170140a5d1e2c7675c1126dcb3"
     }
 }
 

@@ -75,9 +75,10 @@ class SetAsideDamagedDatabaseDriver(
 
     /**
      * Whether `PRAGMA quick_check` (https://www.sqlite.org/pragma.html#pragma_quick_check) finds
-     * the database damaged. It reports what it finds as rows of text, and fails with
-     * SQLITE_CORRUPT or SQLITE_NOTADB if it can't read the database's structure, such as in a
-     * file that isn't a database. Any other failure says nothing about damage, so it's thrown.
+     * the database damaged, or Room's own values in it are ([hasDamagedRoomHeader]). The check
+     * reports what it finds as rows of text, and fails with SQLITE_CORRUPT or SQLITE_NOTADB if it
+     * can't read the database's structure, such as in a file that isn't a database. Any other
+     * failure says nothing about damage, so it's thrown.
      *
      * Pages that nothing uses ("Page 37: never used") only waste space: every read still works,
      * and Android's SQLite kept using such a database, so they don't count.
@@ -87,13 +88,56 @@ class SetAsideDamagedDatabaseDriver(
      */
     private fun isDamaged(fileName: String): Boolean = try {
         driver.open(fileName).use { connection ->
-            connection.prepare("PRAGMA quick_check").use { check ->
-                val problems = buildList { while (check.step()) add(check.getText(0)) }
-                problems.any { it != "ok" && !UNUSED_PAGE.matches(it) }
+            val problems = connection.prepare("PRAGMA quick_check").use { check ->
+                buildList { while (check.step()) add(check.getText(0)) }
             }
+            problems.any { it != "ok" && !UNUSED_PAGE.matches(it) } ||
+                connection.hasDamagedRoomHeader()
         }
     } catch (e: SQLiteException) {
         if (e.isDamage()) true else throw e
+    }
+
+    /**
+     * Whether Room's schema version (the file's `user_version`) and its identity hash (in
+     * `room_master_table`) disagree on whether the database has this build's schema. Storage
+     * can change either without `quick_check` noticing, since SQLite doesn't use them, and Room
+     * then refuses the database at every launch (#389). With this build's version, a changed or
+     * missing hash fails Room's identity check (`checkIdentity`, Room 3.0.3). With this build's
+     * hash, a higher version has no migration, and a lower one runs migrations on a schema that
+     * already has their columns, which fails with SQLITE_ERROR "duplicate column name", a load
+     * failure.
+     *
+     * Left to Room, which keeps the progress or refuses it as before:
+     * - Version 0. Room's create path keeps the tables it finds if they're this schema's, and
+     *   saves the version and hash again.
+     * - No `room_master_table`. Room's identity check then checks the tables in the same way,
+     *   and saves the hash again.
+     * - Neither is this build's. That's an older database, which Room migrates, or a newer
+     *   build's, which it refuses with a missing migration, a crash on purpose: reinstalling the
+     *   newer build opens it again, and setting it aside would tell the scout it's damaged. A
+     *   newer version that kept this schema would have this hash, and would be set aside.
+     *
+     * Room also accepts a "legacy" hash, from an older way of computing it. No database here has
+     * one: every Room version the app has used computed this hash for this schema, as version
+     * 4's file in shared/schemas/ shows, which CI fails the build for changing.
+     */
+    private fun SQLiteConnection.hasDamagedRoomHeader(): Boolean {
+        val version = prepare("PRAGMA user_version").use {
+            it.step()
+            it.getLong(0)
+        }
+        if (version == 0L) return false
+        val hasIdentityTable = prepare(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'room_master_table'"
+        ).use { it.step() }
+        if (!hasIdentityTable) return false
+        // Room's own query, from RoomMasterTable, which it keeps internal.
+        val identityHash = prepare(
+            "SELECT identity_hash FROM room_master_table WHERE id = 42 LIMIT 1"
+        ).use { if (it.step() && !it.isNull(0)) it.getText(0) else null }
+        return (version == BlueCardDatabase.VERSION.toLong()) !=
+            (identityHash == BlueCardDatabase.IDENTITY_HASH)
     }
 
     /**

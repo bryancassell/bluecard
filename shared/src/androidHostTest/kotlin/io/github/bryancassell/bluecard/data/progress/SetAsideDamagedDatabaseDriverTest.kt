@@ -445,17 +445,115 @@ class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun newerDatabase_isRefusedByRoom() = runTest {
-        open().readProgress()
-        databases.single().close()
-        BundledSQLiteDriver().open(file.path).use { it.execSQL("PRAGMA user_version = 99") }
+        // As a newer build leaves it: a higher version, with its own schema's identity hash.
+        changeSavedProgress(
+            "PRAGMA user_version = ${BlueCardDatabase.VERSION + 1}",
+            "UPDATE room_master_table SET identity_hash = '0123456789abcdef0123456789abcdef'"
+        )
 
         val error = runCatching { open().readProgress() }.exceptionOrNull()
 
-        // Room's error for a missing migration.
+        // Room's error for a missing migration, which crashes the app as a bug.
         assertTrue(
             "Expected Room's missing migration error, got $error",
-            error is IllegalStateException
+            error is IllegalStateException && error.message.orEmpty().contains("migration")
         )
+        assertEquals(emptyList<File>(), copies())
+    }
+
+    @Test
+    fun changedIdentityHash_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // A byte of it changed by storage.
+        val damaged = changeSavedProgress(
+            "UPDATE room_master_table SET identity_hash = '0' || substr(identity_hash, 2)"
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun missingIdentityHash_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress("DELETE FROM room_master_table")
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun higherVersionWithThisSchema_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // Version 4 with a bit changed by storage.
+        val damaged = changeSavedProgress("PRAGMA user_version = 68")
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun lowerVersionWithThisSchema_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress("PRAGMA user_version = 3")
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun versionZero_isLeftToRoom_whichKeepsTheProgress() = runTest {
+        changeSavedProgress("PRAGMA user_version = 0")
+
+        val progress = open().readProgress()
+
+        assertEquals(300, progress.size)
+        assertEquals(emptyList<File>(), copies())
+    }
+
+    @Test
+    fun missingIdentityTable_isLeftToRoom_whichKeepsTheProgress() = runTest {
+        changeSavedProgress("DROP TABLE room_master_table")
+
+        val progress = open().readProgress()
+
+        assertEquals(300, progress.size)
+        assertEquals(emptyList<File>(), copies())
+    }
+
+    @Test
+    fun identityHash_isTheOneRoomWrites() = runTest {
+        val written = open().useReaderConnection { connection ->
+            connection.usePrepared("SELECT identity_hash FROM room_master_table") {
+                it.step()
+                it.getText(0)
+            }
+        }
+
+        assertEquals(
+            "Room wrote another identity hash, as for a new schema version. " +
+                "Update BlueCardDatabase.IDENTITY_HASH.",
+            written,
+            BlueCardDatabase.IDENTITY_HASH
+        )
+    }
+
+    /**
+     * Saves enough badges to fill several pages, then runs [changes] on them, which leave
+     * nothing `PRAGMA quick_check` finds. Gives the file as it is after them.
+     */
+    private suspend fun changeSavedProgress(vararg changes: String): ByteArray {
+        saveProgress(open())
+        val check = BundledSQLiteDriver().open(file.path).use { sqlite ->
+            changes.forEach { sqlite.execSQL(it) }
+            sqlite.prepare("PRAGMA quick_check").use {
+                it.step()
+                it.getText(0)
+            }
+        }
+        assertEquals("ok", check)
+        return file.readBytes()
+    }
+
+    /** Opens the database, as the next app run does, and checks it sets [damaged] aside. */
+    private suspend fun assertSetAsideWhenItOpens(damaged: ByteArray) {
+        val progress = open().readProgress()
+
+        assertEquals(emptyList<BadgeProgressDetails>(), progress)
+        assertArrayEquals(damaged, setAside().readBytes())
+        assertTrue(damagedProgress.observeNoticePending().first())
     }
 
     private companion object {
