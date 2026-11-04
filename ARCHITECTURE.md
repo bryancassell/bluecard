@@ -347,8 +347,8 @@ both taps of a double tap can reach it.
   (`useStringsLocalesByDefault`), since Compose Multiplatform picks strings and
   plural forms by the default. On iOS it picks them by the first preferred
   language, so the app saves the strings' locale as that
-  (`useStringsLanguageByDefault`), and Material 3's labels and date picker
-  follow it there too. `BlueCardApp` provides `LocalLocaleFormats` in its
+  (`useStringsLanguageByDefault`), and Material 3's labels follow it there
+  too. `BlueCardApp` provides `LocalLocaleFormats` in its
   locale, so lists and dates follow it too, and a sentence never mixes two
   languages. Compose Multiplatform picks a translation by the phone's first
   language only, and `%1$d` inserts Latin digits, so a translation into a
@@ -442,13 +442,14 @@ both taps of a double tap can reach it.
 - **Buttons are the app's own** (`ui/Buttons.kt`), so each gets the platform's
   press feedback (`ui/PressFeedback.kt`), as
   [`PRD.md`](PRD.md#design-decisions)'s iOS look and conventions row chooses.
-  Rows and cards get it from the theme's `LocalIndication`, and other Material
-  components that draw a ripple, such as the date picker, from
-  `MaterialPressFeedback`.
+  Rows and cards get it from the theme's `LocalIndication`. A Material
+  component with its own ripple, such as a `Checkbox` with `onCheckedChange`,
+  still ripples on iOS.
 - **Dates are picked in our own dialog**, `CompletionDatePickerDialog`, not
   Material's `DatePickerDialog`, which is always as wide as its calendar
   ([#306](https://github.com/bryancassell/bluecard/issues/306)). Compare the two
-  when updating Material 3.
+  when updating Material 3. On iOS, dates are picked in UIKit's `UIDatePicker`
+  instead (`DatePickerSheet`).
 - **Before Compose draws**, the window theme and splash screen follow dark mode
   through `values-night`: the dark scheme's background (`@color/background`,
   which must match each scheme's `background`), a dark window theme, and the

@@ -107,13 +107,6 @@ internal expect fun ButtonPressFeedback(
     content: @Composable (interactionSource: MutableInteractionSource?, modifier: Modifier) -> Unit
 )
 
-/**
- * The platform's press feedback for Material components in [content] that draw their own ripple,
- * such as the date picker.
- */
-@Composable
-internal expect fun MaterialPressFeedback(content: @Composable () -> Unit)
-
 /** iOS's [ProvidePressFeedback]: [highlight] as the theme's indication. */
 @Composable
 internal fun ProvideIosRowHighlight(highlight: PressHighlight, content: @Composable () -> Unit) =
@@ -135,19 +128,6 @@ internal fun IosButtonPressFeedback(
         content(interactionSource, Modifier.indication(interactionSource, dim))
     }
 }
-
-/**
- * iOS's [MaterialPressFeedback]: the components' ripples show only focus and hover. Their presses
- * are out of reach of the dim and highlight, so a press shows only what it does. In the date
- * picker a day shows its selection at once. Its month arrows, mode toggle and year menu show
- * nothing while held, though each acts as soon as it's let go, until #352 revisits the date
- * picker, by agreement.
- */
-@Composable
-internal fun IosMaterialPressFeedback(content: @Composable () -> Unit) = CompositionLocalProvider(
-    LocalRippleConfiguration provides FocusAndHoverRipple,
-    content = content
-)
 
 /**
  * Draws what it's on at [pressedAlpha] while pressed. Once let go, it fades back over

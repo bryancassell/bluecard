@@ -374,18 +374,6 @@ class PressFeedbackTest {
     }
 
     @Test
-    fun iosMaterialComponents_ripple_showsNoPress() {
-        var configuration: RippleConfiguration? = null
-        composeTestRule.setContent {
-            IosMaterialPressFeedback { configuration = LocalRippleConfiguration.current }
-        }
-
-        composeTestRule.runOnIdle {
-            assertEquals(FocusAndHoverRippleAlpha, configuration?.rippleAlpha)
-        }
-    }
-
-    @Test
     fun iosButton_focused_keepsTheRipplesFocusLayer() {
         val inputModeManager = showIosButton()
         composeTestRule.runOnIdle { inputModeManager.requestInputMode(InputMode.Keyboard) }

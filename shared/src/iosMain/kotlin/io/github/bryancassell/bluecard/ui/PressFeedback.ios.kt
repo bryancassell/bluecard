@@ -59,7 +59,3 @@ internal actual fun ButtonPressFeedback(
     filled: Boolean,
     content: @Composable (interactionSource: MutableInteractionSource?, modifier: Modifier) -> Unit
 ) = IosButtonPressFeedback(filled, content)
-
-@Composable
-internal actual fun MaterialPressFeedback(content: @Composable () -> Unit) =
-    IosMaterialPressFeedback(content)
