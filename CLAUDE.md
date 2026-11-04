@@ -84,6 +84,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Every class containing logic (ViewModels, use cases, repositories, mappers) should have a corresponding unit test.
 - Testing line coverage for all new code should be at least 80%.
 - Testing line coverage in a touched module should not decrease; if it does, explain why.
+- Nothing measures the coverage of code that only iOS runs (`iosMain`), so each of its files has a test on the iOS simulator, unless `scripts/check-test-rules.sh` lists it with its reason.
 - Tests must verify meaningful behavior, not just exercise lines.
 - Fakes are preferred over mocks when possible. Mocks couple tests to implementation details, while fakes test behavior.
 - UI tests should be written to validate each distinct UI state (e.g., loading, content, empty, error) and each user interaction.
