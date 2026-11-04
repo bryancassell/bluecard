@@ -10,7 +10,8 @@ import kotlin.test.assertTrue
  * Behavior every [TextRules] must have. Runs against Android's (AndroidTextRulesTest) and iOS's
  * (IosTextRulesTest). Unlike the repositories, it has no fake: other tests use the real ones,
  * Android's or, in common tests, each platform's (platformTextRules), so what they check is what
- * the app does.
+ * the app does, apart from Android's sort order: local tests sort with the JDK's collator, not
+ * the ICU one Android's is built on.
  */
 abstract class TextRulesContract {
     protected abstract val textRules: TextRules

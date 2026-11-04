@@ -12,7 +12,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
 import okio.IOException
 
-/** [TaskRunner]. [TaskFailureTest] covers the snackbar that shows its failures. */
+/** [TaskRunner]. TaskFailureTest covers the snackbar that shows its failures. */
 class TaskRunnerTest {
     private val warningLog = FakeWarningLog()
 
