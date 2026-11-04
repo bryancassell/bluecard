@@ -104,11 +104,11 @@ fun encodeBackup(backup: Backup): String =
  * value is a pasted next-line character, which becomes a space. Only a development build can
  * have one.
  *
- * Text is cleaned up as the app does when the scout saves it: it's trimmed ([normalizedText]),
- * and a single-line text field's line breaks are spaces, as the field replaces them
- * ([lineBreaksAsSpaces]). A one-line field never shows a line break, so a space keeps the text
- * the scout sees, and an export saved before those fields replaced pasted line breaks still
- * imports (#156). A field's length limit applies to the text as it's stored.
+ * Text is cleaned up as the app does when the scout saves it: it's trimmed, with half an emoji
+ * replaced ([normalizedText]), and a single-line text field's line breaks are spaces, as the
+ * field replaces them ([lineBreaksAsSpaces]). A one-line field never shows a line break, so a
+ * space keeps the text the scout sees, and an export saved before those fields replaced pasted
+ * line breaks still imports (#156). A field's length limit applies to the text as it's stored.
  *
  * A file in an older format version imports without what was added since, such as a version 1
  * file without sign-offs (#248).

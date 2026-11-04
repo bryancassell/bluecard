@@ -2,6 +2,7 @@ package io.github.bryancassell.bluecard.data.progress
 
 import androidx.room3.ColumnTypeConverter
 import androidx.room3.ProvidedColumnTypeConverter
+import io.github.bryancassell.bluecard.text.replacingLoneSurrogates
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 
@@ -31,15 +32,18 @@ class Converters(private val onUnreadableValue: (IllegalArgumentException) -> Un
     fun stringToLocalDate(text: String?): LocalDate? = text?.let { reading { LocalDate.parse(it) } }
 
     /**
-     * Stored as JSON, with each lone UTF-16 surrogate escaped (`\ud83d`), such as half an emoji
-     * that was pasted or imported. As androidx.sqlite 2.7.1 bundles it, SQLite joins a lone
-     * surrogate with the character after it when it stores the text. Here that's the closing
-     * quote, so the JSON couldn't be read back (RoomProgressRepositoryTest). Escaped, it's ASCII,
-     * and [jsonToMap] gives back the same text.
+     * Stored as JSON, with each lone UTF-16 surrogate escaped (`\ud83d`). Callers store tracker
+     * values cleaned up ([normalizedTrackerValues]), without one, and
+     * [ProgressRepository.replaceAll] takes them that way too, so this only guards the JSON.
+     * SQLite would join a lone surrogate with the closing quote ([replacingLoneSurrogates]), so
+     * the JSON couldn't be read back, and all progress would be set aside. Escaped, it's ASCII,
+     * and [jsonToMap] gives back the same text. In JSON, a lone surrogate can only be inside a string, where `\uXXXX` stands for it.
      */
     @ColumnTypeConverter
     fun mapToJson(values: Map<String, String>): String =
-        Json.encodeToString(values).escapingLoneSurrogates()
+        replacingLoneSurrogates(Json.encodeToString(values)) {
+            "\\u" + it.code.toString(16).padStart(4, '0')
+        }
 
     @ColumnTypeConverter
     fun jsonToMap(json: String): Map<String, String> = reading { Json.decodeFromString(json) }
@@ -51,25 +55,5 @@ class Converters(private val onUnreadableValue: (IllegalArgumentException) -> Un
     } catch (e: IllegalArgumentException) {
         onUnreadableValue(e)
         throw e
-    }
-}
-
-// In JSON, a lone surrogate can only be inside a string, where \uXXXX stands for it.
-private fun String.escapingLoneSurrogates(): String {
-    if (none { it.isSurrogate() }) return this
-    val text = this
-    return buildString {
-        var i = 0
-        while (i < text.length) {
-            val char = text[i++]
-            when {
-                char.isHighSurrogate() && text.getOrNull(i)?.isLowSurrogate() == true ->
-                    append(char).append(text[i++])
-
-                char.isSurrogate() -> append("\\u").append(char.code.toString(16).padStart(4, '0'))
-
-                else -> append(char)
-            }
-        }
     }
 }

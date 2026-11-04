@@ -344,7 +344,10 @@ both taps of a double tap can reach it.
   shows, which differs from the device's when the app has no strings for it.
   The app makes that language's locales the default
   (`useStringsLocalesByDefault`), since Compose Multiplatform picks strings and
-  plural forms by the default. `BlueCardApp` provides `LocalLocaleFormats` in its
+  plural forms by the default. On iOS it picks them by the first preferred
+  language, so the app saves the strings' locale as that
+  (`useStringsLanguageByDefault`), and Material 3's labels and date picker
+  follow it there too. `BlueCardApp` provides `LocalLocaleFormats` in its
   locale, so lists and dates follow it too, and a sentence never mixes two
   languages. Compose Multiplatform picks a translation by the phone's first
   language only, and `%1$d` inserts Latin digits, so a translation into a
@@ -355,10 +358,12 @@ both taps of a double tap can reach it.
   `TextRules` and `PhoneNumberFormat`** (`text/`), not `java.text`,
   `android.icu`, `java.time.format`, `BidiFormatter` or `PhoneNumberUtils`,
   which code shared with iOS can't call
-  ([#341](https://github.com/bryancassell/bluecard/issues/341)). Their Android
-  implementations wrap those. ViewModels and the report get `TextRules` and
-  `PhoneNumberFormat` from Koin; screens read `LocalTextRules`, which
-  `BlueCardApp` provides.
+  ([#341](https://github.com/bryancassell/bluecard/issues/341)). Nor can it use
+  `\p{L}` in a regex, which Kotlin/Native matches against each half of a
+  surrogate pair, so `TextRules` classifies surrogate pairs. Their Android
+  implementations wrap those; most iOS ones wrap Foundation's. ViewModels and
+  the report get `TextRules` and `PhoneNumberFormat` from Koin; screens read
+  `LocalTextRules`, which `BlueCardApp` provides.
 - **Punctuation that joins text comes from `strings.xml` too**
   ([#135](https://github.com/bryancassell/bluecard/issues/135)), such as the
   " · " between a tracker row's values or the ": " after a label, so a
@@ -369,7 +374,9 @@ both taps of a double tap can reach it.
   phone the English strings are laid out left-to-right, as on an English phone;
   mirrored, they would read as broken English. The manifest keeps
   `android:supportsRtl="true"`, so a right-to-left translation would be laid
-  out right-to-left with no other change.
+  out right-to-left with no other change. On iOS, UIKit takes the direction
+  from the language iOS picks among the Xcode project's localizations, so a
+  translation must be added there too.
 - **Text the scout types keeps its own direction** (`ui/TypedText.kt`). Fields
   the scout types in use `typedTextFieldStyle()`. Typed text shown on screen,
   alone or inside one of the app's strings, goes through
@@ -467,7 +474,7 @@ both taps of a double tap can reach it.
 | `ProfileRepository` | Scout name and unit number; first-launch setup is done once they are saved | [Preferences DataStore](https://developer.android.com/topic/libraries/architecture/datastore) |
 | `CatalogRepository` | Merit badges, requirements, requirement versions (read-only) | JSON file in the app's resources, parsed with [kotlinx.serialization](https://kotlinlang.org/docs/serialization.html) |
 | `ProgressRepository` | Everything the scout records | [Room](https://developer.android.com/training/data-storage/room) database |
-| `ReportRepository` | Building a badge's or rank's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument) |
+| `ReportRepository` | Building a badge's or rank's PDF report | Framework [`PdfDocument`](https://developer.android.com/reference/android/graphics/pdf/PdfDocument); iOS's [`UIGraphicsPDFRenderer`](https://developer.apple.com/documentation/uikit/uigraphicspdfrenderer) |
 | `BackupRepository` | Export and import of all user data | JSON written to or read from a user-chosen file |
 | `DamagedProgressRepository` | Progress set aside because the database was found damaged, and whether the scout has been told | Files in the app's no-backup directory |
 
@@ -782,8 +789,8 @@ requirements version a badge is worked on (`BadgeVersion.kt`), all in
   so a save that fails doesn't leave the badge started. A new function that a
   screen can call before the badge is started should take one too.
 - **The repository cleans up what the scout types,** not the screens: it trims
-  spaces around each value and drops blank ones (`normalizedText`,
-  `normalizedTrackerValues`, `Counselor.normalized`).
+  values, replaces half an emoji, drops blanks (`normalizedText`,
+  `normalizedTrackerValues`, `Counselor.normalized`, `Profile.normalized`).
 - **A page that closes once its save succeeds closes itself from UI state**
   (`saved` or `done`), following the UI layer guide's
   [example](https://developer.android.com/topic/architecture/ui-layer/events#handle-viewmodel-events),
@@ -792,11 +799,15 @@ requirements version a badge is worked on (`BadgeVersion.kt`), all in
 ### PDF report
 
 `PdfReportRepository` builds a badge's or rank's report from the profile, the
-catalog and the progress, lays it out with `StaticLayout` in the strings'
-language and direction (see
-[Language and layout direction](#language-and-layout-direction)), and draws it
-onto framework `PdfDocument` pages. `androidx.pdf` isn't used: it's for viewing
-PDFs, is still in beta, and needs API 28. Sharing goes through the
+catalog and the progress, and places it on pages in the strings' language and
+direction (see
+[Language and layout direction](#language-and-layout-direction)), in common
+code, so one set of page rules serves both platforms
+([#347](https://github.com/bryancassell/bluecard/issues/347)). Each breaks
+lines and draws them with its own text engine (`ReportTypesetter`,
+`ReportPdfWriter`): `StaticLayout` and framework `PdfDocument` on Android, Core
+Text and `UIGraphicsPDFRenderer` on iOS. `androidx.pdf` isn't used: it's for
+viewing PDFs, is still in beta, and needs API 28. Sharing goes through the
 [Android Sharesheet](https://developer.android.com/training/sharing/send) with
 a `FileProvider` URI, and saving through the
 [system file picker](https://developer.android.com/training/data-storage/shared/documents-files),
@@ -933,7 +944,8 @@ tests check the layout and drawing (`ReportLayoutTest`) and use a fake PDF
 writer (`PdfReportRepositoryTest`), and an instrumented test
 (`PdfDocumentWriterTest`) writes a real PDF and reads it back.
 `PdfDocumentWriter` is left out of the per-class coverage check, as are the
-classes Room generates.
+classes Room generates. iOS's are checked on the simulator
+(`CoreTextTypesetterTest`, `UIGraphicsPdfWriterTest`).
 
 ### Instrumented tests in CI
 
@@ -1025,12 +1037,12 @@ how the app looks and behaves are in [`PRD.md`](PRD.md#design-decisions).
 | [Failure announcements](#load-and-save-failures) | A message that takes a screen's place is a live region | Screen readers hear it as it appears, but not again after rotation |
 | [Screen reader labels](#screen-reader-labels) | A description that replaces a button's text goes on the `Text` inside it | TalkBack read one on the button and then the text too |
 | [Live regions](#live-regions) | A live region is set only when its text should be read out | Compose reports a node's first layout as a change |
-| [PDF](#pdf-report) | Framework `PdfDocument`, laid out with `StaticLayout` | `androidx.pdf` is a viewer, in beta, and needs API 28 |
+| [PDF](#pdf-report) | Pages laid out in common code; lines broken and drawn with `StaticLayout` and `PdfDocument`, or Core Text and `UIGraphicsPDFRenderer` | One set of page rules; `androidx.pdf` is a viewer, in beta, and needs API 28 |
 | [Save, share](#pdf-report), [export, import](#export-and-import) | System file picker and share sheet, with a FileProvider on Android; JSON with kotlinx.serialization | No storage permissions; Kotlin's official serialization library |
 | [Older export formats](#export-and-import) | Still imported | Exports from before a format change keep working |
 | [Backup](#backup) | Auto Backup of the databases and DataStore only | Records survive a phone change, with no app sync |
 | [Screenshot tests](#compose-ui-and-screenshot-tests) | Roborazzi under Robolectric, only for looks semantics can't show | They run with the local tests, with no emulator |
-| [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator | `PdfDocument` doesn't run under Robolectric |
+| [PDF report tests](#catalog-report-and-backup-tests) | Layout tested locally; `PdfDocumentWriter` on an emulator, iOS's writer on the simulator | `PdfDocument` doesn't run under Robolectric |
 | [Instrumented tests in CI](#instrumented-tests-in-ci) | A Gradle Managed Device on API 37 with 16 KB pages | The target SDK and the page size Play requires |
 | [Release build](#release-build) | R8 shrinks, optimizes and obfuscates; checked by hand | The app optimization guide recommends it |
 | [Release signing](#release-build) | `apksigner` signs when publishing, and Gradle builds unsigned; test builds are GitHub pre-releases | The key's password never reaches a Gradle build |

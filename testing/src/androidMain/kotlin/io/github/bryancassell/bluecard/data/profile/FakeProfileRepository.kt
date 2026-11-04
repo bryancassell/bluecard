@@ -28,6 +28,6 @@ class FakeProfileRepository(profile: Profile? = null) : ProfileRepository {
 
     override suspend fun saveProfile(profile: Profile) {
         if (failSaves) throw IOException("Save failed")
-        this.profile.value = profile
+        this.profile.value = profile.normalized()
     }
 }

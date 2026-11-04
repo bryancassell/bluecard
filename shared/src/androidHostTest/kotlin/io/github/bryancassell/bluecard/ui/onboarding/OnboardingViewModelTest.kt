@@ -198,6 +198,15 @@ class OnboardingViewModelTest {
         assertEquals(Profile("Alex Scout", "123"), repository.observeProfile().first())
     }
 
+    // Half an emoji, as pasted, stored as the app stores all the text the scout types.
+    @Test
+    fun save_replacesHalfAnEmoji() = runTest {
+        fillIn(name = "Alex\uD83D Scout", unitNumber = "\uDC22123")
+        viewModel.save()
+
+        assertEquals(Profile("Alex\uFFFD Scout", "\uFFFD123"), repository.observeProfile().first())
+    }
+
     @Test
     fun save_rightAfterTyping_storesWhatWasTyped() = runTest {
         startCollecting()

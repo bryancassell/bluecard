@@ -133,8 +133,9 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
         }
 
-        // Tests of iOS code, which `iosSimulatorArm64Test` runs on the simulator.
-        iosTest.dependencies {
+        // Tests that run on Android and iOS alike, such as the contract tests that both
+        // platforms' implementations of an interface must pass.
+        commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
@@ -145,7 +146,6 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.junit)
             implementation(libs.robolectric)
-            implementation(libs.kotlinx.coroutines.test)
             // ViewModelScenario, which saves and restores a ViewModel's state as the system does.
             implementation(libs.androidx.lifecycle.viewmodel.testing)
             // MigrationTestHelper, which checks each database migration against the committed

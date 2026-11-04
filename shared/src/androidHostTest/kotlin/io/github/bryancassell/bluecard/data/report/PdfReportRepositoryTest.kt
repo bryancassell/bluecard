@@ -110,12 +110,12 @@ class PdfReportRepositoryTest {
         ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
         externalScope: CoroutineScope = this.externalScope
     ) = PdfReportRepository(
-        context,
+        AndroidReportPlatform(context),
+        pdfWriter,
         ContentResolverDocuments(context, warningLog, ioDispatcher),
         catalogRepository,
         progressRepository,
         profileRepository,
-        pdfWriter,
         FakeClock(today.atStartOfDayIn(TimeZone.UTC)),
         AndroidTextRules(),
         AndroidPhoneNumberFormat(UnconfinedTestDispatcher()),
@@ -136,7 +136,7 @@ class PdfReportRepositoryTest {
     // app starts, makes it read them again.
     @Before
     fun startFileProvider() {
-        val authority = PdfReportRepository.fileProviderAuthority(context)
+        val authority = AndroidReportPlatform.fileProviderAuthority(context)
         // As the manifest declares it.
         val info = context.packageManager.resolveContentProvider(authority, 0)!!
         Robolectric.buildContentProvider(FileProvider::class.java).create(info)
@@ -250,7 +250,7 @@ class PdfReportRepositoryTest {
         val report = repository.createReportToShare("chess")!!
 
         assertTrue("Notes: Taught my brother." in report.read())
-        val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
+        val files = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER).list()
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
     }
 
@@ -284,13 +284,13 @@ class PdfReportRepositoryTest {
         assertThrows<IOException> { repository.createReportToShare("chess") }
 
         assertEquals(written, earlier.read())
-        val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
+        val files = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER).list()
         assertEquals(listOf("Chess merit badge report.pdf"), files?.toList())
     }
 
     @Test
     fun createReportToShare_whenItFails_andWhatItWroteCantBeDeleted_throwsWhatFailed() = runTest {
-        val reports = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER)
+        val reports = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER)
         // Stops what was written being deleted, as long as the tests don't run as root.
         pdfWriter.beforeWrite = { reports.setWritable(false) }
         pdfWriter.failWrites = true
@@ -478,7 +478,7 @@ class PdfReportRepositoryTest {
 
         assertNull(repository.createReportToShare("chess"))
         assertNull(pdfWriter.lastWritten)
-        val files = File(context.cacheDir, PdfReportRepository.REPORTS_FOLDER).list()
+        val files = File(context.cacheDir, ReportPlatform.REPORTS_FOLDER).list()
         assertEquals(emptyList<String>(), files.orEmpty().toList())
     }
 
@@ -642,7 +642,7 @@ class PdfReportRepositoryTest {
     }
 
     /** Writes each page's text in place of a PDF, and records the pages it's given. */
-    private class FakePdfWriter : ReportPdfWriter {
+    private class FakePdfWriter : ReportPdfWriter<StaticLayoutText> {
         /** When true, writing throws, as PdfDocument does when the file can't be written. */
         var failWrites = false
 
@@ -650,12 +650,12 @@ class PdfReportRepositoryTest {
         var beforeWrite: () -> Unit = {}
 
         /** The pages of each report written, in order. */
-        val pages = mutableListOf<List<ReportPage>>()
+        val pages = mutableListOf<List<ReportPage<StaticLayoutText>>>()
 
         /** What it wrote last. */
         var lastWritten: String? = null
 
-        override fun write(pages: List<ReportPage>, out: BufferedSink) {
+        override fun write(pages: List<ReportPage<StaticLayoutText>>, out: BufferedSink) {
             beforeWrite()
             if (failWrites) throw IOException("Write failed")
             this.pages += pages

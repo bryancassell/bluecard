@@ -1,7 +1,5 @@
 package io.github.bryancassell.bluecard.data.report
 
-import android.content.Context
-import androidx.core.content.FileProvider
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
@@ -12,13 +10,13 @@ import io.github.bryancassell.bluecard.data.progress.RankStatus
 import io.github.bryancassell.bluecard.data.progress.earnedBadges
 import io.github.bryancassell.bluecard.data.progress.standings
 import io.github.bryancassell.bluecard.data.runOutlivingCaller
+import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
 import io.github.bryancassell.bluecard.text.PhoneNumberFormat
 import io.github.bryancassell.bluecard.text.TextRules
-import io.github.bryancassell.bluecard.text.stringsLocale
 import kotlin.random.Random
 import kotlin.random.nextULong
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,15 +25,40 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import okio.Buffer
-import okio.FileSystem
-import okio.Path.Companion.toOkioPath
+import okio.Path
+import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 /**
- * [ReportRepository] that lays reports out with [layOutReport] and writes them with
- * [pdfWriter], which is Android's PdfDocument outside tests. A report to share is written to
- * the cache folder's `reports` folder, which `FileProvider` shares (`res/xml/report_paths.xml`),
+ * What [PdfReportRepository] needs from each platform, besides its PDF writer: a typesetter, and
+ * a folder for reports to share, which another app can read them from.
+ */
+interface ReportPlatform<T : ReportText> {
+    /**
+     * Compose resources' environment, as the system has it, to read a report's strings in. It's
+     * read once for each report, so a report follows a change to the phone's language, and every
+     * string in it, and its typesetter, is in one language.
+     */
+    suspend fun resourceEnvironment(): ResourceEnvironment
+
+    /** A typesetter in the strings' locale, for strings read in [environment]. */
+    suspend fun typesetter(environment: ResourceEnvironment): ReportTypesetter<T>
+
+    /** The folder that reports to share are written to, which isn't backed up. */
+    val shareFolder: Path
+
+    /** Where another app can read [file], a report in [shareFolder], from. */
+    fun shareUri(file: Path): DocumentUri
+
+    companion object {
+        /** The name of each platform's [shareFolder]. */
+        const val REPORTS_FOLDER = "reports"
+    }
+}
+
+/**
+ * [ReportRepository] that lays reports out with [layOutReport] and [platform]'s typesetter, and
+ * writes them with [pdfWriter]. A report to share is written to [ReportPlatform.shareFolder],
  * named after its badge or rank, so each has one file that the next report replaces. Clearing
  * progress doesn't delete it: an app it was shared with, such as an email app that reads it only
  * when it sends, may still need it.
@@ -43,13 +66,13 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
  * Saving runs in [externalScope], so a report finishes saving even if the scout leaves the
  * screen ([runOutlivingCaller]).
  */
-class PdfReportRepository(
-    private val context: Context,
+class PdfReportRepository<T : ReportText>(
+    private val platform: ReportPlatform<T>,
+    private val pdfWriter: ReportPdfWriter<T>,
     private val documents: Documents,
     private val catalogRepository: CatalogRepository,
     private val progressRepository: ProgressRepository,
     private val profileRepository: ProfileRepository,
-    private val pdfWriter: ReportPdfWriter,
     private val clock: ZonedClock,
     private val textRules: TextRules,
     private val phoneNumberFormat: PhoneNumberFormat,
@@ -57,15 +80,18 @@ class PdfReportRepository(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     @param:ApplicationScope private val externalScope: CoroutineScope
 ) : ReportRepository {
-    private val fileSystem = FileSystem.SYSTEM
+    private val fileSystem = systemFileSystem
 
-    override suspend fun createReportToShare(advancementId: String): DocumentUri? =
-        withContext(ioDispatcher) {
+    override suspend fun createReportToShare(advancementId: String): DocumentUri? {
+        // Before switching threads: iOS reads it on the main thread, which the screens call from.
+        val environment = platform.resourceEnvironment()
+        return withContext(ioDispatcher) {
             val report = report(advancementId) ?: return@withContext null
-            val pages = layOut(report)
-            val folder = context.cacheDir.toOkioPath() / REPORTS_FOLDER
+            val pages = layOut(report, environment)
+            val folder = platform.shareFolder
             fileSystem.createDirectories(folder)
-            val file = folder / reportFileName(getString(report.kind.fileNameTitle, report.name))
+            val title = getString(environment, report.kind.fileNameTitle, report.name)
+            val file = folder / reportFileName(title)
             // Written beside the report's file, then renamed over it in one step: an app that an
             // earlier report was shared with, such as an email app that reads it only to send it,
             // never reads a partly written one, and a report that fails leaves that one as it was.
@@ -78,8 +104,9 @@ class PdfReportRepository(
                 fileSystem.deleteOrWarn(written, warningLog, TAG)
                 throw e
             }
-            FileProvider.getUriForFile(context, fileProviderAuthority(context), file.toFile())
+            platform.shareUri(file)
         }
+    }
 
     override suspend fun saveReport(advancementId: String, destination: DocumentUri) =
         externalScope.runOutlivingCaller { save(advancementId, destination) }
@@ -88,13 +115,15 @@ class PdfReportRepository(
      * Writes the report to [destination] ([Documents.save]), or nothing when there's no report
      * ([report]), as when the badge or rank was just cleared.
      */
-    private suspend fun save(advancementId: String, destination: DocumentUri) =
+    private suspend fun save(advancementId: String, destination: DocumentUri) {
+        val environment = platform.resourceEnvironment()
         documents.save(destination) {
             report(advancementId)?.let { report ->
-                val pages = layOut(report)
+                val pages = layOut(report, environment)
                 Buffer().also { pdfWriter.write(pages, it) }.readByteArray()
             }
         }
+    }
 
     /**
      * Badge or rank [advancementId]'s report, or null for a badge that isn't started or a rank
@@ -130,22 +159,12 @@ class PdfReportRepository(
         return report.copy(counselorPhone = phoneNumberFormat.format(phone))
     }
 
-    // Read for each report, so it follows a change to the phone's language. The environment is
-    // read once, as it reads the system's configuration, so every string is in one language.
-    private suspend fun layOut(report: AdvancementReport): List<ReportPage> =
-        layOutReport(report, stringsLocale(context), getSystemResourceEnvironment())
+    private suspend fun layOut(
+        report: AdvancementReport,
+        environment: ResourceEnvironment
+    ): List<ReportPage<T>> = layOutReport(report, environment, platform.typesetter(environment))
 
-    companion object {
-        private const val TAG = "Report"
-
-        /** The cache folder that reports to share are written to. */
-        const val REPORTS_FOLDER = "reports"
-
-        /**
-         * The authority of the `FileProvider` that shares reports, set in the manifest. It's
-         * built from the application ID, because two installed apps can't declare the same one,
-         * and a debug build installs next to a release build.
-         */
-        fun fileProviderAuthority(context: Context) = "${context.packageName}.reports"
+    private companion object {
+        const val TAG = "Report"
     }
 }
