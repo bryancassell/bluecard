@@ -17,6 +17,11 @@ import org.jetbrains.compose.resources.stringResource
  * is red, the theme's error color, so it stands apart from Cancel. The caller closes the
  * dialog: [onConfirm] and [onDismiss] (Cancel, Back or a tap outside) are each called once per
  * tap.
+ *
+ * It ignores taps, and Back, for the double-tap timeout as it opens, as the merge dialog does
+ * (ARCHITECTURE.md, Double taps). Otherwise the second tap of a double tap on iOS's Back button,
+ * which opens "Discard changes?" on a page with unsaved changes, landed outside the dialog and
+ * closed it again, and a double tap on a button such as Clear progress could do the same.
  */
 @Composable
 fun ConfirmDialog(
@@ -26,17 +31,18 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val opening = isOpeningForDoubleTap()
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!opening) onDismiss() },
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {
-            TextButton(onClick = onConfirm, colors = removalButtonColors()) {
+            TextButton(onClick = { if (!opening) onConfirm() }, colors = removalButtonColors()) {
                 Text(confirmLabel)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = { if (!opening) onDismiss() }) {
                 Text(stringResource(Res.string.confirm_dialog_cancel))
             }
         }

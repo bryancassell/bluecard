@@ -56,6 +56,7 @@ import io.github.bryancassell.bluecard.testing.assertButtonReadOnceAs
 import io.github.bryancassell.bluecard.testing.paragraphDirection
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.setContentWithText
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
@@ -572,6 +573,7 @@ class TrackerEntryScreenTest {
         show(savedEntry)
 
         button("Delete").performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Delete this session?").assertIsDisplayed()
         assertEquals(0, deletes)
         composeTestRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
@@ -624,6 +626,7 @@ class TrackerEntryScreenTest {
         show(savedEntry)
 
         button("Delete").performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertEquals(0, deletes)
@@ -845,6 +848,7 @@ class TrackerEntryScreenTest {
         show(savedEntry.copy(canSave = false, changed = true))
 
         back.press(composeTestRule)
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
 

@@ -29,14 +29,17 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
+import androidx.navigation3.scene.SceneInfo
 import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.scene.rememberNavigationEventState as rememberSceneNavigationEventState
 import androidx.navigation3.scene.rememberSceneState
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.defaultTransitionSpec
 import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.NavigationEventState
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.bryancassell.bluecard.ui.UnsavedChanges
 import io.github.bryancassell.bluecard.ui.badge.BadgeDetailRoute
 import io.github.bryancassell.bluecard.ui.badge.EditCounselorRoute
 import io.github.bryancassell.bluecard.ui.badge.RequirementDetailRoute
@@ -56,9 +59,16 @@ import io.github.bryancassell.bluecard.ui.ranks.RanksRoute
  * Onboarding is shown in place of the back stack; the navigation principles say one-time
  * setup screens "should not be considered start destinations":
  * https://developer.android.com/guide/navigation/principles#fixed_start_destination
+ *
+ * With [iosBack], as on iOS, each page but Home and Onboarding has a Back button, and a back
+ * swipe moves the pages with the finger.
  */
 @Composable
-fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
+fun BlueCardNavDisplay(
+    isSetUp: Boolean,
+    modifier: Modifier = Modifier,
+    iosBack: Boolean = usesIosBack
+) {
     val backStack = rememberBackStack()
     // Deciding here, before anything is drawn, means the wrong screen never shows, and
     // Onboarding returns if the profile is ever missing. With only one entry, back leaves
@@ -81,36 +91,39 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             backStack.removeLastOrNull()
         }
     }
-    // The only back handler here, added before the screens, so any a screen adds goes first.
-    // NavDisplay is given no handler of its own, so a back swipe doesn't move the pages;
-    // releasing it plays Back's slide, or asks first on a page with unsaved changes. When the
-    // pages followed the finger, a released swipe finished slowly beside opening a page, so the
-    // swipe gives up predictive back's peek at the page underneath (#104).
-    NavigationBackHandler(
-        state = rememberNavigationEventState(NavigationEventInfo.None),
-        isBackEnabled = shownBackStack.size > 1,
-        onBackCompleted = goBack
-    )
+    // Only while the page is on top, so a double tap can't close the page under it too.
+    val backButtons = if (iosBack) {
+        rememberBackButtonNavEntryDecorator(onBack = { contentKey ->
+            if (entries(currentShownBackStack.last()).contentKey == contentKey) goBack()
+        })
+    } else {
+        null
+    }
+    // NavDisplay moves the pages with a back swipe as this state reports it, on iOS.
+    lateinit var swipeState: NavigationEventState<SceneInfo<NavKey>>
+    val isSwiping = { swipeState.transitionState is NavigationEventTransitionState.InProgress }
     val decoratedEntries = rememberDecoratedNavEntries(
         backStack = shownBackStack,
         // Keep each entry's saved UI state, scope ViewModels to their entry so they are
         // cleared when the entry leaves the back stack, and ignore touches on screens that
         // are animating, so a double tap can't press a control on the screen it opened. Keep
         // focus out of a screen that's leaving, so a key can't move focus onto it, to be lost as
-        // it goes.
-        entryDecorators = listOf(
+        // it goes. Do both while a swipe holds the pages part way. On iOS, put a Back button above
+        // the screen, inside the cover that ignores touches.
+        entryDecorators = listOfNotNull(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
-            rememberIgnoreTouchesNavEntryDecorator(),
-            rememberRefuseFocusWhileLeavingNavEntryDecorator(),
+            rememberIgnoreTouchesNavEntryDecorator(isSwiping),
+            rememberRefuseFocusWhileLeavingNavEntryDecorator(isSwiping),
             drawnScreens.decorator,
-            unsavedChanges.decorator
+            unsavedChanges.decorator,
+            backButtons
         ),
         // Screens navigate with rememberNavigateFrom, so a double tap can't open a screen
         // twice, and a screen reader's click can't reopen one that's closing.
         entryProvider = entryProvider<NavKey> {
-            entry<Onboarding> { OnboardingRoute() }
-            entry<Home> { key ->
+            entry<Onboarding>(metadata = WithoutBackButton) { OnboardingRoute() }
+            entry<Home>(metadata = WithoutBackButton) { key ->
                 val navigate =
                     rememberNavigateFrom(backStack, from = key, isDrawn) { currentShownBackStack }
                 HomeRoute(
@@ -196,6 +209,29 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
         sceneStrategies = listOf(SinglePaneSceneStrategy()),
         onBack = goBack
     )
+    swipeState = rememberSceneNavigationEventState(sceneState)
+    // The back handler, added before the screens, so any a screen adds goes first.
+    // On Android, NavDisplay's state isn't given to it, so nothing reports a swipe to NavDisplay,
+    // and a back swipe doesn't move the pages; releasing it plays Back's slide, or asks first on a
+    // page with unsaved changes. When the pages followed the finger, a released swipe finished
+    // slowly beside opening a page, so the swipe gives up predictive back's peek at the page
+    // underneath (#104).
+    // On iOS, the swipe moves the pages, as it does in iOS's own apps (#351).
+    NavigationBackHandler(
+        state = if (iosBack) swipeState else rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = shownBackStack.size > 1,
+        onBackCompleted = goBack
+    )
+    if (iosBack) {
+        StillWhileUnsavedBackHandler(
+            topPage = if (shownBackStack.size > 1) {
+                unsavedChanges.getOrCreate(entries(shownBackStack.last()))
+            } else {
+                null
+            },
+            onBack = goBack
+        )
+    }
     // A focus target around the pages, which takes input focus from a page that's left with it,
     // so the page shown next doesn't get it, from a page that clears it, and from a page whose
     // focused item goes. Otherwise, out of touch mode, Compose clears the view's focus too, as the
@@ -243,8 +279,7 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
     }
     NavDisplay(
         sceneState = sceneState,
-        // Nothing reports a back swipe to this state, so NavDisplay never plays one.
-        navigationEventState = rememberSceneNavigationEventState(sceneState),
+        navigationEventState = swipeState,
         // Pages slide past the sides of their area. Clip them to it, so they don't draw under
         // a navigation bar or cutout at the side.
         modifier = modifier
@@ -293,12 +328,33 @@ fun BlueCardNavDisplay(isSetUp: Boolean, modifier: Modifier = Modifier) {
             .focusTarget()
             .focusRequester(page)
             .focusGroup(),
-        transitionSpec = {
-            // Neither back stack is a page of the other, so they crossfade, as NavDisplay
-            // does by default.
-            if (replacesBackStack()) defaultTransitionSpec<NavKey>()(this) else openPage()
-        },
-        popTransitionSpec = { closePage() }
+        transitionSpec = { if (replacesBackStack()) crossfade() else openPage() },
+        popTransitionSpec = { closePage() },
+        predictivePopTransitionSpec = { swipeEdge -> followBackSwipe(swipeEdge) }
+    )
+}
+
+/**
+ * Whether Back follows iOS's conventions: a Back button on each page but Home and Onboarding,
+ * and a back swipe that moves the pages with the finger.
+ */
+internal expect val usesIosBack: Boolean
+
+/**
+ * Takes a back swipe from the navigation root's handler while [topPage], the page on top, has
+ * unsaved changes, since the last handler added that's on gets it. So the page stays put, and
+ * releasing the swipe asks first, as on Android, rather than showing the page underneath and then
+ * taking it away. Back still decides from the back stack as it is when it arrives, so a frame's
+ * lag in turning this on or off only changes whether the pages move. It reads the page's changes
+ * in a scope of its own, so their coming and going recompose only this, not the pages. With no
+ * [topPage], as on Home, there's nothing to go back to.
+ */
+@Composable
+private fun StillWhileUnsavedBackHandler(topPage: UnsavedChanges?, onBack: () -> Unit) {
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = topPage?.changed == true,
+        onBackCompleted = onBack
     )
 }
 

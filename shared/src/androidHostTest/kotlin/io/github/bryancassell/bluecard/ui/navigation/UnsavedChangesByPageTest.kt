@@ -25,6 +25,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.ui.ConfirmDiscardOnBack
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -143,6 +144,7 @@ class UnsavedChangesByPageTest {
     fun poppedPage_forgetsItsChanges() {
         launch(Home, Badges)
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Discard").performClick()
         composeTestRule.onNodeWithText("Badges").assertDoesNotExist()
 

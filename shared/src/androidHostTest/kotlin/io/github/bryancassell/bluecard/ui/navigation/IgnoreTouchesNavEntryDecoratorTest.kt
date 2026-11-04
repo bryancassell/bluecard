@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +39,7 @@ class IgnoreTouchesNavEntryDecoratorTest {
     private var homeTaps = 0
     private var badgesTaps = 0
     private var doubleTapTimeout = 0L
+    private var swiping by mutableStateOf(false)
 
     private fun launch(vararg keys: NavKey) {
         backStack.clear()
@@ -47,7 +51,7 @@ class IgnoreTouchesNavEntryDecoratorTest {
                 onBack = { backStack.removeLastOrNull() },
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
-                    rememberIgnoreTouchesNavEntryDecorator()
+                    rememberIgnoreTouchesNavEntryDecorator(isSwiping = { swiping })
                 ),
                 entryProvider = entryProvider {
                     entry<Home> { Button(onClick = { homeTaps++ }) { Text("Home button") } }
@@ -107,6 +111,22 @@ class IgnoreTouchesNavEntryDecoratorTest {
         composeTestRule.onNodeWithText("Home button").assertExists()
         tapBadges()
 
+        assertEquals(1, badgesTaps)
+    }
+
+    @Test
+    fun whileSwiping_screensIgnoreTouches_pastTheDoubleTapTimeout_untilTheSwipeEnds() {
+        launch(Home)
+        swiping = true
+
+        navigate { add(Badges) }
+        composeTestRule.mainClock.advanceTimeBy(400)
+        tapBadges()
+        assertEquals(0, badgesTaps)
+
+        swiping = false
+        composeTestRule.mainClock.advanceTimeByFrame()
+        tapBadges()
         assertEquals(1, badgesTaps)
     }
 
