@@ -63,9 +63,18 @@ class OutlivingWork(
 
 /**
  * Keeps the app running while [OutlivingWork] finishes, after the scout leaves the app. Each
- * platform has its own, since only iOS needs to ask for the time.
+ * platform has its own, since only iOS asks for the time.
  */
 interface BackgroundTime {
-    /** Runs [block], keeping the app running until it returns or throws. */
+    /**
+     * Runs [block], keeping the app running until it returns or throws. It calls [block] at once,
+     * in the caller's thread, without suspending first, since [OutlivingWork.run]'s blocks start
+     * in the order they're run only if it does.
+     */
     suspend fun <T> whileRunning(block: suspend () -> T): T
+}
+
+/** Asks for no time: Android's, and tests' that don't check it. */
+object NoBackgroundTime : BackgroundTime {
+    override suspend fun <T> whileRunning(block: suspend () -> T): T = block()
 }

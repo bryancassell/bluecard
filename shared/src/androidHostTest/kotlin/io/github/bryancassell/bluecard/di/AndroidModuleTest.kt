@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -142,13 +143,8 @@ class AndroidModuleTest {
     }
 
     @Test
-    fun backgroundTime_isAndroidBackgroundTime() {
-        assertSame(AndroidBackgroundTime, koin.get<BackgroundTime>())
-    }
-
-    @Test
-    fun androidBackgroundTime_runsTheWork() = runTest {
-        assertEquals("Saved", AndroidBackgroundTime.whileRunning { "Saved" })
+    fun backgroundTime_isNone() {
+        assertSame(NoBackgroundTime, koin.get<BackgroundTime>())
     }
 
     @Test

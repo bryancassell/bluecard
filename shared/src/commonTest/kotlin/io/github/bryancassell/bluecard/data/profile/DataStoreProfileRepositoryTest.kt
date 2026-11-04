@@ -2,38 +2,37 @@ package io.github.bryancassell.bluecard.data.profile
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
 import io.github.bryancassell.bluecard.data.OutlivingWork
-import io.github.bryancassell.bluecard.testing.FakeBackgroundTime
-import java.io.File
-import java.io.IOException
+import io.github.bryancassell.bluecard.data.systemFileSystem
+import io.github.bryancassell.bluecard.testing.TemporaryDirectory
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import okio.Path.Companion.toOkioPath
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
+import okio.IOException
+import okio.Path
 
 /** Runs the repository contract against DataStore, with its file in a temporary folder. */
 class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
-    @get:Rule
-    val folder = TemporaryFolder()
-
-    private val file get() = File(folder.root, "profile.preferences_pb")
+    private val folder = TemporaryDirectory()
+    private val file = folder.path / "profile.preferences_pb"
     private val jobs = mutableListOf<Job>()
 
     /** What escaped [externalScope]'s coroutines, which crashes the app outside tests. */
@@ -43,18 +42,18 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     private val externalScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> uncaught += e }
     )
-    private val outlivingWork = OutlivingWork(externalScope, FakeBackgroundTime())
+    private val outlivingWork = OutlivingWork(externalScope, NoBackgroundTime)
 
     /** A new DataStore on [file], as a new app process would create. */
-    private fun newDataStore(produceFile: () -> File = { file }): DataStore<Preferences> {
+    private fun newDataStore(produceFile: () -> Path = { file }): DataStore<Preferences> {
         val job = Job().also { jobs += it }
         return DataStoreProfileRepository.createDataStore(
             scope = CoroutineScope(Dispatchers.IO + job),
-            produceFile = { produceFile().toOkioPath() }
+            produceFile = produceFile
         )
     }
 
-    private fun newRepository(produceFile: () -> File = { file }) =
+    private fun newRepository(produceFile: () -> Path = { file }) =
         DataStoreProfileRepository(newDataStore(produceFile), outlivingWork)
 
     override val repository = newRepository()
@@ -62,13 +61,19 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     // A folder where the file should be, so DataStore can't read it. Created here rather
     // than in produceFile, where a second call would throw an IOException of its own.
     override fun unreadableRepository(): DataStoreProfileRepository {
-        val unreadable = folder.newFolder("unreadable.preferences_pb")
+        val unreadable = folder.path / "unreadable.preferences_pb"
+        systemFileSystem.createDirectory(unreadable, mustCreate = true)
         return newRepository { unreadable }
     }
 
-    @After
-    fun closeDataStores() = runBlocking {
-        jobs.forEach { it.cancelAndJoin() }
+    @AfterTest
+    fun closeDataStores() {
+        try {
+            externalScope.cancel()
+            runBlocking { jobs.forEach { it.cancelAndJoin() } }
+        } finally {
+            folder.delete()
+        }
     }
 
     @Test
@@ -84,7 +89,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     fun corruptedFile_isReplacedWithNoProfile() = runTest {
         repository.saveProfile(Profile("Alex Scout", "123"))
         jobs.single().cancelAndJoin()
-        file.writeText("not a preferences file")
+        systemFileSystem.write(file) { writeUtf8("not a preferences file") }
         val reopened = newRepository()
 
         assertNull(reopened.observeProfile().first())
@@ -97,7 +102,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
     @Test
     fun saveProfile_finishesEvenIfItsCallerIsCancelled() = runTest(timeout = 10.seconds) {
         // A file of its own: DataStore allows one active instance per file, and repository has one.
-        val dataStore = newDataStore { File(folder.root, "held.preferences_pb") }
+        val dataStore = newDataStore { folder.path / "held.preferences_pb" }
         val saving = CompletableDeferred<Unit>()
         val written = CompletableDeferred<Unit>()
         // Holds the save until the caller is gone, as when the scout saves and leaves the page.
@@ -125,7 +130,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
 
     @Test
     fun saveProfile_whenItCantBeSaved_throwsIOException_withoutCrashing() = runTest {
-        val dataStore = newDataStore { File(folder.root, "full.preferences_pb") }
+        val dataStore = newDataStore { folder.path / "full.preferences_pb" }
         // As when the disk is full.
         val full = object : DataStore<Preferences> by dataStore {
             override suspend fun updateData(
@@ -138,7 +143,7 @@ class DataStoreProfileRepositoryTest : ProfileRepositoryContract() {
             repository.saveProfile(Profile("Alex Scout", "123"))
         }.exceptionOrNull()
 
-        assertTrue("Expected an IOException, got $error", error is IOException)
+        assertTrue(error is IOException, "Expected an IOException, got $error")
         assertEquals(emptyList<Throwable>(), uncaught)
     }
 }

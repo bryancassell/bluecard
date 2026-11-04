@@ -8,6 +8,7 @@ import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
 import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
@@ -20,7 +21,6 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.progress.BadgeStart
 import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
-import io.github.bryancassell.bluecard.testing.FakeBackgroundTime
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
@@ -123,7 +123,7 @@ class PdfReportRepositoryTest {
         AndroidPhoneNumberFormat(UnconfinedTestDispatcher()),
         warningLog,
         ioDispatcher,
-        OutlivingWork(externalScope, FakeBackgroundTime())
+        OutlivingWork(externalScope, NoBackgroundTime)
     )
 
     private val repository = newRepository()

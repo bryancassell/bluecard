@@ -10,6 +10,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
 import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
@@ -40,7 +41,10 @@ import org.koin.plugin.module.dsl.single
 /** What the app is built from that needs Android to build, such as a [Context]. */
 val androidModule = module {
     single<WarningLog> { LogcatWarningLog }
-    single<BackgroundTime> { AndroidBackgroundTime }
+    // None, as before #354: the data layer guide has work outlive the screen with the
+    // app-lifetime scope alone. Android 14 can still freeze the app once it's been in the
+    // background a while, which #417 checks for long work.
+    single<BackgroundTime> { NoBackgroundTime }
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }
 
@@ -54,14 +58,6 @@ val androidModule = module {
     single<ContentResolverDocuments>() bind Documents::class
     single<AndroidTextRules>() bind TextRules::class
     single<AndroidPhoneNumberFormat>() bind PhoneNumberFormat::class
-}
-
-/**
- * Asks for no time, as before iOS needed it (#354): the data layer guide has work outlive the
- * screen on Android with the app-lifetime scope alone.
- */
-internal object AndroidBackgroundTime : BackgroundTime {
-    override suspend fun <T> whileRunning(block: suspend () -> T): T = block()
 }
 
 /** Writes warnings to logcat, which bug reports include. */

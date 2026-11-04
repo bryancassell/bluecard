@@ -3,6 +3,10 @@ package io.github.bryancassell.bluecard.data
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import okio.IOException
 import platform.UIKit.UIBackgroundTaskIdentifier
@@ -44,6 +48,34 @@ class UIKitBackgroundTimeTest {
         assertEquals(1, tasks.ended.size)
     }
 
+    // As when work begins off the main thread, and the handler runs on it before begin returns.
+    @Test
+    fun timeRunningOutBeforeBeginReturns_endsTheTask_once() = runTest {
+        tasks.runOutWhileBeginning = true
+
+        val during = time.whileRunning { tasks.running.toList() }
+
+        assertEquals(emptyList(), during)
+        assertEquals(1, tasks.ended.size)
+    }
+
+    // Outliving work starts in the order it's run only if this calls it at once.
+    @Test
+    fun work_startsBeforeWhileRunningSuspends() = runTest {
+        val proceed = CompletableDeferred<Unit>()
+        var started = false
+
+        launch(start = CoroutineStart.UNDISPATCHED) {
+            time.whileRunning {
+                started = true
+                proceed.await()
+            }
+        }
+
+        assertTrue(started)
+        proceed.complete(Unit)
+    }
+
     // As when the app is out of background time.
     @Test
     fun taskUIKitRefuses_isntEnded_andTheWorkStillRuns() = runTest {
@@ -71,6 +103,9 @@ class UIKitBackgroundTimeTest {
         /** Whether to refuse each task, as UIKit does when the app is out of time. */
         var refuse = false
 
+        /** Whether each task's time runs out before [begin] returns it. */
+        var runOutWhileBeginning = false
+
         /** The tasks begun and not yet ended, oldest first. */
         val running = mutableListOf<UIBackgroundTaskIdentifier>()
 
@@ -85,6 +120,7 @@ class UIKitBackgroundTimeTest {
             val task = next++
             running += task
             expirationHandlers[task] = expired
+            if (runOutWhileBeginning) expired()
             return task
         }
 

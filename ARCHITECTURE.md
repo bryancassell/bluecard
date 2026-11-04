@@ -501,8 +501,8 @@ both taps of a double tap can reach it.
 - **Writes outlive the screen.** `RoomProgressRepository` runs each write as
   `OutlivingWork` and waits for it, so leaving a screen cancels only the wait,
   not the write. Saving the profile, saving a PDF report, exporting and
-  importing do too. The work runs in an app-lifetime scope, as in the data
-  layer guide's
+  importing do too. Each runs in an app-lifetime scope, as in the data layer
+  guide's
   [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen),
   and on iOS holds a background task, so it can finish after the scout leaves
   the app. A storage failure after the scout has left the screen goes
@@ -555,8 +555,8 @@ fails the build for a missing dependency, as Hilt did.
   and `androidModule` and `iosModule`, for what needs each platform. Besides
   the repositories, they provide a dispatcher (`@IoDispatcher`), an
   app-lifetime `CoroutineScope` (`@ApplicationScope`), a `ZonedClock`, a
-  `WarningLog`, `TextRules`, `PhoneNumberFormat` and `Documents`, the
-  dispatcher, clock and log so tests can replace them.
+  `WarningLog`, `BackgroundTime`, `TextRules`, `PhoneNumberFormat` and
+  `Documents`, the dispatcher, clock and log so tests can replace them.
 - **Screens create ViewModels with `koinViewModel()`**, passing their
   navigation key with `parametersOf(key)` as the ViewModel's one
   `@InjectedParam`. Koin matches arguments by type, so two of one type could
@@ -914,10 +914,10 @@ before launching it, by loading a module of them, as `MainActivityTest` does
 
 ### Room and migration tests
 
-Room repository tests (`RoomProgressRepositoryTest`), migration tests
+Room's repository (`RoomProgressRepositoryTest`, iOS too), migration
 (`MigrationTest`) and damaged database tests
-(`SetAsideDamagedDatabaseDriverTest`) run locally with Robolectric, on the
-SQLite the app bundles (see `BundledSqlitePerSandbox`).
+(`SetAsideDamagedDatabaseDriverTest`) run on the app's bundled SQLite, under
+Robolectric on Android (see `BundledSqlitePerSandbox`).
 
 ### Compose UI and screenshot tests
 

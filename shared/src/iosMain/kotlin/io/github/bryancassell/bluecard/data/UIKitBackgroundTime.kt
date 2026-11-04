@@ -29,15 +29,22 @@ private class HeldTask(private val tasks: BackgroundTasks) {
     // The expiration handler runs on the main thread, and the work may finish on any.
     private val lock = Lock()
     private var task: UIBackgroundTaskIdentifier? = null
+    private var ended = false
 
     init {
-        val begun = tasks.begin(TASK_NAME, ::end)
         // UIKit refuses one when the app is out of background time.
-        lock.withLock { task = begun.takeIf { it != UIBackgroundTaskInvalid } }
+        val begun = tasks.begin(TASK_NAME, ::end).takeIf { it != UIBackgroundTaskInvalid }
+        // If the time ran out before begin returned, as it can when work begins off the main
+        // thread, the expiration handler found no task to end, so it's ended here.
+        val endedFirst = lock.withLock { ended.also { if (!it) task = begun } }
+        if (endedFirst && begun != null) tasks.end(begun)
     }
 
     fun end() {
-        val ending = lock.withLock { task.also { task = null } }
+        val ending = lock.withLock {
+            ended = true
+            task.also { task = null }
+        }
         if (ending != null) tasks.end(ending)
     }
 
