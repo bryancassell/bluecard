@@ -136,12 +136,12 @@ kotlin {
         // Tests that run on Android and iOS alike, such as the contract tests that both
         // platforms' implementations of an interface must pass.
         commonTest.dependencies {
+            implementation(project(":testing"))
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
 
         getByName("androidHostTest").dependencies {
-            implementation(project(":testing"))
             // androidContext(), for AppKoinRule.
             implementation(libs.koin.android)
             implementation(libs.junit)

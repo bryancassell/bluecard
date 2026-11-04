@@ -8,8 +8,9 @@ import kotlin.test.assertTrue
 
 /**
  * Behavior every [TextRules] must have. Runs against Android's (AndroidTextRulesTest) and iOS's
- * (IosTextRulesTest). Unlike the repositories, it has no fake: other tests use Android's, which
- * runs in local tests, so what they check is what the app does.
+ * (IosTextRulesTest). Unlike the repositories, it has no fake: other tests use the real ones,
+ * Android's or, in common tests, each platform's (platformTextRules), so what they check is what
+ * the app does.
  */
 abstract class TextRulesContract {
     protected abstract val textRules: TextRules
