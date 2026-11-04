@@ -48,6 +48,8 @@ coreSplashscreen = "1.2.0"
 bignum = "1.0.5"
 # Files and streams that common code can use (ARCHITECTURE.md, Storage errors).
 okio = "3.18.2"
+# libphonenumber in Kotlin, which formats phone numbers on iOS (IosPhoneNumberFormat).
+phonenumber = "0.0.4"
 junit = "4.13.2"
 androidxJunit = "1.3.0"
 espressoCore = "3.7.0"
@@ -79,6 +81,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 bignum = { group = "io.github.artificialpb", name = "bignum", version.ref = "bignum" }
 okio = { group = "com.squareup.okio", name = "okio", version.ref = "okio" }
+phonenumber = { group = "io.github.aughtone", name = "phonenumber", version.ref = "phonenumber" }
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-compose-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koin" }
