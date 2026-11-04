@@ -1,7 +1,5 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import androidx.room3.RoomDatabase
-import androidx.room3.testing.MigrationTestHelper
 import androidx.room3.useReaderConnection
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteDriver
@@ -33,16 +31,10 @@ import okio.use
 
 /**
  * Opens the database as the app does, on files damaged as SQLite finds them or with values
- * [Converters] can't read, with the SQLite the app bundles. Each platform's test runs it with that
- * platform's database builder, since SQLite's errors are the platform's own.
+ * [Converters] can't read, with the SQLite the app bundles. Each platform's test runs it, since
+ * SQLite's errors are the platform's own.
  */
 abstract class SetAsideDamagedDatabaseDriverTest {
-    /** A builder for a database in [file]. */
-    protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
-
-    /** [migrationTestHelper] for [file], in the platform's test, which closes its connections. */
-    protected abstract val helper: MigrationTestHelper
-
     /** The error [error] was raised for, where the platform's [sqliteException] keeps it. */
     protected abstract fun causeOf(error: SQLiteException): Throwable?
 
@@ -51,12 +43,16 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     // As Android's folders for the app's databases and for what backups leave out.
     private val noBackup = temporary.path / "no_backup"
-    protected val file = temporary.path / "databases" / BlueCardDatabase.NAME
+    private val file = temporary.path / "databases" / BlueCardDatabase.NAME
 
     init {
         fileSystem.createDirectory(noBackup)
         fileSystem.createDirectory(file.parent!!)
     }
+
+    // Lazy, so a failure to make it, such as iOS's when the schemas' folder isn't given, fails the
+    // test and still deletes the folder.
+    private val helper by lazy { migrationTestHelper(file) }
 
     private val warningLog = FakeWarningLog()
     private val damagedProgress = FileDamagedProgressRepository(
@@ -70,8 +66,11 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @AfterTest
     fun closeDatabasesAndDeleteFiles() {
-        databases.forEach { it.close() }
-        temporary.delete()
+        try {
+            databases.forEach { it.close() }
+        } finally {
+            temporary.delete()
+        }
     }
 
     /** The driver as a new app run gets it. */

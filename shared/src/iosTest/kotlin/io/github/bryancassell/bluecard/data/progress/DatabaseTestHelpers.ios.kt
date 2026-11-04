@@ -1,5 +1,6 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import androidx.room3.Room
 import androidx.room3.testing.MigrationTestHelper
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.bryancassell.bluecard.data.systemFileSystem
@@ -9,7 +10,11 @@ import okio.Path
 import okio.Path.Companion.toPath
 import platform.posix.getenv
 
-// iOS's helper reads the schemas from a folder, rather than from assets as Android's does.
+actual fun databaseBuilder(file: Path) =
+    Room.databaseBuilder(file.toString(), BlueCardDatabaseConstructor::initialize)
+
+// iOS's helper reads the schemas from a folder, rather than from assets as Android's does. Its
+// finished() closes the connections it made, but the tests close each one themselves.
 actual fun migrationTestHelper(file: Path) = MigrationTestHelper(
     schemaDirectory(),
     file.toString(),

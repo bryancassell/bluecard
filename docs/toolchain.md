@@ -311,7 +311,8 @@ it.
   `./gradlew recordRoborazziAndroidHostTest` records them again; review
   the new images in the diff.
 - **Migration tests after a database version bump.** The first test run can
-  merge assets before Room writes the new schema, so `MigrationTest` fails.
+  merge assets before Room writes the new schema, so `AndroidMigrationTest`
+  fails.
   Run the tests again
   ([#96](https://github.com/bryancassell/bluecard/issues/96)).
 - **Instrumented tests** (`app/src/androidTest`) run on an emulator or device.

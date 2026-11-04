@@ -1,12 +1,15 @@
 package io.github.bryancassell.bluecard.data.progress
 
+import androidx.room3.RoomDatabase
 import androidx.room3.testing.MigrationTestHelper
 import okio.Path
 
+/** A builder for a database in [file], as the platform's app makes it. */
+expect fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
+
 /**
  * Room's migration helper for a database in [file], on the SQLite the app bundles. Each platform's
- * reads the committed schemas from a different place, and closes the connections it opened
- * differently: Android's is a JUnit rule, and iOS's test calls [MigrationTestHelper.finished].
+ * reads the committed schemas from a different place.
  */
 expect fun migrationTestHelper(file: Path): MigrationTestHelper
 

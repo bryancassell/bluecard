@@ -145,11 +145,6 @@ kotlin {
             // MigrationTestHelper, which checks each database migration against the committed
             // schemas.
             implementation(libs.androidx.room3.testing)
-            // iOS's MigrationTestHelper reads the schemas with this, which room3-testing 3.0.3
-            // asks for at 1.8.1. Gradle raises kotlinx-serialization-json to this build's version
-            // but not this module, and 1.8.1's reader uses a class 1.12.0 doesn't have, so the
-            // iOS test binary failed to link.
-            implementation(libs.kotlinx.serialization.json.okio)
         }
 
         getByName("androidHostTest").dependencies {
@@ -187,6 +182,13 @@ dependencies {
     // Android Studio's Compose previews need it at runtime. It isn't passed on to :app, which
     // adds it to debug builds only.
     "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
+    constraints {
+        // iOS's MigrationTestHelper reads the schemas with kotlinx-serialization-json-okio, which
+        // room3-testing 3.0.3 asks for at 1.8.1. Gradle raises kotlinx-serialization-json to this
+        // build's version but not this separate module, and 1.8.1's reader uses a class 1.12.0
+        // doesn't have, so the iOS test binary failed to link. This raises it without adding it.
+        "commonTestImplementation"(libs.kotlinx.serialization.json.okio)
+    }
 }
 
 // The generated Res class, with the strings, icons and catalog in
@@ -328,9 +330,9 @@ androidComponents {
         // locally, so the host tests' assets carry them too; the library's own assets don't, so
         // the app doesn't ship them. Nothing makes merging assets wait for Room to copy a new
         // database version's schema here, so the first test run after a version bump can miss
-        // it, and MigrationTest fails until it runs again (#96). Room's schema copy declares no
-        // outputs, so Gradle can't order other tasks after it, and working around that needed
-        // more build code than a rerun is worth.
+        // it, and AndroidMigrationTest fails until it runs again (#96); iOS's reads the folder.
+        // Room's schema copy declares no outputs, so Gradle can't order other tasks after it, and
+        // working around that needed more build code than a rerun is worth.
         variant.hostTests.values.forEach { it.sources.assets?.addStaticSourceDirectory("schemas") }
         variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
             .use(coverageClasses)

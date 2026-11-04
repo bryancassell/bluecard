@@ -1,7 +1,5 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import androidx.room3.RoomDatabase
-import androidx.room3.testing.MigrationTestHelper
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import io.github.bryancassell.bluecard.testing.TemporaryDirectory
@@ -15,22 +13,19 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import okio.Path
 
 /**
  * Checks each database migration: that it makes the schema committed in shared/schemas/, and that
- * progress stored before it reads back the same after it. Each platform's test runs it with that
- * platform's database builder.
+ * progress stored before it reads back the same after it. Abstract, since Android's test needs
+ * Robolectric, which only a platform's test can ask for.
  */
 abstract class MigrationTest {
-    /** A builder for a database in [file]. */
-    protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
-
-    /** [migrationTestHelper] for [file], in the platform's test, which closes its connections. */
-    protected abstract val helper: MigrationTestHelper
-
     private val folder = TemporaryDirectory()
-    protected val file = folder.path / DATABASE
+    private val file = folder.path / DATABASE
+
+    // Lazy, so a failure to make it, such as iOS's when the schemas' folder isn't given, fails the
+    // test and still deletes the folder.
+    private val helper by lazy { migrationTestHelper(file) }
 
     @AfterTest
     fun deleteFiles() = folder.delete()
