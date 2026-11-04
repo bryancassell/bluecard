@@ -4,9 +4,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.SystemFileCoordinator
+import io.github.bryancassell.bluecard.data.UIApplicationBackgroundTasks
+import io.github.bryancassell.bluecard.data.UIKitBackgroundTime
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
@@ -53,6 +57,7 @@ import platform.Foundation.NSUserDomainMask
 /** What the app is built from that needs iOS to build, such as where its files go. */
 val iosModule = module {
     single<WarningLog> { NSLogWarningLog }
+    single<BackgroundTime> { UIKitBackgroundTime(UIApplicationBackgroundTasks) }
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }
 
@@ -145,14 +150,14 @@ private fun String.utf8Bytes() = encodeToByteArray().size
 private fun damagedProgressRepository(
     clock: ZonedClock,
     warningLog: WarningLog,
-    @ApplicationScope scope: CoroutineScope,
+    outlivingWork: OutlivingWork,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) = FileDamagedProgressRepository(
     // In Application Support, so on the database's file system, as it must be.
     produceDirectory = { noBackupDirectory(applicationSupportDirectory(), warningLog) },
     clock = clock,
     warningLog = warningLog,
-    externalScope = scope,
+    outlivingWork = outlivingWork,
     ioDispatcher = ioDispatcher
 )
 

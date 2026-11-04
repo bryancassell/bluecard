@@ -14,7 +14,9 @@ import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.di.DeviceClock
+import io.github.bryancassell.bluecard.testing.FakeBackgroundTime
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import java.io.File
 import java.io.IOException
@@ -54,11 +56,18 @@ class SetAsideDamagedDatabaseDriverTest {
     )
 
     private val warningLog = FakeWarningLog()
+
+    // Runs each piece of work in its caller's thread until it suspends.
+    private fun unconfinedOutlivingWork() = OutlivingWork(
+        CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        FakeBackgroundTime()
+    )
+
     private val damagedProgress = FileDamagedProgressRepository(
         { context.noBackupFilesDir.toOkioPath() },
         DeviceClock,
         warningLog,
-        CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        unconfinedOutlivingWork(),
         Dispatchers.Unconfined
     )
     private val databases = mutableListOf<BlueCardDatabase>()
@@ -156,7 +165,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val repository =
             RoomProgressRepository(
                 database,
-                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                unconfinedOutlivingWork()
             )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -208,7 +217,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val repository =
             RoomProgressRepository(
                 database,
-                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                unconfinedOutlivingWork()
             )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -406,7 +415,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val driver = newDriver()
         val repository = RoomProgressRepository(
             open(driver),
-            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            unconfinedOutlivingWork()
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -561,7 +570,7 @@ class SetAsideDamagedDatabaseDriverTest {
         }
         val repository = RoomProgressRepository(
             open(SetAsideDamagedDatabaseDriver(failing, damagedProgress)),
-            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            unconfinedOutlivingWork()
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()

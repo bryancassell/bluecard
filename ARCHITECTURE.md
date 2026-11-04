@@ -498,14 +498,15 @@ both taps of a double tap can reach it.
 
 ### Writes
 
-- **Writes outlive the screen.** `RoomProgressRepository` runs each write in an
-  app-lifetime scope and waits for it (`runOutlivingCaller`), so leaving a
-  screen cancels only the wait, not the write. Saving the profile, saving a PDF
-  report, exporting and importing do too.
-  That's the pattern in the data layer guide's
-  [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen).
-  A storage failure after the scout has left the screen goes unreported, but a
-  bug still crashes the app.
+- **Writes outlive the screen.** `RoomProgressRepository` runs each write as
+  `OutlivingWork` and waits for it, so leaving a screen cancels only the wait,
+  not the write. Saving the profile, saving a PDF report, exporting and
+  importing do too. The work runs in an app-lifetime scope, as in the data
+  layer guide's
+  [Make an operation live longer than the screen](https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen),
+  and on iOS holds a background task, so it can finish after the scout leaves
+  the app. A storage failure after the scout has left the screen goes
+  unreported, but a bug still crashes the app.
 - **Writes happen in the order they're made.** Each takes the database's
   first-come, first-served lock (`writing` in `RoomProgressRepository`), so a
   new write must go through it too: otherwise it could run ahead of writes

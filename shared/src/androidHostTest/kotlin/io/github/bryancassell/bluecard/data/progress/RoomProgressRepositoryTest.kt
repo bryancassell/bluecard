@@ -15,6 +15,8 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.OutlivingWork
+import io.github.bryancassell.bluecard.testing.FakeBackgroundTime
 import java.io.File
 import java.io.IOException
 import java.util.Collections
@@ -80,10 +82,11 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private val externalScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> crash.complete(e) }
     )
+    private val outlivingWork = OutlivingWork(externalScope, FakeBackgroundTime())
 
     private val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 4, 15))
 
-    override val repository = RoomProgressRepository(database, externalScope)
+    override val repository = RoomProgressRepository(database, outlivingWork)
 
     override fun unreadableRepository() = unopenableRepository()
 
@@ -98,7 +101,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
                 BlueCardDatabaseConstructor::initialize
             )
         ),
-        externalScope
+        outlivingWork
     )
 
     @Test
@@ -114,7 +117,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
                     BlueCardDatabaseConstructor::initialize
                 )
             ),
-            externalScope
+            outlivingWork
         )
 
         val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -139,7 +142,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
                     BlueCardDatabaseConstructor::initialize
                 )
             ),
-            externalScope
+            outlivingWork
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -316,7 +319,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
                 Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize),
                 ThreadRecordingDriver(threads)
             ),
-            externalScope
+            outlivingWork
         )
 
         // One write of each kind: a single statement, and a transaction (afterStarting).
@@ -354,7 +357,7 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize),
             FailingRequirementWrites(error)
         ),
-        externalScope
+        outlivingWork
     )
 
     private suspend fun ProgressRepository.startAndRecord() {
@@ -418,8 +421,9 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun writes_happenInTheOrderTheyreMade() = runTest(timeout = 10.seconds) {
         val dispatcher = HeldDispatcher()
+        val scope = CoroutineScope(SupervisorJob() + dispatcher)
         val repository =
-            RoomProgressRepository(database, CoroutineScope(SupervisorJob() + dispatcher))
+            RoomProgressRepository(database, OutlivingWork(scope, FakeBackgroundTime()))
 
         val writes = (1..20).map { i ->
             launch(start = CoroutineStart.UNDISPATCHED) {
@@ -440,7 +444,9 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         runTest(timeout = 10.seconds) {
             val dispatcher = HeldDispatcher()
             val scope = CoroutineScope(SupervisorJob() + dispatcher)
-            val (first, second) = List(2) { RoomProgressRepository(database, scope) }
+            val (first, second) = List(2) {
+                RoomProgressRepository(database, OutlivingWork(scope, FakeBackgroundTime()))
+            }
 
             val writes = (1..20).map { i ->
                 launch(start = CoroutineStart.UNDISPATCHED) {

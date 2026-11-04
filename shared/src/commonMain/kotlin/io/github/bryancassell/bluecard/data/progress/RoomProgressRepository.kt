@@ -2,10 +2,8 @@ package io.github.bryancassell.bluecard.data.progress
 
 import androidx.room3.withWriteTransaction
 import androidx.sqlite.SQLiteException
-import io.github.bryancassell.bluecard.data.runOutlivingCaller
-import io.github.bryancassell.bluecard.di.ApplicationScope
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.sync.withLock
@@ -15,17 +13,15 @@ import okio.IOException
 /**
  * [ProgressRepository] backed by Room.
  *
- * Writes run in [externalScope], which lives as long as the app, so one finishes even if its
- * caller is cancelled, such as when the scout leaves the screen that made it. That's how the
- * data layer guide has an operation live longer than the screen:
- * https://developer.android.com/topic/architecture/data-layer#make_an_operation_live_longer_than_the_screen
+ * Writes run as [outlivingWork], so one finishes even if its caller is cancelled, such as when
+ * the scout leaves the screen that made it.
  *
  * Functions are written as expression bodies (`= dao...`): when a call really suspends,
  * JaCoCo never sees a separate closing brace run, and would count it as untested.
  */
 class RoomProgressRepository(
     private val database: BlueCardDatabase,
-    @param:ApplicationScope private val externalScope: CoroutineScope
+    private val outlivingWork: OutlivingWork
 ) : ProgressRepository {
     private val dao = database.progressDao()
 
@@ -146,15 +142,15 @@ class RoomProgressRepository(
     }
 
     /**
-     * Runs [write] in [externalScope] and waits for it. If the caller is cancelled, only the
-     * wait is: the write still finishes ([runOutlivingCaller]). Reports a database that can't be
+     * Runs [write] as [outlivingWork] and waits for it. If the caller is cancelled, only the
+     * wait is: the write still finishes ([OutlivingWork.run]). Reports a database that can't be
      * written, such as one that can't be opened or a full disk, as an [IOException], in the same
      * way as [readFailuresAsIOException]. Any other exception is a bug: the caller gets it too,
-     * but it crashes the app through [externalScope] even if the caller is gone.
+     * but it crashes the app through [outlivingWork] even if the caller is gone.
      */
     // Started in the caller's thread, so writes queue for the database's writeOrder in the order
     // they're made.
-    private suspend fun <T> writing(write: suspend () -> T): T = externalScope.runOutlivingCaller {
+    private suspend fun <T> writing(write: suspend () -> T): T = outlivingWork.run {
         try {
             database.writeOrder.withLock { write() }
         } catch (e: Exception) {

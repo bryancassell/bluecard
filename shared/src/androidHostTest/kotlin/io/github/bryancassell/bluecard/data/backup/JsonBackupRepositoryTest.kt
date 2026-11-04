@@ -8,6 +8,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.catalog.FakeCatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.MeritBadge
 import io.github.bryancassell.bluecard.data.catalog.Rank
@@ -30,6 +31,7 @@ import io.github.bryancassell.bluecard.data.progress.Counselor
 import io.github.bryancassell.bluecard.data.progress.FakeProgressRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
 import io.github.bryancassell.bluecard.data.progress.RoomProgressRepository
+import io.github.bryancassell.bluecard.testing.FakeBackgroundTime
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.testing.FolderDocumentsProvider
 import java.io.File
@@ -135,7 +137,7 @@ class JsonBackupRepositoryTest {
         profileRepository,
         progressRepository,
         ioDispatcher,
-        externalScope
+        OutlivingWork(externalScope, FakeBackgroundTime())
     )
 
     private val repository = newRepository()
@@ -523,7 +525,7 @@ class JsonBackupRepositoryTest {
             .addColumnTypeConverter(Converters {})
             .build()
             .also { databases += it }
-        return RoomProgressRepository(database, roomScope)
+        return RoomProgressRepository(database, OutlivingWork(roomScope, FakeBackgroundTime()))
     }
 
     /**

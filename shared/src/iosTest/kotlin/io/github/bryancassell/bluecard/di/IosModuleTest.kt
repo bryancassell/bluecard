@@ -1,10 +1,12 @@
 package io.github.bryancassell.bluecard.di
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinator
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.FileUrl
+import io.github.bryancassell.bluecard.data.UIKitBackgroundTime
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -218,6 +220,11 @@ class IosModuleTest {
     }
 
     @Test
+    fun backgroundTime_isUIKitBackgroundTime() {
+        assertIs<UIKitBackgroundTime>(koin.get<BackgroundTime>())
+    }
+
+    @Test
     fun warningLog_isNSLog() {
         assertSame(NSLogWarningLog, koin.get<WarningLog>())
     }
@@ -302,7 +309,7 @@ class IosModuleTest {
         koin.get(),
         koin.get(),
         ioDispatcher,
-        koin.get(named<ApplicationScope>())
+        koin.get()
     )
 
     private val ioDispatcher get() = koin.get<CoroutineDispatcher>(named<IoDispatcher>())

@@ -2,15 +2,13 @@ package io.github.bryancassell.bluecard.data.backup
 
 import io.github.bryancassell.bluecard.data.DocumentUri
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.catalog.getAdvancements
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.ProgressRepository
-import io.github.bryancassell.bluecard.data.runOutlivingCaller
-import io.github.bryancassell.bluecard.di.ApplicationScope
 import io.github.bryancassell.bluecard.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okio.BufferedSource
@@ -22,8 +20,8 @@ import okio.use
  * in the documents the scout picks ([documents]). A file is checked against the catalog of
  * badges and ranks in this version of the app.
  *
- * Exporting and importing run in [externalScope], so each finishes even if the scout leaves
- * the screen ([runOutlivingCaller]).
+ * Exporting and importing run as [outlivingWork], so each finishes even if the scout leaves
+ * the screen.
  */
 class JsonBackupRepository(
     private val documents: Documents,
@@ -31,9 +29,9 @@ class JsonBackupRepository(
     private val profileRepository: ProfileRepository,
     private val progressRepository: ProgressRepository,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    @param:ApplicationScope private val externalScope: CoroutineScope
+    private val outlivingWork: OutlivingWork
 ) : BackupRepository {
-    override suspend fun exportBackup(destination: DocumentUri) = externalScope.runOutlivingCaller {
+    override suspend fun exportBackup(destination: DocumentUri) = outlivingWork.run {
         documents.save(destination) { encodeBackup(currentBackup()).encodeToByteArray() }
     }
 
@@ -59,7 +57,7 @@ class JsonBackupRepository(
         }
 
     // Progress first: it's replaced in one transaction, so if that fails, nothing has changed.
-    override suspend fun importBackup(backup: Backup) = externalScope.runOutlivingCaller {
+    override suspend fun importBackup(backup: Backup) = outlivingWork.run {
         progressRepository.replaceAll(backup.progress)
         profileRepository.saveProfile(backup.profile)
     }
@@ -69,7 +67,7 @@ class JsonBackupRepository(
         backup: Backup,
         fromFile: Set<String>,
         profileFromFile: Boolean
-    ) = externalScope.runOutlivingCaller {
+    ) = outlivingWork.run {
         progressRepository.merge(backup.progress, replacing = fromFile)
         if (profileFromFile) profileRepository.saveProfile(backup.profile)
     }

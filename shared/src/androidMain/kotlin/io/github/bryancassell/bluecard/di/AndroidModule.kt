@@ -7,8 +7,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.profile.DataStoreProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabase
 import io.github.bryancassell.bluecard.data.progress.BlueCardDatabaseConstructor
@@ -38,6 +40,7 @@ import org.koin.plugin.module.dsl.single
 /** What the app is built from that needs Android to build, such as a [Context]. */
 val androidModule = module {
     single<WarningLog> { LogcatWarningLog }
+    single<BackgroundTime> { AndroidBackgroundTime }
     single { create(::progressDatabase) }
     single { create(::profileDataStore) }
 
@@ -53,6 +56,14 @@ val androidModule = module {
     single<AndroidPhoneNumberFormat>() bind PhoneNumberFormat::class
 }
 
+/**
+ * Asks for no time, as before iOS needed it (#354): the data layer guide has work outlive the
+ * screen on Android with the app-lifetime scope alone.
+ */
+internal object AndroidBackgroundTime : BackgroundTime {
+    override suspend fun <T> whileRunning(block: suspend () -> T): T = block()
+}
+
 /** Writes warnings to logcat, which bug reports include. */
 internal object LogcatWarningLog : WarningLog {
     override fun warn(tag: String, message: String, error: Throwable?) {
@@ -64,13 +75,13 @@ private fun damagedProgressRepository(
     context: Context,
     clock: ZonedClock,
     warningLog: WarningLog,
-    @ApplicationScope scope: CoroutineScope,
+    outlivingWork: OutlivingWork,
     @IoDispatcher ioDispatcher: CoroutineDispatcher
 ) = FileDamagedProgressRepository(
     produceDirectory = { context.noBackupFilesDir.toOkioPath() },
     clock = clock,
     warningLog = warningLog,
-    externalScope = scope,
+    outlivingWork = outlivingWork,
     ioDispatcher = ioDispatcher
 )
 

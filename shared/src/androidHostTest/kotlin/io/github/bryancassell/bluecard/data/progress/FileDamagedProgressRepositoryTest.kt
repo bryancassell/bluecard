@@ -3,6 +3,8 @@ package io.github.bryancassell.bluecard.data.progress
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.OutlivingWork
+import io.github.bryancassell.bluecard.testing.FakeBackgroundTime
 import io.github.bryancassell.bluecard.testing.FakeClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import java.io.File
@@ -46,7 +48,7 @@ class FileDamagedProgressRepositoryTest : DamagedProgressRepositoryContract() {
             { context.noBackupFilesDir.toOkioPath() },
             clock,
             warningLog,
-            CoroutineScope(SupervisorJob() + ioDispatcher),
+            OutlivingWork(CoroutineScope(SupervisorJob() + ioDispatcher), FakeBackgroundTime()),
             ioDispatcher
         )
 

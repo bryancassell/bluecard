@@ -1,8 +1,8 @@
 package io.github.bryancassell.bluecard.data.progress
 
 import io.github.bryancassell.bluecard.data.Lock
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.data.deleteOrWarn
-import io.github.bryancassell.bluecard.data.runOutlivingCaller
 import io.github.bryancassell.bluecard.data.systemFileSystem
 import io.github.bryancassell.bluecard.di.WarningLog
 import io.github.bryancassell.bluecard.di.ZonedClock
@@ -10,7 +10,6 @@ import kotlin.random.Random
 import kotlin.random.nextULong
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -37,7 +36,7 @@ class FileDamagedProgressRepository(
     produceDirectory: () -> Path,
     private val clock: ZonedClock,
     private val warningLog: WarningLog,
-    private val externalScope: CoroutineScope,
+    private val outlivingWork: OutlivingWork,
     private val ioDispatcher: CoroutineDispatcher
 ) : DamagedProgressRepository {
     private val fileSystem = systemFileSystem
@@ -64,7 +63,7 @@ class FileDamagedProgressRepository(
         .filterNotNull()
 
     // Finishes even if the caller is cancelled, such as when the scout taps OK and leaves.
-    override suspend fun dismissNotice() = externalScope.runOutlivingCaller {
+    override suspend fun dismissNotice() = outlivingWork.run {
         withContext(ioDispatcher) {
             lock.withLock {
                 // If it can't be deleted, the notice still goes for now, but shows again when the
