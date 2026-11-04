@@ -74,6 +74,7 @@ import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import java.math.BigDecimal
 import kotlinx.datetime.LocalDate
@@ -1543,6 +1544,7 @@ class RequirementDetailScreenTest {
         show(completedLeaf.copy(textChanged = true))
 
         back.press(composeTestRule)
+        composeTestRule.waitPastDoubleTapTimeout()
         // Only the notes: the checkbox and date are saved already.
         composeTestRule.onNodeWithText("Your changes to the notes haven't been saved.")
             .assertIsDisplayed()
@@ -1641,6 +1643,7 @@ class RequirementDetailScreenTest {
         show(rankLeaf.copy(textChanged = true))
 
         back.press(composeTestRule)
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Your changes to the sign-off and notes haven't been saved.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
@@ -1675,6 +1678,7 @@ class RequirementDetailScreenTest {
         show(completedLeaf.copy(canClear = true))
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Clear progress on requirement 1?").assertIsDisplayed()
         composeTestRule.onNodeWithText("What you recorded for it will be removed.")
             .assertIsDisplayed()
@@ -1782,6 +1786,7 @@ class RequirementDetailScreenTest {
         show(completedLeaf.copy(canClear = true))
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertEquals(0, clears)
@@ -1793,6 +1798,7 @@ class RequirementDetailScreenTest {
         show(completedLeaf.copy(canClear = true))
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         // Espresso's pressBack doesn't reach the dialog's window under Robolectric, so Back is
         // sent to the dialog itself.
         composeTestRule.runOnIdle {

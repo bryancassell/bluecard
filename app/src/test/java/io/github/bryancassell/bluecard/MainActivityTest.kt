@@ -98,6 +98,7 @@ import io.github.bryancassell.bluecard.testing.pickerDateField
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.testIoDispatcherModule
 import io.github.bryancassell.bluecard.testing.waitPastDateFieldFocusDelay
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -935,6 +936,7 @@ class MainActivityTest {
 
         composeTestRule.onReadAsOne("Night 1").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Delete").performScrollTo().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNode(hasText("Delete") and hasAnyAncestor(isDialog())).performClick()
 
         composeTestRule.onNodeWithText("0 nights").performScrollTo().assertIsDisplayed()
@@ -1009,11 +1011,13 @@ class MainActivityTest {
 
         // Cancel keeps the page and the edit.
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         discardDialog().assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancel").performClick()
         assertFieldText("Name", "Pat Lee")
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Discard").performClick()
 
         composeTestRule.onNodeWithText("Add counselor").performScrollTo().assertIsDisplayed()
@@ -1026,6 +1030,7 @@ class MainActivityTest {
         typeAnUnsavedNight()
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         discardDialog().assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
 
@@ -1043,6 +1048,7 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Your changes to the notes haven't been saved.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
@@ -1064,6 +1070,7 @@ class MainActivityTest {
         field("Name").performTextInput("Pat Lee")
         composeTestRule.waitForIdle()
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         discardDialog().assertIsDisplayed()
 
         // Back again while the page slides away.
@@ -1653,6 +1660,7 @@ class MainActivityTest {
         openRequirementOutOfTouchMode()
         completedCheckbox().performClick()
         pressWithEnter(composeTestRule.onNodeWithText("Clear progress"))
+        composeTestRule.waitPastDoubleTapTimeout()
 
         composeTestRule.onNodeWithText("Clear").performClick()
 
@@ -1676,6 +1684,7 @@ class MainActivityTest {
         launchWithProfile()
         composeTestRule.onNodeWithText("Manage data").performScrollTo().performClick()
         pressWithEnter(composeTestRule.onNodeWithText("Clear all"))
+        composeTestRule.waitPastDoubleTapTimeout()
 
         composeTestRule.onNodeWithText("Clear").performClick()
 
@@ -1807,6 +1816,7 @@ class MainActivityTest {
         composeTestRule.waitForIdle()
 
         pressBack()
+        composeTestRule.waitPastDoubleTapTimeout()
         discardDialog().assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
 
@@ -2357,6 +2367,7 @@ class MainActivityTest {
         // The first swipe completes without closing the page, so the second must still reach Back.
         val gesture = swipeHalfwayBack()
         scenario.onActivity { gesture.backCompleted() }
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Cancel").performClick()
         discardDialog().assertDoesNotExist()
 

@@ -293,9 +293,11 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   creation extras: the activity's default factory would still pass it them.
 - **Pages slide side by side** (`ui/navigation/PageTransitions.kt`); why,
   against Material 3's advice, is in [`PRD.md`](PRD.md#design-decisions). The
-  navigation root handles Back with its own `NavigationBackHandler`, added
-  before the screens so that a handler a screen adds goes first
-  (`BlueCardNavDisplay.kt`).
+  navigation root handles Back with its own `NavigationBackHandler`s (two on
+  iOS), added before the screens so that a handler a screen adds goes first,
+  since the last one added that's on gets Back (`BlueCardNavDisplay.kt`). On
+  iOS, it also puts a Back button above every page but Home and Onboarding
+  (`rememberBackButtonNavEntryDecorator`), so pages draw none.
 - **The navigation root decides whether Back asks before discarding unsaved
   changes** (`UnsavedChangesByPage`), from the back stack as it is when Back
   arrives. Pages report their changes with `ConfirmDiscardOnBack` and add no
@@ -323,7 +325,8 @@ both taps of a double tap can reach it.
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)). The merge's
-  full-screen dialog does the same as it opens (`IgnoreTouchesAsItOpens`).
+  full-screen dialog and `ConfirmDialog` do the same as they open
+  (`isOpeningForDoubleTap`), and every screen while a back swipe is held.
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
   open another app. After a tap, it ignores taps for the double-tap timeout

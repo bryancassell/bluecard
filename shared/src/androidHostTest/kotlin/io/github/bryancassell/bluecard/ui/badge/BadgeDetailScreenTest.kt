@@ -80,6 +80,7 @@ import io.github.bryancassell.bluecard.testing.readWithOnlyItsLastLineShown
 import io.github.bryancassell.bluecard.testing.setContentWithText
 import io.github.bryancassell.bluecard.testing.turnOnScreenReader
 import io.github.bryancassell.bluecard.testing.visualText
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badges.EagleRequirement
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
@@ -1404,6 +1405,7 @@ class BadgeDetailScreenTest {
         show(startedBadge)
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText(clearTitle).assertIsDisplayed()
         composeTestRule.onNodeWithText("What you recorded for it will be removed.")
             .assertIsDisplayed()
@@ -1444,6 +1446,7 @@ class BadgeDetailScreenTest {
         show(startedBadge)
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Cancel").performClick()
 
         assertEquals(0, clears)
@@ -1455,6 +1458,7 @@ class BadgeDetailScreenTest {
         show(startedBadge)
 
         clearButton().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         // Espresso's pressBack doesn't reach the dialog's window under Robolectric, so Back is
         // sent to the dialog itself.
         composeTestRule.runOnIdle {

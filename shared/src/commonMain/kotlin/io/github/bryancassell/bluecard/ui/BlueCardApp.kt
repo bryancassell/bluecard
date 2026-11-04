@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import io.github.bryancassell.bluecard.MainActivityUiState
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.load_failed
@@ -91,6 +93,13 @@ private fun StatusBarBackground(insets: WindowInsets) {
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsTopHeight(insets)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.statusBarBand)
     )
 }
+
+/**
+ * The color of the band behind the status bar, which iOS's Back bar under it shares, so the two
+ * read as one bar.
+ */
+internal val ColorScheme.statusBarBand: Color
+    get() = surfaceContainer
