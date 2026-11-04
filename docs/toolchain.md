@@ -273,10 +273,14 @@ it.
   which simulates Android on the JVM: mark the class with
   `@RunWith(AndroidJUnit4::class)`. Put every test here unless it needs a real
   device, and in `commonTest`, with `kotlin.test` rather than JUnit, unless it
-  needs Android or the JVM, since the iOS simulator runs those too. Fakes and
+  needs Android or the JVM, since the iOS simulator runs those too. A common
+  test whose setup differs on each platform, such as Room's database builders,
+  is abstract, with a subclass in each platform's tests
+  (`RoomProgressRepositoryTest`). Fakes and
   helpers that tests in both modules use are in `:testing`, in its `commonMain`
   if common tests use them; the rest stay with the tests that use them.
-- **iOS tests** (`shared/src/iosTest`) test code that only iOS runs, with
+- **iOS tests** (`shared/src/iosTest`) test code that only iOS runs, or give
+  a common test what iOS needs (`IosRoomProgressRepositoryTest`), with
   `kotlin.test`, on an iOS simulator, which needs Xcode:
   `./gradlew :shared:iosSimulatorArm64Test`, which runs the common tests
   (`shared/src/commonTest`) there too, as CI's iOS job does. Nothing measures

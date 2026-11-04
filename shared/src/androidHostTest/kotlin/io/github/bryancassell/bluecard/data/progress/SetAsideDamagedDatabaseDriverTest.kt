@@ -14,6 +14,8 @@ import androidx.sqlite.execSQL
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import io.github.bryancassell.bluecard.di.DeviceClock
 import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import java.io.File
@@ -54,11 +56,15 @@ class SetAsideDamagedDatabaseDriverTest {
     )
 
     private val warningLog = FakeWarningLog()
+
+    // As the app's scope, which outlives the screens.
+    private val outlivingWork = OutlivingWork(CoroutineScope(SupervisorJob()), NoBackgroundTime)
+
     private val damagedProgress = FileDamagedProgressRepository(
         { context.noBackupFilesDir.toOkioPath() },
         DeviceClock,
         warningLog,
-        CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        outlivingWork,
         Dispatchers.Unconfined
     )
     private val databases = mutableListOf<BlueCardDatabase>()
@@ -156,7 +162,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val repository =
             RoomProgressRepository(
                 database,
-                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                outlivingWork
             )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -208,7 +214,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val repository =
             RoomProgressRepository(
                 database,
-                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                outlivingWork
             )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -247,7 +253,7 @@ class SetAsideDamagedDatabaseDriverTest {
         damagedProgress.recordDamage()
         // As the database's last save and the damage found in it could be, so the new database
         // Room makes is newer than the record.
-        dateInOrder(older = file, newer = damageFile)
+        dateInOrder(older = file.toOkioPath(), newer = damageFile.toOkioPath())
         // Stops the set-aside and the record's deletion, as long as the tests don't run as root.
         folder.setWritable(false)
         val progress = try {
@@ -287,7 +293,7 @@ class SetAsideDamagedDatabaseDriverTest {
         saveProgress(open())
         damagedProgress.recordDamage()
         // As when a set-aside couldn't delete the record, and Room made this database after it.
-        dateInOrder(older = damageFile, newer = file)
+        dateInOrder(older = damageFile.toOkioPath(), newer = file.toOkioPath())
 
         val progress = open().readProgress()
 
@@ -406,7 +412,7 @@ class SetAsideDamagedDatabaseDriverTest {
         val driver = newDriver()
         val repository = RoomProgressRepository(
             open(driver),
-            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            outlivingWork
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
@@ -561,7 +567,7 @@ class SetAsideDamagedDatabaseDriverTest {
         }
         val repository = RoomProgressRepository(
             open(SetAsideDamagedDatabaseDriver(failing, damagedProgress)),
-            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            outlivingWork
         )
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()

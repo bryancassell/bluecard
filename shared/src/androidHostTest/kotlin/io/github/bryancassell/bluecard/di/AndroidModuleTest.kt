@@ -5,8 +5,10 @@ import androidx.room3.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.ContentResolverDocuments
 import io.github.bryancassell.bluecard.data.Documents
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
 import io.github.bryancassell.bluecard.data.progress.BadgeProgress
@@ -138,6 +140,11 @@ class AndroidModuleTest {
 
         // Installed apps keep their profile here: renaming the file would lose it on update.
         assertTrue(File(context.filesDir, "datastore/profile.preferences_pb").exists())
+    }
+
+    @Test
+    fun backgroundTime_isNone() {
+        assertSame(NoBackgroundTime, koin.get<BackgroundTime>())
     }
 
     @Test

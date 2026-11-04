@@ -132,6 +132,7 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.phonenumber)
         }
 
         // Tests that run on Android and iOS alike, such as the contract tests that both

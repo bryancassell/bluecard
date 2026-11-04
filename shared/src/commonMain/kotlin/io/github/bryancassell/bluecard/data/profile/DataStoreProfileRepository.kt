@@ -7,20 +7,19 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import io.github.bryancassell.bluecard.data.runOutlivingCaller
-import io.github.bryancassell.bluecard.di.ApplicationScope
+import io.github.bryancassell.bluecard.data.OutlivingWork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import okio.Path
 
 /**
- * [ProfileRepository] backed by Preferences DataStore. Saving runs in [externalScope], so the
- * profile finishes saving even if the scout leaves the screen ([runOutlivingCaller]).
+ * [ProfileRepository] backed by Preferences DataStore. Saving runs as [outlivingWork], so the
+ * profile finishes saving even if the scout leaves the screen.
  */
 class DataStoreProfileRepository(
     private val dataStore: DataStore<Preferences>,
-    @param:ApplicationScope private val externalScope: CoroutineScope
+    private val outlivingWork: OutlivingWork
 ) : ProfileRepository {
     override fun observeProfile(): Flow<Profile?> = dataStore.data.map { preferences ->
         val name = preferences[NAME] ?: return@map null
@@ -30,7 +29,7 @@ class DataStoreProfileRepository(
 
     override suspend fun saveProfile(profile: Profile) {
         val stored = profile.normalized()
-        externalScope.runOutlivingCaller {
+        outlivingWork.runOutlivingCaller {
             dataStore.edit {
                 it[NAME] = stored.name
                 it[UNIT_NUMBER] = stored.unitNumber

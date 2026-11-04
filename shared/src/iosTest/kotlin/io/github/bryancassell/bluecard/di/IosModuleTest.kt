@@ -1,10 +1,13 @@
 package io.github.bryancassell.bluecard.di
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.github.bryancassell.bluecard.data.BackgroundTime
 import io.github.bryancassell.bluecard.data.Documents
 import io.github.bryancassell.bluecard.data.FileCoordinator
 import io.github.bryancassell.bluecard.data.FileCoordinatorDocuments
 import io.github.bryancassell.bluecard.data.FileUrl
+import io.github.bryancassell.bluecard.data.UIApplicationBackgroundTasks
+import io.github.bryancassell.bluecard.data.UIKitBackgroundTime
 import io.github.bryancassell.bluecard.data.catalog.CatalogRepository
 import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.data.profile.ProfileRepository
@@ -218,6 +221,12 @@ class IosModuleTest {
     }
 
     @Test
+    fun backgroundTime_asksUIKitForTime() {
+        val time = assertIs<UIKitBackgroundTime>(koin.get<BackgroundTime>())
+        assertSame(UIApplicationBackgroundTasks, time.tasks)
+    }
+
+    @Test
     fun warningLog_isNSLog() {
         assertSame(NSLogWarningLog, koin.get<WarningLog>())
     }
@@ -302,7 +311,7 @@ class IosModuleTest {
         koin.get(),
         koin.get(),
         ioDispatcher,
-        koin.get(named<ApplicationScope>())
+        koin.get()
     )
 
     private val ioDispatcher get() = koin.get<CoroutineDispatcher>(named<IoDispatcher>())
@@ -329,8 +338,8 @@ class IosModuleTest {
     }
 
     @Test
-    fun phoneNumberFormat_leavesNumbersAsTyped() = runTest {
-        assertEquals("5551234567", koin.get<PhoneNumberFormat>().format("5551234567"))
+    fun phoneNumberFormat_followsUsRules() = runTest {
+        assertEquals("(555) 123-4567", koin.get<PhoneNumberFormat>().format("5551234567"))
     }
 
     private val reportsFolder = NSTemporaryDirectory().toPath() / ReportPlatform.REPORTS_FOLDER

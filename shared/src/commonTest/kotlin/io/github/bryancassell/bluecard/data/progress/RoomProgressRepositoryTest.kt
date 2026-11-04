@@ -1,8 +1,5 @@
 package io.github.bryancassell.bluecard.data.progress
 
-import android.content.Context
-import android.database.SQLException
-import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import androidx.room3.executeSQL
 import androidx.room3.useWriterConnection
@@ -13,20 +10,28 @@ import androidx.sqlite.SQLiteException
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import java.io.File
-import java.io.IOException
-import java.util.Collections
-import java.util.concurrent.CancellationException
+import io.github.bryancassell.bluecard.data.Lock
+import io.github.bryancassell.bluecard.data.NoBackgroundTime
+import io.github.bryancassell.bluecard.data.OutlivingWork
+import io.github.bryancassell.bluecard.data.systemFileSystem
+import io.github.bryancassell.bluecard.testing.TemporaryDirectory
 import kotlin.coroutines.CoroutineContext
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
@@ -35,30 +40,29 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
+import okio.IOException
+import okio.Path
+import okio.Path.Companion.toPath
 
 /**
- * Runs the repository contract against Room with an in-memory database, on the SQLite the app
- * bundles (BundledSQLiteDriver), under Robolectric. The Room testing guide recommends plain JVM
- * tests instead. Room 3 can open the database without Robolectric, but on Android its errors are
- * android.database.SQLException, and the local tests' android.jar drops their message, which
- * holds the result code the repository sorts them by. On the JVM target of common code (#345),
- * SQLiteException keeps its message.
+ * Runs the repository contract against Room on the SQLite the app bundles (BundledSQLiteDriver),
+ * and checks how Room's errors reach the scout and that writes outlive their callers. Each
+ * platform's test runs it with that platform's database builders, since Room's errors, its
+ * lock file and the threads it writes on are the platform's own.
  */
-@RunWith(AndroidJUnit4::class)
-class RoomProgressRepositoryTest : ProgressRepositoryContract() {
-    @get:Rule
-    val folder = TemporaryFolder()
+abstract class RoomProgressRepositoryTest : ProgressRepositoryContract() {
+    /** A builder for a database that's only in memory. */
+    protected abstract fun inMemoryDatabaseBuilder(): RoomDatabase.Builder<BlueCardDatabase>
 
-    private val context = ApplicationProvider.getApplicationContext<Context>()
+    /** A builder for a database in [file]. */
+    protected abstract fun databaseBuilder(file: Path): RoomDatabase.Builder<BlueCardDatabase>
+
+    /** The name of the thread that calls it, with an ID no other running thread has. */
+    protected abstract fun currentThread(): String
+
+    // Made only for the tests that use files.
+    private val folder = lazy { TemporaryDirectory() }
+    private val databaseFile by lazy { folder.value.path / BlueCardDatabase.NAME }
     private val databases = mutableListOf<BlueCardDatabase>()
 
     private fun open(
@@ -69,8 +73,9 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         .build()
         .also { databases += it }
 
-    private val database =
-        open(Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize))
+    // Lazy, as is repository, which uses it: a subclass's builders can use its own properties,
+    // which aren't set yet while this class is constructed.
+    private val database by lazy { open(inMemoryDatabaseBuilder()) }
 
     /** The first exception that would crash the app: a bug in a write. */
     private val crash = CompletableDeferred<Throwable>()
@@ -80,74 +85,50 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     private val externalScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> crash.complete(e) }
     )
+    private val outlivingWork = OutlivingWork(externalScope, NoBackgroundTime)
 
     private val start = BadgeStart(LocalDate(2026, 1, 1), LocalDate(2026, 4, 15))
 
-    override val repository = RoomProgressRepository(database, externalScope)
+    override val repository by lazy { RoomProgressRepository(database, outlivingWork) }
 
     override fun unreadableRepository() = unopenableRepository()
 
     override fun unwritableRepository() = unopenableRepository()
 
     // A folder where the database file should be, so SQLite can't open it.
-    private fun unopenableRepository() = RoomProgressRepository(
-        open(
-            Room.databaseBuilder(
-                context,
-                folder.newFolder(BlueCardDatabase.NAME).absolutePath,
-                BlueCardDatabaseConstructor::initialize
-            )
-        ),
-        externalScope
-    )
+    private fun unopenableRepository(): RoomProgressRepository {
+        systemFileSystem.createDirectories(databaseFile)
+        return RoomProgressRepository(open(databaseBuilder(databaseFile)), outlivingWork)
+    }
 
     @Test
     fun readingAndWriting_whenRoomCantLockTheDatabase_throwIOException() = runTest {
         // A folder where Room's lock file goes, so Room can't create it.
-        val file = File(folder.root, BlueCardDatabase.NAME)
-        File(file.path + ".lck").mkdirs()
-        val repository = RoomProgressRepository(
-            open(
-                Room.databaseBuilder(
-                    context,
-                    file.absolutePath,
-                    BlueCardDatabaseConstructor::initialize
-                )
-            ),
-            externalScope
-        )
+        systemFileSystem.createDirectories("$databaseFile.lck".toPath())
+        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), outlivingWork)
 
         val readError = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
         val writeError = runCatching {
             repository.startBadge("archery", start.requirementsVersion, start.startedDate)
         }.exceptionOrNull()
 
-        assertTrue("Expected an IOException, got $readError", readError is IOException)
-        assertTrue("Expected an IOException, got $writeError", writeError is IOException)
+        assertTrue(readError is IOException, "Expected an IOException, got $readError")
+        assertTrue(writeError is IOException, "Expected an IOException, got $writeError")
     }
 
     @Test
     fun observing_whenMigrationIsMissing_throwsTheBugUnwrapped() = runTest {
         // A database from a newer app version, which Room has no migration down from.
-        val file = File(folder.root, BlueCardDatabase.NAME)
-        BundledSQLiteDriver().open(file.path).use { it.execSQL("PRAGMA user_version = 1000") }
-        val repository = RoomProgressRepository(
-            open(
-                Room.databaseBuilder(
-                    context,
-                    file.absolutePath,
-                    BlueCardDatabaseConstructor::initialize
-                )
-            ),
-            externalScope
-        )
+        BundledSQLiteDriver().open(databaseFile.toString())
+            .use { it.execSQL("PRAGMA user_version = 1000") }
+        val repository = RoomProgressRepository(open(databaseBuilder(databaseFile)), outlivingWork)
 
         val error = runCatching { repository.observeAllProgress().first() }.exceptionOrNull()
 
         // A bug must crash, not become a load failure (see readFailuresAsIOException).
         assertTrue(
-            "Expected Room's IllegalStateException, got $error",
-            error is IllegalStateException
+            error is IllegalStateException,
+            "Expected Room's IllegalStateException, got $error"
         )
     }
 
@@ -247,23 +228,23 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
             .exceptionOrNull()
 
         // A bug must crash, not become a save failure (see isStorageFailure).
-        assertTrue("Expected a constraint violation, got $error", isConstraintViolation(error))
+        assertTrue(isConstraintViolation(error), "Expected a constraint violation, got $error")
     }
 
     @Test
     fun writing_whenTheDiskIsFull_throwsIOException() = runTest {
-        val full = SQLException("Error code: 13, message: database or disk is full")
+        val full = SQLiteException("Error code: 13, message: database or disk is full")
 
         val error = runCatching { failingRequirementWrites(full).startAndRecord() }
             .exceptionOrNull()
 
-        assertTrue("Expected an IOException, got $error", error is IOException)
+        assertTrue(error is IOException, "Expected an IOException, got $error")
     }
 
     @Test
     fun writing_whenAnErrorHasNoResultCode_throwsTheBugUnwrapped() = runTest {
         // As Room throws for a failed foreign key check.
-        val noCode = SQLException("Foreign key violation(s) detected in 'requirement_progress'.")
+        val noCode = SQLiteException("Foreign key violation(s) detected in 'requirement_progress'.")
 
         val error = runCatching { failingRequirementWrites(noCode).startAndRecord() }
             .exceptionOrNull()
@@ -293,30 +274,27 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         val error = runCatching { failingRequirementWrites(bug).startAndRecord() }
             .exceptionOrNull()
 
-        assertTrue("Expected the bug, got $error", error is IllegalArgumentException)
+        assertTrue(error is IllegalArgumentException, "Expected the bug, got $error")
     }
 
     @Test
     fun writing_whenCancelled_staysCancelled_evenIfCausedByAStorageFailure() = runTest {
-        val cancelled = CancellationException("Cancelled").apply { initCause(IOException()) }
+        val cancelled = CancellationException("Cancelled", IOException())
 
         val error = runCatching { failingRequirementWrites(cancelled).startAndRecord() }
             .exceptionOrNull()
 
-        assertTrue("Expected the cancellation, got $error", error is CancellationException)
+        assertTrue(error is CancellationException, "Expected the cancellation, got $error")
     }
 
     @Test
     fun writing_usesTheDatabaseOffTheCallersThread() = runTest {
         // Room runs queries on Dispatchers.IO by default, which externalScope runs on, as in the
         // app.
-        val threads = Collections.synchronizedList(mutableListOf<Thread>())
+        val threads = Threads()
         val repository = RoomProgressRepository(
-            open(
-                Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize),
-                ThreadRecordingDriver(threads)
-            ),
-            externalScope
+            open(inMemoryDatabaseBuilder(), ThreadRecordingDriver(threads)),
+            outlivingWork
         )
 
         // One write of each kind: a single statement, and a transaction (afterStarting).
@@ -324,24 +302,34 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         repository.markRequirementCompleted("archery", "1", null, start)
 
         // A copy, since Room's refresh after a write may still be adding to it.
-        val used = synchronized(threads) { threads.toList() }
+        val used = threads.toList()
         assertTrue(used.isNotEmpty())
-        assertFalse("Used on ${used.map { it.name }.distinct()}", Thread.currentThread() in used)
+        assertFalse(currentThread() in used, "Used on ${used.distinct()}")
+    }
+
+    /** The names of threads, added from any of them. */
+    private class Threads {
+        private val lock = Lock()
+        private val names = mutableListOf<String>()
+
+        fun add(name: String) = lock.withLock { names += name }
+
+        fun toList() = lock.withLock { names.toList() }
     }
 
     /**
      * BundledSQLiteDriver, recording in [threads] the thread that opens each connection, which is
      * where the app's driver sets a damaged database aside, and that prepares each statement.
      */
-    private class ThreadRecordingDriver(private val threads: MutableList<Thread>) : SQLiteDriver {
+    private inner class ThreadRecordingDriver(private val threads: Threads) : SQLiteDriver {
         private val driver = BundledSQLiteDriver()
 
         override fun open(fileName: String): SQLiteConnection {
-            threads += Thread.currentThread()
+            threads.add(currentThread())
             val connection = driver.open(fileName)
             return object : SQLiteConnection by connection {
                 override fun prepare(sql: String): SQLiteStatement {
-                    threads += Thread.currentThread()
+                    threads.add(currentThread())
                     return connection.prepare(sql)
                 }
             }
@@ -350,11 +338,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
 
     /** A repository whose writes of requirement progress throw [error]. */
     private fun failingRequirementWrites(error: RuntimeException) = RoomProgressRepository(
-        open(
-            Room.inMemoryDatabaseBuilder(context, BlueCardDatabaseConstructor::initialize),
-            FailingRequirementWrites(error)
-        ),
-        externalScope
+        open(inMemoryDatabaseBuilder(), FailingRequirementWrites(error)),
+        outlivingWork
     )
 
     private suspend fun ProgressRepository.startAndRecord() {
@@ -418,8 +403,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
     @Test
     fun writes_happenInTheOrderTheyreMade() = runTest(timeout = 10.seconds) {
         val dispatcher = HeldDispatcher()
-        val repository =
-            RoomProgressRepository(database, CoroutineScope(SupervisorJob() + dispatcher))
+        val scope = CoroutineScope(SupervisorJob() + dispatcher)
+        val repository = RoomProgressRepository(database, OutlivingWork(scope, NoBackgroundTime))
 
         val writes = (1..20).map { i ->
             launch(start = CoroutineStart.UNDISPATCHED) {
@@ -440,7 +425,8 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         runTest(timeout = 10.seconds) {
             val dispatcher = HeldDispatcher()
             val scope = CoroutineScope(SupervisorJob() + dispatcher)
-            val (first, second) = List(2) { RoomProgressRepository(database, scope) }
+            val work = OutlivingWork(scope, NoBackgroundTime)
+            val (first, second) = List(2) { RoomProgressRepository(database, work) }
 
             val writes = (1..20).map { i ->
                 launch(start = CoroutineStart.UNDISPATCHED) {
@@ -461,20 +447,16 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
      * dispatcher.
      */
     private class HeldDispatcher : CoroutineDispatcher() {
+        private val lock = Lock()
         private var held: MutableList<Runnable>? = mutableListOf()
 
         override fun dispatch(context: CoroutineContext, block: Runnable) {
-            synchronized(this) {
-                held?.let {
-                    it += block
-                    return
-                }
-            }
-            Dispatchers.IO.dispatch(context, block)
+            val isHeld = lock.withLock { held?.add(block) != null }
+            if (!isHeld) Dispatchers.IO.dispatch(context, block)
         }
 
         fun release() {
-            val work = synchronized(this) { held.also { held = null } }
+            val work = lock.withLock { held.also { held = null } }
             work!!.asReversed().forEach { it.run() }
         }
     }
@@ -492,12 +474,16 @@ class RoomProgressRepositoryTest : ProgressRepositoryContract() {
         }
 
         val error = crash.await()
-        assertTrue("Expected a constraint violation, got $error", isConstraintViolation(error))
+        assertTrue(isConstraintViolation(error), "Expected a constraint violation, got $error")
     }
 
-    @After
+    @AfterTest
     fun closeDatabases() {
-        externalScope.cancel()
-        databases.forEach { it.close() }
+        try {
+            externalScope.cancel()
+            databases.forEach { it.close() }
+        } finally {
+            if (folder.isInitialized()) folder.value.delete()
+        }
     }
 }

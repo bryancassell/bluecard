@@ -1,14 +1,14 @@
 package io.github.bryancassell.bluecard.text
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 /**
  * Behavior every [PhoneNumberFormat] must have. Runs against Android's
- * (AndroidPhoneNumberFormatTest), and is for the iOS one to run too (#350). Unlike the
- * repositories, it has no fake: other tests use Android's, which runs in local tests, so what they
- * check is what the app shows.
+ * (AndroidPhoneNumberFormatTest) and iOS's (IosPhoneNumberFormatTest). Unlike the repositories, it
+ * has no fake: other tests use Android's, which runs in local tests, so what they check is what
+ * the app shows.
  */
 abstract class PhoneNumberFormatContract {
     protected abstract val phoneNumberFormat: PhoneNumberFormat
@@ -20,12 +20,44 @@ abstract class PhoneNumberFormatContract {
         assertEquals("(555) 123-4567", format("5551234567"))
         assertEquals("(555) 123-4567", format("555.123.4567"))
         assertEquals("555-0100", format("5550100"))
+        // libphonenumber counts the 555 area code as invalid, and 214 as valid.
+        assertEquals("(214) 555-0142", format("2145550142"))
     }
 
     @Test
     fun withACountryCode_followsItsCountrysRules() = runTest {
         assertEquals("+1 555-123-4567", format("+15551234567"))
+        assertEquals("+1 214-555-0142", format("+12145550142"))
         assertEquals("+44 20 7946 0958", format("+442079460958"))
+    }
+
+    // libphonenumber may read the digits after a valid number as an extension, and add "ext.".
+    @Test
+    fun withDigitsAfterAValidNumber_isAsTyped() = runTest {
+        assertEquals("214-555-0142 (12)", format("214-555-0142 (12)"))
+        assertEquals("214 555 0142  9", format("214 555 0142  9"))
+        assertEquals("214-555-0142/0143", format("214-555-0142/0143"))
+        assertEquals("214-555-0142-12", format("214-555-0142-12"))
+    }
+
+    // As dialed from the US: the national prefix 1, and the international prefix 011.
+    @Test
+    fun withAUsDialingPrefix_keepsIt() = runTest {
+        assertEquals("1 555-123-4567", format("15551234567"))
+        assertEquals("011 44 20 7946 0958", format("011442079460958"))
+    }
+
+    // libphonenumber reads these two as spaces too, and no other whitespace.
+    @Test
+    fun withANoBreakOrIdeographicSpace_isFormatted() = runTest {
+        assertEquals("(214) 555-0142", format("214\u00A0555\u00A00142"))
+        assertEquals("(214) 555-0142", format("214\u3000555\u30000142"))
+    }
+
+    @Test
+    fun withATab_isAsTyped() = runTest {
+        assertEquals("214\t555\t0142", format("214\t555\t0142"))
+        assertEquals("2145550142\t", format("2145550142\t"))
     }
 
     // Formatted, the words would be dropped, or an extension spelled differently.
