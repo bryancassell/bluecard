@@ -124,7 +124,7 @@ part of the app.
 | An app update never loses or mismatches recorded progress (req. 3) | Each database version's schema is committed in `shared/schemas/`, and every schema change comes with a migration test. From the first release on, a catalog test checks that every badge and rank ID and requirements version shipped before is still in the file. |
 | A scout can move their records to a new phone (req. 4) | An export followed by an import restores the same profile and progress. Backup rules include the database and DataStore files **(CI)**. |
 | The app never asks for a runtime permission (req. 5) | The merged manifest declares no dangerous permissions. The iOS app's `Info.plist` has no usage descriptions (`NS…UsageDescription`), which iOS requires before it asks for a permission. |
-| The app runs on every Android version from `minSdk` up and every iOS version from 17 up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. Xcode refuses Swift calls to APIs newer than iOS 17; code review checks Kotlin's calls to iOS APIs. |
+| The app runs on every Android version from `minSdk` up and every iOS version from 17 up, and any bump is a deliberate decision (req. 6) | Android lint, which flags APIs newer than `minSdk`, fails the build on warnings **(CI)**. Xcode refuses Swift calls to APIs newer than iOS 17 **(CI)**; code review checks Kotlin's calls to iOS APIs. |
 | A new tracker needs only catalog data (req. 7) | Tests render and store trackers defined only in test catalog data (`TrackerEntryViewModelTest`, `MainActivityTest`) **(CI)**. |
 | The code stays testable as it grows (req. 8) | Every class, except generated code, `@Preview` functions, `PdfDocumentWriter` (which only runs on a device) and iOS code, has at least 80% line coverage from local tests **(CI)**. Each iOS code file has a test on the iOS simulator, or a reason the build lists **(CI)**. Every ViewModel, use case, repository and mapper has a unit test, no test uses `@Ignore`, and no mocking library is used **(CI)**. Each repository fake passes the same contract tests as the real implementation. |
 | The layers stay separate (req. 9) | Composables and ViewModels depend only on repository interfaces, never on Room, DataStore or file APIs. Checked in code review. |
@@ -948,7 +948,7 @@ classes Room generates.
 
 Nothing measures iOS code's coverage, since JaCoCo and
 [Kover](https://github.com/Kotlin/kotlinx-kover) measure only JVM code. So
-each `iosMain` file has a test on the iOS simulator instead, which
+each `iosMain` file has a simulator test instead, which
 `scripts/check-test-rules.sh` checks for by name, apart from the files it
 lists with a reason, such as composables until Compose UI tests run on iOS.
 

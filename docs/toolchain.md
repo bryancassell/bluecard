@@ -45,7 +45,7 @@ Run these from the repository root.
 | Command | What it does |
 |---|---|
 | `./gradlew build` | Compiles, builds the R8-shrunk release app, runs local tests, checks coverage and the testing rules, runs lint and the formatting check. On a Mac, it also runs the iOS tests; Xcode builds the iOS app's framework. CI runs it. |
-| `./gradlew :shared:iosSimulatorArm64Test` | Runs the iOS tests (`shared/src/iosTest`) on an iOS simulator. |
+| `./gradlew :shared:iosSimulatorArm64Test` | Runs the iOS and common tests (`shared/src/iosTest`, `shared/src/commonTest`) on an iOS simulator. CI's iOS job runs it. |
 | `./gradlew spotlessApply` | Reformats all Kotlin and Gradle files to the project style. |
 | `./gradlew spotlessCheck` | Fails if any file is not formatted (also part of `build`). |
 | `./gradlew test` | Runs local tests only (`app/src/test` and `shared/src/androidHostTest`). |
@@ -130,7 +130,9 @@ iOS app's framework to Xcode (`shared/build.gradle.kts` says why).
 as the `Shared` framework for that build's configuration and device. Xcode
 doesn't read `~/.zshrc`, so the phase runs Gradle with Android Studio's JDK
 unless `JAVA_HOME` is set. Xcode picks up Swift files added to
-`iosApp/iosApp/` without a change to the project file.
+`iosApp/iosApp/` without a change to the project file. Its `iosApp` scheme is
+shared (`iosApp.xcodeproj/xcshareddata/xcschemes/`), so `xcodebuild -scheme
+iosApp` finds it in CI even if Xcode's automatic schemes are turned off.
 
 **KSP.** [KSP](https://kotlinlang.org/docs/ksp-overview.html) (Kotlin Symbol
 Processing) runs code generators at compile time. Room generates its database
@@ -321,7 +323,7 @@ when it can detect that one is broken:
 | New code has at least 80% line coverage | Approximated as: every class in `:app` and `:shared` has at least 80% line coverage from both modules' local tests (task `jacocoDebugCoverageVerification`). Both modules' tests count, since `MainActivityTest` is the only test that reaches some of `:shared`'s classes, such as `BlueCardNavDisplay`. Generated code (Android and Room classes) and `@Preview` functions are excluded; keep previews in `*Preview.kt` files. |
 | Never skip tests | Any `@Ignore` in test code fails `scripts/check-test-rules.sh`. |
 | Logic classes have unit tests | Every `*ViewModel`, `*UseCase`, `*Repository` and `*Mapper` file needs a matching `*Test.kt` in either module's local tests. Files that only declare an interface (such as `CatalogRepository`) are skipped. |
-| iOS code has tests, since nothing measures its coverage | Every file in `shared/src/iosMain` needs a test in the same package of `iosTest` or `commonTest`, named after the file, or after a class, object or top-level function it declares that isn't private (`pickerLayoutDirection` has `PickerLayoutDirectionTest`). `scripts/check-test-rules.sh` lists the files that have none, each with its reason, and fails when a listed file gets a test or is gone. |
+| iOS code has tests, since nothing measures its coverage | Every file in `shared/src/iosMain` needs a test in the same package of `iosTest` named after it (`CFStrings.kt` has `CFStringsTest`, `Lock.ios.kt` has `LockTest`), or the test `scripts/check-test-rules.sh`'s `ios_tests` names for it. A `commonTest` test doesn't count, since it may test only common code. `ios_untested` lists the files that have none, each with its reason. The check fails when a listed file gets a test or either list names a file that's gone. |
 | Prefer fakes over mocks | Adding mockk or Mockito fails the build. |
 
 The other rules need a person to judge, so they are checked in code review:

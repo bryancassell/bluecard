@@ -88,6 +88,14 @@ jobs:
         with:
           cache-provider: basic
 
+      # Kotlin/Native's compiler, outside Gradle's home, and the caches it builds of
+      # each library for the simulator, which take most of the tests' first link.
+      # Those depend on the libraries' versions, so the key does too.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
       # The tests in shared/src/commonTest and shared/src/iosTest, on a simulator
       # that Gradle starts without booting it.
       - run: ./gradlew :shared:iosSimulatorArm64Test
@@ -103,7 +111,8 @@ jobs:
           -destination 'platform=iOS Simulator,arch=arm64,name=iPhone 17,OS=latest'
           -derivedDataPath iosApp/build build
 
-      # Also after a timeout, which cancels the job instead of failing it.
+      # Also after a timeout, which cancels the job instead of failing it. Xcode's
+      # logs include its Gradle build phase's output.
       - uses: actions/upload-artifact@v7
         if: failure() || cancelled()
         with:
@@ -111,6 +120,7 @@ jobs:
           path: |
             shared/build/reports/tests/iosSimulatorArm64Test/
             shared/build/test-results/iosSimulatorArm64Test/
+            iosApp/build/Logs/
 
   instrumented-tests:
     name: Instrumented tests
