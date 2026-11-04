@@ -27,16 +27,22 @@ interface PhoneNumberFormat {
  * [formatInOriginalFormat] is libphonenumber's, with US rules, which keeps a number typed with +
  * in international form. It skips text before the number and some after it, so it would drop a
  * label such as "Cell: ". And with no international format for 7 US digits, +1 555-0100 comes
- * back as +1 5550100. Both are left as typed.
+ * back as +1 5550100. Both are left as typed, and so is a number it adds words to, such as
+ * " ext. " before digits it reads as an extension.
  */
 internal fun formatOnlyPunctuation(
     number: String,
     formatInOriginalFormat: (String) -> String?
 ): String {
-    if (!number.all { it in '0'..'9' || it in "+-.()/" || it.isWhitespace() }) return number
+    if (!isPhoneNumberText(number)) return number
     val formatted = formatInOriginalFormat(number) ?: return number
-    return if (digitBreaks(formatted).containsAll(digitBreaks(number))) formatted else number
+    val keepsDigitBreaks = digitBreaks(formatted).containsAll(digitBreaks(number))
+    return if (isPhoneNumberText(formatted) && keepsDigitBreaks) formatted else number
 }
+
+/** Whether [text] has only digits, spaces and phone punctuation. */
+private fun isPhoneNumberText(text: String): Boolean =
+    text.all { it in '0'..'9' || it in "+-.()/" || it.isWhitespace() }
 
 private val DIGITS = Regex("[0-9]+")
 

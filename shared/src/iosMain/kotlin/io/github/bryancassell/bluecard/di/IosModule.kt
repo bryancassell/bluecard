@@ -64,7 +64,7 @@ val iosModule = module {
     single<UIGraphicsPdfWriter>() bind ReportPdfWriter::class
     single { create(::fileCoordinatorDocuments) } bind Documents::class
     single<IosTextRules>() bind TextRules::class
-    single<PhoneNumberFormat> { IosPhoneNumberFormat }
+    single<IosPhoneNumberFormat>() bind PhoneNumberFormat::class
 }
 
 /**

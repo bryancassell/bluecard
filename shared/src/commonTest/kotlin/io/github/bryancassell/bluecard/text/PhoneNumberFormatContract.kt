@@ -20,12 +20,24 @@ abstract class PhoneNumberFormatContract {
         assertEquals("(555) 123-4567", format("5551234567"))
         assertEquals("(555) 123-4567", format("555.123.4567"))
         assertEquals("555-0100", format("5550100"))
+        // libphonenumber counts the 555 area code as invalid, and 214 as valid.
+        assertEquals("(214) 555-0142", format("2145550142"))
     }
 
     @Test
     fun withACountryCode_followsItsCountrysRules() = runTest {
         assertEquals("+1 555-123-4567", format("+15551234567"))
+        assertEquals("+1 214-555-0142", format("+12145550142"))
         assertEquals("+44 20 7946 0958", format("+442079460958"))
+    }
+
+    // libphonenumber may read the digits after a valid number as an extension, and add "ext.".
+    @Test
+    fun withDigitsAfterAValidNumber_isAsTyped() = runTest {
+        assertEquals("214-555-0142 (12)", format("214-555-0142 (12)"))
+        assertEquals("214 555 0142  9", format("214 555 0142  9"))
+        assertEquals("214-555-0142/0143", format("214-555-0142/0143"))
+        assertEquals("214-555-0142-12", format("214-555-0142-12"))
     }
 
     // As dialed from the US: the national prefix 1, and the international prefix 011.
