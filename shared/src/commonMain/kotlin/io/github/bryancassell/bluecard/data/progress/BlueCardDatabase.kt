@@ -8,9 +8,8 @@ import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import kotlinx.coroutines.sync.Mutex
 
-// Each version's schema is in shared/schemas/, and MigrationTest checks each migration.
-// Version 2 added TrackerEntry.rowNumber, version 3 TrackerEntry.addedDate, and version 4
-// RequirementProgress.signedOffBy.
+// Each version's schema is in shared/schemas/, and MigrationTest checks each migration. TABLES
+// says which version added each column.
 @ConstructedBy(BlueCardDatabaseConstructor::class)
 @Database(
     entities = [BadgeProgress::class, RequirementProgress::class, TrackerEntry::class],
@@ -60,8 +59,45 @@ abstract class BlueCardDatabase : RoomDatabase() {
             3 to "3e67ea8b76032a8049f6f3cad8313660",
             4 to "bdfb11170140a5d1e2c7675c1126dcb3"
         )
+
+        /**
+         * Each table Room creates for the entities, with the columns and foreign keys it has in
+         * each schema version, as in shared/schemas/. [SetAsideDamagedDatabaseDriver] checks a
+         * database's tables against its version's before Room opens it.
+         * SetAsideDamagedDatabaseDriverTest fails until every version's are here.
+         */
+        internal val TABLES = listOf(
+            ProgressTable(
+                "badge_progress",
+                listOf(
+                    "badgeId",
+                    "requirementsVersion",
+                    "startedDate",
+                    "completedOnPriorDate",
+                    "counselor_name",
+                    "counselor_phone",
+                    "counselor_email"
+                )
+            ),
+            ProgressTable(
+                "requirement_progress",
+                listOf("badgeId", "requirementNumber", "completed", "completedDate", "comment"),
+                addedColumns = mapOf("signedOffBy" to 4),
+                foreignKeys = setOf(BADGE_FOREIGN_KEY)
+            ),
+            ProgressTable(
+                "tracker_entry",
+                listOf("id", "badgeId", "requirementNumber", "values"),
+                addedColumns = mapOf("rowNumber" to 2, "addedDate" to 3),
+                foreignKeys = setOf(BADGE_FOREIGN_KEY)
+            )
+        )
     }
 }
+
+// The foreign key of each table whose rows belong to a started badge.
+private val BADGE_FOREIGN_KEY =
+    TableDefinition.ForeignKey("badge_progress", "badgeId", "badgeId", "NO ACTION", "CASCADE")
 
 /**
  * Builds the database, without the reflection that iOS doesn't have. Room's compiler generates
