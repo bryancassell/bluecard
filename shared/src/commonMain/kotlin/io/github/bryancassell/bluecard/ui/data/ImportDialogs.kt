@@ -6,19 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,9 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -67,6 +61,7 @@ import io.github.bryancassell.bluecard.resources.ranks_earned
 import io.github.bryancassell.bluecard.ui.AnnouncedText
 import io.github.bryancassell.bluecard.ui.BlueCardIconButton
 import io.github.bryancassell.bluecard.ui.BlueCardTextButton
+import io.github.bryancassell.bluecard.ui.ChoiceRow
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
@@ -294,8 +289,8 @@ private fun Choice(
 }
 
 /**
- * A radio button labeled [label], with [details] below it, that the whole row selects. Screen
- * readers read it as one: [labelDescription] in place of the label, then the details.
+ * An option labeled [label], with [details] below it. Screen readers read it as one:
+ * [labelDescription] in place of the label, then the details.
  */
 @Composable
 private fun Option(
@@ -305,21 +300,12 @@ private fun Option(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val readAs = readAsOneLabel(labelDescription, *details.toTypedArray())
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-            // A label of its own rather than its lines merged, which TalkBack read without
-            // "This phone" or "The file" once that line was scrolled off screen (#323).
-            .clearAndSetSemantics { contentDescription = readAs }
-            .padding(vertical = 8.dp)
+    ChoiceRow(
+        selected = selected,
+        onClick = onClick,
+        contentDescription = readAsOneLabel(labelDescription, *details.toTypedArray())
     ) {
-        // The row is the control, so the button isn't one of its own.
-        RadioButton(selected = selected, onClick = null)
-        Column(modifier = Modifier.padding(start = 16.dp)) {
+        Column {
             Text(text = label, style = MaterialTheme.typography.bodyLarge)
             for (detail in details) {
                 Text(

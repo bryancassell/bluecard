@@ -174,12 +174,7 @@ internal class PressHighlight(
         object : PressNode(interactionSource, fadeMillis) {
             override fun ContentDrawScope.draw() {
                 drawContent()
-                // Drawn here rather than by delegating to Material's ripple node: of two draw
-                // nodes delegated from one node, Compose 1.12 draws only the last.
-                val stateLayer = stateLayerAlpha
-                if (stateLayer > 0f) {
-                    drawRect(currentValueOf(LocalContentColor), alpha = stateLayer)
-                }
+                drawStateLayer()
                 val pressed = pressed
                 if (pressed > 0f) drawRect(color, alpha = pressed, blendMode = blendMode)
             }
@@ -192,12 +187,30 @@ internal class PressHighlight(
 }
 
 /**
+ * A row's feedback on iOS with no press, only [PressHighlight]'s focus and hover layers, drawn as
+ * the other rows' are, so its focus looks like theirs. It's for a row with a switch, which iOS's
+ * own apps don't turn grey while held, as the switch shows the tap (#352). Presses are ignored,
+ * so they don't redraw the row.
+ */
+internal data object FocusAndHoverHighlight : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): DelegatableNode =
+        object : PressNode(interactionSource, fadeMillis = 0, showsPress = false) {
+            override fun ContentDrawScope.draw() {
+                drawContent()
+                drawStateLayer()
+            }
+        }
+}
+
+/**
  * Follows [interactionSource]: [pressed] is 1 from a press, and falls to 0 over [fadeMillis] once
- * it ends. [stateLayerAlpha] is the ripple's alpha for focus or hover, or 0.
+ * it ends. Without [showsPress], presses are ignored. [stateLayerAlpha] is the ripple's alpha for
+ * focus or hover, or 0.
  */
 private abstract class PressNode(
     private val interactionSource: InteractionSource,
-    private val fadeMillis: Int
+    private val fadeMillis: Int,
+    private val showsPress: Boolean = true
 ) : Modifier.Node(),
     DrawModifierNode,
     CompositionLocalConsumerModifierNode {
@@ -210,6 +223,14 @@ private abstract class PressNode(
     protected val pressed: Float get() = pressedState.value
     protected val stateLayerAlpha: Float get() = stateLayerState.floatValue
 
+    /** The focus or hover layer, in the content color, if either shows. */
+    protected fun ContentDrawScope.drawStateLayer() {
+        // Drawn here rather than by delegating to Material's ripple node: of two draw nodes
+        // delegated from one node, Compose 1.12 draws only the last.
+        val stateLayer = stateLayerAlpha
+        if (stateLayer > 0f) drawRect(currentValueOf(LocalContentColor), alpha = stateLayer)
+    }
+
     override fun onAttach() {
         pressedState = Animatable(0f)
         stateLayerState = mutableFloatStateOf(0f)
@@ -218,6 +239,7 @@ private abstract class PressNode(
         val states = mutableListOf<Interaction>()
         var fade: Job? = null
         interactionSource.interactions.onEach { interaction ->
+            if (interaction is PressInteraction && !showsPress) return@onEach
             when (interaction) {
                 is PressInteraction.Press -> presses += interaction
                 is PressInteraction.Release -> presses -= interaction.press

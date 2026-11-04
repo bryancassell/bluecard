@@ -3,6 +3,8 @@
 package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -16,7 +18,7 @@ import platform.UIKit.UICellConfigurationState
 import platform.UIKit.UIColor
 import platform.UIKit.UIControlStateNormal
 
-/** Checks the press feedback's values against UIKit's. */
+/** Checks the press feedback's values against UIKit's, and colors converted for UIKit. */
 class PressFeedbackTest {
     @Test
     fun aButton_dimsAsASystemButtonsTitleDoes() {
@@ -80,6 +82,29 @@ class PressFeedbackTest {
                 rowHighlightColor(darkTheme),
                 "dark: $darkTheme"
             )
+        }
+    }
+
+    @Test
+    fun aColor_isTheSameInUIKit() {
+        // The light and dark pages' backgrounds, which the switch is drawn on, a translucent
+        // color, and the light page's in Display P3, which must be converted to sRGB for UIKit.
+        val light = Color(0xFFEAF1FE)
+        val colors = listOf(
+            light to light,
+            Color(0xFF00132D) to Color(0xFF00132D),
+            Color(0x80123456) to Color(0x80123456),
+            light.convert(ColorSpaces.DisplayP3) to light
+        )
+        for ((given, color) in colors) {
+            val inUIKit = given.toUIColor().toComposeColor(interfaceStyle(darkTheme = false))
+
+            listOf(
+                color.red to inUIKit.red,
+                color.green to inUIKit.green,
+                color.blue to inUIKit.blue,
+                color.alpha to inUIKit.alpha
+            ).forEach { (want, got) -> assertEquals(want, got, 0.001f, "$color, got $inUIKit") }
         }
     }
 }
