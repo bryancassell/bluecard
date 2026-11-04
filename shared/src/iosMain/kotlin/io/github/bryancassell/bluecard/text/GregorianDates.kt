@@ -1,14 +1,13 @@
 package io.github.bryancassell.bluecard.text
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.number
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toKotlinTimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toNSDateComponents
 import platform.Foundation.NSCalendar
 import platform.Foundation.NSCalendarIdentifierGregorian
-import platform.Foundation.NSCalendarUnitDay
-import platform.Foundation.NSCalendarUnitMonth
-import platform.Foundation.NSCalendarUnitYear
 import platform.Foundation.NSDate
-import platform.Foundation.NSDateComponents
 import platform.Foundation.NSTimeZone
 import platform.Foundation.timeZoneForSecondsFromGMT
 
@@ -25,20 +24,9 @@ internal fun gregorianCalendar(
 }
 
 /** The start of this day in [calendar], a [gregorianCalendar], in its time zone. */
-internal fun LocalDate.toNSDate(calendar: NSCalendar): NSDate {
-    val day = NSDateComponents().apply {
-        year = this@toNSDate.year.toLong()
-        month = this@toNSDate.month.number.toLong()
-        this.day = this@toNSDate.day.toLong()
-    }
-    return calendar.dateFromComponents(day)!!
-}
+internal fun LocalDate.toNSDate(calendar: NSCalendar): NSDate =
+    calendar.dateFromComponents(toNSDateComponents())!!
 
-/** The day this is in, in [calendar], a [gregorianCalendar], in its time zone. */
-internal fun NSDate.toLocalDate(calendar: NSCalendar): LocalDate {
-    val day = calendar.components(
-        NSCalendarUnitYear or NSCalendarUnitMonth or NSCalendarUnitDay,
-        this
-    )
-    return LocalDate(day.year.toInt(), day.month.toInt(), day.day.toInt())
-}
+/** The day this is in, in [calendar]'s time zone. */
+internal fun NSDate.toLocalDate(calendar: NSCalendar): LocalDate =
+    toKotlinInstant().toLocalDateTime(calendar.timeZone.toKotlinTimeZone()).date

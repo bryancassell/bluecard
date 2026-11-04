@@ -129,7 +129,8 @@ internal fun PickDate(
  * Asks for the date something was done on, such as when a requirement was completed, starting
  * at [initial]. Dates after [today] can't be picked or confirmed, so it starts at [today]
  * instead of a later [initial], such as a date recorded while the device's clock was ahead.
- * [onConfirm] gets the date picked, and [onDismiss] is called if the scout cancels.
+ * [onConfirm] gets the date picked, and [onDismiss] is called if the scout cancels, or if the
+ * picker can't be shown, so the page can ask again.
  */
 @Composable
 internal expect fun CompletionDatePicker(

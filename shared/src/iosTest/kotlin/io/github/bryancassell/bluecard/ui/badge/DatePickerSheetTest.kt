@@ -19,9 +19,11 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.autoreleasepool
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.value
 import kotlinx.datetime.LocalDate
 import platform.CoreGraphics.CGFloatVar
+import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSCalendarIdentifierGregorian
 import platform.Foundation.NSLocale
 import platform.Foundation.NSTimeZone
@@ -131,13 +133,30 @@ class DatePickerSheetTest {
 
     @Test
     fun swipingTheSheetDown_cancels() {
-        val controller = sheet().controller
-        val presentation = assertNotNull(controller.presentationController)
+        // Kept, since it holds the delegate, which the presentation holds only weakly.
+        val sheet = sheet()
+        val presentation = assertNotNull(sheet.controller.presentationController)
         val delegate = presentation.delegate as UIAdaptivePresentationControllerDelegateProtocol
 
         delegate.presentationControllerDidDismiss(presentation)
 
         assertEquals(listOf("cancelled"), events)
+    }
+
+    // The picker's height depends on its width: here, 341 pt at 375 pt wide, and 375 at 440. With
+    // no window, the safe area above the picker, the bar on a phone, is 0 here.
+    @Test
+    fun contentHeight_isThePickersHeightAsLaidOut_andTheSafeAreaAboveIt() {
+        for (width in listOf(375.0, 440.0)) {
+            val sheet = sheet()
+            val page = sheet.controller.viewControllers.single() as UIViewController
+            sheet.controller.view.setFrame(CGRectMake(0.0, 0.0, width, 900.0))
+            sheet.controller.view.layoutIfNeeded()
+
+            val pickerHeight = sheet.picker.frame.useContents { size.height }
+            val safeAreaTop = page.view.safeAreaInsets.useContents { top }
+            assertEquals(pickerHeight + safeAreaTop, sheet.contentHeight(), 0.5, "$width")
+        }
     }
 
     // As while another sheet appears. Here, UIKit refuses since the page has no window.

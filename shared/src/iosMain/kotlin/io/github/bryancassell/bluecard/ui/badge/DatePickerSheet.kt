@@ -28,6 +28,7 @@ import platform.UIKit.UIPresentationController
 import platform.UIKit.UIScrollView
 import platform.UIKit.UISheetPresentationControllerDetent
 import platform.UIKit.UIUserInterfaceStyle
+import platform.UIKit.UIView
 import platform.UIKit.UIViewController
 import platform.UIKit.colorWithDynamicProvider
 import platform.UIKit.navigationController
@@ -36,6 +37,7 @@ import platform.UIKit.presentationController
 import platform.UIKit.sheetPresentationController
 import platform.UIKit.systemBackgroundColor
 import platform.UIKit.systemBlueColor
+import platform.UIKit.transitionCoordinator
 import platform.darwin.NSObject
 
 /**
@@ -46,10 +48,10 @@ import platform.darwin.NSObject
  * or swiping the sheet down, calls [onCancel]. Neither closes the sheet: [close] does.
  *
  * Its days are in the Gregorian calendar, as the app's dates are, in [locale]'s language and
- * order, so the region's own calendar, such as Iran's Persian one, never shows. Material 3's
- * picker read a date typed into it in the region's calendar (#398). Each day's accessibility
- * label is still in the region's calendar, as "Sunday, Aban 10" for November 1, so screen
- * readers hear the day there. Giving [locale] the Gregorian calendar too didn't change it (#406).
+ * order, so the region's own calendar, such as Iran's Persian one, never shows (#398). Each
+ * day's accessibility label is still in the region's calendar, as "Sunday, Aban 10" for November
+ * 1, so screen readers hear the day there. Giving [locale] the Gregorian calendar too didn't
+ * change it (#406).
  * They're in [timeZone], the app's today's: the picker marks the day it's in there as today.
  */
 // Nothing UIKit keeps, such as a button's action or the sheet's height, refers back to this
@@ -112,43 +114,65 @@ internal class DatePickerSheet(
 
     private val onRefused = onCancel
 
-    private var closed = false
+    /** How tall the sheet is to be ([Page.contentHeight]). */
+    internal fun contentHeight() = page.contentHeight()
 
     /**
-     * Shows the sheet over [viewController]. If UIKit won't, as while another sheet appears, it's
-     * as if the scout cancelled, so the page can ask again.
+     * Shows the sheet over [over]. If UIKit won't, as while another sheet appears, it's as if the
+     * scout cancelled, so the page can ask again.
      */
     fun show(over: UIViewController) {
-        over.presentViewController(controller, animated = true) {
-            // Closed while it appeared, when UIKit ignores a dismissal.
-            if (closed) controller.dismissViewControllerAnimated(true, completion = null)
-        }
+        over.presentViewController(controller, animated = true, completion = null)
         if (controller.presentingViewController == null) onRefused()
     }
 
-    /** Closes the sheet, once it has appeared if it's appearing. */
+    /**
+     * Closes the sheet. UIKit ignores a dismissal while the sheet appears, or while the scout
+     * swipes it down and may yet drag it back up, so then it's closed once that ends, unless it
+     * ended closed.
+     */
     fun close() {
-        closed = true
-        if (controller.presentingViewController != null &&
-            !controller.isBeingPresented() &&
-            !controller.isBeingDismissed()
-        ) {
+        val transition = controller.transitionCoordinator
+        if (transition == null) {
+            dismissIfShown()
+        } else {
+            transition.animateAlongsideTransition(null) { dismissIfShown() }
+        }
+    }
+
+    private fun dismissIfShown() {
+        if (controller.presentingViewController != null) {
             controller.dismissViewControllerAnimated(true, completion = null)
         }
     }
 
     /**
      * The sheet's page, with [picker] in a scroll view, so it scrolls where the sheet is shorter
-     * than it, as in landscape. The scroll view's content clears the sheet's bar by itself.
+     * than it, as in landscape. The scroll view's content clears the sheet's bar by itself, and its
+     * sides keep to the safe area, clear of the sensor housing in landscape. It's in a view of its
+     * own, since a scroll view lays out again at each step of scrolling, and the page measures the
+     * picker at each layout of its view.
      */
     private class Page(private val picker: UIDatePicker) :
         UIViewController(nibName = null, bundle = null) {
+        private val scroll = UIScrollView()
+
         init {
-            val scroll = UIScrollView()
-            scroll.backgroundColor = UIColor.systemBackgroundColor
+            val page = UIView()
+            page.backgroundColor = UIColor.systemBackgroundColor
+            page.addSubview(scroll)
+            scroll.translatesAutoresizingMaskIntoConstraints = false
             scroll.addSubview(picker)
             NSLayoutConstraint.activateConstraints(
                 listOf(
+                    scroll.topAnchor.constraintEqualToAnchor(page.topAnchor),
+                    scroll.bottomAnchor.constraintEqualToAnchor(page.bottomAnchor),
+                    scroll.leadingAnchor.constraintEqualToAnchor(
+                        page.safeAreaLayoutGuide.leadingAnchor
+                    ),
+                    scroll.trailingAnchor.constraintEqualToAnchor(
+                        page.safeAreaLayoutGuide.trailingAnchor
+                    ),
                     picker.topAnchor.constraintEqualToAnchor(scroll.contentLayoutGuide.topAnchor),
                     picker.bottomAnchor.constraintEqualToAnchor(
                         scroll.contentLayoutGuide.bottomAnchor
@@ -163,7 +187,7 @@ internal class DatePickerSheet(
                     )
                 )
             )
-            view = scroll
+            view = page
         }
 
         private var laidOutHeight = 0.0
@@ -174,7 +198,7 @@ internal class DatePickerSheet(
          * which counting the bar alone left out, so the last week ran into the sheet's edge.
          */
         fun contentHeight(): Double {
-            val width = view.bounds.useContents { size.width } - 2 * SIDE_MARGIN
+            val width = scroll.bounds.useContents { size.width } - 2 * SIDE_MARGIN
             // Before the sheet is first laid out, the page has no width yet.
             val size = if (width > 0) {
                 picker.systemLayoutSizeFittingSize(
@@ -190,7 +214,8 @@ internal class DatePickerSheet(
 
         // The sheet asks how tall to be before it's laid out, and again only when told to. So
         // once a layout changes the answer, as the first one does by placing the bar, and as
-        // turning the phone or changing the text size can, it's told to.
+        // turning the phone or changing the text size can, it's told to. Told inside the sheet's
+        // animateChanges, it still jumped to its new height when the text size changed.
         override fun viewDidLayoutSubviews() {
             super.viewDidLayoutSubviews()
             val height = contentHeight()

@@ -9,9 +9,7 @@ import androidx.compose.ui.uikit.LocalUIViewController
 import io.github.bryancassell.bluecard.ui.rememberStringsLocale
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import platform.Foundation.NSTimeZone
-import platform.Foundation.localTimeZone
-import platform.Foundation.timeZoneWithName
+import kotlinx.datetime.toNSTimeZone
 
 /**
  * iOS's own calendar, in a sheet from the bottom of the window ([DatePickerSheet]), in the
@@ -38,8 +36,7 @@ internal actual fun CompletionDatePicker(
             initial = initial,
             today = today,
             locale = locale,
-            timeZone = NSTimeZone.timeZoneWithName(TimeZone.currentSystemDefault().id)
-                ?: NSTimeZone.localTimeZone,
+            timeZone = TimeZone.currentSystemDefault().toNSTimeZone(),
             onConfirm = { currentOnConfirm(it) },
             onCancel = { currentOnDismiss() }
         )
