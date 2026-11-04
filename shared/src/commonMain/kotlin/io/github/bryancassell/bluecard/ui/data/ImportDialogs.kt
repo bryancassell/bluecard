@@ -24,17 +24,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -73,10 +70,10 @@ import io.github.bryancassell.bluecard.ui.AnnouncedText
 import io.github.bryancassell.bluecard.ui.ConfirmDialog
 import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
+import io.github.bryancassell.bluecard.ui.isOpeningForDoubleTap
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
 import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedText
-import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -194,12 +191,7 @@ internal expect fun FullScreenDialog(onDismissRequest: () -> Unit, content: @Com
  */
 @Composable
 private fun IgnoreTouchesAsItOpens(content: @Composable () -> Unit) {
-    var opening by remember { mutableStateOf(true) }
-    val timeoutMillis = LocalViewConfiguration.current.doubleTapTimeoutMillis
-    LaunchedEffect(timeoutMillis) {
-        delay(timeoutMillis)
-        opening = false
-    }
+    val opening = isOpeningForDoubleTap()
     Box {
         content()
         if (opening) {

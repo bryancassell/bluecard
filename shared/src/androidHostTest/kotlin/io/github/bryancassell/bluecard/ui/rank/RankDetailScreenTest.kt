@@ -44,6 +44,7 @@ import io.github.bryancassell.bluecard.testing.hasClickLabel
 import io.github.bryancassell.bluecard.testing.onReadAsOne
 import io.github.bryancassell.bluecard.testing.pickerDay
 import io.github.bryancassell.bluecard.testing.setContentWithText
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import io.github.bryancassell.bluecard.ui.badge.RequirementItem
 import kotlinx.datetime.LocalDate
@@ -581,6 +582,7 @@ class RankDetailScreenTest {
         val tops = listOf("Cook a meal.", "Clear progress").map(::topOf)
         assertEquals(tops.sorted(), tops)
         text("Clear progress").performScrollTo().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         text("Clear progress on Tenderfoot?").assertIsDisplayed()
         text("What you recorded for it will be removed.").assertIsDisplayed()
         assertEquals(0, clears)
@@ -607,6 +609,7 @@ class RankDetailScreenTest {
         show(started)
 
         text("Clear progress").performScrollTo().performClick()
+        composeTestRule.waitPastDoubleTapTimeout()
         text("Cancel").performClick()
 
         assertEquals(0, clears)

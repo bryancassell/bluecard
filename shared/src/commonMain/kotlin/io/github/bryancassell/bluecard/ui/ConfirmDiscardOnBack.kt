@@ -18,16 +18,20 @@ import org.jetbrains.compose.resources.stringResource
  * confirm discarding them ([askToDiscard]) rather than closing it.
  */
 class UnsavedChanges {
+    // State, so iOS's navigation root sees a change and can keep a back swipe from moving the page.
+    private var _changed by mutableStateOf(false)
+
     /**
      * Whether the page's fields differ from what's saved, as it last showed. It's kept while
      * another page covers it, so Back decides from it before the page is shown again.
      */
-    var changed = false
+    var changed: Boolean
+        get() = _changed
         set(value) {
             // Saved while it asked, as when a save finishes with the dialog open: nothing is
             // left to discard.
-            if (field && !value) confirming = false
-            field = value
+            if (_changed && !value) confirming = false
+            _changed = value
         }
 
     /** Back arrived while there were changes, so the page asks before discarding them. */

@@ -28,12 +28,19 @@ class UnsavedChangesByPage {
      */
     fun askToDiscard(entry: NavEntry<*>): Boolean = pages[entry.contentKey]?.askToDiscard() == true
 
+    /**
+     * [entry]'s page's [UnsavedChanges], made now if the page hasn't been shown yet, so a
+     * composable that reads its [UnsavedChanges.changed] sees the page's first report too. Pass
+     * only a page in the back stack, since the decorator forgets a page only as it leaves it.
+     */
+    fun getOrCreate(entry: NavEntry<*>): UnsavedChanges = getOrCreate(entry.contentKey)
+
+    private fun getOrCreate(contentKey: Any) = pages.getOrPut(contentKey) { UnsavedChanges() }
+
     val decorator = NavEntryDecorator<NavKey>(
         onPop = { contentKey -> pages.remove(contentKey) },
         decorate = { entry ->
-            val unsaved = remember(entry.contentKey) {
-                pages.getOrPut(entry.contentKey) { UnsavedChanges() }
-            }
+            val unsaved = remember(entry.contentKey) { getOrCreate(entry.contentKey) }
             CompositionLocalProvider(LocalUnsavedChanges provides unsaved) { entry.Content() }
         }
     )

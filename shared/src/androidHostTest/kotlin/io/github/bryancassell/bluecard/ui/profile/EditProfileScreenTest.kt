@@ -35,6 +35,7 @@ import io.github.bryancassell.bluecard.testing.OnScreenKeyboard
 import io.github.bryancassell.bluecard.testing.SMALL_PHONE
 import io.github.bryancassell.bluecard.testing.assertAnnouncedWhenShown
 import io.github.bryancassell.bluecard.testing.setContentWithText
+import io.github.bryancassell.bluecard.testing.waitPastDoubleTapTimeout
 import io.github.bryancassell.bluecard.ui.TaskFailure
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -226,6 +227,7 @@ class EditProfileScreenTest {
         show(ready.copy(canSave = false, changed = true))
 
         back.press(composeTestRule)
+        composeTestRule.waitPastDoubleTapTimeout()
         composeTestRule.onNodeWithText("Discard changes?").assertIsDisplayed()
         composeTestRule.onNodeWithText("Discard").performClick()
 

@@ -12,6 +12,9 @@
     <string name="load_failed">Couldn't load your data. Try closing and reopening BlueCard.</string>
     <!-- Shown briefly when something the scout recorded couldn't be saved on the phone. -->
     <string name="save_failed">Couldn't save. Try again.</string>
+    <!-- Screen reader label for the button at the top of a page that goes back to the page
+         before it. It shows only a chevron, on iOS. -->
+    <string name="back">Back</string>
     <!-- Between the lines of a list row or card as screen readers read it, such as
          "Your rank. Tenderfoot. 2 of 7 ranks earned" on Home's rank card. It ends in a
          space. -->
