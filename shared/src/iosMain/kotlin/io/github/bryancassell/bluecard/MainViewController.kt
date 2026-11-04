@@ -15,6 +15,7 @@ import io.github.bryancassell.bluecard.ui.SceneSavedState
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.context.startKoin
+import platform.Foundation.NSBundle
 import platform.UIKit.UIViewController
 
 /**
@@ -33,19 +34,29 @@ fun initKoin() {
  * the preferred one first ([useStringsLanguageByDefault]), as Android's `MainActivity` does.
  *
  * The pages start as [savedState], the text [onSaveState] last gave, which the iOS app keeps
- * with its scene ([SceneSavedState]), or an empty string. It's given each time the app leaves the
- * screen (ON_STOP), as Android saves an activity's state once it stops.
+ * with its scene ([SceneSavedState]), or an empty string. It's given each time the scene goes
+ * inactive (ON_PAUSE), as on its way to the background. Given at ON_STOP, as the scene entered the
+ * background, it reached the copy iOS keeps only on the app's next trip there (checked on an iOS
+ * 27.0 simulator), so iOS ending the app restored the page before. Apple's sample "Restoring your
+ * app's state" also saves its state as the scene becomes inactive.
  */
 @Suppress("FunctionName") // Named as the view controller it returns, as JetBrains' templates do.
 fun MainViewController(savedState: String, onSaveState: (String) -> Unit): UIViewController {
     useStringsLanguageByDefault()
-    val sceneState = SceneSavedState(savedState)
+    val sceneState = SceneSavedState(savedState, appBuild())
     return ComposeUIViewController {
         CompositionLocalProvider(LocalSaveableStateRegistry provides sceneState.registry) {
-            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { onSaveState(sceneState.save()) }
+            LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { onSaveState(sceneState.save()) }
             val viewModel = koinViewModel<MainActivityViewModel>()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             BlueCardApp(uiState, koinInject(), viewModel::dismissDamagedProgressNotice)
         }
     }
+}
+
+/** The app's version and build number, such as "0.1.0 (1)", from its Info.plist. */
+private fun appBuild(): String {
+    val bundle = NSBundle.mainBundle
+    return "${bundle.objectForInfoDictionaryKey("CFBundleShortVersionString")} " +
+        "(${bundle.objectForInfoDictionaryKey("CFBundleVersion")})"
 }

@@ -26,8 +26,8 @@ import kotlinx.serialization.json.long
 /**
  * What the app's pages remember, as text the iOS app gives iOS to keep with its scene
  * (`@SceneStorage` in ContentView.swift). So the back stack and what the scout typed come back
- * after iOS ends the app in the background, as Android's saved state does. iOS drops it when the
- * scout closes the app in the app switcher, as Android does when it's swiped out of Recents.
+ * after iOS ends the app in the background, as Android's saved state does. Unlike Android, iOS
+ * keeps it when the scout closes the app in the app switcher too (PRD.md, Returning to the app).
  *
  * Compose Multiplatform 1.12.2 keeps saved state only in memory on iOS: ComposeContainer.ios.kt
  * keeps it in `private var savedState`, for its next scene in the same process, and
@@ -43,20 +43,40 @@ import kotlinx.serialization.json.long
  * [registry] can save the types a SavedState holds, as Android's can save what a Bundle holds,
  * and the Map and MutableState that SaveableStateHolder and rememberSaveable save.
  * `rememberSaveable` refuses any other type as it's first remembered, as on Android.
+ *
+ * iOS keeps a scene's state when the app is installed over it, even by the same build (checked
+ * on an iOS 27.0 simulator), so the text names the [build] that saved it, and state saved by
+ * another build is dropped. A page's state could otherwise be read by code that saves it
+ * differently, such as a back stack naming a key that was renamed, which Android avoids by
+ * dropping an app's saved state when it's updated. Builds with the same version and build number,
+ * such as two debug builds, share it.
  */
-class SceneSavedState(saved: String) {
+class SceneSavedState(saved: String, private val build: String) {
     val registry: SaveableStateRegistry = SaveableStateRegistry(restore(saved), ::canBeSaved)
 
     /** What [registry] holds now, as the text a new [SceneSavedState] restores it from. */
-    fun save(): String =
-        JsonObject(registry.performSave().mapValues { JsonArray(it.value.map(::encode)) })
+    fun save(): String {
+        val values = registry.performSave().mapValues { JsonArray(it.value.map(::encode)) }
+        return JsonObject(mapOf(BUILD to JsonPrimitive(build), VALUES to JsonObject(values)))
             .toString()
-}
+    }
 
-private fun restore(saved: String): Map<String, List<Any?>>? = if (saved.isEmpty()) {
-    null
-} else {
-    Json.parseToJsonElement(saved).jsonObject.mapValues { it.value.jsonArray.map(::decode) }
+    /**
+     * The values [save] wrote as [saved], or null if there are none, or another build saved
+     * them. The build is checked before the values are read, so a later build can save them
+     * another way.
+     */
+    private fun restore(saved: String): Map<String, List<Any?>>? {
+        if (saved.isEmpty()) return null
+        val state = Json.parseToJsonElement(saved).jsonObject
+        if (state.getValue(BUILD).jsonPrimitive.content != build) return null
+        return state.getValue(VALUES).jsonObject.mapValues { it.value.jsonArray.map(::decode) }
+    }
+
+    private companion object {
+        const val BUILD = "build"
+        const val VALUES = "values"
+    }
 }
 
 private fun canBeSaved(value: Any): Boolean = try {

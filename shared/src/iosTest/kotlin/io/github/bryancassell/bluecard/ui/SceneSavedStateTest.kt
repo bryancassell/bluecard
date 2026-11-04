@@ -28,25 +28,38 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class SceneSavedStateTest {
+    private fun sceneState(saved: String = "", build: String = BUILD) =
+        SceneSavedState(saved, build)
+
     /** [value], saved under a key, as a new [SceneSavedState] restores it from the saved text. */
     private fun savedAndRestored(value: Any): Any? {
-        val state = SceneSavedState("")
+        val state = sceneState()
         state.registry.registerProvider(KEY) { value }
-        return SceneSavedState(state.save()).registry.consumeRestored(KEY)
+        return sceneState(state.save()).registry.consumeRestored(KEY)
     }
 
     @Test
     fun newState_restoresNothing() {
-        assertNull(SceneSavedState("").registry.consumeRestored(KEY))
+        assertNull(sceneState().registry.consumeRestored(KEY))
+    }
+
+    @Test
+    fun restore_stateAnotherBuildSaved_restoresNothing() {
+        val state = sceneState(build = "0.1.0 (1)")
+        state.registry.registerProvider(KEY) { "Camping" }
+
+        val restored = sceneState(state.save(), build = "0.1.0 (2)").registry
+
+        assertNull(restored.consumeRestored(KEY))
     }
 
     @Test
     fun save_keepsEachValueUnderItsKey() {
-        val state = SceneSavedState("")
+        val state = sceneState()
         state.registry.registerProvider("page") { "Camping" }
         state.registry.registerProvider("scroll") { 12 }
 
-        val restored = SceneSavedState(state.save()).registry
+        val restored = sceneState(state.save()).registry
 
         assertEquals("Camping", restored.consumeRestored("page"))
         assertEquals(12, restored.consumeRestored("scroll"))
@@ -170,7 +183,7 @@ class SceneSavedStateTest {
 
     @Test
     fun canBeSaved_refusesWhatItCantSave() {
-        val registry = SceneSavedState("").registry
+        val registry = sceneState().registry
         val ownPolicy = object : SnapshotMutationPolicy<Int> {
             override fun equivalent(a: Int, b: Int) = a == b
         }
@@ -187,7 +200,7 @@ class SceneSavedStateTest {
     @Test
     fun save_whenAValueCantBeSaved_fails() {
         // A bug, as an unsaveable value in a Bundle is on Android, so it isn't caught.
-        val state = SceneSavedState("")
+        val state = sceneState()
         val holder: MutableState<Any> = mutableStateOf("Camping")
         state.registry.registerProvider(KEY) { holder }
         holder.value = Any()
@@ -197,5 +210,6 @@ class SceneSavedStateTest {
 
     private companion object {
         const val KEY = "key"
+        const val BUILD = "0.1.0 (1)"
     }
 }
