@@ -2,13 +2,8 @@
 
 package io.github.bryancassell.bluecard.ui
 
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material3.LocalRippleConfiguration
-import androidx.compose.material3.RippleConfiguration
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,6 +18,9 @@ import platform.UIKit.UITraitCollection
 import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.resolvedColorWithTraitCollection
 import platform.UIKit.systemGray4Color
+
+// iOS's press feedback is in common code, where Android's Compose UI tests check it. This file
+// reads UIKit's color for it and provides it.
 
 /** UIKit's traits for light or dark mode. */
 internal fun interfaceStyle(darkTheme: Boolean): UITraitCollection =
@@ -48,39 +46,20 @@ internal fun UIColor.toComposeColor(traits: UITraitCollection): Color = memScope
 internal fun rowHighlightColor(darkTheme: Boolean): Color =
     UIColor.systemGray4Color.toComposeColor(interfaceStyle(darkTheme))
 
+/** A row's press feedback in light or dark mode, in UIKit's color. */
+internal fun uiKitRowHighlight(darkTheme: Boolean): PressHighlight =
+    rowPressHighlight(rowHighlightColor(darkTheme), darkTheme)
+
 @Composable
-internal actual fun ProvidePressFeedback(darkTheme: Boolean, content: @Composable () -> Unit) {
-    val highlight =
-        remember(darkTheme) { rowPressHighlight(rowHighlightColor(darkTheme), darkTheme) }
-    CompositionLocalProvider(LocalIndication provides highlight, content = content)
-}
-
-private val ButtonDim = buttonPressDim(filled = false)
-private val FilledButtonDim = buttonPressDim(filled = true)
-
-// Material's buttons always draw a ripple, which only LocalRippleConfiguration changes. Google
-// supports that for a component, not across the app, so it's provided around each one.
-private val FocusAndHoverRipple = RippleConfiguration(rippleAlpha = FocusAndHoverRippleAlpha)
+internal actual fun ProvidePressFeedback(darkTheme: Boolean, content: @Composable () -> Unit) =
+    ProvideIosRowHighlight(remember(darkTheme) { uiKitRowHighlight(darkTheme) }, content)
 
 @Composable
 internal actual fun ButtonPressFeedback(
     filled: Boolean,
     content: @Composable (interactionSource: MutableInteractionSource?, modifier: Modifier) -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val dim = if (filled) FilledButtonDim else ButtonDim
-    CompositionLocalProvider(LocalRippleConfiguration provides FocusAndHoverRipple) {
-        content(interactionSource, Modifier.indication(interactionSource, dim))
-    }
-}
+) = IosButtonPressFeedback(filled, content)
 
-// The date picker's controls are Material's own, out of reach of the dim and highlight, so they
-// show only focus and hover. A day shows its selection at once. The month arrows, the mode toggle
-// and the year menu show nothing while held, though each acts as soon as it's let go, until #352
-// revisits the date picker, by agreement.
 @Composable
 internal actual fun MaterialPressFeedback(content: @Composable () -> Unit) =
-    CompositionLocalProvider(
-        LocalRippleConfiguration provides FocusAndHoverRipple,
-        content = content
-    )
+    IosMaterialPressFeedback(content)

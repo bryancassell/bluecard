@@ -2,21 +2,34 @@ package io.github.bryancassell.bluecard.ui
 
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -76,8 +89,15 @@ class PressFeedbackTest {
         it[it.width / 2, it.height / 2]
     }
 
-    private fun assertShown(expected: Color) {
-        val shown = shown()
+    private fun assertShown(expected: Color) = assertColor(expected, shown())
+
+    /** The color in the middle of the node tagged [tag]. */
+    private fun shownIn(tag: String): Color =
+        composeTestRule.onNodeWithTag(tag).captureToImage().toPixelMap().let {
+            it[it.width / 2, it.height / 2]
+        }
+
+    private fun assertColor(expected: Color, shown: Color) {
         // One step of 8-bit color either way, from rounding.
         val step = 1.5f / 255
         listOf(
@@ -247,6 +267,19 @@ class PressFeedbackTest {
     }
 
     @Test
+    fun highlight_focusedThenHovered_showsTheLatest() {
+        // As the ripple's state layer does.
+        show(LightHighlight, Color.White)
+
+        interactionSource.tryEmit(FocusInteraction.Focus())
+        interactionSource.tryEmit(HoverInteraction.Enter())
+        composeTestRule.mainClock.advanceTimeByFrame()
+
+        val hovered = 1f - FocusAndHoverRippleAlpha.hoveredAlpha
+        assertShown(Color(hovered, hovered, hovered))
+    }
+
+    @Test
     fun highlight_focusAndHoverEnded_showsNoLayer() {
         show(LightHighlight, Color.White)
         val focus = FocusInteraction.Focus()
@@ -286,5 +319,97 @@ class PressFeedbackTest {
             PressHighlight(Color(0xFFD1D1D6), BlendMode.Multiply, FADE_MILLIS.toInt()).hashCode()
         )
         assertNotEquals(LightHighlight, DarkHighlight)
+    }
+
+    /** A black Material button with iOS's press feedback, on a white page. */
+    private fun showIosButton(): InputModeManager {
+        lateinit var inputModeManager: InputModeManager
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.setContent {
+            inputModeManager = LocalInputModeManager.current
+            Box(Modifier.background(Color.White).padding(8.dp)) {
+                IosButtonPressFeedback(filled = true) { interactionSource, feedback ->
+                    Button(
+                        onClick = {},
+                        modifier = feedback.testTag("button"),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        ),
+                        interactionSource = interactionSource
+                    ) {}
+                }
+            }
+        }
+        composeTestRule.mainClock.advanceTimeByFrame()
+        return inputModeManager
+    }
+
+    @Test
+    fun iosButton_pressed_dims() {
+        showIosButton()
+
+        composeTestRule.onNodeWithTag("button").performTouchInput { down(center) }
+        composeTestRule.mainClock.advanceTimeBy(100)
+
+        // Black at 0.75 over the white page.
+        assertColor(Color(0xFF404040), shownIn("button"))
+    }
+
+    // Android draws a ripple's press in a View of its own, which captureToImage leaves out, so
+    // the tests read the ripple's configuration instead.
+    @Test
+    fun iosButton_ripple_showsNoPress() {
+        var configuration: RippleConfiguration? = null
+        composeTestRule.setContent {
+            IosButtonPressFeedback(filled = false) { _, _ ->
+                configuration = LocalRippleConfiguration.current
+            }
+        }
+
+        composeTestRule.runOnIdle {
+            assertEquals(FocusAndHoverRippleAlpha, configuration?.rippleAlpha)
+            assertEquals(0f, FocusAndHoverRippleAlpha.pressedAlpha)
+        }
+    }
+
+    @Test
+    fun iosMaterialComponents_ripple_showsNoPress() {
+        var configuration: RippleConfiguration? = null
+        composeTestRule.setContent {
+            IosMaterialPressFeedback { configuration = LocalRippleConfiguration.current }
+        }
+
+        composeTestRule.runOnIdle {
+            assertEquals(FocusAndHoverRippleAlpha, configuration?.rippleAlpha)
+        }
+    }
+
+    @Test
+    fun iosButton_focused_keepsTheRipplesFocusLayer() {
+        val inputModeManager = showIosButton()
+        composeTestRule.runOnIdle { inputModeManager.requestInputMode(InputMode.Keyboard) }
+
+        composeTestRule.onNodeWithTag("button").requestFocus()
+        composeTestRule.mainClock.advanceTimeBy(100)
+
+        // The white content color at Material's focus alpha, over the black button.
+        val focused = FocusAndHoverRippleAlpha.focusedAlpha
+        assertColor(Color(focused, focused, focused), shownIn("button"))
+    }
+
+    @Test
+    fun iosRow_pressed_isHighlightedThroughTheTheme() {
+        composeTestRule.mainClock.autoAdvance = false
+        composeTestRule.setContent {
+            ProvideIosRowHighlight(LightHighlight) {
+                Box(Modifier.size(40.dp).background(Color.White).clickable {}.testTag("row"))
+            }
+        }
+
+        composeTestRule.onNodeWithTag("row").performTouchInput { down(center) }
+        composeTestRule.mainClock.advanceTimeBy(100)
+
+        assertColor(Color(0xFFD1D1D6), shownIn("row"))
     }
 }

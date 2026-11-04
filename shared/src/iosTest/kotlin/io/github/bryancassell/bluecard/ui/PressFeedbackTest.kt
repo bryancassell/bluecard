@@ -2,6 +2,7 @@
 
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.ui.graphics.BlendMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -50,6 +51,18 @@ class PressFeedbackTest {
     @Test
     fun aPress_fadesOverIosDefaultAnimationDuration() {
         assertEquals(CATransaction.animationDuration() * 1000, PRESS_FADE_MILLIS.toDouble(), 0.5)
+    }
+
+    @Test
+    fun aRowsHighlight_isMultipliedInLightModeAndScreenedInDarkMode() {
+        assertEquals(
+            PressHighlight(rowHighlightColor(darkTheme = false), BlendMode.Multiply, 250),
+            uiKitRowHighlight(darkTheme = false)
+        )
+        assertEquals(
+            PressHighlight(rowHighlightColor(darkTheme = true), BlendMode.Screen, 250),
+            uiKitRowHighlight(darkTheme = true)
+        )
     }
 
     @Test

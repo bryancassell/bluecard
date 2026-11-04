@@ -3,16 +3,24 @@ package io.github.bryancassell.bluecard.ui
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
+import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
 import androidx.compose.material3.RippleDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
@@ -106,11 +114,46 @@ internal expect fun ButtonPressFeedback(
 @Composable
 internal expect fun MaterialPressFeedback(content: @Composable () -> Unit)
 
+/** iOS's [ProvidePressFeedback]: [highlight] as the theme's indication. */
+@Composable
+internal fun ProvideIosRowHighlight(highlight: PressHighlight, content: @Composable () -> Unit) =
+    CompositionLocalProvider(LocalIndication provides highlight, content = content)
+
+// Material's buttons always draw a ripple, which only LocalRippleConfiguration changes. Google
+// supports that for a component, not across the app, so it's provided around each one.
+private val FocusAndHoverRipple = RippleConfiguration(rippleAlpha = FocusAndHoverRippleAlpha)
+
+/** iOS's [ButtonPressFeedback]: the button dims, and its ripple shows only focus and hover. */
+@Composable
+internal fun IosButtonPressFeedback(
+    filled: Boolean,
+    content: @Composable (interactionSource: MutableInteractionSource?, modifier: Modifier) -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val dim = remember(filled) { buttonPressDim(filled) }
+    CompositionLocalProvider(LocalRippleConfiguration provides FocusAndHoverRipple) {
+        content(interactionSource, Modifier.indication(interactionSource, dim))
+    }
+}
+
+/**
+ * iOS's [MaterialPressFeedback]: the components' ripples show only focus and hover. Their presses
+ * are out of reach of the dim and highlight, so a press shows only what it does. In the date
+ * picker a day shows its selection at once. Its month arrows, mode toggle and year menu show
+ * nothing while held, though each acts as soon as it's let go, until #352 revisits the date
+ * picker, by agreement.
+ */
+@Composable
+internal fun IosMaterialPressFeedback(content: @Composable () -> Unit) = CompositionLocalProvider(
+    LocalRippleConfiguration provides FocusAndHoverRipple,
+    content = content
+)
+
 /**
  * Draws what it's on at [pressedAlpha] while pressed. Once let go, it fades back over
  * [fadeMillis], so a quick tap still shows.
  */
-class PressDim(private val pressedAlpha: Float, private val fadeMillis: Int) :
+internal class PressDim(private val pressedAlpha: Float, private val fadeMillis: Int) :
     IndicationNodeFactory {
     override fun create(interactionSource: InteractionSource): DelegatableNode =
         object : PressNode(interactionSource, fadeMillis) {
@@ -140,9 +183,9 @@ class PressDim(private val pressedAlpha: Float, private val fadeMillis: Int) :
 /**
  * Blends [color] over what it's on, with [blendMode], while pressed. Once let go, it fades back
  * over [fadeMillis], so a quick tap still shows. As a row's indication in the ripple's place, it
- * also shows focus and hover as the ripple does ([FocusAndHoverRippleAlpha]).
+ * also shows the ripple's focus and hover layer ([FocusAndHoverRippleAlpha]).
  */
-class PressHighlight(
+internal class PressHighlight(
     private val color: Color,
     private val blendMode: BlendMode,
     private val fadeMillis: Int
@@ -170,7 +213,7 @@ class PressHighlight(
 
 /**
  * Follows [interactionSource]: [pressed] is 1 from a press, and falls to 0 over [fadeMillis] once
- * it ends. [stateLayerAlpha] is the ripple's for focus or hover, or 0.
+ * it ends. [stateLayerAlpha] is the ripple's alpha for focus or hover, or 0.
  */
 private abstract class PressNode(
     private val interactionSource: InteractionSource,
@@ -178,37 +221,38 @@ private abstract class PressNode(
 ) : Modifier.Node(),
     DrawModifierNode,
     CompositionLocalConsumerModifierNode {
-    private var animatable = Animatable(0f)
-    private var stateLayer = mutableFloatStateOf(0f)
+    // Made in onAttach: a node can be detached part way through a fade and attached again, as a
+    // button's is when its item in a lazy list scrolls away and back, so each attach starts afresh.
+    private lateinit var pressedState: Animatable<Float, *>
+    private lateinit var stateLayerState: MutableFloatState
 
     // Read in draw, which Compose observes, so a change redraws.
-    protected val pressed: Float get() = animatable.value
-    protected val stateLayerAlpha: Float get() = stateLayer.floatValue
+    protected val pressed: Float get() = pressedState.value
+    protected val stateLayerAlpha: Float get() = stateLayerState.floatValue
 
     override fun onAttach() {
-        // A node can be detached part way through a fade and attached again, as a button's is
-        // when its item in a lazy list scrolls away and back, so each attach starts afresh.
-        val animatable = Animatable(0f).also { animatable = it }
-        val stateLayer = mutableFloatStateOf(0f).also { stateLayer = it }
+        pressedState = Animatable(0f)
+        stateLayerState = mutableFloatStateOf(0f)
         val presses = mutableSetOf<PressInteraction.Press>()
-        val focuses = mutableSetOf<FocusInteraction.Focus>()
-        val hovers = mutableSetOf<HoverInteraction.Enter>()
+        // Focus and hover, in the order they began.
+        val states = mutableListOf<Interaction>()
         var fade: Job? = null
         interactionSource.interactions.onEach { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> presses += interaction
                 is PressInteraction.Release -> presses -= interaction.press
                 is PressInteraction.Cancel -> presses -= interaction.press
-                is FocusInteraction.Focus -> focuses += interaction
-                is FocusInteraction.Unfocus -> focuses -= interaction.focus
-                is HoverInteraction.Enter -> hovers += interaction
-                is HoverInteraction.Exit -> hovers -= interaction.enter
+                is FocusInteraction.Focus, is HoverInteraction.Enter -> states += interaction
+                is FocusInteraction.Unfocus -> states -= interaction.focus
+                is HoverInteraction.Exit -> states -= interaction.enter
+                else -> return@onEach
             }
             if (interaction !is PressInteraction) {
-                // Focus over hover, as in the ripple.
-                stateLayer.floatValue = when {
-                    focuses.isNotEmpty() -> FocusAndHoverRippleAlpha.focusedAlpha
-                    hovers.isNotEmpty() -> FocusAndHoverRippleAlpha.hoveredAlpha
+                // The latest one, as the ripple's state layer shows, but at once rather than
+                // fading in and out.
+                stateLayerState.floatValue = when (states.lastOrNull()) {
+                    is FocusInteraction -> FocusAndHoverRippleAlpha.focusedAlpha
+                    is HoverInteraction -> FocusAndHoverRippleAlpha.hoveredAlpha
                     else -> 0f
                 }
             } else if (presses.isNotEmpty()) {
@@ -216,10 +260,10 @@ private abstract class PressNode(
                 // at once, and its fade must start from the press. A fade not yet started would
                 // otherwise run after the snap.
                 fade?.cancel()
-                animatable.snapTo(1f)
+                pressedState.snapTo(1f)
             } else {
                 // On its own, so a press can stop it.
-                fade = coroutineScope.launch { animatable.animateTo(0f, tween(fadeMillis)) }
+                fade = coroutineScope.launch { pressedState.animateTo(0f, tween(fadeMillis)) }
             }
         }.launchIn(coroutineScope)
     }
