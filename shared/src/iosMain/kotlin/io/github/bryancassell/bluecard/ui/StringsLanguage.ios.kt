@@ -12,14 +12,20 @@ import io.github.bryancassell.bluecard.text.currentRegion
 import io.github.bryancassell.bluecard.text.deviceRegions
 import io.github.bryancassell.bluecard.text.stringsLocale
 import org.jetbrains.compose.resources.stringResource
+import platform.Foundation.NSLocale
 
-/** Writes in the strings' locale ([stringsLocale]), in the device's region as it changes. */
+/** Writes in the strings' locale ([rememberStringsLocale]). */
 @Composable
 actual fun rememberLocaleFormats(): LocaleFormats {
+    val locale = rememberStringsLocale()
+    return remember(locale) { IosLocaleFormats(locale) }
+}
+
+/** The strings' locale ([stringsLocale]), in the device's region as it changes. */
+@Composable
+internal fun rememberStringsLocale(): NSLocale {
     val stringsLanguage = stringResource(Res.string.strings_language)
     val initialRegion = remember { currentRegion() }
     val region by remember { deviceRegions() }.collectAsState(initialRegion)
-    return remember(stringsLanguage, region) {
-        IosLocaleFormats(stringsLocale(stringsLanguage, region))
-    }
+    return remember(stringsLanguage, region) { stringsLocale(stringsLanguage, region) }
 }
