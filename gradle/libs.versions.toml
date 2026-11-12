@@ -6,7 +6,7 @@
 android-compileSdk = "37"
 android-minSdk = "26"
 android-targetSdk = "37"
-agp = "9.4.1"
+agp = "9.5.1"
 kotlin = "2.4.21"
 coreKtx = "1.19.1"
 lifecycle = "2.11.0"
@@ -27,15 +27,15 @@ composeMultiplatformMaterial3 = "1.9.0"
 # they're Google's artifacts, at the versions they're built on, such as Navigation Event 1.1.1
 # for 1.1.0, or at Google's entries' versions where those are higher.
 lifecycleMultiplatform = "2.11.0"
-navigation3 = "1.2.0"
+navigation3 = "1.2.1"
 navigation3Multiplatform = "1.2.0"
 navigationEventMultiplatform = "1.1.0"
 koin = "4.2.2"
 # Checks the Koin graph at build time. Each release lists the Kotlin versions it was
 # verified on; on another, it builds with a warning naming them.
-koinPlugin = "1.2.1"
+koinPlugin = "1.2.3"
 # KSP versions are no longer tied to Kotlin versions (since KSP 2.3.0).
-ksp = "2.3.12"
+ksp = "2.3.13"
 kotlinxCoroutines = "1.11.0"
 room3 = "3.0.3"
 # The SQLite that Room's driver bundles; the androidx.sqlite that Room 3.0.3 depends on.
@@ -57,10 +57,10 @@ robolectric = "4.17"
 # Accessibility checks in Compose UI tests; see ARCHITECTURE.md (Compose UI and screenshot tests).
 accessibilityTestFramework = "4.1.1"
 # Screenshot tests under Robolectric; see ARCHITECTURE.md (Compose UI and screenshot tests).
-roborazzi = "1.76.0"
+roborazzi = "1.78.0"
 # Debug builds only; see ARCHITECTURE.md (Debug builds). 3.0 is still in alpha.
 leakcanary = "2.14"
-spotless = "8.10.4"
+spotless = "8.11.0"
 # ktlint is run by Spotless; this pins the ktlint engine version.
 ktlint = "1.8.0"
 # Coverage engine used by both AGP (test data) and Gradle (verification).
