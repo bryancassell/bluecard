@@ -10,6 +10,7 @@ import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.savedstate.SavedState
 import androidx.savedstate.read
 import androidx.savedstate.savedState
+import io.github.bryancassell.bluecard.di.WarningLog
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import platform.Foundation.NSUserDefaults
 
 /**
  * What the app's pages remember, as text the iOS app gives iOS to keep with its scene
@@ -50,32 +52,86 @@ import kotlinx.serialization.json.long
  * differently, such as a back stack naming a key that was renamed, which Android avoids by
  * dropping an app's saved state when it's updated. Builds with the same version and build number,
  * such as two debug builds, share it.
+ *
+ * iOS keeps it after the app crashes too, even at every launch (checked on an iOS 27.0
+ * simulator), so a page that crashed as it was restored would crash every launch until the next
+ * build. So [defaults] say while the pages are open: from when they're restored, and each time
+ * they become active ([resumed]), until their state is saved as they go inactive ([paused]). If
+ * they're still open at launch, the last run ended while the app was open, as a crash does, and
+ * the pages start at Home, as UIKit's own state restoration does after a crash at launch (Apple's
+ * sample "Restoring your app's state").
  */
-class SceneSavedState(saved: String, private val build: String) {
-    val registry: SaveableStateRegistry = SaveableStateRegistry(restore(saved), ::canBeSaved)
+class SceneSavedState(
+    saved: String,
+    private val build: String,
+    private val defaults: NSUserDefaults,
+    private val warningLog: WarningLog
+) {
+    val registry: SaveableStateRegistry
 
-    /** What [registry] holds now, as the text a new [SceneSavedState] restores it from. */
-    fun save(): String {
+    init {
+        val endedWhileOpen = defaults.boolForKey(OPEN)
+        resumed()
+        registry = SaveableStateRegistry(restore(saved, endedWhileOpen), ::canBeSaved)
+    }
+
+    /** Called as the pages become active (ON_RESUME). */
+    fun resumed() {
+        defaults.setBool(true, OPEN)
+    }
+
+    /**
+     * What [registry] holds now, as the text a new [SceneSavedState] restores it from, for the
+     * app to keep as the pages go inactive (ON_PAUSE).
+     */
+    fun paused(): String {
         val values = registry.performSave().mapValues { JsonArray(it.value.map(::encode)) }
+        defaults.setBool(false, OPEN)
         return JsonObject(mapOf(BUILD to JsonPrimitive(build), VALUES to JsonObject(values)))
             .toString()
     }
 
     /**
-     * The values [save] wrote as [saved], or null if there are none, or another build saved
-     * them. The build is checked before the values are read, so a later build can save them
-     * another way.
+     * The values [paused] wrote as [saved], or null if there are none, the last run ended while
+     * the app was open, another build saved them, or they can't be read. The build is checked
+     * before the values are read, so a later build can save them another way.
      */
-    private fun restore(saved: String): Map<String, List<Any?>>? {
+    private fun restore(saved: String, endedWhileOpen: Boolean): Map<String, List<Any?>>? {
         if (saved.isEmpty()) return null
-        val state = Json.parseToJsonElement(saved).jsonObject
-        if (state.getValue(BUILD).jsonPrimitive.content != build) return null
-        return state.getValue(VALUES).jsonObject.mapValues { it.value.jsonArray.map(::decode) }
+        if (endedWhileOpen) {
+            warningLog.warn(TAG, "The last run ended while the app was open, so it starts at Home")
+            return null
+        }
+        return try {
+            val state = Json.parseToJsonElement(saved).jsonObject
+            if (state[BUILD]?.jsonPrimitive?.content == build) {
+                state.getValue(VALUES).jsonObject.mapValues { it.value.jsonArray.map(::decode) }
+            } else {
+                null
+            }
+        } catch (e: RuntimeException) {
+            // Text this build can't read, as from a bug, which would crash every launch too.
+            // Reading it throws more than one kind (kotlinx-serialization 1.12.0, checked by
+            // SceneSavedStateTest): a SerializationException for text that isn't JSON, an
+            // IllegalArgumentException or, for a Boolean, an IllegalStateException for an
+            // element of the wrong kind, and a NoSuchElementException or IndexOutOfBoundsException
+            // for a missing one.
+            warningLog.warn(
+                TAG,
+                "Couldn't read the pages' saved state, so the app starts at Home",
+                e
+            )
+            null
+        }
     }
 
     private companion object {
         const val BUILD = "build"
         const val VALUES = "values"
+
+        /** The [defaults] key that says the pages are open. */
+        const val OPEN = "pagesOpen"
+        const val TAG = "SceneSavedState"
     }
 }
 

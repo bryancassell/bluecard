@@ -7,6 +7,7 @@ import androidx.compose.ui.window.ComposeUIViewController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.bryancassell.bluecard.di.NSLogWarningLog
 import io.github.bryancassell.bluecard.di.appModule
 import io.github.bryancassell.bluecard.di.iosModule
 import io.github.bryancassell.bluecard.text.useStringsLanguageByDefault
@@ -16,6 +17,7 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.context.startKoin
 import platform.Foundation.NSBundle
+import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIViewController
 
 /**
@@ -43,10 +45,16 @@ fun initKoin() {
 @Suppress("FunctionName") // Named as the view controller it returns, as JetBrains' templates do.
 fun MainViewController(savedState: String, onSaveState: (String) -> Unit): UIViewController {
     useStringsLanguageByDefault()
-    val sceneState = SceneSavedState(savedState, appBuild())
+    val sceneState = SceneSavedState(
+        savedState,
+        appBuild(),
+        NSUserDefaults.standardUserDefaults,
+        NSLogWarningLog
+    )
     return ComposeUIViewController {
         CompositionLocalProvider(LocalSaveableStateRegistry provides sceneState.registry) {
-            LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { onSaveState(sceneState.save()) }
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { sceneState.resumed() }
+            LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { onSaveState(sceneState.paused()) }
             val viewModel = koinViewModel<MainActivityViewModel>()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             BlueCardApp(uiState, koinInject(), viewModel::dismissDamagedProgressNotice)

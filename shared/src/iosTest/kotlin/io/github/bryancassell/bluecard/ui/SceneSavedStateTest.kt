@@ -14,33 +14,51 @@ import androidx.savedstate.read
 import androidx.savedstate.savedState
 import androidx.savedstate.serialization.decodeFromSavedState
 import androidx.savedstate.serialization.encodeToSavedState
+import io.github.bryancassell.bluecard.testing.FakeWarningLog
 import io.github.bryancassell.bluecard.ui.navigation.BadgeDetail
 import io.github.bryancassell.bluecard.ui.navigation.BlueCardNavKey
 import io.github.bryancassell.bluecard.ui.navigation.Home
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import platform.Foundation.NSUserDefaults
 
 class SceneSavedStateTest {
+    private val defaults = NSUserDefaults(suiteName = SUITE)
+    private val warningLog = FakeWarningLog()
+
+    @BeforeTest
+    @AfterTest
+    fun removeDefaults() {
+        defaults.removePersistentDomainForName(SUITE)
+    }
+
     private fun sceneState(saved: String = "", build: String = BUILD) =
-        SceneSavedState(saved, build)
+        SceneSavedState(saved, build, defaults, warningLog)
 
     /** [value], saved under a key, as a new [SceneSavedState] restores it from the saved text. */
     private fun savedAndRestored(value: Any): Any? {
         val state = sceneState()
         state.registry.registerProvider(KEY) { value }
-        return sceneState(state.save()).registry.consumeRestored(KEY)
+        return sceneState(state.paused()).registry.consumeRestored(KEY)
     }
+
+    /** The text a state saved by this build, with [value] under [KEY], would be. */
+    private fun savedText(value: String) = """{"build":"$BUILD","values":{"$KEY":[$value]}}"""
 
     @Test
     fun newState_restoresNothing() {
         assertNull(sceneState().registry.consumeRestored(KEY))
+        assertEquals(emptyList(), warningLog.warnings)
     }
 
     @Test
@@ -48,25 +66,98 @@ class SceneSavedStateTest {
         val state = sceneState(build = "0.1.0 (1)")
         state.registry.registerProvider(KEY) { "Camping" }
 
-        val restored = sceneState(state.save(), build = "0.1.0 (2)").registry
+        val restored = sceneState(state.paused(), build = "0.1.0 (2)").registry
 
         assertNull(restored.consumeRestored(KEY))
+        assertEquals(emptyList(), warningLog.warnings)
     }
 
     @Test
-    fun save_keepsEachValueUnderItsKey() {
+    fun restore_stateSavedWithoutABuild_restoresNothing() {
+        // As debug builds of this class's first version saved it.
+        val restored = sceneState("""{"$KEY":[{"String":"Camping"}]}""").registry
+
+        assertNull(restored.consumeRestored(KEY))
+        assertEquals(emptyList(), warningLog.warnings)
+    }
+
+    @Test
+    fun restore_textItCantRead_restoresNothingAndWarns() {
+        val unreadable = listOf(
+            "{",
+            "Camping",
+            "[]",
+            """{"build":"$BUILD"}""",
+            """{"build":"$BUILD","values":[]}""",
+            savedText("""{"Unknown":1}"""),
+            savedText("{}"),
+            savedText("""{"Int":"twelve"}"""),
+            savedText("""{"Boolean":"maybe"}"""),
+            savedText("""{"Char":""}"""),
+            savedText("""{"MutableState":["structural"]}"""),
+            savedText("""{"MutableState":["own",{"Int":1}]}""")
+        )
+        for (text in unreadable) {
+            // Else the last state, still open, would keep this one from being read.
+            removeDefaults()
+            val restored = sceneState(text).registry
+
+            assertNull(restored.consumeRestored(KEY), text)
+            val warning = warningLog.warnings.last()
+            assertEquals("SceneSavedState", warning.tag, text)
+            assertNotNull(warning.error, text)
+        }
+        assertEquals(unreadable.size, warningLog.warnings.size)
+    }
+
+    @Test
+    fun restore_afterARunThatEndedWhileOpen_restoresNothingAndWarns() {
+        val state = sceneState()
+        state.registry.registerProvider(KEY) { "Camping" }
+        val saved = state.paused()
+        state.resumed()
+
+        val restored = sceneState(saved).registry
+
+        assertNull(restored.consumeRestored(KEY))
+        assertEquals("SceneSavedState", warningLog.warnings.single().tag)
+    }
+
+    @Test
+    fun restore_afterARunThatEndedAsItRestored_restoresNothing() {
+        // As if restoring the pages crashed the app.
+        val state = sceneState()
+        state.registry.registerProvider(KEY) { "Camping" }
+        val saved = state.paused()
+        sceneState(saved)
+
+        assertNull(sceneState(saved).registry.consumeRestored(KEY))
+    }
+
+    @Test
+    fun restore_afterARunThatEndedPaused_restores() {
+        val state = sceneState()
+        state.registry.registerProvider(KEY) { "Camping" }
+        state.resumed()
+        val saved = state.paused()
+
+        assertEquals("Camping", sceneState(saved).registry.consumeRestored(KEY))
+    }
+
+    @Test
+    fun paused_keepsEachValueUnderItsKey() {
         val state = sceneState()
         state.registry.registerProvider("page") { "Camping" }
         state.registry.registerProvider("scroll") { 12 }
 
-        val restored = sceneState(state.save()).registry
+        val restored = sceneState(state.paused()).registry
 
         assertEquals("Camping", restored.consumeRestored("page"))
         assertEquals(12, restored.consumeRestored("scroll"))
     }
 
     @Test
-    fun save_keepsEachValuesType() {
+    fun paused_keepsEachValuesType() {
         // Pages read a value back as the type they saved, so 1 mustn't come back as a Long.
         assertIs<Int>(savedAndRestored(1))
         assertIs<Long>(savedAndRestored(1L))
@@ -79,14 +170,14 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun save_keepsNumbersJsonCantWrite() {
+    fun paused_keepsNumbersJsonCantWrite() {
         assertEquals(Float.NaN, savedAndRestored(Float.NaN))
         assertEquals(Double.NEGATIVE_INFINITY, savedAndRestored(Double.NEGATIVE_INFINITY))
         assertEquals(0.1f, savedAndRestored(0.1f))
     }
 
     @Test
-    fun save_keepsArrays() {
+    fun paused_keepsArrays() {
         assertContentEquals(
             booleanArrayOf(true, false),
             savedAndRestored(booleanArrayOf(true, false)) as BooleanArray
@@ -103,7 +194,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun save_keepsMapsMutable() {
+    fun paused_keepsMapsMutable() {
         // SaveableStateHolder takes a page's state out of the map it restores.
         val pages = savedAndRestored(mapOf("Home" to listOf(1, null), 2 to "Badges"))
 
@@ -113,7 +204,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun save_keepsWhatASavedStateHolds() {
+    fun paused_keepsWhatASavedStateHolds() {
         val restored = savedAndRestored(
             savedState {
                 putBoolean("boolean", true)
@@ -153,7 +244,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun save_keepsTheBackStack() {
+    fun paused_keepsTheBackStack() {
         val serializer = NavBackStackSerializer(BlueCardNavKey.serializer())
         val backStack = NavBackStack<BlueCardNavKey>(Home, BadgeDetail("camping"))
 
@@ -166,7 +257,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun save_keepsAMutableStatesValueAndPolicy() {
+    fun paused_keepsAMutableStatesValueAndPolicy() {
         val policies = listOf<SnapshotMutationPolicy<Any?>>(
             structuralEqualityPolicy(),
             referentialEqualityPolicy(),
@@ -198,18 +289,19 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun save_whenAValueCantBeSaved_fails() {
+    fun paused_whenAValueCantBeSaved_fails() {
         // A bug, as an unsaveable value in a Bundle is on Android, so it isn't caught.
         val state = sceneState()
         val holder: MutableState<Any> = mutableStateOf("Camping")
         state.registry.registerProvider(KEY) { holder }
         holder.value = Any()
 
-        assertFailsWith<IllegalStateException> { state.save() }
+        assertFailsWith<IllegalStateException> { state.paused() }
     }
 
     private companion object {
         const val KEY = "key"
         const val BUILD = "0.1.0 (1)"
+        const val SUITE = "SceneSavedStateTest"
     }
 }
