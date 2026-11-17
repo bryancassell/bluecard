@@ -8,9 +8,8 @@ import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import kotlinx.coroutines.sync.Mutex
 
-// Each version's schema is in shared/schemas/, and MigrationTest checks each migration.
-// Version 2 added TrackerEntry.rowNumber, version 3 TrackerEntry.addedDate, and version 4
-// RequirementProgress.signedOffBy.
+// Each version's schema is in shared/schemas/, and MigrationTest checks each migration. TABLES
+// has each version's tables.
 @ConstructedBy(BlueCardDatabaseConstructor::class)
 @Database(
     entities = [BadgeProgress::class, RequirementProgress::class, TrackerEntry::class],
@@ -60,8 +59,97 @@ abstract class BlueCardDatabase : RoomDatabase() {
             3 to "3e67ea8b76032a8049f6f3cad8313660",
             4 to "bdfb11170140a5d1e2c7675c1126dcb3"
         )
+
+        /**
+         * Each schema version's tables, as Room creates them for the entities, as in the
+         * version's file in shared/schemas/. [SetAsideDamagedDatabaseDriver] checks a database's
+         * tables against its version's before Room opens it. A version that changes a table
+         * gives it a definition of its own. SetAsideDamagedDatabaseDriverTest fails until every
+         * version's tables are here.
+         */
+        internal val TABLES = mapOf(
+            1 to listOf(BADGE_PROGRESS, REQUIREMENT_PROGRESS_1, TRACKER_ENTRY_1),
+            2 to listOf(BADGE_PROGRESS, REQUIREMENT_PROGRESS_1, TRACKER_ENTRY_2),
+            3 to listOf(BADGE_PROGRESS, REQUIREMENT_PROGRESS_1, TRACKER_ENTRY_3),
+            4 to listOf(BADGE_PROGRESS, REQUIREMENT_PROGRESS_4, TRACKER_ENTRY_3)
+        )
     }
 }
+
+// Each version's tables, for BlueCardDatabase.TABLES, in the order they're made.
+private val BADGE_PROGRESS = TableDefinition(
+    "badge_progress",
+    setOf(
+        TableDefinition.Column("badgeId", Affinity.TEXT, notNull = true, primaryKey = true),
+        TableDefinition.Column("requirementsVersion", Affinity.TEXT, notNull = true),
+        TableDefinition.Column("startedDate", Affinity.TEXT, notNull = true),
+        TableDefinition.Column("completedOnPriorDate", Affinity.TEXT),
+        TableDefinition.Column("counselor_name", Affinity.TEXT),
+        TableDefinition.Column("counselor_phone", Affinity.TEXT),
+        TableDefinition.Column("counselor_email", Affinity.TEXT)
+    )
+)
+
+// The foreign key of each table whose rows belong to a started badge.
+private val BADGE_FOREIGN_KEY = TableDefinition.ForeignKey(
+    "badge_progress",
+    listOf("badgeId"),
+    listOf("badgeId"),
+    "NO ACTION",
+    "CASCADE"
+)
+
+private val REQUIREMENT_PROGRESS_1 = TableDefinition(
+    "requirement_progress",
+    setOf(
+        TableDefinition.Column("badgeId", Affinity.TEXT, notNull = true, primaryKey = true),
+        TableDefinition.Column(
+            "requirementNumber",
+            Affinity.TEXT,
+            notNull = true,
+            primaryKey = true
+        ),
+        TableDefinition.Column("completed", Affinity.INTEGER, notNull = true),
+        TableDefinition.Column("completedDate", Affinity.TEXT),
+        TableDefinition.Column("comment", Affinity.TEXT)
+    ),
+    setOf(BADGE_FOREIGN_KEY)
+)
+
+private val REQUIREMENT_PROGRESS_4 =
+    REQUIREMENT_PROGRESS_1 + TableDefinition.Column("signedOffBy", Affinity.TEXT)
+
+private val TRACKER_ENTRY_1 = TableDefinition(
+    "tracker_entry",
+    setOf(
+        TableDefinition.Column("id", Affinity.INTEGER, notNull = true, primaryKey = true),
+        TableDefinition.Column("badgeId", Affinity.TEXT, notNull = true),
+        TableDefinition.Column("requirementNumber", Affinity.TEXT, notNull = true),
+        TableDefinition.Column("values", Affinity.TEXT, notNull = true)
+    ),
+    setOf(BADGE_FOREIGN_KEY),
+    setOf(
+        TableDefinition.Index(
+            "index_tracker_entry_badgeId_requirementNumber",
+            unique = false,
+            listOf("badgeId", "requirementNumber")
+        )
+    )
+)
+
+// Version 2's migration rebuilt the table, with a unique index that has the row's number too.
+private val TRACKER_ENTRY_2 =
+    (TRACKER_ENTRY_1 + TableDefinition.Column("rowNumber", Affinity.INTEGER)).copy(
+        indexes = setOf(
+            TableDefinition.Index(
+                "index_tracker_entry_badgeId_requirementNumber_rowNumber",
+                unique = true,
+                listOf("badgeId", "requirementNumber", "rowNumber")
+            )
+        )
+    )
+
+private val TRACKER_ENTRY_3 = TRACKER_ENTRY_2 + TableDefinition.Column("addedDate", Affinity.TEXT)
 
 /**
  * Builds the database, without the reflection that iOS doesn't have. Room's compiler generates

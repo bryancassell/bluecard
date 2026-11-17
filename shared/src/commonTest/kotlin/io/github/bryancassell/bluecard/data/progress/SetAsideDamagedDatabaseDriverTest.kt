@@ -337,6 +337,16 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         database.close()
     }
 
+    /** Saves a started badge in a database of [version], as an older build leaves it. */
+    private suspend fun saveOlderProgress(version: Int) = helper.createDatabase(version).use {
+        it.execSQL(
+            """
+            INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
+            VALUES ('camping', '2026-01-01', '2026-03-01')
+            """
+        )
+    }
+
     private fun SQLiteConnection.longFor(sql: String) = prepare(sql).use {
         it.step()
         it.getLong(0)
@@ -436,14 +446,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun olderDatabase_isMigratedByRoom() = runTest {
-        helper.createDatabase(1).use {
-            it.execSQL(
-                """
-                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
-                VALUES ('camping', '2026-01-01', '2026-03-01')
-                """
-            )
-        }
+        saveOlderProgress(1)
 
         val progress = open().readProgress()
 
@@ -518,14 +521,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun olderDatabaseWithAnotherVersion_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        helper.createDatabase(3).use {
-            it.execSQL(
-                """
-                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
-                VALUES ('camping', '2026-01-01', '2026-03-01')
-                """
-            )
-        }
+        saveOlderProgress(3)
         val damaged = changeFile("PRAGMA user_version = 2")
 
         assertSetAsideWhenItOpens(damaged)
@@ -536,6 +532,92 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         val damaged = changeSavedProgress(*RENAME_IDENTITY_COLUMN)
 
         assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun tableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress(*RENAME_COUNSELOR_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun olderTableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        saveOlderProgress(3)
+        val damaged = changeFile(*RENAME_COUNSELOR_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun foreignKeyToARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress(
+            *changeDefinition(
+                "requirement_progress",
+                "REFERENCES `badge_progress`(`badgeId`)",
+                "REFERENCES `badge_progress`(`badgeIe`)"
+            )
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun columnWithAnotherAffinity_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // TEXU has NUMERIC affinity, so a phone number saved later would lose its leading zero.
+        val damaged = changeSavedProgress(
+            *changeDefinition("badge_progress", "`counselor_phone` TEXT", "`counselor_phone` TEXU")
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun indexOnAnExpression_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // The unique index is then on (badgeId, requirementNumber < rowNumber), which is 0 or 1,
+        // so a badge's third tracker row would fail as a duplicate.
+        val damaged = changeSavedProgress(
+            *changeDefinition(
+                "index_tracker_entry_badgeId_requirementNumber_rowNumber",
+                "`requirementNumber`, `rowNumber`",
+                "`requirementNumber`< `rowNumber`"
+            )
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun olderColumnThatLostNotNull_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        saveOlderProgress(3)
+        // NOU becomes part of the type, which keeps its affinity, and NULL is allowed.
+        val damaged = changeFile(
+            *changeDefinition(
+                "badge_progress",
+                "`startedDate` TEXT NOT NULL",
+                "`startedDate` TEXT NOU NULL"
+            )
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun versionZeroTableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress("PRAGMA user_version = 0", *RENAME_COUNSELOR_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun versionZeroWithATableMissing_isLeftToRoom_whichCreatesIt_andKeepsTheProgress() = runTest {
+        saveProgress(open())
+        changeFile("DROP TABLE tracker_entry", "PRAGMA user_version = 0")
+
+        val progress = open().readProgress()
+
+        assertEquals(300, progress.size)
+        assertEquals(emptyList<Path>(), copies())
     }
 
     @Test
@@ -639,6 +721,50 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         }
     }
 
+    @Test
+    fun tables_areTheOnesRoomCreates() = runTest {
+        assertEquals((1..BlueCardDatabase.VERSION).toSet(), BlueCardDatabase.TABLES.keys)
+        // Each version's from its schema in shared/schemas/, both new and as Room migrates them
+        // from the first version, whose columns can differ in what isn't compared, such as a
+        // migration's DEFAULT NULL.
+        (1..BlueCardDatabase.VERSION).forEach { version ->
+            deleteDatabase()
+            helper.createDatabase(version).use { assertTables(version, it) }
+            if (version > 1) {
+                deleteDatabase()
+                helper.createDatabase(1).close()
+                helper.runMigrationsAndValidate(version).use { assertTables(version, it) }
+            }
+        }
+        // This build's as the app creates them.
+        deleteDatabase()
+        open().readProgress()
+        databases.single().close()
+        BundledSQLiteDriver().open(file.toString()).use {
+            assertTables(BlueCardDatabase.VERSION, it)
+        }
+    }
+
+    /** Checks that [BlueCardDatabase.TABLES] has [connection]'s tables, as of [version]. */
+    private fun assertTables(version: Int, connection: SQLiteConnection) {
+        val tables = BlueCardDatabase.TABLES.getValue(version)
+        // Room's and SQLite's own tables aside.
+        val names = connection.prepare(
+            """
+            SELECT name FROM sqlite_master WHERE type = 'table'
+            AND name NOT IN ('room_master_table', 'sqlite_sequence')
+            """
+        ).use { buildSet { while (it.step()) add(it.getText(0)) } }
+        assertEquals(tables.map { it.name }.toSet(), names)
+        tables.forEach {
+            assertEquals(
+                it,
+                connection.readTableDefinition(it.name),
+                "BlueCardDatabase.TABLES needs ${it.name} as of version $version"
+            )
+        }
+    }
+
     /** The database file's Room version and identity hash. */
     private fun savedHeader() = BundledSQLiteDriver().open(file.toString()).use { sqlite ->
         val hash = sqlite.prepare("SELECT identity_hash FROM room_master_table").use {
@@ -697,14 +823,26 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         // A hash no version of the database has had.
         const val UNKNOWN_HASH = "0123456789abcdef0123456789abcdef"
 
-        /** Changes `room_master_table`'s definition, as storage could, into SQL that still reads. */
-        val RENAME_IDENTITY_COLUMN = arrayOf(
+        /**
+         * Changes [table]'s definition, as storage could, into SQL that still reads: [old] in it
+         * becomes [new].
+         */
+        fun changeDefinition(table: String, old: String, new: String) = arrayOf(
             "PRAGMA writable_schema = ON",
             """
-            UPDATE sqlite_master SET sql = replace(sql, 'identity_hash', 'identity_hasj')
-            WHERE name = 'room_master_table'
+            UPDATE sqlite_master SET sql = replace(sql, ${sqlText(old)}, ${sqlText(new)})
+            WHERE name = ${sqlText(table)}
             """,
             "PRAGMA writable_schema = OFF"
         )
+
+        /** [text] as an SQL string literal. */
+        private fun sqlText(text: String) = "'${text.replace("'", "''")}'"
+
+        val RENAME_IDENTITY_COLUMN =
+            changeDefinition("room_master_table", "identity_hash", "identity_hasj")
+
+        val RENAME_COUNSELOR_COLUMN =
+            changeDefinition("badge_progress", "counselor_name", "counselor_namf")
     }
 }
