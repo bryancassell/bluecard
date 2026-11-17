@@ -18,6 +18,13 @@ import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.snapshots.SnapshotMutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.structuralEqualityPolicy
+import androidx.lifecycle.Lifecycle.Event.ON_ANY
+import androidx.lifecycle.Lifecycle.Event.ON_CREATE
+import androidx.lifecycle.Lifecycle.Event.ON_DESTROY
+import androidx.lifecycle.Lifecycle.Event.ON_PAUSE
+import androidx.lifecycle.Lifecycle.Event.ON_RESUME
+import androidx.lifecycle.Lifecycle.Event.ON_START
+import androidx.lifecycle.Lifecycle.Event.ON_STOP
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import androidx.savedstate.SavedState
@@ -59,8 +66,11 @@ class SceneSavedStateTest {
     private fun savedAndRestored(value: Any): Any? {
         val state = sceneState()
         state.registry.registerProvider(KEY) { value }
-        return sceneState(state.paused()).registry.consumeRestored(KEY)
+        return sceneState(state.backgrounded()).registry.consumeRestored(KEY)
     }
+
+    /** The text the app keeps as its scene goes to the background. */
+    private fun SceneSavedState.backgrounded(): String = assertNotNull(onEvent(ON_STOP))
 
     /** The text a state saved by this build, with [value] under [KEY], would be. */
     private fun savedText(value: String) = """{"build":"$BUILD","values":{"$KEY":[$value]}}"""
@@ -76,7 +86,7 @@ class SceneSavedStateTest {
         val state = sceneState(build = "0.1.0 (1)")
         state.registry.registerProvider(KEY) { "Camping" }
 
-        val restored = sceneState(state.paused(), build = "0.1.0 (2)").registry
+        val restored = sceneState(state.backgrounded(), build = "0.1.0 (2)").registry
 
         assertNull(restored.consumeRestored(KEY))
         assertEquals(emptyList(), warningLog.warnings)
@@ -121,11 +131,12 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun restore_afterARunThatEndedWhileOpen_restoresNothingAndWarns() {
+    fun restore_afterARunThatEndedShownAgain_restoresNothingAndWarns() {
+        // Back from the background, then a crash.
         val state = sceneState()
         state.registry.registerProvider(KEY) { "Camping" }
-        val saved = state.paused()
-        state.resumed()
+        val saved = state.backgrounded()
+        state.onEvent(ON_START)
 
         val restored = sceneState(saved).registry
 
@@ -134,40 +145,78 @@ class SceneSavedStateTest {
     }
 
     @Test
+    fun restore_afterARunThatEndedInactive_restoresNothing() {
+        // The pages still run while the scene is inactive, as under Control Center, so a crash
+        // then may come from them.
+        val state = sceneState()
+        state.registry.registerProvider(KEY) { "Camping" }
+        state.onEvent(ON_RESUME)
+        val saved = assertNotNull(state.onEvent(ON_PAUSE))
+
+        assertNull(sceneState(saved).registry.consumeRestored(KEY))
+    }
+
+    @Test
     fun restore_afterARunThatEndedAsItRestored_restoresNothing() {
         // As if restoring the pages crashed the app.
         val state = sceneState()
         state.registry.registerProvider(KEY) { "Camping" }
-        val saved = state.paused()
+        val saved = state.backgrounded()
         sceneState(saved)
 
         assertNull(sceneState(saved).registry.consumeRestored(KEY))
     }
 
     @Test
-    fun restore_afterARunThatEndedPaused_restores() {
+    fun restore_afterARunThatEndedInTheBackground_restores() {
         val state = sceneState()
         state.registry.registerProvider(KEY) { "Camping" }
-        state.resumed()
-        val saved = state.paused()
+        for (event in listOf(ON_START, ON_RESUME, ON_PAUSE)) state.onEvent(event)
+        val saved = state.backgrounded()
 
         assertEquals("Camping", sceneState(saved).registry.consumeRestored(KEY))
     }
 
     @Test
-    fun paused_keepsEachValueUnderItsKey() {
+    fun restore_afterARunThatWentToTheBackgroundWithoutBecomingActive_restores() {
+        // As when the scout leaves during launch.
+        val state = sceneState()
+        state.registry.registerProvider(KEY) { "Camping" }
+        state.onEvent(ON_START)
+        val saved = state.backgrounded()
+
+        assertEquals("Camping", sceneState(saved).registry.consumeRestored(KEY))
+    }
+
+    @Test
+    fun onEvent_givesTheTextToKeepAsTheSceneGoesInactiveOrToTheBackground() {
+        val state = sceneState()
+        state.registry.registerProvider(KEY) { "Camping" }
+
+        for (event in listOf(ON_CREATE, ON_START, ON_RESUME, ON_DESTROY, ON_ANY)) {
+            assertNull(state.onEvent(event), "$event")
+        }
+        for (event in listOf(ON_PAUSE, ON_STOP)) {
+            val saved = assertNotNull(state.onEvent(event), "$event")
+            removeDefaults()
+            assertEquals("Camping", sceneState(saved).registry.consumeRestored(KEY), "$event")
+        }
+    }
+
+    @Test
+    fun saved_keepsEachValueUnderItsKey() {
         val state = sceneState()
         state.registry.registerProvider("page") { "Camping" }
         state.registry.registerProvider("scroll") { 12 }
 
-        val restored = sceneState(state.paused()).registry
+        val restored = sceneState(state.backgrounded()).registry
 
         assertEquals("Camping", restored.consumeRestored("page"))
         assertEquals(12, restored.consumeRestored("scroll"))
     }
 
     @Test
-    fun paused_keepsEachValuesType() {
+    fun saved_keepsEachValuesType() {
         // Pages read a value back as the type they saved, so 1 mustn't come back as a Long.
         assertIs<Int>(savedAndRestored(1))
         assertIs<Long>(savedAndRestored(1L))
@@ -180,14 +229,14 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsNumbersJsonCantWrite() {
+    fun saved_keepsNumbersJsonCantWrite() {
         assertEquals(Float.NaN, savedAndRestored(Float.NaN))
         assertEquals(Double.NEGATIVE_INFINITY, savedAndRestored(Double.NEGATIVE_INFINITY))
         assertEquals(0.1f, savedAndRestored(0.1f))
     }
 
     @Test
-    fun paused_keepsArrays() {
+    fun saved_keepsArrays() {
         assertContentEquals(
             booleanArrayOf(true, false),
             savedAndRestored(booleanArrayOf(true, false)) as BooleanArray
@@ -204,7 +253,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsMapsMutable() {
+    fun saved_keepsMapsMutable() {
         // SaveableStateHolder takes a page's state out of the map it restores.
         val pages = savedAndRestored(mapOf("Home" to listOf(1, null), 2 to "Badges"))
 
@@ -214,7 +263,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsWhatASavedStateHolds() {
+    fun saved_keepsWhatASavedStateHolds() {
         val restored = savedAndRestored(
             savedState {
                 putBoolean("boolean", true)
@@ -254,7 +303,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsTheBackStack() {
+    fun saved_keepsTheBackStack() {
         val serializer = NavBackStackSerializer(BlueCardNavKey.serializer())
         val backStack = NavBackStack<BlueCardNavKey>(Home, BadgeDetail("camping"))
 
@@ -267,7 +316,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsAMutableStatesValueAndPolicy() {
+    fun saved_keepsAMutableStatesValueAndPolicy() {
         val policies = listOf<SnapshotMutationPolicy<Any?>>(
             structuralEqualityPolicy(),
             referentialEqualityPolicy(),
@@ -283,7 +332,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsPrimitiveStatesAsTheirOwnTypes() {
+    fun saved_keepsPrimitiveStatesAsTheirOwnTypes() {
         // A page reads one back as the type it remembered, as Android's Parcelable ones are.
         assertEquals(1, assertIs<MutableIntState>(savedAndRestored(mutableIntStateOf(1))).intValue)
         assertEquals(
@@ -305,7 +354,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_keepsASnapshotStateList() {
+    fun saved_keepsASnapshotStateList() {
         val restored = savedAndRestored(mutableStateListOf("Camping", null))
 
         assertEquals(listOf("Camping", null), assertIs<SnapshotStateList<*>>(restored).toList())
@@ -323,7 +372,7 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_leavesOutWhatItCantWrite() {
+    fun saved_leavesOutWhatItCantWrite() {
         val state = sceneState()
         val ownPolicy = object : SnapshotMutationPolicy<Int> {
             override fun equivalent(a: Int, b: Int) = a == b
@@ -343,7 +392,10 @@ class SceneSavedStateTest {
             savedState(mapOf("kept" to 1, "enum" to Tab.Badges))
         }
 
-        val restored = sceneState(state.paused()).registry
+        val saved = state.backgrounded()
+        // Warned once a run, though the scene goes inactive and to the background often.
+        state.onEvent(ON_PAUSE)
+        val restored = sceneState(saved).registry
 
         assertEquals("Camping", restored.consumeRestored("kept"))
         assertNull(restored.consumeRestored("enum"))
@@ -363,13 +415,13 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun paused_whenAValueChangesToOneItCantWrite_leavesItOut() {
+    fun saved_whenAValueChangesToOneItCantWrite_leavesItOut() {
         val state = sceneState()
         val holder: MutableState<Any> = mutableStateOf("Camping")
         state.registry.registerProvider(KEY) { holder }
         holder.value = Any()
 
-        assertNull(sceneState(state.paused()).registry.consumeRestored(KEY))
+        assertNull(sceneState(state.backgrounded()).registry.consumeRestored(KEY))
     }
 
     @Test

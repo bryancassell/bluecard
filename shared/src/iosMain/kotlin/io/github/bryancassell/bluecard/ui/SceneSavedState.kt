@@ -18,6 +18,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.runtime.toMutableStateList
+import androidx.lifecycle.Lifecycle
 import androidx.savedstate.SavedState
 import androidx.savedstate.read
 import androidx.savedstate.savedState
@@ -40,7 +41,9 @@ import platform.Foundation.NSUserDefaults
  * What the app's pages remember, as text the iOS app gives iOS to keep with its scene
  * (`@SceneStorage` in ContentView.swift). So the back stack and what the scout typed come back
  * after iOS ends the app in the background, as Android's saved state does. Unlike Android, iOS
- * keeps it when the scout closes the app in the app switcher too (PRD.md, Returning to the app).
+ * keeps it when the scout closes the app in the app switcher too, and tells the app nothing that
+ * would set a close apart from iOS ending it, so the page comes back then as well (PRD.md,
+ * Returning to the app).
  *
  * Compose Multiplatform 1.12.2 keeps saved state only in memory on iOS: ComposeContainer.ios.kt
  * keeps it in `private var savedState`, for its next scene in the same process, and
@@ -73,13 +76,14 @@ import platform.Foundation.NSUserDefaults
  * iOS keeps it after the app crashes too, even at every launch (checked on an iOS 27.0
  * simulator), so a page that crashed as it was restored would crash every launch until the next
  * build. So [defaults] say while the pages are open: from when they're restored, and each time
- * they become active ([resumed]), until their state is saved as they go inactive or to the
- * background ([paused]). If they're still open at launch, the last run ended while the app was
- * open, as a crash does, and the pages start at Home, as UIKit's own state restoration does after
- * a crash at launch (Apple's sample "Restoring your app's state"). The flag set at launch outlived
- * a crash as the pages were restored, even for a relaunch a second later, though the preferences
- * file changed only seconds after: the system's preferences service had it, and the app reads it
- * from there (checked on an iOS 27.0 simulator). It's one flag for the app, which has one scene
+ * they're shown again (ON_START), until they go to the background (ON_STOP). They stay open while
+ * the scene is only inactive, as under Control Center or a call's banner, since the pages still
+ * run then. If they're still open at launch, the last run ended while the app was open, as a
+ * crash does, and the pages start at Home, as UIKit's own state restoration does after a crash at
+ * launch (Apple's sample "Restoring your app's state"). The flag set at launch outlived a crash
+ * as the pages were restored, even for a relaunch a second later, though the preferences file
+ * changed only seconds after: the system's preferences service had it, and the app reads it from
+ * there (checked on an iOS 27.0 simulator). It's one flag for the app, which has one scene
  * (UIApplicationSupportsMultipleScenes in iosApp/Info.plist).
  */
 internal class SceneSavedState(
@@ -90,42 +94,56 @@ internal class SceneSavedState(
 ) {
     val registry: SaveableStateRegistry
 
+    /** Whether a save has left a value out, which is warned about once a run. */
+    private var warnedLeftOut = false
+
     init {
         val endedWhileOpen = defaults.boolForKey(OPEN)
-        resumed()
+        defaults.setBool(true, OPEN)
         registry = SaveableStateRegistry(restore(saved, endedWhileOpen)) { true }
     }
 
-    /** Called as the pages become active (ON_RESUME). */
-    fun resumed() {
-        defaults.setBool(true, OPEN)
+    /**
+     * Follows the pages' lifecycle [event], and gives the text for the app to keep, or null. The
+     * text is given as the scene goes inactive (ON_PAUSE), on its way to the background, and as
+     * it goes there (ON_STOP).
+     */
+    fun onEvent(event: Lifecycle.Event): String? = when (event) {
+        Lifecycle.Event.ON_START -> {
+            defaults.setBool(true, OPEN)
+            null
+        }
+
+        Lifecycle.Event.ON_PAUSE -> save()
+
+        // Saved first, so a save that fails leaves the pages open.
+        Lifecycle.Event.ON_STOP -> save().also { defaults.setBool(false, OPEN) }
+
+        else -> null
     }
 
-    /**
-     * What [registry] holds now, as the text a new [SceneSavedState] restores it from, for the
-     * app to keep as the pages go inactive (ON_PAUSE) or to the background (ON_STOP).
-     */
-    fun paused(): String {
+    /** What [registry] holds now, as the text a new [SceneSavedState] restores it from. */
+    private fun save(): String {
         val writer = Writer()
         val values = writer.keeping(registry.performSave().entries) {
             it.key to JsonArray(it.value.map(writer::write))
         }
-        if (writer.leftOut.isNotEmpty()) {
+        if (writer.leftOut > 0 && !warnedLeftOut) {
+            warnedLeftOut = true
             warningLog.warn(
                 TAG,
-                "Left out ${writer.leftOut.size} saved values it can't write, which start " +
-                    "fresh if iOS ends the app",
-                writer.leftOut.first()
+                "Left out ${writer.leftOut} saved values it can't write, which start fresh if " +
+                    "iOS ends the app",
+                writer.firstLeftOut
             )
         }
-        defaults.setBool(false, OPEN)
         return JsonObject(
             mapOf(BUILD to JsonPrimitive(build), VALUES to JsonObject(values.toMap()))
         ).toString()
     }
 
     /**
-     * The values [paused] wrote as [saved], or null if there are none, the last run ended while
+     * The values [save] wrote as [saved], or null if there are none, the last run ended while
      * the app was open, another build saved them, or they can't be read. The build is checked
      * before the values are read, so a later build can save them another way.
      */
@@ -176,17 +194,23 @@ internal fun appBuild(info: (key: String) -> Any?): String =
  * Writes values as JSON that [decode] reads back as the same type, since a page reads each value
  * back as the type it saved, such as an Int and not a Long, or a MutableIntState and not a
  * MutableState. It leaves out an entry of a map or SavedState that holds a value it can't write,
- * and keeps why in [leftOut].
+ * and counts it in [leftOut].
  */
 private class Writer {
-    val leftOut = mutableListOf<IllegalArgumentException>()
+    var leftOut = 0
+        private set
+
+    /** Why the first value left out couldn't be written. */
+    var firstLeftOut: IllegalArgumentException? = null
+        private set
 
     /** [items], each written by [write], leaving out one that holds a value it can't write. */
     fun <E, T> keeping(items: Iterable<E>, write: (E) -> T): List<T> = items.mapNotNull {
         try {
             write(it)
         } catch (e: IllegalArgumentException) {
-            leftOut += e
+            if (firstLeftOut == null) firstLeftOut = e
+            leftOut++
             null
         }
     }

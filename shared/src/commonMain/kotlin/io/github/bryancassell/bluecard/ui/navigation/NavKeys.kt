@@ -19,8 +19,10 @@ sealed interface BlueCardNavKey : NavKey
  * It's saved with [BlueCardNavKey]'s serializer, so no reflection is used: each key is saved by
  * its serial name, which the compiler writes in as a string, so R8 renaming the class doesn't
  * change it. Renaming a key in the source does, but Android drops an app's saved state when the
- * app is updated (checked on Android 17, API 37), and iOS's `SceneSavedState` drops state saved by
- * another build, so state saved by one version is never read by another.
+ * app is updated (checked on Android 17, API 37), and iOS's `SceneSavedState` drops state saved
+ * under another version or build number, so a published build never reads another's state. Two
+ * development builds with the same numbers on iOS can, which crashes once, and the app then
+ * starts at Home.
  *
  * Navigation 3's `rememberNavBackStack` finds keys by class name with reflection, which R8's
  * renaming could break in the release build alone, where local tests can't see it (#203). Given
