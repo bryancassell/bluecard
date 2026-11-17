@@ -4,24 +4,42 @@ import platform.UIKit.UIViewController
 import platform.UIKit.transitionCoordinator
 
 /**
- * Presents [controller] over the view controller on top: this one, or the last one presented over
- * it that isn't going ([topPresented]). It waits until a presentation or dismissal under way here
- * ends, since UIKit refuses to present during one, and does nothing if [isClosed] by then, as when
- * the page stopped asking meanwhile. If UIKit still won't present it, calls [onRefused].
+ * Presents [controller] over what's on top of this view controller's window: its root view
+ * controller, or the last one presented over it that isn't going ([topPresented]). It waits until
+ * a presentation or dismissal under way there ends, since UIKit refuses to present during one, and
+ * does nothing if [isClosed] by then, as when the page stopped asking meanwhile. If UIKit still
+ * won't present it, calls [onRefused].
+ *
+ * It's presented from the window's root, not this one: inside a Compose `Dialog`, such as the
+ * merge's, `LocalUIViewController` is the dialog's own view controller, which isn't in the
+ * window's view controllers. Presenting from it worked, but UIKit logged that it "is not
+ * supported, and may result in incorrect safe area insets and a corrupt root presentation… Will
+ * become a hard exception in a future release" (iOS 27.0).
+ *
+ * The wait asks the top controller for the transition, which also covers one between two
+ * controllers above the root. While the top one is being dismissed, as the file picker is when
+ * the import asks what to do with its file, [topPresented] gives the one under it, which is in
+ * that dismissal too. If UIKit won't queue the wait, as when the transition is already ending, it
+ * presents at once, and so calls [onRefused] if UIKit refuses.
  */
 internal fun UIViewController.presentOnceSettled(
     controller: UIViewController,
     isClosed: () -> Boolean,
     onRefused: () -> Unit
 ) {
+    val root = view.window?.rootViewController ?: this
     val present = {
         if (!isClosed()) {
-            topPresented().presentViewController(controller, animated = true, completion = null)
+            root.topPresented().presentViewController(
+                controller,
+                animated = true,
+                completion = null
+            )
             if (controller.presentingViewController == null) onRefused()
         }
     }
-    val transition = transitionCoordinator
-    if (transition == null) present() else transition.animateAlongsideTransition(null) { present() }
+    val transition = root.topPresented().transitionCoordinator
+    if (transition == null || !transition.animateAlongsideTransition(null, { present() })) present()
 }
 
 /**
@@ -40,14 +58,14 @@ internal fun UIViewController.topPresented(): UIViewController {
 /**
  * Dismisses this view controller if it's presented. UIKit ignores a dismissal while it appears, or
  * while the scout swipes a sheet down and may yet drag it back up, so then it's dismissed once that
- * ends, unless it ended dismissed.
+ * ends, unless it ended dismissed. If UIKit won't queue that, it's dismissed at once.
  */
 internal fun UIViewController.dismissOnceSettled() {
     val transition = transitionCoordinator
-    if (transition == null) {
+    if (transition == null ||
+        !transition.animateAlongsideTransition(null, { dismissIfPresented() })
+    ) {
         dismissIfPresented()
-    } else {
-        transition.animateAlongsideTransition(null) { dismissIfPresented() }
     }
 }
 

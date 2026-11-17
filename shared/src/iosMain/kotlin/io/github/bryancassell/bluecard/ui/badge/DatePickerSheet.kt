@@ -4,6 +4,7 @@ import io.github.bryancassell.bluecard.text.gregorianCalendar
 import io.github.bryancassell.bluecard.text.toLocalDate
 import io.github.bryancassell.bluecard.text.toNSDate
 import io.github.bryancassell.bluecard.ui.dismissOnceSettled
+import io.github.bryancassell.bluecard.ui.presentOnceSettled
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
 import io.github.bryancassell.bluecard.ui.toUIColor
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -115,20 +116,26 @@ internal class DatePickerSheet(
 
     private val onRefused = onCancel
 
+    private var closed = false
+
     /** How tall the sheet is to be ([Page.contentHeight]). */
     internal fun contentHeight() = page.contentHeight()
 
     /**
-     * Shows the sheet over [over]. If UIKit won't, as while another sheet appears, it's as if the
-     * scout cancelled, so the page can ask again.
+     * Shows the sheet over what's on top of [over]'s window, once a presentation or dismissal
+     * there ends ([presentOnceSettled]). If UIKit still won't, it's as if the scout cancelled, so
+     * the page can ask again.
      */
     fun show(over: UIViewController) {
-        over.presentViewController(controller, animated = true, completion = null)
-        if (controller.presentingViewController == null) onRefused()
+        over.presentOnceSettled(controller, isClosed = { closed }, onRefused = onRefused)
     }
 
-    /** Closes the sheet, once it's done appearing or the scout is done swiping it down. */
+    /**
+     * Closes the sheet, or keeps it from showing if it hasn't yet, once it's done appearing or the
+     * scout is done swiping it down.
+     */
     fun close() {
+        closed = true
         controller.dismissOnceSettled()
     }
 

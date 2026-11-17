@@ -325,9 +325,8 @@ both taps of a double tap can reach it.
   they animate in (`rememberIgnoreTouchesNavEntryDecorator`), so the second tap
   doesn't press anything on the new screen
   ([#61](https://github.com/bryancassell/bluecard/issues/61)). The merge's
-  full-screen dialog and Android's `ConfirmDialog` do the same as they open
-  (`isOpeningForDoubleTap`), and every screen while a back swipe is held. iOS's
-  action sheet stays open through the second tap by itself.
+  full-screen dialog and `ConfirmDialog` do the same as they open
+  (`isOpeningForDoubleTap`), and every screen while a back swipe is held.
 - **Screens start other apps with one `OtherAppStarter`** from
   `rememberOtherAppStarter` (`ui/`), shared among the screen's controls that
   open another app. After a tap, it ignores taps for the double-tap timeout
@@ -453,9 +452,8 @@ both taps of a double tap can reach it.
   instead (`DatePickerSheet`).
 - **On iOS, the dialogs that ask or tell are UIKit's alerts and action sheets**
   (`SystemAlert`), as [`PRD.md`](PRD.md#design-decisions)'s iOS look and
-  conventions row chooses. `ConfirmDialog`, `ImportDialog` and
-  `DamagedProgressNotice` are `expect` composables, with Material's dialogs on
-  Android.
+  conventions row chooses. Each UIKit sheet or alert holds the text fields' edit
+  menu while it shows (`HoldableTextToolbar`), or the menu shows over it.
 - **Before Compose draws**, the window theme and splash screen follow dark mode
   through `values-night`: the dark scheme's background (`@color/background`,
   which must match each scheme's `background`), a dark window theme, and the

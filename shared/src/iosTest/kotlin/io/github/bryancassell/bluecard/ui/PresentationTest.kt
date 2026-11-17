@@ -2,7 +2,6 @@ package io.github.bryancassell.bluecard.ui
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertSame
 import platform.UIKit.UIViewController
 
@@ -71,23 +70,41 @@ class PresentationTest {
         assertSame(middle, root.topPresented())
     }
 
+    // With no transition under way. One that is can't be made here, nor faked, since
+    // transitionCoordinator is declared in a category, whose methods Kotlin/Native can't override.
     @Test
-    fun dismissOnceSettled_whenNotPresented_doesNothing() {
-        val controller = UIViewController()
+    fun dismissOnceSettled_whenPresented_dismisses() {
+        val controller = Presenting(name = "alert", presenter = UIViewController())
 
         controller.dismissOnceSettled()
 
-        assertNull(controller.presentingViewController)
+        assertEquals(listOf("dismissed alert"), events)
+    }
+
+    @Test
+    fun dismissOnceSettled_whenNotPresented_doesNothing() {
+        val controller = Presenting(name = "alert")
+
+        controller.dismissOnceSettled()
+
+        assertEquals(emptyList(), events)
     }
 
     private inner class Presenting(
         private val name: String,
         private val presented: UIViewController? = null,
-        private val going: Boolean = false
+        private val going: Boolean = false,
+        private val presenter: UIViewController? = null
     ) : UIViewController(nibName = null, bundle = null) {
         override fun presentedViewController(): UIViewController? = presented
 
         override fun isBeingDismissed(): Boolean = going
+
+        override fun presentingViewController(): UIViewController? = presenter
+
+        override fun dismissViewControllerAnimated(flag: Boolean, completion: (() -> Unit)?) {
+            events += "dismissed $name"
+        }
 
         override fun presentViewController(
             viewControllerToPresent: UIViewController,

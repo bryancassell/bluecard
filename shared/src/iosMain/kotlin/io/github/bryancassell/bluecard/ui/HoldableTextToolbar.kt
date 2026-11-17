@@ -5,9 +5,10 @@ import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.TextToolbarStatus
 
 /**
- * The [platform]'s text toolbar, a text field's edit menu ("Select / Select All"), which a
- * [SystemAlert] keeps hidden while it shows ([hold]). `MainViewController` provides it as
- * `LocalTextToolbar` for the app's content.
+ * The [platform]'s text toolbar, a text field's edit menu ("Select / Select All"), which a UIKit
+ * alert or sheet keeps hidden while it shows ([hold]), as [SystemAlert] and the date picker
+ * (`CompletionDate.ios.kt`) do. `MainViewController` provides it as `LocalTextToolbar` for the
+ * app's content.
  *
  * Hiding the menu once isn't enough. A text field shows it again each time the field moves while
  * the field's own toolbar state wants it, and only the field changes that state: a tap on it, a

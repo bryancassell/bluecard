@@ -53,16 +53,9 @@ internal class UIKitAlert(
     /**
      * Shows the alert over what's on top of [over]'s window, once a presentation or dismissal
      * there ends ([presentOnceSettled]). If UIKit won't show it, calls [onRefused].
-     *
-     * It's presented from the window's root view controller, not [over]: inside a Compose
-     * `Dialog`, such as the merge's, [over] is the dialog's own view controller, which isn't in
-     * the window's view controllers. Presenting from it worked, but UIKit logged that it "is not
-     * supported, and may result in incorrect safe area insets and a corrupt root presentation…
-     * Will become a hard exception in a future release" (iOS 27.0).
      */
     fun show(over: UIViewController, onRefused: () -> Unit) {
-        val root = over.view.window?.rootViewController ?: over
-        root.presentOnceSettled(controller, isClosed = { closed }, onRefused = onRefused)
+        over.presentOnceSettled(controller, isClosed = { closed }, onRefused = onRefused)
     }
 
     /** Closes the alert, or keeps it from showing if it hasn't yet. */
@@ -75,13 +68,23 @@ internal class UIKitAlert(
 /**
  * Shows a [UIKitAlert] while this is composed, so it closes once the page stops asking, as a
  * Material dialog does. A new [title] or [message] shows in it, as in a Material dialog, and a
- * button's tap calls the latest [buttons]' `onTap`. If UIKit won't show it, calls [onRefused].
+ * button's tap calls the latest [buttons]' `onTap`. A new button title or style shows a new alert
+ * in its place. UIKit closes the alert as any button is tapped, so each `onTap` must stop
+ * composing it, as every caller's does, or it stays composed with nothing shown. If UIKit won't
+ * show it, calls [onRefused].
+ *
+ * Its buttons take no taps for the double-tap timeout as it opens ([isOpeningForDoubleTap]), as
+ * Android's `ConfirmDialog` ignores them. On iOS 17 and 18 an action sheet rises from the bottom,
+ * where the button that opened it, such as Clear progress, may be, so the second tap of a double
+ * tap could otherwise land on its red button. A tap there then reaches the dimmed area behind it,
+ * which cancels, as a tap outside does.
  *
  * The keyboard goes down first, as for the date picker (`CompletionDate.ios.kt`), and a text
  * field's edit menu ("Select / Select All") stays hidden while the alert shows
  * ([HoldableTextToolbar]), since it otherwise stayed on top of the alert, over its message. If
- * the scout cancels, the keyboard comes back. If UIKit won't show the alert, the menu is let go
- * then, as a page may keep asking, as `DamagedProgressNotice` does until its next launch.
+ * the scout cancels, the keyboard comes back, as UIKit gives the field back its keyboard. If UIKit
+ * won't show the alert, the keyboard comes back then too, and the menu is let go, as a page may
+ * keep asking, as `DamagedProgressNotice` does until its next launch.
  */
 @Composable
 internal fun SystemAlert(
@@ -98,7 +101,8 @@ internal fun SystemAlert(
     val textToolbar = LocalTextToolbar.current as? HoldableTextToolbar
     val currentButtons by rememberUpdatedState(buttons)
     val currentOnRefused by rememberUpdatedState(onRefused)
-    val alert = remember(viewController) {
+    val opening = isOpeningForDoubleTap()
+    val alert = remember(viewController, buttons.map { it.title to it.style }) {
         UIKitAlert(
             title,
             message,
@@ -111,12 +115,14 @@ internal fun SystemAlert(
     SideEffect {
         alert.controller.title = title
         alert.controller.message = message
+        alert.controller.view.userInteractionEnabled = !opening
     }
     DisposableEffect(alert) {
         keyboard?.hide()
         val releaseTextToolbar = textToolbar?.hold() ?: {}
         alert.show(over = viewController) {
             releaseTextToolbar()
+            keyboard?.show()
             currentOnRefused()
         }
         onDispose {
