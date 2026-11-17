@@ -77,9 +77,11 @@ internal class UIKitAlert(
  * Material dialog does. A new [title] or [message] shows in it, as in a Material dialog, and a
  * button's tap calls the latest [buttons]' `onTap`. If UIKit won't show it, calls [onRefused].
  *
- * The keyboard and a text field's edit menu go down first, as the keyboard does for the date
- * picker (`CompletionDate.ios.kt`): the edit menu ("Select / Select All") otherwise stayed on top
- * of the alert, over its message. If the scout cancels, the keyboard comes back.
+ * The keyboard goes down first, as for the date picker (`CompletionDate.ios.kt`), and a text
+ * field's edit menu ("Select / Select All") stays hidden while the alert shows
+ * ([HoldableTextToolbar]), since it otherwise stayed on top of the alert, over its message. If
+ * the scout cancels, the keyboard comes back. If UIKit won't show the alert, the menu is let go
+ * then, as a page may keep asking, as `DamagedProgressNotice` does until its next launch.
  */
 @Composable
 internal fun SystemAlert(
@@ -91,7 +93,9 @@ internal fun SystemAlert(
 ) {
     val viewController = LocalUIViewController.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val textToolbar = LocalTextToolbar.current
+    // Null in a Compose Dialog, which provides its own window's toolbar, as the Merge dialog does.
+    // Neither it nor Data management under it has a text field.
+    val textToolbar = LocalTextToolbar.current as? HoldableTextToolbar
     val currentButtons by rememberUpdatedState(buttons)
     val currentOnRefused by rememberUpdatedState(onRefused)
     val alert = remember(viewController) {
@@ -110,8 +114,14 @@ internal fun SystemAlert(
     }
     DisposableEffect(alert) {
         keyboard?.hide()
-        textToolbar.hide()
-        alert.show(over = viewController) { currentOnRefused() }
-        onDispose(alert::close)
+        val releaseTextToolbar = textToolbar?.hold() ?: {}
+        alert.show(over = viewController) {
+            releaseTextToolbar()
+            currentOnRefused()
+        }
+        onDispose {
+            releaseTextToolbar()
+            alert.close()
+        }
     }
 }
