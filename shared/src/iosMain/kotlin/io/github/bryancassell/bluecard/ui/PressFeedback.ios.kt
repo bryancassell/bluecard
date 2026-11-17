@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -20,7 +21,7 @@ import platform.UIKit.resolvedColorWithTraitCollection
 import platform.UIKit.systemGray4Color
 
 // iOS's press feedback is in common code, where Android's Compose UI tests check it. This file
-// reads UIKit's color for it and provides it.
+// reads UIKit's color for it and provides it, and converts colors between UIKit and Compose.
 
 /** UIKit's traits for light or dark mode. */
 internal fun interfaceStyle(darkTheme: Boolean): UITraitCollection =
@@ -40,6 +41,17 @@ internal fun UIColor.toComposeColor(traits: UITraitCollection): Color = memScope
     val alpha = alloc<CGFloatVar>()
     resolvedColorWithTraitCollection(traits).getRed(red.ptr, green.ptr, blue.ptr, alpha.ptr)
     Color(red.value.toFloat(), green.value.toFloat(), blue.value.toFloat(), alpha.value.toFloat())
+}
+
+/** This color for UIKit, whose `colorWithRed` takes extended sRGB, which an sRGB color is too. */
+internal fun Color.toUIColor(): UIColor {
+    val srgb = if (colorSpace.isSrgb) this else convert(ColorSpaces.ExtendedSrgb)
+    return UIColor.colorWithRed(
+        red = srgb.red.toDouble(),
+        green = srgb.green.toDouble(),
+        blue = srgb.blue.toDouble(),
+        alpha = srgb.alpha.toDouble()
+    )
 }
 
 /** The background UIKit gives a highlighted list row, `systemGray4`, in light or dark mode. */

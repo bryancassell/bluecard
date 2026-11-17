@@ -4,6 +4,7 @@ import io.github.bryancassell.bluecard.text.gregorianCalendar
 import io.github.bryancassell.bluecard.text.toLocalDate
 import io.github.bryancassell.bluecard.text.toNSDate
 import io.github.bryancassell.bluecard.ui.theme.BlueCardLightColorScheme
+import io.github.bryancassell.bluecard.ui.toUIColor
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
@@ -253,14 +254,7 @@ internal class DatePickerSheet(
             if (traits?.userInterfaceStyle == UIUserInterfaceStyle.UIUserInterfaceStyleDark) {
                 UIColor.systemBlueColor
             } else {
-                BlueCardLightColorScheme.primary.run {
-                    UIColor.colorWithRed(
-                        red.toDouble(),
-                        green.toDouble(),
-                        blue.toDouble(),
-                        alpha.toDouble()
-                    )
-                }
+                BlueCardLightColorScheme.primary.toUIColor()
             }
         }
     }

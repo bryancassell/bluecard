@@ -56,6 +56,7 @@ ios_untested=(
     # Composables, which nothing tests on iOS until Compose UI tests run there (#355). A change to
     # one is checked on the simulator.
     ui/StringsLanguage.ios.kt
+    ui/Toggles.ios.kt
     ui/badge/CompletionDate.ios.kt
     ui/data/ImportDialogs.ios.kt
     ui/navigation/BlueCardNavDisplay.ios.kt
