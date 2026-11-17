@@ -1,15 +1,25 @@
 package io.github.bryancassell.bluecard
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.ui.window.ComposeUIViewController
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.bryancassell.bluecard.di.NSLogWarningLog
 import io.github.bryancassell.bluecard.di.appModule
 import io.github.bryancassell.bluecard.di.iosModule
 import io.github.bryancassell.bluecard.text.useStringsLanguageByDefault
 import io.github.bryancassell.bluecard.ui.BlueCardApp
+import io.github.bryancassell.bluecard.ui.SceneSavedState
+import io.github.bryancassell.bluecard.ui.appBuild
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.context.startKoin
+import platform.Foundation.NSBundle
+import platform.Foundation.NSUserDefaults
 import platform.UIKit.UIViewController
 
 /**
@@ -26,13 +36,44 @@ fun initKoin() {
  * page that follows the launch screen, since iOS can't keep that up as Android keeps its splash
  * screen, so the app still opens straight on Onboarding or Home. The strings' language is made
  * the preferred one first ([useStringsLanguageByDefault]), as Android's `MainActivity` does.
+ *
+ * The pages start as [savedState], the text [onSaveState] last gave, which the iOS app keeps
+ * with its scene ([SceneSavedState]), or an empty string. It's given each time the scene goes
+ * inactive (ON_PAUSE), as on its way to the background. Given only at ON_STOP, as the scene
+ * entered the background, it reached the copy iOS keeps only on the app's next trip there
+ * (checked on an iOS 27.0 simulator), so iOS ending the app restored the page before. Apple's
+ * sample "Restoring your app's state" also saves its state as the scene becomes inactive.
+ *
+ * It's given at ON_STOP too, as the pages are no longer open ([SceneSavedState.onEvent]), so a
+ * scene that went to the background without becoming active, as when the scout leaves during
+ * launch, says so. What changes after then reaches the copy iOS keeps only on the next trip, or
+ * when the scout closes the app in the app switcher. So if iOS ends the app first, a page that closed as its save finished comes back
+ * as the scout left it, as it can on Android in a shorter time, since Android saves after
+ * onStop. A new log entry's page then closes, since its entry was added
+ * (TrackerEntryViewModel.closeIfAdded), and an edit page shows the saved text.
  */
 @Suppress("FunctionName") // Named as the view controller it returns, as JetBrains' templates do.
-fun MainViewController(): UIViewController {
+fun MainViewController(savedState: String, onSaveState: (String) -> Unit): UIViewController {
     useStringsLanguageByDefault()
+    val sceneState = SceneSavedState(
+        savedState,
+        appBuild { NSBundle.mainBundle.objectForInfoDictionaryKey(it) },
+        NSUserDefaults.standardUserDefaults,
+        NSLogWarningLog
+    )
     return ComposeUIViewController {
-        val viewModel = koinViewModel<MainActivityViewModel>()
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        BlueCardApp(uiState, koinInject(), viewModel::dismissDamagedProgressNotice)
+        CompositionLocalProvider(LocalSaveableStateRegistry provides sceneState.registry) {
+            val lifecycle = LocalLifecycleOwner.current.lifecycle
+            DisposableEffect(lifecycle) {
+                val observer = LifecycleEventObserver { _, event ->
+                    sceneState.onEvent(event)?.let(onSaveState)
+                }
+                lifecycle.addObserver(observer)
+                onDispose { lifecycle.removeObserver(observer) }
+            }
+            val viewModel = koinViewModel<MainActivityViewModel>()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            BlueCardApp(uiState, koinInject(), viewModel::dismissDamagedProgressNotice)
+        }
     }
 }
