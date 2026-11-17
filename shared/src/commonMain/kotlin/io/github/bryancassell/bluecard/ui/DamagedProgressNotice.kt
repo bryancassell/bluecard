@@ -1,13 +1,6 @@
 package io.github.bryancassell.bluecard.ui
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import io.github.bryancassell.bluecard.resources.Res
-import io.github.bryancassell.bluecard.resources.damaged_progress_message
-import io.github.bryancassell.bluecard.resources.damaged_progress_ok
-import io.github.bryancassell.bluecard.resources.damaged_progress_title
-import org.jetbrains.compose.resources.stringResource
 
 /**
  * Tells the scout that the progress saved on the phone was damaged, so BlueCard started over
@@ -15,18 +8,7 @@ import org.jetbrains.compose.resources.stringResource
  * A scout's records may cover years of work, so they're never lost without the scout knowing
  * (#70). It doesn't suggest restoring Android's backup: that means reinstalling BlueCard, which
  * deletes what's on the phone, and works only if the nightly backup ran before the damage and
- * hasn't run since.
+ * hasn't run since. It's Material's dialog on Android, and UIKit's alert on iOS.
  */
 @Composable
-fun DamagedProgressNotice(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text(stringResource(Res.string.damaged_progress_title)) },
-        text = { Text(stringResource(Res.string.damaged_progress_message)) },
-        confirmButton = {
-            BlueCardTextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.damaged_progress_ok))
-            }
-        }
-    )
-}
+expect fun DamagedProgressNotice(onDismiss: () -> Unit)

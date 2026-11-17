@@ -450,6 +450,10 @@ both taps of a double tap can reach it.
   ([#306](https://github.com/bryancassell/bluecard/issues/306)). Compare the two
   when updating Material 3. On iOS, dates are picked in UIKit's `UIDatePicker`
   instead (`DatePickerSheet`).
+- **On iOS, the dialogs that ask or tell are UIKit's alerts and action sheets**
+  (`SystemAlert`), as [`PRD.md`](PRD.md#design-decisions)'s iOS look and
+  conventions row chooses. Each UIKit sheet or alert holds the text fields' edit
+  menu while it shows (`HoldableTextToolbar`), or the menu shows over it.
 - **Before Compose draws**, the window theme and splash screen follow dark mode
   through `values-night`: the dark scheme's background (`@color/background`,
   which must match each scheme's `background`), a dark window theme, and the

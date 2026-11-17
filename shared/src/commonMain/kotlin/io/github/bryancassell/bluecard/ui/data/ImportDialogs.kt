@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,16 +33,11 @@ import io.github.bryancassell.bluecard.data.profile.Profile
 import io.github.bryancassell.bluecard.resources.Res
 import io.github.bryancassell.bluecard.resources.badges_completed
 import io.github.bryancassell.bluecard.resources.badges_in_progress
-import io.github.bryancassell.bluecard.resources.confirm_dialog_cancel
 import io.github.bryancassell.bluecard.resources.discard_changes_confirm
 import io.github.bryancassell.bluecard.resources.discard_changes_message
 import io.github.bryancassell.bluecard.resources.discard_changes_title
 import io.github.bryancassell.bluecard.resources.home_unit
 import io.github.bryancassell.bluecard.resources.ic_close
-import io.github.bryancassell.bluecard.resources.import_choose_message
-import io.github.bryancassell.bluecard.resources.import_choose_title
-import io.github.bryancassell.bluecard.resources.import_merge
-import io.github.bryancassell.bluecard.resources.import_replace_all
 import io.github.bryancassell.bluecard.resources.merge_close
 import io.github.bryancassell.bluecard.resources.merge_completed_on
 import io.github.bryancassell.bluecard.resources.merge_confirm
@@ -67,7 +61,6 @@ import io.github.bryancassell.bluecard.ui.LocalLocaleFormats
 import io.github.bryancassell.bluecard.ui.badges.percentDoneDescription
 import io.github.bryancassell.bluecard.ui.isOpeningForDoubleTap
 import io.github.bryancassell.bluecard.ui.readAsOneLabel
-import io.github.bryancassell.bluecard.ui.removalButtonColors
 import io.github.bryancassell.bluecard.ui.typedText
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -75,29 +68,11 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Asks the scout, once a file to import is checked, whether to merge it with their data
  * ([onMerge]) or replace all of it ([onReplace]). Replace all is red, as it removes what they
- * recorded. Cancel, Back and a tap outside call [onDismiss].
+ * recorded. Cancel, Back and a tap outside call [onDismiss]. It's Material's dialog on Android,
+ * and UIKit's action sheet on iOS.
  */
 @Composable
-fun ImportDialog(onMerge: () -> Unit, onReplace: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.import_choose_title)) },
-        text = { Text(stringResource(Res.string.import_choose_message)) },
-        confirmButton = {
-            BlueCardTextButton(onClick = onMerge) { Text(stringResource(Res.string.import_merge)) }
-        },
-        // The dialog lays out these buttons, then the confirm button, wrapping them if they
-        // don't fit on one line.
-        dismissButton = {
-            BlueCardTextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.confirm_dialog_cancel))
-            }
-            BlueCardTextButton(onClick = onReplace, colors = removalButtonColors()) {
-                Text(stringResource(Res.string.import_replace_all))
-            }
-        }
-    )
-}
+expect fun ImportDialog(onMerge: () -> Unit, onReplace: () -> Unit, onDismiss: () -> Unit)
 
 /**
  * Asks the scout which to keep, the phone's or the file's, for each of the merge's [choices]:
