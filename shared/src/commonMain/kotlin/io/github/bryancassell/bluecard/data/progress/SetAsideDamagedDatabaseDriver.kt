@@ -139,18 +139,23 @@ class SetAsideDamagedDatabaseDriver(
      * Room's read of a table whose column was renamed fails at every launch, since it looks the
      * columns up by name, and each statement that names the column, or writes through a foreign
      * key to it, fails with SQLITE_ERROR. A type with another affinity changes what later saves
-     * store, such as a phone number's leading zero. In an older version, any change Room's check
-     * compares, such as a column that lost NOT NULL, fails that check after migrating, also at
-     * every launch.
+     * store, such as a phone number's leading zero. A unique index whose column became an
+     * expression, such as `requirementNumber < rowNumber`, fails later saves as a duplicate. In an
+     * older version, any change Room's check compares, such as a column that lost NOT NULL, fails
+     * that check after migrating, also at every launch.
      *
      * Those errors can also come from a bug, and only their message text tells them apart. A
      * definition that differs from the one Room made for [version] comes from storage alone. It's
      * compared as Room's check compares it ([TableDefinition]), at every version. So a change
      * this build's statements don't notice, such as a foreign key's letter case, is damage too,
      * since Room's check after the next version's migration fails it, unless that migration
-     * rebuilds the table. A version-0 database's tables are compared with this build's, which
-     * Room checks them against after creating any that are missing. A newer build's database is
-     * left to Room, which refuses it on purpose ([isRoomHeaderDamaged]).
+     * rebuilds the table. A table a migration rebuilds is compared the same way, though the
+     * rebuild would repair what doesn't rename a column. Only version 1's `tracker_entry` is
+     * rebuilt so far, and no release made a version-1 database.
+     *
+     * A version-0 database's tables are compared with this build's, which Room checks them
+     * against after creating any that are missing. A newer build's database is left to Room,
+     * which refuses it on purpose ([isRoomHeaderDamaged]).
      */
     private fun SQLiteConnection.hasDamagedTables(version: Long): Boolean {
         if (version !in 0..BlueCardDatabase.VERSION.toLong()) return false

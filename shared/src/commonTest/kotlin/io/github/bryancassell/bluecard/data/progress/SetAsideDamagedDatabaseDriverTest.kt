@@ -573,6 +573,21 @@ abstract class SetAsideDamagedDatabaseDriverTest {
     }
 
     @Test
+    fun indexOnAnExpression_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // The unique index is then on (badgeId, requirementNumber < rowNumber), which is 0 or 1,
+        // so a badge's third tracker row would fail as a duplicate.
+        val damaged = changeSavedProgress(
+            *changeDefinition(
+                "index_tracker_entry_badgeId_requirementNumber_rowNumber",
+                "`requirementNumber`, `rowNumber`",
+                "`requirementNumber`< `rowNumber`"
+            )
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
     fun olderColumnThatLostNotNull_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
         saveOlderProgress(3)
         // NOU becomes part of the type, which keeps its affinity, and NULL is allowed.
@@ -740,7 +755,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
             AND name NOT IN ('room_master_table', 'sqlite_sequence')
             """
         ).use { buildSet { while (it.step()) add(it.getText(0)) } }
-        assertEquals(names, tables.map { it.name }.toSet())
+        assertEquals(tables.map { it.name }.toSet(), names)
         tables.forEach {
             assertEquals(
                 it,
@@ -814,9 +829,15 @@ abstract class SetAsideDamagedDatabaseDriverTest {
          */
         fun changeDefinition(table: String, old: String, new: String) = arrayOf(
             "PRAGMA writable_schema = ON",
-            "UPDATE sqlite_master SET sql = replace(sql, '$old', '$new') WHERE name = '$table'",
+            """
+            UPDATE sqlite_master SET sql = replace(sql, ${sqlText(old)}, ${sqlText(new)})
+            WHERE name = ${sqlText(table)}
+            """,
             "PRAGMA writable_schema = OFF"
         )
+
+        /** [text] as an SQL string literal. */
+        private fun sqlText(text: String) = "'${text.replace("'", "''")}'"
 
         val RENAME_IDENTITY_COLUMN =
             changeDefinition("room_master_table", "identity_hash", "identity_hasj")

@@ -91,8 +91,13 @@ private val BADGE_PROGRESS = TableDefinition(
 )
 
 // The foreign key of each table whose rows belong to a started badge.
-private val BADGE_FOREIGN_KEY =
-    TableDefinition.ForeignKey("badge_progress", "badgeId", "badgeId", "NO ACTION", "CASCADE")
+private val BADGE_FOREIGN_KEY = TableDefinition.ForeignKey(
+    "badge_progress",
+    listOf("badgeId"),
+    listOf("badgeId"),
+    "NO ACTION",
+    "CASCADE"
+)
 
 private val REQUIREMENT_PROGRESS_1 = TableDefinition(
     "requirement_progress",
@@ -122,11 +127,27 @@ private val TRACKER_ENTRY_1 = TableDefinition(
         TableDefinition.Column("requirementNumber", Affinity.TEXT, notNull = true),
         TableDefinition.Column("values", Affinity.TEXT, notNull = true)
     ),
-    setOf(BADGE_FOREIGN_KEY)
+    setOf(BADGE_FOREIGN_KEY),
+    setOf(
+        TableDefinition.Index(
+            "index_tracker_entry_badgeId_requirementNumber",
+            unique = false,
+            listOf("badgeId", "requirementNumber")
+        )
+    )
 )
 
+// Version 2's migration rebuilt the table, with a unique index that has the row's number too.
 private val TRACKER_ENTRY_2 =
-    TRACKER_ENTRY_1 + TableDefinition.Column("rowNumber", Affinity.INTEGER)
+    (TRACKER_ENTRY_1 + TableDefinition.Column("rowNumber", Affinity.INTEGER)).copy(
+        indexes = setOf(
+            TableDefinition.Index(
+                "index_tracker_entry_badgeId_requirementNumber_rowNumber",
+                unique = true,
+                listOf("badgeId", "requirementNumber", "rowNumber")
+            )
+        )
+    )
 
 private val TRACKER_ENTRY_3 = TRACKER_ENTRY_2 + TableDefinition.Column("addedDate", Affinity.TEXT)
 

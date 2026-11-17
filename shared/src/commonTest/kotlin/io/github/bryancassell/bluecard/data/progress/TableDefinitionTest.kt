@@ -4,6 +4,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /** Reads tables' definitions with the SQLite the app bundles, which each platform's test runs. */
 abstract class TableDefinitionTest {
@@ -41,19 +42,22 @@ abstract class TableDefinitionTest {
     }
 
     @Test
-    fun readTableDefinition_givesEachColumn_andEachForeignKey() {
+    fun readTableDefinition_givesEachColumn_foreignKey_andIndex() {
         val definition = BundledSQLiteDriver().open(":memory:").use {
             it.execSQL("CREATE TABLE parent (id TEXT NOT NULL, PRIMARY KEY(id))")
+            it.execSQL("CREATE TABLE pair (x TEXT NOT NULL, y TEXT NOT NULL, PRIMARY KEY(x, y))")
             it.execSQL(
                 """
                 CREATE TABLE child (
                     a TEXT NOT NULL, b INTEGER, c,
                     PRIMARY KEY(a, b),
-                    FOREIGN KEY(a) REFERENCES parent(id) ON DELETE CASCADE,
-                    FOREIGN KEY(b) REFERENCES parent
+                    FOREIGN KEY(b, a) REFERENCES pair(y, x) ON DELETE CASCADE,
+                    FOREIGN KEY(c) REFERENCES parent
                 )
                 """
             )
+            it.execSQL("CREATE UNIQUE INDEX index_child_c_a ON child (c DESC, a)")
+            it.execSQL("CREATE INDEX child_expression ON child (b, c + 1)")
             it.readTableDefinition("child")
         }
 
@@ -66,12 +70,57 @@ abstract class TableDefinitionTest {
                     TableDefinition.Column("c", Affinity.NUMERIC)
                 ),
                 setOf(
-                    TableDefinition.ForeignKey("parent", "a", "id", "NO ACTION", "CASCADE"),
+                    TableDefinition.ForeignKey(
+                        "pair",
+                        listOf("b", "a"),
+                        listOf("y", "x"),
+                        "NO ACTION",
+                        "CASCADE"
+                    ),
                     // One that names no column refers to the parent's primary key.
-                    TableDefinition.ForeignKey("parent", "b", null, "NO ACTION", "NO ACTION")
+                    TableDefinition.ForeignKey(
+                        "parent",
+                        listOf("c"),
+                        listOf(null),
+                        "NO ACTION",
+                        "NO ACTION"
+                    )
+                ),
+                // Not the one SQLite makes for the primary key.
+                setOf(
+                    TableDefinition.Index(
+                        "index_child_c_a",
+                        unique = true,
+                        listOf("c", "a"),
+                        listOf(true, false)
+                    ),
+                    // As in Room, only the table's columns, not the expression.
+                    TableDefinition.Index("child_expression", unique = false, listOf("b"))
                 )
             ),
             definition
+        )
+    }
+
+    @Test
+    fun indexes_areComparedAsRoomComparesThem() {
+        val index = TableDefinition.Index("index_t_a", unique = false, listOf("a"))
+
+        // A name with Room's prefix is compared by the prefix alone.
+        assertEquals(
+            setOf(index),
+            setOf(TableDefinition.Index("index_t_b", unique = false, listOf("a")))
+        )
+        assertNotEquals(index, TableDefinition.Index("Index_t_a", unique = false, listOf("a")))
+        assertNotEquals(
+            TableDefinition.Index("t_a", unique = false, listOf("a")),
+            TableDefinition.Index("t_b", unique = false, listOf("a"))
+        )
+        assertNotEquals(index, TableDefinition.Index("index_t_a", unique = true, listOf("a")))
+        assertNotEquals(index, TableDefinition.Index("index_t_a", unique = false, listOf("b")))
+        assertNotEquals(
+            index,
+            TableDefinition.Index("index_t_a", unique = false, listOf("a"), listOf(true))
         )
     }
 

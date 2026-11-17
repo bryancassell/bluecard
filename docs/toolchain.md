@@ -163,7 +163,7 @@ Each new version, even one that keeps the schema, also needs a line with its
 identity hash in `BlueCardDatabase.IDENTITY_HASHES` and one with its tables in
 `BlueCardDatabase.TABLES`, which `SetAsideDamagedDatabaseDriverTest` fails
 without. After a Room update that changes a version's hash, keep its old line
-too.
+in `IDENTITY_HASHES` too.
 
 **Compose Multiplatform resources** (`shared/src/commonMain/composeResources/`).
 The strings, icons and catalog, which common code can read, unlike Android
