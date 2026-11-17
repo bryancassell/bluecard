@@ -76,8 +76,8 @@ internal class UIKitAlert(
  * Its buttons take no taps for the double-tap timeout as it opens ([isOpeningForDoubleTap]), as
  * Android's `ConfirmDialog` ignores them. On iOS 17 and 18 an action sheet rises from the bottom,
  * where the button that opened it, such as Clear progress, may be, so the second tap of a double
- * tap could otherwise land on its red button. A tap there then reaches the dimmed area behind it,
- * which cancels, as a tap outside does.
+ * tap could otherwise land on its red button. On the iOS 27 simulator, a tap on the alert or the
+ * dimmed area meanwhile did nothing, and the alert stayed open.
  *
  * The keyboard goes down first, as for the date picker (`CompletionDate.ios.kt`), and a text
  * field's edit menu ("Select / Select All") stays hidden while the alert shows
