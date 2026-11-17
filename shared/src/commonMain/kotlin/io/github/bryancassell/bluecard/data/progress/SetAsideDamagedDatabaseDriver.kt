@@ -136,20 +136,32 @@ class SetAsideDamagedDatabaseDriver(
      * `counselor_name` into `counselor_namf` (#408). `quick_check` checks the b-trees, not names,
      * and Room compares the tables with its schema only when it creates or migrates the database,
      * or finds no `room_master_table` (Room 3.0.3). So in a database of this build's version,
-     * Room's read of the table fails at every launch, since it looks the columns up by name. Each
-     * statement that names the column, or writes through a changed foreign key, fails too, with
-     * SQLITE_ERROR. An older version fails Room's check after migrating, also at every launch.
+     * Room's read of a table whose column was renamed fails at every launch, since it looks the
+     * columns up by name, and each statement that names the column, or writes through a foreign
+     * key to it, fails with SQLITE_ERROR. A type with another affinity changes what later saves
+     * store, such as a phone number's leading zero. In an older version, any change Room's check
+     * compares, such as a column that lost NOT NULL, fails that check after migrating, also at
+     * every launch.
      *
      * Those errors can also come from a bug, and only their message text tells them apart. A
-     * definition that differs from the one Room made for [version] comes from storage alone. Only
-     * what statements name is compared: a changed key column or index makes SQLite report the
-     * schema as SQLITE_CORRUPT. Room checks a version-0 database's tables itself, after creating
-     * any that are missing, and refuses a newer build's on purpose ([isRoomHeaderDamaged]).
+     * definition that differs from the one Room made for [version] comes from storage alone. It's
+     * compared as Room's check compares it ([TableDefinition]), at every version. So a change
+     * this build's statements don't notice, such as a foreign key's letter case, is damage too,
+     * since Room's check after the next version's migration fails it, unless that migration
+     * rebuilds the table. A version-0 database's tables are compared with this build's, which
+     * Room checks them against after creating any that are missing. A newer build's database is
+     * left to Room, which refuses it on purpose ([isRoomHeaderDamaged]).
      */
-    private fun SQLiteConnection.hasDamagedTables(version: Long): Boolean =
-        version in 1..BlueCardDatabase.VERSION.toLong() && BlueCardDatabase.TABLES.any {
-            readTableDefinition(it.name) != it.definitionAt(version.toInt())
+    private fun SQLiteConnection.hasDamagedTables(version: Long): Boolean {
+        if (version !in 0..BlueCardDatabase.VERSION.toLong()) return false
+        val tables = BlueCardDatabase.TABLES.getValue(
+            if (version == 0L) BlueCardDatabase.VERSION else version.toInt()
+        )
+        return tables.any {
+            val definition = readTableDefinition(it.name)
+            definition != it && !(version == 0L && definition.columns.isEmpty())
         }
+    }
 
     /**
      * Limits the write-ahead log as Android's SQLite does on each of its connections (its

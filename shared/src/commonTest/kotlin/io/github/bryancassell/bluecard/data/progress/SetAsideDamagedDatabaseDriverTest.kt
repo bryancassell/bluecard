@@ -337,6 +337,16 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         database.close()
     }
 
+    /** Saves a started badge in a database of [version], as an older build leaves it. */
+    private suspend fun saveOlderProgress(version: Int) = helper.createDatabase(version).use {
+        it.execSQL(
+            """
+            INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
+            VALUES ('camping', '2026-01-01', '2026-03-01')
+            """
+        )
+    }
+
     private fun SQLiteConnection.longFor(sql: String) = prepare(sql).use {
         it.step()
         it.getLong(0)
@@ -436,14 +446,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun olderDatabase_isMigratedByRoom() = runTest {
-        helper.createDatabase(1).use {
-            it.execSQL(
-                """
-                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
-                VALUES ('camping', '2026-01-01', '2026-03-01')
-                """
-            )
-        }
+        saveOlderProgress(1)
 
         val progress = open().readProgress()
 
@@ -518,14 +521,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun olderDatabaseWithAnotherVersion_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        helper.createDatabase(3).use {
-            it.execSQL(
-                """
-                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
-                VALUES ('camping', '2026-01-01', '2026-03-01')
-                """
-            )
-        }
+        saveOlderProgress(3)
         val damaged = changeFile("PRAGMA user_version = 2")
 
         assertSetAsideWhenItOpens(damaged)
@@ -547,14 +543,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun olderTableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
-        helper.createDatabase(3).use {
-            it.execSQL(
-                """
-                INSERT INTO badge_progress (badgeId, requirementsVersion, startedDate)
-                VALUES ('camping', '2026-01-01', '2026-03-01')
-                """
-            )
-        }
+        saveOlderProgress(3)
         val damaged = changeFile(*RENAME_COUNSELOR_COLUMN)
 
         assertSetAsideWhenItOpens(damaged)
@@ -571,6 +560,49 @@ abstract class SetAsideDamagedDatabaseDriverTest {
         )
 
         assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun columnWithAnotherAffinity_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        // TEXU has NUMERIC affinity, so a phone number saved later would lose its leading zero.
+        val damaged = changeSavedProgress(
+            *changeDefinition("badge_progress", "`counselor_phone` TEXT", "`counselor_phone` TEXU")
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun olderColumnThatLostNotNull_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        saveOlderProgress(3)
+        // NOU becomes part of the type, which keeps its affinity, and NULL is allowed.
+        val damaged = changeFile(
+            *changeDefinition(
+                "badge_progress",
+                "`startedDate` TEXT NOT NULL",
+                "`startedDate` TEXT NOU NULL"
+            )
+        )
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun versionZeroTableWithARenamedColumn_isSetAsideWhenItOpens_andAnEmptyOneOpens() = runTest {
+        val damaged = changeSavedProgress("PRAGMA user_version = 0", *RENAME_COUNSELOR_COLUMN)
+
+        assertSetAsideWhenItOpens(damaged)
+    }
+
+    @Test
+    fun versionZeroWithATableMissing_isLeftToRoom_whichCreatesIt_andKeepsTheProgress() = runTest {
+        saveProgress(open())
+        changeFile("DROP TABLE tracker_entry", "PRAGMA user_version = 0")
+
+        val progress = open().readProgress()
+
+        assertEquals(300, progress.size)
+        assertEquals(emptyList<Path>(), copies())
     }
 
     @Test
@@ -676,10 +708,18 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     @Test
     fun tables_areTheOnesRoomCreates() = runTest {
-        // Each version's from its schema in shared/schemas/.
+        assertEquals((1..BlueCardDatabase.VERSION).toSet(), BlueCardDatabase.TABLES.keys)
+        // Each version's from its schema in shared/schemas/, both new and as Room migrates them
+        // from the first version, whose columns can differ in what isn't compared, such as a
+        // migration's DEFAULT NULL.
         (1..BlueCardDatabase.VERSION).forEach { version ->
             deleteDatabase()
             helper.createDatabase(version).use { assertTables(version, it) }
+            if (version > 1) {
+                deleteDatabase()
+                helper.createDatabase(1).close()
+                helper.runMigrationsAndValidate(version).use { assertTables(version, it) }
+            }
         }
         // This build's as the app creates them.
         deleteDatabase()
@@ -692,6 +732,7 @@ abstract class SetAsideDamagedDatabaseDriverTest {
 
     /** Checks that [BlueCardDatabase.TABLES] has [connection]'s tables, as of [version]. */
     private fun assertTables(version: Int, connection: SQLiteConnection) {
+        val tables = BlueCardDatabase.TABLES.getValue(version)
         // Room's and SQLite's own tables aside.
         val names = connection.prepare(
             """
@@ -699,11 +740,11 @@ abstract class SetAsideDamagedDatabaseDriverTest {
             AND name NOT IN ('room_master_table', 'sqlite_sequence')
             """
         ).use { buildSet { while (it.step()) add(it.getText(0)) } }
-        assertEquals(names, BlueCardDatabase.TABLES.map { it.name }.toSet())
-        BlueCardDatabase.TABLES.forEach {
+        assertEquals(names, tables.map { it.name }.toSet())
+        tables.forEach {
             assertEquals(
+                it,
                 connection.readTableDefinition(it.name),
-                it.definitionAt(version),
                 "BlueCardDatabase.TABLES needs ${it.name} as of version $version"
             )
         }
