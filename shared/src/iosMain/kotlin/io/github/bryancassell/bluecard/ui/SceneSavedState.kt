@@ -59,7 +59,10 @@ import platform.Foundation.NSUserDefaults
  * they become active ([resumed]), until their state is saved as they go inactive ([paused]). If
  * they're still open at launch, the last run ended while the app was open, as a crash does, and
  * the pages start at Home, as UIKit's own state restoration does after a crash at launch (Apple's
- * sample "Restoring your app's state").
+ * sample "Restoring your app's state"). The flag set at launch outlived a crash as the pages were
+ * restored, even for a relaunch a second later, though the preferences file changed only seconds
+ * after: the system's preferences service had it, and the app reads it from there (checked on an
+ * iOS 27.0 simulator).
  */
 class SceneSavedState(
     saved: String,
