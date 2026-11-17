@@ -13,6 +13,7 @@ import io.github.bryancassell.bluecard.di.iosModule
 import io.github.bryancassell.bluecard.text.useStringsLanguageByDefault
 import io.github.bryancassell.bluecard.ui.BlueCardApp
 import io.github.bryancassell.bluecard.ui.SceneSavedState
+import io.github.bryancassell.bluecard.ui.appBuild
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.context.startKoin
@@ -37,17 +38,25 @@ fun initKoin() {
  *
  * The pages start as [savedState], the text [onSaveState] last gave, which the iOS app keeps
  * with its scene ([SceneSavedState]), or an empty string. It's given each time the scene goes
- * inactive (ON_PAUSE), as on its way to the background. Given at ON_STOP, as the scene entered the
- * background, it reached the copy iOS keeps only on the app's next trip there (checked on an iOS
- * 27.0 simulator), so iOS ending the app restored the page before. Apple's sample "Restoring your
- * app's state" also saves its state as the scene becomes inactive.
+ * inactive (ON_PAUSE), as on its way to the background. Given only at ON_STOP, as the scene
+ * entered the background, it reached the copy iOS keeps only on the app's next trip there
+ * (checked on an iOS 27.0 simulator), so iOS ending the app restored the page before. Apple's
+ * sample "Restoring your app's state" also saves its state as the scene becomes inactive.
+ *
+ * It's given at ON_STOP too, so a scene that went to the background without becoming active,
+ * as when the scout leaves during launch, says its pages are no longer open. What changes after
+ * then reaches the copy iOS keeps only on the next trip, or when the scout closes the app in the
+ * app switcher. So if iOS ends the app first, a page that closed as its save finished comes back
+ * as the scout left it, as it can on Android in a shorter time, since Android saves after
+ * onStop. A new log entry's page then closes, since its entry was added
+ * (TrackerEntryViewModel.closeIfAdded), and an edit page shows the saved text.
  */
 @Suppress("FunctionName") // Named as the view controller it returns, as JetBrains' templates do.
 fun MainViewController(savedState: String, onSaveState: (String) -> Unit): UIViewController {
     useStringsLanguageByDefault()
     val sceneState = SceneSavedState(
         savedState,
-        appBuild(),
+        appBuild { NSBundle.mainBundle.objectForInfoDictionaryKey(it) },
         NSUserDefaults.standardUserDefaults,
         NSLogWarningLog
     )
@@ -55,16 +64,10 @@ fun MainViewController(savedState: String, onSaveState: (String) -> Unit): UIVie
         CompositionLocalProvider(LocalSaveableStateRegistry provides sceneState.registry) {
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { sceneState.resumed() }
             LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { onSaveState(sceneState.paused()) }
+            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { onSaveState(sceneState.paused()) }
             val viewModel = koinViewModel<MainActivityViewModel>()
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             BlueCardApp(uiState, koinInject(), viewModel::dismissDamagedProgressNotice)
         }
     }
-}
-
-/** The app's version and build number, such as "0.1.0 (1)", from its Info.plist. */
-private fun appBuild(): String {
-    val bundle = NSBundle.mainBundle
-    return "${bundle.objectForInfoDictionaryKey("CFBundleShortVersionString")} " +
-        "(${bundle.objectForInfoDictionaryKey("CFBundleVersion")})"
 }

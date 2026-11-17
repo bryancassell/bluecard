@@ -60,8 +60,8 @@ ios_untested=(
     ui/badge/CompletionDate.ios.kt
     ui/data/ImportDialogs.ios.kt
     ui/navigation/BlueCardNavDisplay.ios.kt
-    # MainViewController() shows the app's composables, as above, and IosModuleTest starts Koin
-    # with initKoin(), as the app does.
+    # MainViewController() shows the app's composables, and saves their state at lifecycle events
+    # in them, as above. IosModuleTest starts Koin with initKoin(), as the app does.
     MainViewController.kt
     # Returns a constant.
     ui/KeepInViewWhileFocused.ios.kt

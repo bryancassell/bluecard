@@ -26,6 +26,15 @@
 	     LaunchBackground is the color schemes' background, as Android's window background is
 	     (app/src/main/res/values/colors.xml). -->
 
+	<!-- One window, as Android's one activity, where iOS would let the app open more, as on a
+	     Mac. The pages' crash flag is one for the app (SceneSavedState). Xcode's generated
+	     manifest (INFOPLIST_KEY_UIApplicationSceneManifest_Generation) replaced this one and
+	     allowed several, so it's turned off. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

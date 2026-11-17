@@ -1,11 +1,22 @@
 package io.github.bryancassell.bluecard.ui
 
+import androidx.compose.runtime.MutableDoubleState
+import androidx.compose.runtime.MutableFloatState
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SnapshotMutationPolicy
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.snapshots.SnapshotMutableState
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.serialization.NavBackStackSerializer
@@ -23,7 +34,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -273,31 +283,106 @@ class SceneSavedStateTest {
     }
 
     @Test
-    fun canBeSaved_refusesWhatItCantSave() {
-        val registry = sceneState().registry
-        val ownPolicy = object : SnapshotMutationPolicy<Int> {
-            override fun equivalent(a: Int, b: Int) = a == b
-        }
-
-        assertFalse(registry.canBeSaved(Any()))
-        assertFalse(registry.canBeSaved(listOf(Any())))
-        assertFalse(registry.canBeSaved(mapOf("key" to Any())))
-        assertFalse(registry.canBeSaved(savedState(mapOf("key" to Any()))))
-        assertFalse(registry.canBeSaved(mutableStateOf(Any())))
-        assertFalse(registry.canBeSaved(mutableStateOf(1, ownPolicy)))
-        assertTrue(registry.canBeSaved(mutableStateOf(listOf(1))))
+    fun paused_keepsPrimitiveStatesAsTheirOwnTypes() {
+        // A page reads one back as the type it remembered, as Android's Parcelable ones are.
+        assertEquals(1, assertIs<MutableIntState>(savedAndRestored(mutableIntStateOf(1))).intValue)
+        assertEquals(
+            Long.MAX_VALUE,
+            assertIs<MutableLongState>(
+                savedAndRestored(mutableLongStateOf(Long.MAX_VALUE))
+            ).longValue
+        )
+        assertEquals(
+            0.1f,
+            assertIs<MutableFloatState>(savedAndRestored(mutableFloatStateOf(0.1f))).floatValue
+        )
+        assertEquals(
+            Double.NaN,
+            assertIs<MutableDoubleState>(
+                savedAndRestored(mutableDoubleStateOf(Double.NaN))
+            ).doubleValue
+        )
     }
 
     @Test
-    fun paused_whenAValueCantBeSaved_fails() {
-        // A bug, as an unsaveable value in a Bundle is on Android, so it isn't caught.
+    fun paused_keepsASnapshotStateList() {
+        val restored = savedAndRestored(mutableStateListOf("Camping", null))
+
+        assertEquals(listOf("Camping", null), assertIs<SnapshotStateList<*>>(restored).toList())
+    }
+
+    @Test
+    fun canBeSaved_acceptsEveryValue() {
+        // Android saves enums and an unkeyed lazy item's key, which are Serializable or
+        // Parcelable there, so refusing them would crash shared code on iOS alone.
+        val registry = sceneState().registry
+
+        assertTrue(registry.canBeSaved(Any()))
+        assertTrue(registry.canBeSaved(Tab.Badges))
+        assertTrue(registry.canBeSaved(mutableStateMapOf("key" to 1)))
+    }
+
+    @Test
+    fun paused_leavesOutWhatItCantWrite() {
+        val state = sceneState()
+        val ownPolicy = object : SnapshotMutationPolicy<Int> {
+            override fun equivalent(a: Int, b: Int) = a == b
+        }
+        state.registry.registerProvider("kept") { "Camping" }
+        state.registry.registerProvider("enum") { Tab.Badges }
+        state.registry.registerProvider("ownPolicy") { mutableStateOf(1, ownPolicy) }
+        state.registry.registerProvider("stateMap") { mutableStateMapOf("key" to 1) }
+        // As SaveableStateHolder saves a page, with a lazy item's default key.
+        state.registry.registerProvider("pages") {
+            mapOf(
+                "Badges" to mapOf("tab" to listOf(Tab.Badges), "text" to listOf("Pitched a tent")),
+                LazyKey(0) to mapOf("text" to listOf("Item"))
+            )
+        }
+        state.registry.registerProvider("savedState") {
+            savedState(mapOf("kept" to 1, "enum" to Tab.Badges))
+        }
+
+        val restored = sceneState(state.paused()).registry
+
+        assertEquals("Camping", restored.consumeRestored("kept"))
+        assertNull(restored.consumeRestored("enum"))
+        assertNull(restored.consumeRestored("ownPolicy"))
+        assertNull(restored.consumeRestored("stateMap"))
+        assertEquals(
+            mapOf("Badges" to mapOf("text" to listOf("Pitched a tent"))),
+            restored.consumeRestored("pages")
+        )
+        assertIs<SavedState>(restored.consumeRestored("savedState")).read {
+            assertEquals(1, getInt("kept"))
+            assertFalse(contains("enum"))
+        }
+        val warning = warningLog.warnings.single()
+        assertEquals("SceneSavedState", warning.tag)
+        assertTrue(warning.message.startsWith("Left out 6 "), warning.message)
+    }
+
+    @Test
+    fun paused_whenAValueChangesToOneItCantWrite_leavesItOut() {
         val state = sceneState()
         val holder: MutableState<Any> = mutableStateOf("Camping")
         state.registry.registerProvider(KEY) { holder }
         holder.value = Any()
 
-        assertFailsWith<IllegalStateException> { state.paused() }
+        assertNull(sceneState(state.paused()).registry.consumeRestored(KEY))
     }
+
+    @Test
+    fun appBuild_isTheVersionAndBuildNumber() {
+        val info = mapOf("CFBundleShortVersionString" to "0.1.0", "CFBundleVersion" to "12")
+
+        assertEquals("0.1.0 (12)", appBuild { info[it] })
+    }
+
+    private enum class Tab { Badges }
+
+    /** As Compose's DefaultLazyKey is on iOS, a plain data class. */
+    private data class LazyKey(val index: Int)
 
     private companion object {
         const val KEY = "key"

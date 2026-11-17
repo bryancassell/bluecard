@@ -198,10 +198,10 @@ Data sources    DataStore     JSON file       Room      PdfDocument  JSON files 
   the ViewModel's `SavedStateHandle`, as a text field's text is (see
   [Text fields](#text-fields)). On iOS, where Compose Multiplatform keeps it
   only in memory, `SceneSavedState` keeps it with the app's scene, in SwiftUI's
-  `@SceneStorage`. It saves only the types a `SavedState` holds, and only a
-  page's ViewModels save to it. A date, such as Badge detail's unmarked date, is
-  kept as its epoch day and read with `dateFromEpochDay`
-  (`ui/SavedStateDate.kt`). A key observed with
+  `@SceneStorage`. Values a `SavedState` can't hold, such as enums, aren't kept
+  there, nor is `MainActivityViewModel`'s state. A date, such as Badge
+  detail's unmarked date, is kept as its epoch day and read with
+  `dateFromEpochDay` (`ui/SavedStateDate.kt`). A key observed with
   `getStateFlow` is set to null to forget it, not removed: `remove` drops the
   flow, so the screen would stop following the key.
 
